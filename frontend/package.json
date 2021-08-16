@@ -1,0 +1,30 @@
+{
+  "name": "with-mongodb",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@material-ui/core": "^4.11.3",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.57",
+    "@stomp/stompjs": "^6.1.0",
+    "fontsource-roboto": "^4.0.0",
+    "mongodb": "^3.5.9",
+    "next": "^11.1.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-draggable": "^4.4.3",
+    "react-selectable-fast": "^3.4.0",
+    "react-stomp": "^5.1.0",
+    "stompjs": "^2.3.3",
+    "swr": "^0.5.5",
+    "ws": "^8.1.0"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "babel-plugin-styled-components": "^1.12.0"
+  }
+}
