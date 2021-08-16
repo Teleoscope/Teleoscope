@@ -1,4 +1,4 @@
-import @fontsource/roboto;
+import "@fontsource/roboto";
 import "../styles/global.css";
 
 export default function App({ Component, pageProps }) {
