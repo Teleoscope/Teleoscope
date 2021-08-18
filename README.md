@@ -5,7 +5,7 @@ This project is a UI for filtering down a large number of documents for eventual
 # Version 0.3.0
 This version is now deployable on Azure servers. As such, it comes with a new install script. Only tested on Ubuntu 20.04 so far. Requires sudo privileges.
 
-## Installation
+## Frontend Installation
 ```
 git clone https://github.com/pbucci/CorpusExplorer.git
 cd CorpusExplorer
