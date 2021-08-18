@@ -2,6 +2,40 @@
 
 This project is a UI for filtering down a large number of documents for eventual qualitative analysis. It is being purpose-built for looking through the 600k+ posts on Reddit's AITA forum to extract information on the norms and expectations regarding digital privacy behaviours. This README has two purposes: (1) like a normal readme, explain how to run the code; and (2) to document the building process for eventual analysis on the building process itself.
 
+# Version 0.3.0
+This version is now deployable on Azure servers. As such, it comes with a new install script. Only tested on Ubuntu 20.04 so far. Requires sudo privileges.
+
+## Installation
+`git clone https://github.com/pbucci/CorpusExplorer.git`
+`cd CorpusExplorer`
+`chmod u+x install.sh`
+`sudo ./install.sh`
+
+You should be prompted for your MongoDB URI and DB. Right now, the URI includes password-protected information and should be requested directly from an admin. The DB is `aita`. Similarly, the system requires an SSH tunnel to work, so you'll have to also request that access from an admin. After that, you can add this to your .ssh config:
+
+```
+Host bastion-host
+    User <your username for the bastion host>
+    HostName remote.cs.ubc.ca
+    IdentityFile ~/.ssh/id_rsa
+    Port 22
+
+Host bastion-host-mongo-forward
+    User <your other username>
+    Port 22
+    IdentityFile ~/.ssh/id_rsa
+    HostName <the hostname of the machine behind the host>
+    ProxyJump <your username for the bastion host>@bastion-host
+
+    # MongoBD forward
+    Localforward 3307 192.168.79.58:27017
+    # RabbitMQ remote python/celery connection
+    Localforward 3308 192.168.79.58:5672
+```
+
+
+
+
 # Version 0.2.0
 
 Major overhaul for this version:
