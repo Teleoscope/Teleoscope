@@ -35,6 +35,12 @@ Host bastion-host-mongo-forward
     Localforward 3308 <the hostname of the machine behind the host>:5672
 ```
 
+Last, run `npm run build` to test the install and `ssh bastion-host-mongo-forward` to test the ssh tunnel.
+
+
+## Running
+If you are already connected to the bastion host, leave it running and open another tab and cd to the frontend: `cd /path/to/CorpusExplorer/frontend`. Then run `npm run dev` for live dev builds with hotswapped code, or `npm run start` for production builds.
+
 
 
 
