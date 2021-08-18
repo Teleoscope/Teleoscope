@@ -6,10 +6,12 @@ This project is a UI for filtering down a large number of documents for eventual
 This version is now deployable on Azure servers. As such, it comes with a new install script. Only tested on Ubuntu 20.04 so far. Requires sudo privileges.
 
 ## Installation
-`git clone https://github.com/pbucci/CorpusExplorer.git`
-`cd CorpusExplorer`
-`chmod u+x install.sh`
-`sudo ./install.sh`
+```
+git clone https://github.com/pbucci/CorpusExplorer.git
+cd CorpusExplorer
+chmod u+x install.sh
+sudo ./install.sh
+```
 
 You should be prompted for your MongoDB URI and DB. Right now, the URI includes password-protected information and should be requested directly from an admin. The DB is `aita`. Similarly, the system requires an SSH tunnel to work, so you'll have to also request that access from an admin. After that, you can add this to your .ssh config:
 
