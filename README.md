@@ -30,9 +30,9 @@ Host bastion-host-mongo-forward
     ProxyJump <your username for the bastion host>@bastion-host
 
     # MongoBD forward
-    Localforward 3307 192.168.79.58:27017
+    Localforward 3307 <the hostname of the machine behind the host>:27017
     # RabbitMQ remote python/celery connection
-    Localforward 3308 192.168.79.58:5672
+    Localforward 3308 <the hostname of the machine behind the host>:5672
 ```
 
 
