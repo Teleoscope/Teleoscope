@@ -26,7 +26,7 @@ const useStyles = makeStyles((theme) => ({
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 function useQueries(q) {
   const { data, error } = useSWR(
-    `http://localhost:3000/api/queries/`,
+    `/api/queries/`,
     fetcher
   );
   var ret = {
@@ -39,7 +39,7 @@ function useQueries(q) {
 
 function useQuery(q) {
   const { data, error } = useSWR(
-    `http://localhost:3000/api/queries/?${q}`,
+    `/api/queries/?${q}`,
     fetcher
   );
   var ret = {

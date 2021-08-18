@@ -1,11 +1,9 @@
 import React from "react";
 import DocSet from "../components/DocSet";
-import {connectRabbit} from "../components/Stomp";
 import { useEffect, useState } from "react";
 import useSWR, { mutate } from "swr";
 import { SelectableGroup } from "react-selectable-fast";
 import MenuBar from "../components/MenuBar";
-import { Client, Message } from '@stomp/stompjs';
 
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
@@ -56,8 +54,6 @@ export default function Workspace(props) {
       />
     ))
   }
-
-  useEffect(() => {connectRabbit()})
 
   const handleClick = () => {
     
