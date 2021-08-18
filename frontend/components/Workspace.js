@@ -11,7 +11,7 @@ import { Client, Message } from '@stomp/stompjs';
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 function useDocSets(q) {
   const { data, error } = useSWR(
-    `http://localhost:3000/api/docsets/`,
+    `/api/docsets/`,
     fetcher
   );
   var ret = {

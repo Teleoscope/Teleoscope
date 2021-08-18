@@ -28,3 +28,5 @@ read MONGODB_DB
 printf "MONGODB_URI=%s\n" $MONGODB_URI >> .env.local
 printf "MONGODB_DB=%s" $MONGODB_DB >> .env.local
 
+# build project
+npm run build
