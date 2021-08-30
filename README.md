@@ -7,7 +7,7 @@ This version is now deployable on Azure servers. As such, it comes with a new in
 
 ## Frontend Installation
 ```
-git clone https://github.com/pbucci/CorpusExplorer.git
+git clone https://github.com/UntitledCorpusExplorer/CorpusExplorer.git
 cd CorpusExplorer
 chmod u+x install.sh
 sudo ./install.sh
@@ -42,7 +42,66 @@ Last, run `npm run build` to test the install and `ssh bastion-host-mongo-forwar
 If you are already connected to the bastion host, leave it running and open another tab and cd to the frontend: `cd /path/to/CorpusExplorer/frontend`. Then run `npm run dev` for live dev builds with hotswapped code, or `npm run start` for production builds.
 
 
+## Backend Installation
 
+If you're developing for the backend, it's highly recommended that you use some kind of package manager or virtual environment such as [Anaconda](https://docs.anaconda.com/anaconda/install/). If you are going to use Anaconda, you can create a virtual environment with the following:
+
+```
+conda update conda # just good practice
+conda create -n yourenvname python=x.x anaconda
+conda activate yourenvname
+```
+
+This just makes it easier to switch between package dependencies if you ever need to for different projects. Next, install the following python packages. Recommended to use `python -m pip install package` where `python` can be replaced with whatever python version you need (e.g., `python3` or `python3.8`). You may need these if there are multiple versions of python installed on your machine.
+
+```
+python -m pip install celery
+python -m pip install pymongo
+python -m pip install scipy
+python -m pip install sklearn
+python -m pip install gensim
+```
+
+You may want to test each of these installations by opening an interactive python shell (e.g., run `python`) and then importing the modules:
+
+```
+import celery
+import pymongo
+import scipy
+import sklearn
+import gensim
+```
+
+If that works, you can run `quit()` in your interpreter (a.k.a. "shell") and install the helper packages:
+
+```
+python -m pip install tqdm
+python -m pip install requests
+python -m pip install bottleneck
+python -m pip install joblib
+```
+
+Before testing the backend, you'll need to create an authorization module. This is just a python file that has your private information in it. Right now, the format is as follows:
+
+```
+mongodb = {
+	"username": "<mongodb_username>",
+	"password": "<mongodb_password>",
+	"host": "localhost:<local forwarding port, e.g., 3307>",
+	"string": "mongodb://<mongodb_username>:<mongodb_password>@localhost:<local forwarding port>/aita"
+}
+
+rabbitmq = {
+	"username": "<rabbitmq_username>",
+	"password": "<rabbitmq_password>",
+	"host": "localhost",
+	"vhost": "<vhost name>"
+}
+```
+
+You will need to contact an adminstrator to received the credentials above. Once you have the credentials, create the file by running `touch auth.py` and using your favourite text editor to enter the information from above.
+
+Now you can test the installation. Run an interpreter again and then `import tasks`. If that runs, `import server`.
 
 
 # Deprecated
