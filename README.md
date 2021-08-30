@@ -44,7 +44,10 @@ If you are already connected to the bastion host, leave it running and open anot
 
 
 
-# Version 0.2.0
+
+# Deprecated
+
+## Version 0.2.0
 
 Major overhaul for this version:
 
@@ -52,29 +55,29 @@ Major overhaul for this version:
 - Backend NLP proccessing handled by Gensim
 - Added distributed workers for handling ongoing NLP tasks
 
-## Why the current packages
+### Why the current packages
 
-### NextJS
+#### NextJS
 
 NextJS is a development framework for React. React handles UI state changes by managing a virtual DOM. This reduces the amount of explicit state management and interrelated callbacks that you might otherwise have to program explicitly in. React also leverages a lot of syntactic sugar to help manage rendering DOM elements which speeds up development. Finally, React is also widely-supported and there are many libraries available that make development faster. NextJS specifically provides built-in support for data fetching, including handling asynch calls and local caching. It also provides built-in API routing.
 
 The design of the front end is to essentially leverage this API functionality. Read-only calls to the MongoDB backend are managed through the API. NextJS's data fetching features manage the problem of making sure your data is always available and not stale, so MongoDB updates are propagated to the UI in what appears to be immediately.
 
-### RabbitMQ
+#### RabbitMQ
 
 The previous version of the TFIDF Explorer required the corpus data to be loaded into and transformed in memory. However, some NLP functions take a long time to complete, and managing asynchronous operations in Python can be very difficult. Celery/RabbitMQ provide a method for distributing asychronous tasks (Celery is the python package, RabbitMQ is the message broker). Downside is that you can't share memory/pass pointers between workers which means that serialization is a big cost---however, since a lot of this processing is going on in the background while the user can do other things, it's not very visible. Upside is that not having to deal with Python's explicit management of yielding async calls means you can design a completely distributed processing framework with low overhead and do, e.g., partial computes.
 
-### Gensim
+#### Gensim
 
 Genism is essentially an topic modelling/NLP prototyping package with a lot of one-liner built-in support for a lot of common NLP tasks from tokenizing to model-building. It works well with SciKit, and provides a variety of Soft Similarity measures and hierarchical clustering methods.
 
-## MongoDB structure
+### MongoDB structure
 
 Right now the structure of MongoDB is to have a different collection for each major unit of operation which are connected through unique OIDs. This is the recommended structure to avoid destructive data transformations and to keep a relatively flat hierarchy. GridFS is used for large (16mb+) models.
 
 Considering using Redis for local caching in the future, but for now, MongoDB is only written to by workers and read by the NextJS API.
 
-## Query Workflow
+### Query Workflow
 
 The concept of interacting with this system is based around querying and browsing. You might have some idea of what you want to look for, but you don't yet know the exact relationships between words and documents and would like to discover them. The workflow would be:
 
@@ -101,15 +104,15 @@ It may be useful to train small Word2Vec models on document subsets and then ret
 
 My current challenge is figuring out how to manage the include/exclude process with MongoDB (views??) and how to manage recording state. Since I like being able to recalculate the whole process (and likely needs to be included for reproducibility reasons), this should likely be done similar to design programs that use constraint-based functional modelling (like SolidWorks) but TBD.
 
-# Version 0.1.0
+## Version 0.1.0
 
-# Setup
+## Setup
 
 This project is basically a front end build in [Bootstrap](https://getbootstrap.com/) for [Scikit Learn](https://scikit-learn.org/stable/install.html) and uses [Numpy](https://numpy.org/) for most scientific computing. The database it expects is [MongoDB](https://www.mongodb.com/) and uses [Socket.io](https://socket.io/) to communicate between back and front ends. Oh, and [D3.js](https://d3js.org/) powers the visualization. Because of all the different technologies at play here, I wanted to avoid React and Flask, so there are some funny-looking hacks that you'll see as a result. I'm using [Anaconda](https://www.anaconda.com/) to manage the development environment.
 
 The packages should include all of the web technologies, so you will only have to install the python packages for the above. You can use `pip install` for most with no problem, but I suggest setting up a conda virtual environment first. I will assume a prebuilt MongoDB database for this version with documentation below.
 
-## Suggested installation workflow
+### Suggested installation workflow
 
 1. Install Anaconda, then go to a terminal and `conda activate <virtual environment name>`.
 2. Install Scikit Learn.
@@ -132,25 +135,25 @@ This first in-development version release has been set up to do three important 
 
 Given these functions, we can start the process of iterated semi-supervised learning on the documents provided. That is not yet included in this version, but will be the next step in the project. Each subsection below will overview the major concepts that the UI uses and actions that a user will take to filter the database.
 
-## Frontend
+### Frontend
 
 The high-level idea for this interface is to enable learning-through-browsing. You want to be able to eventually get an idea of your big corpus, but also have small, local ideas of what you are interested in as part of building towards an eventual qualitative thematic analysis. The design descisions are focused around making the browsing process and the process of thematic analysis actually create better machine learning models that can be used in further document exploration.
 
-### Defining stopwords
+#### Defining stopwords
 
 The UI provides a quick way to filter through stopwords. You can use Min/Max document frequency scores to do automatic filtering, or browse through with manual filtering. Since a good automatic filter will be quite agressive (e.g., must show up in over 10 documents, and less than 25% of all documents), you need a way to pick through interesting terms that might be automatically excluded. In this interface, you do that by dragging and dropping terms between the "words" card, the "stopwords" card, and the "keywords" card.
 
 The stopwords card is a working set that is local to the current document selection subset. You can commit the stopwords to a global stopwords set, which will remove them from the card, but remain in memory.
 
-### Defining keywords
+#### Defining keywords
 
 Keywords are terms that are potentially useful to keep. Eventually, there will be some function to structure similarity between keywords, but right now, they are just a local set. They will be highlighted in document previews, but otherwise, they have no further function except being preserved in a set.
 
-## Document browsing
+### Document browsing
 
 Right now, just five random documents show up in the document browsing selection. You can drag and drop them to the "include" and "exclude" bins, but it doesn't do anything. In the very near future, this will start to build connection matrices for hierarchical clustering.
 
-### Backend and mechanics
+#### Backend and mechanics
 
 The high-level idea for the backend is to create a server that produces machine learning models as a result of browsing. The rough dataflow idea is keep to unidirectional dataflow.
 
@@ -158,6 +161,6 @@ A server manages communication between the UI and different processes. Communica
 
 The server interacts with a TFIDFProcessorManager which manages TFIDFProcessors. Right now the server also directly calls the Processors, but I'm moving that into the mangager.
 
-## Database setup
+### Database setup
 
 This project uses MongoDB as a database. MongoDB was chosen after attempts at SQL databases proved to not be flexible or cross-compatible enough for the different kinds of machine learning data structures used here.
