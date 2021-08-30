@@ -101,7 +101,7 @@ rabbitmq = {
 
 You will need to contact an adminstrator to received the credentials above. Once you have the credentials, create the file by running `touch auth.py` and using your favourite text editor to enter the information from above.
 
-Now you can test the installation. Run an interpreter again and then `import tasks`. If that runs, `import server`.
+Now you can test the installation. Run an interpreter again and then `import tasks`. If that runs, `import server`. Now you should be ready to roll!
 
 
 # Deprecated
