@@ -13,7 +13,7 @@ chmod u+x install.sh
 sudo ./install.sh
 ```
 
-You should be prompted for your MongoDB URI and DB. Right now, the URI includes password-protected information and should be requested directly from an admin. The DB is `aita`. Similarly, the system requires an SSH tunnel to work, so you'll have to also request that access from an admin. After that, you can add this to your .ssh config:
+You should be prompted for your MongoDB URI and Database name. Right now, the URI includes password-protected information and should be requested directly from an admin. The DB is `aita`. Similarly, the system requires an SSH tunnel to work, so you'll have to also request that access from an admin. After that, you can add this to your .ssh config:
 
 ```
 Host bastion-host
