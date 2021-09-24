@@ -50,6 +50,27 @@ function useQuery(q) {
   return ret
 }
 
+// TODO: define async callback for the task/query server
+// may be able to use the fetcher ^^ above, i.e., const fetcher = (...args) => fetch(...args).then((res) => res.json());
+// or define another react hook such as useQueries()
+// e.g.:
+
+// function useFavs(query, list) {
+//   var ids = list.join("+");
+//   var url = false
+//   if (list.length > 0) {
+//     url = `http://localhost:8080/?query=${query}\&sims=${ids}\&`
+//   }
+//   const { data, error } = useSWR(url, fetcher);
+//   return {
+//     sdata: data,
+//     serror: error,
+//   };
+// }
+
+// Note that we'll need some kind of data validation on the task server and some way to
+// stop this end from spamming the task server.
+
 
 /* 
 SearchBar
