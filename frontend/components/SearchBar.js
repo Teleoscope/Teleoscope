@@ -51,16 +51,40 @@ function useQuery(q) {
 }
 
 
+/* 
+SearchBar
 
-export default function Tags(props) {
+The SearchBar populates a DocSet with queries. The (in-progress) concept is
+that the user searches for a term here, which registers a query-building task 
+with RabbitMQ. A Celery Worker will then consume it, building the NLP indices
+using all of the docs that the query term returns from a MongoDB text search.
+
+TODO: decide how to manage queries with multiple search terms. Previously, we used
+a logical OR for the terms. We may want to generate three separate queries as well as
+the logical OR'd term. Likely should be handled not here but on the task server.
+
+*/
+export default function SearchBar(props) {
   const classes = useStyles();
   const {queries, loading, error} = useQueries()
   
   const done = (query) => {
-  var ids = queries.map((q) => {return q.query})
-  var i = ids.indexOf(query)
-  return i > -1 ? true : false
-}
+    var ids = queries.map((q) => {return q.query})
+    var i = ids.indexOf(query)
+    return i > -1 ? true : false
+  }
+
+  // TODO: add onChange callback here, example code below
+  // Effect: sends a query request to the task/query server
+  // which eventually builds indices out of the query docs
+  
+  // const handleChange = ( x, y, z ) => {
+        // ... do something with the queries
+        // such as make an async request to the task/query server
+        // you may have to create some logic for handling queries that
+        // have already loaded, deleting queries, etc. that 
+        // interacts with the parent component
+  // }
 
   return (
       <Autocomplete
@@ -71,6 +95,7 @@ export default function Tags(props) {
         defaultValue={props.queries.map((q) => (q))}
         freeSolo
         size="small"
+        // TODO: add onChange here
         renderTags={(value, getTagProps) =>
           value.map((option, index) => (
             <Chip 
