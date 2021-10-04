@@ -145,3 +145,5 @@ package-lock.json
 *.archive
 *config.py
 
+# alam mongo auth stuff
+experiments/auths/
