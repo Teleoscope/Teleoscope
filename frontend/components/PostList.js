@@ -53,13 +53,20 @@ export default function PostList(props) {
     console.log(id)
   };
 
+  const handleHide = (id) => {
+    console.log("hiding: " + id);
+  }
   const handleHover = (h) => {
     console.log(h) // boolean
   } 
   
-  const handleFav = (id, fav) => {
-    console.log(id, fav) // boolean
-  } 
+  const handleFav = (id) => {
+    console.log("This is faved: " + id);
+  }
+
+  // const handleFav = (id, fav) => {
+  //   console.log(id, fav) // boolean    
+  // } 
 
 
   return (
@@ -67,16 +74,16 @@ export default function PostList(props) {
       className={classes.idlist}
       dense={true}
     >
-      {sortable.map((id, i, arr) => {
-        var i_fav = props.favs.indexOf(id[0])
-        var i_hide = props.hides.indexOf(id[0])
+      {sortable.map((id) => {
+        var i_fav = props.favs.indexOf(id)
+        var i_hide = props.hides.indexOf(id)
         var in_favs = i_fav > -1
         var in_hides = i_hide > -1
-
+        console.log("This is the id: " + id)
           return (
           <PostListItem
-            id={id[0]}
-            key={id[0] + "PostListItem"}
+            id={id}
+            key={id + "PostListItem"}
             hover={handleHover}
             handleOpenClick={props.handleOpenClick}
             handleCloseClick={props.handleCloseClick}

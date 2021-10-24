@@ -106,7 +106,7 @@ export default function QueryListItem(props) {
         <ListItemIcon>
             <IconButton aria-label="add to favorites" onClick={() => props.handleFav(props.id)}>
               {props.fav ? (
-                <FavoriteIcon color="secondary" style={{ fontSize: 20 }} />
+                <FavoriteIcon color="secondary" style={{ fontSize: 20 }} onClick={() => props.handleFav(props.id)} />
               ) : (
                 <FavoriteIcon style={{ fontSize: 20 }} />
               )}

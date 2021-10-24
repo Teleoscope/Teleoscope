@@ -108,7 +108,7 @@ export default function DocSet(props) {
 
   const handleFav = (id) => {
     var temp = [...favs]
-
+    console.log(id);
     // add to favs if not in
     // remove from favs if in
     var i = temp.indexOf(id)
@@ -155,26 +155,34 @@ export default function DocSet(props) {
     setHover(i)
   }
 
-    const genPosts = (ps) => (
-    <div>
-    {ps.map((m, i) =>
-            <StoryCard
-              key={m + "storycard"}
-              postid={m}
-              close={handleClosePost}
-              handleFav={handleFav}
-              fav={favs.indexOf(m) > -1 ? true : false }
-              hover={handleChildHover}
-              zind={i}
-            />
-        )}
-      </div>
-    )
+  const handleIDs = (data) => {
+    ids = data["reddit_ids"];
+    setPosts(ids)
+  }
+    const genPosts = (ps) => {
+      if (!ps) return;
+      console.log("ELSE");
+      (
+        <div>
+          {ps.map((m) =>
+                <StoryCard
+                  key={m + "storycard"}
+                  postid={m}
+                  close={handleClosePost}
+                  handleFav={handleFav}
+                  fav={favs.indexOf(m) > -1 ? true : false }
+                  hover={handleChildHover}
+                  // zind={i} -> if needed put back up beside m
+                />
+            )}
+          </div>
+      )
+    }
   const breakOut = () => {
     console.log(favs)
   }
 
-  var ids = props.docset.ranked_post_ids
+  var ids = posts;//props.docset.ranked_post_ids
   const inArr = (arr, item) => (
     arr.indexOf(item) == -1 ? false : true
   )
@@ -247,6 +255,7 @@ export default function DocSet(props) {
         >
           <SearchBar 
             queries={props.docset.queries}
+            handleIDs={handleIDs}
           />
           <Typography
             className={classes.dividerFullWidth}

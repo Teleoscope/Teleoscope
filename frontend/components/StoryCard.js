@@ -37,6 +37,7 @@ function usePost(postid) {
     `/api/posts/${postid}`,
     fetcher
   );
+  print(data)
   return {
     post: data,
     loading: !error && !data,

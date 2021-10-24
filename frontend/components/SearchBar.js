@@ -1,5 +1,5 @@
 /* eslint-disable no-use-before-define */
-import React from 'react';
+import {React, useState } from 'react';
 import useSWR, { mutate } from "swr";
 
 // material ui
@@ -37,16 +37,18 @@ function useQueries(q) {
   return ret
 }
 
-function useQuery(q) {
+function useQuery(q, shouldSend) {
+  const API_URL = shouldSend ? `http://localhost:3000/api/queries/${q}` : "";
   const { data, error } = useSWR(
-    `/api/queries/?${q}`,
+    API_URL,
     fetcher
   );
-  var ret = {
-    query: data ? data : [{"query":"_none"}],
-    // loading: !error && !data,
-    // error: error,
+  let ret = {
+    queries: data ? data : [{"query":"_none"}],
+    loading: !error && !data,
+    error: error ? error : "",
   };
+  console.log(ret);
   return ret
 }
 
@@ -87,12 +89,20 @@ the logical OR'd term. Likely should be handled not here but on the task server.
 */
 export default function SearchBar(props) {
   const classes = useStyles();
-  const {queries, loading, error} = useQueries()
+  const [shouldSendQuery, setShouldSendQuery] = useState(false);
+  const [query, setQuery] = useState("");
+  const {queries, loading, error} = useQuery(query, shouldSendQuery);
+
   
   const done = (query) => {
-    var ids = queries.map((q) => {return q.query})
-    var i = ids.indexOf(query)
-    return i > -1 ? true : false
+    if (loading) return false;
+
+    console.log("handling ids");
+    props.handleIDs(queries);
+    console.log(shouldSendQuery);
+    // setShouldSendQuery(false);
+    return true;
+
   }
 
   // TODO: add onChange callback here, example code below
@@ -107,16 +117,25 @@ export default function SearchBar(props) {
         // interacts with the parent component
   // }
 
+
+  const handleSubmit = (q) => {
+    console.log(q);
+    if (!q) return;
+    setShouldSendQuery(true);
+    setQuery(q, shouldSendQuery);
+  }
+    
+
   return (
       <Autocomplete
         className={classes.root}
         multiple
         id="tags-filled"
-        options={queries.map((option) => option.query)}
+        options={props.queries.map((option) => "test")}
         defaultValue={props.queries.map((q) => (q))}
         freeSolo
         size="small"
-        // TODO: add onChange here
+        onChange={(e) => handleSubmit(e.target.value)}
         renderTags={(value, getTagProps) =>
           value.map((option, index) => (
             <Chip 
