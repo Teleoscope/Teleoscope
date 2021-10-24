@@ -1,3 +1,4 @@
+from utils import *
 import numbers
 from collections.abc import Iterable
 import sys
@@ -50,29 +51,6 @@ from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
-
-
-def unpacker(cursor, key):
-    for doc in cursor:
-        yield doc[key]
-
-
-def connect():
-    # client = MongoClient('127.0.0.1:27017',
-    #             username=auth.u,
-    #             password=auth.p,
-    #             authSource='aita',
-    #             authMechanism='SCRAM-SHA-256')
-    autht = "authSource=aita&authMechanism='SCRAM-SHA-256'"
-    connect_str = (
-        f'mongodb://'
-        f'{auth.mongodb["username"]}:'
-        f'{auth.mongodb["password"]}@'
-        f'{auth.mongodb["host"]}/?{autht}'
-    )
-    client = MongoClient(connect_str)
-    return client.aita
-
 
 # url: "amqp://myuser:mypassword@localhost:5672/myvhost"
 celery_broker_url = (
@@ -282,67 +260,3 @@ def run_query_init(query_string):
         upsert=True
     )
     return (result, _reddit_ids)
-
-
-# list(mongodb docs) -> list(str)
-def redditids(results):
-    ids = [r["id"] for r in results]
-    return ids
-
-
-# list(mongodb docs) -> list(list(str))
-def preprocess(results):
-    selftext_only = [simple_preprocess(d["selftext"]) for d in results]
-    return selftext_only
-
-
-# str -> query
-def query(s):
-    mdb_query = {"$text": {"$search": s}}
-    return mdb_query
-
-
-# query -> docs
-def find(_query):
-    db = connect()
-    count = db.posts.count(_query)
-    cursor = tqdm(db.posts.find(_query), total=count)
-    results = list(cursor)
-    return results
-
-
-# docs -> dictionary
-def dictionary(docs):
-    _dictionary = Dictionary(docs)
-    return _dictionary
-
-
-# docs, dictionary -> corpus
-def corpus(docs, _dictionary):
-    bow_corpus = [_dictionary.doc2bow(doc) for doc in docs]
-    return bow_corpus
-
-
-# str -> model
-def load(uri):
-    model = api.load(uri)
-    similarity_index = WordEmbeddingSimilarityIndex(model)
-    return similarity_index
-
-
-# model, _dictionary -> sparse term similarity matrix
-def sparseTSM(model, _dictionary):
-    similarity_matrix = SparseTermSimilarityMatrix(model, _dictionary)
-    return similarity_matrix
-
-
-# bow_corpus, sparseTSM, int -> soft cos sim index
-def softCosSim(bow_corpus, similarity_matrix, n=100):
-    scs = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=n)
-    return scs
-
-
-# dictionary, str -> bow
-def bow(_dictionary, doc):
-    ret = _dictionary.doc2bow(doc.lower().split())
-    return ret
