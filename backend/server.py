@@ -9,31 +9,23 @@ from aiohttp_middlewares import (
     cors_middleware,
     error_middleware,
 )
-from utils import find, query
 
-app = web.Application(
-    middlewares=[
-        cors_middleware(
-            origins=[re.compile(r"^https?\:\/\/localhost")]
-        )
-    ]
-)
 
 async def handle_query(query):
     print(f'Building query: {query}...')
-    ids = tasks.run_query_init(query_string=query)
-    posts = []
-    
-    mdb_query = {"id": {"$in": ids}}
-    posts = find(mdb_query)
-    for p in posts:
-        del p["_id"]
-
-    return {
-        "reddit_ids": ids,
-        "posts": posts
+    f = tasks.run_query_init.signature(
+        args=(),
+        kwargs={"query_string": query},
+    )
+    t = tasks.query_scs.signature(
+        args=(),
+        kwargs={"query_string": query, "doc_string": query},
+    )
+    res = chain(f, t)()
+    data = {
+        "query": query,
     }
-  
+    return data
 
 
 async def handle_sims(query, ids):
@@ -74,20 +66,17 @@ async def handle(req):
     return web.json_response(data)
 
 
-async def get_post(req):
-    query_string = req.query_string
-    reddit_id = query_string.split("=")[1]
-    mdb_query = {"id": reddit_id}
-    post = find(mdb_query)    
-    del post[0]["_id"]
-    print(post[0])
-    return web.json_response(post[0])
-
+app = web.Application(
+    middlewares=[
+        cors_middleware(
+            origins=[re.compile(r"^https?\:\/\/localhost")]
+        )
+    ]
+)
 
 app.add_routes([
-    web.get('/', handle),           # query_string -> [reddit_ids]
-    web.get('/post/', get_post),    # reddit_id -> {post}
-    web.get('/query/{query}', handle_query),
+    web.get('/', handle),
+    # web.get('/query/{query}', handle_query),
     # web.get('/sims/{sims}', handle_sims)
 ])
 

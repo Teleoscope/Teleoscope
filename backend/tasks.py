@@ -1,4 +1,3 @@
-from utils import *
 import numbers
 from collections.abc import Iterable
 import sys
@@ -52,6 +51,27 @@ from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
+
+def unpacker(cursor, key):
+    for doc in cursor:
+        yield doc[key]
+
+
+def connect():
+    # client = MongoClient('127.0.0.1:27017',
+    #             username=auth.u,
+    #             password=auth.p,
+    #             authSource='aita',
+    #             authMechanism='SCRAM-SHA-256')
+    autht = "authSource=aita&authMechanism='SCRAM-SHA-256'"
+    connect_str = (
+        f'mongodb://'
+        f'{auth.mongodb["username"]}:'
+        f'{auth.mongodb["password"]}@'
+        f'{auth.mongodb["host"]}/?{autht}'
+    )
+    client = MongoClient(connect_str)
+    return client.aita
 
 
 # url: "amqp://myuser:mypassword@localhost:5672/myvhost"
@@ -150,9 +170,9 @@ def query_scs(*args, query_string, doc_string):
     mdb_query = query(query_string)
     results = db.queries.find_one(mdb_query)
 
-    scs_oid = safeget(results, "scs_oid")
-    dict_oid = safeget(results, "dict_oid")
-    reddit_ids = safeget(results, "reddit_ids")
+    scs_oid = results["scs_oid"]
+    dict_oid = results["dict_oid"]
+    reddit_ids = results["reddit_ids"]
 
     _scs = get_gridfs("softCosineSimilarityIndices", scs_oid)
     _dict = get_gridfs("dictionaries", dict_oid)
@@ -174,16 +194,43 @@ def query_scs(*args, query_string, doc_string):
     return (result, ranked_post_ids)
 
 
+# _dictionary, str -> list of docs
+def query_scs_helper(scs, _dictionary, s):
+    processed_query = bow(_dictionary, s)
+    print(processed_query)
+    sims = scs[processed_query]
+    print(sims)
+    return sims
+
+
+def get_gridfs(fs_db, oid):
+    db = connect()
+    fs = gridfs.GridFS(db, fs_db)
+    out = fs.get(oid)
+    data = pickle.loads(out.read())
+    return data
+
+
+def put_gridfs(m, fs_db, query, ext):
+    db = connect()
+    filename = f"{fs_db}/{query}.{ext}"
+    fs = gridfs.GridFS(db, fs_db)
+    f = pickle.dumps(m)
+    uid = fs.put(f, filename=filename)
+    return uid
+
+
 @app.task
 def run_query_init(query_string):
     db = connect()
+
     check = db.queries.find_one(query(query_string))
-    if check and "reddit_ids" in check:
-        return safeget(check, "reddit_ids")
+    if check:
+        return (check, check["reddit_ids"])
     else:
         # insert a mostly blank doc to reserve the query
         #  string for a single processing task
-        db.queries.insert_one({"query": query_string, "reddit_ids": []})
+        db.queries.insert_one({"query": query_string})
 
 
     _query = query(query_string)        # properly formatted query string
@@ -192,78 +239,110 @@ def run_query_init(query_string):
     _reddit_ids = redditids(_find)      # ordered list of reddit ids in
                                         # query used to index corpus
                                         # back to original posts
+
     _dict = dictionary(_ppcorpus)        # gensim Dictionary
     _corpus = corpus(_ppcorpus, _dict)   # bow corpus
-
-    # _m = load("glove-wiki-gigaword-50/glove-wiki-gigaword-50.gz")  # load text model
-    # _tsm = sparseTSM(_m, _dict)          # create term similarity matrix
-    # _scs = softCosSim(_corpus, _tsm)     # create soft cosine similarity index
+    _m = load("glove-wiki-gigaword-50")  # load text model
+    _tsm = sparseTSM(_m, _dict)          # create term similarity matrix
+    _scs = softCosSim(_corpus, _tsm)     # create soft cosine similarity index
 
     mdb_upload = {
-        "query": query_string, 
-        "reddit_ids":_reddit_ids,
+        "query": query_string,
+        "reddit_ids": _reddit_ids,
+        "ppcorpus": put_gridfs(
+            _ppcorpus,
+            "pp_corpora",
+            query_string,
+            "pp_corpus"),
+        "corpus": put_gridfs(
+            _corpus,
+            "corpora",
+            query_string,
+            "corpus"),
+        "dict_oid": put_gridfs(
+            _dict,
+            "dictionaries",
+            query_string,
+            "dict"),
+        "tsm_oid": put_gridfs(
+            _tsm,
+            "sparseTermSimilarityMatrices",
+            query_string,
+            "tsm"),
+        "scs_oid": put_gridfs(
+            _scs,
+            "softCosineSimilarityIndices",
+            query_string,
+            "scs")
     }
-    print(mdb_upload)
-    # mdb_upload = {
-    #     "query": query_string,
-    #     "reddit_ids": _reddit_ids,
-    #     "ppcorpus": put_gridfs(
-    #         _ppcorpus,
-    #         "pp_corpora",
-    #         query_string,
-    #         "pp_corpus"),
-    #     "corpus": put_gridfs(
-    #         _corpus,
-    #         "corpora",
-    #         query_string,
-    #         "corpus"),
-    #     "dict_oid": put_gridfs(
-    #         _dict,
-    #         "dictionaries",
-    #         query_string,
-    #         "dict"),
-    #     "tsm_oid": put_gridfs(
-    #         _tsm,
-    #         "sparseTermSimilarityMatrices",
-    #         query_string,
-    #         "tsm"),
-    #     "scs_oid": put_gridfs(
-    #         _scs,
-    #         "softCosineSimilarityIndices",
-    #         query_string,
-    #         "scs")
-    # }
 
-    db.queries.update_one(
+    result = db.queries.update_one(
         {"query": query_string},
         {"$set": mdb_upload},
         upsert=True
     )
-    return _reddit_ids
+    return (result, _reddit_ids)
 
 
-# # _dictionary, str -> list of docs
-# def query_scs_helper(scs, _dictionary, s):
-#     processed_query = bow(_dictionary, s)
-#     print(processed_query)
-#     sims = scs[processed_query]
-#     print(sims)
-#     return sims
+# list(mongodb docs) -> list(str)
+def redditids(results):
+    ids = [r["id"] for r in results]
+    return ids
 
 
-# def get_gridfs(fs_db, oid):
-#     db = connect()
-#     fs = gridfs.GridFS(db, fs_db)
-#     out = fs.get(oid)
-#     data = pickle.loads(out.read())
-#     return data
+# list(mongodb docs) -> list(list(str))
+def preprocess(results):
+    selftext_only = [simple_preprocess(d["selftext"]) for d in results]
+    return selftext_only
 
 
-# def put_gridfs(m, fs_db, query, ext):
-#     db = connect()
-#     filename = f"{fs_db}/{query}.{ext}"
-#     fs = gridfs.GridFS(db, fs_db)
-#     f = pickle.dumps(m)
-#     uid = fs.put(f, filename=filename)
-#     return uid
+# str -> query
+def query(s):
+    mdb_query = {"$text": {"$search": s}}
+    return mdb_query
 
+
+# query -> docs
+def find(_query):
+    db = connect()
+    count = db.posts.count(_query)
+    cursor = tqdm(db.posts.find(_query), total=count)
+    results = list(cursor)
+    return results
+
+
+# docs -> dictionary
+def dictionary(docs):
+    _dictionary = Dictionary(docs)
+    return _dictionary
+
+
+# docs, dictionary -> corpus
+def corpus(docs, _dictionary):
+    bow_corpus = [_dictionary.doc2bow(doc) for doc in docs]
+    return bow_corpus
+
+
+# str -> model
+def load(uri):
+    model = api.load(uri)
+    similarity_index = WordEmbeddingSimilarityIndex(model)
+    return similarity_index
+
+
+# model, _dictionary -> sparse term similarity matrix
+def sparseTSM(model, _dictionary):
+    similarity_matrix = SparseTermSimilarityMatrix(model, _dictionary)
+    return similarity_matrix
+
+
+# bow_corpus, sparseTSM, int -> soft cos sim index
+def softCosSim(bow_corpus, similarity_matrix, n=100):
+    scs = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=n)
+    return scs
+
+
+# dictionary, str -> bow
+def bow(_dictionary, doc):
+    ret = _dictionary.doc2bow(doc.lower().split())
+    return ret
