@@ -24,6 +24,7 @@ async def handle_query(query):
     res = chain(f, t)()
     data = {
         "query": query,
+	"status": 200,
     }
     return data
 
@@ -38,6 +39,7 @@ async def handle_sims(query, ids):
     data = {
         "query": query,
         "ids": ids,
+	"status": 200,
     }
     return data
 
@@ -56,7 +58,7 @@ def parseargs(qs):
 async def handle(req):
     qs = req.query_string
     print(f'Received query string: {qs}')
-    data = {"bad": "format"}
+    data = {"status": 400}
     args = parseargs(qs)
     if args:
         if args[0] and args[1]:
