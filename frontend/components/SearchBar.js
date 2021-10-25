@@ -38,6 +38,7 @@ function useQueries(q) {
 }
 
 function useQuery(q, shouldSend) {
+  console.log("Line 41");
   const API_URL = shouldSend ? `http://localhost:3000/api/queries/${q}` : "";
   const { data, error } = useSWR(
     API_URL,
@@ -48,8 +49,24 @@ function useQuery(q, shouldSend) {
     loading: !error && !data,
     error: error ? error : "",
   };
-  console.log(ret);
   return ret
+}
+
+const makeQuery = (q, shouldSend) => {
+  console.log("making query to backend");
+  const API_URL = shouldSend ? `http://localhost:8080/?query=${q}&sims`;
+  const { data, error } = useSWR(
+    API_URL, 
+    fetcher
+  );
+  if (data != null && "bad" in data) {
+    return 0;
+  }
+
+  let ret = {
+      queries: data ? data : [{"query": "_none"}]
+  }
+
 }
 
 // TODO: define async callback for the task/query server
@@ -100,9 +117,7 @@ export default function SearchBar(props) {
     console.log("handling ids");
     props.handleIDs(queries);
     console.log(shouldSendQuery);
-    // setShouldSendQuery(false);
     return true;
-
   }
 
   // TODO: add onChange callback here, example code below
