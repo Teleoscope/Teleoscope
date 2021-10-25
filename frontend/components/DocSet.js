@@ -156,7 +156,7 @@ export default function DocSet(props) {
   }
 
   const handleIDs = (data) => {
-    ids = data["reddit_ids"];
+    ids = data["ranked_post_ids"];
     setPosts(ids)
   }
     const genPosts = (ps) => {
@@ -164,15 +164,15 @@ export default function DocSet(props) {
       console.log("ELSE");
       (
         <div>
-          {ps.map((m) =>
+          {ps.map((id, similarity) =>
                 <StoryCard
-                  key={m + "storycard"}
-                  postid={m}
+                  key={id + "storycard"}
+                  postid={id}
                   close={handleClosePost}
                   handleFav={handleFav}
-                  fav={favs.indexOf(m) > -1 ? true : false }
+                  fav={favs.indexOf(id) > -1 ? true : false }
                   hover={handleChildHover}
-                  // zind={i} -> if needed put back up beside m
+                  zind={similarity}
                 />
             )}
           </div>

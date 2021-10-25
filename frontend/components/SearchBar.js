@@ -54,18 +54,17 @@ function useQuery(q, shouldSend) {
 
 const makeQuery = (q, shouldSend) => {
   console.log("making query to backend");
-  const API_URL = shouldSend ? `http://localhost:8080/?query=${q}&sims`;
+  const API_URL = shouldSend ? `http://localhost:8080/?query=${q}&sims` : "";
   const { data, error } = useSWR(
     API_URL, 
     fetcher
   );
-  if (data != null && "bad" in data) {
-    return 0;
-  }
 
   let ret = {
-      queries: data ? data : [{"query": "_none"}]
-  }
+      json: data ? data : {},
+      error: error ? error : "",
+  }; 
+  return ret; 
 
 }
 
@@ -109,10 +108,12 @@ export default function SearchBar(props) {
   const [shouldSendQuery, setShouldSendQuery] = useState(false);
   const [query, setQuery] = useState("");
   const {queries, loading, error} = useQuery(query, shouldSendQuery);
+  const {response, query_server_error} = makeQuery(query, shouldSendQuery); 
 
   
   const done = (query) => {
     if (loading) return false;
+    if (response != null && response["status"] == 400) return true; // TODO: error handling? This should always work (as in a good query) though.. 
 
     console.log("handling ids");
     props.handleIDs(queries);
