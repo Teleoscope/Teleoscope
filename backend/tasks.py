@@ -260,3 +260,8 @@ def run_query_init(query_string):
         upsert=True
     )
     return (result, _reddit_ids)
+
+@app.task
+def nlp(*args, query_string: str, post_id: str, status: int):
+    print(f"NLP: {query_string}, {post_id}, {status}")
+    return 200
