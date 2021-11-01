@@ -293,5 +293,7 @@ def nlp(*args, query_string: str, post_id: str, status: int):
     ret.sort(key=lambda x:x[1], reverse=True) # sort by similarity score, high to low
     db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : ret}}) # update query with new ranked post ids
 
+
+    # TODO: Store updated q' vector 
     print(f"NLP: {query_string}, {post_id}, {status}")
     return 200
