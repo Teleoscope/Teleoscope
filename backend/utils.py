@@ -166,8 +166,8 @@ def safeget(mp, *keys):
             return None
     return mp
 
-
 def update_embedding(q_vector, feedback_vector, feedback):
     SENSITIVITY = 0.75
     new_q = (1 - feedback*SENSITIVITY)*q_vector + feedback*SENSITIVITY*feedback_vector
     return new_q
+
