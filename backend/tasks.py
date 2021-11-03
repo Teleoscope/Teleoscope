@@ -46,7 +46,7 @@ from gensim.test.utils import datapath, get_tmpfile
 from gensim.models import Word2Vec
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 
-import tensorflow_hub as hub
+# import tensorflow_hub as hub
 
 # Thanks to http://brandonrose.org/clustering!
 # and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32
@@ -265,33 +265,33 @@ def run_query_init(query_string):
 
 @app.task
 def nlp(*args, query_string: str, post_id: str, status: int):
-    db = connect()
-    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4") # load NLP model
-    qvector = embed([query_string]).numpy()
+    # db = connect()
+    # embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4") # load NLP model
+    # qvector = embed([query_string]).numpy()
 
-    rids = db.queries.find_one({"query": query_string}, projection={'reddit_ids':1})['reddit_ids'] # get reddit ids of posts currently displayed for given query 
-    feedbackPost = db.clean.posts.find_one({"id": post_id}, projection={'vector':1}) # get vector of post which was liked/disliked
-    feedbackVector = np.array(feedbackPost['vector'])
-    qprime = update_embedding(qvector, feedbackVector, status) # move qvector towards/away from feedbackVector
+    # rids = db.queries.find_one({"query": query_string}, projection={'reddit_ids':1})['reddit_ids'] # get reddit ids of posts currently displayed for given query 
+    # feedbackPost = db.clean.posts.find_one({"id": post_id}, projection={'vector':1}) # get vector of post which was liked/disliked
+    # feedbackVector = np.array(feedbackPost['vector'])
+    # qprime = update_embedding(qvector, feedbackVector, status) # move qvector towards/away from feedbackVector
     
-    postSubset = []
-    # get all posts that are currently displayed
-    for p in db.clean.posts.find({'id': {'$in':rids}}, projection={'id':1, 'vector':1}):
-        postSubset.append(p)
+    # postSubset = []
+    # # get all posts that are currently displayed
+    # for p in db.clean.posts.find({'id': {'$in':rids}}, projection={'id':1, 'vector':1}):
+    #     postSubset.append(p)
 
-    # get vectors of all posts currently displayed
-    vectors = np.array([x['vector'] for x in postSubset])
+    # # get vectors of all posts currently displayed
+    # vectors = np.array([x['vector'] for x in postSubset])
 
-    scores = qprime.dot(vectors.T).flatten() # get similarity scores for all those posts
+    # scores = qprime.dot(vectors.T).flatten() # get similarity scores for all those posts
 
-    ret = [] # final list of posts to be displayed, ordered
-    for i in range(len(postSubset)):
-        id_ = postSubset[i]['id']
-        score = scores[i]
-        ret.append((id_,score))
+    # ret = [] # final list of posts to be displayed, ordered
+    # for i in range(len(postSubset)):
+    #     id_ = postSubset[i]['id']
+    #     score = scores[i]
+    #     ret.append((id_,score))
 
-    ret.sort(key=lambda x:x[1], reverse=True) # sort by similarity score, high to low
-    db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : ret}}) # update query with new ranked post ids
+    # ret.sort(key=lambda x:x[1], reverse=True) # sort by similarity score, high to low
+    # db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : ret}}) # update query with new ranked post ids
 
 
     # TODO: Store updated q' vector 
