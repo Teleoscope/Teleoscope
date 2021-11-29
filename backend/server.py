@@ -24,7 +24,7 @@ async def handle_query(query):
     res = chain(f, t)()
     data = {
         "query": query,
-        "status": 200,
+	"status": 200,
     }
     return data
 
@@ -39,7 +39,7 @@ async def handle_sims(query, ids):
     data = {
         "query": query,
         "ids": ids,
-        "status": 200,
+	"status": 200,
     }
     return data
 
@@ -68,6 +68,32 @@ async def handle(req):
     return web.json_response(data)
 
 
+async def user_interaction(req):
+    qs = req.query_string
+    [q, _id, status] = [s.split("=")[1] for s in qs.split("&")]
+    task = tasks.nlp.signature(
+        args=(), 
+        kwargs={"query_string": q, "post_id":_id, "status": int(status)}
+    )
+    res = task.apply_async()
+    data = {"made it": 20000}
+    return web.json_response(data)
+    # f = tasks.run_query_init.signature(
+    #     args=(),
+    #     kwargs={"query_string": query},
+    # )
+    # t = tasks.query_scs.signature(
+    #     args=(),
+    #     kwargs={"query_string": query, "doc_string": query},
+    # )
+    # res = chain(f, t)()
+    # data = {
+    #     "query": query,
+	# "status": 200,
+    # }
+    # return data
+
+
 app = web.Application(
     middlewares=[
         cors_middleware(
@@ -78,6 +104,7 @@ app = web.Application(
 
 app.add_routes([
     web.get('/', handle),
+    web.get('/user-interaction/', user_interaction)
     # web.get('/query/{query}', handle_query),
     # web.get('/sims/{sims}', handle_sims)
 ])

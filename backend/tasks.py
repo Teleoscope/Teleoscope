@@ -1,3 +1,4 @@
+from utils import *
 import numbers
 from collections.abc import Iterable
 import sys
@@ -45,34 +46,13 @@ from gensim.test.utils import datapath, get_tmpfile
 from gensim.models import Word2Vec
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 
+import tensorflow_hub as hub
+
 # Thanks to http://brandonrose.org/clustering!
 # and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
-
-
-def unpacker(cursor, key):
-    for doc in cursor:
-        yield doc[key]
-
-
-def connect():
-    # client = MongoClient('127.0.0.1:27017',
-    #             username=auth.u,
-    #             password=auth.p,
-    #             authSource='aita',
-    #             authMechanism='SCRAM-SHA-256')
-    autht = "authSource=aita&authMechanism='SCRAM-SHA-256'"
-    connect_str = (
-        f'mongodb://'
-        f'{auth.mongodb["username"]}:'
-        f'{auth.mongodb["password"]}@'
-        f'{auth.mongodb["host"]}/?{autht}'
-    )
-    client = MongoClient(connect_str)
-    return client.aita
-
 
 # url: "amqp://myuser:mypassword@localhost:5672/myvhost"
 celery_broker_url = (
@@ -283,66 +263,35 @@ def run_query_init(query_string):
     )
     return (result, _reddit_ids)
 
-
-# list(mongodb docs) -> list(str)
-def redditids(results):
-    ids = [r["id"] for r in results]
-    return ids
-
-
-# list(mongodb docs) -> list(list(str))
-def preprocess(results):
-    selftext_only = [simple_preprocess(d["selftext"]) for d in results]
-    return selftext_only
-
-
-# str -> query
-def query(s):
-    mdb_query = {"$text": {"$search": s}}
-    return mdb_query
-
-
-# query -> docs
-def find(_query):
+@app.task
+def nlp(*args, query_string: str, post_id: str, status: int):
     db = connect()
-    count = db.posts.count(_query)
-    cursor = tqdm(db.posts.find(_query), total=count)
-    results = list(cursor)
-    return results
+    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4") # load NLP model
+    qvector = embed([query_string]).numpy()
 
+    rids = db.queries.find_one({"query": query_string}, projection={'reddit_ids':1})['reddit_ids'] # get reddit ids of posts currently displayed for given query 
+    feedbackPost = db.clean.posts.find_one({"id": post_id}, projection={'vector':1}) # get vector of post which was liked/disliked
+    feedbackVector = np.array(feedbackPost['vector'])
+    qprime = update_embedding(qvector, feedbackVector, status) # move qvector towards/away from feedbackVector
+    
+    postSubset = []
+    # get all posts that are currently displayed
+    for p in db.clean.posts.find({'id': {'$in':rids}}, projection={'id':1, 'vector':1}):
+        postSubset.append(p)
 
-# docs -> dictionary
-def dictionary(docs):
-    _dictionary = Dictionary(docs)
-    return _dictionary
+    # get vectors of all posts currently displayed
+    vectors = np.array([x['vector'] for x in postSubset])
 
+    scores = qprime.dot(vectors.T).flatten() # get similarity scores for all those posts
 
-# docs, dictionary -> corpus
-def corpus(docs, _dictionary):
-    bow_corpus = [_dictionary.doc2bow(doc) for doc in docs]
-    return bow_corpus
+    ret = [] # final list of posts to be displayed, ordered
+    for i in range(len(postSubset)):
+        id_ = postSubset[i]['id']
+        score = scores[i]
+        ret.append((id_,score))
 
+    ret.sort(key=lambda x:x[1], reverse=True) # sort by similarity score, high to low
+    db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : ret}}) # update query with new ranked post ids
 
-# str -> model
-def load(uri):
-    model = api.load(uri)
-    similarity_index = WordEmbeddingSimilarityIndex(model)
-    return similarity_index
-
-
-# model, _dictionary -> sparse term similarity matrix
-def sparseTSM(model, _dictionary):
-    similarity_matrix = SparseTermSimilarityMatrix(model, _dictionary)
-    return similarity_matrix
-
-
-# bow_corpus, sparseTSM, int -> soft cos sim index
-def softCosSim(bow_corpus, similarity_matrix, n=100):
-    scs = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=n)
-    return scs
-
-
-# dictionary, str -> bow
-def bow(_dictionary, doc):
-    ret = _dictionary.doc2bow(doc.lower().split())
-    return ret
+    print(f"NLP: {query_string}, {post_id}, {status}")
+    return 200
