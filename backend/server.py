@@ -10,6 +10,8 @@ from aiohttp_middlewares import (
     error_middleware,
 )
 
+logging.basicConfig(level=logging.INFO)
+
 
 async def handle_query(query):
     logging.info(f"Building query: {query}...")
