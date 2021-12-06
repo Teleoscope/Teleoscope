@@ -99,7 +99,7 @@ def push(query_string, field, values):
 
 @app.task
 def query_scs_by_ids(*args, query_string, ids_string):
-    print(ids_string)
+    logging.info(f"Parameter ids_string: {ids_string}")
     db = connect()
     query_results = db.queries.find_one(query(query_string))
 
@@ -177,9 +177,9 @@ def query_scs(*args, query_string, doc_string):
 # _dictionary, str -> list of docs
 def query_scs_helper(scs, _dictionary, s):
     processed_query = bow(_dictionary, s)
-    print(processed_query)
+    logging.info(f"processed query: {processed_query}")
     sims = scs[processed_query]
-    print(sims)
+    logging.info(f"sims: {sims}")
     return sims
 
 
@@ -293,5 +293,4 @@ def nlp(*args, query_string: str, post_id: str, status: int):
     ret.sort(key=lambda x:x[1], reverse=True) # sort by similarity score, high to low
     db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : ret}}) # update query with new ranked post ids
 
-    print(f"NLP: {query_string}, {post_id}, {status}")
     return 200
