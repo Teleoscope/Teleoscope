@@ -5,11 +5,12 @@ This project is a UI for filtering down a large number of documents for eventual
 
 ## Backend Installation
 
-First, we highly recommend setting up a virtual environment to manage your python packages. This tutorial assumes that you have Anaconda installed (https://www.anaconda.com/products/individual)[https://www.anaconda.com/products/individual]. Set up a new virtual environment and activate it:
+First, we highly recommend setting up a virtual environment to manage your python packages. This tutorial assumes that you have Anaconda installed (https://www.anaconda.com/products/individual)[https://www.anaconda.com/products/individual]. Set up a new virtual environment and activate it. Then install Python 3.8.5 for your new virtual environment.
 
 ```
 conda create --name teleoscope
 conda activate teleoscope
+conda install -c anaconda python=3.8
 ```
 
 Then clone this repository and navigate to the backend folder.
