@@ -27,6 +27,19 @@ pip3 install gensim tensorflow tensorflow_hub aiohttp_middlewares
 conda install tqdm pymongo numpy celery aiohttp
 ```
 
+Test your installation by opening up a python interactive shell, then importing the backend scripts.
+
+```
+$ python
+Python 3.8.12 (default, Oct 12 2021, 06:23:56)
+[Clang 10.0.0 ] :: Anaconda, Inc. on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import tasks
+>>> import server
+>>> import utils
+>>>
+```
+
 # Version 0.3.0
 This version is now deployable on Azure servers. As such, it comes with a new install script. Only tested on Ubuntu 20.04 so far. Requires sudo privileges.
 
