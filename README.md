@@ -5,7 +5,7 @@ This project is a UI for filtering down a large number of documents for eventual
 
 ## Backend Installation
 
-First, we highly recommend setting up a virtual environment to manage your python packages. This tutorial assumes that you have Anaconda installed (https://www.anaconda.com/products/individual)[https://www.anaconda.com/products/individual]. Set up a new virtual environment and activate it. Then install Python 3.8 for your new virtual environment.
+First, we highly recommend setting up a virtual environment to manage your python packages. This tutorial assumes that you have Anaconda installed (https://www.anaconda.com/products/individual). Set up a new virtual environment and activate it. Then install Python 3.8 for your new virtual environment.
 
 ```
 conda create --name teleoscope
@@ -47,7 +47,7 @@ If you see this problem:
 [1]    69853 illegal hardware instruction  python
 ```
 
-Then you'll need to download the tensorflow wheel here: (https://drive.google.com/drive/folders/1oSipZLnoeQB0Awz8U68KYeCPsULy_dQ7)[https://drive.google.com/drive/folders/1oSipZLnoeQB0Awz8U68KYeCPsULy_dQ7]
+Then you'll need to download the tensorflow wheel here: https://drive.google.com/drive/folders/1oSipZLnoeQB0Awz8U68KYeCPsULy_dQ7
 
 then run `pip3 install /path/to/downloaded/whl`.
 
