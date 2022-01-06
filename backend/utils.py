@@ -109,7 +109,6 @@ def corpus(docs, _dictionary):
 # str -> model
 def load(uri):
     model = api.load(uri)
-    print("loaded")
     similarity_index = WordEmbeddingSimilarityIndex(model)
     return similarity_index
 
