@@ -19,8 +19,19 @@ git clone https://github.com/Teleoscope/Teleoscope.git
 cd Teleoscope/backend
 ```
 
+Install the backend requirements. If you're not using conda, you can replace "conda install" with "pip3 install".
 
+```
+conda install tqdm
+conda install pymongo
+conda install numpy
+conda install celery
+conda install aiohttp
 
+pip3 install gensim
+pip3 install tensorflow_hub
+pip3 install aiohttp_middlewares
+```
 
 
 
