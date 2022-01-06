@@ -23,19 +23,9 @@ cd Teleoscope/backend
 Install the backend requirements. If you're not using conda, you can replace "conda install" with "pip3 install".
 
 ```
-conda install tqdm
-conda install pymongo
-conda install numpy
-conda install celery
-conda install aiohttp
-
-pip3 install gensim
-pip3 install tensorflow
-pip3 install tensorflow_hub
-pip3 install aiohttp_middlewares
+pip3 install gensim tensorflow tensorflow_hub aiohttp_middlewares
+conda install tqdm pymongo numpy celery aiohttp
 ```
-
-
 
 # Version 0.3.0
 This version is now deployable on Azure servers. As such, it comes with a new install script. Only tested on Ubuntu 20.04 so far. Requires sudo privileges.
