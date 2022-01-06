@@ -2,6 +2,28 @@
 
 This project is a UI for filtering down a large number of documents for eventual qualitative analysis. It is being purpose-built for looking through the 600k+ posts on Reddit's AITA forum to extract information on the norms and expectations regarding digital privacy behaviours. This README has two purposes: (1) like a normal readme, explain how to run the code; and (2) to document the building process for eventual analysis on the building process itself.
 
+
+## Installation
+
+First, we highly recommend setting up a virtual environment to manage your python packages. This tutorial assumes that you have Anaconda installed (https://www.anaconda.com/products/individual)[https://www.anaconda.com/products/individual]. Set up a new virtual environment and activate it:
+
+```
+conda create --name teleoscope
+conda activate teleoscope
+```
+
+Then clone this repository and navigate to the backend folder.
+
+```
+git clone https://github.com/Teleoscope/Teleoscope.git
+cd Teleoscope/backend
+```
+
+
+
+
+
+
 # Version 0.3.0
 This version is now deployable on Azure servers. As such, it comes with a new install script. Only tested on Ubuntu 20.04 so far. Requires sudo privileges.
 
