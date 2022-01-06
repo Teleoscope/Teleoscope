@@ -29,6 +29,7 @@ conda install celery
 conda install aiohttp
 
 pip3 install gensim
+pip3 install tensorflow
 pip3 install tensorflow_hub
 pip3 install aiohttp_middlewares
 ```
