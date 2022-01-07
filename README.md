@@ -60,6 +60,53 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> import install_test
 ```
 
+## SSH and Login
+
+### Setting up the SSH tunnel
+SSH (Secure Shell) is a networking protocol that allows you to connect a port on your local machine to a remote machine. Any data you send through such an SSH tunnel is encrypted and secure. We need an SSH connection to the leap machine to securely access the MongoDB database instance running on it.
+
+If you open a Terminal, you will be in your (i.e., the user’s) home directory. You can use `ls -a` to see all visible and hidden folders. You may already have a .ssh folder and a public-private-key pair. If not, create keys by running `ssh-keygen`. If you type `ls ~/.ssh` you should now see three files: `id_rsa` for your private key, `id_rsa.pub` for your public key and `config` for the configuration file (if you do not see a config file you can create one with `touch ~/.ssh/config`).
+
+You should now be able to connect to the leap machine with your CWL password.
+
+```
+ssh -i ~/.ssh/id_rsa -J <your CWL username>@remote.students.cs.ubc.ca <your leap machine username>@<IP address of leap server>
+```
+
+If you want, you can store your login credentials in thew config file. 
+
+If you haven't installed a text editor yet, first install nano (or another command line text editor of your choice) with `sudo apt install nano`. You can find instructions on how to use nano here: https://linuxize.com/post/how-to-use-nano-text-editor/. Add the following to your config file using `sudo nano ~/.ssh/config`:
+
+```
+Host jump-host
+    User <your CWL username>
+    HostName remote.cs.ubc.ca
+    IdentityFile ~/.ssh/id_rsa
+    Port 22
+
+Host leap-server
+    User <your leap machine username>
+    Port 22
+    IdentityFile ~/.ssh/id_rsa
+    HostName <IP address of leap server>
+    ProxyJump <your CWL username>@jump-host
+
+    # MongoBD forward
+    Localforward 3307 <IP address of leap server>:27017
+    # RabbitMQ remote python/celery connection
+    Localforward 3308 <IP address of leap server>:5672
+    # RabbitMQ STOMP connection
+    Localforward 3309 <IP address of leap server>:61613
+    # RabbitMQ Admin panel
+    Localforward 3310 <IP address of leap server>:15672
+    # RabbitMQ WebSTOMP connection
+    Localforward 3311 <IP address of leap server>:15674
+```
+
+If you don’t want to have to enter your password every time, distribute your public ssh key onto the jump host and the leap server using `ssh-copy-id -i ~/.ssh/id_rsa.pub jump-host` and `ssh-copy-id -i ~/.ssh/id_rsa.pub leap-server`.
+
+You should now be able to connect to the leap server by running `ssh leap-server` in your Terminal.
+
 
 # Version 0.3.0
 This version is now deployable on Azure servers. As such, it comes with a new install script. Only tested on Ubuntu 20.04 so far. Requires sudo privileges.
