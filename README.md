@@ -50,7 +50,7 @@ Then you'll need to download the tensorflow wheel here: https://drive.google.com
 
 then run `pip3 install /path/to/downloaded/whl`.
 
-Last, check your connections by running `test.py`. You'll be first checking whether you're connected to MongoDB,
+If you haven't gotten all of your login credentials sorted out, now is the time to do so. See below or talk to Paul. Once you have your credentials, check your connections by running `test.py`. You'll be first checking whether you're connected to MongoDB, then whether you can send tasks to the RabbitMQ queue and have a worker consume them.
 
 ```
 $ python
