@@ -150,3 +150,5 @@ experiments/auths/
 
 # alam local data storage on PC
 experiments/data/
+
+.idea/*

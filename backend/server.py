@@ -1,14 +1,17 @@
+# builtin modules
 import re
-from aiohttp import web
-import subprocess
-import tasks
-from celery import chain
-from celery import signature
 import logging
+
+# installed modules
+from aiohttp import web
+from celery import chain
 from aiohttp_middlewares import (
     cors_middleware,
     error_middleware,
 )
+
+# local files
+import tasks
 
 logging.basicConfig(level=logging.INFO)
 
