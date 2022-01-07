@@ -1,50 +1,20 @@
-import numbers
-from collections.abc import Iterable
-import sys
-import os
-import io
-import importlib
-import gridfs
-import time
-from tqdm import tqdm
-import scipy.sparse
-import requests
-from celery import Celery
-from pymongo import MongoClient
-import auth
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
-from numpy import asarray
-from numpy import savez_compressed
-import bottleneck as bn
-import random
+# builtin modules
 import pickle
-# from compress_pickle import dump, load
-from itertools import chain
-from joblib import dump, load
-# from sklearn.externals import joblib
-# import warnings filter
-from warnings import simplefilter
-import logging
-from bson.objectid import ObjectId
 
+# installed modules
+from pymongo import MongoClient
+import gridfs
+from tqdm import tqdm
 
 import gensim.downloader as api
 from gensim.corpora import Dictionary
-from gensim import models
-from gensim.models import TfidfModel
 from gensim.similarities import WordEmbeddingSimilarityIndex
 from gensim.similarities import SparseTermSimilarityMatrix
 from gensim.similarities import SoftCosineSimilarity
-from gensim.similarities import Similarity
 from gensim.utils import simple_preprocess
-from gensim.test.utils import datapath, get_tmpfile
-from gensim.models import Word2Vec
-from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 
+# local files
+import auth
 
 def unpacker(cursor, key):
     for doc in cursor:
@@ -57,7 +27,7 @@ def connect():
     #             password=auth.p,
     #             authSource='aita',
     #             authMechanism='SCRAM-SHA-256')
-    autht = "authSource=aita&authMechanism='SCRAM-SHA-256'"
+    autht = "authSource=aita&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
         f'{auth.mongodb["username"]}:'
@@ -66,6 +36,7 @@ def connect():
     )
     client = MongoClient(connect_str)
     return client.aita
+
 
 # list(mongodb docs) -> list(str)
 def redditids(results):
@@ -88,6 +59,7 @@ def query(s):
 # query -> docs
 def find(_query):
     db = connect()
+    print("asdf")
     count = db.posts.count(_query)
     cursor = tqdm(db.posts.find(_query), total=count)
     results = list(cursor)
@@ -114,13 +86,13 @@ def load(uri):
 
 
 # model, _dictionary -> sparse term similarity matrix
-def sparseTSM(model, _dictionary):
+def sparse_tsm(model, _dictionary):
     similarity_matrix = SparseTermSimilarityMatrix(model, _dictionary)
     return similarity_matrix
 
 
 # bow_corpus, sparseTSM, int -> soft cos sim index
-def softCosSim(bow_corpus, similarity_matrix, n=100):
+def soft_cos_sim(bow_corpus, similarity_matrix, n=100):
     scs = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=n)
     return scs
 
@@ -148,9 +120,9 @@ def get_gridfs(fs_db, oid):
     return data
 
 
-def put_gridfs(m, fs_db, query, ext):
+def put_gridfs(m, fs_db, query_gfs, ext):
     db = connect()
-    filename = f"{fs_db}/{query}.{ext}"
+    filename = f"{fs_db}/{query_gfs}.{ext}"
     fs = gridfs.GridFS(db, fs_db)
     f = pickle.dumps(m)
     uid = fs.put(f, filename=filename)
@@ -165,8 +137,8 @@ def safeget(mp, *keys):
             return None
     return mp
 
+
 def update_embedding(q_vector, feedback_vector, feedback):
     SENSITIVITY = 0.75
-    new_q = (1 - feedback*SENSITIVITY)*q_vector + feedback*SENSITIVITY*feedback_vector
+    new_q = (1 - feedback * SENSITIVITY) * q_vector + feedback * SENSITIVITY * feedback_vector
     return new_q
-
