@@ -61,6 +61,11 @@ Type "help", "copyright", "credits" or "license" for more information.
 ```
 
 ## SSH and Login
+### Credentials
+For now, contact Paul to ensure that you have the login credentials for the following:
+- MonogDB
+- Leap machine
+- RabbitMQ queue
 
 ### Setting up the SSH tunnel
 SSH (Secure Shell) is a networking protocol that allows you to connect a port on your local machine to a remote machine. Any data you send through such an SSH tunnel is encrypted and secure. We need an SSH connection to the leap machine to securely access the MongoDB database instance running on it.
