@@ -37,7 +37,6 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> import tasks
 >>> import server
 >>> import utils
->>>
 ```
 
 If you see this problem:
@@ -50,6 +49,17 @@ If you see this problem:
 Then you'll need to download the tensorflow wheel here: https://drive.google.com/drive/folders/1oSipZLnoeQB0Awz8U68KYeCPsULy_dQ7
 
 then run `pip3 install /path/to/downloaded/whl`.
+
+Last, check your database connection by running `test.py`.
+
+```
+$ python
+Python 3.8.12 (default, Oct 12 2021, 06:23:56)
+[Clang 10.0.0 ] :: Anaconda, Inc. on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import test
+```
+
 
 # Version 0.3.0
 This version is now deployable on Azure servers. As such, it comes with a new install script. Only tested on Ubuntu 20.04 so far. Requires sudo privileges.
