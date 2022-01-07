@@ -50,7 +50,7 @@ Then you'll need to download the tensorflow wheel here: https://drive.google.com
 
 then run `pip3 install /path/to/downloaded/whl`.
 
-Last, check your database connection by running `test.py`.
+Last, check your connections by running `test.py`. You'll be first checking whether you're connected to MongoDB,
 
 ```
 $ python
