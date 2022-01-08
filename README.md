@@ -75,7 +75,10 @@ If you open a Terminal, you will be in your (i.e., the user’s) home directory.
 You should now be able to connect to the leap machine with your CWL password.
 
 ```
-ssh -i ~/.ssh/id_rsa -J <your CWL username>@remote.students.cs.ubc.ca <your leap machine username>@<IP address of leap server>
+ssh \
+-i ~/.ssh/id_rsa \
+-J <your CWL username>@remote.students.cs.ubc.ca \
+   <your leap machine username>@<IP address of leap server>
 ```
 
 If you want, you can store your login credentials in thew config file. 
