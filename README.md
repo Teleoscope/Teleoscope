@@ -215,31 +215,7 @@ chmod u+x install.sh
 sudo ./install.sh
 ```
 
-You should be prompted for your MongoDB URI and Database name. Right now, the URI includes password-protected information and should be requested directly from an admin. The DB is `aita`. Similarly, the system requires an SSH tunnel to work, so you'll have to also request that access from an admin. After that, you can add this to your .ssh config:
-
-```
-Host bastion-host
-    User <your username for the bastion host>
-    HostName remote.cs.ubc.ca
-    IdentityFile ~/.ssh/id_rsa
-    Port 22
-
-Host bastion-host-mongo-forward
-    User <your other username>
-    Port 22
-    IdentityFile ~/.ssh/id_rsa
-    HostName <the hostname of the machine behind the host>
-    ProxyJump <your username for the bastion host>@bastion-host
-
-    # MongoBD forward
-    Localforward 3307 <the hostname of the machine behind the host>:27017
-    # RabbitMQ remote python/celery connection
-    Localforward 3308 <the hostname of the machine behind the host>:5672
-```
-
-Last, run `npm run build` to test the install and `ssh bastion-host-mongo-forward` to test the ssh tunnel.
-
+You should be prompted for your MongoDB URI and Database name. Right now, the URI includes password-protected information and should be requested directly from an admin. The DB is `aita`. Similarly, the system requires an SSH tunnel to work, so you'll have to also request that access from an admin. Last, run `npm run build` to test the install and `ssh leap-machine` to test the ssh tunnel.
 
 ## Running
 If you are already connected to the bastion host, leave it running and open another tab and cd to the frontend: `cd /path/to/CorpusExplorer/frontend`. Then run `npm run dev` for live dev builds with hotswapped code, or `npm run start` for production builds.
-
