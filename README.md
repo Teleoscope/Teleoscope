@@ -52,6 +52,65 @@ then run `pip3 install /path/to/downloaded/whl`.
 
 If you haven't gotten all of your login credentials sorted out, now is the time to do so. See below or talk to Paul. Once you have your credentials, check your connections by running `test.py`. You'll be first checking whether you're connected to MongoDB, then whether you can send tasks to the RabbitMQ queue and have a worker consume them.
 
+Login to the LEAP machine by using `ssh leap-server`. You should see something like this:
+
+```
+ssh leap-machine
+Welcome to Ubuntu...<a bunch of login info>
+Last login: Fri Jan  7 18:43:35 2022 from 142.103.15.6
+$
+```
+
+Make sure that the repo is up to date by running the following:
+
+```
+cd Teleoscope
+git fetch
+git status
+```
+
+If you see:
+
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+```
+
+Then you should be good to go! Otherwise, run `git pull`. All conflicts should already be handled by this point so you should be able to fast-forward; if not, ping the #teleoscope channel.
+
+Then you can `cd` to home and run `./run.sh` to start the Celery worker. You should see:
+
+```
+ -------------- celery@leap-518 v5.1.2 (sun-harmonics)
+--- ***** -----
+-- ******* ---- Linux-***
+- *** --- * ---
+- ** ---------- [config]
+- ** ---------- .> app:         tasks:***
+- ** ---------- .> transport:   amqp://****
+- ** ---------- .> results:     rpc://
+- *** --- * --- .> concurrency: 8 (prefork)
+-- ******* ---- .> task events: OFF (enable -E to monitor tasks in this worker)
+--- ***** -----
+ -------------- [queues]
+                .> celery           exchange=celery(direct) key=celery
+
+
+[tasks]
+  . tasks.nlp
+  . tasks.push
+  . tasks.query_scs
+  . tasks.query_scs_by_ids
+  . tasks.run_query_init
+
+[2022-01-08 20:36:42,126: INFO/MainProcess] Connected to amqp://***
+[2022-01-08 20:36:42,145: INFO/MainProcess] mingle: searching for neighbors
+[2022-01-08 20:36:43,194: INFO/MainProcess] mingle: all alone
+[2022-01-08 20:36:43,225: INFO/MainProcess] celery@leap-518 ready.
+```
+
+On your own machine, now run the test script:
+
 ```
 $ python
 Python 3.8.12 (default, Oct 12 2021, 06:23:56)
@@ -59,6 +118,16 @@ Python 3.8.12 (default, Oct 12 2021, 06:23:56)
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import install_test
 ```
+
+On the LEAP machine, there should be a response starting and ending like this:
+
+```
+[2022-01-08 20:38:06,947: INFO/MainProcess] Task tasks.nlp[533cfbf8-b982-4fd0-b60c-137bdd616155] received
+<Processing info...>
+[2022-01-08 20:38:15,619: INFO/ForkPoolWorker-8] Task tasks.nlp[533cfbf8-b982-4fd0-b60c-137bdd616155] succeeded in 8.668645444791764s: 200
+```
+
+If that all worked, success! You may move on to front-end installation.
 
 ## SSH and Login
 
