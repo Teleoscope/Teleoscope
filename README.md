@@ -203,6 +203,8 @@ If you don’t want to have to enter your password every time, distribute your p
 
 You should now be able to connect to the leap server by running `ssh leap-server` in your Terminal.
 
+Now, it would be easiest to test whether your MongoDB credentials are correct by downloading MongoDB Compass (https://www.mongodb.com/products/compass). You will also be able to debug any MongoDB difficulties. You must run `ssh leap-server` continuously in a Terminal to connect to MongoDB.
+
 ## Frontend Installation
 ```
 git clone https://github.com/Teleoscope/Teleoscope.git
