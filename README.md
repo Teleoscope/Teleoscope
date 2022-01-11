@@ -216,4 +216,13 @@ sudo ./install.sh
 You should be prompted for your MongoDB URI and Database name. Right now, the URI includes password-protected information and should be requested directly from an admin. The DB is `aita`. Similarly, the system requires an SSH tunnel to work, so you'll have to also request that access from an admin. Last, run `npm run build` to test the install and `ssh leap-server` to start the ssh tunnel.
 
 ## Running
-If you are already connected to the bastion host, leave it running and open another tab and cd to the frontend: `cd /path/to/CorpusExplorer/frontend`. Then run `npm run dev` for live dev builds with hotswapped code, or `npm run start` for production builds.
+1. Connect to the LEAP Machine by running `ssh leap-server`.
+2. Open a new Terminal tab and do the following:
+
+```
+conda activate teleoscope
+cd /path/to/Teleoscope/backend
+python server.py
+```
+
+3. Open another tab and cd to the frontend: `cd /path/to/Teleoscope/frontend`. Then run `npm run dev` for live dev builds with hotswapped code, or `npm run start` for production builds.
