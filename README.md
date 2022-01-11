@@ -205,8 +205,8 @@ You should now be able to connect to the leap server by running `ssh leap-server
 
 ## Frontend Installation
 ```
-git clone https://github.com/UntitledCorpusExplorer/CorpusExplorer.git
-cd CorpusExplorer
+git clone https://github.com/Teleoscope/Teleoscope.git
+cd Teleoscope
 chmod u+x install.sh
 sudo ./install.sh
 ```
