@@ -8,6 +8,6 @@ export default async (req, res) => {
   const query_meta = await db
     .collection("docsets")
     .find(id);
-  console.log(query_meta);
+  // console.log(query_meta);
   res.json(query_meta);
 };

@@ -98,17 +98,17 @@ export default function DocSet(props) {
   const handleClosePost = (id) => {
 
     var temp = [...posts]
-    console.log("temp1", temp, id)
+    // console.log("temp1", temp, id)
     var i = temp.indexOf(id)
     temp.splice(i, 1)
     setPosts(temp)
     setHover(false)
-    console.log("temp2", temp, i)
+    // console.log("temp2", temp, i)
   }
 
   const handleFav = (id) => {
     var temp = [...favs]
-    console.log(id);
+    // console.log(id);
     // add to favs if not in
     // remove from favs if in
     var i = temp.indexOf(id)
@@ -161,7 +161,7 @@ export default function DocSet(props) {
   }
     const genPosts = (ps) => {
       if (!ps) return;
-      console.log("ELSE");
+      // console.log("ELSE");
       (
         <div>
           {ps.map((id, similarity) =>
@@ -179,7 +179,7 @@ export default function DocSet(props) {
       )
     }
   const breakOut = () => {
-    console.log(favs)
+    // console.log(favs)
   }
 
   var ids = posts;//props.docset.ranked_post_ids

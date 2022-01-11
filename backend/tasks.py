@@ -88,7 +88,7 @@ def query_scs_by_ids(query_string, ids_string):
 
 
 @app.task
-def query_scs(query_string, doc_string):
+def query_scs(query_string="none", doc_string="none"):
     db = utils.connect()
 
     mdb_query = utils.query(query_string)
