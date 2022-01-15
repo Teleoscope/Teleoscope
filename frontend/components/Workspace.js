@@ -25,21 +25,9 @@ function useDocSets(q) {
 
 export default function Workspace(props) {
   
-  const [favs, setFavs] = useState({})
   const [stagedSets, setStagedSets] = useState([])
   const {databaseDocSets, loading, error} = useDocSets()
   let client
-
-  const globalFav = (query, favlist) => {
-    var temp = {...favs}
-    temp[query] = favlist
-    setFavs(temp)
-  }
-
-  const resolveFavs = () => {
-    var merged = [].concat.apply([], Object.values(favs));
-    return merged
-  }
 
   const docsetlist = () => {
     var arr = databaseDocSets
