@@ -21,6 +21,9 @@ import List from '@material-ui/core/List';
 
 import PostListItem from "../components/PostListItem";
 
+import { useSelector, useDispatch } from 'react-redux'
+import {fav} from "../actions/fav"
+
 const useStyles = makeStyles((theme) => ({
   margin: {
     margin: theme.spacing(1),
@@ -45,6 +48,9 @@ export default function PostList(props) {
   const [postid, setPostID] = React.useState("")
   const container = React.useRef(null)
 
+  const favs = useSelector((state) => state.faver.value)
+
+
   const handleOpenClick = (id) => {
     console.log(id)
   };
@@ -60,14 +66,6 @@ export default function PostList(props) {
     console.log(h) // boolean
   } 
   
-  const handleFav = (id) => {
-    console.log("This is faved: " + id);
-  }
-
-  // const handleFav = (id, fav) => {
-  //   console.log(id, fav) // boolean    
-  // } 
-
 
   return (
     <List 
@@ -77,7 +75,7 @@ export default function PostList(props) {
 
     {sortable.map((pair) => {
       let id = pair[0];
-      var i_fav = props.favs.indexOf(id)
+      var i_fav = favs.indexOf(id)
       var i_hide = props.hides.indexOf(id)
       var in_favs = i_fav > -1
       var in_hides = i_hide > -1
@@ -88,7 +86,6 @@ export default function PostList(props) {
           hover={handleHover}
           handleOpenClick={props.handleOpenClick}
           handleCloseClick={props.handleCloseClick}
-          handleFav={props.handleFav}
           handleHide={props.handleHide}
           fav={in_favs}
         ></PostListItem>

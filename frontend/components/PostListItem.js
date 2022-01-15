@@ -21,6 +21,8 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import DeleteIcon from '@material-ui/icons/Delete';
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
+import { useSelector, useDispatch } from 'react-redux'
+import {fav} from "../actions/fav"
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -79,8 +81,11 @@ export default function QueryListItem(props) {
   const classes = useStyles();
   const { post, loading, error } = usePost(props.id);
   const container = React.useRef(null);
+  const dispatch = useDispatch()
+  const favs = useSelector((state) => state.faver.value)
+  const faved = favs.includes(props.id)
 
-    const postTitle = (post) => {
+  const postTitle = (post) => {
       String.prototype.trimLeft = function(charlist) {
       if (charlist === undefined)
       charlist = "\s";
@@ -104,11 +109,19 @@ export default function QueryListItem(props) {
         disableGutters={true}
       >
         <ListItemIcon>
-            <IconButton aria-label="add to favorites" onClick={() => props.handleFav(props.id)}>
-              {props.fav ? (
-                <FavoriteIcon color="secondary" style={{ fontSize: 20 }} onClick={() => props.handleFav(props.id)} />
+            <IconButton 
+              aria-label="add to favorites"
+              onClick={() => dispatch(fav(props.id))}
+            >
+              {faved ? (
+                <FavoriteIcon 
+                  color="secondary" 
+                  style={{ fontSize: 20 }} 
+                />
               ) : (
-                <FavoriteIcon style={{ fontSize: 20 }} />
+                <FavoriteIcon 
+                  style={{ fontSize: 20 }}
+                />
               )}
             </IconButton>
           </ListItemIcon>
