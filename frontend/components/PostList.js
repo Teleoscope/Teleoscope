@@ -59,9 +59,6 @@ export default function PostList(props) {
     console.log(id)
   };
 
-  const handleHide = (id) => {
-    console.log("hiding: " + id);
-  }
   const handleHover = (h) => {
     console.log(h) // boolean
   } 
@@ -86,7 +83,7 @@ export default function PostList(props) {
           hover={handleHover}
           handleOpenClick={props.handleOpenClick}
           handleCloseClick={props.handleCloseClick}
-          handleHide={props.handleHide}
+          handleHide={props.handleHide} // TODO: migrate this to an action/store design
           fav={in_favs}
         ></PostListItem>
         )

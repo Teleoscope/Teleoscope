@@ -110,7 +110,7 @@ export default function DocSet(props) {
     // console.log("temp2", temp, i)
   }
 
-  const handleHide = (id) => {
+  const handleHide = (id) => { // TODO: migrate this to an action/store design
     var temp = [...hides]
 
     // add to hides if not in
@@ -122,13 +122,6 @@ export default function DocSet(props) {
       temp.push(id)
     }
 
-    // if also faved, remove it
-    var j = favs.indexOf(id)
-    if (j > -1) {
-      var kemp = [...favs]
-      kemp.splice(j, 1)
-      setFavs(kemp)
-    }    
     setHides(temp)
   }
 

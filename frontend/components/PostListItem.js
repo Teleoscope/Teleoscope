@@ -131,7 +131,8 @@ export default function QueryListItem(props) {
             {post ? postTitle(post) : "Post loading..."}
           </ListItemText>
           <ListItemIcon>
-            <IconButton onClick={() => props.handleHide(props.id)}>
+            {/*TODO: migrate this to an action/store design */}
+            <IconButton onClick={() => props.handleHide(props.id)}> 
               <VisibilityOffIcon style={{ fontSize: 20 }} />
             </IconButton>
           </ListItemIcon>  
