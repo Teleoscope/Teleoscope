@@ -32,3 +32,32 @@ client.onStompError = function (frame) {
 };
 
 client.activate();
+
+
+
+client.publish({ destination: '/topic/general', body: 'Hello world' });
+
+// There is an option to skip content length header
+client.publish({
+  destination: '/topic/general',
+  body: 'Hello world',
+  skipContentLengthHeader: true,
+});
+
+// Additional headers
+client.publish({
+  destination: '/topic/general',
+  body: 'Hello world',
+  headers: { priority: '9' },
+});
+
+
+var subscription = client.subscribe('/queue/test', callback);
+callback = function (message) {
+  // called when the client receives a STOMP message from the server
+  if (message.body) {
+    alert('got message with body ' + message.body);
+  } else {
+    alert('got empty message');
+  }
+};
