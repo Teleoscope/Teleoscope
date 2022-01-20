@@ -11,7 +11,7 @@ export const Fav = createSlice({
 		// doesn't actually mutate the state because it uses the Immer library,
 		// which detects changes to a "draft state" and produces a brand new
 		// immutable state based off those changes
-    	var id = action.payload
+    	var id = action.payload // value of postid
 		var temp = [...state.value]
 		// add to favs if not in
 		// remove from favs if in

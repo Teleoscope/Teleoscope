@@ -23,6 +23,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
 import { useSelector, useDispatch } from 'react-redux'
 import {fav} from "../actions/fav"
+import {hide} from "../actions/hide"
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -131,8 +132,9 @@ export default function QueryListItem(props) {
             {post ? postTitle(post) : "Post loading..."}
           </ListItemText>
           <ListItemIcon>
-            {/*TODO: migrate this to an action/store design */}
-            <IconButton onClick={() => props.handleHide(props.id)}> 
+            <IconButton 
+              onClick={() => dispatch(hide(props.id))}
+            >
               <VisibilityOffIcon style={{ fontSize: 20 }} />
             </IconButton>
           </ListItemIcon>  

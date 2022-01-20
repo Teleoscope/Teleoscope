@@ -9,7 +9,6 @@ import SearchBar from "../components/SearchBar";
 import StoryCard from "../components/StoryCard";
 import DocSetLabel from "../components/DocSetLabel";
 
-
 //material ui
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
@@ -35,8 +34,10 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 
+// actions
 import { useSelector, useDispatch } from 'react-redux'
 import {fav} from "../actions/fav"
+import {hide} from "../actions/hide"
 
 
 const useStyles = makeStyles((theme) => ({
@@ -83,12 +84,12 @@ export default function DocSet(props) {
   const classes = useStyles();
   const [hover, setHover] = useState(false);
   const [posts, setPosts] = useState([]);
-  const [hides, setHides] = useState([]);
   const [docExpand, setDocExpand] = useState(false);
   const [favExpand, setFavExpand] = useState(false);
   const [hideExpand, setHideExpand] = useState(false);
   const [noteExpand, setNoteExpand] = useState(false);
   const favs = useSelector((state) => state.faver.value)
+  const hides = useSelector((state) => state.hider.value)
 
   const handleOpenPost = (id) => {
     var temp = [...posts]
@@ -108,21 +109,6 @@ export default function DocSet(props) {
     setPosts(temp)
     setHover(false)
     // console.log("temp2", temp, i)
-  }
-
-  const handleHide = (id) => { // TODO: migrate this to an action/store design
-    var temp = [...hides]
-
-    // add to hides if not in
-    // remove from hides if in
-    var i = temp.indexOf(id)
-    if (i > -1) {
-      temp.splice(i, 1)
-    } else {
-      temp.push(id)
-    }
-
-    setHides(temp)
   }
 
   const handleChildHover = (i) => {
@@ -251,8 +237,6 @@ export default function DocSet(props) {
               handleOpenClick={handleOpenPost}
               handleCloseClick={handleClosePost}
               handleHover={handleChildHover}
-              handleHide={handleHide}
-              hides={hides}
               isFavList={true}
               isHideList={false}
             /> : null}
@@ -280,9 +264,7 @@ export default function DocSet(props) {
               data={ids.filter((id) => (favs.indexOf(id[0]) == -1)).filter((id) => (hides.indexOf(id[0]) == -1))}
               handleOpenClick={handleOpenPost}
               handleCloseClick={handleClosePost}
-              handleHover={handleChildHover}
-              handleHide={handleHide}
-              hides={hides}              
+              handleHover={handleChildHover} 
               isFavList={false}
               isHideList={false}
             /> : null}
@@ -309,9 +291,7 @@ export default function DocSet(props) {
               data={ids.filter((id) => (hides.indexOf(id[0]) > -1) )}
               handleOpenClick={handleOpenPost}
               handleCloseClick={handleClosePost}
-              handleHover={handleChildHover}
-              handleHide={handleHide}
-              hides={hides}              
+              handleHover={handleChildHover} 
               isFavList={false}
               isHideList={true}
             /> : null}

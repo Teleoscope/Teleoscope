@@ -23,6 +23,7 @@ import PostListItem from "../components/PostListItem";
 
 import { useSelector, useDispatch } from 'react-redux'
 import {fav} from "../actions/fav"
+import {hide} from "../actions/hide"
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -49,6 +50,7 @@ export default function PostList(props) {
   const container = React.useRef(null)
 
   const favs = useSelector((state) => state.faver.value)
+  const hides = useSelector((state) => state.hider.value)
 
 
   const handleOpenClick = (id) => {
@@ -73,7 +75,7 @@ export default function PostList(props) {
     {sortable.map((pair) => {
       let id = pair[0];
       var i_fav = favs.indexOf(id)
-      var i_hide = props.hides.indexOf(id)
+      var i_hide = hides.indexOf(id)
       var in_favs = i_fav > -1
       var in_hides = i_hide > -1
       return (
@@ -83,7 +85,6 @@ export default function PostList(props) {
           hover={handleHover}
           handleOpenClick={props.handleOpenClick}
           handleCloseClick={props.handleCloseClick}
-          handleHide={props.handleHide} // TODO: migrate this to an action/store design
           fav={in_favs}
         ></PostListItem>
         )
