@@ -2,6 +2,8 @@ import React from "react";
 import { useEffect, useState } from "react";
 import useSWR, { mutate } from "swr";
 import clsx from "clsx";
+
+// material ui
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Input from "@material-ui/core/Input";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -12,15 +14,18 @@ import Select from "@material-ui/core/Select";
 import Checkbox from "@material-ui/core/Checkbox";
 import Chip from "@material-ui/core/Chip";
 import Button from "@material-ui/core/Button";
+import Portal from "@material-ui/core/Portal";
+import List from '@material-ui/core/List';
+
+// icons
 import IconButton from "@material-ui/core/IconButton";
 import DeleteIcon from "@material-ui/icons/Delete";
 import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 
-import Portal from "@material-ui/core/Portal";
-import List from '@material-ui/core/List';
-
+// custom components
 import PostListItem from "../components/PostListItem";
 
+// actions
 import { useSelector, useDispatch } from 'react-redux'
 import {fav} from "../actions/fav"
 import {hide} from "../actions/hide"
