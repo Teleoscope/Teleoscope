@@ -12,6 +12,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 // icons
 import DoneIcon from '@material-ui/icons/Done';
 
+import cryptoRandomString from 'crypto-random-string';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -22,6 +23,19 @@ const useStyles = makeStyles((theme) => ({
     },
   },
 }));
+
+// JSON PUT request
+
+const json_post = (i) => fetch('http://localhost:8080/post', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(i)
+}).then( r => {
+  open(r.headers.get('location'));
+  return r.json();
+})
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 function useQueries(q) {
@@ -135,6 +149,13 @@ export default function SearchBar(props) {
 
 
   const handleSubmit = (q) => {
+    // var standard = {
+    //   system_time: Date.now(),
+    //   request_id: cryptoRandomString({length: 10, type: 'url-safe'}),
+    //   query: q
+    // }
+    // json_post(standard)
+
     console.log(q);
     if (!q) return;
     setShouldSendQuery(true);

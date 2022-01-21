@@ -13,6 +13,8 @@
     "@material-ui/lab": "^4.0.0-alpha.57",
     "@reduxjs/toolkit": "^1.7.1",
     "@stomp/stompjs": "^6.1.0",
+    "crypto-js": "^4.1.1",
+    "crypto-random-string": "^4.0.0",
     "mongodb": "^3.5.9",
     "next": "^11.1.0",
     "react-draggable": "^4.4.3",
