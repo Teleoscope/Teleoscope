@@ -29,9 +29,10 @@ celery_broker_url = (
 )
 app = Celery('tasks', backend='rpc://', broker=celery_broker_url)
 app.conf.update(
-    task_serializer='pickle',
-    accept_content=['pickle', 'json'],  # Ignore other content
-    result_serializer='pickle',
+    task_serializer='json',
+    accept_content=['json'],  # Ignore other content
+    result_serializer='json',
+    enable_utc=True,
 )
 
 @app.task
