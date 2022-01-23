@@ -9,9 +9,8 @@ import { makeStyles } from "@material-ui/core/styles";
 import Workspace from "../components/Workspace";
 import store from "../stores/store"
 import { Provider } from 'react-redux'
-
+ 
 import { connectToDatabase } from "../util/mongodb";
-// import { sto } from "../util/stomp";
 
 
 const useStyles = makeStyles((theme) => ({

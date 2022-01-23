@@ -5,8 +5,8 @@ import { Client, Message } from '@stomp/stompjs';
 const client = new StompJs.Client({
   brokerURL: 'ws://localhost:3311/ws',
   connectHeaders: {
-    login: 'user',
-    passcode: 'password',
+    login: 'phb2',
+    passcode: 'changeme',
   },
   debug: function (str) {
     console.log(str);
@@ -61,3 +61,40 @@ callback = function (message) {
     alert('got empty message');
   }
 };
+
+
+
+
+
+  public asTaskV2(
+    taskId: string,
+    taskName: string,
+    args?: Array<any>,
+    kwargs?: object
+  ): TaskMessage {
+    const message: TaskMessage = {
+      headers: {
+        lang: "js",
+        task: taskName,
+        id: taskId
+        /*
+        'shadow': shadow,
+        'eta': eta,
+        'expires': expires,
+        'group': group_id,
+        'retries': retries,
+        'timelimit': [time_limit, soft_time_limit],
+        'root_id': root_id,
+        'parent_id': parent_id,
+        'argsrepr': argsrepr,
+        'kwargsrepr': kwargsrepr,
+        'origin': origin or anon_nodename()
+        */
+      },
+      properties: {
+        correlationId: taskId,
+        replyTo: ""
+      },
+      body: [args, kwargs, {}],
+      sentEvent: null
+    };
