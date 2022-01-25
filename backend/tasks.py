@@ -29,15 +29,11 @@ celery_broker_url = (
 )
 app = Celery('tasks', backend='rpc://', broker=celery_broker_url)
 app.conf.update(
-    task_serializer='json',
-    accept_content=['json'],  # Ignore other content
-    result_serializer='json',
-    enable_utc=True,
+    task_serializer='pickle',
+    accept_content=['pickle'],  # Ignore other content
+    result_serializer='pickle',
 )
 
-@app.task
-def hello(hi="hi"):
-    print("hello", hi)
 
 @app.task
 def push(query_string, field, values):
@@ -214,47 +210,34 @@ def run_query_init(query_string):
 @app.task
 def nlp(query_string: str, post_id: str, status: int):
     db = utils.connect()
-
-    # load NLP model
-    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")  # load NLP model
     qvector = embed([query_string]).numpy()
 
-    # get reddit ids of posts currently displayed for given query
-    rids = db.queries.find_one({"query": query_string},
-                               projection={'reddit_ids': 1})['reddit_ids']
-
-    # get vector of post which was liked/disliked
+    rids = db.queries.find_one({"query": query_string}, projection={'reddit_ids': 1})[
+        'reddit_ids']  # get reddit ids of posts currently displayed for given query
     feedback_post = db.clean.posts.find_one({"id": post_id},
-                                            projection={'vector': 1})
+                                            projection={'vector': 1})  # get vector of post which was liked/disliked
     feedback_vector = np.array(feedback_post['vector'])
-
-    # move qvector towards/away from feedback_vector
-    qprime = utils.update_embedding(qvector, feedback_vector, status)
+    qprime = utils.update_embedding(qvector, feedback_vector, status)  # move qvector towards/away from feedback_vector
 
     postSubset = []
-
     # get all posts that are currently displayed
-    for p in db.clean.posts.find({'id': {'$in': rids}},
-                                 projection={'id': 1, 'vector': 1}):
+    for p in db.clean.posts.find({'id': {'$in': rids}}, projection={'id': 1, 'vector': 1}):
         postSubset.append(p)
 
     # get vectors of all posts currently displayed
     vectors = np.array([x['vector'] for x in postSubset])
 
-    # get similarity scores for all those posts
-    scores = qprime.dot(vectors.T).flatten()
+    scores = qprime.dot(vectors.T).flatten()  # get similarity scores for all those posts
 
-    # final list of posts to be displayed, ordered
-    ret = []
+    ret = []  # final list of posts to be displayed, ordered
     for i in range(len(postSubset)):
         id_ = postSubset[i]['id']
         score = scores[i]
         ret.append((id_, score))
 
-    # sort by similarity score, high to low
-    ret.sort(key=lambda x: x[1], reverse=True)
-    # update query with new ranked post ids
+    ret.sort(key=lambda x: x[1], reverse=True)  # sort by similarity score, high to low
     db.queries.update_one({'query': query_string},
-                          {'$set': {"ranked_post_ids": ret}})
+                          {'$set': {"ranked_post_ids": ret}})  # update query with new ranked post ids
 
     return 200
