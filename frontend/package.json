@@ -13,6 +13,7 @@
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.57",
     "@reduxjs/toolkit": "^1.7.1",
+    "@stomp/stompjs": "^6.1.2",
     "celery-node": "^0.5.8",
     "crypto-js": "^4.1.1",
     "crypto-random-string": "^4.0.0",

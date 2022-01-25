@@ -25,7 +25,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 // JSON PUT request
-
+// TODO: look at websocket request code from current Workspace.js and implement
+// instead of server.py request
 const json_post = (i) => fetch('http://localhost:8080/post', {
   method: 'POST',
   headers: {
@@ -66,6 +67,8 @@ function useQuery(q, shouldSend) {
   return ret
 }
 
+// TODO: look at websocket request code from current Workspace.js and implement
+// instead of server.py request
 const makeQuery = (q, shouldSend) => {
   console.log("making query to backend");
   const API_URL = shouldSend ? `http://localhost:8080/?query=${q}&sims` : "";
