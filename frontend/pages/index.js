@@ -1,7 +1,6 @@
 import React from "react";
 import Head from "next/head";
 import { useEffect, useState } from "react";
-import { connectToDatabase } from "../util/mongodb";
 import Layout from "../components/layout";
 import Draggable from "react-draggable";
 import Fab from "@material-ui/core/Fab";
@@ -10,6 +9,9 @@ import { makeStyles } from "@material-ui/core/styles";
 import Workspace from "../components/Workspace";
 import store from "../stores/store"
 import { Provider } from 'react-redux'
+ 
+import { connectToDatabase } from "../util/mongodb";
+
 
 const useStyles = makeStyles((theme) => ({
   root: {

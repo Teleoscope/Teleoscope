@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit'
 export const Fav = createSlice({
   name: 'fav',
   initialState: {
-    value: [],
+    value: [], // list of string: postids 
   },
   reducers: {
     fav: (state, action) => {
@@ -11,7 +11,7 @@ export const Fav = createSlice({
 		// doesn't actually mutate the state because it uses the Immer library,
 		// which detects changes to a "draft state" and produces a brand new
 		// immutable state based off those changes
-    	var id = action.payload // value of postid
+    var id = action.payload // value of postid
 		var temp = [...state.value]
 		// add to favs if not in
 		// remove from favs if in
