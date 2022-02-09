@@ -50,7 +50,7 @@ Then you'll need to download the tensorflow wheel here: https://drive.google.com
 
 then run `pip3 install /path/to/downloaded/whl`.
 
-If you haven't gotten all of your login credentials sorted out, now is the time to do so. See below or talk to Paul. Once you have your credentials, check your connections by running `test.py`. You'll be first checking whether you're connected to MongoDB, then whether you can send tasks to the RabbitMQ queue and have a worker consume them.
+If you haven't gotten all of your login credentials sorted out, now is the time to do so. See below or talk to Paul. Once you have your credentials, check your connections by running `install_test.py`. You'll be first checking whether you're connected to MongoDB, then whether you can send tasks to the RabbitMQ queue and have a worker consume them.
 
 Login to the LEAP machine by using `ssh leap-server`. You should see something like this:
 
@@ -143,14 +143,14 @@ Before testing the backend connections, you'll need to create an `auth.py` modul
 mongodb = {
 	"username": "<mongodb_username>",
 	"password": "<mongodb_password>",
-	"host": "localhost:<local forwarding port, e.g., 3307>",
+	"host": "localhost:<local forwarding port of mongodb from config file, e.g., 3307>",
 	"string": "mongodb://<mongodb_username>:<mongodb_password>@localhost:<local forwarding port>/aita"
 }
 
 rabbitmq = {
 	"username": "<rabbitmq_username>",
 	"password": "<rabbitmq_password>",
-	"host": "localhost",
+	"host": "localhost:<local forwarding port of rabbitMQ/celery from config file",
 	"vhost": "<vhost name>"
 }
 ```
@@ -176,7 +176,7 @@ If you haven't installed a text editor yet, first install nano (or another comma
 ```
 Host jump-host
     User <your CWL username>
-    HostName remote.cs.ubc.ca
+    HostName remote.students.cs.ubc.ca
     IdentityFile ~/.ssh/id_rsa
     Port 22
 
