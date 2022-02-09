@@ -21,7 +21,7 @@ simplefilter(action='ignore', category=FutureWarning)
 
 # url: "amqp://myuser:mypassword@localhost:5672/myvhost"
 celery_broker_url = (
-    f'pyamqp://'
+    f'amqp://'
     f'{auth.rabbitmq["username"]}:'
     f'{auth.rabbitmq["password"]}@'
     f'{auth.rabbitmq["host"]}/'
