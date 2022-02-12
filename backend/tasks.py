@@ -34,6 +34,13 @@ app.conf.update(
     result_serializer='pickle',
 )
 
+@app.task
+def getEmbedding(text):
+    print('Generating embedding for {}'.format(text))
+    model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")  # load NLP model
+    qvector = model([text]).numpy()
+    print(qvector)
+    logging.info(f"qvector: {qvector}")
 
 @app.task
 def push(query_string, field, values):
