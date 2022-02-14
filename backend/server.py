@@ -82,11 +82,15 @@ async def user_interaction(req):
         args=(), 
         kwargs={"query_string": q, "post_id":_id, "status": int(status)}
     )
+    print(task)
     res = task.apply_async()
     data = {"Status": 200}
     return web.json_response(data)
 
 
+async def post_handler(request):
+    post = await request.post()
+    print("beep", post)
 
 app = web.Application(
     middlewares=[
@@ -98,10 +102,14 @@ app = web.Application(
 
 app.add_routes([
     web.get('/', handle),
-    web.get('/user-interaction/', user_interaction)
+    web.get('/user-interaction/', user_interaction),
+    web.post('/post', post_handler),
+
     # web.get('/query/{query}', handle_query),
     # web.get('/sims/{sims}', handle_sims)
 ])
+
+# session = aiohttp.ClientSession()
 
 if __name__ == '__main__':
     web.run_app(app)
