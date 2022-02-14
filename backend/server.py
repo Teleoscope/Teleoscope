@@ -1,45 +1,50 @@
+# builtin modules
 import re
-from aiohttp import web
-import subprocess
-import tasks
-from celery import chain
-from celery import signature
+import logging
 
+# installed modules
+from aiohttp import web
+from celery import chain
 from aiohttp_middlewares import (
     cors_middleware,
     error_middleware,
 )
 
+# local files
+import tasks
+
+logging.basicConfig(level=logging.INFO)
+
 
 async def handle_query(query):
-    print(f'Building query: {query}...')
-    f = tasks.run_query_init.signature(
+    logging.info(f"Building query: {query}...")
+    task1 = tasks.run_query_init.signature(
         args=(),
         kwargs={"query_string": query},
     )
-    t = tasks.query_scs.signature(
+    task2 = tasks.query_scs.signature(
         args=(),
         kwargs={"query_string": query, "doc_string": query},
     )
-    res = chain(f, t)()
+    res = chain(task1, task2)()
     data = {
         "query": query,
-	"status": 200,
+        "status": 200,
     }
     return data
 
 
 async def handle_sims(query, ids):
-    print(f'Running sims: {ids} for {query}...')
-    t = tasks.query_scs_by_ids.signature(
+    logging.info(f"Running sims: {ids} for {query}...")
+    task = tasks.query_scs_by_ids.signature(
         args=(),
         kwargs={"query_string": query, "ids_string": ids},
     )
-    res = t.apply_async()
+    res = task.apply_async()
     data = {
         "query": query,
         "ids": ids,
-	"status": 200,
+        "status": 200,
     }
     return data
 
@@ -52,13 +57,14 @@ def parseargs(qs):
         query = m.group(2)
         sims = m.group(4)
         return (query, sims)
+    logging.error(f"Could not parse query string input: {qs}")
     return False
 
 
 async def handle(req):
     qs = req.query_string
-    print(f'Received query string: {qs}')
-    data = {"status": 400}
+    logging.info(f"Received query string: {qs}")
+    data = {"Status": 400}
     args = parseargs(qs)
     if args:
         if args[0] and args[1]:
@@ -71,28 +77,20 @@ async def handle(req):
 async def user_interaction(req):
     qs = req.query_string
     [q, _id, status] = [s.split("=")[1] for s in qs.split("&")]
+    logging.info(f"Running NLP model with query {q}, post id {_id}")
     task = tasks.nlp.signature(
         args=(), 
         kwargs={"query_string": q, "post_id":_id, "status": int(status)}
     )
+    print(task)
     res = task.apply_async()
-    data = {"made it": 20000}
+    data = {"Status": 200}
     return web.json_response(data)
-    # f = tasks.run_query_init.signature(
-    #     args=(),
-    #     kwargs={"query_string": query},
-    # )
-    # t = tasks.query_scs.signature(
-    #     args=(),
-    #     kwargs={"query_string": query, "doc_string": query},
-    # )
-    # res = chain(f, t)()
-    # data = {
-    #     "query": query,
-	# "status": 200,
-    # }
-    # return data
 
+
+async def post_handler(request):
+    post = await request.post()
+    print("beep", post)
 
 app = web.Application(
     middlewares=[
@@ -104,10 +102,14 @@ app = web.Application(
 
 app.add_routes([
     web.get('/', handle),
-    web.get('/user-interaction/', user_interaction)
+    web.get('/user-interaction/', user_interaction),
+    web.post('/post', post_handler),
+
     # web.get('/query/{query}', handle_query),
     # web.get('/sims/{sims}', handle_sims)
 ])
+
+# session = aiohttp.ClientSession()
 
 if __name__ == '__main__':
     web.run_app(app)

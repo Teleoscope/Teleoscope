@@ -6,6 +6,6 @@ export default async (req, res) => {
   const query_meta = await db
     .collection("queries")
     .findOne({ $text: { $search: query } });
-  console.log(query_meta);
+  // console.log(query_meta);
   res.json(query_meta);
 };

@@ -1,26 +1,35 @@
 import React from "react";
 import useSWR, { mutate } from "swr";
-import { makeStyles } from "@material-ui/core/styles";
 import clsx from "clsx";
-import ViewCompactIcon from "@material-ui/icons/ViewCompact";
+import Draggable from "react-draggable";
+
+// material ui
+import { makeStyles } from "@material-ui/core/styles";
 import { spacing } from "@material-ui/system";
-import CancelIcon from "@material-ui/icons/Cancel";
 import Collapse from "@material-ui/core/Collapse";
 import Avatar from "@material-ui/core/Avatar";
-import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
 import { red } from "@material-ui/core/colors";
-import FavoriteIcon from "@material-ui/icons/Favorite";
-import ShareIcon from "@material-ui/icons/Share";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import MoreVertIcon from "@material-ui/icons/MoreVert";
-import Draggable from "react-draggable";
 import ListItem from '@material-ui/core/ListItem';
 import Grid from '@material-ui/core/Grid';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+
+// icons
+import IconButton from "@material-ui/core/IconButton";
+import FavoriteIcon from "@material-ui/icons/Favorite";
+import ShareIcon from "@material-ui/icons/Share";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import MoreVertIcon from "@material-ui/icons/MoreVert";
+import ViewCompactIcon from "@material-ui/icons/ViewCompact";
+import CancelIcon from "@material-ui/icons/Cancel";
 import DeleteIcon from '@material-ui/icons/Delete';
 import VisibilityOffIcon from '@material-ui/icons/VisibilityOff';
+
+// actions
+import { useSelector, useDispatch } from 'react-redux'
+import {fav} from "../actions/fav"
+import {hide} from "../actions/hide"
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -79,8 +88,11 @@ export default function QueryListItem(props) {
   const classes = useStyles();
   const { post, loading, error } = usePost(props.id);
   const container = React.useRef(null);
+  const dispatch = useDispatch()
+  const favs = useSelector((state) => state.faver.value)
+  const faved = favs.includes(props.id)
 
-    const postTitle = (post) => {
+  const postTitle = (post) => {
       String.prototype.trimLeft = function(charlist) {
       if (charlist === undefined)
       charlist = "\s";
@@ -104,11 +116,19 @@ export default function QueryListItem(props) {
         disableGutters={true}
       >
         <ListItemIcon>
-            <IconButton aria-label="add to favorites" onClick={() => props.handleFav(props.id)}>
-              {props.fav ? (
-                <FavoriteIcon color="secondary" style={{ fontSize: 20 }} onClick={() => props.handleFav(props.id)} />
+            <IconButton 
+              aria-label="add to favorites"
+              onClick={() => dispatch(fav(props.id))}
+            >
+              {faved ? (
+                <FavoriteIcon 
+                  color="secondary" 
+                  style={{ fontSize: 20 }} 
+                />
               ) : (
-                <FavoriteIcon style={{ fontSize: 20 }} />
+                <FavoriteIcon 
+                  style={{ fontSize: 20 }}
+                />
               )}
             </IconButton>
           </ListItemIcon>
@@ -118,7 +138,9 @@ export default function QueryListItem(props) {
             {post ? postTitle(post) : "Post loading..."}
           </ListItemText>
           <ListItemIcon>
-            <IconButton onClick={() => props.handleHide(props.id)}>
+            <IconButton 
+              onClick={() => dispatch(hide(props.id))}
+            >
               <VisibilityOffIcon style={{ fontSize: 20 }} />
             </IconButton>
           </ListItemIcon>  

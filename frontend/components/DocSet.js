@@ -9,7 +9,6 @@ import SearchBar from "../components/SearchBar";
 import StoryCard from "../components/StoryCard";
 import DocSetLabel from "../components/DocSetLabel";
 
-
 //material ui
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
@@ -34,6 +33,12 @@ import LaunchIcon from '@material-ui/icons/Launch';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+
+// actions
+import { useSelector, useDispatch } from 'react-redux'
+import {fav} from "../actions/fav"
+import {hide} from "../actions/hide"
+
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -79,13 +84,13 @@ export default function DocSet(props) {
   const classes = useStyles();
   const [hover, setHover] = useState(false);
   const [posts, setPosts] = useState([]);
-  const [favs, setFavs] = useState([]);
-  const [hides, setHides] = useState([]);
   const [docExpand, setDocExpand] = useState(false);
   const [favExpand, setFavExpand] = useState(false);
   const [hideExpand, setHideExpand] = useState(false);
   const [noteExpand, setNoteExpand] = useState(false);
-  
+  const favs = useSelector((state) => state.faver.value)
+  const hides = useSelector((state) => state.hider.value)
+
   const handleOpenPost = (id) => {
     var temp = [...posts]
     var i = temp.indexOf(id)
@@ -98,57 +103,12 @@ export default function DocSet(props) {
   const handleClosePost = (id) => {
 
     var temp = [...posts]
-    console.log("temp1", temp, id)
+    // console.log("temp1", temp, id)
     var i = temp.indexOf(id)
     temp.splice(i, 1)
     setPosts(temp)
     setHover(false)
-    console.log("temp2", temp, i)
-  }
-
-  const handleFav = (id) => {
-    var temp = [...favs]
-    console.log(id);
-    // add to favs if not in
-    // remove from favs if in
-    var i = temp.indexOf(id)
-    if (i > -1) {
-      temp.splice(i, 1)
-    } else {
-      temp.push(id)
-    }
-    setFavs(temp)
-    
-    // if also hidden, remove it
-    var j = hides.indexOf(id)
-    if (j > -1) {
-      var kemp = [...hides]
-      kemp.splice(j, 1)
-      setHides(kemp)
-    }
-    
-  }
-
-  const handleHide = (id) => {
-    var temp = [...hides]
-
-    // add to hides if not in
-    // remove from hides if in
-    var i = temp.indexOf(id)
-    if (i > -1) {
-      temp.splice(i, 1)
-    } else {
-      temp.push(id)
-    }
-
-    // if also faved, remove it
-    var j = favs.indexOf(id)
-    if (j > -1) {
-      var kemp = [...favs]
-      kemp.splice(j, 1)
-      setFavs(kemp)
-    }    
-    setHides(temp)
+    // console.log("temp2", temp, i)
   }
 
   const handleChildHover = (i) => {
@@ -161,7 +121,7 @@ export default function DocSet(props) {
   }
     const genPosts = (ps) => {
       if (!ps) return;
-      console.log("ELSE");
+      // console.log("ELSE");
       (
         <div>
           {ps.map((id, similarity) =>
@@ -169,8 +129,6 @@ export default function DocSet(props) {
                   key={id + "storycard"}
                   postid={id}
                   close={handleClosePost}
-                  handleFav={handleFav}
-                  fav={favs.indexOf(id) > -1 ? true : false }
                   hover={handleChildHover}
                   zind={similarity}
                 />
@@ -179,7 +137,6 @@ export default function DocSet(props) {
       )
     }
   const breakOut = () => {
-    console.log(favs)
   }
 
   var ids = posts;//props.docset.ranked_post_ids
@@ -279,11 +236,7 @@ export default function DocSet(props) {
               data={ids.filter((id) => (favs.indexOf(id[0]) > -1) )}
               handleOpenClick={handleOpenPost}
               handleCloseClick={handleClosePost}
-              handleFav={handleFav}
               handleHover={handleChildHover}
-              handleHide={handleHide}
-              hides={hides}
-              favs={favs}
               isFavList={true}
               isHideList={false}
             /> : null}
@@ -311,11 +264,7 @@ export default function DocSet(props) {
               data={ids.filter((id) => (favs.indexOf(id[0]) == -1)).filter((id) => (hides.indexOf(id[0]) == -1))}
               handleOpenClick={handleOpenPost}
               handleCloseClick={handleClosePost}
-              handleFav={handleFav}
-              handleHover={handleChildHover}
-              handleHide={handleHide}
-              hides={hides}              
-              favs={favs}
+              handleHover={handleChildHover} 
               isFavList={false}
               isHideList={false}
             /> : null}
@@ -342,11 +291,7 @@ export default function DocSet(props) {
               data={ids.filter((id) => (hides.indexOf(id[0]) > -1) )}
               handleOpenClick={handleOpenPost}
               handleCloseClick={handleClosePost}
-              handleFav={handleFav}
-              handleHover={handleChildHover}
-              handleHide={handleHide}
-              hides={hides}              
-              favs={favs}
+              handleHover={handleChildHover} 
               isFavList={false}
               isHideList={true}
             /> : null}

@@ -2,6 +2,8 @@ import React from "react";
 import { useEffect, useState } from "react";
 import useSWR, { mutate } from "swr";
 import clsx from "clsx";
+
+// material ui
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import Input from "@material-ui/core/Input";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -12,14 +14,21 @@ import Select from "@material-ui/core/Select";
 import Checkbox from "@material-ui/core/Checkbox";
 import Chip from "@material-ui/core/Chip";
 import Button from "@material-ui/core/Button";
+import Portal from "@material-ui/core/Portal";
+import List from '@material-ui/core/List';
+
+// icons
 import IconButton from "@material-ui/core/IconButton";
 import DeleteIcon from "@material-ui/icons/Delete";
 import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 
-import Portal from "@material-ui/core/Portal";
-import List from '@material-ui/core/List';
-
+// custom components
 import PostListItem from "../components/PostListItem";
+
+// actions
+import { useSelector, useDispatch } from 'react-redux'
+import {fav} from "../actions/fav"
+import {hide} from "../actions/hide"
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -45,6 +54,10 @@ export default function PostList(props) {
   const [postid, setPostID] = React.useState("")
   const container = React.useRef(null)
 
+  const favs = useSelector((state) => state.faver.value)
+  const hides = useSelector((state) => state.hider.value)
+
+
   const handleOpenClick = (id) => {
     console.log(id)
   };
@@ -53,21 +66,10 @@ export default function PostList(props) {
     console.log(id)
   };
 
-  const handleHide = (id) => {
-    console.log("hiding: " + id);
-  }
   const handleHover = (h) => {
     console.log(h) // boolean
   } 
   
-  const handleFav = (id) => {
-    console.log("This is faved: " + id);
-  }
-
-  // const handleFav = (id, fav) => {
-  //   console.log(id, fav) // boolean    
-  // } 
-
 
   return (
     <List 
@@ -77,8 +79,8 @@ export default function PostList(props) {
 
     {sortable.map((pair) => {
       let id = pair[0];
-      var i_fav = props.favs.indexOf(id)
-      var i_hide = props.hides.indexOf(id)
+      var i_fav = favs.indexOf(id)
+      var i_hide = hides.indexOf(id)
       var in_favs = i_fav > -1
       var in_hides = i_hide > -1
       return (
@@ -88,8 +90,6 @@ export default function PostList(props) {
           hover={handleHover}
           handleOpenClick={props.handleOpenClick}
           handleCloseClick={props.handleCloseClick}
-          handleFav={props.handleFav}
-          handleHide={props.handleHide}
           fav={in_favs}
         ></PostListItem>
         )

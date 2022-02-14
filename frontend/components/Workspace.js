@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import useSWR, { mutate } from "swr";
 import { SelectableGroup } from "react-selectable-fast";
 import MenuBar from "../components/MenuBar";
-
+import { Client, Message } from '@stomp/stompjs';
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
+
 function useDocSets(q) {
   const { data, error } = useSWR(
     `/api/docsets/`,
@@ -17,29 +18,39 @@ function useDocSets(q) {
     loading: !error && !data,
     error: error,
   };
-  console.log("ret", ret)
-
   return ret
 }
 
-
 export default function Workspace(props) {
-  
-  const [favs, setFavs] = useState({})
+
   const [stagedSets, setStagedSets] = useState([])
   const {databaseDocSets, loading, error} = useDocSets()
-  let client
 
-  const globalFav = (query, favlist) => {
-    var temp = {...favs}
-    temp[query] = favlist
-    setFavs(temp)
-  }
+  // TODO: look at websocket example code here and replicate
+  // anywhere that needs to route a request to the server
+  // possibly best to move this into an action? I'm unsure
+  const client = new Client({
+    brokerURL: 'ws://localhost:3311/ws',
+    connectHeaders: {
+      login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME,
+      passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD,
+      host: 'systopia',
+    },
+    debug: function (str) {
+      console.log(str);
+    },
+    reconnectDelay: 5000,
+    heartbeatIncoming: 4000,
+    heartbeatOutgoing: 4000,
+  });
 
-  const resolveFavs = () => {
-    var merged = [].concat.apply([], Object.values(favs));
-    return merged
-  }
+  client.onConnect = function (frame) {
+    // Do something, all subscribes must be done is this callback
+    // This is needed because this will be executed after a (re)connect
+    console.log("Connected to RabbitMQ webSTOMP server.")
+  };
+
+  client.activate();
 
   const docsetlist = () => {
     var arr = databaseDocSets
@@ -55,6 +66,18 @@ export default function Workspace(props) {
     ))
   }
 
+  const register_task = () => { 
+    var headers = {
+    }
+    var body = {
+      boop: "beep"
+    }
+    client.publish({
+      destination: "/queue/systopia", 
+      headers: headers, 
+      body: JSON.stringify(body)})
+  }
+
   const handleClick = () => {
     
     var temp = [...stagedSets]
@@ -65,7 +88,7 @@ export default function Workspace(props) {
   return (
     <div key="containerkey">
       <MenuBar 
-        callback={handleClick} 
+        callback={register_task} 
         connected={props.isConnected} 
       />
       <div id="workspace" key="workspacekey">

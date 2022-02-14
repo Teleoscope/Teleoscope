@@ -1,13 +1,17 @@
 import React from "react";
 import Head from "next/head";
 import { useEffect, useState } from "react";
-import { connectToDatabase } from "../util/mongodb";
 import Layout from "../components/layout";
 import Draggable from "react-draggable";
 import Fab from "@material-ui/core/Fab";
 import AddIcon from "@material-ui/icons/Add";
 import { makeStyles } from "@material-ui/core/styles";
 import Workspace from "../components/Workspace";
+import store from "../stores/store"
+import { Provider } from 'react-redux'
+ 
+import { connectToDatabase } from "../util/mongodb";
+
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -47,9 +51,11 @@ export default function Home({ isConnected }) {
         </Head>
 
         <main>
+        <Provider store={store}>
           <Workspace 
             isConnected={isConnected}
           />
+        </Provider>
         </main>
       </div>
     </Layout>
