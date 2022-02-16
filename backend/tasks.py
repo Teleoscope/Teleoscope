@@ -269,6 +269,6 @@ def nlp(*args, query_string: str, post_id: str, status: int):
     print('8.Sorting posts by similarity scores')
     newRanks = utils.rankPostsBySimilarity(allPosts, scores)
     print('9.Updating query in mongodb')
-    db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : newRanks}}) # update query with new ranked post ids
+    db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : newRanks[:100]}}) # update query with new ranked post ids
     print(f"NLP: {query_string}, {post_id}, {status}")
     return 200
