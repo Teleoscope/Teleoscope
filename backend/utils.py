@@ -163,7 +163,7 @@ def moveVector(sourceVector, destinationVector, direction, magnitude = None):
 
 def getPostVector(db, post_id):
     post = db.clean.posts.v2.find_one({"id": post_id}, projection={'selftextVector':1}) # get post which was liked/disliked
-    postVector = np.array(post['vector']) # extract vector of post which was liked/disliked
+    postVector = np.array(post['selftextVector']) # extract vector of post which was liked/disliked
     return postVector
 
 def loadModel():
