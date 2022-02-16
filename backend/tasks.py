@@ -250,7 +250,7 @@ def run_query_init(query_string):
 #                           {'$set': {"ranked_post_ids": ret}})  # update query with new ranked post ids
 
 #     return 200
-
+@app.task
 def nlp(*args, query_string: str, post_id: str, status: int):
     print('1.Connecting to DB')
     db = utils.connect()
