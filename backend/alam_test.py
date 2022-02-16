@@ -9,7 +9,8 @@ import tasks
 # print("Embedding Shape: {}".format(emb.shape))
 
 print("Calling NLP Task...")
-tasks.nlp(query_string="password", post_id="d6i6s9", status=1)
+res = tasks.nlp.delay(query_string="password", post_id="d6i6s9", status=1)
+print(res.get())
 
 
 
