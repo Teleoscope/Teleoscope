@@ -34,13 +34,15 @@ app.conf.update(
     result_serializer='pickle',
 )
 
+
 @app.task
 def getEmbedding(text):
     print('Generating embedding for {}'.format(text))
     model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")  # load NLP model
     qvector = model([text]).numpy()
-    print(qvector)
-    logging.info(f"qvector: {qvector}")
+    print("Generated embedding of shape {}".format(qvector.shape))
+    return qvector
+
 
 @app.task
 def push(query_string, field, values):
@@ -214,37 +216,54 @@ def run_query_init(query_string):
     return result, _reddit_ids
 
 
-@app.task
-def nlp(query_string: str, post_id: str, status: int):
-    db = utils.connect()
-    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")  # load NLP model
-    qvector = embed([query_string]).numpy()
+# @app.task
+# def nlp(query_string: str, post_id: str, status: int):
+#     db = utils.connect()
+#     embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")  # load NLP model
+#     qvector = embed([query_string]).numpy()
 
-    rids = db.queries.find_one({"query": query_string}, projection={'reddit_ids': 1})[
-        'reddit_ids']  # get reddit ids of posts currently displayed for given query
-    feedback_post = db.clean.posts.find_one({"id": post_id},
-                                            projection={'vector': 1})  # get vector of post which was liked/disliked
-    feedback_vector = np.array(feedback_post['vector'])
-    qprime = utils.update_embedding(qvector, feedback_vector, status)  # move qvector towards/away from feedback_vector
+#     rids = db.queries.find_one({"query": query_string}, projection={'reddit_ids': 1})[
+#         'reddit_ids']  # get reddit ids of posts currently displayed for given query
+#     feedback_post = db.clean.posts.find_one({"id": post_id},
+#                                             projection={'vector': 1})  # get vector of post which was liked/disliked
+#     feedback_vector = np.array(feedback_post['vector'])
+#     qprime = utils.update_embedding(qvector, feedback_vector, status)  # move qvector towards/away from feedback_vector
 
-    postSubset = []
-    # get all posts that are currently displayed
-    for p in db.clean.posts.find({'id': {'$in': rids}}, projection={'id': 1, 'vector': 1}):
-        postSubset.append(p)
+#     postSubset = []
+#     # get all posts that are currently displayed
+#     for p in db.clean.posts.find({'id': {'$in': rids}}, projection={'id': 1, 'vector': 1}):
+#         postSubset.append(p)
 
-    # get vectors of all posts currently displayed
-    vectors = np.array([x['vector'] for x in postSubset])
+#     # get vectors of all posts currently displayed
+#     vectors = np.array([x['vector'] for x in postSubset])
 
-    scores = qprime.dot(vectors.T).flatten()  # get similarity scores for all those posts
+#     scores = qprime.dot(vectors.T).flatten()  # get similarity scores for all those posts
 
-    ret = []  # final list of posts to be displayed, ordered
-    for i in range(len(postSubset)):
-        id_ = postSubset[i]['id']
-        score = scores[i]
-        ret.append((id_, score))
+#     ret = []  # final list of posts to be displayed, ordered
+#     for i in range(len(postSubset)):
+#         id_ = postSubset[i]['id']
+#         score = scores[i]
+#         ret.append((id_, score))
 
-    ret.sort(key=lambda x: x[1], reverse=True)  # sort by similarity score, high to low
-    db.queries.update_one({'query': query_string},
-                          {'$set': {"ranked_post_ids": ret}})  # update query with new ranked post ids
+#     ret.sort(key=lambda x: x[1], reverse=True)  # sort by similarity score, high to low
+#     db.queries.update_one({'query': query_string},
+#                           {'$set': {"ranked_post_ids": ret}})  # update query with new ranked post ids
 
-    return 200
+#     return 200
+
+# def nlp(*args, query_string: str, post_id: str, status: int):
+#     print('1.Connecting to DB')
+#     db = utils.connect()
+#     print('2.Loading Model')
+#     model = utils.loadModel() # load NLP model
+#     print('3.Converting Query to Vector')
+#     qvector = model([query_string]).numpy() # convert query string to vector
+#     print('4.Getting vector of feedback post')
+#     feedbackVector = utils.getPostVector(db, post_id) # get vector of feedback post
+#     qprime = utils.moveVector(sourceVector=qvector, destinationVector=feedbackVector, direction=status) # move qvector towards/away from feedbackVector
+#     allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1}) # get all Posts from mongoDB as a list of projection tuples
+#     scores = utils.calculateSimilarity(posts=allPosts, queryVector=qprime) # calculate similarity scores for all posts
+#     newRanks = utils.rankPostsBySimilarity(allPosts, scores)
+#     db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : newRanks}}) # update query with new ranked post ids
+#     print(f"NLP: {query_string}, {post_id}, {status}")
+#     return 200
