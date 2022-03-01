@@ -119,23 +119,25 @@ export default function DocSet(props) {
     ids = data["ranked_post_ids"];
     setPosts(ids)
   }
-    const genPosts = (ps) => {
-      if (!ps) return;
-      // console.log("ELSE");
-      (
-        <div>
-          {ps.map((id, similarity) =>
-                <StoryCard
-                  key={id + "storycard"}
-                  postid={id}
-                  close={handleClosePost}
-                  hover={handleChildHover}
-                  zind={similarity}
-                />
-            )}
-          </div>
-      )
-    }
+
+  const genPosts = (ps) => {
+    if (!ps) return;
+    // console.log("ELSE");
+    (
+      <div>
+        {ps.map((id, similarity) =>
+              <StoryCard
+                key={id + "storycard"}
+                postid={id}
+                close={handleClosePost}
+                hover={handleChildHover}
+                zind={similarity}
+              />
+          )}
+        </div>
+    )
+  }
+
   const breakOut = () => {
   }
 

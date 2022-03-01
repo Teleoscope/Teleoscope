@@ -5,6 +5,7 @@ import useSWR, { mutate } from "swr";
 import { SelectableGroup } from "react-selectable-fast";
 import MenuBar from "../components/MenuBar";
 import { Client, Message } from '@stomp/stompjs';
+import LeftMenuBar from '../components/LeftMenuBar';
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
@@ -87,13 +88,22 @@ export default function Workspace(props) {
 
   return (
     <div key="containerkey">
-      <MenuBar 
-        callback={register_task} 
-        connected={props.isConnected} 
-      />
       <div id="workspace" key="workspacekey">
+        <LeftMenuBar />
         {databaseDocSets ? docsetlist() : null}
       </div>
     </div>
   );
+
+  // return (
+  //   <div key="containerkey">
+  //     <MenuBar 
+  //       callback={register_task} 
+  //       connected={props.isConnected} 
+  //     />
+  //     <div id="workspace" key="workspacekey">
+  //       {databaseDocSets ? docsetlist() : null}
+  //     </div>
+  //   </div>
+  // );
 }

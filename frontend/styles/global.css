@@ -152,6 +152,12 @@ code {
   height: 1em;
 }
 
+.leftMenuBar {
+  height: auto;
+  width:25%;
+  float:left;
+}
+
 @media (max-width: 600px) {
   .grid {
     width: 100%;

@@ -12,8 +12,6 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 // icons
 import DoneIcon from '@material-ui/icons/Done';
 
-import cryptoRandomString from 'crypto-random-string';
-
 const useStyles = makeStyles((theme) => ({
   root: {
     // width: 500,
