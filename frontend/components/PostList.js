@@ -77,16 +77,16 @@ export default function PostList(props) {
   const itemsPerPage = 12;
   var displayPagination = false;
   var pageCount = 0;
+  var paginatedItems = [];
 
   if (sortable) {
     displayPagination = sortable.length > itemsPerPage && props.pagination;
     pageCount = Math.ceil(sortable.length / itemsPerPage);
+    paginatedItems = sortable.slice(
+      (pageNumber - 1) * itemsPerPage,
+      pageNumber * itemsPerPage - 1
+    );
   }
-
-  const paginatedItems = sortable.slice(
-    (pageNumber - 1) * itemsPerPage,
-    pageNumber * itemsPerPage - 1
-  );
 
   const changePage = (event, value) => {
     setPageNumber(value);
