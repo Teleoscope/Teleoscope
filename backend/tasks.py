@@ -6,6 +6,9 @@ import utils
 
 # installed modules
 import gridfs
+from gridfs import GridFS
+import json
+
 import numpy as np
 import tensorflow_hub as hub
 from celery import Celery
@@ -216,56 +219,42 @@ def run_query_init(query_string):
     return result, _reddit_ids
 
 
-# @app.task
-# def nlp(query_string: str, post_id: str, status: int):
-#     db = utils.connect()
-#     embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")  # load NLP model
-#     qvector = embed([query_string]).numpy()
-
-#     rids = db.queries.find_one({"query": query_string}, projection={'reddit_ids': 1})[
-#         'reddit_ids']  # get reddit ids of posts currently displayed for given query
-#     feedback_post = db.clean.posts.find_one({"id": post_id},
-#                                             projection={'vector': 1})  # get vector of post which was liked/disliked
-#     feedback_vector = np.array(feedback_post['vector'])
-#     qprime = utils.update_embedding(qvector, feedback_vector, status)  # move qvector towards/away from feedback_vector
-
-#     postSubset = []
-#     # get all posts that are currently displayed
-#     for p in db.clean.posts.find({'id': {'$in': rids}}, projection={'id': 1, 'vector': 1}):
-#         postSubset.append(p)
-
-#     # get vectors of all posts currently displayed
-#     vectors = np.array([x['vector'] for x in postSubset])
-
-#     scores = qprime.dot(vectors.T).flatten()  # get similarity scores for all those posts
-
-#     ret = []  # final list of posts to be displayed, ordered
-#     for i in range(len(postSubset)):
-#         id_ = postSubset[i]['id']
-#         score = scores[i]
-#         ret.append((id_, score))
-
-#     ret.sort(key=lambda x: x[1], reverse=True)  # sort by similarity score, high to low
-#     db.queries.update_one({'query': query_string},
-#                           {'$set': {"ranked_post_ids": ret}})  # update query with new ranked post ids
-
-#     return 200
 @app.task
-def nlp(*args, query_string: str, post_id: str, status: int):
+def nlp(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
     db = utils.connect()
-    queryDocument = db.queries.find_one({"query": query_string})
+    queryDocument = db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
     # check if stateVector exists
     if 'stateVector' in queryDocument:
-        stateVector = queryDocument['stateVector']
+        stateVector = np.array(queryDocument['stateVector'])
     else:
         model = utils.loadModel() # load NLP model
-        stateVector = model([query_string]).numpy() # convert query string to vector
+        stateVector = model([query]).numpy() # convert query string to vector
+
+    posVecs = []
+    negVecs = []
+    for pos_id in positive_docs:
+        v = utils.getPostVector(db, pos_id)
+        posVecs.append(v)
         
-    feedbackVector = utils.getPostVector(db, post_id) # get vector of feedback post
-    qprime = utils.moveVector(sourceVector=qvector, destinationVector=feedbackVector, direction=status) # move qvector towards/away from feedbackVector
-    allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1}) # get all Posts from mongoDB as a list of projection tuples
-    scores = utils.calculateSimilarity(posts=allPosts, queryVector=qprime) # calculate similarity scores for all posts
-    newRanks = utils.rankPostsBySimilarity(allPosts, scores)
-    db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : newRanks[:100]}}) # update query with new ranked post ids
-    print(f"NLP: {query_string}, {post_id}, {status}")
-    return 200
+    for neg_id in negative_docs:
+        v = utils.getPostVector(db, neg_id)*-1
+        negVecs.append(v)
+    
+    avgVec = np.zeros((512,))
+
+    for pvec in posVecs:
+        avgVec += pvec
+
+    for nvec in negVecs:
+        avgVec += nvec
+    
+    avgVec /= (len(posVecs) + len(negVecs))
+    
+    # feedbackVector = utils.getPostVector(db, post_id) # get vector of feedback post
+    # qprime = utils.moveVector(sourceVector=qvector, destinationVector=feedbackVector, direction=status) # move qvector towards/away from feedbackVector
+    # allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1}) # get all Posts from mongoDB as a list of projection tuples
+    # scores = utils.calculateSimilarity(posts=allPosts, queryVector=qprime) # calculate similarity scores for all posts
+    # newRanks = utils.rankPostsBySimilarity(allPosts, scores)
+    # db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : newRanks[:100]}}) # update query with new ranked post ids
+    # print(f"NLP: {query_string}, {post_id}, {status}")
+    # return 200
