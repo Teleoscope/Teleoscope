@@ -37,16 +37,6 @@ app.conf.update(
     result_serializer='pickle',
 )
 
-
-# @app.task
-# def getEmbedding(text):
-#     print('Generating embedding for {}'.format(text))
-#     model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")  # load NLP model
-#     qvector = model([text]).numpy()
-#     print("Generated embedding of shape {}".format(qvector.shape))
-#     return qvector
-
-
 @app.task
 def push(query_string, field, values):
     op = {"$addToSet": {field: {"$each": values}}}
@@ -283,12 +273,3 @@ def reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query
     db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : obj}})
 
     return 200
-    
-    # feedbackVector = utils.getPostVector(db, post_id) # get vector of feedback post
-    # qprime = utils.moveVector(sourceVector=qvector, destinationVector=feedbackVector, direction=status) # move qvector towards/away from feedbackVector
-    # allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1}) # get all Posts from mongoDB as a list of projection tuples
-    # scores = utils.calculateSimilarity(posts=allPosts, queryVector=qprime) # calculate similarity scores for all posts
-    # newRanks = utils.rankPostsBySimilarity(allPosts, scores)
-    # db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : newRanks[:100]}}) # update query with new ranked post ids
-    # print(f"NLP: {query_string}, {post_id}, {status}")
-    # return 200
