@@ -45,9 +45,9 @@ TODO: We can use GridFS to store the results of the query if needed (if sizeof(r
 Doesnt seem to be an issue right now.
 '''
 @app.task
-def querySearch(query_string):
+def querySearch(query_string, teleoscope_id):
     db = utils.connect()
-    query_results = db.queries.find_one({"query": query_string})
+    query_results = db.queries.find_one({"query": query_string, "teleoscope_id": teleoscope_id})
     
     # check if query already exists
     if query_results is not None:
@@ -55,7 +55,7 @@ def querySearch(query_string):
         return query_results['reddit_ids']
 
     # create a new query document
-    db.queries.insert_one({"query": query_string}) 
+    db.queries.insert_one({"query": query_string, "teleoscope_id": teleoscope_id})
 
     # perform text search query
     textSearchQuery = {"$text": {"$search": query_string}}
