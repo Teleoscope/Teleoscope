@@ -267,7 +267,7 @@ def reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query
     obj = fs.put(dumps, encoding='utf-8')
 
     # update stateVector
-    db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime[0].tolist()}})
+    db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
     # update rankedPosts
     db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : obj}})
 
