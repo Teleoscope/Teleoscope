@@ -7,15 +7,16 @@ import Fab from "@material-ui/core/Fab";
 import AddIcon from "@material-ui/icons/Add";
 import { makeStyles } from "@material-ui/core/styles";
 import Workspace from "../components/Workspace";
-import store from "../stores/store"
-import { Provider } from 'react-redux'
- 
+import store from "../stores/store";
+import { Provider } from "react-redux";
+
 import { connectToDatabase } from "../util/mongodb";
 
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 //import { connectToDatabase } from "../util/mongodb";
 // import { sto } from "../util/stomp";
-
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -32,7 +33,6 @@ export default function Home({ isConnected }) {
   const [docSets, setDocSets] = useState([]);
 
   const handleClick = (evt) => {
-
     // evt.preventDefault();
     // var temp = [...docSets];
     // temp.push({ show: true });
@@ -47,22 +47,22 @@ export default function Home({ isConnected }) {
   };
 
   return (
-    <Layout>
-      <div className="container">
-        <Head>
-          <title>Explore Documents</title>
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
+    <DndProvider backend={HTML5Backend}>
+      <Layout>
+        <div className="container">
+          <Head>
+            <title>Explore Documents</title>
+            <link rel="icon" href="/favicon.ico" />
+          </Head>
 
-        <main>
-        <Provider store={store}>
-          <Workspace 
-            isConnected={isConnected}
-          />
-        </Provider>
-        </main>
-      </div>
-    </Layout>
+          <main>
+            <Provider store={store}>
+              <Workspace isConnected={isConnected} />
+            </Provider>
+          </main>
+        </div>
+      </Layout>
+    </DndProvider>
   );
 }
 
