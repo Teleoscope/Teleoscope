@@ -226,40 +226,39 @@ def reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query
         model = utils.loadModel() # load NLP model
         stateVector = model([query]).numpy() # convert query string to vector
 
+    # get vectors for positive and negative doc ids using utils.getPostVector function
     posVecs = []
-    negVecs = []
     for pos_id in positive_docs:
         v = utils.getPostVector(db, pos_id)
         posVecs.append(v)
-        
+
+    negVecs = []
     for neg_id in negative_docs:
         v = utils.getPostVector(db, neg_id)*-1
         negVecs.append(v)
     
-    avgPosVec = np.array(posVecs).mean(axis=0)
-    avgNegVec = np.array(negVecs).mean(axis=0)
-    resultantVec = avgPosVec - avgNegVec
+    avgPosVec = None
+    avgNegVec = None
+
+    # handle different cases of number of docs in each list
+    if len(posVecs) >= 1:
+        avgPosVec = np.array(posVecs).mean(axis=0)
+    if len(negVecs) >= 1:
+        avgNegVec = np.array(posVecs).mean(axis=0)
+
+    if avgPosVec is not None and avgNegVec is not None:
+        resultantVec = avgPosVec - avgNegVec
+    elif avgPosVec is None and avgNegVec is not None:
+        resultantVec = avgNegVec
+    elif avgPosVec is not None and avgNegVec is None:
+        resultantVec = avgPosVec
+
+    # make unit vector
     resultantVec = resultantVec / np.linalg.norm(resultantVec)
     qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=1) # move qvector towards/away from feedbackVector
-
-    # batch size for fetching all posts from mongodb
-    limitSize = 10000
-    # fetch all posts from mongodb in batches
-    numSkip = 0 
-    dataProcessed = 0
-    data = []
-    while True:
-        batch = db.clean.posts.v2.find(projection={'id':1, 'selftextVector':1}).skip(numSkip).limit(limitSize)
-        batch = list(batch)
-        if len(batch) == 0:
-            break
-        data += batch
-        dataProcessed += len(batch)
-        logging.info(dataProcessed)
-        numSkip += limitSize
-    
-    scores = utils.calculateSimilarity(data, qprime)
-    newRanks = utils.rankPostsBySimilarity(data, scores)
+    allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1}, batching=True, batchSize=10000)
+    scores = utils.calculateSimilarity(allPosts, qprime)
+    newRanks = utils.rankPostsBySimilarity(allPosts, scores)
 
     # convert to json to upload to gridfs
     dumps = json.dumps(newRanks)

@@ -6,6 +6,7 @@ import numpy as np
 from pymongo import MongoClient
 import gridfs
 from tqdm import tqdm
+import logging 
 
 import gensim.downloader as api
 from gensim.corpora import Dictionary
@@ -170,9 +171,27 @@ def loadModel():
     model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
     return model
 
-def getAllPosts(db, projection):
-    allPosts = db.clean.posts.v2.find({}, projection=projection)
-    allPosts = list(allPosts)
+def getAllPosts(db, projection, batching=True, batchSize=10000):
+    if not batching:
+        allPosts = db.clean.posts.v2.find({}, projection=projection)
+        allPosts = list(allPosts)
+        return allPosts
+    
+    # fetch all posts from mongodb in batches
+    numSkip = 0 
+    dataProcessed = 0
+    allPosts = []
+    while True:
+        batch = db.clean.posts.v2.find(projection=projection).skip(numSkip).limit(batchSize)
+        batch = list(batch)
+        # break if no more posts
+        if len(batch) == 0:
+            break
+        allPosts += batch
+        dataProcessed += len(batch)
+        logging.info(dataProcessed)
+        numSkip += batchSize
+    
     return allPosts
 
 def calculateSimilarity(posts, queryVector):
