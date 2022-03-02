@@ -40,15 +40,19 @@ Performs a text query on aita.clean.posts.v2 text index.
 If the query string alredy exists in the queries collection, does nothing.
 Otherwise, adds the query to the queries collection and performs a text query the results of which are added to the
 queries collection.
+
+TODO: We can use GridFS to store the results of the query if needed.
+Doesnt seem to be an issue right now.
 '''
 @app.task
 def querySearch(query_string):
     db = utils.connect()
     query_results = db.queries.find_one({"query": query_string})
     
+    # check if query already exists
     if query_results is not None:
         logging.info(f"query {query_string} already exists in queries collection")
-        return None
+        return query_results['reddit_ids']
 
     # create a new query document
     db.queries.insert_one({"query": query_string}) 
@@ -58,6 +62,7 @@ def querySearch(query_string):
     cursor = db.clean.posts.v2.find(textSearchQuery, projection = {'id':1})
     return_ids = [x['id'] for x in cursor]
 
+    # store results in queries collection
     db.queries.update_one({'query': query_string},
                       {'$set': {"reddit_ids": return_ids}})
     
