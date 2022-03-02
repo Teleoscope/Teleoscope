@@ -252,23 +252,20 @@ def run_query_init(query_string):
 #     return 200
 @app.task
 def nlp(*args, query_string: str, post_id: str, status: int):
-    print('1.Connecting to DB')
     db = utils.connect()
-    print('2.Loading Model')
-    model = utils.loadModel() # load NLP model
-    print('3.Converting Query to Vector')
-    qvector = model([query_string]).numpy() # convert query string to vector
-    print('4.Getting vector of feedback post')
+    queryDocument = db.queries.find_one({"query": query_string})
+    # check if stateVector exists
+    if 'stateVector' in queryDocument:
+        stateVector = queryDocument['stateVector']
+    else:
+        model = utils.loadModel() # load NLP model
+        stateVector = model([query_string]).numpy() # convert query string to vector
+        
     feedbackVector = utils.getPostVector(db, post_id) # get vector of feedback post
-    print('5.Moving query vector towards/away from feedback vector')
     qprime = utils.moveVector(sourceVector=qvector, destinationVector=feedbackVector, direction=status) # move qvector towards/away from feedbackVector
-    print('6.Getting all posts from mongodb')
     allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1}) # get all Posts from mongoDB as a list of projection tuples
-    print('7.Calculating similarity scores')
     scores = utils.calculateSimilarity(posts=allPosts, queryVector=qprime) # calculate similarity scores for all posts
-    print('8.Sorting posts by similarity scores')
     newRanks = utils.rankPostsBySimilarity(allPosts, scores)
-    print('9.Updating query in mongodb')
     db.queries.update_one({'query':query_string}, {'$set': { "ranked_post_ids" : newRanks[:100]}}) # update query with new ranked post ids
     print(f"NLP: {query_string}, {post_id}, {status}")
     return 200
