@@ -244,7 +244,7 @@ def reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query
     if len(posVecs) >= 1:
         avgPosVec = np.array(posVecs).mean(axis=0)
     if len(negVecs) >= 1:
-        avgNegVec = np.array(posVecs).mean(axis=0)
+        avgNegVec = np.array(negVecs).mean(axis=0)
 
     if avgPosVec is not None and avgNegVec is not None:
         resultantVec = avgPosVec - avgNegVec
