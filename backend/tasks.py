@@ -37,11 +37,11 @@ app.conf.update(
 '''
 querySearch:
 Performs a text query on aita.clean.posts.v2 text index.
-If the query string alredy exists in the queries collection, does nothing.
+If the query string alredy exists in the queries collection, returns existing reddit_ids.
 Otherwise, adds the query to the queries collection and performs a text query the results of which are added to the
-queries collection.
+queries collection and returned.
 
-TODO: We can use GridFS to store the results of the query if needed.
+TODO: We can use GridFS to store the results of the query if needed (if sizeof(reddit_ids) > 16MB).
 Doesnt seem to be an issue right now.
 '''
 @app.task
