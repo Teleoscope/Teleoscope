@@ -212,7 +212,6 @@ def run_query_init(query_string):
 TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
    because those docs should not be show in the ranked documents.
-2. Different cases of sizes of positive and negative sets.
 '''
 @app.task
 def reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
