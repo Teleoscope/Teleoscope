@@ -41,8 +41,11 @@ If the query string alredy exists in the queries collection, returns existing re
 Otherwise, adds the query to the queries collection and performs a text query the results of which are added to the
 queries collection and returned.
 
-TODO: We can use GridFS to store the results of the query if needed (if sizeof(reddit_ids) > 16MB).
-Doesnt seem to be an issue right now.
+TODO: 
+1. We can use GridFS to store the results of the query if needed (if sizeof(reddit_ids) > 16MB).
+   Doesnt seem to be an issue right now.
+2. Checks for both teleoscope_id and query. Need confirmation from frontend on whether the teleoscope_id and/or query will already exist?
+   If not, then who updates them?
 '''
 @app.task
 def querySearch(query_string, teleoscope_id):
