@@ -16,9 +16,9 @@ import ListItem from "@material-ui/core/ListItem";
 import Grid from "@material-ui/core/Grid";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
+import IconButton from "@mui/material/IconButton";
 
 // icons
-import IconButton from "@material-ui/core/IconButton";
 import FavoriteIcon from "@material-ui/icons/Favorite";
 import ShareIcon from "@material-ui/icons/Share";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
@@ -29,8 +29,8 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import VisibilityOffIcon from "@material-ui/icons/VisibilityOff";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
-import Telescope from "../public/telescope.png";
 import ClearIcon from "@mui/icons-material/Clear";
+import BiotechIcon from "@mui/icons-material/Biotech";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -127,45 +127,34 @@ export default function QueryListItem(props) {
     <>
       {props.workspace ? (
         <Draggable>
-          <ListItem
-            style={{ backgroundColor: "#ffffff" }}
-            className={classes.root}
-            onMouseEnter={() => props.hover(true)}
-            onMouseLeave={() => props.hover(false)}
-            disableGutters={true}
-            onClick={handleClick}
-          >
-            <ListItemText onClick={() => props.handleOpenClick(props.id)}>
-              {post ? postTitle(post) : "Post loading..."}
-            </ListItemText>
-            {open ? <ExpandLess /> : <ExpandMore />}
-          </ListItem>
-          {/* <div>
-            <button
-              style={{
-                marginBottom: 10,
-                marginLeft: 20,
-                width: 50,
-                backgroundColor: "white",
-              }}
+          <div>
+            <IconButton>
+              <BiotechIcon />
+            </IconButton>
+            <ListItem
+              style={{ backgroundColor: "#ffffff" }}
+              className={classes.root}
+              onMouseEnter={() => props.hover(true)}
+              onMouseLeave={() => props.hover(false)}
+              disableGutters={true}
+              onClick={handleClick}
             >
-              <img src={Telescope} alt="Telescope logo" style={{ width: 20 }} />
-            </button>
-            <ul
-              style={{
-                backgroundColor: "#f2f2f2",
-                color: "black",
-                // border: isDragging ? "2px solid red" : "1px solid black",
-                width: "100px",
-                height: "7=60px",
-              }}
-            >
-              text
-              <IconButton>
-                <ClearIcon />
-              </IconButton>
-            </ul>
-          </div> */}
+              <ListItemText onClick={() => props.handleOpenClick(props.id)}>
+                {post ? postTitle(post) : "Post loading..."}
+              </ListItemText>
+              {open ? <ExpandLess /> : <ExpandMore />}
+            </ListItem>
+            <Collapse timeout="auto" unmountOnExit in={open}>
+              <List disablePadding>
+                <ListItem>
+                  <ListItemText
+                    primary="content: dummy test"
+                    style={{ marginLeft: 50 }}
+                  />
+                </ListItem>
+              </List>
+            </Collapse>
+          </div>
         </Draggable>
       ) : (
         <div ref={drag}>
