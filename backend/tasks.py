@@ -34,6 +34,38 @@ app.conf.update(
     result_serializer='pickle',
 )
 
+'''
+querySearch:
+Performs a text query on aita.clean.posts.v2 text index.
+If the query string alredy exists in the queries collection, does nothing.
+Otherwise, adds the query to the queries collection and performs a text query the results of which are added to the
+queries collection.
+'''
+@app.task
+def querySearch(query_string):
+    db = utils.connect()
+    query_results = db.queries.find_one({"query": query_string})
+    
+    if query_results is not None:
+        logging.info(f"query {query_string} already exists in queries collection")
+        return None
+
+    # create a new query document
+    db.queries.insert_one({"query": query_string}) 
+
+    # perform text search query
+    textSearchQuery = {"$text": {"$search": query_string}}
+    cursor = db.clean.posts.v2.find(textSearchQuery, projection = {'id':1})
+    return_ids = [x['id'] for x in cursor]
+
+    db.queries.update_one({'query': query_string},
+                      {'$set': {"reddit_ids": return_ids}})
+    
+    logging.info(f"query {query_string} added to queries collection")
+    return return_ids
+
+
+
 
 @app.task
 def push(query_string, field, values):
