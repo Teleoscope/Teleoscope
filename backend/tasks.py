@@ -232,6 +232,7 @@ def nlp(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str
     if 'stateVector' in queryDocument:
         stateVector = np.array(queryDocument['stateVector'])
     else:
+        logging.info('loading model')
         model = utils.loadModel() # load NLP model
         stateVector = model([query]).numpy() # convert query string to vector
 
@@ -245,15 +246,43 @@ def nlp(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str
         v = utils.getPostVector(db, neg_id)*-1
         negVecs.append(v)
     
-    avgVec = np.zeros((512,))
+    avgPosVec = np.array(posVecs).mean(axis=0)
+    avgNegVec = np.array(negVecs).mean(axis=0)
+    resultantVec = avgPosVec - avgNegVec
+    resultantVec = resultantVec / np.linalg.norm(resultantVec)
+    qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=1) # move qvector towards/away from feedbackVector
 
-    for pvec in posVecs:
-        avgVec += pvec
-
-    for nvec in negVecs:
-        avgVec += nvec
+    # batch size for fetching all posts from mongodb
+    limitSize = 10000
+    # fetch all posts from mongodb in batches
+    numSkip = 0 
+    dataProcessed = 0
+    data = []
+    while True:
+        batch = db.clean.posts.v2.find(projection={'id':1, 'selftextVector':1}).skip(numSkip).limit(limitSize)
+        batch = list(batch)
+        if len(batch) == 0:
+            break
+        data += batch
+        dataProcessed += len(batch)
+        logging.info(dataProcessed)
+        numSkip += limitSize
     
-    avgVec /= (len(posVecs) + len(negVecs))
+    scores = utils.calculateSimilarity(data, qprime)
+    newRanks = utils.rankPostsBySimilarity(data, scores)
+
+    # convert to json to upload to gridfs
+    dumps = json.dumps(newRanks)
+    # upload to gridfs
+    fs = GridFS(db, "queries")
+    obj = fs.put(dumps, encoding='utf-8')
+
+    # update stateVector
+    db.queries.update_one({"query": query, "teleoscope_id": tid}, {'$set': { "stateVector" : qprime[0].tolist()}})
+    # update rankedPosts
+    db.queries.update_one({"query": query, "teleoscope_id": tid}, {'$set': { "ranked_post_ids" : obj}})
+
+    return 200
     
     # feedbackVector = utils.getPostVector(db, post_id) # get vector of feedback post
     # qprime = utils.moveVector(sourceVector=qvector, destinationVector=feedbackVector, direction=status) # move qvector towards/away from feedbackVector
