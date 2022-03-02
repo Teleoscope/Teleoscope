@@ -66,8 +66,7 @@ def querySearch(query_string, teleoscope_id):
     return_ids = [x['id'] for x in cursor]
 
     # store results in queries collection
-    db.queries.update_one({'query': query_string},
-                      {'$set': {"reddit_ids": return_ids}})
+    db.queries.update_one({'query': query_string, 'telesope_id': teleoscope_id}, {'$set': {'reddit_ids': return_ids}})
     
     logging.info(f"query {query_string} added to queries collection")
     return return_ids
