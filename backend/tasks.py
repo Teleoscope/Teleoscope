@@ -225,7 +225,7 @@ TODO:
 2. Different cases of sizes of positive and negative sets.
 '''
 @app.task
-def nlp(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+def reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
     db = utils.connect()
     queryDocument = db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
     # check if stateVector exists

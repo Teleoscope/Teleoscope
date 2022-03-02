@@ -9,7 +9,7 @@ import tasks
 # print("Embedding Shape: {}".format(emb.shape))
 
 print("Calling NLP Task...")
-res = tasks.nlp.delay(query_string="password", post_id="d6i6s9", status=1)
+res = tasks.reorient.delay(teleoscope_id='a1', positive_docs=['j1f7am', 'j1f2rk'], negative_docs=['j1f71q', 'j1f36t'], query='mom')
 print(res.get())
 
 
