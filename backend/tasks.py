@@ -233,7 +233,7 @@ def reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query
 
     negVecs = []
     for neg_id in negative_docs:
-        v = utils.getPostVector(db, neg_id)*-1
+        v = utils.getPostVector(db, neg_id)*-1 # need -1??
         negVecs.append(v)
     
     avgPosVec = None
