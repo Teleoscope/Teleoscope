@@ -1,3 +1,4 @@
+from re import T
 import tasks
 
 
@@ -9,15 +10,16 @@ import tasks
 # print("Embedding Shape: {}".format(emb.shape))
 
 print("Testing both docs size 2")
-res = tasks.reorient.delay(teleoscope_id='a1', positive_docs=['j1f7am', 'j1f2rk'], negative_docs=['j1f71q', 'j1f36t'], query='mom')
+t = tasks.reorient()
+res = t.delay(teleoscope_id='a1', positive_docs=['j1f7am', 'j1f2rk'], negative_docs=['j1f71q', 'j1f36t'], query='mom')
 print(res.get())
 
 print("Testing positive docs size 1, empty negative docs")
-res = tasks.reorient.delay(teleoscope_id='a1', positive_docs=['j1eznm'], negative_docs=[], query='mom')
+res = t.delay(teleoscope_id='a1', positive_docs=['j1eznm'], negative_docs=[], query='mom')
 print(res.get())
 
 print("Testing both size 1")
-res = tasks.reorient.delay(teleoscope_id='a1', positive_docs=['j1f2rk'], negative_docs=['j1ey3j'], query='mom')
+res = t.delay(teleoscope_id='a1', positive_docs=['j1f2rk'], negative_docs=['j1ey3j'], query='mom')
 print(res.get())
 
 
