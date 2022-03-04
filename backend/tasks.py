@@ -11,7 +11,7 @@ import json
 
 import numpy as np
 import tensorflow_hub as hub
-from celery import Celery, Task
+from celery import Celery, Task, registry
 
 # local files
 import auth
@@ -281,8 +281,7 @@ class reorient(Task):
 
         return 200
 
-rt = reorient()
-app.register_task(rt)
+registry.tasks[reorient().name]
 # '''
 # TODO:
 # 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
