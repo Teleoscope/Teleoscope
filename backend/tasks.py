@@ -11,7 +11,7 @@ import json
 
 import numpy as np
 import tensorflow_hub as hub
-from celery import Celery, Task, registry
+from celery import Celery
 
 # local files
 import auth
