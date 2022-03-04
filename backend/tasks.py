@@ -215,7 +215,7 @@ TODO:
    because those docs should not be show in the ranked documents.
 '''
 @app.task
-class reorient(Task):
+class reorient(app.Task):
     
     def __init__(self):
         with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
@@ -281,7 +281,7 @@ class reorient(Task):
 
         return 200
 
-registry.tasks[reorient().name]
+add = app.tasks[reorient.name]
 # '''
 # TODO:
 # 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
