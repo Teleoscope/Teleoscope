@@ -257,9 +257,8 @@ def reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query
     qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=1) # move qvector towards/away from feedbackVector
     # allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1}, batching=True, batchSize=10000)
     logging.info("reading emebddings data...")
-    # with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
-    #     allPosts = pickle.load(handle)
-    allPosts = np.load('/home/phb/embeddings/embeddings.npz', allow_pickle=True)['posts']
+    with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
+        allPosts = pickle.load(handle)
     logging.info("loaded emebddings data...")
 
     scores = utils.calculateSimilarity(allPosts, qprime)
