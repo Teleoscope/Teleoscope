@@ -237,12 +237,12 @@ class reorient(Celery.app.Task):
         # get vectors for positive and negative doc ids using utils.getPostVector function
         posVecs = []
         for pos_id in positive_docs:
-            v = utils.getPostVector(db, pos_id)
+            v = utils.getPostVector(self.db, pos_id)
             posVecs.append(v)
 
         negVecs = []
         for neg_id in negative_docs:
-            v = utils.getPostVector(db, neg_id)*-1 # need -1??
+            v = utils.getPostVector(self.db, neg_id)*-1 # need -1??
             negVecs.append(v)
         
         avgPosVec = None
