@@ -215,7 +215,7 @@ TODO:
    because those docs should not be show in the ranked documents.
 '''
 @app.task
-class reorient(Celery.app.Task):
+class reorient(app.Task):
     
     def __init__(self):
         with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
