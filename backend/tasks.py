@@ -208,71 +208,144 @@ def run_query_init(query_string):
     )
     return result, _reddit_ids
 
+
 '''
 TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
    because those docs should not be show in the ranked documents.
 '''
 @app.task
-def reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
-    db = utils.connect()
-    queryDocument = db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
-    # check if stateVector exists
-    if 'stateVector' in queryDocument:
-        stateVector = np.array(queryDocument['stateVector'])
-    else:
-        logging.info('loading model')
-        model = utils.loadModel() # load NLP model
-        stateVector = model([query]).numpy() # convert query string to vector
-
-    # get vectors for positive and negative doc ids using utils.getPostVector function
-    posVecs = []
-    for pos_id in positive_docs:
-        v = utils.getPostVector(db, pos_id)
-        posVecs.append(v)
-
-    negVecs = []
-    for neg_id in negative_docs:
-        v = utils.getPostVector(db, neg_id)*-1 # need -1??
-        negVecs.append(v)
+class reorient(Celery.app.Task):
     
-    avgPosVec = None
-    avgNegVec = None
+    def __init__(self):
+        with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
+            logging.info('loading embeddings in INIT...')
+            self.allPosts = pickle.load(handle)
 
-    # handle different cases of number of docs in each list
-    if len(posVecs) >= 1:
-        avgPosVec = np.array(posVecs).mean(axis=0)
-    if len(negVecs) >= 1:
-        avgNegVec = np.array(negVecs).mean(axis=0)
+        self.db = utils.connect()
+        self.model = utils.loadModel() # load NLP model
 
-    if avgPosVec is not None and avgNegVec is not None:
-        resultantVec = avgPosVec - avgNegVec
-    elif avgPosVec is None and avgNegVec is not None:
-        resultantVec = avgNegVec
-    elif avgPosVec is not None and avgNegVec is None:
-        resultantVec = avgPosVec
+    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+        
+        queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
+        # check if stateVector exists
+        if 'stateVector' in queryDocument:
+            stateVector = np.array(queryDocument['stateVector'])
+        else:
+            stateVector = self.model([query]).numpy() # convert query string to vector
 
-    # make unit vector
-    resultantVec = resultantVec / np.linalg.norm(resultantVec)
-    qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=1) # move qvector towards/away from feedbackVector
-    # allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1}, batching=True, batchSize=10000)
-    logging.info("reading emebddings data...")
-    with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
-        allPosts = pickle.load(handle)
-    logging.info("loaded emebddings data...")
+        # get vectors for positive and negative doc ids using utils.getPostVector function
+        posVecs = []
+        for pos_id in positive_docs:
+            v = utils.getPostVector(db, pos_id)
+            posVecs.append(v)
 
-    scores = utils.calculateSimilarity(allPosts, qprime)
-    newRanks = utils.rankPostsBySimilarity(allPosts, scores)
+        negVecs = []
+        for neg_id in negative_docs:
+            v = utils.getPostVector(db, neg_id)*-1 # need -1??
+            negVecs.append(v)
+        
+        avgPosVec = None
+        avgNegVec = None
 
-    # convert to json to upload to gridfs
-    dumps = json.dumps(newRanks)
-    # upload to gridfs
-    fs = GridFS(db, "queries")
-    obj = fs.put(dumps, encoding='utf-8')
+        # handle different cases of number of docs in each list
+        if len(posVecs) >= 1:
+            avgPosVec = np.array(posVecs).mean(axis=0)
+        if len(negVecs) >= 1:
+            avgNegVec = np.array(negVecs).mean(axis=0)
 
-    # update stateVector
-    db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
-    # update rankedPosts
-    db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : obj}})
+        if avgPosVec is not None and avgNegVec is not None:
+            resultantVec = avgPosVec - avgNegVec
+        elif avgPosVec is None and avgNegVec is not None:
+            resultantVec = avgNegVec
+        elif avgPosVec is not None and avgNegVec is None:
+            resultantVec = avgPosVec
 
-    return 200
+        # make unit vector
+        resultantVec = resultantVec / np.linalg.norm(resultantVec)
+        qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=1) # move qvector towards/away from feedbackVector
+
+        scores = utils.calculateSimilarity(self.allPosts, qprime)
+        newRanks = utils.rankPostsBySimilarity(self.allPosts, scores)
+
+        # convert to json to upload to gridfs
+        dumps = json.dumps(newRanks)
+        # upload to gridfs
+        fs = GridFS(self.db, "queries")
+        obj = fs.put(dumps, encoding='utf-8')
+
+        # update stateVector
+        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
+        # update rankedPosts
+        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : obj}})
+
+        return 200
+
+# '''
+# TODO:
+# 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
+#    because those docs should not be show in the ranked documents.
+# '''
+# @app.task
+# def reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+#     db = utils.connect()
+#     queryDocument = db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
+#     # check if stateVector exists
+#     if 'stateVector' in queryDocument:
+#         stateVector = np.array(queryDocument['stateVector'])
+#     else:
+#         logging.info('loading model')
+#         model = utils.loadModel() # load NLP model
+#         stateVector = model([query]).numpy() # convert query string to vector
+
+#     # get vectors for positive and negative doc ids using utils.getPostVector function
+#     posVecs = []
+#     for pos_id in positive_docs:
+#         v = utils.getPostVector(db, pos_id)
+#         posVecs.append(v)
+
+#     negVecs = []
+#     for neg_id in negative_docs:
+#         v = utils.getPostVector(db, neg_id)*-1 # need -1??
+#         negVecs.append(v)
+    
+#     avgPosVec = None
+#     avgNegVec = None
+
+#     # handle different cases of number of docs in each list
+#     if len(posVecs) >= 1:
+#         avgPosVec = np.array(posVecs).mean(axis=0)
+#     if len(negVecs) >= 1:
+#         avgNegVec = np.array(negVecs).mean(axis=0)
+
+#     if avgPosVec is not None and avgNegVec is not None:
+#         resultantVec = avgPosVec - avgNegVec
+#     elif avgPosVec is None and avgNegVec is not None:
+#         resultantVec = avgNegVec
+#     elif avgPosVec is not None and avgNegVec is None:
+#         resultantVec = avgPosVec
+
+#     # make unit vector
+#     resultantVec = resultantVec / np.linalg.norm(resultantVec)
+#     qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=1) # move qvector towards/away from feedbackVector
+#     # allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1}, batching=True, batchSize=10000)
+#     logging.info("reading emebddings data...")
+#     with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
+#         allPosts = pickle.load(handle)
+#     logging.info("loaded emebddings data...")
+
+#     scores = utils.calculateSimilarity(allPosts, qprime)
+#     newRanks = utils.rankPostsBySimilarity(allPosts, scores)
+
+#     # convert to json to upload to gridfs
+#     dumps = json.dumps(newRanks)
+#     # upload to gridfs
+#     fs = GridFS(db, "queries")
+#     obj = fs.put(dumps, encoding='utf-8')
+
+#     # update stateVector
+#     db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
+#     # update rankedPosts
+#     db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : obj}})
+
+#     return 200
