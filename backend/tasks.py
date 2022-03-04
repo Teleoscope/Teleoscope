@@ -280,7 +280,7 @@ class reorient(Task):
         self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : obj}})
 
         return 200
-
+app.tasks.register(reorient())
 # add = app.tasks[reorient.name]
 # '''
 # TODO:
