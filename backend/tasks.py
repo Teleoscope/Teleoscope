@@ -11,7 +11,7 @@ import json
 
 import numpy as np
 import tensorflow_hub as hub
-from celery import Celery
+from celery import Celery, Task
 
 # local files
 import auth
@@ -215,7 +215,7 @@ TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
    because those docs should not be show in the ranked documents.
 '''
-class reorient(app.Task):
+class reorient(Task):
     
     def __init__(self):
         with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
