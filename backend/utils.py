@@ -190,6 +190,7 @@ def getAllPosts(db, projection, batching=True, batchSize=10000):
         allPosts += batch
         dataProcessed += len(batch)
         logging.info(dataProcessed)
+        print(dataProcessed)
         numSkip += batchSize
     
     return allPosts
