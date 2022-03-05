@@ -230,11 +230,12 @@ class reorient(Task):
     def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
         if self.postsCached == False:
             logging.info('Embeddings not cached...')
-            with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
-                allPosts = pickle.load(handle)
-                self.allPostIDs = [x['id'] for x in allPosts]
-                self.allPostVectors = np.array([x['selftextVector'] for x in allPosts])
-                self.postsCached = True
+            # Load embeddings
+            self.allPostVectors = np.load('/home/phb/embeddings/embeddings.npz', allow_pickle=False)['posts']
+            # Load ids
+            with open('/home/phb/embeddings/ids.pkl', 'rb') as handle:
+                self.allPostIDs = pickle.load(handle)
+            self.postsCached = True
             logging.info('Embeddings cached...')
         else:
             logging.info('Embeddings already cached...')
