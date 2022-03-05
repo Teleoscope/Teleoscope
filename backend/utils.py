@@ -195,11 +195,10 @@ def getAllPosts(db, projection, batching=True, batchSize=10000):
     
     return allPosts
 
-def calculateSimilarity(posts, queryVector):
-    vectors = np.array([x['selftextVector'] for x in posts])
-    scores = queryVector.dot(vectors.T).flatten() # cosine similarity scores. (assumes vectors are normalized to unit length)
+def calculateSimilarity(postVectors, queryVector):
+    scores = queryVector.dot(postVectors.T).flatten() # cosine similarity scores. (assumes vectors are normalized to unit length)
     return scores
 
 # create and return a list a tuples of (post_id, similarity_score) sorted by similarity score, high to low
-def rankPostsBySimilarity(posts, scores):
-    return sorted([(post['id'], score) for (post, score) in zip(posts, scores)], key=lambda x:x[1], reverse=True)
+def rankPostsBySimilarity(posts_ids, scores):
+    return sorted([(post_id, score) for (post_id, score) in zip(posts_ids, scores)], key=lambda x:x[1], reverse=True)

@@ -220,16 +220,21 @@ TODO:
 class reorient(Task):
     
     def __init__(self):
-        self.allPosts = None
+        self.postsCached = False
+        self.allPostIDs = None
+        self.allPostVectors = None
         self.db = None
         self.model = None
         
 
     def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
-        if self.allPosts is None:
+        if self.postsCached == False:
             logging.info('Embeddings not cached...')
             with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
-                self.allPosts = pickle.load(handle)
+                allPosts = pickle.load(handle)
+                self.allPostIDs = [x['id'] for x in allPosts]
+                self.allPostVectors = np.array([x['selftextVector'] for x in allPosts])
+                self.postsCached = True
             logging.info('Embeddings cached...')
         else:
             logging.info('Embeddings already cached...')
@@ -297,12 +302,12 @@ class reorient(Task):
         qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=1) # move qvector towards/away from feedbackVector
 
         s = time.time()
-        scores = utils.calculateSimilarity(self.allPosts, qprime)
+        scores = utils.calculateSimilarity(self.allPostVectors, qprime)
         e = time.time()
         total = (e - s)
         logging.info(f'Similarity scores calculated in {total} seconds')
         s = time.time()
-        newRanks = utils.rankPostsBySimilarity(self.allPosts, scores)
+        newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
         e = time.time()
         total = (e - s)
         logging.info(f'Posts ranked in {total} seconds')
