@@ -218,20 +218,39 @@ TODO:
 class reorient(Task):
     
     def __init__(self):
-        with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
-            logging.info('loading embeddings in INIT...')
-            self.allPosts = pickle.load(handle)
-
-        self.db = utils.connect()
-        self.model = utils.loadModel() # load NLP model
+        self.allPosts = None
+        self.db = None
+        self.model = None
+        
 
     def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+        if self.allPosts is None:
+            logging.info('Embeddings not cached...')
+            with open('/home/phb/embeddings/embeddings.pkl', 'rb') as handle:
+                self.allPosts = pickle.load(handle)
+            logging.info('Embeddings cached...')
+        else:
+            logging.info('Embeddings already cached...')
+
+        if self.db is None:
+            logging.info('DB connection not cached, connecting to DB...')
+            self.db = utils.connect()
+            logging.info('DB connection cached...')
+        else:
+            logging.info('DB connection already cached...')
         
         queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
         # check if stateVector exists
         if 'stateVector' in queryDocument:
             stateVector = np.array(queryDocument['stateVector'])
         else:
+            if self.model is None:
+                logging.info('Model not cached, loading model...')
+                self.model = utils.loadModel()
+                logging.info('Model cached...')
+            else:
+                logging.info('Model already cached...')
+
             stateVector = self.model([query]).numpy() # convert query string to vector
 
         # get vectors for positive and negative doc ids using utils.getPostVector function
@@ -280,7 +299,8 @@ class reorient(Task):
         self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : obj}})
 
         return 200
-app.register_task(reorient())
+
+robj = app.register_task(reorient())
 # add = app.tasks[reorient.name]
 # '''
 # TODO:
