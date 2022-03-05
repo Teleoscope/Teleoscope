@@ -254,6 +254,7 @@ class reorient(Task):
             stateVector = self.model([query]).numpy() # convert query string to vector
 
         # get vectors for positive and negative doc ids using utils.getPostVector function
+        # TODO: OPTIMIZE
         posVecs = []
         for pos_id in positive_docs:
             v = utils.getPostVector(self.db, pos_id)
