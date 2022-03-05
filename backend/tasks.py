@@ -16,6 +16,8 @@ from celery import Celery, Task
 # local files
 import auth
 
+import time
+
 # Thanks to http://brandonrose.org/clustering!
 # and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32
 
@@ -238,8 +240,13 @@ class reorient(Task):
             logging.info('DB connection cached...')
         else:
             logging.info('DB connection already cached...')
-        
+
+        s = time.time()
         queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
+        e = time.time()
+        total = (e - s)
+        logging.info(f'Query document retrieved in {total} seconds')
+
         # check if stateVector exists
         if 'stateVector' in queryDocument:
             stateVector = np.array(queryDocument['stateVector'])
@@ -255,6 +262,7 @@ class reorient(Task):
 
         # get vectors for positive and negative doc ids using utils.getPostVector function
         # TODO: OPTIMIZE
+        s = time.time()
         posVecs = []
         for pos_id in positive_docs:
             v = utils.getPostVector(self.db, pos_id)
@@ -264,6 +272,9 @@ class reorient(Task):
         for neg_id in negative_docs:
             v = utils.getPostVector(self.db, neg_id)*-1 # need -1??
             negVecs.append(v)
+        e = time.time()
+        total = (e - s)
+        logging.info(f'Pos/Neg Vectors retrieved in {total} seconds')
         
         avgPosVec = None
         avgNegVec = None
@@ -285,19 +296,39 @@ class reorient(Task):
         resultantVec = resultantVec / np.linalg.norm(resultantVec)
         qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=1) # move qvector towards/away from feedbackVector
 
+        s = time.time()
         scores = utils.calculateSimilarity(self.allPosts, qprime)
+        e = time.time()
+        total = (e - s)
+        logging.info(f'Similarity scores calculated in {total} seconds')
+        s = time.time()
         newRanks = utils.rankPostsBySimilarity(self.allPosts, scores)
+        e = time.time()
+        total = (e - s)
+        logging.info(f'Posts ranked in {total} seconds')
 
+        s = time.time()
         # convert to json to upload to gridfs
         dumps = json.dumps(newRanks)
+        e = time.time()
+        total = (e - s)
+        logging.info(f'Dumped json in {total} seconds')
         # upload to gridfs
+        s = time.time()
         fs = GridFS(self.db, "queries")
         obj = fs.put(dumps, encoding='utf-8')
+        e = time.time()
+        total = (e - s)
+        logging.info(f'Uploaded json to gridfs in {total} seconds')
 
+        s =  time.time()
         # update stateVector
         self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
         # update rankedPosts
         self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : obj}})
+        e = time.time()
+        total = (e - s)
+        logging.info(f'Updated stateVector and rankedPosts in {total} seconds')
 
         return 200
 
