@@ -1,24 +1,5 @@
 import tasks
 
-# query1= "password"
-# print("Calling Query Search Task with Query: {}".format(query1))
-# res = tasks.querySearch.delay(query_string=query1)
-# print(res.get())
-# print("Query 1 finished")
-
-# query2= "bike"
-# print("Calling Query Search Task with Query: {}".format(query2))
-# res = tasks.querySearch.delay(query_string=query2)
-# print(res.get())
-# print("Query 2 finished")
-
-# approx 400k docs
-# query3 = "aita"
-# print("Calling Query Search Task with Query: {}".format(query3))
-# res = tasks.querySearch.delay(query_string=query3)
-# print(res.get())
-# print("Query 3 finished")
-
 query4 = "mom"
 tid = 'a1'
 print("Calling Query Search Task with Query: {}".format(query4))
@@ -39,3 +20,17 @@ print("Calling Query Search Task with Query: {}".format(query6))
 res = tasks.querySearch.delay(query_string=query6, teleoscope_id=tid)
 print(res.get())
 print("Query 6 finished")
+=======
+from tasks import robj
+
+print("Testing both docs size 2")
+res = robj.delay(teleoscope_id='a1', positive_docs=['j1f7am', 'j1f2rk'], negative_docs=['j1f71q', 'j1f36t'], query='mom')
+print(res.get())
+
+# print("Testing positive docs size 1, empty negative docs")
+# res = robj.delay(teleoscope_id='a1', positive_docs=['j1eznm'], negative_docs=[], query='mom')
+# print(res.get())
+
+# print("Testing both size 1")
+# res = robj.delay(teleoscope_id='a1', positive_docs=['j1f2rk'], negative_docs=['j1ey3j'], query='mom')
+# print(res.get())

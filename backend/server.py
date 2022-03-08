@@ -80,7 +80,17 @@ async def user_interaction(req):
     logging.info(f"Running NLP model with query {q}, post id {_id}")
     task = tasks.nlp.signature(
         args=(), 
-        kwargs={"query_string": q, "post_id":_id, "status": int(status)}
+        kwargs={"query_string": q, "post_id":_id, "status": -1}
+    )
+    print(task)
+    res = task.apply_async()
+    data = {"Status": 200}
+    return web.json_response(data)
+
+async def use_model(text):
+    task = tasks.getEmbedding.signature(
+        args=(), 
+        kwargs={"text":text}
     )
     print(task)
     res = task.apply_async()

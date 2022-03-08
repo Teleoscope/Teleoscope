@@ -1,10 +1,12 @@
 # builtin modules
 import pickle
-
+import tensorflow_hub as hub
+import numpy as np
 # installed modules
 from pymongo import MongoClient
 import gridfs
 from tqdm import tqdm
+import logging 
 
 import gensim.downloader as api
 from gensim.corpora import Dictionary
@@ -138,7 +140,65 @@ def safeget(mp, *keys):
     return mp
 
 
-def update_embedding(q_vector, feedback_vector, feedback):
-    SENSITIVITY = 0.75
-    new_q = (1 - feedback * SENSITIVITY) * q_vector + feedback * SENSITIVITY * feedback_vector
+# def update_embedding(q_vector, feedback_vector, feedback):
+#     SENSITIVITY = 0.75
+#     new_q = (1 - feedback * SENSITIVITY) * q_vector + feedback * SENSITIVITY * feedback_vector
+#     return new_q
+
+'''
+moveVector:
+    q_vector: query vector
+    feedback_vector: feedback vector
+    feedback: feedback value - 1 for like, -1 for dislike
+
+    returns: new query vector
+    side effects: moves the query vector towards the feedback vector by a certain amount defined by sensitivity and then norms the vector to have unit length
+'''
+# TODO: is this commutative? i.e. can we go from x -> y and then y -> x by the same reverse action?
+# TODO: 
+def moveVector(sourceVector, destinationVector, direction, magnitude = None):
+    magnitude = magnitude if magnitude is not None else 0.75
+    new_q = sourceVector + direction*magnitude*(destinationVector - sourceVector)
+    new_q = new_q / np.linalg.norm(new_q)
     return new_q
+
+def getPostVector(db, post_id):
+    post = db.clean.posts.v2.find_one({"id": post_id}, projection={'selftextVector':1}) # get post which was liked/disliked
+    postVector = np.array(post['selftextVector']) # extract vector of post which was liked/disliked
+    return postVector
+
+def loadModel():
+    model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    return model
+
+def getAllPosts(db, projection, batching=True, batchSize=10000):
+    if not batching:
+        allPosts = db.clean.posts.v2.find({}, projection=projection)
+        allPosts = list(allPosts)
+        return allPosts
+    
+    # fetch all posts from mongodb in batches
+    numSkip = 0 
+    dataProcessed = 0
+    allPosts = []
+    while True:
+        batch = db.clean.posts.v2.find(projection=projection).skip(numSkip).limit(batchSize)
+        batch = list(batch)
+        # break if no more posts
+        if len(batch) == 0:
+            break
+        allPosts += batch
+        dataProcessed += len(batch)
+        logging.info(dataProcessed)
+        print(dataProcessed)
+        numSkip += batchSize
+    
+    return allPosts
+
+def calculateSimilarity(postVectors, queryVector):
+    scores = queryVector.dot(postVectors.T).flatten() # cosine similarity scores. (assumes vectors are normalized to unit length)
+    return scores
+
+# create and return a list a tuples of (post_id, similarity_score) sorted by similarity score, high to low
+def rankPostsBySimilarity(posts_ids, scores):
+    return sorted([(post_id, score) for (post_id, score) in zip(posts_ids, scores)], key=lambda x:x[1], reverse=True)
