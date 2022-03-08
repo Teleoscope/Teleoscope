@@ -1,29 +1,27 @@
 import tasks
+from tasks import robj
 
-query4 = "mom"
+# initial query - mdb find 
+query4 = "chores"
 tid = 'a1'
 print("Calling Query Search Task with Query: {}".format(query4))
 res = tasks.querySearch.delay(query_string=query4, teleoscope_id=tid)
-print(res.get())
-print("Query 4 finished")
+res = res.get()
+print("MDBSearch task complete with query {}".format(query4))
 
-query5 = "mom"
-tid = 'a2'
-print("Calling Query Search Task with Query: {}".format(query5))
-res = tasks.querySearch.delay(query_string=query5, teleoscope_id=tid)
-print(res.get())
-print("Query 5 finished")
+'''
+Lets say we end up wanting to commit the following posts:
 
-query6 = "mom"
-tid = 'a1'
-print("Calling Query Search Task with Query: {}".format(query6))
-res = tasks.querySearch.delay(query_string=query6, teleoscope_id=tid)
-print(res.get())
-print("Query 6 finished")
-=======
-from tasks import robj
+POSITIVE:
 
-print("Testing both docs size 2")
+id: j1f2rk
+title: AITA for getting offended when my dad asked me to do chores?
+
+id: j1f1jh
+title: AITA for not washing the dishes?
+
+NEGATIVE:
+'''
 res = robj.delay(teleoscope_id='a1', positive_docs=['j1f7am', 'j1f2rk'], negative_docs=['j1f71q', 'j1f36t'], query='mom')
 print(res.get())
 
