@@ -278,7 +278,7 @@ class reorient(Task):
 
         negVecs = []
         for neg_id in negative_docs:
-            v = utils.getPostVector(self.db, neg_id)*-1 # need -1??
+            v = utils.getPostVector(self.db, neg_id) # need -1??
             negVecs.append(v)
         e = time.time()
         total = (e - s)
