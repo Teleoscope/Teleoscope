@@ -123,6 +123,11 @@ export default function QueryListItem(props) {
     return ret;
   };
 
+  const postContent = (post) => {
+    var text = post["selftext"].slice(0, 1000);
+    return text;
+  }
+
   return (
     <>
       {props.workspace ? (
@@ -192,7 +197,7 @@ export default function QueryListItem(props) {
             <List disablePadding>
               <ListItem>
                 <ListItemText
-                  primary="content: dummy test"
+                  primary={post ? postContent(post) : "content: dummy test"}
                   style={{ marginLeft: 50 }}
                 />
               </ListItem>
