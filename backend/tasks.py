@@ -323,6 +323,7 @@ class reorient(Task):
         
         avgPosVec = None
         avgNegVec = None
+        direction = 1
 
         # handle different cases of number of docs in each list
         if len(posVecs) >= 1:
@@ -334,12 +335,13 @@ class reorient(Task):
             resultantVec = avgPosVec - avgNegVec
         elif avgPosVec is None and avgNegVec is not None:
             resultantVec = avgNegVec
+            direction = -1
         elif avgPosVec is not None and avgNegVec is None:
             resultantVec = avgPosVec
 
         # make unit vector
         resultantVec = resultantVec / np.linalg.norm(resultantVec)
-        qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=1) # move qvector towards/away from feedbackVector
+        qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=direction) # move qvector towards/away from feedbackVector
 
         s = time.time()
         scores = utils.calculateSimilarity(self.allPostVectors, qprime)
