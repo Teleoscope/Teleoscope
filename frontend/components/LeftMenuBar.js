@@ -10,6 +10,8 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Divider from "@mui/material/Divider";
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 
 // icons
 import InboxIcon from "@mui/icons-material/Inbox";
@@ -20,6 +22,7 @@ export default function LeftMenuBar(props) {
   const [queries, setQueries] = useState([]);
   const [posts, setPosts] = useState([]);
   const [hover, setHover] = useState(false);
+  const [checked, setChecked] = React.useState(true);
 
   const handleOpenPost = (id) => {
     var temp = [...posts];
@@ -50,6 +53,10 @@ export default function LeftMenuBar(props) {
     setPosts(ids);
   };
 
+  const handleChange = (event) => {
+    setChecked(event.target.checked);
+  };
+
   return (
     <div className="leftMenuBar">
       <Box
@@ -61,6 +68,8 @@ export default function LeftMenuBar(props) {
         }}
       >
         <SearchBar queries={queries} handleIDs={handleIDs} />
+        <FormControlLabel control={
+        <Checkbox checked={checked} onChange={() => handleChange}/>} label="Favourited Documents Only" />
         <PostList
           data={ids}
           handleOpenClick={handleOpenPost}
@@ -72,6 +81,17 @@ export default function LeftMenuBar(props) {
           addItemToWorkSpace={props.addItemToWorkSpace}
           pagination={true}
         />
+        {/* {checked ? ((filetered items)) :         <PostList
+          data={ids}
+          handleOpenClick={handleOpenPost}
+          handleCloseClick={handleClosePost}
+          handleHover={handleChildHover}
+          isFavList={true}
+          isHideList={false}
+          workspace={false}
+          addItemToWorkSpace={props.addItemToWorkSpace}
+          pagination={true}
+        />} */}
       </Box>
     </div>
   );

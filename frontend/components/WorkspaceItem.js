@@ -95,41 +95,44 @@ export default function WorkspaceItem(props) {
 
   return (
     <Draggable className={classes.draggable}>
-      <div>
-        <Card sx={{ height: 150, width: 200, display: "flex" }}>
-          <CardContent>
-            <Typography
-              sx={{ fontSize: 12 }}
-              color="text.secondary"
-              gutterBottom
-            >
-              Title
-            </Typography>
-            <Typography variant="body2">
-              Content <br />
-              {'"description"'}
-            </Typography>
-          </CardContent>
-          <CardActions>
-            <Button sx={{ fontSize: 12 }}>View More</Button>
-          </CardActions>
-        </Card>
-        {grouped ? (
-          <IconButton>
-            <BiotechIcon />
-          </IconButton>
-        ) : null}
-        <Collapse timeout="auto" unmountOnExit in={open}>
-          <List disablePadding>
-            <ListItem>
-              <ListItemText
-                primary="content: dummy test"
-                style={{ marginLeft: 50 }}
-              />
-            </ListItem>
-          </List>
-        </Collapse>
-      </div>
-    </Draggable>
+        <button>
+        <div>
+          <Card sx={{ height: 150, width: 200, display: "flex" }}>
+            <CardContent>
+              <Typography
+                sx={{ fontSize: 12 }}
+                color="text.secondary"
+                gutterBottom
+              >
+                Title
+              </Typography>
+              <Typography variant="body2">
+                Content <br />
+                {'"description"'}
+              </Typography>
+            </CardContent>
+            <CardActions>
+              <Button sx={{ fontSize: 12 }}>View More</Button>
+            </CardActions>
+          </Card>
+          {grouped ? (
+            <IconButton>
+              <BiotechIcon />
+            </IconButton>
+          ) : null}
+          <Collapse timeout="auto" unmountOnExit in={open}>
+            <List disablePadding>
+              <ListItem>
+                <ListItemText
+                  primary="content: dummy test"
+                  style={{ marginLeft: 50 }}
+                />
+              </ListItem>
+            </List>
+          </Collapse>
+        </div>
+        </button>
+      </Draggable>
+
   );
 }
