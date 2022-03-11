@@ -379,6 +379,7 @@ class reorient(Task):
         return 200
 
 robj = app.register_task(reorient())
+app.tasks.register(reorient())
 # add = app.tasks[reorient.name]
 # '''
 # TODO:
