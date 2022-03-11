@@ -14,7 +14,7 @@ from kombu import Consumer, Exchange, Queue
 
 # local files
 import auth
-import tasks
+from tasks import robj
 
 # Thanks to http://brandonrose.org/clustering!
 # and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32
@@ -51,6 +51,16 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
         message.ack()
+        if teleoscope_id in body and 
+           positive_docs in body and
+           negative_docs in body:
+            res = robj.delay(
+                teleoscope_id=body.teleoscope_id, 
+                positive_docs=body.positive_docs, 
+                negative_docs=body.negative_docs, 
+                query='mom'
+            )
+
 app.steps['consumer'].add(WebTaskConsumer)
 
 # @app.task
