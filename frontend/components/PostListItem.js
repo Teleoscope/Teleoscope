@@ -39,7 +39,8 @@ import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { fav } from "../actions/fav";
+import { favs } from "../actions/fav";
+import { adder } from "../actions/addtoworkspace";
 import { hide } from "../actions/hide";
 
 const useStyles = makeStyles((theme) => ({
@@ -96,8 +97,10 @@ export default function QueryListItem(props) {
   const { post, loading, error } = usePost(props.id);
   const container = React.useRef(null);
   const dispatch = useDispatch();
-  const favs = useSelector((state) => state.faver.value);
-  const faved = favs.includes(props.id);
+  
+  const added = useSelector((state) => state.adder.value);
+  const faved = added.includes(props.id);
+
   const [open, setOpen] = React.useState(false);
   const [viewMore, setViewMore] = React.useState(false);
 
@@ -162,7 +165,7 @@ export default function QueryListItem(props) {
         <ListItemIcon>
           <IconButton
             aria-label="add to favorites"
-            onClick={() => dispatch(fav(props.id))}
+            onClick={() => dispatch(adder(props.id))}
           >
             {faved ? (
               <FavoriteIcon color="secondary" style={{ fontSize: 20 }} />

@@ -69,6 +69,17 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+
+const fetcher = (...args) => fetch(...args).then((res) => res.json());
+function usePost(postid) {
+  const { data, error } = useSWR(`/api/posts/${postid}`, fetcher);
+  return {
+    post: data,
+    loading: !error && !data,
+    error: error,
+  };
+}
+
 export default function WorkspaceItem(props) {
   const classes = useStyles();
   const container = React.useRef(null);
@@ -78,6 +89,7 @@ export default function WorkspaceItem(props) {
   const [open, setOpen] = React.useState(false);
   const [grouped, setGrouped] = React.useState(false);
   const [viewMore, setViewMore] = React.useState(false);
+  const { post, loading, error } = usePost(props.id);
 
   const handleClick = () => {
     setOpen(!open);
@@ -103,10 +115,10 @@ export default function WorkspaceItem(props) {
               color="text.secondary"
               gutterBottom
             >
-              Title
+              {post["title"]}
             </Typography>
             <Typography variant="body2">
-              Content <br />
+              {post["selftext"]} <br />
               {'"description"'}
             </Typography>
           </CardContent>

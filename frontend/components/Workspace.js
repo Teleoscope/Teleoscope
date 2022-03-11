@@ -11,7 +11,10 @@ import { useDrop } from "react-dnd";
 import PostList from "../components/PostList";
 import WorkspaceItem from "./WorkspaceItem";
 import StoryCard from "./StoryCard";
+import Button from '@mui/material/Button';
 
+import { useSelector, useDispatch } from "react-redux";
+import { adder } from "../actions/addtoworkspace";
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 function useDocSets(q) {
@@ -28,6 +31,8 @@ export default function Workspace(props) {
   const [stagedSets, setStagedSets] = useState([]);
   const { databaseDocSets, loading, error } = useDocSets();
   // const [workspace, setWorkspace] = useState([]);
+  const added = useSelector((state) => state.adder.value);
+
   const workSpaceItems = [];
 
   // TODO: look at websocket example code here and replicate
@@ -68,7 +73,7 @@ export default function Workspace(props) {
   const register_task = () => {
     var headers = {};
     var body = {
-      boop: "beep",
+      boop: added,
     };
     client.publish({
       destination: "/queue/systopia",
@@ -103,9 +108,19 @@ export default function Workspace(props) {
     <div key="containerkey">
       <LeftMenuBar addItemToWorkSpace={addItemToWorkSpace} />
       <RightMenuBar />
+      <Button variant="text" onClick={() => register_task()}>Register Task</Button>
       <div ref={drop} id="workspace" key="workspacekey">
-        <WorkspaceItem />
-        <PostList data={workSpaceItems} isFavList={false} isHideList={true} />
+        {added.map((id) => {
+          return(
+            <WorkspaceItem id={id}
+            />
+          )
+        })}
+        <PostList 
+          data={workSpaceItems}  
+          isFavList={false} 
+          isHideList={true} 
+          />
         {/* {databaseDocSets ? docsetlist() : null} */}
       </div>
     </div>
