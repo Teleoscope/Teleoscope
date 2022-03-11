@@ -17,6 +17,7 @@ import Grid from "@material-ui/core/Grid";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import IconButton from "@mui/material/IconButton";
+import Button from "@mui/material/Button";
 
 // icons
 import FavoriteIcon from "@material-ui/icons/Favorite";
@@ -31,6 +32,8 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import ClearIcon from "@mui/icons-material/Clear";
 import BiotechIcon from "@mui/icons-material/Biotech";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -55,7 +58,7 @@ const useStyles = makeStyles((theme) => ({
   },
   root: {
     // margin: 5,
-    maxWidth: 290,
+    // maxWidth: 290,
     // maxHeight: 200,
     // overflow: "hidden",
   },
@@ -92,8 +95,10 @@ export default function QueryListItem(props) {
   const favs = useSelector((state) => state.faver.value);
   const faved = favs.includes(props.id);
   const [open, setOpen] = React.useState(false);
+  const [viewMore, setViewMore] = React.useState(false);
 
   const handleClick = () => {
+    if (!open) setViewMore(false);
     setOpen(!open);
   };
 
@@ -126,85 +131,73 @@ export default function QueryListItem(props) {
   const postContent = (post) => {
     var text = post["selftext"].slice(0, 1000);
     return text;
-  }
+  };
 
   return (
-    <>
-      {props.workspace ? (
-        <Draggable>
-          <div>
-            <IconButton>
-              <BiotechIcon />
-            </IconButton>
-            <ListItem
-              style={{ backgroundColor: "#ffffff" }}
-              className={classes.root}
-              onMouseEnter={() => props.hover(true)}
-              onMouseLeave={() => props.hover(false)}
-              disableGutters={true}
-              onClick={handleClick}
-            >
-              <ListItemText onClick={() => props.handleOpenClick(props.id)}>
-                {post ? postTitle(post) : "Post loading..."}
-              </ListItemText>
-              {open ? <ExpandLess /> : <ExpandMore />}
-            </ListItem>
-            <Collapse timeout="auto" unmountOnExit in={open}>
-              <List disablePadding>
-                <ListItem>
-                  <ListItemText
-                    primary="content: dummy test"
-                    style={{ marginLeft: 50 }}
-                  />
-                </ListItem>
-              </List>
-            </Collapse>
-          </div>
-        </Draggable>
-      ) : (
-        <div ref={drag}>
-          <ListItem
-            button
-            className={classes.root}
-            onMouseEnter={() => props.hover(true)}
-            onMouseLeave={() => props.hover(false)}
-            disableGutters={true}
-            onClick={handleClick}
+    <div ref={drag} style={{ borderBottom: "1px solid  #eceeee" }}>
+      <ListItem
+        className={classes.root}
+        onMouseEnter={() => props.hover(true)}
+        onMouseLeave={() => props.hover(false)}
+        disableGutters={true}
+      >
+        <ListItemIcon>
+          <IconButton
+            aria-label="add to favorites"
+            onClick={() => dispatch(fav(props.id))}
           >
-            <ListItemIcon>
-              <IconButton
-                aria-label="add to favorites"
-                onClick={() => dispatch(fav(props.id))}
-              >
-                {faved ? (
-                  <FavoriteIcon color="secondary" style={{ fontSize: 20 }} />
-                ) : (
-                  <FavoriteIcon style={{ fontSize: 20 }} />
-                )}
-              </IconButton>
-            </ListItemIcon>
-            <ListItemText onClick={() => props.handleOpenClick(props.id)}>
-              {post ? postTitle(post) : "Post loading..."}
-            </ListItemText>
-            <ListItemIcon>
-              <IconButton onClick={() => dispatch(hide(props.id))}>
-                <VisibilityOffIcon style={{ fontSize: 20 }} />
-              </IconButton>
-            </ListItemIcon>
-            {open ? <ExpandLess /> : <ExpandMore />}
+            {faved ? (
+              <FavoriteIcon color="secondary" style={{ fontSize: 20 }} />
+            ) : (
+              <FavoriteIcon style={{ fontSize: 20 }} />
+            )}
+          </IconButton>
+        </ListItemIcon>
+        <ListItemText onClick={() => props.handleOpenClick(props.id)}>
+          {post ? postTitle(post) : "Post loading..."}
+        </ListItemText>
+        <IconButton onClick={handleClick}>
+          {open ? <ExpandLess /> : <ExpandMore />}
+        </IconButton>
+      </ListItem>
+      <Collapse timeout="auto" unmountOnExit in={open}>
+        <List disablePadding>
+          <ListItem
+            style={
+              viewMore
+                ? {
+                    display: "inline-block",
+                  }
+                : {
+                    display: "inline-block",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis [..]",
+                    height: 250,
+                  }
+            }
+          >
+            <ListItemText
+              primary={post ? postContent(post) : ""}
+              ellipsizeMode="tail"
+              style={{
+                marginLeft: 50,
+                display: "inline-block",
+                whiteSpace: "pre-line",
+              }}
+            />
           </ListItem>
-          <Collapse timeout="auto" unmountOnExit in={open}>
-            <List disablePadding>
-              <ListItem>
-                <ListItemText
-                  primary={post ? postContent(post) : "content: dummy test"}
-                  style={{ marginLeft: 50 }}
-                />
-              </ListItem>
-            </List>
-          </Collapse>
-        </div>
-      )}
-    </>
+          <Button
+            variant="text"
+            style={{ fontSize: 11, margin: "0 auto", display: "flex" }}
+            onClick={() => setViewMore(!viewMore)}
+          >
+            {viewMore ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            <div style={{ textDecoration: "underline" }}>
+              {viewMore ? "View Less" : "View More"}
+            </div>
+          </Button>
+        </List>
+      </Collapse>
+    </div>
   );
 }

@@ -15,7 +15,7 @@ body {
   /*position: relative;*/
 }
 #restrict {
-  max-width: 250px;
+  /* max-width: 250px; */
   background-color: #ffffff;
 }
 
@@ -154,8 +154,14 @@ code {
 
 .leftMenuBar {
   height: auto;
-  width:25%;
-  float:left;
+  width: 20%;
+  float: left;
+}
+
+.rightMenuBar {
+  height: auto;
+  width: 20%;
+  float: right;
 }
 
 @media (max-width: 600px) {

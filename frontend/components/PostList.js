@@ -134,7 +134,7 @@ export default function PostList(props) {
             );
           })}
       {displayPagination ? (
-        <Stack spacing={2}>
+        <Stack>
           <Pagination
             count={pageCount}
             onChange={changePage}
