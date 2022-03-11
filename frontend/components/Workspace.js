@@ -10,6 +10,7 @@ import RightMenuBar from "../components/RightMenuBar";
 import { useDrop } from "react-dnd";
 import PostList from "../components/PostList";
 import WorkspaceItem from "./WorkspaceItem";
+import StoryCard from "./StoryCard";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 

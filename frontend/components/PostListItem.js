@@ -18,6 +18,7 @@ import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
 
 // icons
 import FavoriteIcon from "@material-ui/icons/Favorite";
@@ -34,6 +35,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import BiotechIcon from "@mui/icons-material/Biotech";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -87,6 +89,8 @@ function usePost(postid) {
   };
 }
 
+var notesInList = [];
+
 export default function QueryListItem(props) {
   const classes = useStyles();
   const { post, loading, error } = usePost(props.id);
@@ -96,6 +100,11 @@ export default function QueryListItem(props) {
   const faved = favs.includes(props.id);
   const [open, setOpen] = React.useState(false);
   const [viewMore, setViewMore] = React.useState(false);
+
+  // Note
+  const [note, setNote] = React.useState(false);
+  const [noteContent, setNoteContent] = useState("");
+  const [index, setIndex] = useState(0);
 
   const handleClick = () => {
     if (!open) setViewMore(false);
@@ -131,6 +140,15 @@ export default function QueryListItem(props) {
   const postContent = (post) => {
     var text = post["selftext"].slice(0, 1000);
     return text;
+  };
+
+  // Notes
+  const onSubmit = (e) => {
+    e.preventDefault();
+    setIndex(index + 1);
+    notesInList.push({ content: noteContent, id: index });
+    console.log("added notes:", notesInList);
+    setNoteContent("");
   };
 
   return (
@@ -197,6 +215,34 @@ export default function QueryListItem(props) {
             </div>
           </Button>
         </List>
+        <IconButton
+          size="small"
+          style={{ float: "right", marginRight: 10, marginBottom: 10 }}
+          onClick={() => setNote(!note)}
+        >
+          <BorderColorOutlinedIcon />
+        </IconButton>
+        {note ? (
+          <form style={{ width: "100%", display: "block" }} onSubmit={onSubmit}>
+            <input
+              style={{
+                height: 100,
+                width: 250,
+                marginLeft: 20,
+              }}
+              type="text"
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+            />
+            <input
+              type="submit"
+              value="Add"
+              style={{
+                float: "right",
+              }}
+            />
+          </form>
+        ) : null}
       </Collapse>
     </div>
   );

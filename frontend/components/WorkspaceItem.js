@@ -62,10 +62,10 @@ const useStyles = makeStyles((theme) => ({
     // backgroundColor: "red",
     // },
   },
-  itemAlign: {
+  draggable: {
+    height: "100px !important",
+    width: "100px !important",
     display: "flex",
-    alignItems: "center",
-    flexWrap: "wrap",
   },
 }));
 
@@ -94,9 +94,9 @@ export default function WorkspaceItem(props) {
   }));
 
   return (
-    <Draggable>
+    <Draggable className={classes.draggable}>
       <div>
-        <Card sx={{ maxWidth: 275, width: 200 }}>
+        <Card sx={{ height: 150, width: 200, display: "flex" }}>
           <CardContent>
             <Typography
               sx={{ fontSize: 12 }}

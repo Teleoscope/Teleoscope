@@ -12,6 +12,7 @@ body {
   /*width: 100%;*/
   width: 100vw;
   height: 2000vh;
+  z-index: -100;
   /*position: relative;*/
 }
 #restrict {
@@ -156,6 +157,7 @@ code {
   height: auto;
   width: 20%;
   float: left;
+  z-index: 100;
 }
 
 .rightMenuBar {
