@@ -55,9 +55,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         b = json.loads(body)
         if ("teleoscope_id" in b.keys()) and ("positive_docs" in b.keys()) and ("negative_docs" in b.keys()):
             res = robj.delay(
-                teleoscope_id=b.teleoscope_id, 
-                positive_docs=b.positive_docs, 
-                negative_docs=b.negative_docs, 
+                teleoscope_id=b["teleoscope_id"],
+                positive_docs=b["positive_docs"],
+                negative_docs=b["negative_docs"],
                 query='mom'
             )
 
