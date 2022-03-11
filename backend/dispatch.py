@@ -51,11 +51,12 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
         message.ack()
-        if ("teleoscope_id" in body.keys()) and (positive_docs in body.keys()) and (negative_docs in body.keys()):
+        b = json.loads(body)
+        if ("teleoscope_id" in b.keys()) and (positive_docs in b.keys()) and (negative_docs in b.keys()):
             res = robj.delay(
-                teleoscope_id=body.teleoscope_id, 
-                positive_docs=body.positive_docs, 
-                negative_docs=body.negative_docs, 
+                teleoscope_id=b.teleoscope_id, 
+                positive_docs=b.positive_docs, 
+                negative_docs=b.negative_docs, 
                 query='mom'
             )
 
