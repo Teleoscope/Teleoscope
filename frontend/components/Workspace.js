@@ -73,7 +73,9 @@ export default function Workspace(props) {
   const register_task = () => {
     var headers = {};
     var body = {
-      boop: added,
+      teleoscope_id: "622bbaedb5a28808bd4c993f",
+      positive_docs: ['j1f7am', 'j1f2rk'], 
+      negative_docs: ['j1f71q', 'j1f36t']
     };
     client.publish({
       destination: "/queue/systopia",
