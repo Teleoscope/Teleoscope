@@ -10,19 +10,33 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Divider from "@mui/material/Divider";
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
+import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 
 // icons
 import InboxIcon from "@mui/icons-material/Inbox";
 import DraftsIcon from "@mui/icons-material/Drafts";
 import ListItemIcon from "@mui/material/ListItemIcon";
 
+const theme = createTheme({
+  components: {
+    // Name of the component
+    Checkbox: {
+      styleOverrides: {
+        root: {
+          // Some CSS
+          fontSize: "1rem",
+        },
+      },
+    },
+  },
+});
 export default function LeftMenuBar(props) {
   const [queries, setQueries] = useState([]);
   const [posts, setPosts] = useState([]);
   const [hover, setHover] = useState(false);
-  const [checked, setChecked] = React.useState(true);
+  const [checked, setChecked] = React.useState(false);
 
   const handleOpenPost = (id) => {
     var temp = [...posts];
@@ -68,8 +82,19 @@ export default function LeftMenuBar(props) {
         }}
       >
         <SearchBar queries={queries} handleIDs={handleIDs} />
-        <FormControlLabel control={
-        <Checkbox checked={checked} onChange={() => handleChange}/>} label="Favourited Documents Only" />
+        {/* <Checkbox
+          theme={theme}
+          checked={checked}
+          onChange={() => handleChange}
+        />
+
+        <div style={{ fontSize: 13 }}>Favourited Documents Only</div>
+         */}
+        <FormControlLabel
+          style={{ marginLeft: 20, marginTop: 10 }}
+          control={<Checkbox style={{ marginRight: 10 }} />}
+          label="Favourited Items Only"
+        />
         <PostList
           data={ids}
           handleOpenClick={handleOpenPost}

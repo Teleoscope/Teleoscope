@@ -76,7 +76,8 @@ export default function WorkspaceItem(props) {
   const favs = useSelector((state) => state.faver.value);
   const faved = favs.includes(props.id);
   const [open, setOpen] = React.useState(false);
-  const [grouped, setGrouped] = React.useState(false);
+  const [selected, setSelected] = React.useState(false);
+
   const [viewMore, setViewMore] = React.useState(false);
 
   const handleClick = () => {
@@ -93,46 +94,73 @@ export default function WorkspaceItem(props) {
     }),
   }));
 
+  const selectDocumentItem = () => {
+    setSelected(!selected);
+    // add to selected group
+    console.log("document selected clicked");
+  };
+
   return (
-    <Draggable className={classes.draggable}>
-        <button>
-        <div>
-          <Card sx={{ height: 150, width: 200, display: "flex" }}>
-            <CardContent>
-              <Typography
-                sx={{ fontSize: 12 }}
-                color="text.secondary"
-                gutterBottom
-              >
-                Title
-              </Typography>
-              <Typography variant="body2">
-                Content <br />
-                {'"description"'}
-              </Typography>
-            </CardContent>
-            <CardActions>
-              <Button sx={{ fontSize: 12 }}>View More</Button>
-            </CardActions>
-          </Card>
-          {grouped ? (
-            <IconButton>
+    <>
+      <Draggable
+        className={classes.draggable}
+        // defaultPosition={{ x: "300", y: "300" }}
+      >
+        <button
+          onClick={() => selectDocumentItem()}
+          style={{
+            borderStyle: "solid",
+            borderRadius: 3,
+            backgroundColor: "white",
+            bortderStyle: "solid",
+            borderWidth: selected ? 3 : 0,
+            borderColor: selected ? "#2596be" : "white",
+            boxShadow: selected ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
+            width: 140,
+            height: 120,
+          }}
+        >
+          <div>
+            <Typography
+              sx={{ fontSize: 12 }}
+              color="text.secondary"
+              gutterBottom
+            >
+              Title
+            </Typography>
+            <Typography variant="body2">
+              Content <br />
+              {'"description"'}
+            </Typography>
+
+            <Button sx={{ fontSize: 12 }}>View More</Button>
+
+            <Collapse timeout="auto" unmountOnExit in={open}>
+              <List disablePadding>
+                <ListItem>
+                  <ListItemText
+                    primary="content: dummy test"
+                    style={{ marginLeft: 50 }}
+                  />
+                </ListItem>
+              </List>
+            </Collapse>
+          </div>
+          {/* {selected ? (
+            <IconButton
+              size="small"
+              style={{
+                color: "black",
+                position: "absolute",
+                marginTop: 18,
+                marginLeft: 20,
+              }}
+            >
               <BiotechIcon />
             </IconButton>
-          ) : null}
-          <Collapse timeout="auto" unmountOnExit in={open}>
-            <List disablePadding>
-              <ListItem>
-                <ListItemText
-                  primary="content: dummy test"
-                  style={{ marginLeft: 50 }}
-                />
-              </ListItem>
-            </List>
-          </Collapse>
-        </div>
+          ) : null} */}
         </button>
       </Draggable>
-
+    </>
   );
 }

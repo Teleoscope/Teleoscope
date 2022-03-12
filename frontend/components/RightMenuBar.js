@@ -58,6 +58,8 @@ export default function RightMenuBar(props) {
           height: "100vh",
         }}
       >
+        <div style={{ marginLeft: 50 }}>Recommended Documents</div>
+
         {/* <SearchBar queries={queries} handleIDs={handleIDs} />
         <PostList
           data={ids}
