@@ -100,7 +100,7 @@ export default function Workspace(props) {
   };
 
   return (
-    <div key="containerkey">
+    <div key="containerkey" id="containerkey">
       <LeftMenuBar addItemToWorkSpace={addItemToWorkSpace} />
       <RightMenuBar />
       <div ref={drop} id="workspace" key="workspacekey">

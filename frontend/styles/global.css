@@ -9,9 +9,9 @@ body {
 #workspace {
   background-image: url("../public/grid.png");
   background-color: #f9f9f9;
-  /*width: 100%;*/
-  width: 100vw;
-  height: 2000vh;
+  width: 75vw;
+  margin: auto;
+  height: 100vh;
   z-index: -100;
   /*position: relative;*/
 }
@@ -25,6 +25,7 @@ body {
 }
 .container {
   min-height: 100vh;
+  width: 100vw;
   /*padding: 0 0.5rem;*/
   display: flex;
   flex-direction: column;
@@ -32,6 +33,9 @@ body {
   align-items: center;
 }
 
+#containerkey {
+  width: 100vw;
+}
 main {
   /*padding: 5rem 0;*/
   flex: 1;
@@ -155,14 +159,14 @@ code {
 
 .leftMenuBar {
   height: auto;
-  width: 20%;
+  width: 20vw;
   float: left;
   z-index: 100;
 }
 
 .rightMenuBar {
   height: auto;
-  width: 20%;
+  width: 20vw;
   float: right;
 }
 

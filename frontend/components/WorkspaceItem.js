@@ -20,9 +20,12 @@ import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
+import Checkbox from "@mui/material/Checkbox";
 
 // icons
-
+import CloseIcon from "@mui/icons-material/Close";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import BiotechIcon from "@mui/icons-material/Biotech";
@@ -31,6 +34,7 @@ import BiotechIcon from "@mui/icons-material/Biotech";
 import { useSelector, useDispatch } from "react-redux";
 import { fav } from "../actions/fav";
 import { hide } from "../actions/hide";
+import Close from "@mui/icons-material/Close";
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -63,9 +67,9 @@ const useStyles = makeStyles((theme) => ({
     // },
   },
   draggable: {
-    height: "100px !important",
-    width: "100px !important",
-    display: "flex",
+    // height: "200px !important",
+    // width: "100px !important",
+    // display: "flex",
   },
 }));
 
@@ -76,9 +80,9 @@ export default function WorkspaceItem(props) {
   const favs = useSelector((state) => state.faver.value);
   const faved = favs.includes(props.id);
   const [open, setOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState(false);
 
   const [viewMore, setViewMore] = React.useState(false);
+  const [checked, setChecked] = React.useState(false);
 
   const handleClick = () => {
     setOpen(!open);
@@ -94,73 +98,65 @@ export default function WorkspaceItem(props) {
     }),
   }));
 
-  const selectDocumentItem = () => {
-    setSelected(!selected);
+  const handleChange = (event) => {
+    setChecked(event.target.checked);
     // add to selected group
     console.log("document selected clicked");
   };
 
+  const handleDelete = () => {
+    // TODO
+    console.log("close");
+  };
+
   return (
-    <>
-      <Draggable
-        className={classes.draggable}
-        // defaultPosition={{ x: "300", y: "300" }}
+    <Draggable className={classes.draggable}>
+      <Card
+        style={{
+          padding: 10,
+          borderStyle: "solid",
+          borderRadius: 3,
+          backgroundColor: "white",
+          bortderStyle: "solid",
+          borderWidth: checked ? 2 : 0,
+          borderColor: checked ? "#4e5cbc" : "white",
+          boxShadow: checked ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
+          minWidth: 180,
+          maxWidth: 230,
+          // height: 120,
+        }}
       >
-        <button
-          onClick={() => selectDocumentItem()}
-          style={{
-            borderStyle: "solid",
-            borderRadius: 3,
-            backgroundColor: "white",
-            bortderStyle: "solid",
-            borderWidth: selected ? 3 : 0,
-            borderColor: selected ? "#2596be" : "white",
-            boxShadow: selected ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
-            width: 140,
-            height: 120,
-          }}
-        >
-          <div>
-            <Typography
-              sx={{ fontSize: 12 }}
-              color="text.secondary"
-              gutterBottom
-            >
-              Title
-            </Typography>
-            <Typography variant="body2">
-              Content <br />
-              {'"description"'}
-            </Typography>
-
-            <Button sx={{ fontSize: 12 }}>View More</Button>
-
-            <Collapse timeout="auto" unmountOnExit in={open}>
-              <List disablePadding>
-                <ListItem>
-                  <ListItemText
-                    primary="content: dummy test"
-                    style={{ marginLeft: 50 }}
-                  />
-                </ListItem>
-              </List>
-            </Collapse>
-          </div>
-          {/* {selected ? (
-            <IconButton
-              size="small"
-              style={{
-                color: "black",
-                position: "absolute",
-                marginTop: 18,
-                marginLeft: 20,
-              }}
-            >
-              <BiotechIcon />
-            </IconButton>
-          ) : null} */}
-        </button>
-      </Draggable>
-    </>
+        <Checkbox
+          size="small"
+          checked={checked}
+          onChange={handleChange}
+          inputProps={{ "aria-label": "controlled" }}
+          style={{ marginRight: 10 }}
+        />
+        Title
+        <div style={{ display: "flex", float: "right" }}>
+          <IconButton size="small" onClick={handleClick}>
+            {open ? <ExpandLess /> : <ExpandMore />}
+          </IconButton>
+          <IconButton size="small" onClick={handleDelete}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </div>
+        <Collapse timeout="auto" unmountOnExit in={open}>
+          <p style={{ marginLeft: 30 }}>Content</p>
+          <button
+            style={{
+              backgroundColor: "white",
+              borderWidth: 0,
+              textDecoration: "underline",
+              margin: "auto",
+              display: "block",
+            }}
+          >
+            {viewMore ? "View Less" : "View More"}
+          </button>
+        </Collapse>
+      </Card>
+    </Draggable>
   );
 }

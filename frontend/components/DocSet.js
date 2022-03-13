@@ -140,8 +140,8 @@ export default function DocSet(props) {
   return (
     <Draggable
       grid={[20, 20]}
-      bounds="parent"
-      defaultPosition={{ x: 200, y: 200 }}
+      // bounds={{ left: 200, top: 0, right: 200, bottom: 0 }}
+      // defaultPosition={{ x: 200, y: 200 }}
       disabled={hover}
     >
       <div className={classes.root}>
