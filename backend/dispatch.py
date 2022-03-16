@@ -3,6 +3,7 @@ import logging
 import pickle
 from warnings import simplefilter
 import utils
+import json
 
 # installed modules
 import gridfs
@@ -15,6 +16,7 @@ from kombu import Consumer, Exchange, Queue
 # local files
 import auth
 import tasks
+from tasks import robj
 
 # Thanks to http://brandonrose.org/clustering!
 # and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32
@@ -51,6 +53,15 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
         message.ack()
+        b = json.loads(body)
+        if ("teleoscope_id" in b.keys()) and ("positive_docs" in b.keys()) and ("negative_docs" in b.keys()):
+            res = robj.delay(
+                teleoscope_id=b["teleoscope_id"],
+                positive_docs=b["positive_docs"],
+                negative_docs=b["negative_docs"],
+                query='mom'
+            )
+
 app.steps['consumer'].add(WebTaskConsumer)
 
 # @app.task

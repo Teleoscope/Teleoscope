@@ -73,6 +73,16 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const fetcher = (...args) => fetch(...args).then((res) => res.json());
+function usePost(postid) {
+  const { data, error } = useSWR(`/api/posts/${postid}`, fetcher);
+  return {
+    post: data,
+    loading: !error && !data,
+    error: error,
+  };
+}
+
 export default function WorkspaceItem(props) {
   const classes = useStyles();
   const container = React.useRef(null);
@@ -83,6 +93,7 @@ export default function WorkspaceItem(props) {
 
   const [viewMore, setViewMore] = React.useState(false);
   const [checked, setChecked] = React.useState(false);
+  const { post, loading, error } = usePost(props.id);
 
   const handleClick = () => {
     setOpen(!open);
@@ -133,7 +144,7 @@ export default function WorkspaceItem(props) {
           inputProps={{ "aria-label": "controlled" }}
           style={{ marginRight: 10 }}
         />
-        Title
+        {props.id}
         <div style={{ display: "flex", float: "right" }}>
           <IconButton size="small" onClick={handleClick}>
             {open ? <ExpandLess /> : <ExpandMore />}

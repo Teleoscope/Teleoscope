@@ -131,7 +131,7 @@ export default function SearchBar(props) {
     if (response != null && response["status"] == 400) return true; // TODO: error handling? This should always work (as in a good query) though.. 
 
     console.log("handling ids");
-    props.handleIDs(queries);
+    props.handleIDs([["gnes1a"]]);
     console.log(shouldSendQuery);
     return true;
   }
@@ -165,28 +165,31 @@ export default function SearchBar(props) {
     
 
   return (
-      <Autocomplete
-        className={classes.root}
-        multiple
-        id="tags-filled"
-        options={props.queries.map((option) => "test")}
-        defaultValue={props.queries.map((q) => (q))}
-        freeSolo
-        size="small"
-        onChange={(e) => handleSubmit(e.target.value)}
-        renderTags={(value, getTagProps) =>
-          value.map((option, index) => (
-            <Chip 
-              icon={done(option) ? <DoneIcon /> : <CircularProgress color="inherit" size={10} />}
-              size="small"
-              variant="outlined" 
-              label={option} {...getTagProps({ index })} />
-          ))
-        }
-        renderInput={(params) => (
-          <TextField {...params} variant="filled" label="queries" placeholder="Add query..." />
-        )}
-      />
+    <div>
+
+    </div>
+      // <Autocomplete
+      //   className={classes.root}
+      //   multiple
+      //   id="tags-filled"
+      //   options={props.queries.map((option) => "test")}
+      //   defaultValue={props.queries.map((q) => (q))}
+      //   freeSolo
+      //   size="small"
+      //   onChange={(e) => handleSubmit(e.target.value)}
+      //   renderTags={(value, getTagProps) =>
+      //     value.map((option, index) => (
+      //       <Chip 
+      //         icon={done(option) ? <DoneIcon /> : <CircularProgress color="inherit" size={10} />}
+      //         size="small"
+      //         variant="outlined" 
+      //         label={option} {...getTagProps({ index })} />
+      //     ))
+      //   }
+      //   renderInput={(params) => (
+      //     <TextField {...params} variant="filled" label="queries" placeholder="Add query..." />
+      //   )}
+      // />
   );
 }
 

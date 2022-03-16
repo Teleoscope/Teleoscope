@@ -2,6 +2,7 @@ import * as React from "react";
 import { useState } from "react";
 import SearchBar from "./SearchBar";
 import PostList from "./PostList";
+import useSWR, { mutate } from "swr";
 
 // material ui
 import Box from "@mui/material/Box";
@@ -16,10 +17,29 @@ import InboxIcon from "@mui/icons-material/Inbox";
 import DraftsIcon from "@mui/icons-material/Drafts";
 import ListItemIcon from "@mui/material/ListItemIcon";
 
+const fetcher = (...args) => fetch(...args).then((res) => res.json());
+function useTeleoscope(id) {
+  const { data, error } = useSWR(`/api/teleoscopes/${id}`, fetcher);
+  return {
+    teleoscope: data,
+    loading: !error && !data,
+    error: error,
+  };
+}
+
 export default function RightMenuBar(props) {
   const [queries, setQueries] = useState([]);
   const [posts, setPosts] = useState([]);
   const [hover, setHover] = useState(false);
+  const { teleoscope, loading, error } = useTeleoscope(
+    "622bbaedb5a28808bd4c993f"
+  );
+
+  var data = teleoscope
+    ? teleoscope.ranked_post_ids.map((post) => {
+        return [post, 1.0];
+      })
+    : []; // this is a hack
 
   const handleOpenPost = (id) => {
     var temp = [...posts];
@@ -70,7 +90,6 @@ export default function RightMenuBar(props) {
           isHideList={false}
           workspace={false}
           addItemToWorkSpace={props.addItemToWorkSpace}
-          pagination={true}
         /> */}
       </Box>
     </div>

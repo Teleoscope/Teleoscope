@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import DocSet from "../components/DocSet";
-import { useEffect, useState } from "react";
 import useSWR, { mutate } from "swr";
 import { SelectableGroup } from "react-selectable-fast";
 import MenuBar from "../components/MenuBar";
@@ -11,7 +10,10 @@ import { useDrop } from "react-dnd";
 import PostList from "../components/PostList";
 import WorkspaceItem from "./WorkspaceItem";
 import StoryCard from "./StoryCard";
+import Button from "@mui/material/Button";
 
+import { useSelector, useDispatch } from "react-redux";
+import { adder } from "../actions/addtoworkspace";
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 function useDocSets(q) {
@@ -28,7 +30,9 @@ export default function Workspace(props) {
   const [stagedSets, setStagedSets] = useState([]);
   const { databaseDocSets, loading, error } = useDocSets();
   // const [workspace, setWorkspace] = useState([]);
-  const workSpaceItems = [];
+  const added = useSelector((state) => state.adder.value);
+  const dispatch = useDispatch();
+  var workSpaceItems = [];
 
   // TODO: look at websocket example code here and replicate
   // anywhere that needs to route a request to the server
@@ -68,7 +72,9 @@ export default function Workspace(props) {
   const register_task = () => {
     var headers = {};
     var body = {
-      boop: "beep",
+      teleoscope_id: "622bbaedb5a28808bd4c993f",
+      positive_docs: ["j1f7am", "j1f2rk"],
+      negative_docs: ["j1f71q", "j1f36t"],
     };
     client.publish({
       destination: "/queue/systopia",
@@ -85,27 +91,28 @@ export default function Workspace(props) {
 
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "item",
-    drop: (item) => addItemToWorkSpace(item.id),
+    drop: (item) => dispatch(adder(item.id)),
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
   }));
 
-  const addItemToWorkSpace = (id) => {
-    console.log("dropped:", id);
-    workSpaceItems.push(id);
-    console.log("dropped items", workSpaceItems);
-    // const randomList = RandomList.filter((item) => id === item.id);
-    // setWorkspace((workspace) => [...workspace, randomList[0]]);
-  };
+  useEffect(() => {
+    workSpaceItems = added;
+  }, [added]);
 
   return (
     <div key="containerkey" id="containerkey">
-      <LeftMenuBar addItemToWorkSpace={addItemToWorkSpace} />
+      <LeftMenuBar />
       <RightMenuBar />
+      <Button variant="text" onClick={() => register_task()}>
+        Register Task
+      </Button>
       <div ref={drop} id="workspace" key="workspacekey">
-        <WorkspaceItem />
-        <PostList data={workSpaceItems} isFavList={false} isHideList={true} />
+        {added.map((id) => {
+          return <WorkspaceItem id={id} />;
+        })}
+        {/* <PostList data={workSpaceItems} isFavList={false} isHideList={true} /> */}
         {/* {databaseDocSets ? docsetlist() : null} */}
       </div>
     </div>
