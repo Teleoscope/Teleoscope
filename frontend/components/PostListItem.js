@@ -19,6 +19,9 @@ import ListItemText from "@material-ui/core/ListItemText";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
+import Paper from "@mui/material/Paper";
+import InputBase from "@mui/material/InputBase";
+import Divider from "@mui/material/Divider";
 
 // icons
 import FavoriteIcon from "@material-ui/icons/Favorite";
@@ -36,6 +39,10 @@ import BiotechIcon from "@mui/icons-material/Biotech";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
+import StickyNote2OutlinedIcon from "@mui/icons-material/StickyNote2Outlined";
+import CloseIcon from "@mui/icons-material/Close";
+import MinimizeIcon from "@mui/icons-material/Minimize";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -90,7 +97,12 @@ function usePost(postid) {
   };
 }
 
-var notesInList = [];
+var notesInList = [
+  { content: "note 1", id: "1" },
+  { content: "note 2", id: "2" },
+  { content: "note 3", id: "3" },
+];
+//TODO: Figure out store for notes
 
 export default function QueryListItem(props) {
   const classes = useStyles();
@@ -146,7 +158,8 @@ export default function QueryListItem(props) {
   };
 
   // Notes
-  const onSubmit = (e) => {
+  const handleNoteSubmit = (e) => {
+    console.log("add!");
     e.preventDefault();
     setIndex(index + 1);
     notesInList.push({ content: noteContent, id: index });
@@ -218,33 +231,70 @@ export default function QueryListItem(props) {
             </div>
           </Button>
         </List>
-        <IconButton
-          size="small"
-          style={{ float: "right", marginRight: 10, marginBottom: 10 }}
-          onClick={() => setNote(!note)}
-        >
-          <BorderColorOutlinedIcon />
-        </IconButton>
+        <div style={{ justifyContent: "center" }}>
+          {notesInList.length != 0 ? (
+            <h4 style={{ textAlign: "center", margin: 2 }}>Notes</h4>
+          ) : null}
+        </div>
+        {notesInList.map((note) => {
+          return (
+            <div style={{ padding: "10px 15px 0px 15px", fontSize: 14 }}>
+              {note.content}
+              <Divider style={{ marginTop: 10 }} />
+            </div>
+          );
+        })}
+        <div style={{ float: "right" }}>
+          <IconButton
+            size="small"
+            style={{
+              marginRight: 10,
+              marginBottom: 10,
+            }}
+            onClick={() => setNote(!note)}
+          >
+            {note ? <CloseIcon /> : <BorderColorOutlinedIcon />}
+          </IconButton>
+        </div>
         {note ? (
-          <form style={{ width: "100%", display: "block" }} onSubmit={onSubmit}>
-            <input
-              style={{
-                height: 100,
-                width: 250,
-                marginLeft: 20,
+          <div style={{ width: "100%", paddingLeft: 10, marginBottom: 10 }}>
+            <Paper
+              component="form"
+              sx={{
+                p: "2px 4px",
+                display: "flex",
+                alignItems: "start",
+                width: "95%",
+                height: "80px",
               }}
-              type="text"
-              value={noteContent}
-              onChange={(e) => setNoteContent(e.target.value)}
-            />
-            <input
-              type="submit"
-              value="Add"
-              style={{
-                float: "right",
-              }}
-            />
-          </form>
+            >
+              <InputBase
+                style={{ fontSize: 14, color: "black" }}
+                sx={{ ml: 1, flex: 1 }}
+                placeholder="Add notes"
+                value={noteContent}
+                inputProps={{ "aria-label": "Add notes" }}
+                onChange={(e) => setNoteContent(e.target.value)}
+              />
+            </Paper>
+            <div style={{ width: "95%" }}>
+              <Button
+                onClick={handleNoteSubmit}
+                type="submit"
+                sx={{
+                  p: "5px",
+                  fontSize: 12,
+                  backgroundColor: "#666666",
+                  float: "right",
+                  marginBottom: 1,
+                }}
+                aria-label="search"
+                variant="contained"
+              >
+                Submit
+              </Button>
+            </div>
+          </div>
         ) : null}
       </Collapse>
     </div>
