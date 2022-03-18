@@ -37,7 +37,7 @@ celery_broker_url = (
 app = Celery('tasks', backend='rpc://', broker=celery_broker_url)
 app.conf.update(
     task_serializer='json',
-    accept_content=['json'],  # Ignore other content
+    accept_content=['json'], # Ignore other content
     result_serializer='json',
     enable_utc=True,
 )
@@ -53,6 +53,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
         message.ack()
+        # not tested below
         b = json.loads(body)
         if ("teleoscope_id" in b.keys()) and ("positive_docs" in b.keys()) and ("negative_docs" in b.keys()):
             res = robj.delay(

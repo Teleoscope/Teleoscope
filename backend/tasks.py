@@ -261,6 +261,7 @@ class reorient(Task):
         self.allPostVectors = None
         self.db = None
         self.model = None
+        self.name = "reorient"
         
 
     def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
