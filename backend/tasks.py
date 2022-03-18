@@ -245,6 +245,9 @@ def run_query_init(query_string):
     )
     return result, _reddit_ids
 
+@app.task
+def reorient_caller(t_id, p_docs, n_docs, q):
+    Reorient().run(t_id, p_docs, n_docs, q)
 
 
 '''
@@ -253,7 +256,7 @@ TODO:
    because those docs should not be show in the ranked documents.
 '''
 class Reorient(Task):
-    
+
     
     def __init__(self):
         self.postsCached = False
