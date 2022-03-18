@@ -246,8 +246,8 @@ def run_query_init(query_string):
     return result, _reddit_ids
 
 @app.task
-def reorient_caller(t_id, p_docs, n_docs, q):
-    Reorient().run(t_id, p_docs, n_docs, q)
+def reorient_caller(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+    Reorient().run(teleoscope_id, positive_docs, negative_docs, query)
 
 
 '''
