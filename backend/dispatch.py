@@ -16,7 +16,7 @@ from kombu import Consumer, Exchange, Queue
 # local files
 import auth
 # import tasks
-from tasks import Reorient
+from tasks import robj
 
 # Thanks to http://brandonrose.org/clustering!
 # and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32
@@ -56,7 +56,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # not tested below
         b = json.loads(body)
         if ("teleoscope_id" in b.keys()) and ("positive_docs" in b.keys()) and ("negative_docs" in b.keys()):
-            res = Reorient.delay(
+            res = robj.delay(
                 teleoscope_id=b["teleoscope_id"],
                 positive_docs=b["positive_docs"],
                 negative_docs=b["negative_docs"],
