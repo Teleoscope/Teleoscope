@@ -17,6 +17,9 @@ from kombu import Consumer, Exchange, Queue
 import auth
 import tasks
 from tasks import robj
+from tasks import app as taskapp
+
+print("tasks.app.tasks", taskapp.tasks)
 
 # Thanks to http://brandonrose.org/clustering!
 # and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32

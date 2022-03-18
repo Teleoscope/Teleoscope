@@ -254,6 +254,7 @@ TODO:
 '''
 class Reorient(Task):
     
+    
     def __init__(self):
         self.postsCached = False
         self.allPostIDs = None
@@ -379,7 +380,7 @@ class Reorient(Task):
         return 200
 
 robj = app.register_task(Reorient())
-# app.tasks.register(Reorient())
+app.tasks.register(Reorient())
 # add = app.tasks[Reorient.name]
 # '''
 # TODO:
