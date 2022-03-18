@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import useSWR, { mutate } from "swr";
+import React from "react";
 import { Client, Message } from "@stomp/stompjs";
 import { useDrop } from "react-dnd";
 
@@ -8,32 +7,15 @@ import Button from "@mui/material/Button";
 // custom components
 import LeftMenuBar from "../components/LeftMenuBar";
 import RightMenuBar from "../components/RightMenuBar";
-import PostList from "../components/PostList";
 import WorkspaceItem from "../components/WorkspaceItem";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
 
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
-
-function useDocSets(q) {
-  const { data, error } = useSWR(`/api/docsets/`, fetcher);
-  var ret = {
-    databaseDocSets: data,
-    loading: !error && !data,
-    error: error,
-  };
-  return ret;
-}
-
 export default function Workspace(props) {
-  const [stagedSets, setStagedSets] = useState([]);
-  const { databaseDocSets, loading, error } = useDocSets();
-  // const [workspace, setWorkspace] = useState([]);
   const added = useSelector((state) => state.adder.value);
   const dispatch = useDispatch();
-  var workSpaceItems = [];
 
   // TODO: look at websocket example code here and replicate
   // anywhere that needs to route a request to the server
@@ -61,15 +43,6 @@ export default function Workspace(props) {
 
   client.activate();
 
-  const docsetlist = () => {
-    var arr = databaseDocSets;
-    arr = arr.concat(stagedSets);
-    if (arr.length < 1) {
-      return null;
-    }
-    return arr.map((d) => <DocSet docset={d} key={d._id} />);
-  };
-
   const register_task = () => {
     var headers = {};
     var body = {
@@ -84,12 +57,6 @@ export default function Workspace(props) {
     });
   };
 
-  const handleClick = () => {
-    var temp = [...stagedSets];
-    temp.push({ _id: null, label: "", queries: [] });
-    setStagedSets(temp);
-  };
-
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "item",
     drop: (item) => dispatch(adder(item.id)),
@@ -97,10 +64,6 @@ export default function Workspace(props) {
       isOver: !!monitor.isOver(),
     }),
   }));
-
-  useEffect(() => {
-    workSpaceItems = added;
-  }, [added]);
 
   return (
     <div key="containerkey" id="containerkey">

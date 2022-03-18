@@ -1,6 +1,5 @@
 import * as React from "react";
 import { useState } from "react";
-import SearchBar from "./SearchBar";
 import PostList from "./PostList";
 import useSWR, { mutate } from "swr";
 
@@ -18,6 +17,7 @@ import DraftsIcon from "@mui/icons-material/Drafts";
 import ListItemIcon from "@mui/material/ListItemIcon";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
+
 function useTeleoscope(id) {
   const { data, error } = useSWR(`/api/teleoscopes/${id}`, fetcher);
   return {
@@ -79,18 +79,13 @@ export default function RightMenuBar(props) {
         }}
       >
         <div style={{ marginLeft: 50 }}>Recommended Documents</div>
-
-        {/* <SearchBar queries={queries} handleIDs={handleIDs} />
         <PostList
-          data={ids}
-          handleOpenClick={handleOpenPost}
-          handleCloseClick={handleClosePost}
-          handleHover={handleChildHover}
+          data={data}
           isFavList={true}
           isHideList={false}
           workspace={false}
           addItemToWorkSpace={props.addItemToWorkSpace}
-        /> */}
+        />
       </Box>
     </div>
   );
