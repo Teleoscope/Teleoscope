@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
-import DocSet from "../components/DocSet";
 import useSWR, { mutate } from "swr";
-import { SelectableGroup } from "react-selectable-fast";
-import MenuBar from "../components/MenuBar";
 import { Client, Message } from "@stomp/stompjs";
-import LeftMenuBar from "../components/LeftMenuBar";
-import RightMenuBar from "../components/RightMenuBar";
 import { useDrop } from "react-dnd";
-import PostList from "../components/PostList";
-import WorkspaceItem from "./WorkspaceItem";
-import StoryCard from "./StoryCard";
+
 import Button from "@mui/material/Button";
 
+// custom components
+import LeftMenuBar from "../components/LeftMenuBar";
+import RightMenuBar from "../components/RightMenuBar";
+import PostList from "../components/PostList";
+import WorkspaceItem from "../components/WorkspaceItem";
+
+// actions
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
+
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 function useDocSets(q) {
@@ -112,8 +113,6 @@ export default function Workspace(props) {
         {added.map((id) => {
           return <WorkspaceItem id={id} />;
         })}
-        {/* <PostList data={workSpaceItems} isFavList={false} isHideList={true} /> */}
-        {/* {databaseDocSets ? docsetlist() : null} */}
       </div>
     </div>
   );

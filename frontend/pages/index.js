@@ -1,7 +1,6 @@
 import React from "react";
 import Head from "next/head";
 import { useEffect, useState } from "react";
-import Layout from "../components/layout";
 import Draggable from "react-draggable";
 import Fab from "@material-ui/core/Fab";
 import AddIcon from "@material-ui/icons/Add";
@@ -14,9 +13,6 @@ import { connectToDatabase } from "../util/mongodb";
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-
-//import { connectToDatabase } from "../util/mongodb";
-// import { sto } from "../util/stomp";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -48,7 +44,6 @@ export default function Home({ isConnected }) {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <Layout>
         <div className="container">
           <Head>
             <title>Explore Documents</title>
@@ -61,7 +56,6 @@ export default function Home({ isConnected }) {
             </Provider>
           </main>
         </div>
-      </Layout>
     </DndProvider>
   );
 }

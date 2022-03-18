@@ -74,6 +74,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
+
 function usePost(postid) {
   const { data, error } = useSWR(`/api/posts/${postid}`, fetcher);
   return {
@@ -120,6 +121,27 @@ export default function WorkspaceItem(props) {
     console.log("close");
   };
 
+  const postTitle = (post) => {
+    String.prototype.trimLeft = function (charlist) {
+      if (charlist === undefined) charlist = "s";
+      return this.replace(new RegExp("^[" + charlist + "]+"), "");
+    };
+    var regex = new RegExp(
+      "(AITA for|aita for|AITA if|WIBTA if|AITA|aita|WIBTA)"
+    );
+    var title = post["title"].replace(regex, "");
+    var charlist = " -";
+    title = title.trimLeft(charlist);
+    var first = title.slice(0, 1);
+    var ret = first.toUpperCase() + title.slice(1);
+    return ret;
+  };
+
+  const postContent = (post) => {
+    var text = post["selftext"].slice(0, 1000);
+    return text;
+  };
+
   return (
     <Draggable className={classes.draggable}>
       <Card
@@ -144,7 +166,13 @@ export default function WorkspaceItem(props) {
           inputProps={{ "aria-label": "controlled" }}
           style={{ marginRight: 10 }}
         />
-        {props.id}
+        <Typography
+              sx={{ fontSize: 12 }}
+              color="text.secondary"
+              gutterBottom
+            >
+              {postTitle(post)}
+            </Typography>
         <div style={{ display: "flex", float: "right" }}>
           <IconButton size="small" onClick={handleClick}>
             {open ? <ExpandLess /> : <ExpandMore />}
@@ -154,18 +182,17 @@ export default function WorkspaceItem(props) {
           </IconButton>
         </div>
         <Collapse timeout="auto" unmountOnExit in={open}>
-          <p style={{ marginLeft: 30 }}>Content</p>
-          <button
-            style={{
-              backgroundColor: "white",
-              borderWidth: 0,
-              textDecoration: "underline",
-              margin: "auto",
-              display: "block",
-            }}
+          <p style={{ marginLeft: 30 }}>{postContent(post)}</p>
+          <Button
+            variant="text"
+            style={{ fontSize: 11, margin: "0 auto", display: "flex" }}
+            onClick={() => setViewMore(!viewMore)}
           >
-            {viewMore ? "View Less" : "View More"}
-          </button>
+            {viewMore ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            <div style={{ textDecoration: "underline" }}>
+              {viewMore ? "View Less" : "View More"}
+            </div>
+          </Button>
         </Collapse>
       </Card>
     </Draggable>
