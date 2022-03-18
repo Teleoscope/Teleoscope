@@ -16,7 +16,7 @@ from kombu import Consumer, Exchange, Queue
 # local files
 import auth
 # import tasks
-from tasks.tasks import Reorient
+from tasks import Reorient
 
 # Thanks to http://brandonrose.org/clustering!
 # and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32
