@@ -16,8 +16,6 @@ from kombu import Consumer, Exchange, Queue
 # local files
 import auth
 import tasks
-from tasks import robj
-from tasks import app as taskapp
 
 print("tasks.app.tasks", taskapp.tasks)
 
@@ -59,7 +57,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # not tested below
         b = json.loads(body)
         if ("teleoscope_id" in b.keys()) and ("positive_docs" in b.keys()) and ("negative_docs" in b.keys()):
-            res = robj.delay(
+            res = tasks.reorient_caller.delay(
                 teleoscope_id=b["teleoscope_id"],
                 positive_docs=b["positive_docs"],
                 negative_docs=b["negative_docs"],
