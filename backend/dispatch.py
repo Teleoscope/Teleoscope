@@ -15,7 +15,7 @@ from kombu import Consumer, Exchange, Queue
 
 # local files
 import auth
-# import tasks
+import tasks
 from tasks import robj
 
 # Thanks to http://brandonrose.org/clustering!
