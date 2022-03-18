@@ -36,7 +36,7 @@ celery_broker_url = (
 app = Celery('tasks', backend='rpc://', broker=celery_broker_url)
 app.conf.update(
     task_serializer='json',
-    accept_content=['json'], # Ignore other content
+    accept_content=['json', 'pickle'], # Ignore other content
     result_serializer='json',
     enable_utc=True,
 )
@@ -47,7 +47,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         return [Consumer(channel,
                          queues=[systopia],
                          callbacks=[self.handle_message],
-                         accept=['json'])]
+                         accept=['json', 'pickle'])]
 
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
