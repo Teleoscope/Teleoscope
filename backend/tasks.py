@@ -298,6 +298,8 @@ class Reorient(Task):
         # check if stateVector exists
         if 'stateVector' in queryDocument:
             stateVector = np.array(queryDocument['stateVector'])
+            if stateVector == None:
+                stateVector = []
         else:
             if self.model is None:
                 logging.info('Model not cached, loading model...')
