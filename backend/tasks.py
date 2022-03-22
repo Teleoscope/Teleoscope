@@ -88,47 +88,38 @@ class reorient(Task):
         self.allPostVectors = None
         self.db = None
         self.model = None
-        
 
-    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
-        if self.postsCached == False:
-            # Load embeddings
-            self.allPostVectors = np.load('/home/phb/embeddings/embeddings.npz', allow_pickle=False)['posts']
-            # Load ids
-            with open('/home/phb/embeddings/ids.pkl', 'rb') as handle:
+    def cachePostsData(self, path='/home/phb/embeddings/'):
+        # cache embeddings
+        self.allPostVectors = np.load(path + 'embeddings.npz', allow_pickle=False)['posts']
+        # cache posts ids
+        with open(path + '/ids.pkl', 'rb') as handle:
                 self.allPostIDs = pickle.load(handle)
 
-            self.postsCached = True
+        self.postsCached = True
 
-        if self.db is None:
-            self.db = utils.connect()
-
-        queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
-
-        # check if stateVector exists
-        if 'stateVector' in queryDocument:
-            stateVector = np.array(queryDocument['stateVector'])
-        else:
-            if self.model is None:
-                self.model = utils.loadModel()
-
-            stateVector = self.model([query]).numpy() # convert query string to vector
-
+        return
+    '''
+    Computes the resultant vector for positive and negative docs.
+    Resultant vector is the final vector that the stateVector of the teleoscope should move towards/away from.
+    '''
+    def computeResultantVector(self, positive_docs, negative_docs):
         # get vectors for positive and negative doc ids using utils.getPostVector function
         # TODO: OPTIMIZE
-        posVecs = []
+        
+        posVecs = [] # vectors we want to move towards
         for pos_id in positive_docs:
             v = utils.getPostVector(self.db, pos_id)
             posVecs.append(v)
 
-        negVecs = []
+        negVecs = [] # vectors we want to move away from
         for neg_id in negative_docs:
-            v = utils.getPostVector(self.db, neg_id) # need -1??
+            v = utils.getPostVector(self.db, neg_id)
             negVecs.append(v)
         
-        avgPosVec = None
-        avgNegVec = None
-        direction = 1
+        avgPosVec = None # avg positive vector
+        avgNegVec = None # avg negative vector
+        direction = 1 # direction of movement
 
         # handle different cases of number of docs in each list
         if len(posVecs) >= 1:
@@ -136,31 +127,60 @@ class reorient(Task):
         if len(negVecs) >= 1:
             avgNegVec = np.array(negVecs).mean(axis=0)
 
+        # if both lists are not empty
         if avgPosVec is not None and avgNegVec is not None:
             resultantVec = avgPosVec - avgNegVec
+        # if only negative list has entries
         elif avgPosVec is None and avgNegVec is not None:
             resultantVec = avgNegVec
+            # change direction of movement since we want to move away in this case
             direction = -1
+        # if only positive list has entries
         elif avgPosVec is not None and avgNegVec is None:
             resultantVec = avgPosVec
+        
+        resultantVec /= np.linalg.norm(resultantVec)
+        return resultantVec, direction
 
-        # make unit vector
-        resultantVec = resultantVec / np.linalg.norm(resultantVec)
+    def gridfsUpload(self, namespace, data, encoding='utf-8'):
+         # convert to json
+        dumps = json.dumps(data)
+        fs = GridFS(self.db, namespace)
+        obj = fs.put(dumps, encoding=encoding)
+        return obj
+
+    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+        # Check if post ids and vectors are cached
+        if self.postsCached == False:
+            self.cachePostsData()
+
+        # Check if db connection is cached
+        if self.db is None:
+            self.db = utils.connect()
+
+        # get query document from queries collection
+        queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
+
+        # check if stateVector exists
+        stateVector = None
+        if 'stateVector' in queryDocument:
+            stateVector = np.array(queryDocument['stateVector'])
+        elif self.model is None:
+            self.model = utils.loadModel()
+            stateVector = self.model([query]).numpy() # convert query string to vector
+        else:
+            stateVector = self.model([query]).numpy() # convert query string to vector
+
+        resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
         qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=direction) # move qvector towards/away from feedbackVector
-
         scores = utils.calculateSimilarity(self.allPostVectors, qprime)
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
-
-        # convert to json to upload to gridfs
-        dumps = json.dumps(newRanks)
-        # upload to gridfs
-        fs = GridFS(self.db, "queries")
-        obj = fs.put(dumps, encoding='utf-8')
+        gridfsObj = self.gridfsUpload("queries", newRanks)
 
         # update stateVector
         self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
         # update rankedPosts
-        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : obj}})
+        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : gridfsObj}})
 
         return 200 # TODO: what to return?
 
