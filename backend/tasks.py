@@ -1,28 +1,13 @@
-# builtin modules
-import logging
-import pickle
+import logging, pickle, utils, json, auth, numpy as np, tensorflow_hub as hub
 from warnings import simplefilter
-import utils
-
-# installed modules
-import gridfs
 from gridfs import GridFS
-import json
-
-import numpy as np
-import tensorflow_hub as hub
 from celery import Celery, Task
-
-# local files
-import auth
-
-import time
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
 # url: "amqp://myuser:mypassword@localhost:5672/myvhost"
-celery_broker_url = (
+CELERY_BROKER_URL = (
     f'amqp://'
     f'{auth.rabbitmq["username"]}:'
     f'{auth.rabbitmq["password"]}@'
@@ -30,7 +15,7 @@ celery_broker_url = (
     f'{auth.rabbitmq["vhost"]}'
 )
 
-app = Celery('tasks', backend='rpc://', broker=celery_broker_url)
+app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
 app.conf.update(
     task_serializer='pickle',
     accept_content=['pickle'],  # Ignore other content
