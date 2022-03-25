@@ -47,8 +47,9 @@ def querySearch(query_string, teleoscope_id):
     # create a new query document
     db.queries.insert_one({
         "query": query_string, 
-        "teleoscope_id": teleoscope_id},
+        "teleoscope_id": teleoscope_id,
         "rank_slice": []
+        }
 
     )
 
