@@ -9,13 +9,14 @@ body {
 #workspace {
   background-image: url("../public/grid.png");
   background-color: #f9f9f9;
-  /*width: 100%;*/
-  width: 100vw;
-  height: 2000vh;
+  width: 75vw;
+  margin: auto;
+  height: 100vh;
+  z-index: -100;
   /*position: relative;*/
 }
 #restrict {
-  max-width: 250px;
+  /* max-width: 250px; */
   background-color: #ffffff;
 }
 
@@ -24,6 +25,7 @@ body {
 }
 .container {
   min-height: 100vh;
+  width: 100vw;
   /*padding: 0 0.5rem;*/
   display: flex;
   flex-direction: column;
@@ -31,6 +33,9 @@ body {
   align-items: center;
 }
 
+#containerkey {
+  width: 100vw;
+}
 main {
   /*padding: 5rem 0;*/
   flex: 1;
@@ -150,6 +155,19 @@ code {
 
 .logo {
   height: 1em;
+}
+
+.leftMenuBar {
+  height: auto;
+  width: 20vw;
+  float: left;
+  z-index: 100;
+}
+
+.rightMenuBar {
+  height: auto;
+  width: 20vw;
+  float: right;
 }
 
 @media (max-width: 600px) {

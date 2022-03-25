@@ -15,6 +15,7 @@ from celery import Celery, Task
 
 # local files
 import auth
+import time
 
 import time
 
@@ -248,21 +249,26 @@ def run_query_init(query_string):
     return result, _reddit_ids
 
 
+@app.task
+def reorient_caller(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+    Reorient().run(teleoscope_id, positive_docs, negative_docs, query)
+
+
 
 '''
 TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
    because those docs should not be show in the ranked documents.
 '''
-class reorient(Task):
-    
+
+class Reorient(Task):
     def __init__(self):
         self.postsCached = False
         self.allPostIDs = None
         self.allPostVectors = None
         self.db = None
         self.model = None
-        
+        self.name = "Reorient"    
 
     def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
         if self.postsCached == False:
@@ -295,6 +301,9 @@ class reorient(Task):
         # check if stateVector exists
         if 'stateVector' in queryDocument:
             stateVector = np.array(queryDocument['stateVector'])
+            if stateVector == None:
+                stateVector = []
+
         else:
             if self.model is None:
                 logging.info('Model not cached, loading model...')
@@ -379,15 +388,23 @@ class reorient(Task):
 
         return 200
 
+
+robj = app.register_task(Reorient())
+app.tasks.register(Reorient())
+# add = app.tasks[Reorient.name]
+
 robj = app.register_task(reorient())
 # add = app.tasks[reorient.name]
+
 # '''
 # TODO:
 # 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
 #    because those docs should not be show in the ranked documents.
 # '''
 # @app.task
-# def reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+
+# def Reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+
 #     db = utils.connect()
 #     queryDocument = db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
 #     # check if stateVector exists
@@ -448,4 +465,8 @@ robj = app.register_task(reorient())
 #     # update rankedPosts
 #     db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : obj}})
 
+
 #     return 200
+
+#     return 200
+
