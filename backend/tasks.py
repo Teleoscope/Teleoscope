@@ -391,8 +391,9 @@ class Reorient(Task):
 
 # robj = app.register_task(Reorient())
 # app.tasks.register(Reorient())
-add = app.tasks[Reorient.name]
+
 robj = app.register_task(Reorient())
+add = app.tasks[Reorient.name]
 
 # add = app.tasks[reorient.name]
 
