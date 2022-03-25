@@ -145,6 +145,10 @@ class reorient(Task):
         # get query document from queries collection
         queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
 
+        if queryDocument == None:
+            logging.info("queryDocument is None type")
+            return
+
         # check if stateVector exists
         stateVector = None
         if 'stateVector' in queryDocument:

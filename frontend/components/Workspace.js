@@ -46,7 +46,8 @@ export default function Workspace(props) {
   const register_task = () => {
     var headers = {};
     var body = {
-      teleoscope_id: "622bbaedb5a28808bd4c993f",
+      query: "india",
+      teleoscope_id: "a2",
       positive_docs: ["j1f7am", "j1f2rk"],
       negative_docs: ["j1f71q", "j1f36t"],
     };
