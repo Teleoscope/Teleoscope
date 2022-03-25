@@ -45,7 +45,12 @@ def querySearch(query_string, teleoscope_id):
     #     return query_results['reddit_ids']
 
     # create a new query document
-    db.queries.insert_one({"query": query_string, "teleoscope_id": teleoscope_id})
+    db.queries.insert_one({
+        "query": query_string, 
+        "teleoscope_id": teleoscope_id},
+        "rank_slice": []
+
+    )
 
     # perform text search query
     textSearchQuery = {"$text": {"$search": query_string}}
