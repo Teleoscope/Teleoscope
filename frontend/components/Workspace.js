@@ -13,7 +13,12 @@ import WorkspaceItem from "../components/WorkspaceItem";
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
 
+import randomstring from "randomstring";
+
+
+
 export default function Workspace(props) {
+  const teleoscope_id = randomstring.generate();
   const added = useSelector((state) => state.adder.value);
   const dispatch = useDispatch();
 
@@ -47,7 +52,7 @@ export default function Workspace(props) {
     var headers = {};
     var body = {
       query: "india", // TODO
-      teleoscope_id: "a2", // TODO
+      teleoscope_id: teleoscope_id, // TODO
       positive_docs: added,
       negative_docs: [],
     };
@@ -71,7 +76,7 @@ export default function Workspace(props) {
       <LeftMenuBar />
       <RightMenuBar />
       <Button variant="text" onClick={() => register_task()}>
-        Register Task
+        Reorient
       </Button>
       <div ref={drop} id="workspace" key="workspacekey">
         {added.map((id) => {

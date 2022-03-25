@@ -104,7 +104,7 @@ class reorient(Task):
         avgPosVec = None # avg positive vector
         avgNegVec = None # avg negative vector
         direction = 1 # direction of movement
-        resultantVec = np.float16(1);
+        resultantVec = np.float16(1); # TODO: check w/ Alam whether this messes with his math
 
         # handle different cases of number of docs in each list
         if len(posVecs) >= 1:
@@ -147,8 +147,8 @@ class reorient(Task):
         queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
 
         if queryDocument == None:
-            logging.info("queryDocument is None type")
-            return
+           querySearch(query, teleoscope_id)
+           logging.info("queryDocument is being generated.")
 
         # check if stateVector exists
         stateVector = None

@@ -36,8 +36,10 @@ export default function RightMenuBar(props) {
   );
 
   var data = teleoscope
-    ? teleoscope.rank_slice.map((post) => {
-        return [post, 1.0];
+    ? teleoscope.rank_slice.slice(0,10).map((post_and_rank) => {
+        var post = post_and_rank[0];
+        var rank = post_and_rank[1];
+        return [post, rank];
       })
     : []; // this is a hack
 
