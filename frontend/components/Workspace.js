@@ -46,10 +46,10 @@ export default function Workspace(props) {
   const register_task = () => {
     var headers = {};
     var body = {
-      query: "india",
-      teleoscope_id: "a2",
-      positive_docs: ["j1f7am", "j1f2rk"],
-      negative_docs: ["j1f71q", "j1f36t"],
+      query: "india", // TODO
+      teleoscope_id: "a2", // TODO
+      positive_docs: added,
+      negative_docs: [],
     };
     client.publish({
       destination: "/queue/systopia",

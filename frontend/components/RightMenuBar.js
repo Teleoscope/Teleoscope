@@ -32,11 +32,11 @@ export default function RightMenuBar(props) {
   const [posts, setPosts] = useState([]);
   const [hover, setHover] = useState(false);
   const { teleoscope, loading, error } = useTeleoscope(
-    "622bbaedb5a28808bd4c993f"
+    "a2"
   );
 
   var data = teleoscope
-    ? teleoscope.ranked_post_ids.map((post) => {
+    ? teleoscope.rank_slice.map((post) => {
         return [post, 1.0];
       })
     : []; // this is a hack
@@ -66,7 +66,7 @@ export default function RightMenuBar(props) {
 
   var ids = posts;
   const handleIDs = (data) => {
-    ids = data["ranked_post_ids"];
+    ids = data["rank_slice"];
     setPosts(ids);
   };
 

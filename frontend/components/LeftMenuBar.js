@@ -11,7 +11,7 @@ import Checkbox from "@mui/material/Checkbox";
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 function useQuery(q, shouldSend) {
-  const API_URL = shouldSend ? `http://localhost:3000/api/queries/${q}` : "";
+  const API_URL = shouldSend ? `http://localhost:3000/api/cleanposts/${q}` : "";
   const { data, error } = useSWR(API_URL, fetcher);
   let ret = {
     posts: data ? data : [{ query: "_none" }],
@@ -49,7 +49,7 @@ export default function LeftMenuBar(props) {
       >
         <TextField
           variant="filled"
-          label="queries"
+          label="cleanposts"
           placeholder="Add query..."
           onKeyDown={(e) => keyChange(e)}
           onChange={(e) => setText(e.target.value)}
