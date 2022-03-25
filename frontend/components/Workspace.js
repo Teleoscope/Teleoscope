@@ -19,6 +19,7 @@ import randomstring from "randomstring";
 
 export default function Workspace(props) {
   const teleoscope_id = randomstring.generate();
+
   const added = useSelector((state) => state.adder.value);
   const dispatch = useDispatch();
 
@@ -48,20 +49,37 @@ export default function Workspace(props) {
 
   client.activate();
 
-  const register_task = () => {
-    var headers = {};
+
+  const reorient = () => {
     var body = {
-      query: "india", // TODO
-      teleoscope_id: teleoscope_id, // TODO
-      positive_docs: added,
-      negative_docs: [],
-    };
+      task: "reorient",
+      args: {
+        query: "india", // TODO
+        teleoscope_id: teleoscope_id, // TODO
+        positive_docs: added,
+        negative_docs: [],
+      };
+    }
+    publish(body);
+  }
+
+  const initialize_teleoscope = () => {
+    var body = {
+      task: 'initialize_teleoscope',
+      args: {
+      }
+    }
+  }
+
+ const publish = (body) => {
+    var headers = {};
     client.publish({
       destination: "/queue/systopia",
       headers: headers,
       body: JSON.stringify(body),
     });
-  };
+ }
+
 
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "item",
@@ -74,7 +92,10 @@ export default function Workspace(props) {
   return (
     <div key="containerkey" id="containerkey">
       <LeftMenuBar />
-      <RightMenuBar />
+      <RightMenuBar teleoscope_id={teleoscope_id} />
+      <Button variant="text" onClick={() => register_task()}>
+        New Teleoscope
+      </Button>
       <Button variant="text" onClick={() => register_task()}>
         Reorient
       </Button>

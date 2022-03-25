@@ -32,7 +32,7 @@ export default function RightMenuBar(props) {
   const [posts, setPosts] = useState([]);
   const [hover, setHover] = useState(false);
   const { teleoscope, loading, error } = useTeleoscope(
-    "a2"
+    props.teleoscope_id
   );
 
   var data = teleoscope

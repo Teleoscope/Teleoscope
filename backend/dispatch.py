@@ -4,6 +4,10 @@ import pickle
 from warnings import simplefilter
 import utils
 import json
+import random
+import string
+
+
 
 # installed modules
 import gridfs
@@ -40,12 +44,26 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         message.ack()
         # not tested below
         b = json.loads(body)
-        if ("query" in b.keys() and "teleoscope_id" in b.keys()) and ("positive_docs" in b.keys()) and ("negative_docs" in b.keys()):
+
+        if b['task'] == "initialize_teleoscope":
+            res = tasks.querySearch.signature(
+                args=("test", get_random_string(32)),
+                kwargs={},
+            )
+            res.apply_async()
+
+        if b['task'] == "reorient":
             res = robj.delay(
-                teleoscope_id=b["teleoscope_id"],
-                positive_docs=b["positive_docs"],
-                negative_docs=b["negative_docs"],
-                query=b["query"]
+                teleoscope_id=b['args']["teleoscope_id"],
+                positive_docs=b['args']["positive_docs"],
+                negative_docs=b['args']["negative_docs"],
+                query=b['args']["query"]
             )
 
 app.steps['consumer'].add(WebTaskConsumer)
+
+def get_random_string(length):
+    # choose from all lowercase letter
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for i in range(length))
+    print("Random string of length", length, "is:", result_str)
