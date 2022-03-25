@@ -17,6 +17,8 @@ from celery import Celery, Task
 import auth
 import time
 
+import time
+
 # Thanks to http://brandonrose.org/clustering!
 # and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32
 
@@ -44,6 +46,7 @@ Performs a text query on aita.clean.posts.v2 text index.
 If the query string alredy exists in the queries collection, returns existing reddit_ids.
 Otherwise, adds the query to the queries collection and performs a text query the results of which are added to the
 queries collection and returned.
+
 TODO: 
 1. We can use GridFS to store the results of the query if needed (if sizeof(reddit_ids) > 16MB).
    Doesnt seem to be an issue right now.
@@ -245,9 +248,11 @@ def run_query_init(query_string):
     )
     return result, _reddit_ids
 
+
 @app.task
 def reorient_caller(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
     Reorient().run(teleoscope_id, positive_docs, negative_docs, query)
+
 
 
 '''
@@ -255,17 +260,15 @@ TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
    because those docs should not be show in the ranked documents.
 '''
-class Reorient(Task):
 
-    
+class Reorient(Task):
     def __init__(self):
         self.postsCached = False
         self.allPostIDs = None
         self.allPostVectors = None
         self.db = None
         self.model = None
-        self.name = "Reorient"
-        
+        self.name = "Reorient"    
 
     def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
         if self.postsCached == False:
@@ -300,6 +303,7 @@ class Reorient(Task):
             stateVector = np.array(queryDocument['stateVector'])
             if stateVector == None:
                 stateVector = []
+
         else:
             if self.model is None:
                 logging.info('Model not cached, loading model...')
@@ -384,16 +388,23 @@ class Reorient(Task):
 
         return 200
 
+
 robj = app.register_task(Reorient())
 app.tasks.register(Reorient())
 # add = app.tasks[Reorient.name]
+
+robj = app.register_task(reorient())
+# add = app.tasks[reorient.name]
+
 # '''
 # TODO:
 # 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
 #    because those docs should not be show in the ranked documents.
 # '''
 # @app.task
+
 # def Reorient(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+
 #     db = utils.connect()
 #     queryDocument = db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
 #     # check if stateVector exists
@@ -454,4 +465,8 @@ app.tasks.register(Reorient())
 #     # update rankedPosts
 #     db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : obj}})
 
+
 #     return 200
+
+#     return 200
+
