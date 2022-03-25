@@ -25,21 +25,7 @@ simplefilter(action='ignore', category=FutureWarning)
 
 systopia = Queue('systopia', Exchange('systopia'), 'systopia')
 
-# url: "amqp://myuser:mypassword@localhost:5672/myvhost"
-celery_broker_url = (
-    f'pyamqp://'
-    f'{auth.rabbitmq["username"]}:'
-    f'{auth.rabbitmq["password"]}@'
-    f'{auth.rabbitmq["host"]}/'
-    f'{auth.rabbitmq["vhost"]}'
-)
-app = Celery('tasks', backend='rpc://', broker=celery_broker_url)
-app.conf.update(
-    task_serializer='json',
-    accept_content=['json', 'pickle'], # Ignore other content
-    result_serializer='json',
-    enable_utc=True,
-)
+from tasks import robj, app
 
 class WebTaskConsumer(bootsteps.ConsumerStep):
 
@@ -55,7 +41,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # not tested below
         b = json.loads(body)
         if ("teleoscope_id" in b.keys()) and ("positive_docs" in b.keys()) and ("negative_docs" in b.keys()):
-            res = tasks.reorient_caller.delay(
+            res = robj.delay(
                 teleoscope_id=b["teleoscope_id"],
                 positive_docs=b["positive_docs"],
                 negative_docs=b["negative_docs"],
@@ -63,17 +49,3 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
 app.steps['consumer'].add(WebTaskConsumer)
-
-# @app.task
-# def hello(hi="hi"):
-#     print("hello", hi)
-
-
-# @app.task
-# def dispatch(requests={}):
-#     logging.info(
-#         f"Running requests for "
-#         f"{requests["request_id"]} at time "
-#         f"{requests["system_time"]}.")
-#     if "query" in requests.keys():
-#         run_query_init(requests["query"])
