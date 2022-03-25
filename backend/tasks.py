@@ -39,10 +39,10 @@ def querySearch(query_string, teleoscope_id):
     db = utils.connect()
     query_results = db.queries.find_one({"query": query_string, "teleoscope_id": teleoscope_id})
     
-    # check if query already exists
-    if query_results is not None:
-        logging.info(f"query {query_string} already exists in queries collection")
-        return query_results['reddit_ids']
+    # # check if query already exists
+    # if query_results is not None:
+    #     logging.info(f"query {query_string} already exists in queries collection")
+    #     return query_results['reddit_ids']
 
     # create a new query document
     db.queries.insert_one({"query": query_string, "teleoscope_id": teleoscope_id})
