@@ -8,6 +8,10 @@ import Box from "@mui/material/Box";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 
+// actions
+import { useSelector, useDispatch } from "react-redux";
+import { searcher } from "../actions/searchterm";
+
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 function useQuery(q, shouldSend) {
@@ -22,9 +26,11 @@ function useQuery(q, shouldSend) {
 }
 
 export default function LeftMenuBar(props) {
-  const [query, setQuery] = useState("");
+  const search_term = useSelector((state) => state.searcher.value);
+  const dispatch = useDispatch();
+
   const [text, setText] = useState("");
-  const { posts, loading, error } = useQuery(query, true);
+  const { posts, loading, error } = useQuery(search_term, true);
 
   // this is a hard-coded hack for ranking of post_id
   let data = posts.map((post) => {
@@ -33,7 +39,7 @@ export default function LeftMenuBar(props) {
 
   const keyChange = (e) => {
     if (e.code == "Enter") {
-      setQuery(text);
+      dispatch(searcher(text));
     }
   };
 

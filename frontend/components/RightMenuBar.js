@@ -80,7 +80,7 @@ export default function RightMenuBar(props) {
           height: "100vh",
         }}
       >
-        <div style={{ marginLeft: 50 }}>Recommended Documents</div>
+        <div style={{ marginLeft: 50 }}>Recommended Documents {props.teleoscope_id}</div>
         <PostList
           data={data}
           isFavList={true}

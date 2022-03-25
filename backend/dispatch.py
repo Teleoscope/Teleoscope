@@ -47,7 +47,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
         if b['task'] == "initialize_teleoscope":
             res = tasks.querySearch.signature(
-                args=("test", get_random_string(32)),
+                args=(b['args']['query'], get_random_string(32)),
                 kwargs={},
             )
             res.apply_async()

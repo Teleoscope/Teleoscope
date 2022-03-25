@@ -31,6 +31,7 @@ export default function Workspace(props) {
   const { teleoscopes, teleoscope_id, loading, error } = useTeleoscopes();
 
   const added = useSelector((state) => state.adder.value);
+  const search_term = useSelector((state) => state.searcher.value);
   const dispatch = useDispatch();
 
   // TODO: look at websocket example code here and replicate
@@ -64,7 +65,7 @@ export default function Workspace(props) {
     var body = {
       task: "reorient",
       args: {
-        query: "india", // TODO
+        query: search_term, // TODO
         teleoscope_id: teleoscope_id, // TODO
         positive_docs: added,
         negative_docs: [],
@@ -77,6 +78,7 @@ export default function Workspace(props) {
     var body = {
       task: 'initialize_teleoscope',
       args: {
+        query: search_term
       }
     }
     publish(body);
