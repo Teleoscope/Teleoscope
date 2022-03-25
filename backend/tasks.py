@@ -104,6 +104,7 @@ class reorient(Task):
         avgPosVec = None # avg positive vector
         avgNegVec = None # avg negative vector
         direction = 1 # direction of movement
+        resultantVec = np.float16(1);
 
         # handle different cases of number of docs in each list
         if len(posVecs) >= 1:
