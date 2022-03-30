@@ -139,6 +139,20 @@ class reorient(Task):
         return obj
 
     def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+        # either positive or negative docs should have at least one entry
+        if len(positive_docs) == 0 and len(negative_docs) == 0:
+            # if both are empty, then cache stuff if not cached alreadt
+            # Check if post ids and vectors are cached
+            if self.postsCached == False:
+                self.cachePostsData()
+
+            # Check if db connection is cached
+            if self.db is None:
+                self.db = utils.connect()
+
+            # do nothing since no feedback given on docs
+            return
+
         # Check if post ids and vectors are cached
         if self.postsCached == False:
             self.cachePostsData()
