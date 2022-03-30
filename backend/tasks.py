@@ -64,7 +64,6 @@ def querySearch(query_string, teleoscope_id):
     logging.info(f"query {query_string} added to queries collection")
     return return_ids
 
-
 '''
 TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
@@ -110,7 +109,6 @@ class reorient(Task):
         avgPosVec = None # avg positive vector
         avgNegVec = None # avg negative vector
         direction = 1 # direction of movement
-        resultantVec = np.float16(1); # TODO: check w/ Alam whether this messes with his math
 
         # handle different cases of number of docs in each list
         if len(posVecs) >= 1:
