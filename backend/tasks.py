@@ -39,6 +39,10 @@ def querySearch(query_string, teleoscope_id):
     db = utils.connect()
     query_results = db.queries.find_one({"query": query_string, "teleoscope_id": teleoscope_id})
     
+    if query_string == "":
+        logging.info(f"query {query_string} is empty.")
+        return []
+
     # # check if query already exists
     # if query_results is not None:
     #     logging.info(f"query {query_string} already exists in queries collection")

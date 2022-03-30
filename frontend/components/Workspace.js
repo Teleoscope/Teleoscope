@@ -5,6 +5,14 @@ import useSWR, { mutate } from "swr";
 
 import Button from "@mui/material/Button";
 
+// dropdown TODO: move this
+import Box from '@mui/material/Box';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+
+
 // custom components
 import LeftMenuBar from "../components/LeftMenuBar";
 import RightMenuBar from "../components/RightMenuBar";
@@ -21,14 +29,16 @@ function useTeleoscopes() {
   const { data, error } = useSWR(`/api/teleoscopes/`, fetcher);
   return {
     teleoscopes: data,
-    teleoscope_id: data ? data[data.length - 1]['teleoscope_id'] : -1,
     loading: !error && !data,
     error: error,
   };
 }
 
 export default function Workspace(props) {
-  const { teleoscopes, teleoscope_id, loading, error } = useTeleoscopes();
+  
+  const [teleoscope_id, setTeleoscope_id] = React.useState(-1);
+  
+  const { teleoscopes, loading, error } = useTeleoscopes();
 
   const added = useSelector((state) => state.adder.value);
   const search_term = useSelector((state) => state.searcher.value);
@@ -106,12 +116,23 @@ export default function Workspace(props) {
     <div key="containerkey" id="containerkey">
       <LeftMenuBar />
       <RightMenuBar teleoscope_id={teleoscope_id} />
+
+      <div>Active teleoscope_id is {teleoscope_id}
+      <hr/>
+      {teleoscopes ? teleoscopes.map((t) => {
+        return( <p><Button onClick={() => setTeleoscope_id(t["teleoscope_id"])}>
+          <span>{t["query"]}</span> : <span>{t["teleoscope_id"]}</span></Button></p>
+          )
+      }):[]}
+      </div>
       <Button variant="text" onClick={() => initialize_teleoscope()}>
-        New Teleoscope {teleoscope_id}
+        New Teleoscope
       </Button>
       <Button variant="text" onClick={() => reorient()}>
         Reorient
       </Button>
+
+
       <div ref={drop} id="workspace" key="workspacekey">
         {added.map((id) => {
           return <WorkspaceItem id={id} />;
@@ -120,3 +141,5 @@ export default function Workspace(props) {
     </div>
   );
 }
+
+
