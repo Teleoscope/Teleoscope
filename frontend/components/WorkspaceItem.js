@@ -155,34 +155,55 @@ export default function WorkspaceItem(props) {
           borderColor: checked ? "#4e5cbc" : "white",
           boxShadow: checked ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
           minWidth: 180,
-          maxWidth: 230,
+          maxWidth: 290,
           // height: 120,
         }}
       >
-        <Checkbox
-          size="small"
-          checked={checked}
-          onChange={handleChange}
-          inputProps={{ "aria-label": "controlled" }}
-          style={{ marginRight: 10 }}
-        />
-        <Typography
-              sx={{ fontSize: 12 }}
-              color="text.secondary"
-              gutterBottom
-            >
-              {postTitle(post)}
-            </Typography>
-        <div style={{ display: "flex", float: "right" }}>
-          <IconButton size="small" onClick={handleClick}>
-            {open ? <ExpandLess /> : <ExpandMore />}
-          </IconButton>
-          <IconButton size="small" onClick={handleDelete}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
+        <div>
+          <Checkbox
+            size="small"
+            checked={checked}
+            onChange={handleChange}
+            inputProps={{ "aria-label": "controlled" }}
+            style={{ marginRight: 10 }}
+          />
+          <div style={{ display: "flex", float: "right" }}>
+            <IconButton size="small" onClick={handleClick}>
+              {open ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+            <IconButton size="small" onClick={handleDelete}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </div>
         </div>
+
+        <Typography color="text.secondary" gutterBottom>
+          {postTitle(post)}
+        </Typography>
+
         <Collapse timeout="auto" unmountOnExit in={open}>
-          <p style={{ marginLeft: 30 }}>{postContent(post)}</p>
+          <p
+            style={
+              viewMore
+                ? {
+                    display: "inline-block",
+                    fontSize: 13,
+                    whiteSpace: "pre-line",
+                    marginLeft: 30,
+                  }
+                : {
+                    display: "inline-block",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis [..]",
+                    height: 195,
+                    fontSize: 13,
+                    whiteSpace: "pre-line",
+                    marginLeft: 30,
+                  }
+            }
+          >
+            {postContent(post)}
+          </p>
           <Button
             variant="text"
             style={{ fontSize: 11, margin: "0 auto", display: "flex" }}

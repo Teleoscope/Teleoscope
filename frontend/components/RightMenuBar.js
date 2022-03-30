@@ -31,12 +31,10 @@ export default function RightMenuBar(props) {
   const [queries, setQueries] = useState([]);
   const [posts, setPosts] = useState([]);
   const [hover, setHover] = useState(false);
-  const { teleoscope, loading, error } = useTeleoscope(
-    props.teleoscope_id
-  );
+  const { teleoscope, loading, error } = useTeleoscope(props.teleoscope_id);
 
   var data = teleoscope
-    ? teleoscope.rank_slice.slice(0,10).map((post_and_rank) => {
+    ? teleoscope.rank_slice.slice(0, 10).map((post_and_rank) => {
         var post = post_and_rank[0];
         var rank = post_and_rank[1];
         return [post, rank];
@@ -80,7 +78,15 @@ export default function RightMenuBar(props) {
           height: "100vh",
         }}
       >
-        <div style={{ marginLeft: 50 }}>Recommended Documents {props.teleoscope_id}</div>
+        <div
+          style={{
+            marginLeft: 50,
+            height: 56,
+            borderBottom: "1px solid black",
+          }}
+        >
+          Recommended Documents {props.teleoscope_id}
+        </div>
         <PostList
           data={data}
           isFavList={true}

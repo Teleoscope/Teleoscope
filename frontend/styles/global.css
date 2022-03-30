@@ -158,14 +158,14 @@ code {
 }
 
 .leftMenuBar {
-  height: auto;
+  height: 100vh;
   width: 20vw;
   float: left;
   z-index: 100;
 }
 
 .rightMenuBar {
-  height: auto;
+  height: 100vh;
   width: 20vw;
   float: right;
 }

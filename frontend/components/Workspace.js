@@ -6,6 +6,7 @@ import useSWR, { mutate } from "swr";
 import Button from "@mui/material/Button";
 
 // custom components
+import TopBar from "../components/TopBar";
 import LeftMenuBar from "../components/LeftMenuBar";
 import RightMenuBar from "../components/RightMenuBar";
 import WorkspaceItem from "../components/WorkspaceItem";
@@ -14,14 +15,14 @@ import WorkspaceItem from "../components/WorkspaceItem";
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
 
-import randomstring from "randomstring";
+// import randomstring from "randomstring";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 function useTeleoscopes() {
   const { data, error } = useSWR(`/api/teleoscopes/`, fetcher);
   return {
     teleoscopes: data,
-    teleoscope_id: data ? data[data.length - 1]['teleoscope_id'] : -1,
+    teleoscope_id: data ? data[data.length - 1]["teleoscope_id"] : -1,
     loading: !error && !data,
     error: error,
   };
@@ -60,7 +61,6 @@ export default function Workspace(props) {
 
   client.activate();
 
-
   const reorient = () => {
     var body = {
       task: "reorient",
@@ -69,30 +69,29 @@ export default function Workspace(props) {
         teleoscope_id: teleoscope_id, // TODO
         positive_docs: added,
         negative_docs: [],
-      }
-    }
+      },
+    };
     publish(body);
-  }
+  };
 
   const initialize_teleoscope = () => {
     var body = {
-      task: 'initialize_teleoscope',
+      task: "initialize_teleoscope",
       args: {
-        query: search_term
-      }
-    }
+        query: search_term,
+      },
+    };
     publish(body);
-  }
+  };
 
- const publish = (body) => {
+  const publish = (body) => {
     var headers = {};
     client.publish({
       destination: "/queue/systopia",
       headers: headers,
       body: JSON.stringify(body),
     });
- }
-
+  };
 
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "item",
@@ -104,6 +103,7 @@ export default function Workspace(props) {
 
   return (
     <div key="containerkey" id="containerkey">
+      <TopBar />
       <LeftMenuBar />
       <RightMenuBar teleoscope_id={teleoscope_id} />
       <Button variant="text" onClick={() => initialize_teleoscope()}>
