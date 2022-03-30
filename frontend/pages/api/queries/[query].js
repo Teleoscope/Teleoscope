@@ -4,8 +4,7 @@ export default async (req, res) => {
   const { db } = await connectToDatabase();
   const { query } = req.query;
   const query_meta = await db
-    .collection("queries")
-    .findOne({ $text: { $search: query } });
-  // console.log(query_meta);
+    .collection("clean.posts.v2")
+    .find({ $text: { $search: query } }).limit(50).toArray();
   res.json(query_meta);
 };

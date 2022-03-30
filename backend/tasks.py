@@ -60,19 +60,25 @@ def querySearch(query_string, teleoscope_id):
     return return_ids
 
 
+@app.task
+def reorient_caller(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+    Reorient().run(teleoscope_id, positive_docs, negative_docs, query)
+
+
 '''
 TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
    because those docs should not be show in the ranked documents.
 '''
-class reorient(Task):
-    
+
+class Reorient(Task):
     def __init__(self):
         self.postsCached = False
         self.allPostIDs = None
         self.allPostVectors = None
         self.db = None
         self.model = None
+        self.name = "Reorient"    
 
     def cachePostsData(self, path='/home/phb/embeddings/'):
         # cache embeddings
@@ -169,4 +175,7 @@ class reorient(Task):
 
         return 200 # TODO: what to return?
 
-robj = app.register_task(reorient())
+
+robj = app.register_task(Reorient())
+app.tasks.register(Reorient())
+# add = app.tasks[Reorient.name]
