@@ -40,8 +40,8 @@ export default function Workspace(props) {
   
   const { teleoscopes, loading, error } = useTeleoscopes();
 
-  const added = useSelector((state) => state.adder.value);
-  const search_term = useSelector((state) => state.searcher.value);
+  const added = useSelector((state) => state.adder.value); // TODO rename
+  const search_term = useSelector((state) => state.searcher.value); // TODO rename
   const dispatch = useDispatch();
 
   const [{ isOver }, drop] = useDrop(() => ({

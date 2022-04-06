@@ -9,7 +9,7 @@ export function client_init() {
     connectHeaders: {
       login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME,
       passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD,
-      host: "systopia",
+      host: "systopia", // TODO: rename this
     },
     debug: function (str) {
       console.log(str);
@@ -31,7 +31,7 @@ export function client_init() {
 export function publish(client, body) {
   var headers = {};
   client.publish({
-    destination: "/queue/systopia",
+    destination: "/queue/systopia", // TODO: rename queue
     headers: headers,
     body: JSON.stringify(body),
   });
@@ -43,8 +43,8 @@ export function reorient(client, search_term, teleoscope_id, positive_docs, nega
   var body = {
     task: "reorient",
     args: {
-        query: search_term, // TODO
-        teleoscope_id: teleoscope_id, // TODO
+      query: search_term, // TODO
+      teleoscope_id: teleoscope_id, // TODO
       positive_docs: added,
       negative_docs: [],
     }
@@ -56,7 +56,7 @@ export function initialize_teleoscope(client, search_term) {
   var body = {
     task: 'initialize_teleoscope',
     args: {
-      query: search_term
+      query: search_term // TODO: rename consistently
     }
   }
   publish(client, body);

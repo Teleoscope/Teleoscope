@@ -31,6 +31,13 @@ systopia = Queue('systopia', Exchange('systopia'), 'systopia')
 
 from tasks import robj, app
 
+
+def get_random_string(length):
+    # choose from all lowercase letter
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for i in range(length))
+    return result_str
+
 class WebTaskConsumer(bootsteps.ConsumerStep):
 
     def get_consumers(self, channel):
@@ -63,9 +70,3 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
 app.steps['consumer'].add(WebTaskConsumer)
-
-def get_random_string(length):
-    # choose from all lowercase letter
-    letters = string.ascii_lowercase
-    result_str = ''.join(random.choice(letters) for i in range(length))
-    return result_str
