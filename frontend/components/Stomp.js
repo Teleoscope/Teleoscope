@@ -28,6 +28,17 @@ export function client_init() {
   return client;
 }
 
+export function publish(client, body) {
+  var headers = {};
+  client.publish({
+    destination: "/queue/systopia",
+    headers: headers,
+    body: JSON.stringify(body),
+  });
+}
+
+// TODO: These should exactly implement the interface standard
+// TODO: Make sure they look like dispatch.py
 export function reorient(client, search_term, teleoscope_id, positive_docs, negative_docs) {
   var body = {
     task: "reorient",
@@ -49,13 +60,4 @@ export function initialize_teleoscope(client, search_term) {
     }
   }
   publish(client, body);
-}
-
-export function publish(client, body) {
-  var headers = {};
-  client.publish({
-    destination: "/queue/systopia",
-    headers: headers,
-    body: JSON.stringify(body),
-  });
 }

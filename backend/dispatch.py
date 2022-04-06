@@ -45,6 +45,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # not tested below
         b = json.loads(body)
 
+        # TODO: these should exactly implement the interface standard
+        # TODO: make sure they look like Stomp.js
         if b['task'] == "initialize_teleoscope":
             res = tasks.querySearch.signature(
                 args=(b['args']['query'], get_random_string(32)),
