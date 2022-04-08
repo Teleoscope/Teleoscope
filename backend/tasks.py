@@ -65,6 +65,11 @@ def querySearch(query_string, teleoscope_id):
     return return_ids
 
 
+@app.task
+def reorient_caller(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+    Reorient().run(teleoscope_id, positive_docs, negative_docs, query)
+
+
 '''
 TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
@@ -110,7 +115,10 @@ class reorient(Task):
         avgPosVec = None # avg positive vector
         avgNegVec = None # avg negative vector
         direction = 1 # direction of movement
+<<<<<<< HEAD
         resultantVec = np.float16(1); # TODO: check w/ Alam whether this messes with his math
+=======
+>>>>>>> b109a96fcf6e20d79caf4d581c39bdf8c66e8f5a
 
         # handle different cases of number of docs in each list
         if len(posVecs) >= 1:
@@ -152,11 +160,6 @@ class reorient(Task):
         # get query document from queries collection
         queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
 
-        if queryDocument == None:
-           querySearch(query, teleoscope_id)
-           queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
-           logging.info("queryDocument is being generated.")
-
         # check if stateVector exists
         stateVector = None
         if 'stateVector' in queryDocument:
@@ -173,15 +176,12 @@ class reorient(Task):
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
         gridfsObj = self.gridfsUpload("queries", newRanks)
 
-        rank_slice = newRanks[0:500]
-
         # update stateVector
         self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
         # update rankedPosts
         self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : gridfsObj}})
-        # update a slice of rank_slice
-        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "rank_slice" : rank_slice}})
 
         return 200 # TODO: what to return?
 
-robj = app.register_task(reorient())
+
+robj = app.register_task(Reorient())
