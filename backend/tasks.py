@@ -28,6 +28,7 @@ Performs a text query on aita.clean.posts.v2 text index.
 If the query string alredy exists in the queries collection, returns existing reddit_ids.
 Otherwise, adds the query to the queries collection and performs a text query the results of which are added to the
 queries collection and returned.
+
 TODO: 
 1. We can use GridFS to store the results of the query if needed (if sizeof(reddit_ids) > 16MB).
    Doesnt seem to be an issue right now.
@@ -39,19 +40,13 @@ def querySearch(query_string, teleoscope_id):
     db = utils.connect()
     query_results = db.queries.find_one({"query": query_string, "teleoscope_id": teleoscope_id})
     
-    # # check if query already exists
-    # if query_results is not None:
-    #     logging.info(f"query {query_string} already exists in queries collection")
-    #     return query_results['reddit_ids']
+    # check if query already exists
+    if query_results is not None:
+        logging.info(f"query {query_string} already exists in queries collection")
+        return query_results['reddit_ids']
 
     # create a new query document
-    db.queries.insert_one({
-        "query": query_string, 
-        "teleoscope_id": teleoscope_id,
-        "rank_slice": []
-        }
-
-    )
+    db.queries.insert_one({"query": query_string, "teleoscope_id": teleoscope_id})
 
     # perform text search query
     textSearchQuery = {"$text": {"$search": query_string}}
@@ -75,14 +70,15 @@ TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
    because those docs should not be show in the ranked documents.
 '''
-class reorient(Task):
-    
+
+class Reorient(Task):
     def __init__(self):
         self.postsCached = False
         self.allPostIDs = None
         self.allPostVectors = None
         self.db = None
         self.model = None
+        self.name = "Reorient"    
 
     def cachePostsData(self, path='/home/phb/embeddings/'):
         # cache embeddings
@@ -115,10 +111,6 @@ class reorient(Task):
         avgPosVec = None # avg positive vector
         avgNegVec = None # avg negative vector
         direction = 1 # direction of movement
-<<<<<<< HEAD
-        resultantVec = np.float16(1); # TODO: check w/ Alam whether this messes with his math
-=======
->>>>>>> b109a96fcf6e20d79caf4d581c39bdf8c66e8f5a
 
         # handle different cases of number of docs in each list
         if len(posVecs) >= 1:
