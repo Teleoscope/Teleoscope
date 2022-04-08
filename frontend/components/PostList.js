@@ -78,12 +78,12 @@ export default function PostList(props) {
           })}
 
       {displayPagination ? (
-        <Stack style={{ marginLeft: 100 }}>
+        <Stack style={{ paddingTop: 30 }}>
           <Pagination
             count={pageCount}
             onChange={changePage}
             page={pageNumber}
-            style={{ marginTop: 20 }}
+            style={{ marginTop: 20, margin: "auto" }}
           />
         </Stack>
       ) : null}
