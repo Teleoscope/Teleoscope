@@ -32,9 +32,6 @@ export default function RightMenuBar(props) {
   const [posts, setPosts] = useState([]);
   const [hover, setHover] = useState(false);
   const { teleoscope, loading, error } = useTeleoscope(props.teleoscope_id);
-
-  var data = teleoscope
-    ? teleoscope.rank_slice.slice(0, 10).map((post_and_rank) => {
         var post = post_and_rank[0];
         var rank = post_and_rank[1];
         return [post, rank];
@@ -78,6 +75,7 @@ export default function RightMenuBar(props) {
           height: "100vh",
         }}
       >
+
         <div
           style={{
             height: 56,

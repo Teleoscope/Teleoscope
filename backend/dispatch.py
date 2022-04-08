@@ -4,6 +4,10 @@ import pickle
 from warnings import simplefilter
 import utils
 import json
+import random
+import string
+
+
 
 # installed modules
 import gridfs
@@ -25,21 +29,14 @@ simplefilter(action='ignore', category=FutureWarning)
 
 systopia = Queue('systopia', Exchange('systopia'), 'systopia')
 
-# url: "amqp://myuser:mypassword@localhost:5672/myvhost"
-celery_broker_url = (
-    f'pyamqp://'
-    f'{auth.rabbitmq["username"]}:'
-    f'{auth.rabbitmq["password"]}@'
-    f'{auth.rabbitmq["host"]}/'
-    f'{auth.rabbitmq["vhost"]}'
-)
-app = Celery('tasks', backend='rpc://', broker=celery_broker_url)
-app.conf.update(
-    task_serializer='json',
-    accept_content=['json', 'pickle'], # Ignore other content
-    result_serializer='json',
-    enable_utc=True,
-)
+from tasks import robj, app
+
+
+def get_random_string(length):
+    # choose from all lowercase letter
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for i in range(length))
+    return result_str
 
 class WebTaskConsumer(bootsteps.ConsumerStep):
 
@@ -54,26 +51,23 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         message.ack()
         # not tested below
         b = json.loads(body)
-        if ("teleoscope_id" in b.keys()) and ("positive_docs" in b.keys()) and ("negative_docs" in b.keys()):
-            res = tasks.reorient_caller.delay(
-                teleoscope_id=b["teleoscope_id"],
-                positive_docs=b["positive_docs"],
-                negative_docs=b["negative_docs"],
-                query='mom'
+
+        # TODO: these should exactly implement the interface standard
+        # TODO: make sure they look like Stomp.js
+        if b['task'] == "initialize_teleoscope":
+            res = tasks.querySearch.signature(
+                args=(b['args']['query'], get_random_string(32)),
+                kwargs={},
+            )
+            res.apply_async()
+
+        if b['task'] == "reorient":
+            res = robj.delay(
+                teleoscope_id=b['args']["teleoscope_id"],
+                positive_docs=b['args']["positive_docs"],
+                negative_docs=b['args']["negative_docs"],
+                query=b['args']["query"]
             )
 
 app.steps['consumer'].add(WebTaskConsumer)
 
-# @app.task
-# def hello(hi="hi"):
-#     print("hello", hi)
-
-
-# @app.task
-# def dispatch(requests={}):
-#     logging.info(
-#         f"Running requests for "
-#         f"{requests["request_id"]} at time "
-#         f"{requests["system_time"]}.")
-#     if "query" in requests.keys():
-#         run_query_init(requests["query"])

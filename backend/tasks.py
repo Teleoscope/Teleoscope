@@ -28,7 +28,6 @@ Performs a text query on aita.clean.posts.v2 text index.
 If the query string alredy exists in the queries collection, returns existing reddit_ids.
 Otherwise, adds the query to the queries collection and performs a text query the results of which are added to the
 queries collection and returned.
-
 TODO: 
 1. We can use GridFS to store the results of the query if needed (if sizeof(reddit_ids) > 16MB).
    Doesnt seem to be an issue right now.
@@ -40,13 +39,23 @@ def querySearch(query_string, teleoscope_id):
     db = utils.connect()
     query_results = db.queries.find_one({"query": query_string, "teleoscope_id": teleoscope_id})
     
-    # check if query already exists
-    if query_results is not None:
-        logging.info(f"query {query_string} already exists in queries collection")
-        return query_results['reddit_ids']
+    if query_string == "":
+        logging.info(f"query {query_string} is empty.")
+        return []
+
+    # # check if query already exists
+    # if query_results is not None:
+    #     logging.info(f"query {query_string} already exists in queries collection")
+    #     return query_results['reddit_ids']
 
     # create a new query document
-    db.queries.insert_one({"query": query_string, "teleoscope_id": teleoscope_id})
+    db.queries.insert_one({
+        "query": query_string, 
+        "teleoscope_id": teleoscope_id,
+        "rank_slice": []
+        }
+
+    )
 
     # perform text search query
     textSearchQuery = {"$text": {"$search": query_string}}
@@ -59,26 +68,19 @@ def querySearch(query_string, teleoscope_id):
     logging.info(f"query {query_string} added to queries collection")
     return return_ids
 
-
-@app.task
-def reorient_caller(teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
-    Reorient().run(teleoscope_id, positive_docs, negative_docs, query)
-
-
 '''
 TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
    because those docs should not be show in the ranked documents.
 '''
-
-class Reorient(Task):
+class reorient(Task):
+    
     def __init__(self):
         self.postsCached = False
         self.allPostIDs = None
         self.allPostVectors = None
         self.db = None
         self.model = None
-        self.name = "Reorient"    
 
     def cachePostsData(self, path='/home/phb/embeddings/'):
         # cache embeddings
@@ -141,6 +143,20 @@ class Reorient(Task):
         return obj
 
     def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+        # either positive or negative docs should have at least one entry
+        if len(positive_docs) == 0 and len(negative_docs) == 0:
+            # if both are empty, then cache stuff if not cached alreadt
+            # Check if post ids and vectors are cached
+            if self.postsCached == False:
+                self.cachePostsData()
+
+            # Check if db connection is cached
+            if self.db is None:
+                self.db = utils.connect()
+
+            # do nothing since no feedback given on docs
+            return
+
         # Check if post ids and vectors are cached
         if self.postsCached == False:
             self.cachePostsData()
@@ -151,6 +167,11 @@ class Reorient(Task):
 
         # get query document from queries collection
         queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
+
+        if queryDocument == None:
+           querySearch(query, teleoscope_id)
+           queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
+           logging.info("queryDocument is being generated.")
 
         # check if stateVector exists
         stateVector = None
@@ -168,12 +189,15 @@ class Reorient(Task):
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
         gridfsObj = self.gridfsUpload("queries", newRanks)
 
+        rank_slice = newRanks[0:500]
+
         # update stateVector
         self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
         # update rankedPosts
         self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : gridfsObj}})
+        # update a slice of rank_slice
+        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "rank_slice" : rank_slice}})
 
         return 200 # TODO: what to return?
 
-
-robj = app.register_task(Reorient())
+robj = app.register_task(reorient())
