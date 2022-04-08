@@ -57,7 +57,6 @@ export default function Workspace(props) {
       <TopBar />
       <LeftMenuBar />
       <RightMenuBar teleoscope_id={teleoscope_id} />
-<<<<<<< HEAD
 
       <div>Active teleoscope_id is {teleoscope_id}
       <hr/>
@@ -70,7 +69,7 @@ export default function Workspace(props) {
       <Button variant="text" onClick={() => initialize_teleoscope(client, search_term, teleoscope_id, added, [])}>
         New Teleoscope
       </Button>
-      <Button variant="text" onClick={() => reorient(client, search_term)}>
+      <Button variant="text" onClick={() => reorient(client, search_term, teleoscope_id, added, [])}>
         Reorient
       </Button>
 

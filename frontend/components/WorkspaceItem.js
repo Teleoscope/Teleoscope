@@ -24,7 +24,7 @@ import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 // actions
 import { useSelector, useDispatch } from "react-redux";
 
-import Note from "./Note";
+import Note from "./Notes";
 
 const useStyles = makeStyles((theme) => ({
   margin: {

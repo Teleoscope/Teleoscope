@@ -45,8 +45,8 @@ export function reorient(client, search_term, teleoscope_id, positive_docs, nega
     args: {
       query: search_term, // TODO
       teleoscope_id: teleoscope_id, // TODO
-      positive_docs: added,
-      negative_docs: [],
+      positive_docs: positive_docs,
+      negative_docs: negative_docs,
     }
   }
   publish(client, body);

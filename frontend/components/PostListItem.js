@@ -27,7 +27,7 @@ import CloseIcon from "@mui/icons-material/Close";
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
-import Note from "./Note";
+import Note from "./Notes";
 
 const useStyles = makeStyles((theme) => ({
   margin: {

@@ -7,8 +7,6 @@ import json
 import random
 import string
 
-
-
 # installed modules
 import gridfs
 import numpy as np
