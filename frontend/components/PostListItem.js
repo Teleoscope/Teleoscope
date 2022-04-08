@@ -27,6 +27,7 @@ import CloseIcon from "@mui/icons-material/Close";
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
+import Note from "./Note";
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -36,27 +37,9 @@ const useStyles = makeStyles((theme) => ({
   extendedIcon: {
     marginRight: theme.spacing(1),
   },
-  idlist: {
-    // overflow: "scroll",
-    // maxHeight: "200px",
-  },
   floater: {
     position: "absolute",
     top: "10px",
-  },
-  root: {
-    // margin: 5,
-    // maxWidth: 290,
-    // maxHeight: 200,
-    // overflow: "hidden",
-  },
-  title: {
-    // border: "1px solid #ffffff",
-    // borderRadius:5,
-    // "&:hover" :{
-    //   border: "1px solid #eeeeee",
-    // backgroundColor: "red",
-    // },
   },
   itemAlign: {
     display: "flex",
@@ -202,95 +185,7 @@ export default function QueryListItem(props) {
           </Button>
         </List>
 
-        <div
-          style={{
-            justifyContent: "center",
-            margin: 15,
-            padding: "10px 10px 40px 10px",
-            border: "1px solid black",
-            borderRadius: 2,
-          }}
-        >
-          <div style={{ justifyContent: "center" }}>
-            <h4 style={{ textAlign: "center", margin: 2 }}>Notes</h4>
-          </div>
-
-          {notesInList.map((note) => {
-            return (
-              <div style={{ padding: "10px 15px 0px 15px", fontSize: 14 }}>
-                <div>
-                  {note.content}
-                  <button
-                    style={{
-                      float: "right",
-                      background: "none",
-                      border: "none",
-                      textDecoration: "underline",
-                    }}
-                  >
-                    Edit
-                  </button>
-                </div>
-                <Divider style={{ marginTop: 10 }} />
-              </div>
-            );
-          })}
-
-          <div style={{ float: "right" }}>
-            <IconButton
-              size="small"
-              style={{
-                marginRight: 10,
-                marginBottom: 10,
-              }}
-              onClick={() => setNote(!note)}
-            >
-              {note ? <CloseIcon /> : <BorderColorOutlinedIcon />}
-            </IconButton>
-          </div>
-
-          {note ? (
-            <div style={{ width: "100%", paddingLeft: 10, marginBottom: 10 }}>
-              <Paper
-                component="form"
-                sx={{
-                  p: "2px 4px",
-                  display: "flex",
-                  alignItems: "start",
-                  width: "95%",
-                  height: "80px",
-                }}
-              >
-                <InputBase
-                  style={{ fontSize: 14, color: "black" }}
-                  sx={{ ml: 1, flex: 1 }}
-                  placeholder="Add notes"
-                  value={noteContent}
-                  inputProps={{ "aria-label": "Add notes" }}
-                  onChange={(e) => setNoteContent(e.target.value)}
-                />
-              </Paper>
-
-              <div style={{ width: "95%" }}>
-                <Button
-                  onClick={handleNoteSubmit}
-                  type="submit"
-                  sx={{
-                    p: "5px",
-                    fontSize: 12,
-                    backgroundColor: "#666666",
-                    float: "right",
-                    marginBottom: 1,
-                  }}
-                  aria-label="search"
-                  variant="contained"
-                >
-                  Submit
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </div>
+        <Note />
       </Collapse>
     </div>
   );
