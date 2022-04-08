@@ -48,7 +48,6 @@ export default function LeftMenuBar(props) {
       <Box
         sx={{
           width: "100%",
-          maxWidth: 360,
           bgcolor: "background.paper",
           height: "100vh",
         }}

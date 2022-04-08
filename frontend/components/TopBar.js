@@ -4,10 +4,8 @@ import React, { useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import MenuIcon from "@mui/icons-material/Menu";
+import BiotechIcon from "@mui/icons-material/Biotech";
 
 export default function TopBar(props) {
   return (
@@ -17,7 +15,19 @@ export default function TopBar(props) {
         style={{ height: 50, backgroundColor: "#4E5CBC" }}
       >
         <Toolbar>
-          <Button color="inherit">Analyze</Button>
+          <Button
+            style={{
+              backgroundColor: "#FFFFFF",
+              color: "black",
+              margin: "auto",
+              marginTop: 0,
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            <BiotechIcon />
+            Analyze
+          </Button>
         </Toolbar>
       </AppBar>
     </Box>
