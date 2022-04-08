@@ -31,13 +31,13 @@ export default function RightMenuBar(props) {
   const [queries, setQueries] = useState([]);
   const [posts, setPosts] = useState([]);
   const [hover, setHover] = useState(false);
-  const { teleoscope, loading, error } = useTeleoscope(
-    "622bbaedb5a28808bd4c993f"
-  );
+  const { teleoscope, loading, error } = useTeleoscope(props.teleoscope_id);
 
   var data = teleoscope
-    ? teleoscope.ranked_post_ids.map((post) => {
-        return [post, 1.0];
+    ? teleoscope.rank_slice.slice(0, 10).map((post_and_rank) => {
+        var post = post_and_rank[0];
+        var rank = post_and_rank[1];
+        return [post, rank];
       })
     : []; // this is a hack
 
@@ -66,7 +66,7 @@ export default function RightMenuBar(props) {
 
   var ids = posts;
   const handleIDs = (data) => {
-    ids = data["ranked_post_ids"];
+    ids = data["rank_slice"];
     setPosts(ids);
   };
 
@@ -78,7 +78,15 @@ export default function RightMenuBar(props) {
           height: "100vh",
         }}
       >
-        <div style={{ marginLeft: 50 }}>Recommended Documents</div>
+        <div
+          style={{
+            height: 56,
+            marginLeft: 50,
+          }}
+        >
+          Recommended Documents {props.teleoscope_id}
+        </div>
+        <hr />
         <PostList
           data={data}
           isFavList={true}

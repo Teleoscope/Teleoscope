@@ -58,32 +58,35 @@ export default function PostList(props) {
   const changePage = (event, value) => {
     setPageNumber(value);
   };
-  
+
   return (
     <List className={classes.idlist} dense={true}>
-
       {displayPagination
         ? paginatedItems.map((pair) => {
             return (
-              <PostListItem id={pair[0]} key={pair[0] + "PostListItem"}> </PostListItem>
-            );})
+              <PostListItem id={pair[0]} key={pair[0] + "PostListItem"}>
+                {" "}
+              </PostListItem>
+            );
+          })
         : sortable.map((pair) => {
             return (
-              <PostListItem id={pair[0]} key={pair[0] + "PostListItem"}> </PostListItem>
-            );})
-      }
+              <PostListItem id={pair[0]} key={pair[0] + "PostListItem"}>
+                {" "}
+              </PostListItem>
+            );
+          })}
 
-      {displayPagination 
-        ? (<Stack>
-            <Pagination
-              count={pageCount}
-              onChange={changePage}
-              page={pageNumber}
-              style={{ marginTop: 20 }}
-            />
-          </Stack>) 
-        : null
-      }
+      {displayPagination ? (
+        <Stack style={{ paddingTop: 30 }}>
+          <Pagination
+            count={pageCount}
+            onChange={changePage}
+            page={pageNumber}
+            style={{ marginTop: 20, margin: "auto" }}
+          />
+        </Stack>
+      ) : null}
     </List>
   );
 }

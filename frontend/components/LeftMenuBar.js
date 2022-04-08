@@ -8,10 +8,14 @@ import Box from "@mui/material/Box";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 
+// actions
+import { useSelector, useDispatch } from "react-redux";
+import { searcher } from "../actions/searchterm";
+
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 function useQuery(q, shouldSend) {
-  const API_URL = shouldSend ? `http://localhost:3000/api/queries/${q}` : "";
+  const API_URL = shouldSend ? `http://localhost:3000/api/cleanposts/${q}` : "";
   const { data, error } = useSWR(API_URL, fetcher);
   let ret = {
     posts: data ? data : [{ query: "_none" }],
@@ -22,9 +26,11 @@ function useQuery(q, shouldSend) {
 }
 
 export default function LeftMenuBar(props) {
-  const [query, setQuery] = useState("");
+  const search_term = useSelector((state) => state.searcher.value);
+  const dispatch = useDispatch();
+
   const [text, setText] = useState("");
-  const { posts, loading, error } = useQuery(query, true);
+  const { posts, loading, error } = useQuery(search_term, true);
 
   // this is a hard-coded hack for ranking of post_id
   let data = posts.map((post) => {
@@ -33,7 +39,7 @@ export default function LeftMenuBar(props) {
 
   const keyChange = (e) => {
     if (e.code == "Enter") {
-      setQuery(text);
+      dispatch(searcher(text));
     }
   };
 
@@ -42,28 +48,24 @@ export default function LeftMenuBar(props) {
       <Box
         sx={{
           width: "100%",
-          maxWidth: 360,
           bgcolor: "background.paper",
           height: "100vh",
         }}
       >
         <TextField
           variant="filled"
-          label="queries"
+          label="cleanposts"
           placeholder="Add query..."
           onKeyDown={(e) => keyChange(e)}
           onChange={(e) => setText(e.target.value)}
-          style={{ width: "100%" }}
+          style={{ width: "100%", borderRadius: "0 !important" }}
         />
         <FormControlLabel
           style={{ marginLeft: 20, marginTop: 10 }}
           control={<Checkbox style={{ marginRight: 10 }} />}
           label="Bookmarked Items Only"
         />
-        <PostList
-          data={data}
-          pagination={true}
-        />
+        <PostList data={data} pagination={true} />
       </Box>
     </div>
   );

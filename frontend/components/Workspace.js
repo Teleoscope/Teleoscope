@@ -1,10 +1,12 @@
 import React from "react";
 import { Client, Message } from "@stomp/stompjs";
 import { useDrop } from "react-dnd";
+import useSWR, { mutate } from "swr";
 
 import Button from "@mui/material/Button";
 
 // custom components
+import TopBar from "../components/TopBar";
 import LeftMenuBar from "../components/LeftMenuBar";
 import RightMenuBar from "../components/RightMenuBar";
 import WorkspaceItem from "../components/WorkspaceItem";
@@ -13,8 +15,24 @@ import WorkspaceItem from "../components/WorkspaceItem";
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
 
+// import randomstring from "randomstring";
+
+const fetcher = (...args) => fetch(...args).then((res) => res.json());
+function useTeleoscopes() {
+  const { data, error } = useSWR(`/api/teleoscopes/`, fetcher);
+  return {
+    teleoscopes: data,
+    teleoscope_id: data ? data[data.length - 1]["teleoscope_id"] : -1,
+    loading: !error && !data,
+    error: error,
+  };
+}
+
 export default function Workspace(props) {
+  const { teleoscopes, teleoscope_id, loading, error } = useTeleoscopes();
+
   const added = useSelector((state) => state.adder.value);
+  const search_term = useSelector((state) => state.searcher.value);
   const dispatch = useDispatch();
 
   // TODO: look at websocket example code here and replicate
@@ -43,13 +61,31 @@ export default function Workspace(props) {
 
   client.activate();
 
-  const register_task = () => {
-    var headers = {};
+  const reorient = () => {
     var body = {
-      teleoscope_id: "622bbaedb5a28808bd4c993f",
-      positive_docs: ["j1f7am", "j1f2rk"],
-      negative_docs: ["j1f71q", "j1f36t"],
+      task: "reorient",
+      args: {
+        query: search_term, // TODO
+        teleoscope_id: teleoscope_id, // TODO
+        positive_docs: added,
+        negative_docs: [],
+      },
     };
+    publish(body);
+  };
+
+  const initialize_teleoscope = () => {
+    var body = {
+      task: "initialize_teleoscope",
+      args: {
+        query: search_term,
+      },
+    };
+    publish(body);
+  };
+
+  const publish = (body) => {
+    var headers = {};
     client.publish({
       destination: "/queue/systopia",
       headers: headers,
@@ -67,10 +103,14 @@ export default function Workspace(props) {
 
   return (
     <div key="containerkey" id="containerkey">
+      <TopBar />
       <LeftMenuBar />
-      <RightMenuBar />
-      <Button variant="text" onClick={() => register_task()}>
-        Register Task
+      <RightMenuBar teleoscope_id={teleoscope_id} />
+      <Button variant="text" onClick={() => initialize_teleoscope()}>
+        New Teleoscope {teleoscope_id}
+      </Button>
+      <Button variant="text" onClick={() => reorient()}>
+        Reorient
       </Button>
       <div ref={drop} id="workspace" key="workspacekey">
         {added.map((id) => {
