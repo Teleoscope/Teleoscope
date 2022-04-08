@@ -12,6 +12,7 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 
 // custom components
+import TopBar from "../components/TopBar";
 import LeftMenuBar from "../components/LeftMenuBar";
 import RightMenuBar from "../components/RightMenuBar";
 import WorkspaceItem from "../components/WorkspaceItem";
@@ -39,7 +40,6 @@ export default function Workspace(props) {
   const [teleoscope_id, setTeleoscope_id] = React.useState(-1);
   
   const { teleoscopes, loading, error } = useTeleoscopes();
-
   const added = useSelector((state) => state.adder.value); // TODO rename
   const search_term = useSelector((state) => state.searcher.value); // TODO rename
   const dispatch = useDispatch();
@@ -54,8 +54,10 @@ export default function Workspace(props) {
 
   return (
     <div key="containerkey" id="containerkey">
+      <TopBar />
       <LeftMenuBar />
       <RightMenuBar teleoscope_id={teleoscope_id} />
+<<<<<<< HEAD
 
       <div>Active teleoscope_id is {teleoscope_id}
       <hr/>
@@ -71,7 +73,6 @@ export default function Workspace(props) {
       <Button variant="text" onClick={() => reorient(client, search_term)}>
         Reorient
       </Button>
-
 
       <div ref={drop} id="workspace" key="workspacekey">
         {added.map((id) => {

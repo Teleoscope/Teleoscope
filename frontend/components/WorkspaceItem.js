@@ -6,20 +6,11 @@ import { useDrag } from "react-dnd";
 
 // material ui
 import { makeStyles } from "@material-ui/core/styles";
-import { spacing } from "@material-ui/system";
 import Collapse from "@material-ui/core/Collapse";
-import Avatar from "@material-ui/core/Avatar";
 import Typography from "@material-ui/core/Typography";
-import { red } from "@material-ui/core/colors";
-import List from "@mui/material/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
-import CardActions from "@mui/material/CardActions";
-import CardContent from "@mui/material/CardContent";
 import Checkbox from "@mui/material/Checkbox";
 
 // icons
@@ -28,13 +19,12 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
-import BiotechIcon from "@mui/icons-material/Biotech";
+import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { fav } from "../actions/fav";
-import { hide } from "../actions/hide";
-import Close from "@mui/icons-material/Close";
+
+import Note from "./Note";
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -44,32 +34,9 @@ const useStyles = makeStyles((theme) => ({
   extendedIcon: {
     marginRight: theme.spacing(1),
   },
-  idlist: {
-    // overflow: "scroll",
-    // maxHeight: "200px",
-  },
   floater: {
     position: "absolute",
     top: "10px",
-  },
-  root: {
-    // margin: 5,
-    // maxWidth: 290,
-    // maxHeight: 200,
-    // overflow: "hidden",
-  },
-  title: {
-    // border: "1px solid #ffffff",
-    // borderRadius:5,
-    // "&:hover" :{
-    //   border: "1px solid #eeeeee",
-    // backgroundColor: "red",
-    // },
-  },
-  draggable: {
-    // height: "200px !important",
-    // width: "100px !important",
-    // display: "flex",
   },
 }));
 
@@ -96,6 +63,8 @@ export default function WorkspaceItem(props) {
   const [checked, setChecked] = React.useState(false);
   const { post, loading, error } = usePost(props.id);
 
+  const [note, setNote] = React.useState(false);
+  const [noteContent, setNoteContent] = useState("");
   const handleClick = () => {
     setOpen(!open);
   };
@@ -155,34 +124,64 @@ export default function WorkspaceItem(props) {
           borderColor: checked ? "#4e5cbc" : "white",
           boxShadow: checked ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
           minWidth: 180,
-          maxWidth: 230,
+          maxWidth: 290,
           // height: 120,
         }}
       >
-        <Checkbox
-          size="small"
-          checked={checked}
-          onChange={handleChange}
-          inputProps={{ "aria-label": "controlled" }}
-          style={{ marginRight: 10 }}
-        />
-        <Typography
-              sx={{ fontSize: 12 }}
-              color="text.secondary"
-              gutterBottom
-            >
-              {postTitle(post)}
-            </Typography>
-        <div style={{ display: "flex", float: "right" }}>
-          <IconButton size="small" onClick={handleClick}>
-            {open ? <ExpandLess /> : <ExpandMore />}
-          </IconButton>
-          <IconButton size="small" onClick={handleDelete}>
-            <CloseIcon fontSize="small" />
-          </IconButton>
+        <div>
+          <Checkbox
+            size="small"
+            checked={checked}
+            onChange={handleChange}
+            inputProps={{ "aria-label": "controlled" }}
+            style={{ marginRight: 10 }}
+          />
+          <div style={{ display: "flex", float: "right" }}>
+            <IconButton size="small" onClick={handleClick}>
+              {open ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+            <IconButton size="small" onClick={handleDelete}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </div>
         </div>
+
+        <Typography
+          color="text.secondary"
+          style={{
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            width: "90%",
+            margin: "auto",
+          }}
+          gutterBottom
+        >
+          {postTitle(post)}
+        </Typography>
+
         <Collapse timeout="auto" unmountOnExit in={open}>
-          <p style={{ marginLeft: 30 }}>{postContent(post)}</p>
+          <p
+            style={
+              viewMore
+                ? {
+                    display: "inline-block",
+                    fontSize: 13,
+                    whiteSpace: "pre-line",
+                    margin: "10px 10px 0px 20px",
+                  }
+                : {
+                    display: "inline-block",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis [..]",
+                    height: 195,
+                    fontSize: 13,
+                    whiteSpace: "pre-line",
+                    margin: "10px 10px 0px 20px",
+                  }
+            }
+          >
+            {postContent(post)}
+          </p>
           <Button
             variant="text"
             style={{ fontSize: 11, margin: "0 auto", display: "flex" }}
@@ -193,6 +192,7 @@ export default function WorkspaceItem(props) {
               {viewMore ? "View Less" : "View More"}
             </div>
           </Button>
+          <Note />
         </Collapse>
       </Card>
     </Draggable>

@@ -48,7 +48,6 @@ export default function LeftMenuBar(props) {
       <Box
         sx={{
           width: "100%",
-          maxWidth: 360,
           bgcolor: "background.paper",
           height: "100vh",
         }}
@@ -59,17 +58,14 @@ export default function LeftMenuBar(props) {
           placeholder="Add query..."
           onKeyDown={(e) => keyChange(e)}
           onChange={(e) => setText(e.target.value)}
-          style={{ width: "100%" }}
+          style={{ width: "100%", borderRadius: "0 !important" }}
         />
         <FormControlLabel
           style={{ marginLeft: 20, marginTop: 10 }}
           control={<Checkbox style={{ marginRight: 10 }} />}
           label="Bookmarked Items Only"
         />
-        <PostList
-          data={data}
-          pagination={true}
-        />
+        <PostList data={data} pagination={true} />
       </Box>
     </div>
   );

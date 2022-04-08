@@ -27,6 +27,7 @@ import CloseIcon from "@mui/icons-material/Close";
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
+import Note from "./Note";
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -36,27 +37,9 @@ const useStyles = makeStyles((theme) => ({
   extendedIcon: {
     marginRight: theme.spacing(1),
   },
-  idlist: {
-    // overflow: "scroll",
-    // maxHeight: "200px",
-  },
   floater: {
     position: "absolute",
     top: "10px",
-  },
-  root: {
-    // margin: 5,
-    // maxWidth: 290,
-    // maxHeight: 200,
-    // overflow: "hidden",
-  },
-  title: {
-    // border: "1px solid #ffffff",
-    // borderRadius:5,
-    // "&:hover" :{
-    //   border: "1px solid #eeeeee",
-    // backgroundColor: "red",
-    // },
   },
   itemAlign: {
     display: "flex",
@@ -77,9 +60,9 @@ function usePost(postid) {
 }
 
 var notesInList = [
-  { content: "note 1", id: "1" },
-  { content: "note 2", id: "2" },
-  { content: "note 3", id: "3" },
+  // { content: "note 1", id: "1" },
+  // { content: "note 2", id: "2" },
+  // { content: "note 3", id: "3" },
 ];
 //TODO: Figure out store for notes
 
@@ -132,21 +115,17 @@ export default function QueryListItem(props) {
 
   // Notes
   const handleNoteSubmit = (e) => {
-    console.log("add!");
     e.preventDefault();
-    setIndex(index + 1);
-    notesInList.push({ content: noteContent, id: index });
-    console.log("added notes:", notesInList);
-    setNoteContent("");
+    if (noteContent == null || noteContent != "") {
+      setIndex(index + 1);
+      notesInList.push({ content: noteContent, id: index });
+      setNoteContent("");
+    }
   };
 
   return (
     <div ref={drag} style={{ borderBottom: "1px solid  #eceeee" }}>
-      <ListItem
-        className={classes.root}
-        disableGutters={true}
-      >
-
+      <ListItem className={classes.root} disableGutters={true}>
         <ListItemIcon>
           <IconButton
             aria-label="add to favorites"
@@ -161,7 +140,7 @@ export default function QueryListItem(props) {
         </ListItemIcon>
 
         <ListItemText>
-          {post ?  postTitle(post) : "Post loading..."}
+          {post ? postTitle(post) : "Post loading..."}
         </ListItemText>
 
         <IconButton onClick={handleClick}>
@@ -170,15 +149,19 @@ export default function QueryListItem(props) {
       </ListItem>
 
       <Collapse timeout="auto" unmountOnExit in={open}>
-
         <List disablePadding>
-          <ListItem style={viewMore ? 
-                  { display: "inline-block" }
-                : { display: "inline-block",
+          <ListItem
+            style={
+              viewMore
+                ? { display: "inline-block" }
+                : {
+                    display: "inline-block",
                     overflow: "hidden",
                     textOverflow: "ellipsis [..]",
-                    height: 250}}>
-
+                    height: 250,
+                  }
+            }
+          >
             <ListItemText
               primary={post ? post["selftext"] : "Post content not available"}
               ellipsizeMode="tail"
@@ -186,8 +169,8 @@ export default function QueryListItem(props) {
                 marginLeft: 50,
                 display: "inline-block",
                 whiteSpace: "pre-line",
-              }}/>
-
+              }}
+            />
           </ListItem>
 
           <Button
@@ -202,75 +185,7 @@ export default function QueryListItem(props) {
           </Button>
         </List>
 
-        <div style={{ justifyContent: "center" }}>
-          {notesInList.length != 0 ? (
-            <h4 style={{ textAlign: "center", margin: 2 }}>Notes</h4>
-          ) : null}
-        </div>
-
-        {notesInList.map((note) => {
-          return (
-            <div style={{ padding: "10px 15px 0px 15px", fontSize: 14 }}>
-              {note.content}
-              <Divider style={{ marginTop: 10 }} />
-            </div>
-          );
-        })}
-
-        <div style={{ float: "right" }}>
-          <IconButton
-            size="small"
-            style={{
-              marginRight: 10,
-              marginBottom: 10,
-            }}
-            onClick={() => setNote(!note)}
-          >
-            {note ? <CloseIcon /> : <BorderColorOutlinedIcon />}
-          </IconButton>
-        </div>
-
-        {note ? (
-          <div style={{ width: "100%", paddingLeft: 10, marginBottom: 10 }}>
-            <Paper
-              component="form"
-              sx={{
-                p: "2px 4px",
-                display: "flex",
-                alignItems: "start",
-                width: "95%",
-                height: "80px",
-              }}
-            >
-              <InputBase
-                style={{ fontSize: 14, color: "black" }}
-                sx={{ ml: 1, flex: 1 }}
-                placeholder="Add notes"
-                value={noteContent}
-                inputProps={{ "aria-label": "Add notes" }}
-                onChange={(e) => setNoteContent(e.target.value)}
-              />
-            </Paper>
-
-            <div style={{ width: "95%" }}>
-              <Button
-                onClick={handleNoteSubmit}
-                type="submit"
-                sx={{
-                  p: "5px",
-                  fontSize: 12,
-                  backgroundColor: "#666666",
-                  float: "right",
-                  marginBottom: 1,
-                }}
-                aria-label="search"
-                variant="contained"
-              >
-                Submit
-              </Button>
-            </div>
-          </div>
-        ) : null}
+        <Note />
       </Collapse>
     </div>
   );

@@ -70,3 +70,4 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
 app.steps['consumer'].add(WebTaskConsumer)
+
