@@ -16,7 +16,7 @@ CELERY_BROKER_URL = (
     f'{auth.rabbitmq["vhost"]}'
 )
 
-app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
+app = Celery('App', backend='rpc://', broker=CELERY_BROKER_URL)
 app.conf.update(
     task_serializer='pickle',
     accept_content=['pickle'],  # Ignore other content
