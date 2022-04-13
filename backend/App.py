@@ -2,7 +2,6 @@ import auth
 from warnings import simplefilter
 from celery import Celery
 from dispatch import WebTaskConsumer
-from tasks import reorient
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
