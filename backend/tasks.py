@@ -93,6 +93,12 @@ class reorient(Task):
 
         return
 
+    def moveVector(self, sourceVector, destinationVector, direction, magnitude = None):
+        magnitude = magnitude if magnitude is not None else 0.75
+        new_q = sourceVector + direction*magnitude*(destinationVector - sourceVector)
+        new_q = new_q / np.linalg.norm(new_q)
+        return new_q
+
     def getPostVector(self, db, post_id):
         post = db.clean.posts.v2.find_one({"id": post_id}, projection={'selftextVector':1}) # get post which was liked/disliked
         postVector = np.array(post['selftextVector']) # extract vector of post which was liked/disliked
