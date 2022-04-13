@@ -92,6 +92,23 @@ class reorient(Task):
         self.postsCached = True
 
         return
+
+    def getPostVector(self, db, post_id):
+        post = db.clean.posts.v2.find_one({"id": post_id}, projection={'selftextVector':1}) # get post which was liked/disliked
+        postVector = np.array(post['selftextVector']) # extract vector of post which was liked/disliked
+        return postVector
+
+    def loadModel(self):
+        model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+        return model
+
+    def calculateSimilarity(self, postVectors, queryVector):
+        scores = queryVector.dot(postVectors.T).flatten() # cosine similarity scores. (assumes vectors are normalized to unit length)
+        return scores
+
+    # create and return a list a tuples of (post_id, similarity_score) sorted by similarity score, high to low
+    def rankPostsBySimilarity(self, posts_ids, scores):
+        return sorted([(post_id, score) for (post_id, score) in zip(posts_ids, scores)], key=lambda x:x[1], reverse=True)
     '''
     Computes the resultant vector for positive and negative docs.
     Resultant vector is the final vector that the stateVector of the teleoscope should move towards/away from.
@@ -102,12 +119,12 @@ class reorient(Task):
         
         posVecs = [] # vectors we want to move towards
         for pos_id in positive_docs:
-            v = utils.getPostVector(self.db, pos_id)
+            v = self.getPostVector(self.db, pos_id)
             posVecs.append(v)
 
         negVecs = [] # vectors we want to move away from
         for neg_id in negative_docs:
-            v = utils.getPostVector(self.db, neg_id)
+            v = self.getPostVector(self.db, neg_id)
             negVecs.append(v)
         
         avgPosVec = None # avg positive vector
@@ -178,15 +195,15 @@ class reorient(Task):
         if 'stateVector' in queryDocument:
             stateVector = np.array(queryDocument['stateVector'])
         elif self.model is None:
-            self.model = utils.loadModel()
+            self.model = self.loadModel()
             stateVector = self.model([query]).numpy() # convert query string to vector
         else:
             stateVector = self.model([query]).numpy() # convert query string to vector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
-        qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=direction) # move qvector towards/away from feedbackVector
-        scores = utils.calculateSimilarity(self.allPostVectors, qprime)
-        newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
+        qprime = self.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=direction) # move qvector towards/away from feedbackVector
+        scores = self.calculateSimilarity(self.allPostVectors, qprime)
+        newRanks = self.rankPostsBySimilarity(self.allPostIDs, scores)
         gridfsObj = self.gridfsUpload("queries", newRanks)
 
         rank_slice = newRanks[0:500]
