@@ -1,26 +1,28 @@
-import logging, pickle, utils, json, auth, numpy as np, tensorflow_hub as hub
+import logging, pickle, utils, json, numpy as np, tensorflow_hub as hub
 from warnings import simplefilter
 from gridfs import GridFS
-from celery import Celery, Task
+from celery import Task
+
+from App import app
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
 # url: "amqp://myuser:mypassword@localhost:5672/myvhost"
-CELERY_BROKER_URL = (
-    f'amqp://'
-    f'{auth.rabbitmq["username"]}:'
-    f'{auth.rabbitmq["password"]}@'
-    f'{auth.rabbitmq["host"]}/'
-    f'{auth.rabbitmq["vhost"]}'
-)
+# CELERY_BROKER_URL = (
+#     f'amqp://'
+#     f'{auth.rabbitmq["username"]}:'
+#     f'{auth.rabbitmq["password"]}@'
+#     f'{auth.rabbitmq["host"]}/'
+#     f'{auth.rabbitmq["vhost"]}'
+# )
 
-app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
-app.conf.update(
-    task_serializer='pickle',
-    accept_content=['pickle'],  # Ignore other content
-    result_serializer='pickle',
-)
+# app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
+# app.conf.update(
+#     task_serializer='pickle',
+#     accept_content=['pickle'],  # Ignore other content
+#     result_serializer='pickle',
+# )
 
 '''
 querySearch:
@@ -223,4 +225,5 @@ class reorient(Task):
 
         return 200 # TODO: what to return?
 
-robj = app.register_task(reorient())
+# Register the reorient task to the Celery app
+reorientTaskObject = app.register_task(reorient())
