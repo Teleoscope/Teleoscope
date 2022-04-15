@@ -8,7 +8,7 @@ TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
    because those docs should not be show in the ranked documents.
 '''
-class reorient(Task):
+class Reorient(Task):
     
     def __init__(self):
         self.postsCached = False
