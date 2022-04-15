@@ -1,7 +1,7 @@
 import logging,utils
 from warnings import simplefilter
 from celery import Task
-from CustomTasks.Reorient import Reorient
+from Reorient import Reorient
 from App import app
 
 # ignore all future warnings
