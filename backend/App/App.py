@@ -2,7 +2,7 @@
 - This file is the main entry point for the application.
 - Celery is initialized here via a shell script on the hosting server.
 '''
-import os
+import os, sys
 from os.path import dirname, realpath
 import logging
 
@@ -14,6 +14,7 @@ print(parent_path)
 os.environ["PYTHONPATH"] = parent_path
 
 logging.info(parent_path)
+logging.info(sys.path)
 from backend import auth # **make sure to import auth after setting the environment variable**
 from warnings import simplefilter
 from celery import Celery
