@@ -1,8 +1,22 @@
-import auth
+'''
+- This file is the main entry point for the application.
+- Celery is initialized here via a shell script on the hosting server.
+'''
+import os
+from os.path import dirname, realpath
+
+
+# Set the environment variable for the application
+# This is required so that subfolders can be imported and can import parent folders
+curr_file_path = dirname(realpath(__file__))
+parent_path = dirname(curr_file_path)
+print(parent_path)
+os.environ["PYTHONPATH"] = parent_path
+
+import auth # **make sure to import auth after setting the environment variable**
 from warnings import simplefilter
 from celery import Celery
 from dispatch import WebTaskConsumer
-
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -16,6 +30,7 @@ CELERY_BROKER_URL = (
 )
 
 app = Celery('App', backend='rpc://', broker=CELERY_BROKER_URL)
+
 app.conf.update(
     task_serializer='pickle',
     accept_content=['pickle'],  # Ignore other content

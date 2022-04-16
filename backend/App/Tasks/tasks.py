@@ -1,8 +1,13 @@
-import logging,utils
+'''
+Main Tasks Entry Point.
+
+All tasks are registered here, including custom tasks.
+'''
+
+import logging, utils
 from warnings import simplefilter
-from celery import Task
-from Reorient import Reorient
-from App import app
+from CustomTasks.Reorient import Reorient
+from App.App import app
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
@@ -55,4 +60,4 @@ def querySearch(query_string, teleoscope_id):
 
 
 # Register the reorient task to the Celery app
-reorientTaskObject = app.register_task(Reorient())
+reorient = app.register_task(Reorient())
