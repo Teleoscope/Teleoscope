@@ -13,10 +13,12 @@ parent_path = dirname(curr_file_path)
 print(parent_path)
 os.environ["PYTHONPATH"] = parent_path
 
+logging.info(parent_path)
 from backend import auth # **make sure to import auth after setting the environment variable**
 from warnings import simplefilter
 from celery import Celery
 from dispatch import WebTaskConsumer
+import logging
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
