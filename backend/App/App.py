@@ -4,7 +4,7 @@
 '''
 import os
 from os.path import dirname, realpath
-
+import logging
 
 # Set the environment variable for the application
 # This is required so that subfolders can be imported and can import parent folders
@@ -18,7 +18,6 @@ from backend import auth # **make sure to import auth after setting the environm
 from warnings import simplefilter
 from celery import Celery
 from dispatch import WebTaskConsumer
-import logging
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
