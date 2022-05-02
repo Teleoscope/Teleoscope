@@ -1,34 +1,18 @@
-# builtin modules
-import logging
-import pickle
-from warnings import simplefilter
-import utils
-import json
-import random
-import string
+'''
+- Declares the WebTaskConsumer class to be used in App.py
+- Only contains definitions, not a script.
+'''
 
-# installed modules
-import gridfs
-import numpy as np
-import tensorflow_hub as hub
-from celery import Celery
+import json, random, string
+from warnings import simplefilter
 from celery import bootsteps
 from kombu import Consumer, Exchange, Queue
-
-# local files
-import auth
-import tasks
-
-# Thanks to http://brandonrose.org/clustering!
-# and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32
-
+from Tasks import tasks
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
+# TODO: Recommended to move this into the WebTaskConsumer constructor
 systopia = Queue('systopia', Exchange('systopia'), 'systopia')
-
-from tasks import robj, app
-
 
 def get_random_string(length):
     # choose from all lowercase letter
@@ -60,12 +44,10 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res.apply_async()
 
         if b['task'] == "reorient":
-            res = robj.delay(
+            res = tasks.reorient.delay(
                 teleoscope_id=b['args']["teleoscope_id"],
                 positive_docs=b['args']["positive_docs"],
                 negative_docs=b['args']["negative_docs"],
                 query=b['args']["query"]
             )
-
-app.steps['consumer'].add(WebTaskConsumer)
 
