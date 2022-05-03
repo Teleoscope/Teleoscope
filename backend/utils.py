@@ -16,7 +16,7 @@ from gensim.similarities import SoftCosineSimilarity
 from gensim.utils import simple_preprocess
 
 # local files
-from backend import auth
+import auth
 
 def unpacker(cursor, key):
     for doc in cursor:

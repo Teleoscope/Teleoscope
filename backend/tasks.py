@@ -1,14 +1,79 @@
-
-import logging, pickle, utils, json, numpy as np, tensorflow_hub as hub
+import logging, pickle, utils, json, auth, numpy as np, tensorflow_hub as hub
+from warnings import simplefilter
 from gridfs import GridFS
-from celery import Task
+from celery import Celery, Task
+
+# ignore all future warnings
+simplefilter(action='ignore', category=FutureWarning)
+
+# url: "amqp://myuser:mypassword@localhost:5672/myvhost"
+CELERY_BROKER_URL = (
+    f'amqp://'
+    f'{auth.rabbitmq["username"]}:'
+    f'{auth.rabbitmq["password"]}@'
+    f'{auth.rabbitmq["host"]}/'
+    f'{auth.rabbitmq["vhost"]}'
+)
+
+app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
+app.conf.update(
+    task_serializer='pickle',
+    accept_content=['pickle'],  # Ignore other content
+    result_serializer='pickle',
+)
+
+'''
+querySearch:
+Performs a text query on aita.clean.posts.v2 text index.
+If the query string alredy exists in the queries collection, returns existing reddit_ids.
+Otherwise, adds the query to the queries collection and performs a text query the results of which are added to the
+queries collection and returned.
+TODO: 
+1. We can use GridFS to store the results of the query if needed (if sizeof(reddit_ids) > 16MB).
+   Doesnt seem to be an issue right now.
+2. Checks for both teleoscope_id and query. Need confirmation from frontend on whether the teleoscope_id and/or query will already exist?
+   If not, then who updates them?
+'''
+@app.task
+def querySearch(query_string, teleoscope_id):
+    db = utils.connect()
+    query_results = db.queries.find_one({"query": query_string, "teleoscope_id": teleoscope_id})
+    
+    if query_string == "":
+        logging.info(f"query {query_string} is empty.")
+        return []
+
+    # # check if query already exists
+    # if query_results is not None:
+    #     logging.info(f"query {query_string} already exists in queries collection")
+    #     return query_results['reddit_ids']
+
+    # create a new query document
+    db.queries.insert_one({
+        "query": query_string, 
+        "teleoscope_id": teleoscope_id,
+        "rank_slice": []
+        }
+
+    )
+
+    # perform text search query
+    textSearchQuery = {"$text": {"$search": query_string}}
+    cursor = db.clean.posts.v2.find(textSearchQuery, projection = {'id':1})
+    return_ids = [x['id'] for x in cursor]
+
+    # store results in queries collection
+    db.queries.update_one({'query': query_string, 'teleoscope_id': teleoscope_id}, {'$set': {'reddit_ids': return_ids}})
+    
+    logging.info(f"query {query_string} added to queries collection")
+    return return_ids
 
 '''
 TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
    because those docs should not be show in the ranked documents.
 '''
-class Reorient(Task):
+class reorient(Task):
     
     def __init__(self):
         self.postsCached = False
@@ -27,29 +92,6 @@ class Reorient(Task):
         self.postsCached = True
 
         return
-
-    def moveVector(self, sourceVector, destinationVector, direction, magnitude = None):
-        magnitude = magnitude if magnitude is not None else 0.75
-        new_q = sourceVector + direction*magnitude*(destinationVector - sourceVector)
-        new_q = new_q / np.linalg.norm(new_q)
-        return new_q
-
-    def getPostVector(self, db, post_id):
-        post = db.clean.posts.v2.find_one({"id": post_id}, projection={'selftextVector':1}) # get post which was liked/disliked
-        postVector = np.array(post['selftextVector']) # extract vector of post which was liked/disliked
-        return postVector
-
-    def loadModel(self):
-        model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        return model
-
-    def calculateSimilarity(self, postVectors, queryVector):
-        scores = queryVector.dot(postVectors.T).flatten() # cosine similarity scores. (assumes vectors are normalized to unit length)
-        return scores
-
-    # create and return a list a tuples of (post_id, similarity_score) sorted by similarity score, high to low
-    def rankPostsBySimilarity(self, posts_ids, scores):
-        return sorted([(post_id, score) for (post_id, score) in zip(posts_ids, scores)], key=lambda x:x[1], reverse=True)
     '''
     Computes the resultant vector for positive and negative docs.
     Resultant vector is the final vector that the stateVector of the teleoscope should move towards/away from.
@@ -60,12 +102,12 @@ class Reorient(Task):
         
         posVecs = [] # vectors we want to move towards
         for pos_id in positive_docs:
-            v = self.getPostVector(self.db, pos_id)
+            v = utils.getPostVector(self.db, pos_id)
             posVecs.append(v)
 
         negVecs = [] # vectors we want to move away from
         for neg_id in negative_docs:
-            v = self.getPostVector(self.db, neg_id)
+            v = utils.getPostVector(self.db, neg_id)
             negVecs.append(v)
         
         avgPosVec = None # avg positive vector
@@ -136,15 +178,15 @@ class Reorient(Task):
         if 'stateVector' in queryDocument:
             stateVector = np.array(queryDocument['stateVector'])
         elif self.model is None:
-            self.model = self.loadModel()
+            self.model = utils.loadModel()
             stateVector = self.model([query]).numpy() # convert query string to vector
         else:
             stateVector = self.model([query]).numpy() # convert query string to vector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
-        qprime = self.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=direction) # move qvector towards/away from feedbackVector
-        scores = self.calculateSimilarity(self.allPostVectors, qprime)
-        newRanks = self.rankPostsBySimilarity(self.allPostIDs, scores)
+        qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=direction) # move qvector towards/away from feedbackVector
+        scores = utils.calculateSimilarity(self.allPostVectors, qprime)
+        newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
         gridfsObj = self.gridfsUpload("queries", newRanks)
 
         rank_slice = newRanks[0:500]
@@ -157,3 +199,5 @@ class Reorient(Task):
         self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "rank_slice" : rank_slice}})
 
         return 200 # TODO: what to return?
+
+robj = app.register_task(reorient())
