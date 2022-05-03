@@ -86,8 +86,7 @@ export default function WorkspaceItem(props) {
   };
 
   const handleDelete = () => {
-    // TODO
-    console.log("close");
+    
   };
 
   const postTitle = (post) => {

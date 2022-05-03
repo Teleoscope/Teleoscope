@@ -24,24 +24,14 @@ import randomstring from "randomstring";
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
+import { activator } from "../actions/activeTeleoscopeID";
+import { searcher } from "../actions/searchterm";
 
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
-function useTeleoscopes() {
-  const { data, error } = useSWR(`/api/teleoscopes/`, fetcher);
-  return {
-    teleoscopes: data,
-    loading: !error && !data,
-    error: error,
-  };
-}
 
 export default function Workspace(props) {
-  const client = client_init();
-  const [teleoscope_id, setTeleoscope_id] = React.useState(-1);
-  
-  const { teleoscopes, loading, error } = useTeleoscopes();
   const added = useSelector((state) => state.adder.value); // TODO rename
   const search_term = useSelector((state) => state.searcher.value); // TODO rename
+  const teleoscope_id = useSelector((state) => state.activator.value); // TODO rename
   const dispatch = useDispatch();
 
   const [{ isOver }, drop] = useDrop(() => ({
@@ -52,26 +42,13 @@ export default function Workspace(props) {
     }),
   }));
 
+
+
   return (
     <div key="containerkey" id="containerkey">
-      <TopBar />
+      <TopBar/>
       <LeftMenuBar />
-      <RightMenuBar teleoscope_id={teleoscope_id} />
-
-      <div>Active teleoscope_id is {teleoscope_id}
-      <hr/>
-      {teleoscopes ? teleoscopes.map((t) => {
-        return( <p><Button onClick={() => setTeleoscope_id(t["teleoscope_id"])}>
-          <span>{t["query"]}</span> : <span>{t["teleoscope_id"]}</span></Button></p>
-          )
-      }):[]}
-      </div>
-      <Button variant="text" onClick={() => initialize_teleoscope(client, search_term, teleoscope_id, added, [])}>
-        New Teleoscope
-      </Button>
-      <Button variant="text" onClick={() => reorient(client, search_term, teleoscope_id, added, [])}>
-        Reorient
-      </Button>
+      <RightMenuBar/>
 
       <div ref={drop} id="workspace" key="workspacekey">
         {added.map((id) => {

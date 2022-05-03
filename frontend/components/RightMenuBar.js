@@ -16,6 +16,11 @@ import InboxIcon from "@mui/icons-material/Inbox";
 import DraftsIcon from "@mui/icons-material/Drafts";
 import ListItemIcon from "@mui/material/ListItemIcon";
 
+// actions
+import { useSelector, useDispatch } from "react-redux";
+import { activator } from "../actions/activeTeleoscopeID";
+
+
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 function useTeleoscope(id) {
@@ -31,7 +36,9 @@ export default function RightMenuBar(props) {
   const [queries, setQueries] = useState([]);
   const [posts, setPosts] = useState([]);
   const [hover, setHover] = useState(false);
-  const { teleoscope, loading, error } = useTeleoscope(props.teleoscope_id);
+  const teleoscope_id = useSelector((state) => state.activator.value);
+  const { teleoscope, loading, error } = useTeleoscope(teleoscope_id);
+  
   var data = teleoscope ? teleoscope.rank_slice.slice(0, 10).map((post_and_rank) => {
         var post = post_and_rank[0];
         var rank = post_and_rank[1];
@@ -83,7 +90,7 @@ export default function RightMenuBar(props) {
             marginLeft: 50,
           }}
         >
-          Recommended Documents {props.teleoscope_id}
+          Recommended Documents
         </div>
         <hr />
         <PostList
