@@ -24,6 +24,7 @@ import { activator } from "../actions/activeTeleoscopeID";
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 function useTeleoscope(id) {
+  console.log(id)
   const { data, error } = useSWR(`/api/teleoscopes/${id}`, fetcher);
   return {
     teleoscope: data,
@@ -38,7 +39,7 @@ export default function RightMenuBar(props) {
   const [hover, setHover] = useState(false);
   const teleoscope_id = useSelector((state) => state.activator.value);
   const { teleoscope, loading, error } = useTeleoscope(teleoscope_id);
-  
+  console.log("This is the teleoscope id: " + teleoscope_id)
   var data = teleoscope ? teleoscope.rank_slice.slice(0, 10).map((post_and_rank) => {
         var post = post_and_rank[0];
         var rank = post_and_rank[1];

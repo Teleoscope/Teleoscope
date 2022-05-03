@@ -5,6 +5,7 @@ import Hide from "../actions/hide"
 import AddToWorkspace from "../actions/addtoworkspace"
 import SearchTerm from "../actions/searchterm"
 import ActiveTeleoscopeID from "../actions/activeTeleoscopeID"
+import Check from "../actions/check"
 
 export default configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export default configureStore({
     hider: Hide,
     adder: AddToWorkspace,
     searcher: SearchTerm,
-    activator: ActiveTeleoscopeID
+    activator: ActiveTeleoscopeID,
+    checker: Check
   },
 })

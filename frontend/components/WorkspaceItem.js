@@ -23,6 +23,7 @@ import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
+import { checker } from "../actions/check";
 
 import Note from "./Notes";
 
@@ -57,10 +58,11 @@ export default function WorkspaceItem(props) {
   const dispatch = useDispatch();
   const favs = useSelector((state) => state.faver.value);
   const faved = favs.includes(props.id);
-  const [open, setOpen] = React.useState(false);
+  const checked = useSelector((state) => state.checker.value); // TODO rename
 
+  const [open, setOpen] = React.useState(false);
   const [viewMore, setViewMore] = React.useState(false);
-  const [checked, setChecked] = React.useState(false);
+
   const { post, loading, error } = usePost(props.id);
 
   const [note, setNote] = React.useState(false);
@@ -80,9 +82,9 @@ export default function WorkspaceItem(props) {
   }));
 
   const handleChange = (event) => {
-    setChecked(event.target.checked);
+    dispatch(checker(props.id));
     // add to selected group
-    console.log("document selected clicked");
+    console.log("document selected clicked: " + event.target.checked);
   };
 
   const handleDelete = () => {
@@ -119,9 +121,9 @@ export default function WorkspaceItem(props) {
           borderRadius: 3,
           backgroundColor: "white",
           bortderStyle: "solid",
-          borderWidth: checked ? 2 : 0,
-          borderColor: checked ? "#4e5cbc" : "white",
-          boxShadow: checked ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
+          borderWidth: props.id in checked ? 2 : 0,
+          borderColor: props.id in checked ? "#4e5cbc" : "white",
+          boxShadow: props.id in checked ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
           minWidth: 180,
           maxWidth: 290,
           // height: 120,
@@ -130,8 +132,7 @@ export default function WorkspaceItem(props) {
         <div>
           <Checkbox
             size="small"
-            checked={checked}
-            onChange={handleChange}
+            onChange={(e) => handleChange(e)}
             inputProps={{ "aria-label": "controlled" }}
             style={{ marginRight: 10 }}
           />

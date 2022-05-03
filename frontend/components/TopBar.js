@@ -18,6 +18,7 @@ import Stack from '@mui/material/Stack';
 import { useSelector, useDispatch } from "react-redux";
 import { activator } from "../actions/activeTeleoscopeID";
 import { adder } from "../actions/addtoworkspace";
+import { checker } from "../actions/addtoworkspace";
 
 // utilities
 import {client_init, reorient, initialize_teleoscope} from "../components/Stomp.js";
@@ -38,6 +39,7 @@ export default function TopBar(props) {
   const teleoscope_id = useSelector((state) => state.activator.value); // TODO rename
   const search_term = useSelector((state) => state.searcher.value); // TODO rename
   const added = useSelector((state) => state.adder.value); // TODO rename
+  const checked = useSelector((state) => state.checker.value); // TODO rename
   const dispatch = useDispatch();
   const client = client_init();
 
@@ -62,12 +64,14 @@ export default function TopBar(props) {
               New Teleoscope
             </Button>
             <Button
+              onClick={() => reorient(client, search_term, teleoscope_id, checked, [])}
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",
                 fontSize: 12,
                 fontWeight: 700,
               }}
+
             >
               <BiotechIcon />
               Reorient
