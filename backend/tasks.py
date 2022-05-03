@@ -194,11 +194,11 @@ class reorient(Task):
         logging.info(rank_slice)
 
         # update stateVector
-        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
+        self.db.queries.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
         # update rankedPosts
-        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : gridfsObj}})
+        self.db.queries.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : gridfsObj}})
         # update a slice of rank_slice
-        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "rank_slice" : rank_slice}})
+        self.db.queries.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "rank_slice" : rank_slice}})
 
         return 200 # TODO: what to return?
 
