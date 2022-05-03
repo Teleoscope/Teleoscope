@@ -49,6 +49,7 @@ export function reorient(client, search_term, teleoscope_id, positive_docs, nega
       negative_docs: negative_docs,
     }
   }
+  console.log("sent", body);
   publish(client, body);
 }
 
@@ -59,5 +60,6 @@ export function initialize_teleoscope(client, search_term) {
       query: search_term // TODO: rename consistently
     }
   }
+  console.log("sent", body);
   publish(client, body);
 }

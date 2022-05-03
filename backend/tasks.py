@@ -171,7 +171,7 @@ class reorient(Task):
         if queryDocument == None:
            querySearch(query, teleoscope_id)
            queryDocument = self.db.queries.find_one({"teleoscope_id": teleoscope_id})
-           logging.info("queryDocument is being generated.")
+           logging.info(f'queryDocument is being generated for {teleoscope_id}.')
 
         # check if stateVector exists
         stateVector = None
