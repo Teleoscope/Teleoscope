@@ -190,6 +190,8 @@ class reorient(Task):
         gridfsObj = self.gridfsUpload("queries", newRanks)
 
         rank_slice = newRanks[0:500]
+        logging.info("new rank slice:")
+        logging.info(rank_slice)
 
         # update stateVector
         self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
