@@ -61,9 +61,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         
         if b['task'] == 'initialize_session':
             res = tasks.initialize_session.signature(
-                args=(get_random_string(32)),
+                args=(str(get_random_string(32))),
                 kwargs={},
-                )
+            )
             res.apply_async()
 
         if b['task'] == "save_UI_state":
