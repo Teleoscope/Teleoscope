@@ -35,6 +35,7 @@ export function publish(client, body) {
     headers: headers,
     body: JSON.stringify(body),
   });
+  console.log("sent", body);
 }
 
 // TODO: These should exactly implement the interface standard
@@ -57,6 +58,26 @@ export function initialize_teleoscope(client, search_term) {
     task: 'initialize_teleoscope',
     args: {
       query: search_term // TODO: rename consistently
+    }
+  }
+  publish(client, body);
+}
+
+export function save_UI_state(client, session_id, history_item) {
+  var body = {
+    task: 'save_UI_state',
+    args: {
+      session_id: session_id,
+      history_item: history_item
+    }
+  }
+  publish(client, body);
+}
+
+export function initialize_session(client) {
+  var body = {
+    task: 'initialize_session',
+    args: {
     }
   }
   publish(client, body);

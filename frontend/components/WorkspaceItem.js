@@ -22,7 +22,9 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 
 // actions
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux"
+import { adder } from "../actions/addtoworkspace";;
+import { checker } from "../actions/checkedPosts";
 
 import Note from "./Notes";
 
@@ -55,12 +57,12 @@ export default function WorkspaceItem(props) {
   const classes = useStyles();
   const container = React.useRef(null);
   const dispatch = useDispatch();
-  const favs = useSelector((state) => state.faver.value);
-  const faved = favs.includes(props.id);
-  const [open, setOpen] = React.useState(false);
+  const added = useSelector((state) => state.adder.value); // TODO rename
+  const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
 
+  const [open, setOpen] = React.useState(false);
   const [viewMore, setViewMore] = React.useState(false);
-  const [checked, setChecked] = React.useState(false);
+
   const { post, loading, error } = usePost(props.id);
 
   const [note, setNote] = React.useState(false);
@@ -80,16 +82,19 @@ export default function WorkspaceItem(props) {
   }));
 
   const handleChange = (event) => {
-    setChecked(event.target.checked);
+    dispatch(checker(props.id));
     // add to selected group
-    console.log("document selected clicked");
+    console.log("document selected clicked: " + event.target.checked);
   };
 
   const handleDelete = () => {
-    
+    dispatch(adder(props.id))
   };
 
   const postTitle = (post) => {
+    if (!post) {
+      return "";
+    }
     String.prototype.trimLeft = function (charlist) {
       if (charlist === undefined) charlist = "s";
       return this.replace(new RegExp("^[" + charlist + "]+"), "");
@@ -106,6 +111,9 @@ export default function WorkspaceItem(props) {
   };
 
   const postContent = (post) => {
+    if (!post) {
+      return "";
+    }
     var text = post["selftext"].slice(0, 1000);
     return text;
   };
@@ -119,9 +127,9 @@ export default function WorkspaceItem(props) {
           borderRadius: 3,
           backgroundColor: "white",
           bortderStyle: "solid",
-          borderWidth: checked ? 2 : 0,
-          borderColor: checked ? "#4e5cbc" : "white",
-          boxShadow: checked ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
+          borderWidth: checked.indexOf(props.id) >= 0  ? 2 : 0,
+          borderColor: checked.indexOf(props.id) >= 0 ? "#4e5cbc" : "white",
+          boxShadow: checked.indexOf(props.id) >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
           minWidth: 180,
           maxWidth: 290,
           // height: 120,
@@ -130,10 +138,10 @@ export default function WorkspaceItem(props) {
         <div>
           <Checkbox
             size="small"
-            checked={checked}
-            onChange={handleChange}
+            onChange={(e) => handleChange(e)}
             inputProps={{ "aria-label": "controlled" }}
             style={{ marginRight: 10 }}
+            checked={checked.indexOf(props.id) >= 0}
           />
           <div style={{ display: "flex", float: "right" }}>
             <IconButton size="small" onClick={handleClick}>

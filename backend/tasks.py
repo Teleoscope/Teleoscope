@@ -68,6 +68,21 @@ def querySearch(query_string, teleoscope_id):
     logging.info(f"query {query_string} added to queries collection")
     return return_ids
 
+@app.task
+def save_UI_state(*args, **kwargs):
+    db = utils.connect()
+    logging.info(f'Saving state for {kwargs["session_id"]}.')
+    session_id = kwargs["session_id"]
+    history_item = kwargs["history_item"]
+    
+    db.sessions.update({"session_id": kwargs["session_id"]}, {'$push': {"history": kwargs["history_item"]}})
+
+@app.task
+def initialize_session(*args, **kwargs):
+    db = utils.connect()
+    logging.info(f'Initializing sesssion for ID {kwargs["session_id"]}.')
+    db.sessions.insert_one({"session_id": kwargs["session_id"], "history":[]})
+
 '''
 TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
@@ -166,12 +181,12 @@ class reorient(Task):
             self.db = utils.connect()
 
         # get query document from queries collection
-        queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
+        queryDocument = self.db.queries.find_one({"teleoscope_id": teleoscope_id})
 
         if queryDocument == None:
            querySearch(query, teleoscope_id)
-           queryDocument = self.db.queries.find_one({"query": query, "teleoscope_id": teleoscope_id})
-           logging.info("queryDocument is being generated.")
+           queryDocument = self.db.queries.find_one({"teleoscope_id": teleoscope_id})
+           logging.info(f'queryDocument is being generated for {teleoscope_id}.')
 
         # check if stateVector exists
         stateVector = None
@@ -190,13 +205,14 @@ class reorient(Task):
         gridfsObj = self.gridfsUpload("queries", newRanks)
 
         rank_slice = newRanks[0:500]
+        logging.info(f'new rank slice has length {len(rank_slice)}.')
 
         # update stateVector
-        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
+        self.db.queries.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
         # update rankedPosts
-        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : gridfsObj}})
+        self.db.queries.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : gridfsObj}})
         # update a slice of rank_slice
-        self.db.queries.update_one({"query": query, "teleoscope_id": teleoscope_id}, {'$set': { "rank_slice" : rank_slice}})
+        self.db.queries.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "rank_slice" : rank_slice}})
 
         return 200 # TODO: what to return?
 

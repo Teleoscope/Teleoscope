@@ -30,8 +30,8 @@ import { searcher } from "../actions/searchterm";
 
 export default function Workspace(props) {
   const added = useSelector((state) => state.adder.value); // TODO rename
-  const search_term = useSelector((state) => state.searcher.value); // TODO rename
-  const teleoscope_id = useSelector((state) => state.activator.value); // TODO rename
+  const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
+  const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value); // TODO rename
   const dispatch = useDispatch();
 
   const [{ isOver }, drop] = useDrop(() => ({

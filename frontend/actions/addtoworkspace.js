@@ -22,10 +22,13 @@ export const AddToWorkspace = createSlice({
 		}
 			state.value = temp
     },
+    loadAddedPosts: (state, action) => {
+   		state.value = action.payload;
+    }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { adder } = AddToWorkspace.actions
+export const { adder, loadAddedPosts } = AddToWorkspace.actions
 
 export default AddToWorkspace.reducer
