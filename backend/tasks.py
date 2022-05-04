@@ -68,6 +68,17 @@ def querySearch(query_string, teleoscope_id):
     logging.info(f"query {query_string} added to queries collection")
     return return_ids
 
+@app.task
+def save_UI_state(ui_state):
+    session_id = ui_state["session_id"]
+    history_item = ui_state["history_item"]
+    db = utils.connect()
+    db.sessions.update("session_id": session_id, {'$push': {"history": history_item}})
+
+@app.task
+def initialize_session(session_id):
+    db.sessions.insert_one({"session_id": session_id, "history":[]})
+
 '''
 TODO:
 1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from

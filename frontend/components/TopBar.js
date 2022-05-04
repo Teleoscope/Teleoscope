@@ -21,7 +21,7 @@ import { adder } from "../actions/addtoworkspace";
 import { checker, uncheckall } from "../actions/check";
 
 // utilities
-import {client_init, reorient, initialize_teleoscope} from "../components/Stomp.js";
+import {client_init, reorient, initialize_teleoscope, save_UI_state, initialize_session} from "../components/Stomp.js";
 import randomstring from "randomstring";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
@@ -51,6 +51,30 @@ export default function TopBar(props) {
       >
         <Toolbar sx={{}} >
           <Stack spacing={4} direction="row">
+            <Button 
+              variant="text" 
+              onClick={() => initialize_session(client)}
+              style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              New session
+            </Button>
+            <Button 
+              variant="text" 
+              onClick={() => save_UI_state(client, {})}
+              style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              Save
+            </Button>
             <Button 
               variant="text" 
               onClick={() => initialize_teleoscope(client, search_term, teleoscope_id, added, [])}

@@ -58,6 +58,20 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 kwargs={},
             )
             res.apply_async()
+        
+        if b['task'] == 'initialize_session':
+            res = tasks.initialize_session.signature(
+                args=(get_random_string(32)),
+                kwargs={},
+                )
+
+        if b['task'] == "save_UI_state":
+            res = tasks.save_UI_state.signature(
+                args=(b['args']['ui_state']),
+                kwargs={},
+                )
+            res.apply_async()
+        
 
         if b['task'] == "reorient":
             res = robj.delay(
@@ -66,6 +80,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 negative_docs=b['args']["negative_docs"],
                 query=b['args']["query"]
             )
+
+
 
 app.steps['consumer'].add(WebTaskConsumer)
 
