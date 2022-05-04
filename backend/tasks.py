@@ -70,6 +70,7 @@ def querySearch(query_string, teleoscope_id):
 
 @app.task
 def save_UI_state(ui_state):
+    logging.info(f'Saving state for {ui_state}'.)
     session_id = ui_state["session_id"]
     history_item = ui_state["history_item"]
     db = utils.connect()
@@ -77,6 +78,7 @@ def save_UI_state(ui_state):
 
 @app.task
 def initialize_session(session_id):
+    logging.info(f'Initializing sesssion for ID {session_id}.')
     db.sessions.insert_one({"session_id": session_id, "history":[]})
 
 '''
