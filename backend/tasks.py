@@ -70,7 +70,7 @@ def querySearch(query_string, teleoscope_id):
 
 @app.task
 def save_UI_state(ui_state):
-    logging.info(f'Saving state for {ui_state}'.)
+    logging.info(f'Saving state for {ui_state}.')
     session_id = ui_state["session_id"]
     history_item = ui_state["history_item"]
     db = utils.connect()
