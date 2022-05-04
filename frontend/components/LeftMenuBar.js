@@ -15,7 +15,7 @@ import { searcher } from "../actions/searchterm";
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 function useQuery(q, shouldSend) {
-  const API_URL = shouldSend ? `http://localhost:3000/api/cleanposts/${q}` : "";
+  const API_URL = shouldSend ? `/api/cleanposts/${q}` : "";
   const { data, error } = useSWR(API_URL, fetcher);
   let ret = {
     posts: data ? data : [{ query: "_none" }],
