@@ -61,7 +61,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         
         if b['task'] == 'initialize_session':
             res = tasks.initialize_session.signature(
-                args=("initialize_session"),
+                args=(),
                 kwargs={
                     "session_id": get_random_string(32)
                 },
