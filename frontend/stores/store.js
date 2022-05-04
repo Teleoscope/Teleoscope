@@ -5,15 +5,15 @@ import Hide from "../actions/hide"
 import AddToWorkspace from "../actions/addtoworkspace"
 import SearchTerm from "../actions/searchterm"
 import ActiveTeleoscopeID from "../actions/activeTeleoscopeID"
-import Check from "../actions/check"
+import CheckedPosts from "../actions/checkedPosts"
 
 export default configureStore({
   reducer: {
   	faver: Fav,
     hider: Hide,
     adder: AddToWorkspace,
-    searcher: SearchTerm,
-    activator: ActiveTeleoscopeID,
-    checker: Check
+    searchTerm: SearchTerm,
+    activeTeleoscopeID: ActiveTeleoscopeID,
+    checkedPosts: CheckedPosts
   },
 })

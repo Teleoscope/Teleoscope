@@ -1,7 +1,7 @@
 // actions.js
 import { createSlice } from '@reduxjs/toolkit'
 export const ActiveTeleoscopeID = createSlice({
-  name: 'activator',
+  name: 'activeTeleoscopeID',
   initialState: {
     value: -1,
   },
@@ -14,10 +14,13 @@ export const ActiveTeleoscopeID = createSlice({
     	var id = action.payload // value of postid
 			state.value = id;
     },
+    loadActiveTeleoscopeID: (state, action) => {
+      state.value = action.payload
+    }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { activator } = ActiveTeleoscopeID.actions
+export const { activator, loadActiveTeleoscopeID } = ActiveTeleoscopeID.actions
 
 export default ActiveTeleoscopeID.reducer

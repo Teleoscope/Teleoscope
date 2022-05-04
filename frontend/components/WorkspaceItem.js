@@ -24,7 +24,7 @@ import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 // actions
 import { useSelector, useDispatch } from "react-redux"
 import { adder } from "../actions/addtoworkspace";;
-import { checker } from "../actions/check";
+import { checker } from "../actions/checkedPosts";
 
 import Note from "./Notes";
 
@@ -58,7 +58,7 @@ export default function WorkspaceItem(props) {
   const container = React.useRef(null);
   const dispatch = useDispatch();
   const added = useSelector((state) => state.adder.value); // TODO rename
-  const checked = useSelector((state) => state.checker.value); // TODO rename
+  const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
 
   const [open, setOpen] = React.useState(false);
   const [viewMore, setViewMore] = React.useState(false);
@@ -92,6 +92,9 @@ export default function WorkspaceItem(props) {
   };
 
   const postTitle = (post) => {
+    if (!post) {
+      return "";
+    }
     String.prototype.trimLeft = function (charlist) {
       if (charlist === undefined) charlist = "s";
       return this.replace(new RegExp("^[" + charlist + "]+"), "");
@@ -108,6 +111,9 @@ export default function WorkspaceItem(props) {
   };
 
   const postContent = (post) => {
+    if (!post) {
+      return "";
+    }
     var text = post["selftext"].slice(0, 1000);
     return text;
   };

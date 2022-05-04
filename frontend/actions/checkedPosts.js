@@ -34,11 +34,15 @@ export const Check = createSlice({
    },
    uncheckall: (state, action) => {
    	state.value = [];
+   },
+   loadCheckedPosts: (state, action) => {
+   	state.value = action.payload;
    }
+
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { checker, unchecker, uncheckall } = Check.actions
+export const { checker, unchecker, uncheckall, loadCheckedPosts } = Check.actions
 
 export default Check.reducer

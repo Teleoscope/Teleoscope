@@ -14,10 +14,13 @@ export const SearchTerm = createSlice({
 	    var search_term = action.payload // value of postid
 			state.value = search_term
     },
+    loadSearchTerm: (state, action) => {
+      state.value = action.payload;
+   }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { searcher } = SearchTerm.actions
+export const { searcher, loadSearchTerm } = SearchTerm.actions
 
 export default SearchTerm.reducer

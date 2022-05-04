@@ -26,7 +26,7 @@ function useQuery(q, shouldSend) {
 }
 
 export default function LeftMenuBar(props) {
-  const search_term = useSelector((state) => state.searcher.value);
+  const search_term = useSelector((state) => state.searchTerm.value);
   const dispatch = useDispatch();
 
   const [text, setText] = useState("");

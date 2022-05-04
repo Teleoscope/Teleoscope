@@ -16,9 +16,10 @@ import Stack from '@mui/material/Stack';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { activator } from "../actions/activeTeleoscopeID";
-import { adder } from "../actions/addtoworkspace";
-import { checker, uncheckall } from "../actions/check";
+import { activator, loadActiveTeleoscopeID } from "../actions/activeTeleoscopeID";
+import { adder, loadAddedPosts } from "../actions/addtoworkspace";
+import { searcher, loadSearchTerm } from "../actions/searchterm";
+import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
 
 // utilities
 import {client_init, reorient, initialize_teleoscope, save_UI_state, initialize_session} from "../components/Stomp.js";
@@ -38,20 +39,41 @@ function useSessions() {
   const { data, error } = useSWR(`/api/sessions/`, fetcher);
   return {
     sessions: data,
-    s_loading: !error && !data,
-    s_error: error,
+    sessions_loading: !error && !data,
+    sessions_error: error,
+  };  
+}
+
+function useSession(id) {
+  const { data, error } = useSWR(`/api/sessions/${id}`, fetcher);
+  return {
+    session: data,
+    session_loading: !error && !data,
+    session_error: error,
   };  
 }
 
 export default function TopBar(props) {
   const { teleoscopes, loading, error } = useTeleoscopes();
-  const { sessions, s_loading, s_error } = useSessions();
-  const teleoscope_id = useSelector((state) => state.activator.value); // TODO rename
-  const search_term = useSelector((state) => state.searcher.value); // TODO rename
+  const { sessions, sessions_loading, sessions_error } = useSessions();
+  const session_id = sessions_error || sessions_loading ? -1 : sessions[sessions.length - 1]['session_id']
+  const { session, session_loading, session_error } = useSession(session_id);
+  
+  const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value); // TODO rename
+  const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
   const added = useSelector((state) => state.adder.value); // TODO rename
-  const checked = useSelector((state) => state.checker.value); // TODO rename
+  const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
+  
   const dispatch = useDispatch();
   const client = client_init();
+
+  const reload = () => {
+    var history_item = session["history"][session["history"].length - 1]
+    dispatch(loadActiveTeleoscopeID(history_item["teleoscope_id"]));
+    dispatch(loadSearchTerm(history_item["search_term"]));
+    dispatch(loadAddedPosts(history_item["added"]));
+    dispatch(loadCheckedPosts(history_item["checked"]));
+  }
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -75,7 +97,16 @@ export default function TopBar(props) {
             </Button>
             <Button 
               variant="text" 
-              onClick={() => save_UI_state(client, sessions[sessions.length - 1]['session_id'], {})}
+              onClick={() => save_UI_state(
+                client, 
+                session_id, 
+                {
+                    "teleoscope_id": teleoscope_id,
+                    "search_term": search_term,
+                    "added": added,
+                    "checked": checked
+                })
+              }
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",
@@ -85,6 +116,19 @@ export default function TopBar(props) {
             >
               Save
             </Button>
+            <Button 
+              variant="text" 
+              onClick={() => reload()}
+              style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              Load
+            </Button>
+            
             <Button 
               variant="text" 
               onClick={() => initialize_teleoscope(client, search_term, teleoscope_id, added, [])}

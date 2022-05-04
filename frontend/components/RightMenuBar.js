@@ -37,7 +37,7 @@ export default function RightMenuBar(props) {
   const [queries, setQueries] = useState([]);
   const [posts, setPosts] = useState([]);
   const [hover, setHover] = useState(false);
-  const teleoscope_id = useSelector((state) => state.activator.value);
+  const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value);
   const { teleoscope, loading, error } = useTeleoscope(teleoscope_id);
   console.log("This is the teleoscope id: " + teleoscope_id)
   var data = teleoscope ? teleoscope.rank_slice.slice(0, 10).map((post_and_rank) => {
