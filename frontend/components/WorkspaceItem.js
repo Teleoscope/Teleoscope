@@ -121,9 +121,9 @@ export default function WorkspaceItem(props) {
           borderRadius: 3,
           backgroundColor: "white",
           bortderStyle: "solid",
-          borderWidth: props.id in checked ? 2 : 0,
-          borderColor: props.id in checked ? "#4e5cbc" : "white",
-          boxShadow: props.id in checked ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
+          borderWidth: checked.indexOf(props.id) >= 0  ? 2 : 0,
+          borderColor: checked.indexOf(props.id) >= 0 ? "#4e5cbc" : "white",
+          boxShadow: checked.indexOf(props.id) >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
           minWidth: 180,
           maxWidth: 290,
           // height: 120,
@@ -135,6 +135,7 @@ export default function WorkspaceItem(props) {
             onChange={(e) => handleChange(e)}
             inputProps={{ "aria-label": "controlled" }}
             style={{ marginRight: 10 }}
+            checked={checked.indexOf(props.id) >= 0}
           />
           <div style={{ display: "flex", float: "right" }}>
             <IconButton size="small" onClick={handleClick}>
