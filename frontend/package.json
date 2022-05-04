@@ -23,6 +23,7 @@
     "celery-node": "^0.5.8",
     "crypto-js": "^4.1.1",
     "crypto-random-string": "^4.0.0",
+    "fs": "^0.0.1-security",
     "mongodb": "^3.5.9",
     "net": "^1.0.2",
     "next": "^11.1.0",
@@ -33,7 +34,9 @@
     "react-draggable": "^4.4.3",
     "react-redux": "^7.2.6",
     "react-selectable-fast": "^3.4.0",
-    "swr": "^0.5.5"
+    "swr": "^0.5.5",
+    "websocket": "^1.0.34",
+    "ws": "^8.6.0"
   },
   "license": "MIT",
   "devDependencies": {

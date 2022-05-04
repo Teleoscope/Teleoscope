@@ -2,6 +2,12 @@ import { Client, Message } from "@stomp/stompjs";
 // TODO: look at websocket example code here and replicate
 // anywhere that needs to route a request to the server
 // possibly best to move this into an action? I'm unsure
+Object.assign(global, {
+WebSocket: websocket.w3cwebsocket,
+// Not needed in node 11
+TextEncoder: TextEncodingPolyfill.TextEncoder,
+TextDecoder: TextEncodingPolyfill.TextDecoder
+});
 
 export function client_init() {
   const client = new Client({
