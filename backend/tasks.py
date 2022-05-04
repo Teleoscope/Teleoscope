@@ -77,9 +77,9 @@ def save_UI_state(ui_state):
     db.sessions.update({"session_id": session_id}, {'$push': {"history": history_item}})
 
 @app.task
-def initialize_session(session_id):
-    logging.info(f'Initializing sesssion for ID {session_id}.')
-    db.sessions.insert_one({"session_id": session_id, "history":[]})
+def initialize_session(args, **kwargs):
+    logging.info(f'Initializing sesssion for ID {kwargs["session_id"]}.')
+    db.sessions.insert_one({"session_id": kwargs["session_id"], "history":[]})
 
 '''
 TODO:
