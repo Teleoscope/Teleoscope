@@ -18,7 +18,7 @@ import Stack from '@mui/material/Stack';
 import { useSelector, useDispatch } from "react-redux";
 import { activator } from "../actions/activeTeleoscopeID";
 import { adder } from "../actions/addtoworkspace";
-import { checker } from "../actions/addtoworkspace";
+import { checker, uncheckall } from "../actions/check";
 
 // utilities
 import {client_init, reorient, initialize_teleoscope} from "../components/Stomp.js";
@@ -64,7 +64,10 @@ export default function TopBar(props) {
               New Teleoscope
             </Button>
             <Button
-              onClick={() => reorient(client, search_term, teleoscope_id, checked, [])}
+              onClick={() => {
+                reorient(client, search_term, teleoscope_id, checked, []);
+                dispatch(uncheckall(teleoscope_id))
+              }}
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",

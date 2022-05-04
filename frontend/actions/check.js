@@ -31,11 +31,14 @@ export const Check = createSlice({
 			  temp.splice(i, 1);
 		 }
 		 state.value = temp;
+   },
+   uncheckall: (state, action) => {
+   	state.value = [];
    }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { checker, unchecker } = Check.actions
+export const { checker, unchecker, uncheckall } = Check.actions
 
 export default Check.reducer
