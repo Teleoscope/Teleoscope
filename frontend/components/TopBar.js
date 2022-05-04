@@ -34,8 +34,18 @@ function useTeleoscopes() {
   };
 }
 
+function useSessions() {
+  const { data, error } = useSWR(`/api/sessions/`, fetcher);
+  return {
+    sessions: data,
+    s_loading: !error && !data,
+    s_error: error,
+  };  
+}
+
 export default function TopBar(props) {
   const { teleoscopes, loading, error } = useTeleoscopes();
+  const { sessions, s_loading, s_error } = useSessions();
   const teleoscope_id = useSelector((state) => state.activator.value); // TODO rename
   const search_term = useSelector((state) => state.searcher.value); // TODO rename
   const added = useSelector((state) => state.adder.value); // TODO rename
@@ -65,7 +75,7 @@ export default function TopBar(props) {
             </Button>
             <Button 
               variant="text" 
-              onClick={() => save_UI_state(client, {})}
+              onClick={() => save_UI_state(client, sessions[sessions.length - 1]['session_id'], {})}
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",

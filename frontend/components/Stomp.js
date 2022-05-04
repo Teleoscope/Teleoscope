@@ -63,11 +63,12 @@ export function initialize_teleoscope(client, search_term) {
   publish(client, body);
 }
 
-export function save_UI_state(client, ui_state) {
+export function save_UI_state(client, session_id, history_item) {
   var body = {
     task: 'save_UI_state',
     args: {
-      ui_state: ui_state
+      session_id: session_id,
+      history_item: history_item
     }
   }
   publish(client, body);

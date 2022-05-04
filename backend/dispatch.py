@@ -70,8 +70,11 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
         if b['task'] == "save_UI_state":
             res = tasks.save_UI_state.signature(
-                args=(b['args']['ui_state']),
-                kwargs={},
+                args=(),
+                kwargs={
+                    "session_id": b["args"]["session_id"],
+                    "history_item": b["args"]["history_item"]
+                },
                 )
             res.apply_async()
         
