@@ -64,6 +64,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 args=(get_random_string(32)),
                 kwargs={},
                 )
+            res.apply_async()
 
         if b['task'] == "save_UI_state":
             res = tasks.save_UI_state.signature(
