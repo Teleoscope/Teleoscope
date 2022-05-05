@@ -19,7 +19,7 @@ jobs:
              
     strategy:
       matrix:
-        node-version: [12.x, 14.x, 16.x]
+        node-version: [12.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
@@ -28,6 +28,11 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
+    - run: touch .env.local
+    - run: echo "MONGODB_URI=test" >> .env.local
+    - run: echo "MONGODB_DB=test" >> .env.local
+    - run: echo "NEXT_PUBLIC_RABBITMQ_USERNAME=test" >> .env.local
+    - run: echo "NEXT_PUBLIC_RABBITMQ_PASSWORD=test" >> .env.local
+    - run: echo "NEXT_PUBLIC_RABBITMQ_PASSWORD=test" >> .env.local
     - run: npm ci
     - run: npm run build --if-present
-    - run: npm test
