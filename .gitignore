@@ -138,7 +138,6 @@ test.py
 archive/*
 *node_modules*
 manager.p
-package-lock.json
 *vendor*
 */models/*
 *.rdb
