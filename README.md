@@ -2,6 +2,11 @@
 
 This project is a UI for filtering down a large number of documents for eventual qualitative analysis. It is being purpose-built for looking through the 600k+ posts on Reddit's AITA forum to extract information on the norms and expectations regarding digital privacy behaviours. This README has two purposes: (1) like a normal readme, explain how to run the code; and (2) to document the building process for eventual analysis on the building process itself.
 
+## Contribution workflow
+1. Make a new branch from `main`.
+2. Make your changes. Merge `main` into your branch. Solve conflicts.
+3. Push your new branch and make a pull request.
+
 ## Installation
 This was only tested on Ubuntu, but you should be able to install with the following:
 ```
