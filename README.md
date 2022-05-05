@@ -2,6 +2,44 @@
 
 This project is a UI for filtering down a large number of documents for eventual qualitative analysis. It is being purpose-built for looking through the 600k+ posts on Reddit's AITA forum to extract information on the norms and expectations regarding digital privacy behaviours. This README has two purposes: (1) like a normal readme, explain how to run the code; and (2) to document the building process for eventual analysis on the building process itself.
 
+## Installation
+This was only tested on Ubuntu, but you should be able to install with the following:
+```
+git clone https://github.com/Teleoscope/Teleoscope.git
+cd Teleoscope/backend
+pip install -r requirements.txt
+touch auth.py
+cd ../
+cd Teleoscope/frontend
+npm install
+touch .env.local
+```
+
+Edit `.env.local` to read:
+
+```
+MONGODB_URI=mongodb://<your mongodb username>:<your mongodb password>@<your mongodb host>:<your mongodb port>/<your mongodb database>?authSource=<your database name>&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false
+MONGODB_DB=<your database name>
+NEXT_PUBLIC_RABBITMQ_USERNAME=<your rabbit mq username>
+NEXT_PUBLIC_RABBITMQ_PASSWORD=<your rabbit mq password>
+```
+
+Edit `auth.py` to read:
+
+```
+rabbitmq = {
+	"username": "<your rabbitmq username>",
+	"password": "<your rabbitmq password>",
+	"host": "<your rabbitmq host>:<your rabbitmq port>",
+	"vhost": "<your rabbitmq vhost>",
+}
+mongodb = {
+ "username": "<your mongodb username>",
+ "password": "<your mongodb password>",
+ "host": "<your mongodb host>:<your mongodb port>"
+}
+```
+You should receive a template .ssh config file with usernames, passwords, hosts, and ports from Paul.
 
 ## Backend Installation
 
