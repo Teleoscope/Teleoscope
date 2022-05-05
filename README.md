@@ -5,7 +5,7 @@ This project is a UI for filtering down a large number of documents for eventual
 ## Contribution workflow
 1. Make a new branch from `main`.
 2. Make your changes. Merge `main` into your branch. Solve conflicts.
-3. Push your new branch and make a pull request.
+3. Push your new branch and make a pull request. 
 
 ## Installation
 This was only tested on Ubuntu, but you should be able to install with the following:
