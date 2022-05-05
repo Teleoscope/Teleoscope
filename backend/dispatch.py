@@ -25,7 +25,7 @@ import tasks
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
-systopia = Queue(auth["vhost"], Exchange(auth["vhost"]), auth["vhost"])
+systopia = Queue(auth.rabbitmq["vhost"], Exchange(auth.rabbitmq["vhost"]), auth.rabbitmq["vhost"])
 
 from tasks import robj, app
 
