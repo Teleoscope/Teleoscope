@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
            run:
-             working-directory: /home/runner/work/Teleoscope/Teleoscope/frontend
+             working-directory: ./frontend
              
     strategy:
       matrix:
