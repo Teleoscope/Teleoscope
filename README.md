@@ -236,6 +236,8 @@ Host leap-server
     Localforward 3310 <IP address of leap server>:15672
     # RabbitMQ WebSTOMP connection
     Localforward 3311 <IP address of leap server>:15674
+    # Connect to frontend on leap
+    Localforward 3313 <IP address of leap server>:3000
 ```
 
 If you don’t want to have to enter your password every time, distribute your public ssh key onto the jump host and the leap server using `ssh-copy-id -i ~/.ssh/id_rsa.pub jump-host` and `ssh-copy-id -i ~/.ssh/id_rsa.pub leap-server`.
