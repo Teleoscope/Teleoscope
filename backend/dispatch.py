@@ -25,7 +25,7 @@ import tasks
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
-systopia = Queue(auth["vhost"], Exchange(auth["vhost"]), auth["vhost"])
+queue = Queue(auth.rabbitmq["vhost"], Exchange(auth.rabbitmq["vhost"]), auth.rabbitmq["vhost"])
 
 from tasks import robj, app
 
@@ -40,7 +40,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
     def get_consumers(self, channel):
         return [Consumer(channel,
-                         queues=[systopia],
+                         queues=[queue],
                          callbacks=[self.handle_message],
                          accept=['json', 'pickle'])]
 
