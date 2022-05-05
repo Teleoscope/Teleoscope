@@ -9,7 +9,7 @@ export function client_init() {
     connectHeaders: {
       login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME,
       passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD,
-      host: "systopia", // TODO: rename this
+      host: process.env.NEXT_PUBLIC_RABBITMQ_VHOST,
     },
     debug: function (str) {
       console.log(str);
@@ -31,7 +31,7 @@ export function client_init() {
 export function publish(client, body) {
   var headers = {};
   client.publish({
-    destination: "/queue/systopia", // TODO: rename queue
+    destination: "/queue/demo", // TODO: rename queue
     headers: headers,
     body: JSON.stringify(body),
   });

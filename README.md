@@ -22,6 +22,7 @@ MONGODB_URI=mongodb://<your mongodb username>:<your mongodb password>@<your mong
 MONGODB_DB=<your database name>
 NEXT_PUBLIC_RABBITMQ_USERNAME=<your rabbit mq username>
 NEXT_PUBLIC_RABBITMQ_PASSWORD=<your rabbit mq password>
+NEXT_PUBLIC_RABBITMQ_VHOST=<your rabbit mq vhost>
 ```
 
 Edit `auth.py` to read:
