@@ -272,3 +272,24 @@ python server.py
 ```
 
 3. Open another tab and cd to the frontend: `cd /path/to/Teleoscope/frontend`. Then run `npm run dev` for live dev builds with hotswapped code, or `npm run start` for production builds.
+
+## Running w/ Daemon
+Install pm2 (https://pm2.keymetrics.io/):
+`npm install -g pm2`
+Navigate to the root where your `ecosystem.config.js` file is, then:
+```
+# Start all applications
+pm2 start ecosystem.config.js
+
+# Stop all
+pm2 stop ecosystem.config.js
+
+# Restart all
+pm2 restart ecosystem.config.js
+
+# Reload all
+pm2 reload ecosystem.config.js
+
+# Delete all
+pm2 delete ecosystem.config.js
+```
