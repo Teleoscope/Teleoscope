@@ -5,7 +5,7 @@ import { Client, Message } from "@stomp/stompjs";
 
 export function client_init() {
   const client = new Client({
-    brokerURL: "ws://localhost:3311/ws",
+    brokerURL: "ws://192.168.79.58:3311/ws",
     connectHeaders: {
       login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME,
       passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD,
@@ -31,7 +31,7 @@ export function client_init() {
 export function publish(client, body) {
   var headers = {};
   client.publish({
-    destination: "/queue/demo", // TODO: rename queue
+    destination: "/queue/" + process.env.NEXT_PUBLIC_RABBITMQ_VHOST, // TODO: rename queue
     headers: headers,
     body: JSON.stringify(body),
   });
