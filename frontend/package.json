@@ -1,5 +1,5 @@
 {
-  "name": "@Teleoscope/Teleoscope",
+  "name": "@teleoscope/teleoscope",
   "version": "0.1.0",
   "scripts": {
     "dev": "next dev",
