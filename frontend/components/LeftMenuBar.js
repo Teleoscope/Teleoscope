@@ -11,6 +11,7 @@ import Checkbox from "@mui/material/Checkbox";
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { searcher } from "../actions/searchterm";
+import { shower } from "../actions/showBookmarkedPosts"
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
@@ -63,6 +64,7 @@ export default function LeftMenuBar(props) {
         <FormControlLabel
           style={{ marginLeft: 20, marginTop: 10 }}
           control={<Checkbox style={{ marginRight: 10 }} />}
+          onChange={(e) => dispatch(shower(props.id))}
           label="Bookmarked Items Only"
         />
         <PostList data={data} pagination={true} />

@@ -17,6 +17,7 @@ import Divider from "@mui/material/Divider";
 
 // icons
 import FavoriteIcon from "@material-ui/icons/Favorite";
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -27,7 +28,9 @@ import CloseIcon from "@mui/icons-material/Close";
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
+import { bookmarker } from "../actions/bookmark";
 import Note from "./Notes";
+import Bookmark from "../actions/bookmark";
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -72,7 +75,9 @@ export default function QueryListItem(props) {
   const dispatch = useDispatch();
 
   const added = useSelector((state) => state.adder.value);
+  const bookmarked = useSelector((state) => state.bookmarker.value);
   const faved = added.includes(props.id);
+  const marked = bookmarked.includes(props.id);
 
   const [open, setOpen] = useState(false);
   const [viewMore, setViewMore] = useState(false);
@@ -135,6 +140,16 @@ export default function QueryListItem(props) {
               <FavoriteIcon color="secondary" style={{ fontSize: 20 }} />
             ) : (
               <FavoriteIcon style={{ fontSize: 20 }} />
+            )}
+          </IconButton>
+          <IconButton
+            aria-label="add to bookmarks"
+            onClick={() => dispatch(bookmarker(props.id))}
+          >
+            {marked ? (
+              <BookmarkIcon color="secondary" style={{ fontSize: 20 }} />
+            ) : (
+              <BookmarkIcon style={{ fontSize: 20 }} />
             )}
           </IconButton>
         </ListItemIcon>
