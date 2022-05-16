@@ -28,6 +28,7 @@ MONGODB_DB=<your database name>
 NEXT_PUBLIC_RABBITMQ_USERNAME=<your rabbit mq username>
 NEXT_PUBLIC_RABBITMQ_PASSWORD=<your rabbit mq password>
 NEXT_PUBLIC_RABBITMQ_VHOST=<your rabbit mq vhost>
+NEXT_PUBLIC_RABBITMQ_HOST=<your rabbit mq host>
 ```
 
 Edit `auth.py` to read:
