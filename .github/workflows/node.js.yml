@@ -33,6 +33,7 @@ jobs:
     - run: echo "MONGODB_DB=test" >> .env.local
     - run: echo "NEXT_PUBLIC_RABBITMQ_USERNAME=test" >> .env.local
     - run: echo "NEXT_PUBLIC_RABBITMQ_PASSWORD=test" >> .env.local
-    - run: echo "NEXT_PUBLIC_RABBITMQ_PASSWORD=test" >> .env.local
+    - run: echo "NEXT_PUBLIC_RABBITMQ_VHOST=test" >> .env.local
+    - run: echo "NEXT_PUBLIC_RABBITMQ_HOST=test" >> .env.local
     - run: npm ci
     - run: npm run build --if-present
