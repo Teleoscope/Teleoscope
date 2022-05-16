@@ -5,7 +5,7 @@ import { Client, Message } from "@stomp/stompjs";
 
 export function client_init() {
   const client = new Client({
-    brokerURL: "ws://192.168.79.58:3311/ws",
+    brokerURL: "ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:3311/ws",
     connectHeaders: {
       login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME,
       passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD,
@@ -18,7 +18,6 @@ export function client_init() {
     heartbeatIncoming: 4000,
     heartbeatOutgoing: 4000,
   });
-
   client.onConnect = function (frame) {
       // Do something, all subscribes must be done is this callback
       // This is needed because this will be executed after a (re)connect
