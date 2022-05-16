@@ -23,6 +23,9 @@ jobs:
   publish-gpr:
     needs: build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+          working-directory: ./frontend
     permissions:
       packages: write
       contents: read
