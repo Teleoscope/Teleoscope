@@ -5,7 +5,7 @@ import { Client, Message } from "@stomp/stompjs";
 
 export function client_init() {
   const client = new Client({
-    brokerURL: "ws://192.168.79.58:3311/ws",
+    brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:3311/ws`,
     connectHeaders: {
       login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME,
       passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD,
@@ -24,6 +24,16 @@ export function client_init() {
       // This is needed because this will be executed after a (re)connect
     console.log("Connected to RabbitMQ webSTOMP server.");
   };
+
+  client.onStompError = function (frame) {
+    // Will be invoked in case of error encountered at Broker
+    // Bad login/passcode typically will cause an error
+    // Complaint brokers will set `message` header with a brief message. Body may contain details.
+    // Compliant brokers will terminate the connection after any error
+    console.log('Broker reported error: ' + frame.headers['message']);
+    console.log('Additional details: ' + frame.body);
+  };
+
   client.activate();
   return client;
 }
