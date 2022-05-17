@@ -21,6 +21,39 @@ app.conf.update(
     accept_content=['pickle'],  # Ignore other content
     result_serializer='pickle',
 )
+'''
+import_single_post
+
+input: String (Path to json file)
+output: Void
+purpose: This function is used to import a single post from a json file to a database
+'''
+@app.task
+def import_single_post(path_to_post):
+    
+    # Read file
+    with open(path_to_post) as f:
+            data = json.load(f)
+
+    # Connect to database
+    db = utils.connect()
+
+    # filter fields to only include author, author_fullname, created_utc, full link, id, num_comments, score, selftext, title
+    post = {
+        'author': data[0]['data']['children'][0]['data']['author'],
+        'author_fullname': data[0]['data']['children'][0]['data']['author_fullname'],
+        'created_utc': data[0]['data']['children'][0]['data']['created_utc'],
+        'full_link': data[0]['data']['children'][0]['data']['url'],
+        'id': data[0]['data']['children'][0]['data']['id'],
+        'num_comments': data[0]['data']['children'][0]['data']['num_comments'],
+        'score': data[0]['data']['children'][0]['data']['score'],
+        'selftext': data[0]['data']['children'][0]['data']['selftext'],
+        'title': data[0]['data']['children'][0]['data']['title'],
+    }
+
+    # add to database
+    insert = db.posts.insert_one(post)
+
 
 '''
 querySearch:
