@@ -20,7 +20,8 @@ export const Bookmark = createSlice({
 		} else {
 		  temp.push(id)
 		}
-			state.value = temp
+		state.value = temp
+		console.log(state.value)
     }
   },
 })

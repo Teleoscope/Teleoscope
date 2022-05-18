@@ -28,7 +28,9 @@ function useQuery(q, shouldSend) {
 
 export default function LeftMenuBar(props) {
   const search_term = useSelector((state) => state.searchTerm.value);
+  const bookmarks = useSelector((state) => state.bookmarker.value);
   const dispatch = useDispatch();
+  const [bookmarked, setBookmarked] = useState(false);
 
   const [text, setText] = useState("");
   const { posts, loading, error } = useQuery(search_term, true);
@@ -37,6 +39,16 @@ export default function LeftMenuBar(props) {
   let data = posts.map((post) => {
     return [post.id, 1.0];
   });
+
+  // another hard-coded hack for ranking of post_id
+  let bookmarked_data = bookmarks.map((post) => {
+    return [post.id, 1.0];
+  });
+
+  const bookmarkToggler = (e) => {
+    bookmarked = !bookmarked;
+    console.log(bookmarked);
+  };
 
   const keyChange = (e) => {
     if (e.code == "Enter") {
@@ -64,10 +76,14 @@ export default function LeftMenuBar(props) {
         <FormControlLabel
           style={{ marginLeft: 20, marginTop: 10 }}
           control={<Checkbox style={{ marginRight: 10 }} />}
-          onChange={() => dispatch(displayer(props.id))}
+          onChange={() => setBookmarked(!bookmarked)}
           label="Bookmarked Items Only"
         />
-        <PostList data={data} pagination={true} />
+        {bookmarked ? (
+              <PostList data={bookmarked_data} pagination={true} />
+            ) : (
+              <PostList data={data} pagination={true} />
+            )}
       </Box>
     </div>
   );
