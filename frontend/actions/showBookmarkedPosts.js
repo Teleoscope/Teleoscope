@@ -6,7 +6,7 @@ export const ShowBookmarkedPosts = createSlice({
     value: [], // list of string: postids 
   },
   reducers: {
-    shower: (state, action) => {
+    displayer: (state, action) => {
 		// Redux Toolkit allows us to write "mutating" logic in reducers. It
 		// doesn't actually mutate the state because it uses the Immer library,
 			// which detects changes to a "draft state" and produces a brand new
@@ -29,6 +29,6 @@ export const ShowBookmarkedPosts = createSlice({
 })
 
 // Action creators are generated for each case reducer function
-export const { adder, loadAddedPosts } = ShowBookmarkedPosts.actions
+export const { displayer, loadAddedPosts } = ShowBookmarkedPosts.actions
 
 export default ShowBookmarkedPosts.reducer

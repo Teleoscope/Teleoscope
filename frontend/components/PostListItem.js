@@ -28,7 +28,7 @@ import CloseIcon from "@mui/icons-material/Close";
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
-import { bookmarker } from "../actions/bookmark";
+import { mark } from "../actions/bookmark";
 import Note from "./Notes";
 import Bookmark from "../actions/bookmark";
 
@@ -144,7 +144,7 @@ export default function QueryListItem(props) {
           </IconButton>
           <IconButton
             aria-label="add to bookmarks"
-            onClick={() => dispatch(bookmarker(props.id))}
+            onClick={() => dispatch(mark(props.id))}
           >
             {marked ? (
               <BookmarkIcon color="secondary" style={{ fontSize: 20 }} />

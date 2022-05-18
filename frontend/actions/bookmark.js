@@ -21,15 +21,7 @@ export const Bookmark = createSlice({
 		  temp.push(id)
 		}
 			state.value = temp
-    },
-	 unbookmark: (state, action) => {
-		 var id = action.payload;
-		 var temp = [...state.value];
-		 var i = temp.indexOf(id);
-		 if (i > -1) {
-			 temp.splice(i,1);
-		 }
-	 }
+    }
   },
 })
 
