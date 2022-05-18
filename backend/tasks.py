@@ -25,7 +25,7 @@ app.conf.update(
 import_single_post
 
 input: String (Path to json file)
-output: Void
+output: void
 purpose: This function is used to import a single post from a json file to a database
 '''
 @app.task
@@ -33,26 +33,28 @@ def import_single_post(path_to_post):
     
     # Read file
     with open(path_to_post) as f:
-            data = json.load(f)
+            data = json.load(f)[0]['data']['children'][0]['data']
 
     # Connect to database
     db = utils.connect()
 
-    # filter fields to only include author, author_fullname, created_utc, full link, id, num_comments, score, selftext, title
+    # extract relevent fields
     post = {
-        'author': data[0]['data']['children'][0]['data']['author'],
-        'author_fullname': data[0]['data']['children'][0]['data']['author_fullname'],
-        'created_utc': data[0]['data']['children'][0]['data']['created_utc'],
-        'full_link': data[0]['data']['children'][0]['data']['url'],
-        'id': data[0]['data']['children'][0]['data']['id'],
-        'num_comments': data[0]['data']['children'][0]['data']['num_comments'],
-        'score': data[0]['data']['children'][0]['data']['score'],
-        'selftext': data[0]['data']['children'][0]['data']['selftext'],
-        'title': data[0]['data']['children'][0]['data']['title'],
+        'author': data['author'],
+        'author_fullname': data['author_fullname'],
+        'created_utc': data['created_utc'],
+        'full_link': data['url'],
+        'id': data['id'],
+        'num_comments': data['num_comments'],
+        'score': data['score'],
+        'selftext': data['selftext'],
+        'title': data['title'],
     }
 
     # add to database
-    insert = db.posts.insert_one(post)
+    db.posts.insert_one(post)
+
+
 
 
 '''
