@@ -38,11 +38,11 @@ export default function LeftMenuBar(props) {
   // this is a hard-coded hack for ranking of post_id
   let data = posts.map((post) => {
     return [post.id, 1.0];
-  });
+  }); 
 
   // another hard-coded hack for ranking of post_id
   let bookmarked_data = bookmarks.map((post) => {
-    return [post.id, 1.0];
+    return [post, 1.0];
   });
 
   const bookmarkToggler = (e) => {
@@ -55,6 +55,9 @@ export default function LeftMenuBar(props) {
       dispatch(searcher(text));
     }
   };
+
+  console.log(bookmarked_data);
+
 
   return (
     <div className="leftMenuBar">
@@ -79,6 +82,10 @@ export default function LeftMenuBar(props) {
           onChange={() => setBookmarked(!bookmarked)}
           label="Bookmarked Items Only"
         />
+
+        {/* have to have it update the store for it to refresh with the 
+        right data  */}
+        
         {bookmarked ? (
               <PostList data={bookmarked_data} pagination={true} />
             ) : (

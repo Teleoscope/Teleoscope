@@ -7,7 +7,7 @@ import SearchTerm from "../actions/searchterm"
 import ActiveTeleoscopeID from "../actions/activeTeleoscopeID"
 import CheckedPosts from "../actions/checkedPosts"
 import Bookmark from "../actions/bookmark"
-import { ShowBookmarkedPosts } from '../actions/showBookmarkedPosts'
+import ShowBookmarkedPosts from '../actions/showBookmarkedPosts'
 
 export default configureStore({
   reducer: {
