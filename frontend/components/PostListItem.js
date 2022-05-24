@@ -11,6 +11,8 @@ import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import Paper from "@mui/material/Paper";
 import InputBase from "@mui/material/InputBase";
 import Divider from "@mui/material/Divider";
@@ -86,6 +88,16 @@ export default function QueryListItem(props) {
   const [note, setNote] = React.useState(false);
   const [noteContent, setNoteContent] = useState("");
   const [index, setIndex] = useState(0);
+  const [anchorEl, setAnchorEl] = React.useState(null);
+
+  // methods for the menu functionality 
+  const opened = Boolean(anchorEl);
+  const handleMouseClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   const handleClick = () => {
     if (!open) setViewMore(false);
@@ -144,7 +156,11 @@ export default function QueryListItem(props) {
           </IconButton>
           <IconButton
             aria-label="add to bookmarks"
-            onClick={() => dispatch(mark(props.id))}
+            //onClick={() => dispatch(mark(props.id))}
+            aria-controls={open ? 'basic-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={open ? 'true' : undefined}
+            onClick={handleMouseClick}
           >
             {marked ? (
               <BookmarkIcon color="secondary" style={{ fontSize: 20 }} />
@@ -152,6 +168,20 @@ export default function QueryListItem(props) {
               <BookmarkIcon style={{ fontSize: 20 }} />
             )}
           </IconButton>
+          <Menu
+            id="basic-menu"
+            anchorEl={anchorEl}
+            open={opened}
+            onClose={handleClose}
+            MenuListProps={{
+              'aria-labelledby': 'basic-button',
+            }}
+          >
+            <MenuItem onClick={() => dispatch(mark(props.id))}>Tag 0</MenuItem>
+            <MenuItem onClick={() => dispatch(mark(props.id))}>Tag 1</MenuItem>
+            <MenuItem onClick={() => dispatch(mark(props.id))}>Tag 2</MenuItem>
+            <MenuItem onClick={handleClose}>Close</MenuItem>
+          </Menu>
         </ListItemIcon>
 
         <ListItemText>
@@ -170,11 +200,11 @@ export default function QueryListItem(props) {
               viewMore
                 ? { display: "inline-block" }
                 : {
-                    display: "inline-block",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis [..]",
-                    height: 250,
-                  }
+                  display: "inline-block",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis [..]",
+                  height: 250,
+                }
             }
           >
             <ListItemText
