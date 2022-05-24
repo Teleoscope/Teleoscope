@@ -92,6 +92,10 @@ export default function QueryListItem(props) {
 
   // methods for the menu functionality 
   const opened = Boolean(anchorEl);
+  let blue = false;
+  let red = false;
+  let green = false;
+
   const handleMouseClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -163,7 +167,7 @@ export default function QueryListItem(props) {
             onClick={handleMouseClick}
           >
             {marked ? (
-              <BookmarkIcon color="secondary" style={{ fontSize: 20 }} />
+                <BookmarkIcon sx={{ color: "#0000FF" }} style={{ fontSize: 20 }} />
             ) : (
               <BookmarkIcon style={{ fontSize: 20 }} />
             )}
@@ -177,10 +181,10 @@ export default function QueryListItem(props) {
               'aria-labelledby': 'basic-button',
             }}
           >
-            <MenuItem onClick={() => dispatch(mark(props.id))}>Tag 0</MenuItem>
-            <MenuItem onClick={() => dispatch(mark(props.id))}>Tag 1</MenuItem>
-            <MenuItem onClick={() => dispatch(mark(props.id))}>Tag 2</MenuItem>
-            <MenuItem onClick={handleClose}>Close</MenuItem>
+            <MenuItem onClick={() => dispatch(mark(props.id))}>Blue {blue = !blue}</MenuItem>
+            <MenuItem onClick={() => dispatch(mark(props.id))}>Red {red = !red}</MenuItem>
+            <MenuItem onClick={() => dispatch(mark(props.id))}>Green {green = !green}</MenuItem>
+            <MenuItem onClick={handleClose}><CloseIcon style={{ fontSize: 20 }} /></MenuItem>
           </Menu>
         </ListItemIcon>
 
