@@ -31,10 +31,12 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
 import { mark } from "../actions/bookmark";
+import { blue } from "../actions/tagblue";
+import { red } from "../actions/tagred";
+import { green } from "../actions/taggreen";
+
 import Note from "./Notes";
 import Bookmark from "../actions/bookmark";
-
-var bookmarkColor; // global variable for changing the bookmark color
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -80,8 +82,15 @@ export default function QueryListItem(props) {
 
   const added = useSelector((state) => state.adder.value);
   const bookmarked = useSelector((state) => state.bookmarker.value);
+  const rTagged = useSelector((state) => state.redtagger.value);
+  const gTagged = useSelector((state) => state.greentagger.value);
+  const bTagged = useSelector((state) => state.bluetagger.value);
+
   const faved = added.includes(props.id);
   const marked = bookmarked.includes(props.id);
+  const taggedBlue = bTagged.includes(props.id);
+  const taggedGreen = gTagged.includes(props.id);
+  const taggedRed = rTagged.includes(props.id);
 
   const [open, setOpen] = useState(false);
   const [viewMore, setViewMore] = useState(false);
@@ -108,12 +117,8 @@ export default function QueryListItem(props) {
   };
 
   const documentGroup = () => {
-    {!marked ? dispatch(mark(props.id)) : null};
+    dispatch(mark(props.id));
     handleClose();
-  };
-
-  const changeColor = (color) => {
-    bookmarkColor = color;
   };
 
   const [{ isDragging }, drag] = useDrag(() => ({
@@ -174,12 +179,18 @@ export default function QueryListItem(props) {
             aria-expanded={open ? 'true' : undefined}
             onClick={handleMouseClick}
           >
-            {marked ? (
-                console.log(bookmarkColor),
-                <BookmarkIcon sx={{ color:bookmarkColor }} style={{ fontSize: 20 }} />
-                
+            {marked && taggedBlue ? (
+                <BookmarkIcon sx={{ color:"#0000FF" }} style={{ fontSize: 20 }} />
             ) : (
-              <BookmarkIcon style={{ fontSize: 20 }} />
+              marked && taggedGreen ?  (
+                <BookmarkIcon sx={{ color:"#00FF00"}} style={{fontSize: 20}} />
+              ) : (
+                marked && taggedRed ? (
+                  <BookmarkIcon sx={{ color:"#FF0000"}} style={{fontSize: 20}} />
+                ) : (
+                  <BookmarkIcon style={{ fontSize: 20 }} />
+                )
+              )
             )}
           </IconButton>
           
@@ -193,20 +204,19 @@ export default function QueryListItem(props) {
             }}
           >
             <MenuItem onClick={() => {
-              bookmarkColor = "#0000FF";
-              documentGroup();
-              console.log(bookmarkColor);}}>
+              dispatch(blue(props.id));
+              documentGroup();}}>
                 Blue
               </MenuItem>
 
             <MenuItem onClick={() => {
-              bookmarkColor = "#FF0000";
+              dispatch(red(props.id));
               documentGroup();}}>
                 Red
                 </MenuItem>
 
             <MenuItem onClick={() => {
-              bookmarkColor = "#00FF00";
+              dispatch(green(props.id));
               documentGroup();}}>
                 Green
                 </MenuItem>

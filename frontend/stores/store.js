@@ -8,6 +8,9 @@ import ActiveTeleoscopeID from "../actions/activeTeleoscopeID"
 import CheckedPosts from "../actions/checkedPosts"
 import Bookmark from "../actions/bookmark"
 import ShowBookmarkedPosts from '../actions/showBookmarkedPosts'
+import BlueTag from '../actions/tagBlue'
+import GreenTag from '../actions/tagGreen'
+import RedTag from '../actions/tagRed'
 
 export default configureStore({
   reducer: {
@@ -18,7 +21,9 @@ export default configureStore({
     activeTeleoscopeID: ActiveTeleoscopeID,
     checkedPosts: CheckedPosts,
     bookmarker: Bookmark,
-    shower: ShowBookmarkedPosts
+    bluetagger: BlueTag,
+    greentagger: GreenTag,
+    redtagger: RedTag,
   },
 })
 
