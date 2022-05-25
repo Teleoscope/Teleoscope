@@ -117,7 +117,7 @@ export default function QueryListItem(props) {
   };
 
   const documentGroup = () => {
-    dispatch(mark(props.id));
+    (!taggedBlue && !taggedRed && !taggedGreen) ? dispatch(mark(props.id)) : null;
     handleClose();
   };
 
@@ -204,19 +204,28 @@ export default function QueryListItem(props) {
             }}
           >
             <MenuItem onClick={() => {
+              if (taggedBlue) dispatch(mark(props.id));
               dispatch(blue(props.id));
+              if (taggedRed) dispatch(red(props.id));
+              if (taggedGreen) dispatch(green(props.id));
               documentGroup();}}>
                 Blue
               </MenuItem>
 
             <MenuItem onClick={() => {
+              if (taggedRed) dispatch(mark(props.id));
               dispatch(red(props.id));
+              if (taggedBlue) dispatch(blue(props.id));
+              if (taggedGreen) dispatch(green(props.id));
               documentGroup();}}>
                 Red
                 </MenuItem>
 
             <MenuItem onClick={() => {
+              if (taggedGreen) dispatch(mark(props.id));
               dispatch(green(props.id));
+              if (taggedBlue) dispatch(blue(props.id));
+              if (taggedRed) dispatch(red(props.id));
               documentGroup();}}>
                 Green
                 </MenuItem>
