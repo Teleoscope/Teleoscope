@@ -188,9 +188,6 @@ export default function QueryListItem(props) {
             anchorEl={anchorEl}
             open={opened}
             onClose={handleClose}
-            //blue="#0000FF"
-            //bookmarkColor="#FF0000"
-            //bookmarkColor="#00FF00"
             MenuListProps={{
               'aria-labelledby': 'basic-button',
             }}
@@ -201,7 +198,7 @@ export default function QueryListItem(props) {
               console.log(bookmarkColor);}}>
                 Blue
               </MenuItem>
-              
+
             <MenuItem onClick={() => {
               bookmarkColor = "#FF0000";
               documentGroup();}}>
