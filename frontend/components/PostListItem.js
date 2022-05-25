@@ -34,6 +34,8 @@ import { mark } from "../actions/bookmark";
 import Note from "./Notes";
 import Bookmark from "../actions/bookmark";
 
+var bookmarkColor; // global variable for changing the bookmark color
+
 const useStyles = makeStyles((theme) => ({
   margin: {
     margin: theme.spacing(1),
@@ -92,9 +94,6 @@ export default function QueryListItem(props) {
 
   // methods for the menu functionality 
   const opened = Boolean(anchorEl);
-  let blue = false;
-  let red = false;
-  let green = false;
 
   const handleMouseClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -106,6 +105,15 @@ export default function QueryListItem(props) {
   const handleClick = () => {
     if (!open) setViewMore(false);
     setOpen(!open);
+  };
+
+  const documentGroup = () => {
+    {!marked ? dispatch(mark(props.id)) : null};
+    handleClose();
+  };
+
+  const changeColor = (color) => {
+    bookmarkColor = color;
   };
 
   const [{ isDragging }, drag] = useDrag(() => ({
@@ -167,26 +175,49 @@ export default function QueryListItem(props) {
             onClick={handleMouseClick}
           >
             {marked ? (
-                <BookmarkIcon sx={{ color: "#0000FF" }} style={{ fontSize: 20 }} />
+                console.log(bookmarkColor),
+                <BookmarkIcon sx={{ color:bookmarkColor }} style={{ fontSize: 20 }} />
+                
             ) : (
               <BookmarkIcon style={{ fontSize: 20 }} />
             )}
           </IconButton>
+          
           <Menu
             id="basic-menu"
             anchorEl={anchorEl}
             open={opened}
             onClose={handleClose}
+            //blue="#0000FF"
+            //bookmarkColor="#FF0000"
+            //bookmarkColor="#00FF00"
             MenuListProps={{
               'aria-labelledby': 'basic-button',
             }}
           >
-            <MenuItem onClick={() => dispatch(mark(props.id))}>Blue {blue = !blue}</MenuItem>
-            <MenuItem onClick={() => dispatch(mark(props.id))}>Red {red = !red}</MenuItem>
-            <MenuItem onClick={() => dispatch(mark(props.id))}>Green {green = !green}</MenuItem>
+            <MenuItem onClick={() => {
+              bookmarkColor = "#0000FF";
+              documentGroup();
+              console.log(bookmarkColor);}}>
+                Blue
+              </MenuItem>
+              
+            <MenuItem onClick={() => {
+              bookmarkColor = "#FF0000";
+              documentGroup();}}>
+                Red
+                </MenuItem>
+
+            <MenuItem onClick={() => {
+              bookmarkColor = "#00FF00";
+              documentGroup();}}>
+                Green
+                </MenuItem>
+
             <MenuItem onClick={handleClose}><CloseIcon style={{ fontSize: 20 }} /></MenuItem>
           </Menu>
         </ListItemIcon>
+        
 
         <ListItemText>
           {post ? postTitle(post) : "Post loading..."}

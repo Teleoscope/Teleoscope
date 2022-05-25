@@ -56,9 +56,6 @@ export default function LeftMenuBar(props) {
     }
   };
 
-  console.log(bookmarked_data);
-
-
   return (
     <div className="leftMenuBar">
       <Box
