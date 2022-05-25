@@ -11,7 +11,6 @@ import Checkbox from "@mui/material/Checkbox";
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { searcher } from "../actions/searchterm";
-import { displayer } from "../actions/showBookmarkedPosts"
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 

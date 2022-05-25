@@ -96,8 +96,6 @@ export default function RightMenuBar(props) {
         <hr />
         <PostList
           data={data}
-          isFavList={true}
-          isHideList={false}
           workspace={false}
           addItemToWorkSpace={props.addItemToWorkSpace}
         />
