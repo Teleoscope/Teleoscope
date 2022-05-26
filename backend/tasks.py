@@ -1,7 +1,7 @@
 import logging, pickle, utils, json, auth, numpy as np, tensorflow_hub as hub
 from warnings import simplefilter
 from gridfs import GridFS
-from celery import Celery, Task
+from celery import Celery, Task, chain, group 
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
@@ -28,32 +28,52 @@ input: String (Path to json file)
 output: void
 purpose: This function is used to import a single post from a json file to a database
 '''
+# Read and validate a post
 @app.task
-def import_single_post(path_to_post):
-    
-    # Read file
+def read_and_validate_post(path_to_post):
     with open(path_to_post) as f:
             data = json.load(f)[0]['data']['children'][0]['data']
+    if data['selftext'] == "" or data['title'] == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
+        # Throw error instead and handle in chain
+        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
+        return {'error': 'Post is missing required fields.'}
 
-    # Connect to database
-    db = utils.connect()
-
-    # extract relevent fields
     post = {
-        'author': data['author'],
-        'author_fullname': data['author_fullname'],
-        'created_utc': data['created_utc'],
-        'full_link': data['url'],
-        'id': data['id'],
-        'num_comments': data['num_comments'],
-        'score': data['score'],
-        'selftext': data['selftext'],
-        'title': data['title'],
+            'id': data['id'],
+            'title': data['title'],
+            'selftext': data['selftext'],
     }
 
-    # add to database
-    db.posts.insert_one(post)
+    return post
 
+# This task takes a post and vectorizes it.
+@app.task
+def vectorize_post(post):
+	if 'error' not in post:
+		embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+		post['vector'] = embed([post['title']]).numpy()[0].tolist()
+		post['selftextVector'] = embed([post['selftext']]).numpy()[0].tolist()
+		return post
+	else:
+		return post
+
+
+# Add single post to database
+@app.task
+def add_single_post_to_database(post):
+	db = utils.connect()
+	if 'error' not in post:
+		target = db.clean.posts.test
+		target.insert_one(post)
+
+# Add multiple posts to database
+@app.task
+def add_multiple_posts_to_database(posts):
+    db = utils.connect()
+    posts = (list (filter (lambda x: 'error' not in x, posts)))
+    if len(posts) > 0:
+        target = db.clean.posts.test
+        target.insert_many(posts)
 
 
 
