@@ -1,7 +1,7 @@
 import logging, pickle, utils, json, auth, numpy as np, tensorflow_hub as hub
 from warnings import simplefilter
 from gridfs import GridFS
-from celery import Celery, Task, chain, group 
+from celery import Celery, Task
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
