@@ -6,7 +6,6 @@ path_to_single_post = '../posts/test_post.json'
 path_to_folder = '../posts'
 
 def import_single_post(path_to_post):
-	# For a single post
 	workflow = chain(
 			read_and_validate_post.s(path_to_post),
 			vectorize_post.s(),
@@ -14,7 +13,6 @@ def import_single_post(path_to_post):
 
 # Test
 # import_single_post(path_to_single_post)
-
 
 def import_multiple_posts(path_to_folder):
 	paths =  glob.glob(path_to_folder + '/*.json')

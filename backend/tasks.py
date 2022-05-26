@@ -41,8 +41,7 @@ def read_and_validate_post(path_to_post):
     post = {
             'id': data['id'],
             'title': data['title'],
-            'selftext': data['selftext'],
-    }
+            'selftext': data['selftext']}
 
     return post
 
