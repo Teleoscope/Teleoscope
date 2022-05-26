@@ -21,20 +21,20 @@ app.conf.update(
     accept_content=['pickle'],  # Ignore other content
     result_serializer='pickle',
 )
+
 '''
-import_single_post
+read_and_validate_post
 
 input: String (Path to json file)
-output: void
-purpose: This function is used to import a single post from a json file to a database
+output: Dict
+purpose: This function is used to read and validate a single post from a json file to a database
+        If the file is missing required fields, a dictionary with an error key is returned
 '''
-# Read and validate a post
 @app.task
 def read_and_validate_post(path_to_post):
     with open(path_to_post) as f:
             data = json.load(f)[0]['data']['children'][0]['data']
     if data['selftext'] == "" or data['title'] == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
-        # Throw error instead and handle in chain
         logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
         return {'error': 'Post is missing required fields.'}
 
@@ -46,7 +46,14 @@ def read_and_validate_post(path_to_post):
 
     return post
 
-# This task takes a post and vectorizes it.
+'''
+vectorize_post
+
+input: Dict
+output: Dict
+purpose: This function is used to update the dictionary with a vectorized version of the title and selftext
+        (Ignores dictionaries containing error keys)
+'''
 @app.task
 def vectorize_post(post):
 	if 'error' not in post:
@@ -58,7 +65,14 @@ def vectorize_post(post):
 		return post
 
 
-# Add single post to database
+'''
+add_single_post_to_database
+
+input: Dict
+output: void
+purpose: This function adds a single post to the database
+        (Ignores dictionaries containing error keys)
+'''
 @app.task
 def add_single_post_to_database(post):
 	db = utils.connect()
@@ -66,7 +80,14 @@ def add_single_post_to_database(post):
 		target = db.clean.posts.test
 		target.insert_one(post)
 
-# Add multiple posts to database
+'''
+add_single_post_to_database
+
+input: List[Dict]
+output: void
+purpose: This function adds multiple posts to the database
+        (Ignores dictionaries containing error keys)
+'''
 @app.task
 def add_multiple_posts_to_database(posts):
     db = utils.connect()

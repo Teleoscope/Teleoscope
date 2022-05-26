@@ -22,5 +22,5 @@ def import_multiple_posts(path_to_folder):
 	posts_vectorized = group(vectorize_post.s(post) for post in posts).apply_async().get()
 	add_multiple_posts_to_database.delay(posts=posts_vectorized)
 
-
-import_multiple_posts(path_to_folder)
+# Test
+# import_multiple_posts(path_to_folder)
