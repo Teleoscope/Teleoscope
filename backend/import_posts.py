@@ -24,7 +24,7 @@ if __name__ == '__main__':
 	elif sys.argv[1] == '-d':
 		import_multiple_posts(sys.argv[2])
 	else:
-		print('Wrong argument. Use -f for single post or -d for folder')
+		print('Wrong argument. Use -f for single post or -d for folder\n')
 		print("Usage: python3 import_posts.py -f <path_to_post>")
 		print("Usage: python3 import_posts.py -d <path_to_folder>")
 		sys.exit(1)
