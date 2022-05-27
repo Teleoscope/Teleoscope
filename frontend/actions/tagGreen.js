@@ -21,7 +21,6 @@ export const GreenTag = createSlice({
 		  temp.push(id)
 		}
 		state.value = temp;
-      console.log(state.value);
     }
   },
 })
