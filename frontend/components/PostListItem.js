@@ -86,7 +86,6 @@ export default function QueryListItem(props) {
   const gTagged = useSelector((state) => state.greentagger.value);
   const bTagged = useSelector((state) => state.bluetagger.value);
 
-  const faved = added.includes(props.id);
   const marked = bookmarked.includes(props.id);
   const taggedBlue = bTagged.includes(props.id);
   const taggedGreen = gTagged.includes(props.id);
@@ -161,16 +160,6 @@ export default function QueryListItem(props) {
     <div ref={drag} style={{ borderBottom: "1px solid  #eceeee" }}>
       <ListItem className={classes.root} disableGutters={true}>
         <ListItemIcon>
-          <IconButton
-            aria-label="add to favorites"
-            onClick={() => dispatch(adder(props.id))}
-          >
-            {faved ? (
-              <FavoriteIcon color="secondary" style={{ fontSize: 20 }} />
-            ) : (
-              <FavoriteIcon style={{ fontSize: 20 }} />
-            )}
-          </IconButton>
           <IconButton
             aria-label="add to bookmarks"
             //onClick={() => dispatch(mark(props.id))}

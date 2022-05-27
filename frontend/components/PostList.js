@@ -32,12 +32,6 @@ const useStyles = makeStyles((theme) => ({
 export default function PostList(props) {
   let sortable = props.data;
   const classes = useStyles();
-  const [show, setShow] = React.useState(true);
-  const [postid, setPostID] = React.useState("");
-  const container = React.useRef(null);
-
-  const favs = useSelector((state) => state.faver.value);
-  const hides = useSelector((state) => state.hider.value);
 
   // pagination
   const [pageNumber, setPageNumber] = useState(1);
