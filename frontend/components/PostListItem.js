@@ -37,6 +37,9 @@ import { green } from "../actions/taggreen";
 
 import Note from "./Notes";
 import Bookmark from "../actions/bookmark";
+import tagBlue from "../actions/tagBlue";
+import tagGreen from "../actions/tagGreen";
+import tagRed from "../actions/tagRed"
 
 const useStyles = makeStyles((theme) => ({
   margin: {
