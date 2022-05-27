@@ -20,7 +20,7 @@ export const BlueTag = createSlice({
 		} else {
 		  temp.push(id)
 		}
-		state.value = temp
+		state.value = temp;
     }
   },
 })

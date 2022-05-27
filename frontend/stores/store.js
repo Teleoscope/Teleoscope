@@ -18,7 +18,7 @@ export default configureStore({
     bookmarker: Bookmark,
     bluetagger: BlueTag,
     greentagger: GreenTag,
-    redtagger: RedTag,
+    redtagger: RedTag
   },
 })
 

@@ -31,15 +31,15 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
 import { mark } from "../actions/bookmark";
-import { blue } from "../actions/tagblue";
-import { red } from "../actions/tagred";
-import { green } from "../actions/taggreen";
+import { blue } from "../actions/tagBlue";
+import { red } from "../actions/tagRed";
+import { green } from "../actions/tagGreen";
 
 import Note from "./Notes";
 import Bookmark from "../actions/bookmark";
 import tagBlue from "../actions/tagBlue";
 import tagGreen from "../actions/tagGreen";
-import tagRed from "../actions/tagRed"
+import tagRed from "../actions/tagRed";
 
 const useStyles = makeStyles((theme) => ({
   margin: {
