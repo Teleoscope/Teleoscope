@@ -60,9 +60,9 @@ def import_single_post(path_to_post):
 '''
 querySearch:
 Performs a text query on aita.clean.posts.v2 text index.
-If the query string alredy exists in the queries collection, returns existing reddit_ids.
-Otherwise, adds the query to the queries collection and performs a text query the results of which are added to the
-queries collection and returned.
+If the query string alredy exists in the teleoscopes collection, returns existing reddit_ids.
+Otherwise, adds the query to the teleoscopes collection and performs a text query the results of which are added to the
+teleoscopes collection and returned.
 TODO: 
 1. We can use GridFS to store the results of the query if needed (if sizeof(reddit_ids) > 16MB).
    Doesnt seem to be an issue right now.
@@ -70,37 +70,33 @@ TODO:
    If not, then who updates them?
 '''
 @app.task
-def querySearch(query_string, teleoscope_id):
+def initialize_teleoscope(label):
     db = utils.connect()
-    query_results = db.queries.find_one({"query": query_string, "teleoscope_id": teleoscope_id})
     
-    if query_string == "":
-        logging.info(f"query {query_string} is empty.")
+    if label == "":
+        logging.info(f"label {label} is empty.")
         return []
 
-    # # check if query already exists
-    # if query_results is not None:
-    #     logging.info(f"query {query_string} already exists in queries collection")
-    #     return query_results['reddit_ids']
-
+    logging.info("About to insert a new document")
     # create a new query document
-    db.queries.insert_one({
-        "query": query_string, 
-        "teleoscope_id": teleoscope_id,
-        "rank_slice": []
+    teleoscope_id = db.teleoscopes.insert_one({
+        "label": label,
+        "rank_slice": [],
+        "reddit_ids": [],
+        "history": []
         }
-
     )
+    logging.info(f"The new teleoscope has an id of: {teleoscope_id.inserted_id}")
 
     # perform text search query
-    textSearchQuery = {"$text": {"$search": query_string}}
-    cursor = db.clean.posts.v2.find(textSearchQuery, projection = {'id':1})
+    labelAsTextSearch = {"$text": {"$search": label}}
+    cursor = db.clean.posts.v2.find(labelAsTextSearch, projection = {'id':1})
     return_ids = [x['id'] for x in cursor]
 
-    # store results in queries collection
-    db.queries.update_one({'query': query_string, 'teleoscope_id': teleoscope_id}, {'$set': {'reddit_ids': return_ids}})
+    # store results in teleoscopes collection
+    db.teleoscopes.update_one({'_id': teleoscope_id.inserted_id}, {'$set': {'reddit_ids': return_ids}})
     
-    logging.info(f"query {query_string} added to queries collection")
+    logging.info(f"label {label} added to teleoscopes collection")
     return return_ids
 
 @app.task
@@ -215,12 +211,12 @@ class reorient(Task):
         if self.db is None:
             self.db = utils.connect()
 
-        # get query document from queries collection
-        queryDocument = self.db.queries.find_one({"teleoscope_id": teleoscope_id})
+        # get query document from teleoscopes collection
+        queryDocument = self.db.teleoscopes.find_one({"teleoscope_id": teleoscope_id})
 
         if queryDocument == None:
            querySearch(query, teleoscope_id)
-           queryDocument = self.db.queries.find_one({"teleoscope_id": teleoscope_id})
+           queryDocument = self.db.teleoscopes.find_one({"teleoscope_id": teleoscope_id})
            logging.info(f'queryDocument is being generated for {teleoscope_id}.')
 
         # check if stateVector exists
@@ -237,17 +233,17 @@ class reorient(Task):
         qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=direction) # move qvector towards/away from feedbackVector
         scores = utils.calculateSimilarity(self.allPostVectors, qprime)
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
-        gridfsObj = self.gridfsUpload("queries", newRanks)
+        gridfsObj = self.gridfsUpload("teleoscopes", newRanks)
 
         rank_slice = newRanks[0:500]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
 
         # update stateVector
-        self.db.queries.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
+        self.db.teleoscopes.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
         # update rankedPosts
-        self.db.queries.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : gridfsObj}})
+        self.db.teleoscopes.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : gridfsObj}})
         # update a slice of rank_slice
-        self.db.queries.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "rank_slice" : rank_slice}})
+        self.db.teleoscopes.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "rank_slice" : rank_slice}})
 
         return 200 # TODO: what to return?
 

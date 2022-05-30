@@ -100,7 +100,7 @@ export default function TopBar(props) {
               onClick={() => save_UI_state(
                 client, 
                 session_id, 
-                {
+                { // history_item in save_UI_state in Stomp.js
                     "teleoscope_id": teleoscope_id,
                     "search_term": search_term,
                     "added": added,
@@ -131,7 +131,7 @@ export default function TopBar(props) {
             
             <Button 
               variant="text" 
-              onClick={() => initialize_teleoscope(client, search_term, teleoscope_id, added, [])}
+              onClick={() => initialize_teleoscope(client, search_term)}
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",
@@ -171,7 +171,7 @@ export default function TopBar(props) {
               >
                 {teleoscopes ? teleoscopes.map((t) => {
                   return (
-                    <MenuItem value={t["teleoscope_id"]}>{t["query"]}</MenuItem>
+                    <MenuItem value={t["_id"]}>{t["label"]}</MenuItem>
                 )}):[]}
               </Select>
             </FormControl>
