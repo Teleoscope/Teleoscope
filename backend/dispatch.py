@@ -53,9 +53,11 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # TODO: these should exactly implement the interface standard
         # TODO: make sure they look like Stomp.js
         if b['task'] == "initialize_teleoscope":
-            res = tasks.querySearch.signature(
-                args=(b['args']['query'], get_random_string(32)),
-                kwargs={},
+            res = tasks.initialize_teleoscope.signature(
+                args=(),
+                kwargs={
+                    "label": b['args']['query']
+                },
             )
             res.apply_async()
         

@@ -171,7 +171,7 @@ export default function TopBar(props) {
               >
                 {teleoscopes ? teleoscopes.map((t) => {
                   return (
-                    <MenuItem value={t["teleoscope_id"]}>{t["query"]}</MenuItem>
+                    <MenuItem value={t["_id"]}>{t["label"]}</MenuItem>
                 )}):[]}
               </Select>
             </FormControl>
