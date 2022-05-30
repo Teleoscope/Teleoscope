@@ -77,7 +77,7 @@ def initialize_teleoscope(label):
         logging.info(f"label {label} is empty.")
         return []
 
-
+    logging.info("About to insert a new document")
     # create a new query document
     teleoscope_id = db.teleoscopes.insert_one({
         "label": label,
@@ -85,8 +85,8 @@ def initialize_teleoscope(label):
         "reddit_ids": [],
         "history": []
         }
-
     )
+    logging.info(f"The new teleoscope has an id of: {teleoscope_id.inserted_id}")
 
     # perform text search query
     labelAsTextSearch = {"$text": {"$search": label}}
@@ -94,7 +94,7 @@ def initialize_teleoscope(label):
     return_ids = [x['id'] for x in cursor]
 
     # store results in teleoscopes collection
-    db.teleoscopes.update_one({'_id': teleoscope_id}, {'$set': {'reddit_ids': return_ids}})
+    db.teleoscopes.update_one({'_id': teleoscope_id.inserted_id}, {'$set': {'reddit_ids': return_ids}})
     
     logging.info(f"label {label} added to teleoscopes collection")
     return return_ids
