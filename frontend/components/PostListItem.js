@@ -20,6 +20,7 @@ import Divider from "@mui/material/Divider";
 // icons
 import FavoriteIcon from "@material-ui/icons/Favorite";
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import CircleIcon from '@mui/icons-material/Circle';
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -31,15 +32,11 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
 import { mark } from "../actions/bookmark";
-import { blue } from "../actions/tagBlue";
-import { red } from "../actions/tagRed";
-import { green } from "../actions/tagGreen";
+import { tag } from "../actions/tagged";
 
 import Note from "./Notes";
 import Bookmark from "../actions/bookmark";
-import tagBlue from "../actions/tagBlue";
-import tagGreen from "../actions/tagGreen";
-import tagRed from "../actions/tagRed";
+
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -85,14 +82,12 @@ export default function QueryListItem(props) {
 
   const added = useSelector((state) => state.adder.value);
   const bookmarked = useSelector((state) => state.bookmarker.value);
-  const rTagged = useSelector((state) => state.redtagger.value);
-  const gTagged = useSelector((state) => state.greentagger.value);
-  const bTagged = useSelector((state) => state.bluetagger.value);
+  const Tagged = useSelector((state) => state.tagger.value);
+
 
   const marked = bookmarked.includes(props.id);
-  const taggedBlue = bTagged.includes(props.id);
-  const taggedGreen = gTagged.includes(props.id);
-  const taggedRed = rTagged.includes(props.id);
+  const taggedPost = Tagged.some(post => post.id === props.id);
+
 
   const [open, setOpen] = useState(false);
   const [viewMore, setViewMore] = useState(false);
@@ -118,10 +113,6 @@ export default function QueryListItem(props) {
     setOpen(!open);
   };
 
-  const documentGroup = () => {
-    (!taggedBlue && !taggedRed && !taggedGreen) ? dispatch(mark(props.id)) : null;
-    handleClose();
-  };
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "item",
@@ -159,31 +150,37 @@ export default function QueryListItem(props) {
     }
   };
 
+
+  const getColor = () => {
+    let i = Tagged.findIndex(postID => postID.id === props.id);
+    return Tagged[i].color;
+  };
+
   return (
     <div ref={drag} style={{ borderBottom: "1px solid  #eceeee" }}>
       <ListItem className={classes.root} disableGutters={true}>
         <ListItemIcon>
+          <IconButton 
+          onClick={() => dispatch(mark(props.id))}
+          >
+            {marked ?
+              <BookmarkIcon color="secondary"style={{ fontSize: 20 }} />
+            :
+              <BookmarkIcon style={{ fontSize: 20 }} />
+            }
+          </IconButton>
           <IconButton
             aria-label="add to bookmarks"
-            //onClick={() => dispatch(mark(props.id))}
             aria-controls={open ? 'basic-menu' : undefined}
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
             onClick={handleMouseClick}
           >
-            {marked && taggedBlue ? (
-                <BookmarkIcon sx={{ color:"#0000FF" }} style={{ fontSize: 20 }} />
+            {taggedPost ? (
+                <CircleIcon sx={{ color: getColor() }} style={{ fontSize: 20 }} />
             ) : (
-              marked && taggedGreen ?  (
-                <BookmarkIcon sx={{ color:"#00FF00"}} style={{fontSize: 20}} />
-              ) : (
-                marked && taggedRed ? (
-                  <BookmarkIcon sx={{ color:"#FF0000"}} style={{fontSize: 20}} />
-                ) : (
-                  <BookmarkIcon style={{ fontSize: 20 }} />
-                )
-              )
-            )}
+                <CircleIcon style={{ fontSize: 20 }} />
+              )}
           </IconButton>
           
           <Menu
@@ -196,29 +193,20 @@ export default function QueryListItem(props) {
             }}
           >
             <MenuItem onClick={() => {
-              if (taggedBlue) dispatch(mark(props.id));
-              dispatch(blue(props.id));
-              if (taggedRed) dispatch(red(props.id));
-              if (taggedGreen) dispatch(green(props.id));
-              documentGroup();}}>
+              dispatch(tag({id: props.id, color: "#0000FF"}));
+              handleClose();}}>
                 Blue
               </MenuItem>
 
             <MenuItem onClick={() => {
-              if (taggedRed) dispatch(mark(props.id));
-              dispatch(red(props.id));
-              if (taggedBlue) dispatch(blue(props.id));
-              if (taggedGreen) dispatch(green(props.id));
-              documentGroup();}}>
+              dispatch(tag({id: props.id, color: "#FF0000"}));
+              handleClose();}}>
                 Red
                 </MenuItem>
 
             <MenuItem onClick={() => {
-              if (taggedGreen) dispatch(mark(props.id));
-              dispatch(green(props.id));
-              if (taggedBlue) dispatch(blue(props.id));
-              if (taggedRed) dispatch(red(props.id));
-              documentGroup();}}>
+              dispatch(tag({id: props.id, color: "#00FF00"}));
+              handleClose();}}>
                 Green
                 </MenuItem>
 
