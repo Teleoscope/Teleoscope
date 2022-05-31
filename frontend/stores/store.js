@@ -6,6 +6,7 @@ import ActiveTeleoscopeID from "../actions/activeTeleoscopeID"
 import CheckedPosts from "../actions/checkedPosts"
 import Bookmark from "../actions/bookmark"
 import Tagged from '../actions/tagged'
+import NamedTags from '../actions/namedTags'
 
 export default configureStore({
   reducer: {
@@ -15,6 +16,7 @@ export default configureStore({
     checkedPosts: CheckedPosts,
     bookmarker: Bookmark,
     tagger: Tagged,
+    namedtagger: NamedTags
   },
 })
 

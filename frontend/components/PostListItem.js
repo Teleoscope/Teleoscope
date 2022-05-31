@@ -82,11 +82,11 @@ export default function QueryListItem(props) {
 
   const added = useSelector((state) => state.adder.value);
   const bookmarked = useSelector((state) => state.bookmarker.value);
-  const Tagged = useSelector((state) => state.tagger.value);
+  const tagged = useSelector((state) => state.tagger.value);
 
 
   const marked = bookmarked.includes(props.id);
-  const taggedPost = Tagged.some(post => post.id === props.id);
+  const taggedPost = tagged.some(post => post.id === props.id);
 
 
   const [open, setOpen] = useState(false);
@@ -152,8 +152,8 @@ export default function QueryListItem(props) {
 
 
   const getColor = () => {
-    let i = Tagged.findIndex(postID => postID.id === props.id);
-    return Tagged[i].color;
+    let i = tagged.findIndex(postID => postID.id === props.id);
+    return tagged[i].color;
   };
 
   return (
@@ -164,7 +164,7 @@ export default function QueryListItem(props) {
           onClick={() => dispatch(mark(props.id))}
           >
             {marked ?
-              <BookmarkIcon color="secondary"style={{ fontSize: 20 }} />
+              <BookmarkIcon color="secondary" style={{ fontSize: 20 }} />
             :
               <BookmarkIcon style={{ fontSize: 20 }} />
             }
