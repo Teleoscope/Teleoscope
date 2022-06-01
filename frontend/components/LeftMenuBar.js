@@ -21,6 +21,7 @@ import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { searcher } from "../actions/searchterm";
+import { tag } from "../actions/tagged";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 const filter = createFilterOptions();
@@ -51,23 +52,23 @@ export default function LeftMenuBar(props) {
 
   const handleClose = () => {
     setDialogValue({
-      title: '',
-      year: '',
+      tag: '',
+      color: '',
     });
 
     toggleOpen(false);
   };
 
   const [dialogValue, setDialogValue] = React.useState({
-    title: '',
-    year: '',
+    tag: '',
+    color: '',
   });
 
   const handleSubmit = (event) => {
     event.preventDefault();
     setValue({
-      title: dialogValue.title,
-      year: parseInt(dialogValue.year, 10),
+      tag: dialogValue.tag,
+      color: parseInt(dialogValue.color, 10),
     });
 
     handleClose();
@@ -125,15 +126,15 @@ export default function LeftMenuBar(props) {
                 setTimeout(() => {
                   toggleOpen(true);
                   setDialogValue({
-                    title: newValue,
-                    year: '',
+                    tag: newValue,
+                    color: '',
                   });
                 });
               } else if (newValue && newValue.inputValue) {
                 toggleOpen(true);
                 setDialogValue({
-                  title: newValue.inputValue,
-                  year: '',
+                  tag: newValue.inputValue,
+                  color: '',
                 });
               } else {
                 setValue(newValue);
@@ -145,14 +146,14 @@ export default function LeftMenuBar(props) {
               if (params.inputValue !== '') {
                 filtered.push({
                   inputValue: params.inputValue,
-                  title: `Add "${params.inputValue}"`,
+                  tag: `Add "${params.inputValue}"`,
                 });
               }
 
               return filtered;
             }}
             id="Add Tag"
-            options={top100Films}
+            options={userTags}
             getOptionLabel={(option) => {
               // e.g value selected with enter, right from the input
               if (typeof option === 'string') {
@@ -161,13 +162,13 @@ export default function LeftMenuBar(props) {
               if (option.inputValue) {
                 return option.inputValue;
               }
-              return option.title;
+              return option.tag;
             }}
             style={{ width: "100%", borderRadius: "0 !important" }}
             selectOnFocus
             clearOnBlur
             handleHomeEndKeys
-            renderOption={(props, option) => <li {...props}>{option.title}</li>}
+            renderOption={(props, option) => <li {...props}>{option.tag}</li>}
             sx={{ width: 300 }}
             freeSolo
             renderInput={(params) => 
@@ -188,17 +189,15 @@ export default function LeftMenuBar(props) {
                 <TextField
                   variant="filled"
                   placeholder="Add tag name"
-                  //onKeyDown={(e) => keyChange(e)}
-                  //onChange={(e) => setText(e.target.value)}
                   style={{ width: "100%", borderRadius: "0 !important" }}
                   autoFocus
                   margin="dense"
                   id="name"
-                  value={dialogValue.title}
+                  value={dialogValue.tag}
                   onChange={(event) =>
                     setDialogValue({
                       ...dialogValue,
-                      title: event.target.value,
+                      tag: event.target.value,
                     })
                   }
                   label="tag name"
@@ -211,20 +210,26 @@ export default function LeftMenuBar(props) {
                   onKeyDown={(e) => keyChange(e)}
                   style={{ width: "100%", borderRadius: "0 !important" }}
                   margin="dense"
-                  id="name"
+                  id="color"
                   type="color"
-                  value={dialogValue.year}
+                  value={dialogValue.color}
                   onChange={(event) =>
                     setDialogValue({
                       ...dialogValue,
-                      year: event.target.value,
+                      color: event.target.value,
                     })
                   }
                 />
               </DialogContent>
               <DialogActions>
                 <Button onClick={handleClose}>Cancel</Button>
-                <Button type="submit">Add</Button>
+                <Button 
+                  type="submit"
+                  onClick= {() => {
+                    userTags.push({id: '', tag: document.getElementById('name').value, color: document.getElementById('color').value})
+                    dispatch(tag({id: '', tag: document.getElementById('name').value, color: document.getElementById('color').value}))
+                  }}>Add</Button>
+                  { console.log(userTags) }
               </DialogActions>
             </form>
           </Dialog>
@@ -251,5 +256,7 @@ export default function LeftMenuBar(props) {
   );
 }
 
-const top100Films = [
-  { title: 'The Shawshank Redemption', year: 1994 }]
+const userTags = [
+  {id: '', tag: 'All Posts', color: 'white' }]
+
+  

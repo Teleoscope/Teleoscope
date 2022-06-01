@@ -97,12 +97,15 @@ export default function QueryListItem(props) {
   const [noteContent, setNoteContent] = useState("");
   const [index, setIndex] = useState(0);
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [menuItem, setMenuItem] = useState(false);
+  console.log(menuItem);
 
   // methods for the menu functionality 
   const opened = Boolean(anchorEl);
 
   const handleMouseClick = (event) => {
     setAnchorEl(event.currentTarget);
+    setMenuItem(!menuItem);
   };
   const handleClose = () => {
     setAnchorEl(null);
@@ -160,12 +163,12 @@ export default function QueryListItem(props) {
     <div ref={drag} style={{ borderBottom: "1px solid  #eceeee" }}>
       <ListItem className={classes.root} disableGutters={true}>
         <ListItemIcon>
-          <IconButton 
-          onClick={() => dispatch(mark(props.id))}
+          <IconButton
+            onClick={() => dispatch(mark(props.id))}
           >
             {marked ?
               <BookmarkIcon color="secondary" style={{ fontSize: 20 }} />
-            :
+              :
               <BookmarkIcon style={{ fontSize: 20 }} />
             }
           </IconButton>
@@ -177,12 +180,12 @@ export default function QueryListItem(props) {
             onClick={handleMouseClick}
           >
             {taggedPost ? (
-                <CircleIcon sx={{ color: getColor() }} style={{ fontSize: 20 }} />
+              <CircleIcon sx={{ color: getColor() }} style={{ fontSize: 20 }} />
             ) : (
-                <CircleIcon style={{ fontSize: 20 }} />
-              )}
+              <CircleIcon style={{ fontSize: 20 }} />
+            )}
           </IconButton>
-          
+
           <Menu
             id="basic-menu"
             anchorEl={anchorEl}
@@ -191,7 +194,19 @@ export default function QueryListItem(props) {
             MenuListProps={{
               'aria-labelledby': 'basic-button',
             }}
+            //onClick={() => setMenuItem(!menuItem)}
           >
+            { menuItem ? (
+              tagged.map((id, tag, tagColor) => {
+                return <MenuItem key={id} onClick={handleClose()}>{
+                  <CircleIcon sx={{ color: tagColor }} style={{ fontSize: 20 }} />
+                  } {
+                  console.log(tag)
+                  }</MenuItem>;
+              })) :
+              (console.log("it ran"))}
+            {/* <MenuItem >
+            </MenuItem>
             <MenuItem onClick={() => {
               dispatch(tag({id: props.id, color: "#0000FF"}));
               handleClose();}}>
@@ -208,12 +223,12 @@ export default function QueryListItem(props) {
               dispatch(tag({id: props.id, color: "#00FF00"}));
               handleClose();}}>
                 Green
-                </MenuItem>
+                </MenuItem> */}
 
             <MenuItem onClick={handleClose}><CloseIcon style={{ fontSize: 20 }} /></MenuItem>
           </Menu>
         </ListItemIcon>
-        
+
 
         <ListItemText>
           {post ? postTitle(post) : "Post loading..."}

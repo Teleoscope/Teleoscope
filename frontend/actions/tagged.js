@@ -33,6 +33,7 @@ export const Tagged = createSlice({
 			}
 		}
 		state.value = temp;
+		console.log(state.value);
     }
   },
 })
