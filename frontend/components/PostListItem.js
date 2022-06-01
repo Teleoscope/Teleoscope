@@ -13,6 +13,9 @@ import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import Checkbox from '@mui/material/Checkbox';
 import Paper from "@mui/material/Paper";
 import InputBase from "@mui/material/InputBase";
 import Divider from "@mui/material/Divider";
@@ -33,6 +36,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
 import { mark } from "../actions/bookmark";
 import { tag } from "../actions/tagged";
+import { userTags } from "../components/LeftMenuBar";
 
 import Note from "./Notes";
 import Bookmark from "../actions/bookmark";
@@ -75,6 +79,19 @@ var notesInList = [
 ];
 //TODO: Figure out store for notes
 
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
+
 export default function QueryListItem(props) {
   const classes = useStyles();
   const { post, loading, error } = usePost(props.id);
@@ -97,16 +114,23 @@ export default function QueryListItem(props) {
   const [noteContent, setNoteContent] = useState("");
   const [index, setIndex] = useState(0);
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const [menuItem, setMenuItem] = useState(false);
-  console.log(menuItem);
+  const [menuItem, setMenuItem] = React.useState([]);
+
+
 
   // methods for the menu functionality 
   const opened = Boolean(anchorEl);
 
   const handleMouseClick = (event) => {
-    setAnchorEl(event.currentTarget);
     setMenuItem(!menuItem);
+    setAnchorEl(event.currentTarget);
   };
+
+  const handleMenuItemClick = () => {
+    setMenuItem(!menuItem);
+    handleClose();
+  };
+
   const handleClose = () => {
     setAnchorEl(null);
   };
@@ -114,6 +138,16 @@ export default function QueryListItem(props) {
   const handleClick = () => {
     if (!open) setViewMore(false);
     setOpen(!open);
+  };
+
+  const handleChange = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setMenuItem(
+      // On autofill we get a stringified value.
+      typeof value === 'string' ? value.split(',') : value,
+    );
   };
 
 
@@ -186,47 +220,23 @@ export default function QueryListItem(props) {
             )}
           </IconButton>
 
-          <Menu
-            id="basic-menu"
-            anchorEl={anchorEl}
-            open={opened}
-            onClose={handleClose}
-            MenuListProps={{
-              'aria-labelledby': 'basic-button',
-            }}
-            //onClick={() => setMenuItem(!menuItem)}
-          >
-            { menuItem ? (
-              tagged.map((id, tag, tagColor) => {
-                return <MenuItem key={id} onClick={handleClose()}>{
-                  <CircleIcon sx={{ color: tagColor }} style={{ fontSize: 20 }} />
-                  } {
-                  console.log(tag)
-                  }</MenuItem>;
-              })) :
-              (console.log("it ran"))}
-            {/* <MenuItem >
+          <Select
+          labelId="demo-multiple-checkbox-label"
+          id="basic-menu"
+          multiple
+          value={menuItem}
+          onChange={handleChange}
+          input={<OutlinedInput label="Tag" />}
+          renderValue={(selected) => selected.join(', ')}
+          MenuProps={MenuProps}
+        >
+          {userTags.map(tag => (
+            <MenuItem key={tag.id} value={tag.id}>
+              <Checkbox checked={menuItem.indexOf(tag) > -1} />
+              <ListItemText primary={tag.tag} />
             </MenuItem>
-            <MenuItem onClick={() => {
-              dispatch(tag({id: props.id, color: "#0000FF"}));
-              handleClose();}}>
-                Blue
-              </MenuItem>
-
-            <MenuItem onClick={() => {
-              dispatch(tag({id: props.id, color: "#FF0000"}));
-              handleClose();}}>
-                Red
-                </MenuItem>
-
-            <MenuItem onClick={() => {
-              dispatch(tag({id: props.id, color: "#00FF00"}));
-              handleClose();}}>
-                Green
-                </MenuItem> */}
-
-            <MenuItem onClick={handleClose}><CloseIcon style={{ fontSize: 20 }} /></MenuItem>
-          </Menu>
+          ))}
+        </Select>
         </ListItemIcon>
 
 

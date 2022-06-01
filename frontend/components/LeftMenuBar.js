@@ -256,7 +256,7 @@ export default function LeftMenuBar(props) {
   );
 }
 
-const userTags = [
+export var userTags = [
   {id: '', tag: 'All Posts', color: 'white' }]
 
   
