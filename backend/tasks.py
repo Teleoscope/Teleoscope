@@ -150,9 +150,9 @@ TODO:
    If not, then who updates them?
 '''
 @app.task
-def initialize_teleoscope(label):
+def initialize_teleoscope(*args, **kwargs):
     db = utils.connect()
-    
+    label = kwargs["label"]
     if label == "":
         logging.info(f"label {label} is empty.")
         return []
