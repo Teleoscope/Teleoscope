@@ -22,6 +22,46 @@ app.conf.update(
     result_serializer='pickle',
 )
 
+
+'''
+read_post
+
+input: String (Path to json file)
+output: Dict
+purpose: This function is used to read a single post from a json file to a database
+'''
+@app.task
+def read_post(path_to_post):
+    try:
+        with open(path_to_post, 'r') as f:
+            post = json.load(f)
+    except Exception as e:
+        return {'error': str(e)}
+
+    return post
+
+'''
+validate_post
+
+input: Dict (post)
+output: Dict
+purpose: This function is used to validate a single post.
+        If the file is missing required fields, a dictionary with an error key is returned
+'''
+@app.task
+def validate_post(data):
+    if data.get('selftext', "") == "" or data.get('title', "") == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
+        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
+        return {'error': 'Post is missing required fields.'}
+
+    post = {
+            'id': data['id'],
+            'title': data['title'],
+            'selftext': data['selftext']}
+
+    return post
+
+
 '''
 read_and_validate_post
 
@@ -33,7 +73,7 @@ purpose: This function is used to read and validate a single post from a json fi
 @app.task
 def read_and_validate_post(path_to_post):
     with open(path_to_post) as f:
-            data = json.load(f)[0]['data']['children'][0]['data']
+            data = json.load(f)
     if data['selftext'] == "" or data['title'] == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
         logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
         return {'error': 'Post is missing required fields.'}
@@ -76,7 +116,7 @@ purpose: This function adds a single post to the database
 def add_single_post_to_database(post):
 	db = utils.connect()
 	if 'error' not in post:
-		target = db.clean.posts.test
+		target = db.clean.posts.v3
 		target.insert_one(post)
 
 '''
@@ -92,7 +132,7 @@ def add_multiple_posts_to_database(posts):
     db = utils.connect()
     posts = (list (filter (lambda x: 'error' not in x, posts)))
     if len(posts) > 0:
-        target = db.clean.posts.test
+        target = db.clean.posts.v3
         target.insert_many(posts)
 
 
