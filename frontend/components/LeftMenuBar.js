@@ -40,14 +40,15 @@ function useQuery(q, shouldSend) {
 }
 
 function arrayUnique(array) {
+  console.log(array)
   var a = array.concat();
   for(var i=0; i<a.length; ++i) {
       for(var j=i+1; j<a.length; ++j) {
-          if(a[i].id === a[j].id)
+          if(a[i][0] === a[j][0]) {
               a.splice(j--, 1);
+          }
       }
   }
-
   return a;
 }
 
@@ -143,7 +144,6 @@ export default function LeftMenuBar(props) {
 
               if (typeof newValue === 'object' && newValue !== null) {
                 tagged_data = tagDataMaker(newValue.tag);
-                //<PostList data={tagDataMaker(newValue.tag)} pagination={true} />
                 tagged = true;
               } else {
                 tagged = false;
