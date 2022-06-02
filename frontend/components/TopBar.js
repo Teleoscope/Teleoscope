@@ -12,7 +12,9 @@ import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
-
+import TextField from '@mui/material/TextField';
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import InputAdornment from '@mui/material/InputAdornment';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -24,6 +26,8 @@ import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
 // utilities
 import {client_init, reorient, initialize_teleoscope, save_UI_state, initialize_session} from "../components/Stomp.js";
 import randomstring from "randomstring";
+import { useCookies } from "react-cookie";
+
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 function useTeleoscopes() {
@@ -58,14 +62,25 @@ export default function TopBar(props) {
   const { sessions, sessions_loading, sessions_error } = useSessions();
   const session_id = sessions_error || sessions_loading ? -1 : sessions[sessions.length - 1]['session_id']
   const { session, session_loading, session_error } = useSession(session_id);
-  
+  const [cookies, setCookie] = useCookies(["user"]);
+
   const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value); // TODO rename
   const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
   const added = useSelector((state) => state.adder.value); // TODO rename
   const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
+
+  const handleCookie = (username) => {
+    setCookie("user", username, {
+      path: "/"
+    });
+    console.log(`Set username to ${username}.`);
+  }
   
   const dispatch = useDispatch();
   const client = client_init();
+
+
+
 
   const reload = () => {
     var history_item = session["history"][session["history"].length - 1]
@@ -175,6 +190,26 @@ export default function TopBar(props) {
                 )}):[]}
               </Select>
             </FormControl>
+                  <TextField
+                    id="input-with-icon-textfield"
+                    label="TextField"
+                    InputProps={{
+                                  startAdornment: (
+                                                    <InputAdornment position="start">
+                                                      <AccountCircle />
+                                                    </InputAdornment>
+                                  ),
+                    }}
+                    label="Username" 
+                    variant="standard"
+                    defaultValue={cookies.user}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleCookie(e.target.value)
+                      }
+                    }}
+            />
+
           </Stack>
         </Toolbar>
       </AppBar>
