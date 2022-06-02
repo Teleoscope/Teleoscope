@@ -25,6 +25,8 @@ import { tag } from "../actions/tagged";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 const filter = createFilterOptions();
+let tagged_data = [];
+let tagged = false;
 
 function useQuery(q, shouldSend) {
   const API_URL = shouldSend ? `/api/cleanposts/${q}` : "";
@@ -37,13 +39,25 @@ function useQuery(q, shouldSend) {
   return ret;
 }
 
+function arrayUnique(array) {
+  var a = array.concat();
+  for(var i=0; i<a.length; ++i) {
+      for(var j=i+1; j<a.length; ++j) {
+          if(a[i].id === a[j].id)
+              a.splice(j--, 1);
+      }
+  }
+
+  return a;
+}
+
 export default function LeftMenuBar(props) {
   const search_term = useSelector((state) => state.searchTerm.value);
   const bookmarks = useSelector((state) => state.bookmarker.value);
   const tags = useSelector((state) => state.tagger.value);
   const dispatch = useDispatch();
   const [bookmarked, setBookmarked] = useState(false);
-  const [tagged, setTagged] = useState(false);
+  //const [tagged, setTagged] = useState(false);
 
   const [text, setText] = useState("");
   const { posts, loading, error } = useQuery(search_term, true);
@@ -52,6 +66,7 @@ export default function LeftMenuBar(props) {
 
   const handleClose = () => {
     setDialogValue({
+      id: '',
       tag: '',
       color: '',
     });
@@ -60,6 +75,7 @@ export default function LeftMenuBar(props) {
   };
 
   const [dialogValue, setDialogValue] = React.useState({
+    id: '',
     tag: '',
     color: '',
   });
@@ -85,9 +101,12 @@ export default function LeftMenuBar(props) {
     return [post, 1.0];
   });
 
-  let tagged_data = tags.map((post) => {
-    return [post.id, 1.0];
-  });
+  const tagDataMaker = (tagName) => {
+    let filteredTags = tags.filter(posts => posts.tag === tagName);
+    return filteredTags.map((posts) => {
+      return [posts.id, 1.0];
+    })
+  }
 
   const bookmarkToggler = (e) => {
     bookmarked = !bookmarked;
@@ -121,11 +140,21 @@ export default function LeftMenuBar(props) {
           <Autocomplete
             value={value}
             onChange={(event, newValue) => {
+
+              if (typeof newValue === 'object' && newValue !== null) {
+                tagged_data = tagDataMaker(newValue.tag);
+                //<PostList data={tagDataMaker(newValue.tag)} pagination={true} />
+                tagged = true;
+              } else {
+                tagged = false;
+              }
+
               if (typeof newValue === 'string') {
                 // timeout to avoid instant validation of the dialog's form.
                 setTimeout(() => {
                   toggleOpen(true);
                   setDialogValue({
+                    id: '',
                     tag: newValue,
                     color: '',
                   });
@@ -133,6 +162,7 @@ export default function LeftMenuBar(props) {
               } else if (newValue && newValue.inputValue) {
                 toggleOpen(true);
                 setDialogValue({
+                  id: '',
                   tag: newValue.inputValue,
                   color: '',
                 });
@@ -160,6 +190,7 @@ export default function LeftMenuBar(props) {
                 return option;
               }
               if (option.inputValue) {
+                // if the user is typing then populate the text field with what they are typing 
                 return option.inputValue;
               }
               return option.tag;
@@ -171,13 +202,13 @@ export default function LeftMenuBar(props) {
             renderOption={(props, option) => <li {...props}>{option.tag}</li>}
             sx={{ width: 300 }}
             freeSolo
-            renderInput={(params) => 
-            <TextField {...params} 
-              label="tags" 
-              variant="filled"
-              placeholder="Add or Search tag..."
-              onKeyDown={(e) => keyChange(e)}
-              style={{ width: "100%", borderRadius: "0 !important" }}/>}
+            renderInput={(params) =>
+              <TextField {...params}
+                label="tags"
+                variant="filled"
+                placeholder="Add or Search tag..."
+                onKeyDown={(e) => keyChange(e)}
+                style={{ width: "100%", borderRadius: "0 !important" }} />}
           />
           <Dialog open={open} onClose={handleClose}>
             <form onSubmit={handleSubmit}>
@@ -223,13 +254,11 @@ export default function LeftMenuBar(props) {
               </DialogContent>
               <DialogActions>
                 <Button onClick={handleClose}>Cancel</Button>
-                <Button 
+                <Button
                   type="submit"
-                  onClick= {() => {
-                    userTags.push({id: '', tag: document.getElementById('name').value, color: document.getElementById('color').value})
-                    dispatch(tag({id: '', tag: document.getElementById('name').value, color: document.getElementById('color').value}))
+                  onClick={() => {
+                    userTags.push({ id: '', tag: document.getElementById('name').value, color: document.getElementById('color').value })
                   }}>Add</Button>
-                  { console.log(userTags) }
               </DialogActions>
             </form>
           </Dialog>
@@ -242,21 +271,19 @@ export default function LeftMenuBar(props) {
           onChange={() => setBookmarked(!bookmarked)}
           label="Bookmarked Items Only"
         />
-        {/* <FormControlLabel
-          style={{ marginLeft: 20, marginTop: 10 }}
-          control={<Checkbox style={{ marginRight: 10 }} />}
-          onChange={() => setTagged(!tagged)}
-          label="Tagged Items Only"
-        /> */}
 
-        {bookmarked ? (<PostList data={bookmarked_data} pagination={true} />) : <PostList data={data} pagination={true} />}
-        {/* {tagged ? (<PostList data={tagged_data} pagination={true} />) : (<PostList data={data} pagination={true} />)} */}
+        {bookmarked && tagged ? (<PostList data={arrayUnique(bookmarked_data.concat(tagged_data))} pagination={true} />) :
+          (bookmarked ? (<PostList data={bookmarked_data} pagination={true} />) :
+            (tagged ? (<PostList data={tagged_data} pagination={true} />) :
+              (<PostList data={data} pagination={true} />)))}
       </Box>
     </div >
   );
 }
 
 export var userTags = [
-  {id: '', tag: 'All Posts', color: 'white' }]
+  { id: '', tag: 'Red', color: 'red' },
+  { id: '', tag: 'Blue', color: 'blue' },
+  { id: '', tag: 'Green', color: 'green' }]
 
-  
+

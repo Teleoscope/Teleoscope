@@ -28,6 +28,7 @@ export const Tagged = createSlice({
 			// since different colors account for different objects, we need to 
 			if (inTemp > -1) {
 				temp[inTemp].color = post.color;
+				temp[inTemp].tag = post.tag;
 			} else {
 				temp.push(post)
 			}

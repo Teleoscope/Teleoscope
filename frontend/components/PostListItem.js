@@ -41,7 +41,6 @@ import { userTags } from "../components/LeftMenuBar";
 import Note from "./Notes";
 import Bookmark from "../actions/bookmark";
 
-
 const useStyles = makeStyles((theme) => ({
   margin: {
     margin: theme.spacing(1),
@@ -115,9 +114,6 @@ export default function QueryListItem(props) {
   const [index, setIndex] = useState(0);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [menuItem, setMenuItem] = React.useState([]);
-
-
-
   // methods for the menu functionality 
   const opened = Boolean(anchorEl);
 
@@ -211,7 +207,7 @@ export default function QueryListItem(props) {
             aria-controls={open ? 'basic-menu' : undefined}
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
-            onClick={handleMouseClick}
+            //onClick={handleMouseClick}
           >
             {taggedPost ? (
               <CircleIcon sx={{ color: getColor() }} style={{ fontSize: 20 }} />
@@ -221,24 +217,23 @@ export default function QueryListItem(props) {
           </IconButton>
 
           <Select
-          labelId="demo-multiple-checkbox-label"
-          id="basic-menu"
-          multiple
-          value={menuItem}
-          onChange={handleChange}
-          input={<OutlinedInput label="Tag" />}
-          renderValue={(selected) => selected.join(', ')}
-          MenuProps={MenuProps}
-        >
-          {userTags.map(tag => (
-            <MenuItem key={tag.id} value={tag.id}>
-              <Checkbox checked={menuItem.indexOf(tag) > -1} />
-              <ListItemText primary={tag.tag} />
-            </MenuItem>
-          ))}
-        </Select>
+            labelId="demo-multiple-checkbox-label"
+            id="basic-menu"
+            multiple
+            value={menuItem}
+            onChange={handleChange}
+            input={<OutlinedInput label="Tag" />}
+            renderValue={(selected) => selected.join(', ')}
+            MenuProps={MenuProps}
+          >
+            {userTags.map(tags => (
+              <MenuItem key={tags.id} value={tags.id} onClick={() => dispatch(tag({ id: props.id, tag: tags.tag, color: tags.color }))}>
+                <Checkbox checked={menuItem.indexOf(tags) > -1} />
+                <ListItemText primary={tags.tag} />
+              </MenuItem>
+            ))}
+          </Select>
         </ListItemIcon>
-
 
         <ListItemText>
           {post ? postTitle(post) : "Post loading..."}
@@ -288,6 +283,6 @@ export default function QueryListItem(props) {
 
         <Note />
       </Collapse>
-    </div>
+    </div >
   );
 }
