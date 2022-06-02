@@ -100,6 +100,15 @@ def initialize_teleoscope(label):
     return return_ids
 
 @app.task
+def save_teleoscope_state(*args, **kwargs):
+    db = utils.connect()
+    logging.info(f'Saving state for teleoscope {kwargs["_id"}.')
+    _id = kwargs["_id"]
+    history_item = kwargs["history_item"]
+
+    db.teleoscopes.update({"_id": kwargs["_id"]}, {'$push': {"history": kwargs["history_item"]}})
+
+@app.task
 def save_UI_state(*args, **kwargs):
     db = utils.connect()
     logging.info(f'Saving state for {kwargs["session_id"]}.')

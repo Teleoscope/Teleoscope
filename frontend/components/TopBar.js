@@ -142,6 +142,26 @@ export default function TopBar(props) {
               New Teleoscope
             </Button>
             <Button
+              variant="text"
+              onClick={() => save_teleoscope_state(
+                client, 
+                _id,
+                {
+                  "search_term": search_term,
+                  "added": added,
+                  "checked": checked
+                })
+                }
+                style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              Save Teleoscope
+            </Button>
+            <Button
               onClick={() => {
                 reorient(client, search_term, teleoscope_id, checked, []);
                 dispatch(uncheckall(teleoscope_id))
