@@ -21,39 +21,119 @@ app.conf.update(
     accept_content=['pickle'],  # Ignore other content
     result_serializer='pickle',
 )
+
+
 '''
-import_single_post
+read_post
 
 input: String (Path to json file)
-output: void
-purpose: This function is used to import a single post from a json file to a database
+output: Dict
+purpose: This function is used to read a single post from a json file to a database
 '''
 @app.task
-def import_single_post(path_to_post):
-    
-    # Read file
-    with open(path_to_post) as f:
-            data = json.load(f)[0]['data']['children'][0]['data']
+def read_post(path_to_post):
+    try:
+        with open(path_to_post, 'r') as f:
+            post = json.load(f)
+    except Exception as e:
+        return {'error': str(e)}
 
-    # Connect to database
-    db = utils.connect()
+    return post
 
-    # extract relevent fields
+'''
+validate_post
+
+input: Dict (post)
+output: Dict
+purpose: This function is used to validate a single post.
+        If the file is missing required fields, a dictionary with an error key is returned
+'''
+@app.task
+def validate_post(data):
+    if data.get('selftext', "") == "" or data.get('title', "") == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
+        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
+        return {'error': 'Post is missing required fields.'}
+
     post = {
-        'author': data['author'],
-        'author_fullname': data['author_fullname'],
-        'created_utc': data['created_utc'],
-        'full_link': data['url'],
-        'id': data['id'],
-        'num_comments': data['num_comments'],
-        'score': data['score'],
-        'selftext': data['selftext'],
-        'title': data['title'],
-    }
+            'id': data['id'],
+            'title': data['title'],
+            'selftext': data['selftext']}
 
-    # add to database
-    db.posts.insert_one(post)
+    return post
 
+
+'''
+read_and_validate_post
+
+input: String (Path to json file)
+output: Dict
+purpose: This function is used to read and validate a single post from a json file to a database
+        If the file is missing required fields, a dictionary with an error key is returned
+'''
+@app.task
+def read_and_validate_post(path_to_post):
+    with open(path_to_post) as f:
+            data = json.load(f)
+    if data['selftext'] == "" or data['title'] == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
+        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
+        return {'error': 'Post is missing required fields.'}
+
+    post = {
+            'id': data['id'],
+            'title': data['title'],
+            'selftext': data['selftext']}
+
+    return post
+
+'''
+vectorize_post
+
+input: Dict
+output: Dict
+purpose: This function is used to update the dictionary with a vectorized version of the title and selftext
+        (Ignores dictionaries containing error keys)
+'''
+@app.task
+def vectorize_post(post):
+	if 'error' not in post:
+		embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+		post['vector'] = embed([post['title']]).numpy()[0].tolist()
+		post['selftextVector'] = embed([post['selftext']]).numpy()[0].tolist()
+		return post
+	else:
+		return post
+
+
+'''
+add_single_post_to_database
+
+input: Dict
+output: void
+purpose: This function adds a single post to the database
+        (Ignores dictionaries containing error keys)
+'''
+@app.task
+def add_single_post_to_database(post):
+	db = utils.connect()
+	if 'error' not in post:
+		target = db.clean.posts.v3
+		target.insert_one(post)
+
+'''
+add_single_post_to_database
+
+input: List[Dict]
+output: void
+purpose: This function adds multiple posts to the database
+        (Ignores dictionaries containing error keys)
+'''
+@app.task
+def add_multiple_posts_to_database(posts):
+    db = utils.connect()
+    posts = (list (filter (lambda x: 'error' not in x, posts)))
+    if len(posts) > 0:
+        target = db.clean.posts.v3
+        target.insert_many(posts)
 
 
 
