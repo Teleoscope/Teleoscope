@@ -83,10 +83,11 @@ export function save_UI_state(client, session_id, history_item) {
   publish(client, body);
 }
 
-export function initialize_session(client) {
+export function initialize_session(client, username) {
   var body = {
     task: 'initialize_session',
     args: {
+      username: username,
     }
   }
   publish(client, body);
