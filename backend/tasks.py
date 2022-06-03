@@ -106,7 +106,7 @@ def save_teleoscope_state(*args, **kwargs):
     _id = kwargs["_id"]
     history_item = kwargs["history_item"]
 
-    db.teleoscopes.update({"_id": kwargs["_id"]}, {'$push': {"history": kwargs["history_item"]}})
+    db.teleoscopes.update({"_id": kwargs["_id"]}, {'$push': {"history": kwargs["history_item0"]}})
 
 @app.task
 def save_UI_state(*args, **kwargs):

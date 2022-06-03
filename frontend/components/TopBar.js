@@ -22,7 +22,7 @@ import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
 
 // utilities
-import {client_init, reorient, initialize_teleoscope, save_UI_state, initialize_session} from "../components/Stomp.js";
+import {client_init, reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, initialize_session} from "../components/Stomp.js";
 import randomstring from "randomstring";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
