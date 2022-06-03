@@ -82,6 +82,7 @@ export function save_teleoscope_state(client, _id, history_item) {
       history_item: history_item
     }
   }
+  console.log("The object id is: " + _id);
   publish(client, body);
 }
 

@@ -145,7 +145,7 @@ export default function TopBar(props) {
               variant="text"
               onClick={() => save_teleoscope_state(
                 client, 
-                _id,
+                teleoscope_id,
                 {
                   "search_term": search_term,
                   "added": added,
