@@ -1,4 +1,5 @@
 import { Client, Message } from "@stomp/stompjs";
+const { ObjectId } = require('mongodb');
 // TODO: look at websocket example code here and replicate
 // anywhere that needs to route a request to the server
 // possibly best to move this into an action? I'm unsure
@@ -75,10 +76,11 @@ export function initialize_teleoscope(client, search_term) {
 }
 
 export function save_teleoscope_state(client, _id, history_item) {
+  const obj_id = ObjectId(_id);
   var body = {
     task: 'save_teleoscope_state',
     args: {
-      _id: _id,
+      _id: obj_id,
       history_item: history_item
     }
   }
