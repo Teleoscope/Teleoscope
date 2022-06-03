@@ -64,11 +64,12 @@ export function reorient(client, search_term, teleoscope_id, positive_docs, nega
   publish(client, body);
 }
 
-export function initialize_teleoscope(client, search_term) {
+export function initialize_teleoscope(client, search_term, session_id) {
   var body = {
     task: 'initialize_teleoscope',
     args: {
-      query: search_term // TODO: rename consistently
+      query: search_term, // TODO: rename consistently
+      session_id: session_id
     }
   }
   publish(client, body);

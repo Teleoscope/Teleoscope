@@ -49,6 +49,7 @@ function useSessions() {
   };  
 }
 
+
 function useSession(id) {
   const { data, error } = useSWR(`/api/sessions/${id}`, fetcher);
   return {
@@ -70,12 +71,15 @@ function useUsers() {
 export default function TopBar(props) {
   const { teleoscopes, loading, error } = useTeleoscopes();
   const { sessions, sessions_loading, sessions_error } = useSessions();
-  
   const { users, users_loading, users_error } = useUsers();
-  // const { session, session_loading, session_error } = useSession(session_id);
+  
   const [cookies, setCookie] = useCookies(["user"]);
-
+  
   const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value); // TODO rename
+  const session_id = useSelector((state) => state.activeSessionID.value); // TODO rename
+
+  const { session, session_loading, session_error } = useSession(session_id);
+  
   const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
   const added = useSelector((state) => state.adder.value); // TODO rename
   const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
@@ -86,16 +90,26 @@ export default function TopBar(props) {
     });
     console.log(`Set username to ${username}.`);
   }
+
+  const getTeleoscopes = () => {
+    if (teleoscopes && session) {
+      var ts = teleoscopes.filter((t) => {return session["teleoscopes"].indexOf(t["_id"]) > -1});
+      return ts.map((t) => {
+                  return (
+                    <MenuItem value={t["_id"]}>{t["label"]}</MenuItem>
+                )
+      });
+    }
+    return (
+            <MenuItem>No Teleoscopes started for this session...</MenuItem>
+      )
+  }
  
   const getSessions = (username) => {
-    console.log("getSessions called")
-    console.log(users)
       if (sessions && users) {
         for (const i in users) {
           var user = users[i];
-          console.log(user["username"])
           if (user["username"] == username) {
-            console.log(user["sessions"])
             return user["sessions"].map((s) => {
                 return (<MenuItem value={s}>{s}</MenuItem>)
               })
@@ -174,7 +188,7 @@ export default function TopBar(props) {
             
             <Button 
               variant="text" 
-              onClick={() => initialize_teleoscope(client, search_term)}
+              onClick={() => initialize_teleoscope(client, search_term, session_id)}
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",
@@ -212,10 +226,7 @@ export default function TopBar(props) {
                 label="Teleoscope ID"
                 onChange={(event) => dispatch(teleoscopeActivator(event.target.value))}
               >
-                {teleoscopes ? teleoscopes.map((t) => {
-                  return (
-                    <MenuItem value={t["_id"]}>{t["label"]}</MenuItem>
-                )}):[]}
+                {getTeleoscopes()}
               </Select>
             </FormControl>
                   <TextField
