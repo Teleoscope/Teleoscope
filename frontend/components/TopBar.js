@@ -128,7 +128,7 @@ export default function TopBar(props) {
           <Stack spacing={4} direction="row">
             <Button 
               variant="text" 
-              onClick={() => initialize_session(client)}
+              onClick={() => initialize_session(client, cookies.user)}
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",

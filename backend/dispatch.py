@@ -47,7 +47,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
         message.ack()
-        # not tested below
         b = json.loads(body)
 
         # TODO: these should exactly implement the interface standard
