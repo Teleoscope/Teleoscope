@@ -132,16 +132,23 @@ export default function LeftMenuBar(props) {
       >
         <TextField
           variant="filled"
-          label="cleanposts"
+          label="Search posts..."
           placeholder="Add query..."
           onKeyDown={(e) => keyChange(e)}
           onChange={(e) => setText(e.target.value)}
           style={{ width: "100%", borderRadius: "0 !important" }}
         />
+        {/* TODO: if we're seeing react fragments, it might be best to refactor.
+          Suggest moving this into a separate component and rethinking the logic here.
+          Similarly, I'm seeing  a lot of repeated code, so probably best to see what
+          kind of abstraction is possible.
+         */}
         <React.Fragment>
           <Autocomplete
             value={value}
             onChange={(event, newValue) => {
+              // TODO move this logic into a store or
+              // into a function above the body of the JSX
 
               if (typeof newValue === 'object' && newValue !== null) {
                 tagged_data = tagDataMaker(newValue.tag);
@@ -152,6 +159,8 @@ export default function LeftMenuBar(props) {
 
               if (typeof newValue === 'string') {
                 // timeout to avoid instant validation of the dialog's form.
+                // TODO: seems like a bit of a hack, what behaviour is being suppressed here?
+                // is there another way to modify it?
                 setTimeout(() => {
                   toggleOpen(true);
                   setDialogValue({
@@ -205,22 +214,22 @@ export default function LeftMenuBar(props) {
             freeSolo
             renderInput={(params) =>
               <TextField {...params}
-                label="tags"
+                label="Groups..."
                 variant="filled"
-                placeholder="Add or Search tag..."
+                placeholder="Add or search groups..."
                 onKeyDown={(e) => keyChange(e)}
                 style={{ width: "100%", borderRadius: "0 !important" }} />}
           />
           <Dialog open={open} onClose={handleClose}>
             <form onSubmit={handleSubmit}>
-              <DialogTitle>Add a new tag</DialogTitle>
+              <DialogTitle>Add a new group</DialogTitle>
               <DialogContent>
                 <DialogContentText>
-                  Input your tag name and select a color to represent that tag!
+                  Input your group name and select a color to represent that group!
                 </DialogContentText>
                 <TextField
                   variant="filled"
-                  placeholder="Add tag name"
+                  placeholder="Add group name"
                   style={{ width: "100%", borderRadius: "0 !important" }}
                   autoFocus
                   margin="dense"
