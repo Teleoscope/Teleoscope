@@ -192,8 +192,8 @@ def save_UI_state(*args, **kwargs):
 def initialize_session(*args, **kwargs):
     db = utils.connect()
     logging.info(f'Initializing sesssion for user {kwargs["username"]}.')
-    sid = db.sessions.insert_one({"username": kwargs["username"], "history":[]})
-    db.users.update_one({"username": kwargs["username"]}, {"$push": "sessions":sid})
+    result = db.sessions.insert_one({"username": kwargs["username"], "history":[]})
+    db.users.update_one({"username": kwargs["username"]}, {"$push": {"sessions":result.inserted_id}})
 
 '''
 TODO:
