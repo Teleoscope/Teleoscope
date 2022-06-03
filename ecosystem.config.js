@@ -8,7 +8,7 @@ module.exports = {
       name: "worker",
       cwd: "./backend",
       script: "/usr/local/bin/python3",
-      args: "-m celery -A dispatch worker --loglevel=INFO",
+      args: "-m celery -A dispatch worker --loglevel=INFO -n worker.${whoami}",
       watch: false,
       interpreter: "",
       max_memory_restart: "1G"
