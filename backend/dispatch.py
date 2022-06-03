@@ -75,7 +75,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.initialize_session.signature(
                 args=(),
                 kwargs={
-                    "session_id": get_random_string(32)
+                    "label": b["args"]["label"]
                 },
             )
             res.apply_async()
