@@ -291,7 +291,7 @@ export default function LeftMenuBar(props) {
   );
 }
 
-export var userTags = [
+export var userTags = [ // TODO move this into a store rather than a local variable
   { id: '', tag: 'Red', color: 'red' },
   { id: '', tag: 'Blue', color: 'blue' },
   { id: '', tag: 'Green', color: 'green' }]
