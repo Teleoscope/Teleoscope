@@ -184,7 +184,7 @@ def initialize_teleoscope(*args, **kwargs):
 def save_teleoscope_state(*args, **kwargs):
     db = utils.connect()
     logging.info(f'Saving state for teleoscope {kwargs["_id"]}.')
-    _id = kwargs["_id"]
+    _id = str(kwargs["_id"])
     obj_id = ObjectId(_id)
     history_item = kwargs["history_item"]
 
