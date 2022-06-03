@@ -49,6 +49,7 @@ function arrayUnique(array) {
           }
       }
   }
+
   return a;
 }
 
