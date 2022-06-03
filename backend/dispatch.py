@@ -55,7 +55,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
-                    "label": b['args']['query']
+                    "label": b['args']['query'],
+                    "session_id": b["args"]["session_id"]
                 },
             )
             res.apply_async()
@@ -64,8 +65,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.initialize_session.signature(
                 args=(),
                 kwargs={
-                    "username": b["args"]["username"],
-                    "session_id": b["args"]["session_id"]
+                    "username": b["args"]["username"]
                 },
             )
             res.apply_async()
