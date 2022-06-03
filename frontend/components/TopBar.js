@@ -18,7 +18,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { activator, loadActiveTeleoscopeID } from "../actions/activeTeleoscopeID";
+import { teleoscopeActivator, loadActiveTeleoscopeID } from "../actions/activeTeleoscopeID";
+import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
 import { adder, loadAddedPosts } from "../actions/addtoworkspace";
 import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
@@ -57,11 +58,21 @@ function useSession(id) {
   };  
 }
 
+function useUsers() {
+  const { data, error } = useSWR(`/api/users/`, fetcher);
+  return {
+    users: data,
+    users_loading: !error && !data,
+    users_error: error,
+  };  
+}
+
 export default function TopBar(props) {
   const { teleoscopes, loading, error } = useTeleoscopes();
   const { sessions, sessions_loading, sessions_error } = useSessions();
-  const session_id = sessions_error || sessions_loading ? -1 : sessions[sessions.length - 1]['session_id']
-  const { session, session_loading, session_error } = useSession(session_id);
+  
+  const { users, users_loading, users_error } = useUsers();
+  // const { session, session_loading, session_error } = useSession(session_id);
   const [cookies, setCookie] = useCookies(["user"]);
 
   const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value); // TODO rename
@@ -75,12 +86,29 @@ export default function TopBar(props) {
     });
     console.log(`Set username to ${username}.`);
   }
-  
+ 
+  const getSessions = (username) => {
+    console.log("getSessions called")
+    console.log(users)
+      if (sessions && users) {
+        for (const i in users) {
+          var user = users[i];
+          console.log(user["username"])
+          if (user["username"] == username) {
+            console.log(user["sessions"])
+            return user["sessions"].map((s) => {
+                return (<MenuItem value={s}>{s}</MenuItem>)
+              })
+          }
+        }
+      }
+      return (
+          <MenuItem value={"No sessions for this user..."}>No sessions for this user...</MenuItem>
+      )    
+  }
+
   const dispatch = useDispatch();
   const client = client_init();
-
-
-
 
   const reload = () => {
     var history_item = session["history"][session["history"].length - 1]
@@ -182,7 +210,7 @@ export default function TopBar(props) {
                 id="demo-simple-select"
                 value={teleoscope_id}
                 label="Teleoscope ID"
-                onChange={(event) => dispatch(activator(event.target.value))}
+                onChange={(event) => dispatch(teleoscopeActivator(event.target.value))}
               >
                 {teleoscopes ? teleoscopes.map((t) => {
                   return (
@@ -209,6 +237,21 @@ export default function TopBar(props) {
                       }
                     }}
             />
+            <FormControl 
+              sx={{width: 200, backgroundColor: 'white', }}
+              variant="filled"
+              >
+              <InputLabel id="demo-simple-select-label">Active Session</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={"No sessions for this user..."}
+                label="Session ID"
+                onChange={(event) => dispatch(sessionActivator(event.target.value))}
+              >
+                {getSessions(cookies.user)}
+              </Select>
+            </FormControl>
 
           </Stack>
         </Toolbar>
