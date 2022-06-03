@@ -3,6 +3,7 @@
 // pm2 start ecosystem.config.js
 // pm2 monit
 const os = require("os");
+let userInfo = os.userInfo();
 console.log("User info:", userInfo);
 
 module.exports = {
