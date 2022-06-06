@@ -51,7 +51,7 @@
   "license": "MIT",
   "devDependencies": {
     "2": "^3.0.0",
-    "@babel/core": "^7.15.0",
+    "@babel/core": "^7.18.2",
     "@babel/preset-env": "^7.18.2",
     "babel-jest": "^28.1.0",
     "babel-plugin-styled-components": "^1.12.0",
