@@ -47,6 +47,7 @@ export function publish(client, body) {
     body: JSON.stringify(body),
   });
   console.log("sent", body);
+  return body;
 }
 
 // TODO: These should exactly implement the interface standard
@@ -62,17 +63,19 @@ export function reorient(client, search_term, teleoscope_id, positive_docs, nega
     }
   }
   publish(client, body);
+  return body;
 }
 
 export function initialize_teleoscope(client, search_term, session_id) {
   var body = {
     task: 'initialize_teleoscope',
     args: {
-      query: search_term, // TODO: rename consistently
+      label: search_term,
       session_id: session_id
     }
   }
   publish(client, body);
+  return body;
 }
 
 export function save_teleoscope_state(client, _id, history_item) {
@@ -97,6 +100,7 @@ export function save_UI_state(client, session_id, history_item) {
     }
   }
   publish(client, body);
+  return body;
 }
 
 export function initialize_session(client, username) {
@@ -107,4 +111,5 @@ export function initialize_session(client, username) {
     }
   }
   publish(client, body);
+  return body;
 }
