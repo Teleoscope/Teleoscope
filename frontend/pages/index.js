@@ -8,6 +8,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import Workspace from "../components/Workspace";
 import store from "../stores/store";
 import { Provider } from "react-redux";
+import { CookiesProvider } from "react-cookie";
 
 import { connectToDatabase } from "../util/mongodb";
 
@@ -43,6 +44,7 @@ export default function Home({ isConnected }) {
   };
 
   return (
+    <CookiesProvider>
     <DndProvider backend={HTML5Backend}>
         <div className="container">
           <Head>
@@ -57,6 +59,7 @@ export default function Home({ isConnected }) {
           </main>
         </div>
     </DndProvider>
+    </CookiesProvider>
   );
 }
 

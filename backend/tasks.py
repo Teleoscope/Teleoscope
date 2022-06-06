@@ -2,7 +2,7 @@ import logging, pickle, utils, json, auth, numpy as np, tensorflow_hub as hub
 from warnings import simplefilter
 from gridfs import GridFS
 from celery import Celery, Task
-
+from bson.objectid import ObjectId
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -175,7 +175,7 @@ def initialize_teleoscope(*args, **kwargs):
 
     # store results in teleoscopes collection
     db.teleoscopes.update_one({'_id': teleoscope_id.inserted_id}, {'$set': {'reddit_ids': return_ids}})
-    
+    db.sessions.update_one({'_id': ObjectId(str(kwargs["session_id"]))}, {'$push': {"teleoscopes": teleoscope_id.inserted_id}})
     logging.info(f"label {label} added to teleoscopes collection")
     return return_ids
 
@@ -191,8 +191,9 @@ def save_UI_state(*args, **kwargs):
 @app.task
 def initialize_session(*args, **kwargs):
     db = utils.connect()
-    logging.info(f'Initializing sesssion for ID {kwargs["session_id"]}.')
-    db.sessions.insert_one({"session_id": kwargs["session_id"], "history":[]})
+    logging.info(f'Initializing sesssion for user {kwargs["username"]}.')
+    result = db.sessions.insert_one({"username": kwargs["username"], "history":[], "teleoscopes":[]})
+    db.users.update_one({"username": kwargs["username"]}, {"$push": {"sessions":result.inserted_id}})
 
 '''
 TODO:

@@ -3,6 +3,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import AddToWorkspace from "../actions/addtoworkspace"
 import SearchTerm from "../actions/searchterm"
 import ActiveTeleoscopeID from "../actions/activeTeleoscopeID"
+import ActiveSessionID from "../actions/activeSessionID"
 import CheckedPosts from "../actions/checkedPosts"
 import Bookmark from "../actions/bookmark"
 import Tagged from '../actions/tagged'
@@ -13,6 +14,7 @@ export default configureStore({
     adder: AddToWorkspace,
     searchTerm: SearchTerm,
     activeTeleoscopeID: ActiveTeleoscopeID,
+    activeSessionID: ActiveSessionID,
     checkedPosts: CheckedPosts,
     bookmarker: Bookmark,
     tagger: Tagged,
