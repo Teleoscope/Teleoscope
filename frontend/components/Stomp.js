@@ -75,6 +75,19 @@ export function initialize_teleoscope(client, search_term, session_id) {
   publish(client, body);
 }
 
+export function save_teleoscope_state(client, _id, history_item) {
+  //const obj_id = ObjectId(_id);
+  var body = {
+    task: 'save_teleoscope_state',
+    args: {
+      _id: _id,
+      history_item: history_item
+    }
+  }
+  console.log("The object id is: " + _id);
+  publish(client, body);
+}
+
 export function save_UI_state(client, session_id, history_item) {
   var body = {
     task: 'save_UI_state',

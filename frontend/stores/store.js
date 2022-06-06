@@ -4,6 +4,7 @@ import AddToWorkspace from "../actions/addtoworkspace"
 import SearchTerm from "../actions/searchterm"
 import ActiveTeleoscopeID from "../actions/activeTeleoscopeID"
 import ActiveSessionID from "../actions/activeSessionID"
+import ActiveHistoryItem from "../actions/activeHistoryItem"
 import CheckedPosts from "../actions/checkedPosts"
 import Bookmark from "../actions/bookmark"
 import Tagged from '../actions/tagged'
@@ -15,6 +16,7 @@ export default configureStore({
     searchTerm: SearchTerm,
     activeTeleoscopeID: ActiveTeleoscopeID,
     activeSessionID: ActiveSessionID,
+    activeHistoryItem: ActiveHistoryItem,
     checkedPosts: CheckedPosts,
     bookmarker: Bookmark,
     tagger: Tagged,

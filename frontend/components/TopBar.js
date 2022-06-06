@@ -20,12 +20,13 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { useSelector, useDispatch } from "react-redux";
 import { teleoscopeActivator, loadActiveTeleoscopeID } from "../actions/activeTeleoscopeID";
 import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
+import { historyActivator, loadActiveHistoryItem } from "../actions/activeHistoryItem";
 import { adder, loadAddedPosts } from "../actions/addtoworkspace";
 import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
 
 // utilities
-import {client_init, reorient, initialize_teleoscope, save_UI_state, initialize_session} from "../components/Stomp.js";
+import {client_init, reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session} from "../components/Stomp.js";
 import randomstring from "randomstring";
 import { useCookies } from "react-cookie";
 
@@ -37,6 +38,15 @@ function useTeleoscopes() {
     teleoscopes: data,
     loading: !error && !data,
     error: error,
+  };
+}
+
+function useTeleoscope(id) {
+  const { data, error } = useSWR(`/api/teleoscopes/${id}`, fetcher);
+  return {
+    teleoscope: data,
+    teleoscope_loading: !error && !data,
+    teleoscope_error: error,
   };
 }
 
@@ -69,13 +79,20 @@ function useUsers() {
 }
 
 export default function TopBar(props) {
+
   const { teleoscopes, loading, error } = useTeleoscopes();
+  const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value); // TODO rename
+  const { teleoscope, teleoscope_loading, teleoscope_error } = useTeleoscope(teleoscope_id);
+
+
+  console.log("teleoscope id is: ", teleoscope_id);
+
+  const history_item_num = useSelector((state) => state.activeHistoryItem.value);
+
   const { sessions, sessions_loading, sessions_error } = useSessions();
   const { users, users_loading, users_error } = useUsers();
   
   const [cookies, setCookie] = useCookies(["user"]);
-  
-  const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value); // TODO rename
   const session_id = useSelector((state) => state.activeSessionID.value); // TODO rename
 
   const { session, session_loading, session_error } = useSession(session_id);
@@ -123,6 +140,13 @@ export default function TopBar(props) {
 
   const dispatch = useDispatch();
   const client = client_init();
+
+  const load_teleoscope_state = (history_item_num) => {
+    var history_item = teleoscope["history"][history_item_num]
+    dispatch(loadSearchTerm(history_item["search_term"]));
+    dispatch(loadAddedPosts(history_item["added"]));
+    dispatch(loadCheckedPosts(history_item["checked"]));
+  }
 
   const reload = () => {
     var history_item = session["history"][session["history"].length - 1]
@@ -185,7 +209,6 @@ export default function TopBar(props) {
             >
               Load
             </Button>
-            
             <Button 
               variant="text" 
               onClick={() => initialize_teleoscope(client, search_term, session_id)}
@@ -197,6 +220,55 @@ export default function TopBar(props) {
               }}
             >
               New Teleoscope
+            </Button>
+            <Button
+              variant="text"
+              onClick={() => save_teleoscope_state(
+                client, 
+                teleoscope_id,
+                {
+                  "search_term": search_term,
+                  "added": added,
+                  "checked": checked
+                })}
+                style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              Save Teleoscope
+            </Button>
+            <FormControl 
+              sx={{width: 200, backgroundColor: 'white', }}
+              variant="filled"
+              >
+              <InputLabel id="demo-simple-select-label">Load History Item</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={history_item_num}
+                label="History Item"
+                onChange={(event) => dispatch(historyActivator(event.target.value))}
+              >
+                {!teleoscope_loading && !teleoscope_error ? teleoscope["history"].map((h, i) => {
+                  return (
+                    <MenuItem value={i}>{i}</MenuItem>
+                )}):[]}
+              </Select>
+            </FormControl>
+            <Button 
+              variant="text" 
+              onClick={() => load_teleoscope_state(history_item_num)}
+              style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              Load
             </Button>
             <Button
               onClick={() => {
@@ -231,7 +303,6 @@ export default function TopBar(props) {
             </FormControl>
                   <TextField
                     id="input-with-icon-textfield"
-                    label="TextField"
                     InputProps={{
                                   startAdornment: (
                                                     <InputAdornment position="start">

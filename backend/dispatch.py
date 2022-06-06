@@ -61,6 +61,16 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
         
+        if b['task'] == "save_teleoscope_state":
+            res = tasks.save_teleoscope_state.signature(
+                args=(),
+                kwargs={
+                    "_id": b["args"]["_id"],
+                    "history_item": b["args"]["history_item"]
+                },
+            )
+            res.apply_async()
+                
         if b['task'] == 'initialize_session':
             res = tasks.initialize_session.signature(
                 args=(),
