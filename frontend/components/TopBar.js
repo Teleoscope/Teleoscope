@@ -63,9 +63,15 @@ function useSession(id) {
 }
 
 export default function TopBar(props) {
+
   const { teleoscopes, loading, error } = useTeleoscopes();
   const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value); // TODO rename
   const { teleoscope, teleoscope_loading, teleoscope_error } = useTeleoscope(teleoscope_id);
+
+
+  console.log("teleoscope id is: ", teleoscope_id);
+
+  const history_item_num = !teleoscope_loading && !teleoscope_error ? teleoscope["history"].length - 1 : 0;
 
   const { sessions, sessions_loading, sessions_error } = useSessions();
   const session_id = sessions_error || sessions_loading ? -1 : sessions[sessions.length - 1]['session_id']
@@ -78,6 +84,14 @@ export default function TopBar(props) {
   
   const dispatch = useDispatch();
   const client = client_init();
+
+  const load_teleoscope_state = (history_item_num) => {
+    var history_item = teleoscope["history"][history_item_num]
+    dispatch(loadActiveTeleoscopeID(history_item["teleoscope_id"]));
+    dispatch(loadSearchTerm(history_item["search_term"]));
+    dispatch(loadAddedPosts(history_item["added"]));
+    dispatch(loadCheckedPosts(history_item["checked"]));
+  }
 
   const reload = () => {
     var history_item = session["history"][session["history"].length - 1]
@@ -140,7 +154,6 @@ export default function TopBar(props) {
             >
               Load
             </Button>
-            
             <Button 
               variant="text" 
               onClick={() => initialize_teleoscope(client, search_term)}
@@ -172,12 +185,27 @@ export default function TopBar(props) {
             >
               Save Teleoscope
             </Button>
+            <FormControl 
+              sx={{width: 200, backgroundColor: 'white', }}
+              variant="filled"
+              >
+              <InputLabel id="demo-simple-select-label">Load History Item</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={history_item_num}
+                label="History Item"
+                onChange={(event) => dispatch(activator(event.target.value))}
+              >
+                {!teleoscope_loading && !teleoscope_error ? teleoscope["history"].map((h, i) => {
+                  return (
+                    <MenuItem value={i}>{i}</MenuItem>
+                )}):[]}
+              </Select>
+            </FormControl>
             <Button 
               variant="text" 
-              onClick={() => load_teleoscope_state(
-                client,
-                teleoscope_id
-              )}
+              onClick={() => load_teleoscope_state(history_item_num)}
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",
