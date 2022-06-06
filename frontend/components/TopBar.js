@@ -12,11 +12,14 @@ import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
-
+import TextField from '@mui/material/TextField';
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import InputAdornment from '@mui/material/InputAdornment';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { activator, loadActiveTeleoscopeID } from "../actions/activeTeleoscopeID";
+import { teleoscopeActivator, loadActiveTeleoscopeID } from "../actions/activeTeleoscopeID";
+import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
 import { adder, loadAddedPosts } from "../actions/addtoworkspace";
 import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
@@ -24,6 +27,8 @@ import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
 // utilities
 import {client_init, reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session} from "../components/Stomp.js";
 import randomstring from "randomstring";
+import { useCookies } from "react-cookie";
+
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 function useTeleoscopes() {
@@ -53,12 +58,22 @@ function useSessions() {
   };  
 }
 
+
 function useSession(id) {
   const { data, error } = useSWR(`/api/sessions/${id}`, fetcher);
   return {
     session: data,
     session_loading: !error && !data,
     session_error: error,
+  };  
+}
+
+function useUsers() {
+  const { data, error } = useSWR(`/api/users/`, fetcher);
+  return {
+    users: data,
+    users_loading: !error && !data,
+    users_error: error,
   };  
 }
 
@@ -74,14 +89,54 @@ export default function TopBar(props) {
   const history_item_num = !teleoscope_loading && !teleoscope_error ? teleoscope["history"].length - 1 : 0;
 
   const { sessions, sessions_loading, sessions_error } = useSessions();
-  const session_id = sessions_error || sessions_loading ? -1 : sessions[sessions.length - 1]['session_id']
+  const { users, users_loading, users_error } = useUsers();
+  
+  const [cookies, setCookie] = useCookies(["user"]);
+  const session_id = useSelector((state) => state.activeSessionID.value); // TODO rename
+
   const { session, session_loading, session_error } = useSession(session_id);
-
-
+  
   const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
   const added = useSelector((state) => state.adder.value); // TODO rename
   const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
-  
+
+  const handleCookie = (username) => {
+    setCookie("user", username, {
+      path: "/"
+    });
+    console.log(`Set username to ${username}.`);
+  }
+
+  const getTeleoscopes = () => {
+    if (teleoscopes && session) {
+      var ts = teleoscopes.filter((t) => {return session["teleoscopes"].indexOf(t["_id"]) > -1});
+      return ts.map((t) => {
+                  return (
+                    <MenuItem value={t["_id"]}>{t["label"]}</MenuItem>
+                )
+      });
+    }
+    return (
+            <MenuItem>No Teleoscopes started for this session...</MenuItem>
+      )
+  }
+ 
+  const getSessions = (username) => {
+      if (sessions && users) {
+        for (const i in users) {
+          var user = users[i];
+          if (user["username"] == username) {
+            return user["sessions"].map((s) => {
+                return (<MenuItem value={s}>{s}</MenuItem>)
+              })
+          }
+        }
+      }
+      return (
+          <MenuItem value={"No sessions for this user..."}>No sessions for this user...</MenuItem>
+      )    
+  }
+
   const dispatch = useDispatch();
   const client = client_init();
 
@@ -111,7 +166,7 @@ export default function TopBar(props) {
           <Stack spacing={4} direction="row">
             <Button 
               variant="text" 
-              onClick={() => initialize_session(client)}
+              onClick={() => initialize_session(client, cookies.user)}
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",
@@ -156,7 +211,7 @@ export default function TopBar(props) {
             </Button>
             <Button 
               variant="text" 
-              onClick={() => initialize_teleoscope(client, search_term)}
+              onClick={() => initialize_teleoscope(client, search_term, session_id)}
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",
@@ -241,14 +296,45 @@ export default function TopBar(props) {
                 id="demo-simple-select"
                 value={teleoscope_id}
                 label="Teleoscope ID"
-                onChange={(event) => dispatch(activator(event.target.value))}
+                onChange={(event) => dispatch(teleoscopeActivator(event.target.value))}
               >
-                {teleoscopes ? teleoscopes.map((t) => {
-                  return (
-                    <MenuItem value={t["_id"]}>{t["label"]}</MenuItem>
-                )}):[]}
+                {getTeleoscopes()}
               </Select>
             </FormControl>
+                  <TextField
+                    id="input-with-icon-textfield"
+                    InputProps={{
+                                  startAdornment: (
+                                                    <InputAdornment position="start">
+                                                      <AccountCircle />
+                                                    </InputAdornment>
+                                  ),
+                    }}
+                    label="Username" 
+                    variant="standard"
+                    defaultValue={cookies.user}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleCookie(e.target.value)
+                      }
+                    }}
+            />
+            <FormControl 
+              sx={{width: 200, backgroundColor: 'white', }}
+              variant="filled"
+              >
+              <InputLabel id="demo-simple-select-label">Active Session</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={"No sessions for this user..."}
+                label="Session ID"
+                onChange={(event) => dispatch(sessionActivator(event.target.value))}
+              >
+                {getSessions(cookies.user)}
+              </Select>
+            </FormControl>
+
           </Stack>
         </Toolbar>
       </AppBar>
