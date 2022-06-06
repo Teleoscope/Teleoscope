@@ -327,7 +327,7 @@ export default function TopBar(props) {
               <Select
                 labelId="demo-simple-select-label"
                 id="demo-simple-select"
-                value={"No sessions for this user..."}
+                value={session_id}
                 label="Session ID"
                 onChange={(event) => dispatch(sessionActivator(event.target.value))}
               >
