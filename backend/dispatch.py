@@ -70,7 +70,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 },
             )
             res.apply_async()
-        
+                
         if b['task'] == 'initialize_session':
             res = tasks.initialize_session.signature(
                 args=(),

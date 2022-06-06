@@ -22,7 +22,7 @@ import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
 
 // utilities
-import {client_init, reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, initialize_session} from "../components/Stomp.js";
+import {client_init, reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session} from "../components/Stomp.js";
 import randomstring from "randomstring";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
@@ -32,6 +32,15 @@ function useTeleoscopes() {
     teleoscopes: data,
     loading: !error && !data,
     error: error,
+  };
+}
+
+function useTeleoscope(id) {
+  const { data, error } = useSWR(`/api/teleoscopes/${id}`, fetcher);
+  return {
+    teleoscope: data,
+    teleoscope_loading: !error && !data,
+    teleoscope_error: error,
   };
 }
 
@@ -55,11 +64,14 @@ function useSession(id) {
 
 export default function TopBar(props) {
   const { teleoscopes, loading, error } = useTeleoscopes();
+  const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value); // TODO rename
+  const { teleoscope, teleoscope_loading, teleoscope_error } = useTeleoscope(teleoscope_id);
+
   const { sessions, sessions_loading, sessions_error } = useSessions();
   const session_id = sessions_error || sessions_loading ? -1 : sessions[sessions.length - 1]['session_id']
   const { session, session_loading, session_error } = useSession(session_id);
-  
-  const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value); // TODO rename
+
+
   const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
   const added = useSelector((state) => state.adder.value); // TODO rename
   const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
@@ -150,8 +162,7 @@ export default function TopBar(props) {
                   "search_term": search_term,
                   "added": added,
                   "checked": checked
-                })
-                }
+                })}
                 style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",
@@ -160,6 +171,21 @@ export default function TopBar(props) {
               }}
             >
               Save Teleoscope
+            </Button>
+            <Button 
+              variant="text" 
+              onClick={() => load_teleoscope_state(
+                client,
+                teleoscope_id
+              )}
+              style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              Load
             </Button>
             <Button
               onClick={() => {
