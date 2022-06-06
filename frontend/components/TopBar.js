@@ -20,6 +20,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { useSelector, useDispatch } from "react-redux";
 import { teleoscopeActivator, loadActiveTeleoscopeID } from "../actions/activeTeleoscopeID";
 import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
+import { historyActivator, loadActiveHistoryItem } from "../actions/activeHistoryItem";
 import { adder, loadAddedPosts } from "../actions/addtoworkspace";
 import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
@@ -86,7 +87,7 @@ export default function TopBar(props) {
 
   console.log("teleoscope id is: ", teleoscope_id);
 
-  const history_item_num = !teleoscope_loading && !teleoscope_error ? teleoscope["history"].length - 1 : 0;
+  const history_item_num = useSelector((state) => state.activeHistoryItem.value);
 
   const { sessions, sessions_loading, sessions_error } = useSessions();
   const { users, users_loading, users_error } = useUsers();
@@ -142,7 +143,6 @@ export default function TopBar(props) {
 
   const load_teleoscope_state = (history_item_num) => {
     var history_item = teleoscope["history"][history_item_num]
-    dispatch(loadActiveTeleoscopeID(history_item["teleoscope_id"]));
     dispatch(loadSearchTerm(history_item["search_term"]));
     dispatch(loadAddedPosts(history_item["added"]));
     dispatch(loadCheckedPosts(history_item["checked"]));
@@ -250,7 +250,7 @@ export default function TopBar(props) {
                 id="demo-simple-select"
                 value={history_item_num}
                 label="History Item"
-                onChange={(event) => dispatch(activator(event.target.value))}
+                onChange={(event) => dispatch(historyActivator(event.target.value))}
               >
                 {!teleoscope_loading && !teleoscope_error ? teleoscope["history"].map((h, i) => {
                   return (
