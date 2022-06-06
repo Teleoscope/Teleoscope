@@ -217,8 +217,8 @@ export default function QueryListItem(props) {
           </IconButton>
 
           <Select
-            labelId="demo-multiple-checkbox-label"
-            id="basic-menu"
+            labelId="demo-simple-checkbox-label"
+            id="demo-simple-select"
             multiple
             value={menuItem}
             onChange={handleChange}
@@ -228,8 +228,9 @@ export default function QueryListItem(props) {
           >
             {userTags.map(tags => (
               <MenuItem key={tags.id} value={tags.id} onClick={() => dispatch(tag({ id: props.id, tag: tags.tag, color: tags.color }))}>
-                <Checkbox checked={menuItem.indexOf(tags) > -1} />
-                <ListItemText primary={tags.tag} />
+                {/* <Checkbox checked={menuItem.indexOf(tags) > -1} /> */}
+                {tags.tag}
+                {/* <ListItemText primary={tags.tag} /> */}
               </MenuItem>
             ))}
           </Select>
