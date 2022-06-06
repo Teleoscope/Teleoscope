@@ -55,7 +55,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
-                    "label": b['args']['query'],
+                    "label": b['args']['label'],
                     "session_id": b["args"]["session_id"]
                 },
             )
