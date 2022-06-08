@@ -1,12 +1,12 @@
 // actions.js
 import { createSlice } from '@reduxjs/toolkit'
-export const ActiveTeleoscopeID = createSlice({
-  name: 'activeTeleoscopeID',
+export const ActiveHistoryItem = createSlice({
+  name: 'activeHistoryItem',
   initialState: {
-    value: -1,
+    value: 0,
   },
   reducers: {
-    teleoscopeActivator: (state, action) => {
+    historyActivator: (state, action) => {
 		// Redux Toolkit allows us to write "mutating" logic in reducers. It
 		// doesn't actually mutate the state because it uses the Immer library,
 		// which detects changes to a "draft state" and produces a brand new
@@ -14,13 +14,13 @@ export const ActiveTeleoscopeID = createSlice({
     	var id = action.payload // value of postid
 			state.value = id;
     },
-    loadActiveTeleoscopeID: (state, action) => {
+    loadActiveHistoryItem: (state, action) => {
       state.value = action.payload
     }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { teleoscopeActivator, loadActiveTeleoscopeID } = ActiveTeleoscopeID.actions
+export const { historyActivator, loadActiveHistoryItem } = ActiveHistoryItem.actions
 
-export default ActiveTeleoscopeID.reducer
+export default ActiveHistoryItem.reducer

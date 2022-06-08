@@ -2,6 +2,8 @@ import { Client, Message } from "@stomp/stompjs";
 // TODO: look at websocket example code here and replicate
 // anywhere that needs to route a request to the server
 // possibly best to move this into an action? I'm unsure
+Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
+
 
 export function client_init() {
   const client = new Client({
@@ -45,6 +47,7 @@ export function publish(client, body) {
     body: JSON.stringify(body),
   });
   console.log("sent", body);
+  return body;
 }
 
 // TODO: These should exactly implement the interface standard
@@ -60,15 +63,31 @@ export function reorient(client, search_term, teleoscope_id, positive_docs, nega
     }
   }
   publish(client, body);
+  return body;
 }
 
-export function initialize_teleoscope(client, search_term) {
+export function initialize_teleoscope(client, search_term, session_id) {
   var body = {
     task: 'initialize_teleoscope',
     args: {
-      query: search_term // TODO: rename consistently
+      label: search_term,
+      session_id: session_id
     }
   }
+  publish(client, body);
+  return body;
+}
+
+export function save_teleoscope_state(client, _id, history_item) {
+  //const obj_id = ObjectId(_id);
+  var body = {
+    task: 'save_teleoscope_state',
+    args: {
+      _id: _id,
+      history_item: history_item
+    }
+  }
+  console.log("The object id is: " + _id);
   publish(client, body);
 }
 
@@ -81,13 +100,16 @@ export function save_UI_state(client, session_id, history_item) {
     }
   }
   publish(client, body);
+  return body;
 }
 
-export function initialize_session(client) {
+export function initialize_session(client, username) {
   var body = {
     task: 'initialize_session',
     args: {
+      username: username,
     }
   }
   publish(client, body);
+  return body;
 }
