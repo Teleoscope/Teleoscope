@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "test": "jest",
     "start": "next start"
   },
   "repository": {
@@ -50,13 +51,17 @@
   "license": "MIT",
   "devDependencies": {
     "2": "^3.0.0",
-    "@babel/core": "^7.15.0",
+    "@babel/core": "^7.18.2",
+    "@babel/preset-env": "^7.18.2",
+    "babel-jest": "^28.1.0",
     "babel-plugin-styled-components": "^1.12.0",
     "install": "^0.13.0",
+    "jest": "^28.1.0",
     "npm": "^7.20.6",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "styled-components": "^5.3.3"
+    "styled-components": "^5.3.3",
+    "ts-jest": "^28.0.4"
   },
   "bundledDependencies": [
     "next"
