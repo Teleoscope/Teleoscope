@@ -37,4 +37,5 @@ jobs:
     - run: echo "NEXT_PUBLIC_RABBITMQ_HOST=test" >> .env.local
     - run: npm i -g npm@latest
     - run: npm ci
+    - run: npm run test
     - run: npm run build --if-present

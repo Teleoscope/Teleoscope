@@ -47,7 +47,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
         message.ack()
-        # not tested below
         b = json.loads(body)
 
         # TODO: these should exactly implement the interface standard
@@ -56,16 +55,27 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
-                    "label": b['args']['query']
+                    "label": b['args']['label'],
+                    "session_id": b["args"]["session_id"]
                 },
             )
             res.apply_async()
         
+        if b['task'] == "save_teleoscope_state":
+            res = tasks.save_teleoscope_state.signature(
+                args=(),
+                kwargs={
+                    "_id": b["args"]["_id"],
+                    "history_item": b["args"]["history_item"]
+                },
+            )
+            res.apply_async()
+                
         if b['task'] == 'initialize_session':
             res = tasks.initialize_session.signature(
                 args=(),
                 kwargs={
-                    "label": b["args"]["label"]
+                    "username": b["args"]["username"]
                 },
             )
             res.apply_async()
