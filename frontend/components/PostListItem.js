@@ -208,21 +208,28 @@ export default function QueryListItem(props) {
             aria-controls={open ? 'basic-menu' : undefined}
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
+            //onClick={}
           >
-            {groupedPost ? (
+            {/* {groupedPost ? (
               <CircleIcon sx={{ color: getColor() }} style={{ fontSize: 20 }} />
             ) : (
               <CircleIcon style={{ fontSize: 20 }} />
-            )}
+            )} */}
           </IconButton>
 
           <Select
             labelId="demo-simple-checkbox-label"
             id="demo-simple-select"
             multiple
+            IconComponent={() => 
+              groupedPost ? (
+                <CircleIcon sx={{ color: getColor() }} style={{ fontSize: 20 }} />
+              ) : (
+                <CircleIcon sx={{ color: '#808080'}} style={{ fontSize: 20 }} />
+              )}
             value={menuItem}
             onChange={handleChange}
-            input={<OutlinedInput label="Tag" />}
+            input={<OutlinedInput label="Group" />}
             renderValue={(selected) => selected.join(', ')}
             MenuProps={MenuProps}
           >
