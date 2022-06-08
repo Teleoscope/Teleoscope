@@ -21,7 +21,8 @@ import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { searcher } from "../actions/searchterm";
-import { tag } from "../actions/tagged";
+import { addGroup } from "../actions/tagged";
+import { unstable_composeClasses } from "@mui/material";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 const filter = createFilterOptions();
@@ -57,10 +58,9 @@ export default function LeftMenuBar(props) {
   const search_term = useSelector((state) => state.searchTerm.value);
   const bookmarks = useSelector((state) => state.bookmarker.value);
   const tags = useSelector((state) => state.tagger.value);
+  const labels = useSelector((state) => state.tagger.groups);
   const dispatch = useDispatch();
   const [bookmarked, setBookmarked] = useState(false);
-  //const [tagged, setTagged] = useState(false);
-
   const [text, setText] = useState("");
   const { posts, loading, error } = useQuery(search_term, true);
   const [value, setValue] = React.useState(null);
@@ -68,8 +68,7 @@ export default function LeftMenuBar(props) {
 
   const handleClose = () => {
     setDialogValue({
-      id: '',
-      tag: '',
+      label: '',
       color: '',
     });
 
@@ -77,15 +76,14 @@ export default function LeftMenuBar(props) {
   };
 
   const [dialogValue, setDialogValue] = React.useState({
-    id: '',
-    tag: '',
+    label: '',
     color: '',
   });
 
   const handleSubmit = (event) => {
     event.preventDefault();
     setValue({
-      tag: dialogValue.tag,
+      label: dialogValue.label,
       color: parseInt(dialogValue.color, 10),
     });
 
@@ -104,7 +102,7 @@ export default function LeftMenuBar(props) {
   });
 
   const tagDataMaker = (tagName) => {
-    let filteredTags = tags.filter(posts => posts.tag === tagName);
+    let filteredTags = tags.filter(posts => posts.label === tagName);
     return !filteredTags ? (
       "There is no posts that fit the selected filters")
       : (filteredTags.map((posts) => {
@@ -122,6 +120,39 @@ const keyChange = (e) => {
     dispatch(searcher(text));
   }
 };
+
+const onChangeHandler = (event, newValue) => {
+  // TODO move this logic into a store or
+            // into a function above the body of the JSX
+
+            if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
+              tagged_data = tagDataMaker(newValue.label);
+              tagged = true;
+            } else {
+              tagged = false;
+            }
+
+            if (typeof newValue === 'string') {
+              // timeout to avoid instant validation of the dialog's form.
+              // TODO: seems like a bit of a hack, what behaviour is being suppressed here?
+              // is there another way to modify it?
+              setTimeout(() => {
+                toggleOpen(true);
+                setDialogValue({
+                  label: newValue,
+                  color: '',
+                });
+              });
+            } else if (newValue && newValue.inputValue) {
+              toggleOpen(true);
+              setDialogValue({
+                label: newValue.inputValue,
+                color: '',
+              });
+            } else {
+              setValue(newValue);
+            }
+}
 
 return (
   <div className="leftMenuBar">
@@ -149,38 +180,7 @@ return (
         <Autocomplete
           value={value}
           onChange={(event, newValue) => {
-            // TODO move this logic into a store or
-            // into a function above the body of the JSX
-
-            if (typeof newValue === 'object' && newValue !== null && !newValue.tag.includes("Add")) {
-              tagged_data = tagDataMaker(newValue.tag);
-              tagged = true;
-            } else {
-              tagged = false;
-            }
-
-            if (typeof newValue === 'string') {
-              // timeout to avoid instant validation of the dialog's form.
-              // TODO: seems like a bit of a hack, what behaviour is being suppressed here?
-              // is there another way to modify it?
-              setTimeout(() => {
-                toggleOpen(true);
-                setDialogValue({
-                  id: '',
-                  tag: newValue,
-                  color: '',
-                });
-              });
-            } else if (newValue && newValue.inputValue) {
-              toggleOpen(true);
-              setDialogValue({
-                id: '',
-                tag: newValue.inputValue,
-                color: '',
-              });
-            } else {
-              setValue(newValue);
-            }
+            onChangeHandler(event, newValue)
           }}
           filterOptions={(options, params) => {
             const filtered = filter(options, params);
@@ -195,7 +195,7 @@ return (
             return filtered;
           }}
           id="Add Tag"
-          options={userTags}
+          options={labels}
           getOptionLabel={(option) => {
             // e.g value selected with enter, right from the input
             if (typeof option === 'string') {
@@ -205,13 +205,13 @@ return (
               // if the user is typing then populate the text field with what they are typing 
               return option.inputValue;
             }
-            return option.tag;
+            return option.label;
           }}
           style={{ width: "100%", borderRadius: "0 !important" }}
           selectOnFocus
           clearOnBlur
           handleHomeEndKeys
-          renderOption={(props, option) => <li {...props}>{option.tag}</li>}
+          renderOption={(props, option) => <li {...props}>{option.label}</li>}
           sx={{ width: 300 }}
           freeSolo
           renderInput={(params) =>
@@ -236,7 +236,7 @@ return (
                 autoFocus
                 margin="dense"
                 id="name"
-                value={dialogValue.tag}
+                value={dialogValue.label}
                 onChange={(event) =>
                   setDialogValue({
                     ...dialogValue,
@@ -269,7 +269,7 @@ return (
               <Button
                 type="submit"
                 onClick={() => {
-                  userTags.push({ id: '', tag: document.getElementById('name').value, color: document.getElementById('color').value })
+                  dispatch(addGroup({label: document.getElementById('name').value, color: document.getElementById('color').value }))
                 }}>Add</Button>
             </DialogActions>
           </form>
@@ -293,9 +293,5 @@ return (
 );
 }
 
-export var userTags = [ // TODO move this into a store rather than a local variable
-  { id: '', tag: 'Red', color: 'red' },
-  { id: '', tag: 'Blue', color: 'blue' },
-  { id: '', tag: 'Green', color: 'green' }]
 
 

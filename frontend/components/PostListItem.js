@@ -99,6 +99,7 @@ export default function QueryListItem(props) {
   const added = useSelector((state) => state.adder.value);
   const bookmarked = useSelector((state) => state.bookmarker.value);
   const tagged = useSelector((state) => state.tagger.value);
+  const groupLabel = useSelector((state) => state.tagger.groups);
 
 
   const marked = bookmarked.includes(props.id);
@@ -186,7 +187,8 @@ export default function QueryListItem(props) {
 
   const getColor = () => {
     let i = tagged.findIndex(postID => postID.id === props.id);
-    return tagged[i].color;
+    let j = groupLabel.findIndex(postLabel => postLabel.label === tagged[i].label)
+    return groupLabel[j].color;
   };
 
   return (
@@ -207,7 +209,6 @@ export default function QueryListItem(props) {
             aria-controls={open ? 'basic-menu' : undefined}
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
-            //onClick={handleMouseClick}
           >
             {taggedPost ? (
               <CircleIcon sx={{ color: getColor() }} style={{ fontSize: 20 }} />
@@ -226,11 +227,9 @@ export default function QueryListItem(props) {
             renderValue={(selected) => selected.join(', ')}
             MenuProps={MenuProps}
           >
-            {userTags.map(tags => (
-              <MenuItem key={tags.id} value={tags.id} onClick={() => dispatch(tag({ id: props.id, tag: tags.tag, color: tags.color }))}>
-                {/* <Checkbox checked={menuItem.indexOf(tags) > -1} /> */}
-                {tags.tag}
-                {/* <ListItemText primary={tags.tag} /> */}
+            {groupLabel.map(labels => ( // if it is the same tag name then only display once
+              <MenuItem key={props.label} value={props.label} onClick={() => dispatch(tag({ id: props.id, label: labels.label}))}>
+                {labels.label}
               </MenuItem>
             ))}
           </Select>
