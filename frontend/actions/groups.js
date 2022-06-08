@@ -1,7 +1,7 @@
 // actions.js
 import { createSlice } from '@reduxjs/toolkit'
-export const Tagged = createSlice({
-	name: 'tagged',
+export const Grouped = createSlice({
+	name: 'grouped',
 	initialState: {
 		groups: [
 			{
@@ -20,7 +20,7 @@ export const Tagged = createSlice({
 		value: []
 	},
 	reducers: {
-		tag: (state, action) => {
+		group: (state, action) => {
 			// Redux Toolkit allows us to write "mutating" logic in reducers. It
 			// doesn't actually mutate the state because it uses the Immer library,
 			// which detects changes to a "draft state" and produces a brand new
@@ -63,6 +63,6 @@ export const Tagged = createSlice({
 })
 
 // Action creators are generated for each case reducer function
-export const { tag, addGroup } = Tagged.actions
+export const { group, addGroup } = Grouped.actions
 
-export default Tagged.reducer
+export default Grouped.reducer

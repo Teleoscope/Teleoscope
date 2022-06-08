@@ -21,13 +21,13 @@ import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { searcher } from "../actions/searchterm";
-import { addGroup } from "../actions/tagged";
+import { addGroup } from "../actions/groups";
 import { unstable_composeClasses } from "@mui/material";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 const filter = createFilterOptions();
-let tagged_data = [];
-let tagged = false;
+let grouped_data = [];
+let grouped = false;
 
 function useQuery(q, shouldSend) {
   const API_URL = shouldSend ? `/api/cleanposts/${q}` : "";
@@ -57,8 +57,8 @@ function arrayUnique(array) {
 export default function LeftMenuBar(props) {
   const search_term = useSelector((state) => state.searchTerm.value);
   const bookmarks = useSelector((state) => state.bookmarker.value);
-  const tags = useSelector((state) => state.tagger.value);
-  const labels = useSelector((state) => state.tagger.groups);
+  const groups = useSelector((state) => state.grouper.value);
+  const labels = useSelector((state) => state.grouper.groups);
   const dispatch = useDispatch();
   const [bookmarked, setBookmarked] = useState(false);
   const [text, setText] = useState("");
@@ -101,11 +101,11 @@ export default function LeftMenuBar(props) {
     return [post, 1.0];
   });
 
-  const tagDataMaker = (tagName) => {
-    let filteredTags = tags.filter(posts => posts.label === tagName);
-    return !filteredTags ? (
+  const groupDataMaker = (groupName) => {
+    let filteredGroups = groups.filter(posts => posts.label === groupName);
+    return !filteredGroups ? (
       "There is no posts that fit the selected filters")
-      : (filteredTags.map((posts) => {
+      : (filteredGroups.map((posts) => {
       return [posts.id, 1.0];
     }))
 }
@@ -126,10 +126,10 @@ const onChangeHandler = (event, newValue) => {
             // into a function above the body of the JSX
 
             if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
-              tagged_data = tagDataMaker(newValue.label);
-              tagged = true;
+              grouped_data = groupDataMaker(newValue.label);
+              grouped = true;
             } else {
-              tagged = false;
+              grouped = false;
             }
 
             if (typeof newValue === 'string') {
@@ -194,7 +194,7 @@ return (
 
             return filtered;
           }}
-          id="Add Tag"
+          id="Add Group"
           options={labels}
           getOptionLabel={(option) => {
             // e.g value selected with enter, right from the input
@@ -243,7 +243,7 @@ return (
                     tag: event.target.value,
                   })
                 }
-                label="tag name"
+                label="group name"
                 type="text"
               />
               <TextField
@@ -284,9 +284,9 @@ return (
         label="Bookmarked Items Only"
       />
 
-      {bookmarked && tagged ? (<PostList data={arrayUnique(bookmarked_data.concat(tagged_data))} pagination={true} />) :
+      {bookmarked && grouped ? (<PostList data={arrayUnique(bookmarked_data.concat(grouped_data))} pagination={true} />) :
         (bookmarked ? (<PostList data={bookmarked_data} pagination={true} />) :
-          (tagged ? (<PostList data={tagged_data} pagination={true} />) :
+          (grouped ? (<PostList data={grouped_data} pagination={true} />) :
             (<PostList data={data} pagination={true} />)))}
     </Box>
   </div >
