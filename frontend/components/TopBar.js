@@ -338,24 +338,7 @@ export default function TopBar(props) {
                 {getSessions(cookies.user)}
               </Select>
             </FormControl>
-                  <TextField
-                    id="input-with-icon-textfield"
-                    InputProps={{
-                                  startAdornment: (
-                                                    <InputAdornment position="start">
-                                                      <AccountCircle />
-                                                    </InputAdornment>
-                                  ),
-                    }}
-                    label="Username" 
-                    variant="standard"
-                    defaultValue={cookies.user}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleCookie(e.target.value)
-                      }
-                    }}
-            />
+
 
           </Stack>
         </Toolbar>
