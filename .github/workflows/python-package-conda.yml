@@ -8,18 +8,19 @@ on:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 5
     defaults:
            run:
              working-directory: ./backend
+    strategy:
+      matrix:
+        python-version: [3.8.x]
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.10
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
-        python-version: 3.8.13
+        python-version: ${{ matrix.python-version }}
     - run: touch .env.local
     - run: echo "MONGODB_URI=test" >> .env.local
     - run: echo "MONGODB_DB=test" >> .env.local
