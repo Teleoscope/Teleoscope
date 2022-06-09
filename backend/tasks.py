@@ -166,6 +166,7 @@ def initialize_teleoscope(*args, **kwargs):
         "history": []
         }
     )
+    # TODO: Add more robust error handling in case of failures, maybe transactions to remove data from mongo in case of failures
     logging.info(f"The new teleoscope has an id of: {teleoscope_id.inserted_id}")
 
     # perform text search query
