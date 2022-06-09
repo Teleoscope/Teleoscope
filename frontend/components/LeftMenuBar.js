@@ -21,12 +21,13 @@ import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { searcher } from "../actions/searchterm";
-import { tag } from "../actions/tagged";
+import { addGroup } from "../actions/groups";
+import { unstable_composeClasses } from "@mui/material";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 const filter = createFilterOptions();
-let tagged_data = [];
-let tagged = false;
+let grouped_data = [];
+let grouped = false;
 
 function useQuery(q, shouldSend) {
   const API_URL = shouldSend ? `/api/cleanposts/${q}` : "";
@@ -42,12 +43,12 @@ function useQuery(q, shouldSend) {
 function arrayUnique(array) {
   console.log(array)
   var a = array.concat();
-  for(var i=0; i<a.length; ++i) {
-      for(var j=i+1; j<a.length; ++j) {
-          if(a[i][0] === a[j][0]) {
-              a.splice(j--, 1);
-          }
+  for (var i = 0; i < a.length; ++i) {
+    for (var j = i + 1; j < a.length; ++j) {
+      if (a[i][0] === a[j][0]) {
+        a.splice(j--, 1);
       }
+    }
   }
 
   return a;
@@ -56,11 +57,10 @@ function arrayUnique(array) {
 export default function LeftMenuBar(props) {
   const search_term = useSelector((state) => state.searchTerm.value);
   const bookmarks = useSelector((state) => state.bookmarker.value);
-  const tags = useSelector((state) => state.tagger.value);
+  const groups = useSelector((state) => state.grouper.value);
+  const labels = useSelector((state) => state.grouper.groups);
   const dispatch = useDispatch();
   const [bookmarked, setBookmarked] = useState(false);
-  //const [tagged, setTagged] = useState(false);
-
   const [text, setText] = useState("");
   const { posts, loading, error } = useQuery(search_term, true);
   const [value, setValue] = React.useState(null);
@@ -68,8 +68,7 @@ export default function LeftMenuBar(props) {
 
   const handleClose = () => {
     setDialogValue({
-      id: '',
-      tag: '',
+      label: '',
       color: '',
     });
 
@@ -77,15 +76,14 @@ export default function LeftMenuBar(props) {
   };
 
   const [dialogValue, setDialogValue] = React.useState({
-    id: '',
-    tag: '',
+    label: '',
     color: '',
   });
 
   const handleSubmit = (event) => {
     event.preventDefault();
     setValue({
-      tag: dialogValue.tag,
+      label: dialogValue.label,
       color: parseInt(dialogValue.color, 10),
     });
 
@@ -103,188 +101,197 @@ export default function LeftMenuBar(props) {
     return [post, 1.0];
   });
 
-  const tagDataMaker = (tagName) => {
-    let filteredTags = tags.filter(posts => posts.tag === tagName);
-    return filteredTags.map((posts) => {
+  const groupDataMaker = (groupName) => {
+    let filteredGroups = groups.filter(posts => posts.label === groupName);
+    return !filteredGroups ? (
+      "There is no posts that fit the selected filters")
+      : (filteredGroups.map((posts) => {
       return [posts.id, 1.0];
-    })
-  }
-
-  const bookmarkToggler = (e) => {
-    bookmarked = !bookmarked;
-    console.log(bookmarked);
-  };
-
-  const keyChange = (e) => {
-    if (e.code == "Enter") {
-      dispatch(searcher(text));
-    }
-  };
-
-  return (
-    <div className="leftMenuBar">
-      <Box
-        sx={{
-          width: "100%",
-          bgcolor: "background.paper",
-          height: "100vh",
-        }}
-      >
-        <TextField
-          variant="filled"
-          label="cleanposts"
-          placeholder="Add query..."
-          onKeyDown={(e) => keyChange(e)}
-          onChange={(e) => setText(e.target.value)}
-          style={{ width: "100%", borderRadius: "0 !important" }}
-        />
-        <React.Fragment>
-          <Autocomplete
-            value={value}
-            onChange={(event, newValue) => {
-
-              if (typeof newValue === 'object' && newValue !== null) {
-                tagged_data = tagDataMaker(newValue.tag);
-                tagged = true;
-              } else {
-                tagged = false;
-              }
-
-              if (typeof newValue === 'string') {
-                // timeout to avoid instant validation of the dialog's form.
-                setTimeout(() => {
-                  toggleOpen(true);
-                  setDialogValue({
-                    id: '',
-                    tag: newValue,
-                    color: '',
-                  });
-                });
-              } else if (newValue && newValue.inputValue) {
-                toggleOpen(true);
-                setDialogValue({
-                  id: '',
-                  tag: newValue.inputValue,
-                  color: '',
-                });
-              } else {
-                setValue(newValue);
-              }
-            }}
-            filterOptions={(options, params) => {
-              const filtered = filter(options, params);
-
-              if (params.inputValue !== '') {
-                filtered.push({
-                  inputValue: params.inputValue,
-                  tag: `Add "${params.inputValue}"`,
-                });
-              }
-
-              return filtered;
-            }}
-            id="Add Tag"
-            options={userTags}
-            getOptionLabel={(option) => {
-              // e.g value selected with enter, right from the input
-              if (typeof option === 'string') {
-                return option;
-              }
-              if (option.inputValue) {
-                // if the user is typing then populate the text field with what they are typing 
-                return option.inputValue;
-              }
-              return option.tag;
-            }}
-            style={{ width: "100%", borderRadius: "0 !important" }}
-            selectOnFocus
-            clearOnBlur
-            handleHomeEndKeys
-            renderOption={(props, option) => <li {...props}>{option.tag}</li>}
-            sx={{ width: 300 }}
-            freeSolo
-            renderInput={(params) =>
-              <TextField {...params}
-                label="tags"
-                variant="filled"
-                placeholder="Add or Search tag..."
-                onKeyDown={(e) => keyChange(e)}
-                style={{ width: "100%", borderRadius: "0 !important" }} />}
-          />
-          <Dialog open={open} onClose={handleClose}>
-            <form onSubmit={handleSubmit}>
-              <DialogTitle>Add a new tag</DialogTitle>
-              <DialogContent>
-                <DialogContentText>
-                  Input your tag name and select a color to represent that tag!
-                </DialogContentText>
-                <TextField
-                  variant="filled"
-                  placeholder="Add tag name"
-                  style={{ width: "100%", borderRadius: "0 !important" }}
-                  autoFocus
-                  margin="dense"
-                  id="name"
-                  value={dialogValue.tag}
-                  onChange={(event) =>
-                    setDialogValue({
-                      ...dialogValue,
-                      tag: event.target.value,
-                    })
-                  }
-                  label="tag name"
-                  type="text"
-                />
-                <TextField
-                  variant="filled"
-                  label="color"
-                  placeholder="Add query..."
-                  onKeyDown={(e) => keyChange(e)}
-                  style={{ width: "100%", borderRadius: "0 !important" }}
-                  margin="dense"
-                  id="color"
-                  type="color"
-                  value={dialogValue.color}
-                  onChange={(event) =>
-                    setDialogValue({
-                      ...dialogValue,
-                      color: event.target.value,
-                    })
-                  }
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleClose}>Cancel</Button>
-                <Button
-                  type="submit"
-                  onClick={() => {
-                    userTags.push({ id: '', tag: document.getElementById('name').value, color: document.getElementById('color').value })
-                  }}>Add</Button>
-              </DialogActions>
-            </form>
-          </Dialog>
-        </React.Fragment>
-
-
-        <FormControlLabel
-          style={{ marginLeft: 20, marginTop: 10 }}
-          control={<Checkbox style={{ marginRight: 10 }} />}
-          onChange={() => setBookmarked(!bookmarked)}
-          label="Bookmarked Items Only"
-        />
-
-        {bookmarked && tagged ? (<PostList data={arrayUnique(bookmarked_data.concat(tagged_data))} pagination={true} />) :
-          (bookmarked ? (<PostList data={bookmarked_data} pagination={true} />) :
-            (tagged ? (<PostList data={tagged_data} pagination={true} />) :
-              (<PostList data={data} pagination={true} />)))}
-      </Box>
-    </div >
-  );
+    }))
 }
 
-export var userTags = [
-  { id: '', tag: 'Red', color: 'red' },
-  { id: '', tag: 'Blue', color: 'blue' },
-  { id: '', tag: 'Green', color: 'green' }]
+const bookmarkToggler = (e) => {
+  bookmarked = !bookmarked;
+  console.log(bookmarked);
+};
+
+const keyChange = (e) => {
+  if (e.code == "Enter") {
+    dispatch(searcher(text));
+  }
+};
+
+const onChangeHandler = (event, newValue) => {
+  // TODO move this logic into a store or
+            // into a function above the body of the JSX
+
+            if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
+              grouped_data = groupDataMaker(newValue.label);
+              grouped = true;
+            } else {
+              grouped = false;
+            }
+
+            if (typeof newValue === 'string') {
+              // timeout to avoid instant validation of the dialog's form.
+              // TODO: seems like a bit of a hack, what behaviour is being suppressed here?
+              // is there another way to modify it?
+              setTimeout(() => {
+                toggleOpen(true);
+                setDialogValue({
+                  label: newValue,
+                  color: '',
+                });
+              });
+            } else if (newValue && newValue.inputValue) {
+              toggleOpen(true);
+              setDialogValue({
+                label: newValue.inputValue,
+                color: '',
+              });
+            } else {
+              setValue(newValue);
+            }
+}
+
+return (
+  <div className="leftMenuBar">
+    <Box
+      sx={{
+        width: "100%",
+        bgcolor: "background.paper",
+        height: "100vh",
+      }}
+    >
+      <TextField
+        variant="filled"
+        label="Search posts..."
+        placeholder="Add query..."
+        onKeyDown={(e) => keyChange(e)}
+        onChange={(e) => setText(e.target.value)}
+        style={{ width: "100%", borderRadius: "0 !important" }}
+      />
+      {/* TODO: if we're seeing react fragments, it might be best to refactor.
+          Suggest moving this into a separate component and rethinking the logic here.
+          Similarly, I'm seeing  a lot of repeated code, so probably best to see what
+          kind of abstraction is possible.
+         */}
+      <React.Fragment>
+        <Autocomplete
+          value={value}
+          onChange={(event, newValue) => {
+            onChangeHandler(event, newValue)
+          }}
+          filterOptions={(options, params) => {
+            const filtered = filter(options, params);
+
+            if (params.inputValue !== '') {
+              filtered.push({
+                inputValue: params.inputValue,
+                tag: `Add "${params.inputValue}"`,
+              });
+            }
+
+            return filtered;
+          }}
+          id="Add Group"
+          options={labels}
+          getOptionLabel={(option) => {
+            // e.g value selected with enter, right from the input
+            if (typeof option === 'string') {
+              return option;
+            }
+            if (option.inputValue) {
+              // if the user is typing then populate the text field with what they are typing 
+              return option.inputValue;
+            }
+            return option.label;
+          }}
+          style={{ width: "100%", borderRadius: "0 !important" }}
+          selectOnFocus
+          clearOnBlur
+          handleHomeEndKeys
+          renderOption={(props, option) => <li {...props}>{option.label}</li>}
+          sx={{ width: 300 }}
+          freeSolo
+          renderInput={(params) =>
+            <TextField {...params}
+              label="Post groups..."
+              variant="filled"
+              placeholder="type to create, click to filter..."
+              onKeyDown={(e) => keyChange(e)}
+              style={{ width: "100%", borderRadius: "0 !important" }} />}
+        />
+        <Dialog open={open} onClose={handleClose}>
+          <form onSubmit={handleSubmit}>
+            <DialogTitle>Add a new group</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Input your group name and select a color to represent that group!
+              </DialogContentText>
+              <TextField
+                variant="filled"
+                placeholder="Add group name"
+                style={{ width: "100%", borderRadius: "0 !important" }}
+                autoFocus
+                margin="dense"
+                id="name"
+                value={dialogValue.label}
+                onChange={(event) =>
+                  setDialogValue({
+                    ...dialogValue,
+                    tag: event.target.value,
+                  })
+                }
+                label="group name"
+                type="text"
+              />
+              <TextField
+                variant="filled"
+                label="color"
+                placeholder="Add query..."
+                onKeyDown={(e) => keyChange(e)}
+                style={{ width: "100%", borderRadius: "0 !important" }}
+                margin="dense"
+                id="color"
+                type="color"
+                value={dialogValue.color}
+                onChange={(event) =>
+                  setDialogValue({
+                    ...dialogValue,
+                    color: event.target.value,
+                  })
+                }
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose}>Cancel</Button>
+              <Button
+                type="submit"
+                onClick={() => {
+                  dispatch(addGroup({label: document.getElementById('name').value, color: document.getElementById('color').value }))
+                }}>Add</Button>
+            </DialogActions>
+          </form>
+        </Dialog>
+      </React.Fragment>
+
+
+      <FormControlLabel
+        style={{ marginLeft: 20, marginTop: 10 }}
+        control={<Checkbox style={{ marginRight: 10 }} />}
+        onChange={() => setBookmarked(!bookmarked)}
+        label="Bookmarked Items Only"
+      />
+
+      {bookmarked && grouped ? (<PostList data={arrayUnique(bookmarked_data.concat(grouped_data))} pagination={true} />) :
+        (bookmarked ? (<PostList data={bookmarked_data} pagination={true} />) :
+          (grouped ? (<PostList data={grouped_data} pagination={true} />) :
+            (<PostList data={data} pagination={true} />)))}
+    </Box>
+  </div >
+);
+}
+
 
 

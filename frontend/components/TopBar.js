@@ -107,6 +107,12 @@ export default function TopBar(props) {
     });
     console.log(`Set username to ${username}.`);
   }
+  
+  const dispatch = useDispatch();
+  const client = client_init();
+
+
+
 
   const getTeleoscopes = () => {
     if (teleoscopes && session) {
@@ -138,8 +144,6 @@ export default function TopBar(props) {
       )    
   }
 
-  const dispatch = useDispatch();
-  const client = client_init();
 
   const load_teleoscope_state = (history_item_num) => {
     var history_item = teleoscope["history"][history_item_num]
@@ -334,6 +338,24 @@ export default function TopBar(props) {
                 {getSessions(cookies.user)}
               </Select>
             </FormControl>
+                  <TextField
+                    id="input-with-icon-textfield"
+                    InputProps={{
+                                  startAdornment: (
+                                                    <InputAdornment position="start">
+                                                      <AccountCircle />
+                                                    </InputAdornment>
+                                  ),
+                    }}
+                    label="Username" 
+                    variant="standard"
+                    defaultValue={cookies.user}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleCookie(e.target.value)
+                      }
+                    }}
+            />
 
           </Stack>
         </Toolbar>

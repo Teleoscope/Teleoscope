@@ -7,8 +7,7 @@ import ActiveSessionID from "../actions/activeSessionID"
 import ActiveHistoryItem from "../actions/activeHistoryItem"
 import CheckedPosts from "../actions/checkedPosts"
 import Bookmark from "../actions/bookmark"
-import Tagged from '../actions/tagged'
-import NamedTags from '../actions/namedTags'
+import Grouped from '../actions/groups'
 
 export default configureStore({
   reducer: {
@@ -19,8 +18,7 @@ export default configureStore({
     activeHistoryItem: ActiveHistoryItem,
     checkedPosts: CheckedPosts,
     bookmarker: Bookmark,
-    tagger: Tagged,
-    namedtagger: NamedTags
+    grouper: Grouped,
   },
 })
 
