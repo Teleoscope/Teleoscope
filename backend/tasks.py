@@ -203,9 +203,15 @@ def save_UI_state(*args, **kwargs):
 @app.task
 def initialize_session(*args, **kwargs):
     db = utils.connect()
-    logging.info(f'Initializing sesssion for user {kwargs["username"]}.')
-    result = db.sessions.insert_one({"username": kwargs["username"], "history":[], "teleoscopes":[]})
-    db.users.update_one({"username": kwargs["username"]}, {"$push": {"sessions":result.inserted_id}})
+    username = kwargs["username"]
+    logging.info(f'Initializing sesssion for user {username}.')
+    # Check if user exists and throw error if not
+    user = db.users.find_one({"username": username})
+    if user is None:
+        logging.info(f'User {username} does not exist.')
+        raise Exception(f"User {username} does not exist.")
+    result = db.sessions.insert_one({"username": username, "history":[], "teleoscopes":[]})
+    db.users.update_one({"username": username}, {"$push": {"sessions":result.inserted_id}})
 
 '''
 TODO:
