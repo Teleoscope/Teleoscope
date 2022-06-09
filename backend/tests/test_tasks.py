@@ -16,11 +16,9 @@ def db():
 def session(db):
 	"""Fixture to execute asserts before and after a test is run"""
 	# Create a session
-	print('\n*****SETUP*****')
 	res = db.sessions.insert_one({"username": 'test', "history":[], "teleoscopes":[]})
 	curr_session_id = str(res.inserted_id)
 	yield curr_session_id # this is where the testing happens
-	print('\n******TEARDOWN******')
 	# remove the session
 	db.sessions.remove({'_id': res.inserted_id})
 
@@ -28,14 +26,11 @@ def session(db):
 def user(db):
 	"""Fixture to execute asserts before and after a test is run"""
 	# Create a user
-	print('\n*****SETUP*****')
 	res = db.users.insert_one({"username": 'test', "password_hash": hash('test'), 'sessions': []})
 	curr_user_id = str(res.inserted_id)
 	yield 'test' # this is where the testing happens
 	# Remove the user
-	print('\n******TEARDOWN******')
 	db.users.remove({'_id': res.inserted_id})
-
 
 
 # Tests
@@ -60,6 +55,12 @@ def test_initialize_teleoscope_valid_label(db, session):
 	finally:
 		db.teleoscopes.remove({ 'label': "test label" })
 
+# Case 4: Missing kwargs
+def test_initialize_session_missing_kwargs(db):
+	with pytest.raises(Exception):
+		tasks.initialize_session()
+
+
 # ! Test cases for initialize_session
 # Case 1: Empty username
 def test_initialize_session_empty_username():
@@ -81,9 +82,48 @@ def test_initialize_session_valid_username(db, user):
 			# Remove session
 			db.sessions.remove({'username': 'test'})
 
-# Test edge cases for save_teleoscope_state
+# Case 4: Missing kwargs 
+def test_initialize_session_missing_kwargs(db):
+	with pytest.raises(Exception):
+		tasks.initialize_session()
 
-# Test edge cases for save_UI_state
+# ! Test cases for save_teleoscope_state
+# Case 1: invalid teleoscope id
+def test_save_teleoscope_state_invalid_teleoscope_id(db):
+	with pytest.raises(Exception):
+		tasks.save_teleoscope_state(_id = "test", history_item = [])
 
-# Test cases for reorient
+# Case 2: Missing kwargs - history_item
+def test_save_teleoscope_state_missing_kwargs(db):
+	with pytest.raises(Exception):
+		tasks.save_teleoscope_state(_id = "test")
+	
+# Case 3 Missing kwargs - _id
+def test_save_teleoscope_state_missing_kwargs_id(db):
+	with pytest.raises(Exception):
+		tasks.save_teleoscope_state(history_item = [])
+
+# Case 4: Invalid teleoscope id - should throw an exception
+def test_save_teleoscope_state_dummy_teleoscope_id(db):
+	with pytest.raises(Exception):
+		tasks.save_teleoscope_state(_id = "test", history_item = [])
+
+# ! Test cases for save_UI_state
+# Case 1: Invalid session id
+def test_save_UI_state_invalid_session_id(db):
+	with pytest.raises(Exception):
+		tasks.save_UI_state(session_id = "test", history_item = [])
+
+# Case 2: Missing kwargs - history_item
+def test_save_UI_state_missing_kwargs(db):
+	with pytest.raises(Exception):
+		tasks.save_UI_state(session_id = "test")
+	
+# Case 3 Missing kwargs - session_id
+def test_save_UI_state_missing_kwargs_session_id(db):
+	with pytest.raises(Exception):
+		tasks.save_UI_state(history_item = [])
+
+
+# ! Test cases for reorient
 
