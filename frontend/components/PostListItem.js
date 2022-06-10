@@ -35,8 +35,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
 import { mark } from "../actions/bookmark";
-import { tag } from "../actions/tagged";
-import { userTags } from "../components/LeftMenuBar";
+import { group } from "../actions/groups";
 
 import Note from "./Notes";
 import Bookmark from "../actions/bookmark";
@@ -98,11 +97,12 @@ export default function QueryListItem(props) {
 
   const added = useSelector((state) => state.adder.value);
   const bookmarked = useSelector((state) => state.bookmarker.value);
-  const tagged = useSelector((state) => state.tagger.value);
+  const grouped = useSelector((state) => state.grouper.value);
+  const groupLabel = useSelector((state) => state.grouper.groups);
 
 
   const marked = bookmarked.includes(props.id);
-  const taggedPost = tagged.some(post => post.id === props.id);
+  const groupedPost = grouped.some(post => post.id === props.id);
 
 
   const [open, setOpen] = useState(false);
@@ -185,8 +185,9 @@ export default function QueryListItem(props) {
 
 
   const getColor = () => {
-    let i = tagged.findIndex(postID => postID.id === props.id);
-    return tagged[i].color;
+    let i = grouped.findIndex(postID => postID.id === props.id);
+    let j = groupLabel.findIndex(postLabel => postLabel.label === grouped[i].label)
+    return groupLabel[j].color;
   };
 
   return (
@@ -207,29 +208,34 @@ export default function QueryListItem(props) {
             aria-controls={open ? 'basic-menu' : undefined}
             aria-haspopup="true"
             aria-expanded={open ? 'true' : undefined}
-            //onClick={handleMouseClick}
+            //onClick={}
           >
-            {taggedPost ? (
+            {/* {groupedPost ? (
               <CircleIcon sx={{ color: getColor() }} style={{ fontSize: 20 }} />
             ) : (
               <CircleIcon style={{ fontSize: 20 }} />
-            )}
+            )} */}
           </IconButton>
 
           <Select
-            labelId="demo-multiple-checkbox-label"
-            id="basic-menu"
+            labelId="demo-simple-checkbox-label"
+            id="demo-simple-select"
             multiple
+            IconComponent={() => 
+              groupedPost ? (
+                <CircleIcon sx={{ color: getColor() }} style={{ fontSize: 20 }} />
+              ) : (
+                <CircleIcon sx={{ color: '#808080'}} style={{ fontSize: 20 }} />
+              )}
             value={menuItem}
             onChange={handleChange}
-            input={<OutlinedInput label="Tag" />}
+            input={<OutlinedInput label="Group" />}
             renderValue={(selected) => selected.join(', ')}
             MenuProps={MenuProps}
           >
-            {userTags.map(tags => (
-              <MenuItem key={tags.id} value={tags.id} onClick={() => dispatch(tag({ id: props.id, tag: tags.tag, color: tags.color }))}>
-                <Checkbox checked={menuItem.indexOf(tags) > -1} />
-                <ListItemText primary={tags.tag} />
+            {groupLabel.map(labels => ( // if it is the same tag name then only display once
+              <MenuItem key={props.label} value={props.label} onClick={() => dispatch(group({ id: props.id, label: labels.label}))}>
+                {labels.label}
               </MenuItem>
             ))}
           </Select>

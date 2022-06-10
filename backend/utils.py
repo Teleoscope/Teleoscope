@@ -36,7 +36,7 @@ def connect():
         f'{auth.mongodb["password"]}@'
         f'{auth.mongodb["host"]}/?{autht}'
     )
-    client = MongoClient(connect_str)
+    client = MongoClient(connect_str, connectTimeoutMS=50000, serverSelectionTimeoutMS = 50000)
     return client.aita
 
 
