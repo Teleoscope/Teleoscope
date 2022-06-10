@@ -21,12 +21,12 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Create auth.py
+    - name: create auth.py
       run: | 
-      # TODO: create usernames for tests
-      echo 'rabbitmq = { "username": "test", "password": "test", "host": "192.168.79.58:5672:systopia", "vhost": "systopia" }' >> auth.py
-      echo 'mongodb = { "username": "test", "password": "test", "host": "192.168.79.58:27017"}' >> auth.py'
-      run: |
+        touch auth.py
+        echo "rabbitmq = {'username': 'test', 'password': 'test', 'host': '192.168.79.58:5672:systopia', 'vhost': 'systopia' }" >> auth.py
+        echo "mongodb = { "username": "test", "password": "test", "host": "192.168.79.58:27017"}" >> auth.py
+    - run: 
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
