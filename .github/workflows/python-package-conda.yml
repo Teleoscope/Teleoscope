@@ -22,10 +22,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: create auth.py
-      env:
-      RABBITMQ: ${{ secrets.RABBITMQ_CREDENTIALS }}
-      MONGODB_CREDENTIALS: ${{ secrets.MONGODB_CREDENTIALS }}
-      env:
+      with:
         rabbitmq: ${{ secrets.RABBITMQ_CREDENTIALS }}
         mongodb: ${{ secrets.MONGODB_CREDENTIALS }}
       run: | 
