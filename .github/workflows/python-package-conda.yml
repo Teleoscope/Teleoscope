@@ -36,8 +36,7 @@ jobs:
     - name: Install dependencies
       run: |
         conda env update --file environment.yml --name base
-        # pip3 install gensim tensorflow tensorflow_hub aiohttp_middlewares
-        # conda install tqdm pymongo numpy celery aiohttp pytest
+    # TODO: Uncomment after querySearch errors are fixed
     # - name: Lint with flake8
     #   run: |
     #     conda install flake8
@@ -49,3 +48,4 @@ jobs:
       run: |
         cd tests/
         pytest -v -p no:warnings  
+      timeout-minutes: 15
