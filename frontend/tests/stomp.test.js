@@ -34,7 +34,7 @@ test("Testing initialize_session return value.", () => {
 
 // initialize_teleoscope
 test("Testing initialize_teleoscope return value.", () => {
-	expect(initialize_teleoscope(new DummyClient(), "test label", 1010
+	expect(initialize_teleoscope(new DummyClient(), "test label", '62a24ba3a43e59841cacad9d'
 	)).toStrictEqual(
 		{
 			"task": "initialize_teleoscope",
