@@ -26,8 +26,8 @@ jobs:
       env:
         rabbitmq: ${{ secrets.RABBITMQ_CREDENTIALS }}
         mongodb: ${{ secrets.MONGODB_CREDENTIALS }}
-      run: | 
-        touch auth.py
+      run: touch auth.py
+      run: |
         echo "rabbitmq = {'username': 'phb', 'password': '"$rabbitmq"', 'host': '192.168.79.58:5672:systopia', 'vhost': 'systopia' }" >> auth.py
         echo "mongodb = { 'username': 'sol', 'password': '"$mongodb"','host': '192.168.79.58:27017'}" >> auth.py
     - run: 
@@ -45,7 +45,6 @@ jobs:
     #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
     #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
-      run: |
-        cd tests/
-        pytest -v -p no:warnings  
+      run: cd tests/
+      run: pytest -v -p no:warnings  
       timeout-minutes: 15
