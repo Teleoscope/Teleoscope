@@ -337,20 +337,25 @@ class reorient(Task):
 
         # get query document from teleoscopes collection
         _id = ObjectId(teleoscope_id)
-        queryDocument = self.db.teleoscopes.find_one({"_id": _id})
+        teleoscope = self.db.teleoscopes.find_one({"_id": _id})
 
-        if queryDocument == None:
+        if teleoscope == None:
            logging.info(f'Teleoscope with id {_id} does not exist!')
+           return 400 # fail
 
         # check if stateVector exists
         stateVector = None
-        if 'stateVector' in queryDocument:
-            stateVector = np.array(queryDocument['stateVector'])
+        if 'stateVector' in teleoscope:
+            stateVector = np.array(teleoscope['stateVector'])
         elif self.model is None:
+            docs = positive_docs + negative_docs
+            first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
             self.model = utils.loadModel()
-            stateVector = self.model([query]).numpy() # convert query string to vector
+            stateVector = self.model(first_doc['selftext']).numpy() # convert query string to vector
         else:
-            stateVector = self.model([query]).numpy() # convert query string to vector
+            docs = positive_docs + negative_docs
+            first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
+            stateVector = self.model(first_doc['selftext']).numpy() # convert query string to vector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
         qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=direction) # move qvector towards/away from feedbackVector
