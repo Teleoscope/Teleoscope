@@ -312,7 +312,7 @@ class reorient(Task):
         obj = fs.put(dumps, encoding=encoding)
         return obj
 
-    def run(self, _id: str, positive_docs: list, negative_docs: list, query: str):
+    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list):
         # either positive or negative docs should have at least one entry
         if len(positive_docs) == 0 and len(negative_docs) == 0:
             # if both are empty, then cache stuff if not cached alreadt
@@ -336,12 +336,11 @@ class reorient(Task):
             self.db = utils.connect()
 
         # get query document from teleoscopes collection
+        _id = ObjectId(kwargs["teleoscope_id"])
         queryDocument = self.db.teleoscopes.find_one({"_id": _id})
 
         if queryDocument == None:
-           initialize_teleoscope(_id)
-           queryDocument = self.db.teleoscopes.find_one({"_id": _id})
-           logging.info(f'queryDocument is being generated for {_id}.')
+           logging.info(f'Teleoscope with id {_id} does not exist!')
 
         # check if stateVector exists
         stateVector = None
