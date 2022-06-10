@@ -151,6 +151,10 @@ TODO:
 '''
 @app.task
 def initialize_teleoscope(*args, **kwargs):
+    if 'label' not in kwargs:
+        logging.info(f"label not in kwargs.")
+        raise Exception("label not in kwargs")
+    
     db = utils.connect()
     label = kwargs["label"]
     if label == "":
@@ -166,6 +170,7 @@ def initialize_teleoscope(*args, **kwargs):
         "history": []
         }
     )
+    # TODO: Add more robust error handling in case of failures, maybe transactions to remove data from mongo in case of failures
     logging.info(f"The new teleoscope has an id of: {teleoscope_id.inserted_id}")
 
     # perform text search query
@@ -181,20 +186,41 @@ def initialize_teleoscope(*args, **kwargs):
 
 @app.task
 def save_teleoscope_state(*args, **kwargs):
+    # Error checking
+    if '_id' not in kwargs:
+        logging.info(f"_id not in kwargs.")
+        raise Exception("_id not in kwargs")
+    if 'history_item' not in kwargs:
+        logging.info(f"history_item not in kwargs.")
+        raise Exception("history_item not in kwargs")
     db = utils.connect()
     logging.info(f'Saving state for teleoscope {kwargs["_id"]}.')
     _id = str(kwargs["_id"])
     obj_id = ObjectId(_id)
+    # check if teleoscope id is valid, if not, raise exception
+    if not db.teleoscopes.find_one({"_id": obj_id}):
+        logging.info(f"Teleoscope {_id} not found.")
+        raise Exception("Teleoscope not found")
     history_item = kwargs["history_item"]
-
     result = db.teleoscopes.update({"_id": obj_id}, {'$push': {"history": kwargs["history_item"]}})
     logging.info(f'Returned: {result}')
 
 @app.task
 def save_UI_state(*args, **kwargs):
+    # Error checking
+    if 'session_id' not in kwargs:
+        logging.info(f"session_id not in kwargs.")
+        raise Exception("session_id not in kwargs")
+    if 'history_item' not in kwargs:
+        logging.info(f"history_item not in kwargs.")
+        raise Exception("history_item not in kwargs")
     db = utils.connect()
     logging.info(f'Saving state for {kwargs["session_id"]}.')
     session_id = kwargs["session_id"]
+    # check if session id is valid, if not, raise exception
+    if not db.sessions.find_one({"_id": ObjectId(str(session_id))}):
+        logging.info(f"Session {session_id} not found.")
+        raise Exception("Session not found")
     history_item = kwargs["history_item"]
     
     db.sessions.update({"session_id": kwargs["session_id"]}, {'$push': {"history": kwargs["history_item"]}})
@@ -202,9 +228,15 @@ def save_UI_state(*args, **kwargs):
 @app.task
 def initialize_session(*args, **kwargs):
     db = utils.connect()
-    logging.info(f'Initializing sesssion for user {kwargs["username"]}.')
-    result = db.sessions.insert_one({"username": kwargs["username"], "history":[], "teleoscopes":[]})
-    db.users.update_one({"username": kwargs["username"]}, {"$push": {"sessions":result.inserted_id}})
+    username = kwargs["username"]
+    logging.info(f'Initializing sesssion for user {username}.')
+    # Check if user exists and throw error if not
+    user = db.users.find_one({"username": username})
+    if user is None:
+        logging.info(f'User {username} does not exist.')
+        raise Exception(f"User {username} does not exist.")
+    result = db.sessions.insert_one({"username": username, "history":[], "teleoscopes":[]})
+    db.users.update_one({"username": username}, {"$push": {"sessions":result.inserted_id}})
 
 '''
 TODO:
