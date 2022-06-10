@@ -325,7 +325,8 @@ class reorient(Task):
                 self.db = utils.connect()
 
             # do nothing since no feedback given on docs
-            return
+            logging.info(f'No positive or negative docs specified for teleoscope {teleoscope_id}.')
+            return 200 # trival pass
 
         # Check if post ids and vectors are cached
         if self.postsCached == False:
@@ -350,6 +351,7 @@ class reorient(Task):
         else:
             docs = positive_docs + negative_docs
             first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
+            logging.info(f'Results of finding first_doc: {first_doc}.')
             stateVector = first_doc['selftextVector'] # grab selftextVector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
