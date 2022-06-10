@@ -22,12 +22,13 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: create auth.py
+      env:
+      RABBITMQ: ${{ secrets.RABBITMQ_CREDENTIALS }}
+      MONGODB_CREDENTIALS: ${{ secrets.MONGODB_CREDENTIALS }}
       run: | 
         touch auth.py
-        echo "rabbitmq = {'username': 'phb', 'password': "${{ secrets.RABBITMQ_CREDENTIALS }}", 'host': '192.168.79.58:5672:systopia', 'vhost': 'systopia' }" >> auth.py
-        echo "mongodb = { 'username': 'sol', 'password': "${{ secrets.MONGODB_CREDENTIALS }}",'host': '192.168.79.58:27017'}" >> auth.py
-        echo "print(rabbitmq)" >> auth.py
-        echo "print(mongodb)" >> auth.py
+        echo "rabbitmq = {'username': 'phb', 'password': '"${{ secrets.RABBITMQ_CREDENTIALS }}"', 'host': '192.168.79.58:5672:systopia', 'vhost': 'systopia' }" >> auth.py
+        echo "mongodb = { 'username': 'sol', 'password': '"${{ secrets.MONGODB_CREDENTIALS }}"','host': '192.168.79.58:27017'}" >> auth.py
     - run: 
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
