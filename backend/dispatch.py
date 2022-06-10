@@ -93,7 +93,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
         if b['task'] == "reorient":
             res = robj.delay(
-                teleoscope_id=b['args']["teleoscope_id"],
+                _id=b['args']["_id"],
                 positive_docs=b['args']["positive_docs"],
                 negative_docs=b['args']["negative_docs"],
                 query=b['args']["query"]
