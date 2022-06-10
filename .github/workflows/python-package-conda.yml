@@ -24,8 +24,8 @@ jobs:
     - name: create auth.py
       run: | 
         touch auth.py
-        echo "rabbitmq = {'username': phb, 'password': "${{ secrets.RABBITMQ_CREDENTIALS }}", 'host': '192.168.79.58:5672:systopia', 'vhost': 'systopia' }" >> auth.py
-        echo "mongodb = { "username": "sol", "password": "${{ secrets.MONGODB_CREDENTIALS }}", "host": "192.168.79.58:27017"}" >> auth.py
+        echo "rabbitmq = {'username': 'phb', 'password': "${{ secrets.RABBITMQ_CREDENTIALS }}", 'host': '192.168.79.58:5672:systopia', 'vhost': 'systopia' }" >> auth.py
+        echo "mongodb = { 'username': 'sol', 'password': "${{ secrets.MONGODB_CREDENTIALS }}",'host': '192.168.79.58:27017'}" >> auth.py
         echo "print(rabbitmq)" >> auth.py
         echo "print(mongodb)" >> auth.py
     - run: 
