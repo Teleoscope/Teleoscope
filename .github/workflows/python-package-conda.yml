@@ -21,14 +21,11 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-    - run: touch .env.local
-    - run: echo "MONGODB_URI=test" >> .env.local
-    - run: echo "MONGODB_DB=test" >> .env.local
-    - run: echo "NEXT_PUBLIC_RABBITMQ_USERNAME=test" >> .env.local
-    - run: echo "NEXT_PUBLIC_RABBITMQ_PASSWORD=test" >> .env.local
-    - run: echo "NEXT_PUBLIC_RABBITMQ_VHOST=test" >> .env.local
-    - run: echo "NEXT_PUBLIC_RABBITMQ_HOST=test" >> .env.local
-    - name: Add conda to system path
+    - name: Create auth.py
+      run: | 
+      # TODO: create usernames for tests
+      echo 'rabbitmq = { "username": "test", "password": "test", "host": "192.168.79.58:5672:systopia", "vhost": "systopia" }' >> auth.py
+      echo 'mongodb = { "username": "test", "password": "test", "host": "192.168.79.58:27017"}' >> auth.py'
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
