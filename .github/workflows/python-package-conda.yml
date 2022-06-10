@@ -47,5 +47,5 @@ jobs:
     - name: Test with pytest
       run: |
           cd tests/
-          pytest -v -p no:warnings  
+          pytest -v -p no:warnings test_tasks_automated.py 
       timeout-minutes: 15
