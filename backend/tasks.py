@@ -336,7 +336,7 @@ class reorient(Task):
             self.db = utils.connect()
 
         # get query document from teleoscopes collection
-        _id = ObjectId(kwargs["teleoscope_id"])
+        _id = ObjectId(teleoscope_id)
         queryDocument = self.db.teleoscopes.find_one({"_id": _id})
 
         if queryDocument == None:
