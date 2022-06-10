@@ -347,15 +347,10 @@ class reorient(Task):
         stateVector = None
         if 'stateVector' in teleoscope:
             stateVector = np.array(teleoscope['stateVector'])
-        elif self.model is None:
-            docs = positive_docs + negative_docs
-            first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
-            self.model = utils.loadModel()
-            stateVector = self.model(first_doc['selftext']).numpy() # convert query string to vector
         else:
             docs = positive_docs + negative_docs
             first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
-            stateVector = self.model(first_doc['selftext']).numpy() # convert query string to vector
+            stateVector = first_doc['selftextVector'] # grab selftextVector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
         qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=direction) # move qvector towards/away from feedbackVector
