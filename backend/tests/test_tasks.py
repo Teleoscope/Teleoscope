@@ -39,12 +39,14 @@ def user(db):
 def test_initialize_teleoscope_empty_label():
 	assert tasks.initialize_teleoscope((), label = "") == []
 
+
 # Case 2: Invalid session id - should throw an exception
 def test_initialize_teleoscope_dummy_label(db):
 	with pytest.raises(Exception):
 		tasks.initialize_teleoscope((), label = "test label", session_id = 1010)
 	# delete test label teleoscope from table
 	db.teleoscopes.remove({ 'label': "test label" })
+
 
 # Case 3: Valid label, and session id
 def test_initialize_teleoscope_valid_label(db, session):
@@ -54,6 +56,7 @@ def test_initialize_teleoscope_valid_label(db, session):
 		pytest.fail(e)
 	finally:
 		db.teleoscopes.remove({ 'label': "test label" })
+
 
 # Case 4: Missing kwargs
 def test_initialize_session_missing_kwargs(db):
