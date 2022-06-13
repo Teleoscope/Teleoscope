@@ -122,6 +122,7 @@ const keyChange = (e) => {
 };
 
 const onChangeHandler = (event, newValue) => {
+
             if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
               grouped_data = groupDataMaker(newValue.label);
               grouped = true;
@@ -188,6 +189,7 @@ return (
                 label: `Add "${params.inputValue}"`,
               });
             }
+
 
             return filtered;
           }}

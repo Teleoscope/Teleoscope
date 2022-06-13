@@ -105,7 +105,10 @@ export default function QueryListItem(props) {
 
 
   const marked = bookmarked.includes(props.id);
+<<<<<<< HEAD
   //const 
+=======
+>>>>>>> main
   const groupedPost = grouped.some(post => post.id === props.id);
 
 
@@ -186,19 +189,9 @@ export default function QueryListItem(props) {
       setNoteContent("");
     }
   };
-
-
-  // const getColor = () => {
-  //   let i = grouped.findIndex(postID => postID.id === props.id);
-  //   let results = (i > -1) ? (
-  //     groupLabel.findIndex(postLabel => postLabel.label === groupLabel[i].label)
-  //   ) : ('#808080')
-  //   return (typeof (results) === "number") ? groupLabel[results].color : results;
-  // };
-
   const postValue = (propsID) => {
-
   }
+
 
   return (
     <div ref={drag} style={{ borderBottom: "1px solid  #eceeee" }}>
@@ -213,6 +206,7 @@ export default function QueryListItem(props) {
               <BookmarkIcon style={{ fontSize: 20 }} />
             }
           </IconButton>
+
           {console.log(groupColor)}
           <FormControl sx={{ m: 1, width: 300 }}>
             <InputLabel id="demo-simple-select-label">Group</InputLabel>
@@ -236,6 +230,7 @@ export default function QueryListItem(props) {
               ))}
             </Select>
           </FormControl>
+
         </ListItemIcon>
 
         <ListItemText>
