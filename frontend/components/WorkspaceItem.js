@@ -175,10 +175,9 @@ export default function WorkspaceItem(props) {
         }}
       >
         <div>
-          <FormControl sx={{ m: 1, width: 300 }}>
+          <FormControl variant="filled" size="small">
             <InputLabel id="demo-simple-select-label" style={{fontSize: 11}}>Group</InputLabel>
             <Select
-              size="small"
               labelId="demo-simple-select-label"
               id="demo-simple-select"
               multiple

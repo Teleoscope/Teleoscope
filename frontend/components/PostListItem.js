@@ -105,6 +105,7 @@ export default function QueryListItem(props) {
 
 
   const marked = bookmarked.includes(props.id);
+  //const 
   const groupedPost = grouped.some(post => post.id === props.id);
 
 
@@ -187,13 +188,17 @@ export default function QueryListItem(props) {
   };
 
 
-  const getColor = () => {
-    let i = grouped.findIndex(postID => postID.id === props.id);
-    let results = (i > -1) ? (
-      groupLabel.findIndex(postLabel => postLabel.label === groupLabel[i].label)
-    ) : ('#808080')
-    return (typeof (results) === "number") ? groupLabel[results].color : results;
-  };
+  // const getColor = () => {
+  //   let i = grouped.findIndex(postID => postID.id === props.id);
+  //   let results = (i > -1) ? (
+  //     groupLabel.findIndex(postLabel => postLabel.label === groupLabel[i].label)
+  //   ) : ('#808080')
+  //   return (typeof (results) === "number") ? groupLabel[results].color : results;
+  // };
+
+  const postValue = (propsID) => {
+
+  }
 
   return (
     <div ref={drag} style={{ borderBottom: "1px solid  #eceeee" }}>
@@ -222,7 +227,7 @@ export default function QueryListItem(props) {
               MenuProps={MenuProps}
             >
               {groupLabel.map(labels => ( // if it is the same tag name then only display once
-                <MenuItem key={labels.label} value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
+                <MenuItem value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
                   <ListItemIcon>
                     <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />
                   </ListItemIcon>
