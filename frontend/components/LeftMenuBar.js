@@ -122,9 +122,6 @@ const keyChange = (e) => {
 };
 
 const onChangeHandler = (event, newValue) => {
-  // TODO move this logic into a store or
-            // into a function above the body of the JSX
-
             if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
               grouped_data = groupDataMaker(newValue.label);
               grouped = true;
@@ -188,7 +185,7 @@ return (
             if (params.inputValue !== '') {
               filtered.push({
                 inputValue: params.inputValue,
-                tag: `Add "${params.inputValue}"`,
+                label: `Add "${params.inputValue}"`,
               });
             }
 

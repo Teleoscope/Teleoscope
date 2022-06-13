@@ -214,7 +214,7 @@ export default function QueryListItem(props) {
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              //IconComponent={() => (groupColor)} 
+              //IconComponent={() => (<CircleIcon style={{ fontSize: 20 }}/>)} 
               multiple
               value={menuItem}
               onChange={handleChange}
@@ -222,7 +222,7 @@ export default function QueryListItem(props) {
               MenuProps={MenuProps}
             >
               {groupLabel.map(labels => ( // if it is the same tag name then only display once
-                <MenuItem onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
+                <MenuItem key={labels.label} value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
                   <ListItemIcon>
                     <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />
                   </ListItemIcon>
