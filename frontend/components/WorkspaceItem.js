@@ -13,6 +13,17 @@ import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Checkbox from "@mui/material/Checkbox";
 
+// group imports
+import ListItemIcon from "@material-ui/core/ListItemIcon";
+import ListItemText from "@material-ui/core/ListItemText";
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import CircleIcon from '@mui/icons-material/Circle';
+import { group } from "../actions/groups";
+import { FormControl } from "@material-ui/core";
+import InputLabel from '@mui/material/InputLabel';
+import OutlinedInput from '@mui/material/OutlinedInput';
+
 // icons
 import CloseIcon from "@mui/icons-material/Close";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -53,7 +64,25 @@ function usePost(postid) {
   };
 }
 
+// group global function
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
 export default function WorkspaceItem(props) {
+
+  // group variables
+  const [menuItem, setMenuItem] = React.useState([]);
+  const grouped = useSelector((state) => state.grouper.value);
+  const groupLabel = useSelector((state) => state.grouper.groups);
+
   const classes = useStyles();
   const container = React.useRef(null);
   const dispatch = useDispatch();
@@ -85,6 +114,16 @@ export default function WorkspaceItem(props) {
     dispatch(checker(props.id));
     // add to selected group
     console.log("document selected clicked: " + event.target.checked);
+  };
+
+  const handleChangeGroups = (event) => {
+    const {
+      target: { value },
+    } = event;
+    setMenuItem(
+      // On autofill we get a stringified value.
+      typeof value === 'string' ? value.split(',') : value,
+    );
   };
 
   const handleDelete = () => {
@@ -136,6 +175,27 @@ export default function WorkspaceItem(props) {
         }}
       >
         <div>
+          <FormControl variant="filled" size="small">
+            <InputLabel id="demo-simple-select-label" style={{fontSize: 11}}>Group</InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              multiple
+              value={menuItem}
+              onChange={handleChangeGroups}
+              input={<OutlinedInput label="Group" />}
+              MenuProps={MenuProps}
+            >
+              {groupLabel.map(labels => ( // if it is the same tag name then only display once
+                <MenuItem key={labels.label} value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
+                  <ListItemIcon>
+                    <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />
+                  </ListItemIcon>
+                  <ListItemText primary={labels.label} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <Checkbox
             size="small"
             onChange={(e) => handleChange(e)}

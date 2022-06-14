@@ -18,6 +18,7 @@ export const Grouped = createSlice({
 			}
 		],
 		value: []
+		// value: [id: '', label: 'Red']
 	},
 	reducers: {
 		group: (state, action) => {

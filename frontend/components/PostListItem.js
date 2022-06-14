@@ -10,6 +10,7 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import IconButton from "@mui/material/IconButton";
+import InputLabel from '@mui/material/InputLabel';
 import Button from "@mui/material/Button";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -39,6 +40,7 @@ import { group } from "../actions/groups";
 
 import Note from "./Notes";
 import Bookmark from "../actions/bookmark";
+import { FormControl } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -60,6 +62,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
+let groupColor;
 
 function usePost(postid) {
   const { data, error } = useSWR(`/api/posts/${postid}`, fetcher);
@@ -102,6 +105,10 @@ export default function QueryListItem(props) {
 
 
   const marked = bookmarked.includes(props.id);
+<<<<<<< HEAD
+  //const 
+=======
+>>>>>>> main
   const groupedPost = grouped.some(post => post.id === props.id);
 
 
@@ -182,13 +189,9 @@ export default function QueryListItem(props) {
       setNoteContent("");
     }
   };
+  const postValue = (propsID) => {
+  }
 
-
-  const getColor = () => {
-    let i = grouped.findIndex(postID => postID.id === props.id);
-    let j = groupLabel.findIndex(postLabel => postLabel.label === grouped[i].label)
-    return groupLabel[j].color;
-  };
 
   return (
     <div ref={drag} style={{ borderBottom: "1px solid  #eceeee" }}>
@@ -203,42 +206,31 @@ export default function QueryListItem(props) {
               <BookmarkIcon style={{ fontSize: 20 }} />
             }
           </IconButton>
-          <IconButton
-            aria-label="add to bookmarks"
-            aria-controls={open ? 'basic-menu' : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? 'true' : undefined}
-            //onClick={}
-          >
-            {/* {groupedPost ? (
-              <CircleIcon sx={{ color: getColor() }} style={{ fontSize: 20 }} />
-            ) : (
-              <CircleIcon style={{ fontSize: 20 }} />
-            )} */}
-          </IconButton>
 
-          <Select
-            labelId="demo-simple-checkbox-label"
-            id="demo-simple-select"
-            multiple
-            IconComponent={() => 
-              groupedPost ? (
-                <CircleIcon sx={{ color: getColor() }} style={{ fontSize: 20 }} />
-              ) : (
-                <CircleIcon sx={{ color: '#808080'}} style={{ fontSize: 20 }} />
-              )}
-            value={menuItem}
-            onChange={handleChange}
-            input={<OutlinedInput label="Group" />}
-            renderValue={(selected) => selected.join(', ')}
-            MenuProps={MenuProps}
-          >
-            {groupLabel.map(labels => ( // if it is the same tag name then only display once
-              <MenuItem key={props.label} value={props.label} onClick={() => dispatch(group({ id: props.id, label: labels.label}))}>
-                {labels.label}
-              </MenuItem>
-            ))}
-          </Select>
+          {console.log(groupColor)}
+          <FormControl sx={{ m: 1, width: 300 }}>
+            <InputLabel id="demo-simple-select-label">Group</InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              //IconComponent={() => (<CircleIcon style={{ fontSize: 20 }}/>)} 
+              multiple
+              value={menuItem}
+              onChange={handleChange}
+              input={<OutlinedInput label="Group" />}
+              MenuProps={MenuProps}
+            >
+              {groupLabel.map(labels => ( // if it is the same tag name then only display once
+                <MenuItem value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
+                  <ListItemIcon>
+                    <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />
+                  </ListItemIcon>
+                  <ListItemText primary={labels.label} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
         </ListItemIcon>
 
         <ListItemText>
