@@ -105,10 +105,6 @@ export default function QueryListItem(props) {
 
 
   const marked = bookmarked.includes(props.id);
-<<<<<<< HEAD
-  //const 
-=======
->>>>>>> main
   const groupedPost = grouped.some(post => post.id === props.id);
 
 
