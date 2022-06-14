@@ -364,11 +364,11 @@ class reorient(Task):
         logging.info(f'new rank slice has length {len(rank_slice)}.')
 
         # update stateVector
-        self.db.teleoscopes.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
+        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "stateVector" : qprime.tolist()}})
         # update rankedPosts
-        self.db.teleoscopes.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : gridfsObj}})
+        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "ranked_post_ids" : gridfsObj}})
         # update a slice of rank_slice
-        self.db.teleoscopes.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "rank_slice" : rank_slice}})
+        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "rank_slice" : rank_slice}})
 
         return 200 # TODO: what to return?
 
