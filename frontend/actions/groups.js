@@ -43,11 +43,11 @@ export const Grouped = createSlice({
 				// if the post is equal to the same object that is already 
 				console.log("PostIn: " + postIn)
 				temp.splice(postIn, 1);
-			} else if (postID > -1) {
-				// means that the post ID is in list without a group
-				console.log("postID:" + postID)
-				temp.splice(postID, 1);
-				temp.push(post);
+			// } else if (postID > -1) {
+			// 	// means that the post ID is in list without a group
+			// 	console.log("postID:" + postID)
+			// 	temp.splice(postID, 1);
+			// 	temp.push(post);
 			} else {
 				temp.push(post);
 			}

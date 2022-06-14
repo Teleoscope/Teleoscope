@@ -157,6 +157,24 @@ export default function WorkspaceItem(props) {
     return text;
   };
 
+  // const getLabel = () => {
+  //   console.log(props)
+  //   console.log(menuItem)
+  //   grouped.forEach(element => { 
+  //     element.id === props.id ? menuItem.push(element.label) : ( () => {
+  //             let index = menuItem.findIndex(props.label)
+  //             index > -1 ? menuItem.splice(index, 1) : null})
+  //   });
+  // }
+  const getLabel = () => {
+    let menuItems = [];
+    grouped.forEach(element => {
+      menuItems.push(element.label);
+    } )
+
+    return menuItems;
+  }
+
   return (
     <Draggable className={classes.draggable}>
       <Card
@@ -181,7 +199,8 @@ export default function WorkspaceItem(props) {
               labelId="demo-simple-select-label"
               id="demo-simple-select"
               multiple
-              value={menuItem}
+              //value={menuItem}
+              value={getLabel()}
               onChange={handleChangeGroups}
               input={<OutlinedInput label="Group" />}
               MenuProps={MenuProps}

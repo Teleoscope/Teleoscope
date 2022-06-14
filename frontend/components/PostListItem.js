@@ -103,9 +103,8 @@ export default function QueryListItem(props) {
   const grouped = useSelector((state) => state.grouper.value);
   const groupLabel = useSelector((state) => state.grouper.groups);
 
-
+  const groupedPosts = grouped.includes(props.id);
   const marked = bookmarked.includes(props.id);
-  //const 
   const groupedPost = grouped.some(post => post.id === props.id);
 
 
@@ -196,9 +195,19 @@ export default function QueryListItem(props) {
   //   return (typeof (results) === "number") ? groupLabel[results].color : results;
   // };
 
-  const postValue = (propsID) => {
+  // const getLabel = () => {
+  //   grouped.forEach(element => { 
+  //     element.id === props.id ? menuItem.push(element.label) : null
+  //   });
+  // }
 
-  }
+  const getLabel = () => {
+    let menuItems = [];
+    grouped.forEach(element => {
+      menuItems.push(element.label);
+    })
+    return menuItems;
+  };
 
   return (
     <div ref={drag} style={{ borderBottom: "1px solid  #eceeee" }}>
@@ -213,20 +222,19 @@ export default function QueryListItem(props) {
               <BookmarkIcon style={{ fontSize: 20 }} />
             }
           </IconButton>
-          {console.log(groupColor)}
           <FormControl sx={{ m: 1, width: 300 }}>
             <InputLabel id="demo-simple-select-label">Group</InputLabel>
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              //IconComponent={() => (<CircleIcon style={{ fontSize: 20 }}/>)} 
               multiple
-              value={menuItem}
+              //value={menuItem}
+              value={getLabel()}
               onChange={handleChange}
               input={<OutlinedInput label="Group" />}
               MenuProps={MenuProps}
             >
-              {groupLabel.map(labels => ( // if it is the same tag name then only display once
+              {groupLabel.map(labels => (
                 <MenuItem value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
                   <ListItemIcon>
                     <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />
