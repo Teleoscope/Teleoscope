@@ -157,15 +157,6 @@ export default function WorkspaceItem(props) {
     return text;
   };
 
-  // const getLabel = () => {
-  //   console.log(props)
-  //   console.log(menuItem)
-  //   grouped.forEach(element => { 
-  //     element.id === props.id ? menuItem.push(element.label) : ( () => {
-  //             let index = menuItem.findIndex(props.label)
-  //             index > -1 ? menuItem.splice(index, 1) : null})
-  //   });
-  // }
   const getLabel = () => {
     let menuItems = [];
     grouped.forEach(element => {
@@ -189,7 +180,6 @@ export default function WorkspaceItem(props) {
           boxShadow: checked.indexOf(props.id) >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
           minWidth: 180,
           maxWidth: 290,
-          // height: 120,
         }}
       >
         <div>
@@ -199,13 +189,12 @@ export default function WorkspaceItem(props) {
               labelId="demo-simple-select-label"
               id="demo-simple-select"
               multiple
-              //value={menuItem}
               value={getLabel()}
               onChange={handleChangeGroups}
               input={<OutlinedInput label="Group" />}
               MenuProps={MenuProps}
             >
-              {groupLabel.map(labels => ( // if it is the same tag name then only display once
+              {groupLabel.map(labels => (
                 <MenuItem key={labels.label} value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
                   <ListItemIcon>
                     <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />

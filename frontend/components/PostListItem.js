@@ -187,24 +187,10 @@ export default function QueryListItem(props) {
   };
 
 
-  // const getColor = () => {
-  //   let i = grouped.findIndex(postID => postID.id === props.id);
-  //   let results = (i > -1) ? (
-  //     groupLabel.findIndex(postLabel => postLabel.label === groupLabel[i].label)
-  //   ) : ('#808080')
-  //   return (typeof (results) === "number") ? groupLabel[results].color : results;
-  // };
-
-  // const getLabel = () => {
-  //   grouped.forEach(element => { 
-  //     element.id === props.id ? menuItem.push(element.label) : null
-  //   });
-  // }
-
-  const getLabel = () => {
+  const getLabel = (id) => {
     let menuItems = [];
     grouped.forEach(element => {
-      menuItems.push(element.label);
+      element.id === id ? menuItems.push(element.label) : null;
     })
     return menuItems;
   };
@@ -229,7 +215,7 @@ export default function QueryListItem(props) {
               id="demo-simple-select"
               multiple
               //value={menuItem}
-              value={getLabel()}
+              value={getLabel(props.id)}
               onChange={handleChange}
               input={<OutlinedInput label="Group" />}
               MenuProps={MenuProps}
