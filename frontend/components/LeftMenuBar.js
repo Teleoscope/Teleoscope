@@ -116,16 +116,16 @@ export default function LeftMenuBar(props) {
       }))
   }
 
-  const bookmarkToggler = (e) => {
-    bookmarked = !bookmarked;
-    console.log(bookmarked);
-  };
+const bookmarkToggler = (e) => {
+  bookmarked = !bookmarked;
+  console.log(bookmarked);
+};
 
-  const keyChange = (e) => {
-    if (e.code == "Enter") {
-      dispatch(searcher(text));
-    }
-  };
+const keyChange = (e) => {
+  if (e.code == "Enter") {
+    dispatch(searcher(text));
+  }
+};
 
   const onChangeHandler = (event, newValue) => {
     if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
@@ -263,12 +263,13 @@ export default function LeftMenuBar(props) {
         </React.Fragment>
 
 
-        <FormControlLabel
-          style={{ marginLeft: 20, marginTop: 10 }}
-          control={<Checkbox style={{ marginRight: 10 }} />}
-          onChange={() => setBookmarked(!bookmarked)}
-          label="Bookmarked Items Only"
-        />
+
+      <FormControlLabel
+        style={{ marginLeft: 20, marginTop: 10 }}
+        control={<Checkbox style={{ marginRight: 10 }} />}
+        onChange={() => setBookmarked(!bookmarked)}
+        label="Bookmarked Items Only"
+      />
 
         {bookmarked && grouped ? (<PostList data={arrayUnique(bookmarked_data.concat(grouped_data))} pagination={true} />) :
           (bookmarked ? (<PostList data={bookmarked_data} pagination={true} />) :
@@ -277,6 +278,7 @@ export default function LeftMenuBar(props) {
       </Box>
     </div >
   );
+
 }
 
 

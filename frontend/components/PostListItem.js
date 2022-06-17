@@ -185,6 +185,8 @@ export default function QueryListItem(props) {
       setNoteContent("");
     }
   };
+  const postValue = (propsID) => {
+  }
 
 
   const getLabel = (id) => {
@@ -213,6 +215,7 @@ export default function QueryListItem(props) {
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
+
               multiple
               value={getLabel(props.id)}
               onChange={handleChange}

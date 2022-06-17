@@ -121,9 +121,7 @@ export default function WorkspaceItem(props) {
     // add to selected group
     console.log("document selected clicked: " + event.target.checked);
   };
-
-
-
+  
   const handleChangeGroups = (event) => {
     const {
       target: { value },
@@ -133,7 +131,6 @@ export default function WorkspaceItem(props) {
       typeof value === 'string' ? value.split(',') : value,
     );
   };
-
 
 
   const handleDelete = () => {

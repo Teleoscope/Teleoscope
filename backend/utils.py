@@ -36,7 +36,7 @@ def connect():
         f'{auth.mongodb["password"]}@'
         f'{auth.mongodb["host"]}/?{autht}'
     )
-    client = MongoClient(connect_str)
+    client = MongoClient(connect_str, connectTimeoutMS=50000, serverSelectionTimeoutMS = 50000)
     return client.aita
 
 
@@ -163,7 +163,7 @@ def moveVector(sourceVector, destinationVector, direction, magnitude = None):
     return new_q
 
 def getPostVector(db, post_id):
-    post = db.clean.posts.v2.find_one({"id": post_id}, projection={'selftextVector':1}) # get post which was liked/disliked
+    post = db.clean.posts.v3.find_one({"id": post_id}, projection={'selftextVector':1}) # get post which was liked/disliked
     postVector = np.array(post['selftextVector']) # extract vector of post which was liked/disliked
     return postVector
 
@@ -173,7 +173,7 @@ def loadModel():
 
 def getAllPosts(db, projection, batching=True, batchSize=10000):
     if not batching:
-        allPosts = db.clean.posts.v2.find({}, projection=projection)
+        allPosts = db.clean.posts.v3.find({}, projection=projection)
         allPosts = list(allPosts)
         return allPosts
     
@@ -182,7 +182,7 @@ def getAllPosts(db, projection, batching=True, batchSize=10000):
     dataProcessed = 0
     allPosts = []
     while True:
-        batch = db.clean.posts.v2.find(projection=projection).skip(numSkip).limit(batchSize)
+        batch = db.clean.posts.v3.find(projection=projection).skip(numSkip).limit(batchSize)
         batch = list(batch)
         # break if no more posts
         if len(batch) == 0:

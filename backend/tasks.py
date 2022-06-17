@@ -151,6 +151,10 @@ TODO:
 '''
 @app.task
 def initialize_teleoscope(*args, **kwargs):
+    if 'label' not in kwargs:
+        logging.info(f"label not in kwargs.")
+        raise Exception("label not in kwargs")
+    
     db = utils.connect()
     label = kwargs["label"]
     if label == "":
@@ -166,6 +170,7 @@ def initialize_teleoscope(*args, **kwargs):
         "history": []
         }
     )
+    # TODO: Add more robust error handling in case of failures, maybe transactions to remove data from mongo in case of failures
     logging.info(f"The new teleoscope has an id of: {teleoscope_id.inserted_id}")
 
     # perform text search query
@@ -181,20 +186,41 @@ def initialize_teleoscope(*args, **kwargs):
 
 @app.task
 def save_teleoscope_state(*args, **kwargs):
+    # Error checking
+    if '_id' not in kwargs:
+        logging.info(f"_id not in kwargs.")
+        raise Exception("_id not in kwargs")
+    if 'history_item' not in kwargs:
+        logging.info(f"history_item not in kwargs.")
+        raise Exception("history_item not in kwargs")
     db = utils.connect()
     logging.info(f'Saving state for teleoscope {kwargs["_id"]}.')
     _id = str(kwargs["_id"])
     obj_id = ObjectId(_id)
+    # check if teleoscope id is valid, if not, raise exception
+    if not db.teleoscopes.find_one({"_id": obj_id}):
+        logging.info(f"Teleoscope {_id} not found.")
+        raise Exception("Teleoscope not found")
     history_item = kwargs["history_item"]
-
     result = db.teleoscopes.update({"_id": obj_id}, {'$push': {"history": kwargs["history_item"]}})
     logging.info(f'Returned: {result}')
 
 @app.task
 def save_UI_state(*args, **kwargs):
+    # Error checking
+    if 'session_id' not in kwargs:
+        logging.info(f"session_id not in kwargs.")
+        raise Exception("session_id not in kwargs")
+    if 'history_item' not in kwargs:
+        logging.info(f"history_item not in kwargs.")
+        raise Exception("history_item not in kwargs")
     db = utils.connect()
     logging.info(f'Saving state for {kwargs["session_id"]}.')
     session_id = kwargs["session_id"]
+    # check if session id is valid, if not, raise exception
+    if not db.sessions.find_one({"_id": ObjectId(str(session_id))}):
+        logging.info(f"Session {session_id} not found.")
+        raise Exception("Session not found")
     history_item = kwargs["history_item"]
     
     db.sessions.update({"session_id": kwargs["session_id"]}, {'$push': {"history": kwargs["history_item"]}})
@@ -202,9 +228,15 @@ def save_UI_state(*args, **kwargs):
 @app.task
 def initialize_session(*args, **kwargs):
     db = utils.connect()
-    logging.info(f'Initializing sesssion for user {kwargs["username"]}.')
-    result = db.sessions.insert_one({"username": kwargs["username"], "history":[], "teleoscopes":[]})
-    db.users.update_one({"username": kwargs["username"]}, {"$push": {"sessions":result.inserted_id}})
+    username = kwargs["username"]
+    logging.info(f'Initializing sesssion for user {username}.')
+    # Check if user exists and throw error if not
+    user = db.users.find_one({"username": username})
+    if user is None:
+        logging.info(f'User {username} does not exist.')
+        raise Exception(f"User {username} does not exist.")
+    result = db.sessions.insert_one({"username": username, "history":[], "teleoscopes":[]})
+    db.users.update_one({"username": username}, {"$push": {"sessions":result.inserted_id}})
 
 '''
 TODO:
@@ -280,7 +312,7 @@ class reorient(Task):
         obj = fs.put(dumps, encoding=encoding)
         return obj
 
-    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, query: str):
+    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list):
         # either positive or negative docs should have at least one entry
         if len(positive_docs) == 0 and len(negative_docs) == 0:
             # if both are empty, then cache stuff if not cached alreadt
@@ -293,7 +325,8 @@ class reorient(Task):
                 self.db = utils.connect()
 
             # do nothing since no feedback given on docs
-            return
+            logging.info(f'No positive or negative docs specified for teleoscope {teleoscope_id}.')
+            return 200 # trival pass
 
         # Check if post ids and vectors are cached
         if self.postsCached == False:
@@ -304,22 +337,22 @@ class reorient(Task):
             self.db = utils.connect()
 
         # get query document from teleoscopes collection
-        queryDocument = self.db.teleoscopes.find_one({"teleoscope_id": teleoscope_id})
+        _id = ObjectId(teleoscope_id)
+        teleoscope = self.db.teleoscopes.find_one({"_id": _id})
 
-        if queryDocument == None:
-           querySearch(query, teleoscope_id)
-           queryDocument = self.db.teleoscopes.find_one({"teleoscope_id": teleoscope_id})
-           logging.info(f'queryDocument is being generated for {teleoscope_id}.')
+        if teleoscope == None:
+           logging.info(f'Teleoscope with id {_id} does not exist!')
+           return 400 # fail
 
         # check if stateVector exists
         stateVector = None
-        if 'stateVector' in queryDocument:
-            stateVector = np.array(queryDocument['stateVector'])
-        elif self.model is None:
-            self.model = utils.loadModel()
-            stateVector = self.model([query]).numpy() # convert query string to vector
+        if 'stateVector' in teleoscope:
+            stateVector = np.array(teleoscope['stateVector'])
         else:
-            stateVector = self.model([query]).numpy() # convert query string to vector
+            docs = positive_docs + negative_docs
+            first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
+            logging.info(f'Results of finding first_doc: {first_doc}.')
+            stateVector = first_doc['selftextVector'] # grab selftextVector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
         qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=direction) # move qvector towards/away from feedbackVector
@@ -331,11 +364,11 @@ class reorient(Task):
         logging.info(f'new rank slice has length {len(rank_slice)}.')
 
         # update stateVector
-        self.db.teleoscopes.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "stateVector" : qprime.tolist()}})
+        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "stateVector" : qprime.tolist()}})
         # update rankedPosts
-        self.db.teleoscopes.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "ranked_post_ids" : gridfsObj}})
+        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "ranked_post_ids" : gridfsObj}})
         # update a slice of rank_slice
-        self.db.teleoscopes.update_one({"teleoscope_id": teleoscope_id}, {'$set': { "rank_slice" : rank_slice}})
+        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "rank_slice" : rank_slice}})
 
         return 200 # TODO: what to return?
 

@@ -29,7 +29,6 @@ export const Grouped = createSlice({
 
 			var post = action.payload
 			var temp = [...state.value]
-
 			var postIn = temp.findIndex(object => {
 				return ((post.label === object.label) && (post.id === object.id))
 			});
