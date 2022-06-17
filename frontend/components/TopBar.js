@@ -357,7 +357,6 @@ export default function TopBar(props) {
                     }}
             />
 
-
           </Stack>
         </Toolbar>
       </AppBar>

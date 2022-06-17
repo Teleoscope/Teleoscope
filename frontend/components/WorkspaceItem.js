@@ -96,9 +96,13 @@ export default function WorkspaceItem(props) {
 
   const [note, setNote] = React.useState(false);
   const [noteContent, setNoteContent] = useState("");
+
+  
   const handleClick = () => {
     setOpen(!open);
   };
+
+
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "item",
@@ -110,12 +114,14 @@ export default function WorkspaceItem(props) {
     }),
   }));
 
+
+
   const handleChange = (event) => {
     dispatch(checker(props.id));
     // add to selected group
     console.log("document selected clicked: " + event.target.checked);
   };
-
+  
   const handleChangeGroups = (event) => {
     const {
       target: { value },
@@ -126,9 +132,12 @@ export default function WorkspaceItem(props) {
     );
   };
 
+
   const handleDelete = () => {
     dispatch(adder(props.id))
   };
+
+
 
   const postTitle = (post) => {
     if (!post) {
@@ -149,6 +158,8 @@ export default function WorkspaceItem(props) {
     return ret;
   };
 
+
+
   const postContent = (post) => {
     if (!post) {
       return "";
@@ -156,6 +167,18 @@ export default function WorkspaceItem(props) {
     var text = post["selftext"].slice(0, 1000);
     return text;
   };
+
+
+
+  const getLabel = (id) => {
+    let menuItems = [];
+    grouped.forEach(element => {
+      element.id === id ? menuItems.push(element.label) : null;
+    })
+    return menuItems;
+  };
+
+
 
   return (
     <Draggable className={classes.draggable}>
@@ -166,27 +189,26 @@ export default function WorkspaceItem(props) {
           borderRadius: 3,
           backgroundColor: "white",
           bortderStyle: "solid",
-          borderWidth: checked.indexOf(props.id) >= 0  ? 2 : 0,
+          borderWidth: checked.indexOf(props.id) >= 0 ? 2 : 0,
           borderColor: checked.indexOf(props.id) >= 0 ? "#4e5cbc" : "white",
           boxShadow: checked.indexOf(props.id) >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
           minWidth: 180,
           maxWidth: 290,
-          // height: 120,
         }}
       >
         <div>
           <FormControl variant="filled" size="small">
-            <InputLabel id="demo-simple-select-label" style={{fontSize: 11}}>Group</InputLabel>
+            <InputLabel id="demo-simple-select-label" style={{ fontSize: 11 }}>Group</InputLabel>
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
               multiple
-              value={menuItem}
+              value={getLabel(props.id)}
               onChange={handleChangeGroups}
               input={<OutlinedInput label="Group" />}
               MenuProps={MenuProps}
             >
-              {groupLabel.map(labels => ( // if it is the same tag name then only display once
+              {groupLabel.map(labels => (
                 <MenuItem key={labels.label} value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
                   <ListItemIcon>
                     <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />
@@ -231,20 +253,20 @@ export default function WorkspaceItem(props) {
             style={
               viewMore
                 ? {
-                    display: "inline-block",
-                    fontSize: 13,
-                    whiteSpace: "pre-line",
-                    margin: "10px 10px 0px 20px",
-                  }
+                  display: "inline-block",
+                  fontSize: 13,
+                  whiteSpace: "pre-line",
+                  margin: "10px 10px 0px 20px",
+                }
                 : {
-                    display: "inline-block",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis [..]",
-                    height: 195,
-                    fontSize: 13,
-                    whiteSpace: "pre-line",
-                    margin: "10px 10px 0px 20px",
-                  }
+                  display: "inline-block",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis [..]",
+                  height: 195,
+                  fontSize: 13,
+                  whiteSpace: "pre-line",
+                  margin: "10px 10px 0px 20px",
+                }
             }
           >
             {postContent(post)}

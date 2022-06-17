@@ -103,7 +103,7 @@ export default function QueryListItem(props) {
   const grouped = useSelector((state) => state.grouper.value);
   const groupLabel = useSelector((state) => state.grouper.groups);
 
-
+  const groupedPosts = grouped.includes(props.id);
   const marked = bookmarked.includes(props.id);
   const groupedPost = grouped.some(post => post.id === props.id);
 
@@ -189,6 +189,14 @@ export default function QueryListItem(props) {
   }
 
 
+  const getLabel = (id) => {
+    let menuItems = [];
+    grouped.forEach(element => {
+      element.id === id ? menuItems.push(element.label) : null;
+    })
+    return menuItems;
+  };
+
   return (
     <div ref={drag} style={{ borderBottom: "1px solid  #eceeee" }}>
       <ListItem className={classes.root} disableGutters={true}>
@@ -202,21 +210,19 @@ export default function QueryListItem(props) {
               <BookmarkIcon style={{ fontSize: 20 }} />
             }
           </IconButton>
-
-          {console.log(groupColor)}
           <FormControl sx={{ m: 1, width: 300 }}>
             <InputLabel id="demo-simple-select-label">Group</InputLabel>
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              //IconComponent={() => (<CircleIcon style={{ fontSize: 20 }}/>)} 
+
               multiple
-              value={menuItem}
+              value={getLabel(props.id)}
               onChange={handleChange}
               input={<OutlinedInput label="Group" />}
               MenuProps={MenuProps}
             >
-              {groupLabel.map(labels => ( // if it is the same tag name then only display once
+              {groupLabel.map(labels => (
                 <MenuItem value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
                   <ListItemIcon>
                     <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />
@@ -224,9 +230,9 @@ export default function QueryListItem(props) {
                   <ListItemText primary={labels.label} />
                 </MenuItem>
               ))}
+              <MenuItem>Add Group</MenuItem>
             </Select>
           </FormControl>
-
         </ListItemIcon>
 
         <ListItemText>

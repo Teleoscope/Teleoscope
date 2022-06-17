@@ -66,6 +66,12 @@ export default function LeftMenuBar(props) {
   const [value, setValue] = React.useState(null);
   const [open, toggleOpen] = React.useState(false);
 
+  const setRandomColor = () => {
+    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+    document.body.style.backgroundColor = "#" + randomColor;
+    return "#" + randomColor;
+  }
+
   const handleClose = () => {
     setDialogValue({
       label: '',
@@ -106,9 +112,9 @@ export default function LeftMenuBar(props) {
     return !filteredGroups ? (
       "There is no posts that fit the selected filters")
       : (filteredGroups.map((posts) => {
-      return [posts.id, 1.0];
-    }))
-}
+        return [posts.id, 1.0];
+      }))
+  }
 
 const bookmarkToggler = (e) => {
   bookmarked = !bookmarked;
@@ -121,159 +127,141 @@ const keyChange = (e) => {
   }
 };
 
-const onChangeHandler = (event, newValue) => {
+  const onChangeHandler = (event, newValue) => {
+    if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
+      grouped_data = groupDataMaker(newValue.label);
+      grouped = true;
+    } else {
+      grouped = false;
+    }
 
-            if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
-              grouped_data = groupDataMaker(newValue.label);
-              grouped = true;
-            } else {
-              grouped = false;
-            }
+    if (typeof newValue === 'string') {
+      // timeout to avoid instant validation of the dialog's form.
+      // TODO: seems like a bit of a hack, what behaviour is being suppressed here?
+      // is there another way to modify it?
+      setTimeout(() => {
+        toggleOpen(true);
+        setDialogValue({
+          label: newValue,
+          color: '',
+        });
+      });
+    } else if (newValue && newValue.inputValue) {
+      toggleOpen(true);
+      setDialogValue({
+        label: newValue.inputValue,
+        color: '',
+      });
+    } else {
+      setValue(newValue);
+    }
+  }
 
-            if (typeof newValue === 'string') {
-              // timeout to avoid instant validation of the dialog's form.
-              // TODO: seems like a bit of a hack, what behaviour is being suppressed here?
-              // is there another way to modify it?
-              setTimeout(() => {
-                toggleOpen(true);
-                setDialogValue({
-                  label: newValue,
-                  color: '',
-                });
-              });
-            } else if (newValue && newValue.inputValue) {
-              toggleOpen(true);
-              setDialogValue({
-                label: newValue.inputValue,
-                color: '',
-              });
-            } else {
-              setValue(newValue);
-            }
-}
-
-return (
-  <div className="leftMenuBar">
-    <Box
-      sx={{
-        width: "100%",
-        bgcolor: "background.paper",
-        height: "100vh",
-      }}
-    >
-      <TextField
-        variant="filled"
-        label="Search posts..."
-        placeholder="Add query..."
-        onKeyDown={(e) => keyChange(e)}
-        onChange={(e) => setText(e.target.value)}
-        style={{ width: "100%", borderRadius: "0 !important" }}
-      />
-      {/* TODO: if we're seeing react fragments, it might be best to refactor.
+  return (
+    <div className="leftMenuBar">
+      <Box
+        sx={{
+          width: "100%",
+          bgcolor: "background.paper",
+          height: "100vh",
+        }}
+      >
+        <TextField
+          variant="filled"
+          label="Search posts..."
+          placeholder="Add query..."
+          onKeyDown={(e) => keyChange(e)}
+          onChange={(e) => setText(e.target.value)}
+          style={{ width: "100%", borderRadius: "0 !important" }}
+        />
+        {/* TODO: if we're seeing react fragments, it might be best to refactor.
           Suggest moving this into a separate component and rethinking the logic here.
           Similarly, I'm seeing  a lot of repeated code, so probably best to see what
           kind of abstraction is possible.
          */}
-      <React.Fragment>
-        <Autocomplete
-          value={value}
-          onChange={(event, newValue) => {
-            onChangeHandler(event, newValue)
-          }}
-          filterOptions={(options, params) => {
-            const filtered = filter(options, params);
+        <React.Fragment>
+          <Autocomplete
+            value={value}
+            onChange={(event, newValue) => {
+              onChangeHandler(event, newValue)
+            }}
+            filterOptions={(options, params) => {
+              const filtered = filter(options, params);
 
-            if (params.inputValue !== '') {
-              filtered.push({
-                inputValue: params.inputValue,
-                label: `Add "${params.inputValue}"`,
-              });
-            }
+              if (params.inputValue !== '') {
+                filtered.push({
+                  inputValue: params.inputValue,
+                  label: `Add "${params.inputValue}"`,
+                });
+              }
 
-
-            return filtered;
-          }}
-          id="Add Group"
-          options={labels}
-          getOptionLabel={(option) => {
-            // e.g value selected with enter, right from the input
-            if (typeof option === 'string') {
-              return option;
-            }
-            if (option.inputValue) {
-              // if the user is typing then populate the text field with what they are typing 
-              return option.inputValue;
-            }
-            return option.label;
-          }}
-          style={{ width: "100%", borderRadius: "0 !important" }}
-          selectOnFocus
-          clearOnBlur
-          handleHomeEndKeys
-          renderOption={(props, option) => <li {...props}>{option.label}</li>}
-          sx={{ width: 300 }}
-          freeSolo
-          renderInput={(params) =>
-            <TextField {...params}
-              label="Post groups..."
-              variant="filled"
-              placeholder="type to create, click to filter..."
-              onKeyDown={(e) => keyChange(e)}
-              style={{ width: "100%", borderRadius: "0 !important" }} />}
-        />
-        <Dialog open={open} onClose={handleClose}>
-          <form onSubmit={handleSubmit}>
-            <DialogTitle>Add a new group</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Input your group name and select a color to represent that group!
-              </DialogContentText>
-              <TextField
+              return filtered;
+            }}
+            id="Add Group"
+            options={labels}
+            getOptionLabel={(option) => {
+              // e.g value selected with enter, right from the input
+              if (typeof option === 'string') {
+                return option;
+              }
+              if (option.inputValue) {
+                // if the user is typing then populate the text field with what they are typing 
+                return option.inputValue;
+              }
+              return option.label;
+            }}
+            style={{ width: "100%", borderRadius: "0 !important" }}
+            selectOnFocus
+            clearOnBlur
+            handleHomeEndKeys
+            renderOption={(props, option) => <li {...props}>{option.label}</li>}
+            sx={{ width: 300 }}
+            freeSolo
+            renderInput={(params) =>
+              <TextField {...params}
+                label="Post groups..."
                 variant="filled"
-                placeholder="Add group name"
-                style={{ width: "100%", borderRadius: "0 !important" }}
-                autoFocus
-                margin="dense"
-                id="name"
-                value={dialogValue.label}
-                onChange={(event) =>
-                  setDialogValue({
-                    ...dialogValue,
-                    tag: event.target.value,
-                  })
-                }
-                label="group name"
-                type="text"
-              />
-              <TextField
-                variant="filled"
-                label="color"
-                placeholder="Add query..."
+                placeholder="type to create, click to filter..."
                 onKeyDown={(e) => keyChange(e)}
-                style={{ width: "100%", borderRadius: "0 !important" }}
-                margin="dense"
-                id="color"
-                type="color"
-                value={dialogValue.color}
-                onChange={(event) =>
-                  setDialogValue({
-                    ...dialogValue,
-                    color: event.target.value,
-                  })
-                }
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose}>Cancel</Button>
-              <Button
-                type="submit"
-                onClick={() => {
-                  dispatch(addGroup({label: document.getElementById('name').value, color: document.getElementById('color').value }))
-                }}>Add</Button>
-            </DialogActions>
-          </form>
-        </Dialog>
-      </React.Fragment>
+                style={{ width: "100%", borderRadius: "0 !important" }} />}
+          />
+          <Dialog open={open} onClose={handleClose}>
+            <form onSubmit={handleSubmit}>
+              <DialogTitle>Add a new group</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Input your group name and a random color will be matched to the group!
+                </DialogContentText>
+                <TextField
+                  variant="filled"
+                  placeholder="Add group name"
+                  style={{ width: "100%", borderRadius: "0 !important" }}
+                  autoFocus
+                  margin="dense"
+                  id="name"
+                  value={dialogValue.label}
+                  onChange={(event) =>
+                    setDialogValue({
+                      ...dialogValue,
+                      tag: event.target.value,
+                    })
+                  }
+                  label="group name"
+                  type="text"
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleClose}>Cancel</Button>
+                <Button
+                  type="submit"
+                  onClick={() => {
+                    dispatch(addGroup({ label: document.getElementById('name').value, color: setRandomColor() }))
+                  }}>Add</Button>
+              </DialogActions>
+            </form>
+          </Dialog>
+        </React.Fragment>
+
 
 
       <FormControlLabel
@@ -283,13 +271,14 @@ return (
         label="Bookmarked Items Only"
       />
 
-      {bookmarked && grouped ? (<PostList data={arrayUnique(bookmarked_data.concat(grouped_data))} pagination={true} />) :
-        (bookmarked ? (<PostList data={bookmarked_data} pagination={true} />) :
-          (grouped ? (<PostList data={grouped_data} pagination={true} />) :
-            (<PostList data={data} pagination={true} />)))}
-    </Box>
-  </div >
-);
+        {bookmarked && grouped ? (<PostList data={arrayUnique(bookmarked_data.concat(grouped_data))} pagination={true} />) :
+          (bookmarked ? (<PostList data={bookmarked_data} pagination={true} />) :
+            (grouped ? (<PostList data={grouped_data} pagination={true} />) :
+              (<PostList data={data} pagination={true} />)))}
+      </Box>
+    </div >
+  );
+
 }
 
 
