@@ -214,7 +214,6 @@ export default function QueryListItem(props) {
               labelId="demo-simple-select-label"
               id="demo-simple-select"
               multiple
-              //value={menuItem}
               value={getLabel(props.id)}
               onChange={handleChange}
               input={<OutlinedInput label="Group" />}
@@ -228,6 +227,7 @@ export default function QueryListItem(props) {
                   <ListItemText primary={labels.label} />
                 </MenuItem>
               ))}
+              <MenuItem>Add Group</MenuItem>
             </Select>
           </FormControl>
         </ListItemIcon>
