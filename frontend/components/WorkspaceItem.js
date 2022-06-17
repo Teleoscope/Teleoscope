@@ -115,7 +115,7 @@ export default function WorkspaceItem(props) {
     setMenuItem(
       // On autofill we get a stringified value.
       typeof value === 'string' ? value.split(',') : value,
-    );
+      );
   };
 
 
@@ -135,7 +135,7 @@ export default function WorkspaceItem(props) {
     };
     var regex = new RegExp(
       "(AITA for|aita for|AITA if|WIBTA if|AITA|aita|WIBTA)"
-    );
+      );
     var title = post["title"].replace(regex, "");
     var charlist = " -";
     title = title.trimLeft(charlist);
@@ -167,93 +167,93 @@ export default function WorkspaceItem(props) {
 
 
   return (
-        <div>
-          <FormControl variant="filled" size="small">
-            <InputLabel id="demo-simple-select-label" style={{ fontSize: 11 }}>Group</InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              multiple
-              value={getLabel(props.id)}
-              onChange={handleChangeGroups}
-              input={<OutlinedInput label="Group" />}
-              MenuProps={MenuProps}
-            >
-              {groupLabel.map(labels => (
-                <MenuItem key={labels.label} value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
-                  <ListItemIcon>
-                    <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />
-                  </ListItemIcon>
-                  <ListItemText primary={labels.label} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Checkbox
-            size="small"
-            onChange={(e) => handleChange(e)}
-            inputProps={{ "aria-label": "controlled" }}
-            style={{ marginRight: 10 }}
-            checked={checked.indexOf(props.id) >= 0}
-          />
-          <div style={{ display: "flex", float: "right" }}>
-            <IconButton size="small" onClick={handleClick}>
-              {open ? <ExpandLess /> : <ExpandMore />}
-            </IconButton>
-            <IconButton size="small" onClick={handleDelete}>
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </div>
-        </div>
-
-        <Typography
-          color="text.secondary"
-          style={{
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            width: "90%",
-            margin: "auto",
-          }}
-          gutterBottom
+    <div>
+      <FormControl variant="filled" size="small">
+        <InputLabel id="demo-simple-select-label" style={{ fontSize: 11 }}>Group</InputLabel>
+        <Select
+          labelId="demo-simple-select-label"
+          id="demo-simple-select"
+          multiple
+          value={getLabel(props.id)}
+          onChange={handleChangeGroups}
+          input={<OutlinedInput label="Group" />}
+          MenuProps={MenuProps}
         >
-          {postTitle(post)}
-        </Typography>
+          {groupLabel.map(labels => (
+            <MenuItem key={labels.label} value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
+            <ListItemIcon>
+            <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />
+            </ListItemIcon>
+            <ListItemText primary={labels.label} />
+            </MenuItem>
+            ))}
+        </Select>
+      </FormControl>
 
-        <Collapse timeout="auto" unmountOnExit in={open}>
-          <p
-            style={
-              viewMore
-                ? {
-                  display: "inline-block",
-                  fontSize: 13,
-                  whiteSpace: "pre-line",
-                  margin: "10px 10px 0px 20px",
-                }
-                : {
-                  display: "inline-block",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis [..]",
-                  height: 195,
-                  fontSize: 13,
-                  whiteSpace: "pre-line",
-                  margin: "10px 10px 0px 20px",
-                }
-            }
-          >
-            {postContent(post)}
-          </p>
-          <Button
-            variant="text"
-            style={{ fontSize: 11, margin: "0 auto", display: "flex" }}
-            onClick={() => setViewMore(!viewMore)}
-          >
-            {viewMore ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-            <div style={{ textDecoration: "underline" }}>
-              {viewMore ? "View Less" : "View More"}
-            </div>
-          </Button>
-          <Note />
-        </Collapse>
+      <Checkbox
+        size="small"
+        onChange={(e) => handleChange(e)}
+        inputProps={{ "aria-label": "controlled" }}
+        style={{ marginRight: 10 }}
+        checked={checked.indexOf(props.id) >= 0}
+      />
+      <div style={{ display: "flex", float: "right" }}>
+        <IconButton size="small" onClick={handleClick}>
+          {open ? <ExpandLess /> : <ExpandMore />}
+        </IconButton>
+        <IconButton size="small" onClick={handleDelete}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </div>
+
+      <Typography
+        color="text.secondary"
+        style={{
+          fontSize: "0.875rem",
+          fontWeight: 600,
+          width: "90%",
+          margin: "auto",
+        }}
+        gutterBottom
+      >
+        {postTitle(post)}
+      </Typography>
+
+      <Collapse timeout="auto" unmountOnExit in={open}>
+        <p
+        style={
+          viewMore
+          ? {
+            display: "inline-block",
+            fontSize: 13,
+            whiteSpace: "pre-line",
+            margin: "10px 10px 0px 20px",
+          }
+          : {
+            display: "inline-block",
+            overflow: "hidden",
+            textOverflow: "ellipsis [..]",
+            height: 195,
+            fontSize: 13,
+            whiteSpace: "pre-line",
+            margin: "10px 10px 0px 20px",
+          }
+        }
+        >
+        {postContent(post)}
+        </p>
+        <Button
+          variant="text"
+          style={{ fontSize: 11, margin: "0 auto", display: "flex" }}
+          onClick={() => setViewMore(!viewMore)}
+        >
+          {viewMore ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+        <div style={{ textDecoration: "underline" }}>
+          {viewMore ? "View Less" : "View More"}
         </div>
-  );
+        </Button>
+        <Note />
+      </Collapse>
+    </div>
+    );
 }
