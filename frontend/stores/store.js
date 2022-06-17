@@ -1,6 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit'
 
-import AddToWorkspace from "../actions/addtoworkspace"
 import SearchTerm from "../actions/searchterm"
 import ActiveTeleoscopeID from "../actions/activeTeleoscopeID"
 import ActiveSessionID from "../actions/activeSessionID"
@@ -12,7 +11,6 @@ import Windows from '../actions/windows'
 
 export default configureStore({
   reducer: {
-    adder: AddToWorkspace,
     searchTerm: SearchTerm,
     activeTeleoscopeID: ActiveTeleoscopeID,
     activeSessionID: ActiveSessionID,

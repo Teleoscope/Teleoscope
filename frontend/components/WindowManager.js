@@ -1,6 +1,6 @@
 // imports
 import React from "react";
-import GridLayout from "react-grid-layout";
+import RGL, { WidthProvider } from "react-grid-layout";
 
 // custom
 import WorkspaceItem from "../components/WorkspaceItem";
@@ -18,6 +18,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { addWindow, reload } from "../actions/windows";
 import { checker } from "../actions/checkedPosts";
 
+const ReactGridLayout = WidthProvider(RGL);
 
 
 function wrapLayout(windows, checked) {
@@ -53,7 +54,7 @@ export default function WindowManager(props) {
     dispatch(addWindow(item));
   }
     return (
-      <GridLayout
+      <ReactGridLayout
         className="layout"
         layout={windows}
         cols={12}
@@ -65,8 +66,12 @@ export default function WindowManager(props) {
         isDroppable={true}
         droppingItem={{ i: dragged_id, w: 1, h: 1 }}
         onLayoutChange={(layout) => dispatch(reload(layout))}
+        style={{
+          // backgroundColor:"blue",
+          minHeight: "100%"
+        }}
       >
       {wrapLayout(windows, checked)}
-      </GridLayout>
+      </ReactGridLayout>
     );
 }

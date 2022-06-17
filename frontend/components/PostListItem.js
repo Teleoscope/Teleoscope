@@ -35,7 +35,6 @@ import CloseIcon from "@mui/icons-material/Close";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { adder } from "../actions/addtoworkspace";
 import { mark } from "../actions/bookmark";
 import { group } from "../actions/groups";
 import { dragged } from "../actions/windows";
@@ -100,7 +99,6 @@ export default function PostListItem(props) {
   const { post, loading, error } = usePost(props.id);
   const dispatch = useDispatch();
 
-  const added = useSelector((state) => state.adder.value);
   const bookmarked = useSelector((state) => state.bookmarker.value);
   const grouped = useSelector((state) => state.grouper.value);
   const groupLabel = useSelector((state) => state.grouper.groups);

@@ -10,8 +10,6 @@ export const Windows = createSlice({
 		// Added options:
 		//	- surface: "Card", "AppBar", "Paper", "Accordion" // MUI surfaces
 		windows: [
-				{i: "v20r7t", x: 0, y: 0, w: 1, h: 2, type: "Post"},
-				{i: "v20r36", x: 1, y: 0, w: 5, h: 2, type: "Post"},
 		],
 		dragged: ""
 	},
