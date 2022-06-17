@@ -30,9 +30,8 @@ import randomstring from "randomstring";
 import { useCookies } from "react-cookie";
 
 
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
 function useTeleoscopes() {
-  const { data, error } = useSWR(`/api/teleoscopes/`, fetcher);
+  const { data, error } = useSWR(`/api/teleoscopes/`);
   return {
     teleoscopes: data,
     loading: !error && !data,
@@ -41,7 +40,7 @@ function useTeleoscopes() {
 }
 
 function useTeleoscope(id) {
-  const { data, error } = useSWR(`/api/teleoscopes/${id}`, fetcher);
+  const { data, error } = useSWR(`/api/teleoscopes/${id}`);
   return {
     teleoscope: data,
     teleoscope_loading: !error && !data,
@@ -50,7 +49,7 @@ function useTeleoscope(id) {
 }
 
 function useSessions() {
-  const { data, error } = useSWR(`/api/sessions/`, fetcher);
+  const { data, error } = useSWR(`/api/sessions/`);
   return {
     sessions: data,
     sessions_loading: !error && !data,
@@ -60,7 +59,7 @@ function useSessions() {
 
 
 function useSession(id) {
-  const { data, error } = useSWR(`/api/sessions/${id}`, fetcher);
+  const { data, error } = useSWR(`/api/sessions/${id}`);
   return {
     session: data,
     session_loading: !error && !data,
@@ -69,7 +68,7 @@ function useSession(id) {
 }
 
 function useUsers() {
-  const { data, error } = useSWR(`/api/users/`, fetcher);
+  const { data, error } = useSWR(`/api/users/`);
   return {
     users: data,
     users_loading: !error && !data,

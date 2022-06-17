@@ -62,11 +62,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
+
 let groupColor;
 
 function usePost(postid) {
-  const { data, error } = useSWR(`/api/posts/${postid}`, fetcher);
+  const { data, error } = useSWR(`/api/posts/${postid}`);
   return {
     post: data,
     loading: !error && !data,

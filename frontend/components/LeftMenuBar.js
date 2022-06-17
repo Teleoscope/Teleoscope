@@ -24,14 +24,13 @@ import { searcher } from "../actions/searchterm";
 import { addGroup } from "../actions/groups";
 import { unstable_composeClasses } from "@mui/material";
 
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
 const filter = createFilterOptions();
 let grouped_data = [];
 let grouped = false;
 
 function useQuery(q, shouldSend) {
   const API_URL = shouldSend ? `/api/cleanposts/${q}` : "";
-  const { data, error } = useSWR(API_URL, fetcher);
+  const { data, error } = useSWR(API_URL);
   let ret = {
     posts: data ? data : [{ query: "_none" }],
     loading: !error && !data,
