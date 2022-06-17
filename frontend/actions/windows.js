@@ -37,6 +37,13 @@ export const Windows = createSlice({
 		},
 		removeWindow: (state, action) => {
 			var temp = [...state.windows];
+			var ids = state.windows.map((w) => {return w.i});
+			var index = ids.indexOf(action.payload);
+			console.log("removeWindow", temp, ids, index)
+			if (index > -1) {
+				temp.splice(index, 1);
+			}
+			state.windows = temp;
 		},
 		reload: (state, action) => {
 			for (var index in action.payload) {
@@ -56,5 +63,5 @@ export const Windows = createSlice({
 	}
 })
 
-export const { addWindow, reload, dragged } = Windows.actions
+export const { addWindow, removeWindow, reload, dragged } = Windows.actions
 export default Windows.reducer

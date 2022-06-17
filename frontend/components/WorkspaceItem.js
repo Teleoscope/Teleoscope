@@ -34,8 +34,8 @@ import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 
 // actions
 import { useSelector, useDispatch } from "react-redux"
-import { adder } from "../actions/addtoworkspace";;
 import { checker } from "../actions/checkedPosts";
+import { removeWindow } from "../actions/windows";
 
 import Note from "./Notes";
 
@@ -86,7 +86,6 @@ export default function WorkspaceItem(props) {
   const classes = useStyles();
   const container = React.useRef(null);
   const dispatch = useDispatch();
-  const added = useSelector((state) => state.adder.value); // TODO rename
   const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
 
   const [open, setOpen] = React.useState(false);
@@ -120,7 +119,7 @@ export default function WorkspaceItem(props) {
 
 
   const handleDelete = () => {
-    dispatch(adder(props.id))
+    dispatch(removeWindow(props.id))
   };
 
 
