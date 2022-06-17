@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import useSWR from "swr";
-import { useDrag } from "react-dnd";
+import Draggable from 'react-draggable'; // The default
 
 // material ui
 import { makeStyles } from "@material-ui/core/styles";
+import { FormControl } from "@material-ui/core";
 import Collapse from "@material-ui/core/Collapse";
 import List from "@mui/material/List";
 import ListItem from "@material-ui/core/ListItem";
@@ -37,10 +38,11 @@ import { useSelector, useDispatch } from "react-redux";
 import { adder } from "../actions/addtoworkspace";
 import { mark } from "../actions/bookmark";
 import { group } from "../actions/groups";
+import { dragged } from "../actions/windows";
 
+// custom
 import Note from "./Notes";
 import Bookmark from "../actions/bookmark";
-import { FormControl } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   margin: {
@@ -93,7 +95,7 @@ const MenuProps = {
 };
 
 
-export default function QueryListItem(props) {
+export default function PostListItem(props) {
   const classes = useStyles();
   const { post, loading, error } = usePost(props.id);
   const dispatch = useDispatch();
@@ -150,16 +152,6 @@ export default function QueryListItem(props) {
   };
 
 
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "item",
-    item: { id: props.id },
-
-    //optional to keep track of dragging and access state
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
-    }),
-  }));
-
   const postTitle = (post) => {
     String.prototype.trimLeft = function (charlist) {
       if (charlist === undefined) charlist = "s";
@@ -185,12 +177,20 @@ export default function QueryListItem(props) {
       setNoteContent("");
     }
   };
+
   const postValue = (propsID) => {
   }
 
 
   return (
-    <div ref={drag} style={{ borderBottom: "1px solid  #eceeee" }}>
+    
+    <div 
+      draggable={true} 
+      className="droppable-element" 
+      style={{ borderBottom: "1px solid  #eceeee" }}
+      id={props.id}
+      onDragStart={(e, data) => {dispatch(dragged(props.id))}}
+    >
       <ListItem className={classes.root} disableGutters={true}>
         <ListItemIcon>
           <IconButton
@@ -277,6 +277,6 @@ export default function QueryListItem(props) {
 
         <Note />
       </Collapse>
-    </div >
+      </div>
   );
 }

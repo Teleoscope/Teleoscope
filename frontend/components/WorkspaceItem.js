@@ -100,16 +100,6 @@ export default function WorkspaceItem(props) {
     setOpen(!open);
   };
 
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "item",
-    item: { id: props.id },
-
-    //optional to keep track of dragging and access state
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
-    }),
-  }));
-
   const handleChange = (event) => {
     dispatch(checker(props.id));
     // add to selected group
@@ -158,22 +148,7 @@ export default function WorkspaceItem(props) {
   };
 
   return (
-    <Draggable className={classes.draggable}>
-      <Card
-        style={{
-          padding: 10,
-          borderStyle: "solid",
-          borderRadius: 3,
-          backgroundColor: "white",
-          bortderStyle: "solid",
-          borderWidth: checked.indexOf(props.id) >= 0  ? 2 : 0,
-          borderColor: checked.indexOf(props.id) >= 0 ? "#4e5cbc" : "white",
-          boxShadow: checked.indexOf(props.id) >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
-          minWidth: 180,
-          maxWidth: 290,
-          // height: 120,
-        }}
-      >
+    <div>
         <div>
           <FormControl variant="filled" size="small">
             <InputLabel id="demo-simple-select-label" style={{fontSize: 11}}>Group</InputLabel>
@@ -261,7 +236,6 @@ export default function WorkspaceItem(props) {
           </Button>
           <Note />
         </Collapse>
-      </Card>
-    </Draggable>
+        </div>
   );
 }
