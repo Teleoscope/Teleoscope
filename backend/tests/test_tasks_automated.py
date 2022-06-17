@@ -58,19 +58,3 @@ def test_save_teleoscope_state_dummy_teleoscope_id():
 	with pytest.raises(Exception):
 		tasks.save_teleoscope_state(_id = "test", history_item = [])
 
-# ! Test cases for save_UI_state
-# Case 1: Invalid session id
-def test_save_UI_state_invalid_session_id():
-	with pytest.raises(Exception):
-		tasks.save_UI_state(session_id = "test", history_item = [])
-
-# Case 2: Missing kwargs - history_item
-def test_save_UI_state_missing_kwargs():
-	with pytest.raises(Exception):
-		tasks.save_UI_state(session_id = "test")
-	
-# Case 3 Missing kwargs - session_id
-def test_save_UI_state_missing_kwargs_session_id():
-	with pytest.raises(Exception):
-		tasks.save_UI_state(history_item = [])
-

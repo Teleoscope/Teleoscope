@@ -92,18 +92,6 @@ export function save_teleoscope_state(client, _id, history_item) {
   publish(client, body);
 }
 
-export function save_UI_state(client, session_id, history_item) {
-  var body = {
-    task: 'save_UI_state',
-    args: {
-      session_id: session_id,
-      history_item: history_item
-    }
-  }
-  publish(client, body);
-  return body;
-}
-
 export function initialize_session(client, username) {
   var body = {
     task: 'initialize_session',

@@ -26,7 +26,7 @@ import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
 
 // utilities
-import {client_init, reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session} from "../components/Stomp.js";
+import {client_init, reorient, initialize_teleoscope, save_teleoscope_state, initialize_session} from "../components/Stomp.js";
 import randomstring from "randomstring";
 import { useCookies } from "react-cookie";
 
@@ -146,15 +146,8 @@ export default function TopBar(props) {
 
 
   const load_teleoscope_state = (history_item_num) => {
-    var history_item = teleoscope["history"][history_item_num]
-    dispatch(loadSearchTerm(history_item["search_term"]));
-    dispatch(loadAddedPosts(history_item["added"]));
-    dispatch(loadCheckedPosts(history_item["checked"]));
-  }
-
-  const reload = () => {
-    var history_item = session["history"][session["history"].length - 1]
-    dispatch(loadActiveTeleoscopeID(history_item["teleoscope_id"]));
+    dispatch(historyActivator(history_item_num));
+    var history_item = teleoscope["history"][history_item_num];
     dispatch(loadSearchTerm(history_item["search_term"]));
     dispatch(loadAddedPosts(history_item["added"]));
     dispatch(loadCheckedPosts(history_item["checked"]));
@@ -179,39 +172,6 @@ export default function TopBar(props) {
               }}
             >
               New session
-            </Button>
-            <Button 
-              variant="text" 
-              onClick={() => save_UI_state(
-                client, 
-                session_id, 
-                { // history_item in save_UI_state in Stomp.js
-                    "teleoscope_id": teleoscope_id,
-                    "search_term": search_term,
-                    "added": added,
-                    "checked": checked
-                })
-              }
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              Save
-            </Button>
-            <Button 
-              variant="text" 
-              onClick={() => reload()}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              Load
             </Button>
             <Button 
               variant="text" 
@@ -254,7 +214,7 @@ export default function TopBar(props) {
                 id="demo-simple-select"
                 value={history_item_num}
                 label="History Item"
-                onChange={(event) => dispatch(historyActivator(event.target.value))}
+                onChange={(event) => load_teleoscope_state(event.target.value)}
               >
                 {!teleoscope_loading && !teleoscope_error ? teleoscope["history"].map((h, i) => {
                   return (
@@ -262,18 +222,6 @@ export default function TopBar(props) {
                 )}):[]}
               </Select>
             </FormControl>
-            <Button 
-              variant="text" 
-              onClick={() => load_teleoscope_state(history_item_num)}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              Load
-            </Button>
             <Button
               onClick={() => {
                 reorient(client, search_term, teleoscope_id, checked, []);
@@ -305,23 +253,22 @@ export default function TopBar(props) {
                 {getTeleoscopes()}
               </Select>
             </FormControl>
-                  <TextField
-                    id="input-with-icon-textfield"
-                    InputProps={{
-                                  startAdornment: (
-                                                    <InputAdornment position="start">
-                                                      <AccountCircle />
-                                                    </InputAdornment>
-                                  ),
-                    }}
-                    label="Username" 
-                    variant="standard"
-                    defaultValue={cookies.user}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleCookie(e.target.value)
-                      }
-                    }}
+            <TextField
+              id="input-with-icon-textfield"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <AccountCircle />
+                  </InputAdornment>
+                  ),}}
+                label="Username" 
+                variant="standard"
+                defaultValue={cookies.user}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    handleCookie(e.target.value)
+                  }
+                }}
             />
             <FormControl 
               sx={{width: 200, backgroundColor: 'white', }}
@@ -338,26 +285,6 @@ export default function TopBar(props) {
                 {getSessions(cookies.user)}
               </Select>
             </FormControl>
-                  <TextField
-                    id="input-with-icon-textfield"
-                    InputProps={{
-                                  startAdornment: (
-                                                    <InputAdornment position="start">
-                                                      <AccountCircle />
-                                                    </InputAdornment>
-                                  ),
-                    }}
-                    label="Username" 
-                    variant="standard"
-                    defaultValue={cookies.user}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleCookie(e.target.value)
-                      }
-                    }}
-            />
-
-
           </Stack>
         </Toolbar>
       </AppBar>

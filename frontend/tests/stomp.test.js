@@ -1,4 +1,4 @@
-import { publish, client_init, reorient, initialize_teleoscope, save_UI_state, initialize_session } from "../components/Stomp.js";
+import { publish, client_init, reorient, initialize_teleoscope, initialize_session } from "../components/Stomp.js";
 
 class DummyClient {
 	publish(msg) {
