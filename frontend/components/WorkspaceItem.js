@@ -96,6 +96,8 @@ export default function WorkspaceItem(props) {
 
   const [note, setNote] = React.useState(false);
   const [noteContent, setNoteContent] = useState("");
+
+  
   const handleClick = () => {
     setOpen(!open);
   };
@@ -105,7 +107,7 @@ export default function WorkspaceItem(props) {
     // add to selected group
     console.log("document selected clicked: " + event.target.checked);
   };
-
+  
   const handleChangeGroups = (event) => {
     const {
       target: { value },
@@ -116,9 +118,12 @@ export default function WorkspaceItem(props) {
     );
   };
 
+
   const handleDelete = () => {
     dispatch(adder(props.id))
   };
+
+
 
   const postTitle = (post) => {
     if (!post) {
@@ -139,6 +144,8 @@ export default function WorkspaceItem(props) {
     return ret;
   };
 
+
+
   const postContent = (post) => {
     if (!post) {
       return "";
@@ -147,21 +154,32 @@ export default function WorkspaceItem(props) {
     return text;
   };
 
+
+
+  const getLabel = (id) => {
+    let menuItems = [];
+    grouped.forEach(element => {
+      element.id === id ? menuItems.push(element.label) : null;
+    })
+    return menuItems;
+  };
+
+
+
   return (
-    <div>
         <div>
           <FormControl variant="filled" size="small">
-            <InputLabel id="demo-simple-select-label" style={{fontSize: 11}}>Group</InputLabel>
+            <InputLabel id="demo-simple-select-label" style={{ fontSize: 11 }}>Group</InputLabel>
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
               multiple
-              value={menuItem}
+              value={getLabel(props.id)}
               onChange={handleChangeGroups}
               input={<OutlinedInput label="Group" />}
               MenuProps={MenuProps}
             >
-              {groupLabel.map(labels => ( // if it is the same tag name then only display once
+              {groupLabel.map(labels => (
                 <MenuItem key={labels.label} value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
                   <ListItemIcon>
                     <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />
@@ -206,20 +224,20 @@ export default function WorkspaceItem(props) {
             style={
               viewMore
                 ? {
-                    display: "inline-block",
-                    fontSize: 13,
-                    whiteSpace: "pre-line",
-                    margin: "10px 10px 0px 20px",
-                  }
+                  display: "inline-block",
+                  fontSize: 13,
+                  whiteSpace: "pre-line",
+                  margin: "10px 10px 0px 20px",
+                }
                 : {
-                    display: "inline-block",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis [..]",
-                    height: 195,
-                    fontSize: 13,
-                    whiteSpace: "pre-line",
-                    margin: "10px 10px 0px 20px",
-                  }
+                  display: "inline-block",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis [..]",
+                  height: 195,
+                  fontSize: 13,
+                  whiteSpace: "pre-line",
+                  margin: "10px 10px 0px 20px",
+                }
             }
           >
             {postContent(post)}
