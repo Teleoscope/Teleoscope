@@ -9,6 +9,9 @@ import GroupSelector from "../components/GroupSelector"
 import BookmarkSelector from "../components/BookmarkSelector"
 import PostTitle from "./PostTitle";
 import Expander from "./Expander"
+import PostListItem from "./PostListItem"
+
+
 // css
 import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
@@ -39,7 +42,7 @@ function wrapLayout(windows, checked) {
             boxShadow: checked.indexOf(w.i) >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
           }}
         >
-          <Expander post={{}}/>
+        <PostListItem id={w.i} />
         </Card>
         )
     }  
@@ -72,7 +75,8 @@ export default function WindowManager(props) {
         onLayoutChange={(layout) => dispatch(reload(layout))}
         style={{
           // backgroundColor:"blue",
-          minHeight: "100%"
+          minHeight: "100%",
+          zIndex: 0
         }}
       >
       {wrapLayout(windows, checked)}

@@ -6,7 +6,9 @@ import { makeStyles } from "@material-ui/core/styles";
 import Grid from "@material-ui/core/Grid";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
-
+import IconButton from "@mui/material/IconButton";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { dragged } from "../actions/windows";
@@ -36,7 +38,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-
 function usePost(postid) {
   const { data, error } = useSWR(`/api/posts/${postid}`);
   return {
@@ -46,13 +47,11 @@ function usePost(postid) {
   };
 }
 
-
-
-
 export default function PostListItem(props) {
   const classes = useStyles();
   const { post, loading, error } = usePost(props.id);
   const dispatch = useDispatch();
+  const [open, setOpen] = useState(false);
 
   return (
 
@@ -70,12 +69,18 @@ export default function PostListItem(props) {
         <Grid item xs={2}>
           <GroupSelector id={props.id} />
         </Grid>
-        <Grid item xs={7}>
+        <Grid item wrap="nowrap" xs={7}>
           <PostTitle post={post ? post : {}} />
         </Grid>
-        <Grid item xs={12}>
-          <Expander post={post ? post : {}} />
+        <Grid item xs={2}>
+          <IconButton onClick={() => setOpen(!open)}>
+            {open ? <ExpandLess /> : <ExpandMore />}
+         </IconButton> 
         </Grid>
+        <Grid item xs={10}>
+          {open ? <Expander post={post ? post : {}} /> : ""}
+        </Grid>
+        
       </Grid>
     </div>
   );
