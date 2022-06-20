@@ -19,6 +19,7 @@ import "react-resizable/css/styles.css"
 // mui
 import Card from '@mui/material/Card';
 import Paper from '@mui/material/Paper';
+import CardActionArea from '@mui/material/CardActionArea';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -28,21 +29,29 @@ import { checker } from "../actions/checkedPosts";
 const ReactGridLayout = WidthProvider(RGL);
 
 
-function wrapLayout(windows, checked) {
-  
+function wrapLayout(windows, checked, dispatch) {
   var ret = windows.map((w) => {
+    var pc = checked.indexOf(w.i)
+
     if (w.type == "Post") {
       return (
         <Card 
           key={w.i}
           variant="outlined"
           style={{
-            borderWidth: checked.indexOf(w.i) >= 0  ? 2 : 0,
-            borderColor: checked.indexOf(w.i) >= 0 ? "#4e5cbc" : "white",
-            boxShadow: checked.indexOf(w.i) >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
+            borderWidth: pc >= 0  ? 2 : 0,
+            borderColor: pc >= 0 ? "#4e5cbc" : "white",
+            boxShadow: pc >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
+
           }}
         >
-        <PostListItem id={w.i} />
+        
+        
+        <CardActionArea
+          onClick={() => handleClick(w.i, pc, dispatch)}
+        >
+          <WorkspaceItem id={w.i} />
+        </CardActionArea>
         </Card>
         )
     }  
@@ -50,12 +59,21 @@ function wrapLayout(windows, checked) {
 	return ret;
 }
 
+// strangely, this is needed
+function handleClick(id, index, dispatch) {
+  if (index < 0) {
+    dispatch(checker(id))
+  } else {
+    dispatch(checker(id))
+  }
+}
 
 export default function WindowManager(props) {
   const windows = useSelector((state) => state.windows.windows);
   const dragged_id = useSelector((state) => state.windows.dragged);
   const checked = useSelector((state) => state.checkedPosts.value);
 	const dispatch = useDispatch();
+
   const dropping = (layout, item, e) => {
     console.log("Dropping", layout, item, e);
     dispatch(addWindow(item));
@@ -79,7 +97,7 @@ export default function WindowManager(props) {
           zIndex: 0
         }}
       >
-      {wrapLayout(windows, checked)}
+      {wrapLayout(windows, checked, dispatch)}
       </ReactGridLayout>
     );
 }

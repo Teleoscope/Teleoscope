@@ -2,6 +2,13 @@ import React, { useState } from "react";
 
 // MUI imports
 import ListItemText from "@material-ui/core/ListItemText";
+import Typography from '@mui/material/Typography';
+
+// fonts
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
 
 const postTitle = (post) => {
    String.prototype.trimLeft = function (charlist) {
@@ -30,9 +37,11 @@ export default function PostTitle(props) {
    const title = postTitle(props.post);
 
    return (
-
-      <ListItemText>
+      <Typography
+         variant="body1"
+         noWrap={true}
+      >
          {title}
-      </ListItemText>
+      </Typography>
    )
 }

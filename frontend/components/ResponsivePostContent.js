@@ -70,38 +70,4 @@ export default function ResponsivePostContent(props) {
 		},
 	});
 	const size = getsize(width);
-
-	if (size == "xs") {
-		return (
-			<CardContent sx={{padding: "0em"}}>
-				<Stack direction="row" spacing={2}>
-					<IconButton sx={{padding: "0.11em"}}>
-						<CircleIcon 
-							sx={{color: pink[500]}} 
-							size="small"
-						/>
-					</IconButton>
-					<Typography noWrap variant="caption" sx={{mt: "10"}}>
-						{postTitle(data)}
-					</Typography>
-				</Stack>
-			</CardContent>
-		)
-	}
-	if (size == "sm") {
-		return (
-			<CardContent>
-			<Chip
-				size="small"
-				avatar={<Avatar>{group ? group.label : "!"}</Avatar>}
-			/>
-			
-			</CardContent>
-		)
-	}
-	return (
-			<Typography>
-				{postTitle(data)}
-			</Typography>
-	)
 }
