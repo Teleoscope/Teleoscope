@@ -148,7 +148,6 @@ export default function TopBar(props) {
   const load_teleoscope_state = (history_item_num) => {
     dispatch(historyActivator(history_item_num));
     var history_item = teleoscope["history"][history_item_num];
-    dispatch(loadActiveTeleoscopeID(history_item["teleoscope_id"]));
     dispatch(loadSearchTerm(history_item["search_term"]));
     dispatch(loadAddedPosts(history_item["added"]));
     dispatch(loadCheckedPosts(history_item["checked"]));
@@ -197,7 +196,7 @@ export default function TopBar(props) {
                 fontWeight: 700,
               }}
             >
-              Save
+              Save Workspace
             </Button>
             <Button 
               variant="text" 
@@ -209,7 +208,7 @@ export default function TopBar(props) {
                 fontWeight: 700,
               }}
             >
-              Load
+              Load Workspace
             </Button>
             <Button 
               variant="text" 
