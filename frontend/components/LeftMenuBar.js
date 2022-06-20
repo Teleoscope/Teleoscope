@@ -197,7 +197,7 @@ const keyChange = (e) => {
               return filtered;
             }}
             id="Add Group"
-            options={labels}
+            options={Object.keys(labels)}
             getOptionLabel={(option) => {
               // e.g value selected with enter, right from the input
               if (typeof option === 'string') {

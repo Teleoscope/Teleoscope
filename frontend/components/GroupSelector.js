@@ -5,7 +5,9 @@ import { FormControl } from "@material-ui/core";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import InputLabel from '@mui/material/InputLabel';
+import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import IconButton from '@mui/material/IconButton';
 import Select from '@mui/material/Select';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import CircleIcon from '@mui/icons-material/Circle';
@@ -19,12 +21,24 @@ import { group, addGroup } from "../actions/groups";
 export default function groupSelector(props) {
 
    const dispatch = useDispatch();
-   const grouped = useSelector((state) => state.grouper.value);
-   const groupLabel = useSelector((state) => state.grouper.groups);
+   const grouped_posts = useSelector((state) => state.grouper.grouped_posts);
+   const groups_this_post_belongs_to = grouped_posts.filter(e => e.id == props.id)
+   const groups = useSelector((state) => state.grouper.groups);
+
    const [menuItem, setMenuItem] = React.useState([]);
-   const postID = props.id;
+
    const ITEM_HEIGHT = 48;
    const ITEM_PADDING_TOP = 8;
+
+   const [anchorEl, setAnchorEl] = useState(null);
+   const open = Boolean(anchorEl);
+   const handleClick = (event) => {
+     setAnchorEl(event.currentTarget);
+   };
+
+   const handleClose = () => {
+      setAnchorEl(null);
+   };
 
    const handleChange = (event) => {
       const {
@@ -36,6 +50,11 @@ export default function groupSelector(props) {
       );
     };
 
+    const handleSelect = (label) => {
+      dispatch(group({ id: props.id, label: label }));
+      handleClose();
+    }
+
    const MenuProps = {
       PaperProps: {
          style: {
@@ -45,37 +64,30 @@ export default function groupSelector(props) {
       },
    };
 
-   // gets the label for the post depending on its postID
-   const getLabel = (id) => {
-      let menuItems = [];
-      grouped.forEach(element => {
-        element.id === id ? menuItems.push(element.label) : null;
-      })
-      return menuItems;
-    };
 
    return (
-      <FormControl sx={{ m: 1, width: 300 }}>
-         
-         <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            multiple
-            value={getLabel(props.id)}
-            onChange={handleChange}
-            input={<OutlinedInput label="Group" />}
-            MenuProps={MenuProps}
+      <div>
+         <IconButton onClick={handleClick}>
+         {groups_this_post_belongs_to.map(({id, label}) => {
+            return (<CircleIcon sx={{ color: groups[label] }} style={{ fontSize: 15 }} />)})}
+         {groups_this_post_belongs_to.length == 0 ? 
+                     <CircleIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} /> : ""}
+         </IconButton>
+         <Menu
+            anchorEl={anchorEl}
+            onClose={handleClose}
+            open={open}
          >
-            {groupLabel.map(labels => (
-               <MenuItem value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
-                  <ListItemIcon>
-                     <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 15 }} />
-                  </ListItemIcon>
-                  <ListItemText primary={labels.label} />
+            {Object.keys(groups).map(label => (
+               <MenuItem 
+                  value={label} 
+                  onClick={() => handleSelect(label)}>
+                  <CircleIcon sx={{ color: groups[label] }} style={{ fontSize: 15 }} />
+                  <ListItemText primary={label} />
                </MenuItem>
             ))}
-            <MenuItem>Add Group</MenuItem>
-         </Select>
-      </FormControl>
+            {Object.keys(groups).length == 0 ? <MenuItem>No groups added yet...</MenuItem> : ""}
+         </Menu>
+      </div>
    )
 }

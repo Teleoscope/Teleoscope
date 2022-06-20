@@ -83,7 +83,7 @@ export default function WindowManager(props) {
         className="layout"
         layout={windows}
         cols={12}
-        containerPadding={[80,0]}
+        containerPadding={[0,0]}
         rowHeight={30}
         width={1200}
         compactionType={false}

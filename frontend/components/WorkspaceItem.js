@@ -20,8 +20,10 @@ import { removeWindow } from "../actions/windows";
 
 // custom components
 import PostTitle from "./PostTitle"
+import PostText from "./PostText"
 import GroupSelector from "./GroupSelector"
 import Expander from "./Expander"
+
 
 function usePost(postid) {
   const { data, error } = useSWR(`/api/posts/${postid}`);
@@ -47,19 +49,17 @@ export default function WorkspaceItem(props) {
       <Grid item xs={1}>
         <GroupSelector id={props.id}/>
       </Grid>
+      <Grid item xs={10}>
+        <PostTitle post={post ? post : {}}/>
+      </Grid>
       <Grid item xs={1}>
           <IconButton size="small" onClick={() => dispatch(removeWindow(props.id))}>
             <CloseIcon fontSize="small" />
           </IconButton>
       </Grid>
-      <Grid item xs={1}>
-        <IconButton onClick={() => setOpen(!open)}>
-          {open ? <ExpandLess /> : <ExpandMore />}
-        </IconButton>
-      </Grid>
-      <Grid item xs={4}>      
-        <PostTitle post={post ? post : {}}/>
-        {open ? <Expander post={post ? post : {}} /> : ""}
+
+      <Grid item xs={12}>
+        <PostText text={post ? post["selftext"] : "Content not available"}></PostText>
       </Grid>
     </Grid>
     );
