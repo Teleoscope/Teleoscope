@@ -291,23 +291,23 @@ export default function TopBar(props) {
                 {getTeleoscopes()}
               </Select>
             </FormControl>
-                  <TextField
-                    id="input-with-icon-textfield"
-                    InputProps={{
-                                  startAdornment: (
-                                                    <InputAdornment position="start">
-                                                      <AccountCircle />
-                                                    </InputAdornment>
-                                  ),
-                    }}
-                    label="Username" 
-                    variant="standard"
-                    defaultValue={cookies.user}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleCookie(e.target.value)
-                      }
-                    }}
+            <TextField
+              id="input-with-icon-textfield"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <AccountCircle />
+                  </InputAdornment>
+                ),
+              }}
+              label="Username" 
+              variant="standard"
+              defaultValue={cookies.user}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  handleCookie(e.target.value)
+                }
+              }}
             />
             <FormControl 
               sx={{width: 200, backgroundColor: 'white', }}
@@ -324,25 +324,6 @@ export default function TopBar(props) {
                 {getSessions(cookies.user)}
               </Select>
             </FormControl>
-                  <TextField
-                    id="input-with-icon-textfield"
-                    InputProps={{
-                                  startAdornment: (
-                                                    <InputAdornment position="start">
-                                                      <AccountCircle />
-                                                    </InputAdornment>
-                                  ),
-                    }}
-                    label="Username" 
-                    variant="standard"
-                    defaultValue={cookies.user}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleCookie(e.target.value)
-                      }
-                    }}
-            />
-
           </Stack>
         </Toolbar>
       </AppBar>
