@@ -68,7 +68,7 @@ export default function LeftMenuBar(props) {
 
   const setRandomColor = () => {
     const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-    document.body.style.backgroundColor = "#" + randomColor;
+    // document.body.style.backgroundColor = "#" + randomColor;
     return "#" + randomColor;
   }
 
@@ -77,7 +77,6 @@ export default function LeftMenuBar(props) {
       label: '',
       color: '',
     });
-
     toggleOpen(false);
   };
 
@@ -265,8 +264,8 @@ const keyChange = (e) => {
 
 
       <FormControlLabel
-        style={{ marginLeft: 20, marginTop: 10 }}
-        control={<Checkbox style={{ marginRight: 10 }} />}
+        style={{ marginLeft: 0, marginTop: 0 }}
+        control={<Checkbox style={{ marginRight: 0 }} />}
         onChange={() => setBookmarked(!bookmarked)}
         label="Bookmarked Items Only"
       />

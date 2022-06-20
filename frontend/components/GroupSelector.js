@@ -56,7 +56,7 @@ export default function groupSelector(props) {
 
    return (
       <FormControl sx={{ m: 1, width: 300 }}>
-         <InputLabel id="demo-simple-select-label">Group</InputLabel>
+         
          <Select
             labelId="demo-simple-select-label"
             id="demo-simple-select"
@@ -69,7 +69,7 @@ export default function groupSelector(props) {
             {groupLabel.map(labels => (
                <MenuItem value={labels.label} onClick={() => dispatch(group({ id: props.id, label: labels.label }))}>
                   <ListItemIcon>
-                     <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 20 }} />
+                     <CircleIcon sx={{ color: labels.color }} style={{ fontSize: 15 }} />
                   </ListItemIcon>
                   <ListItemText primary={labels.label} />
                </MenuItem>

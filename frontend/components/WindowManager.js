@@ -71,7 +71,7 @@ export default function WindowManager(props) {
         compactionType={false}
         onDrop={(layout, item, e) => {dropping(layout, item, e)}}
         isDroppable={true}
-        droppingItem={{ i: dragged_id, w: 1, h: 1 }}
+        droppingItem={{ i: dragged_id, w: 2, h: 1 }}
         onLayoutChange={(layout) => dispatch(reload(layout))}
         style={{
           // backgroundColor:"blue",
