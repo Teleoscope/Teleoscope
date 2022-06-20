@@ -363,12 +363,12 @@ class reorient(Task):
         rank_slice = newRanks[0:500]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
 
-        # update stateVector
-        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "stateVector" : qprime.tolist()}})
-        # update rankedPosts
-        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "ranked_post_ids" : gridfsObj}})
-        # update a slice of rank_slice
-        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "rank_slice" : rank_slice}})
+        # # update stateVector
+        # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "stateVector" : qprime.tolist()}})
+        # # update rankedPosts
+        # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "ranked_post_ids" : gridfsObj}})
+        # # update a slice of rank_slice
+        # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "rank_slice" : rank_slice}})
 
 
         # ! Teleoscope history item -> return this and use it in a chain
@@ -379,7 +379,7 @@ class reorient(Task):
         # rank_slice
         history_obj =  {'_id': teleoscope_id, 'history_item': {'positive_docs': positive_docs, 
                                                                'negative_docs': negative_docs, 
-                                                               'stateVector': stateVector, 
+                                                               'stateVector': qprime.tolist(), 
                                                                'ranked_post_ids': gridfsObj, 
                                                                'rank_slice': rank_slice}}
         
