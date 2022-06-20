@@ -222,25 +222,6 @@ export default function TopBar(props) {
             >
               New Teleoscope
             </Button>
-            <Button
-              variant="text"
-              onClick={() => save_teleoscope_state(
-                client, 
-                teleoscope_id,
-                {
-                  "search_term": search_term,
-                  "added": added,
-                  "checked": checked
-                })}
-                style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              Save Teleoscope
-            </Button>
             <FormControl 
               sx={{width: 200, backgroundColor: 'white', }}
               variant="filled"
@@ -261,6 +242,7 @@ export default function TopBar(props) {
             </FormControl>
             <Button
               onClick={() => {
+                // negative docs array is empty
                 reorient(client, search_term, teleoscope_id, checked, []);
                 dispatch(uncheckall(teleoscope_id))
               }}
@@ -270,10 +252,25 @@ export default function TopBar(props) {
                 fontSize: 12,
                 fontWeight: 700,
               }}
-
             >
               <BiotechIcon />
-              Reorient
+              Orient Towards
+            </Button>
+            <Button
+              onClick={() => {
+                // positive docs array is empty
+                reorient(client, search_term, teleoscope_id, [], checked);
+                dispatch(uncheckall(teleoscope_id))
+              }}
+              style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              <BiotechIcon />
+              Orient Away
             </Button>
             <FormControl 
               sx={{width: 200, backgroundColor: 'white', }}
