@@ -4,6 +4,7 @@ import RGL, { WidthProvider } from "react-grid-layout";
 
 // custom
 import WorkspaceItem from "../components/WorkspaceItem";
+import ResponsivePostContent from "../components/ResponsivePostContent";
 
 // css
 import "react-grid-layout/css/styles.css"
@@ -35,7 +36,7 @@ function wrapLayout(windows, checked) {
             boxShadow: checked.indexOf(w.i) >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
           }}
         >
-           <WorkspaceItem id={w.i}></WorkspaceItem>
+           <ResponsivePostContent id={w.i}></ResponsivePostContent>
         </Card>
         )
     }  
