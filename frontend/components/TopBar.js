@@ -146,18 +146,16 @@ export default function TopBar(props) {
 
 
   const load_teleoscope_state = (history_item_num) => {
-    var history_item = teleoscope["history"][history_item_num]
+    dispatch(historyActivator(history_item_num));
+    var history_item = teleoscope["history"][history_item_num];
+    dispatch(loadActiveTeleoscopeID(history_item["teleoscope_id"]));
     dispatch(loadSearchTerm(history_item["search_term"]));
     dispatch(loadAddedPosts(history_item["added"]));
     dispatch(loadCheckedPosts(history_item["checked"]));
   }
 
-  const reload = () => {
-    var history_item = session["history"][session["history"].length - 1]
-    dispatch(loadActiveTeleoscopeID(history_item["teleoscope_id"]));
-    dispatch(loadSearchTerm(history_item["search_term"]));
-    dispatch(loadAddedPosts(history_item["added"]));
-    dispatch(loadCheckedPosts(history_item["checked"]));
+  const load_UI_state = () => {
+
   }
 
   return (
@@ -203,7 +201,7 @@ export default function TopBar(props) {
             </Button>
             <Button 
               variant="text" 
-              onClick={() => reload()}
+              onClick={() => load_UI_state()}
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",
@@ -254,7 +252,7 @@ export default function TopBar(props) {
                 id="demo-simple-select"
                 value={history_item_num}
                 label="History Item"
-                onChange={(event) => dispatch(historyActivator(event.target.value))}
+                onChange={(event) => load_teleoscope_state(event.target.value)}
               >
                 {!teleoscope_loading && !teleoscope_error ? teleoscope["history"].map((h, i) => {
                   return (
@@ -262,18 +260,6 @@ export default function TopBar(props) {
                 )}):[]}
               </Select>
             </FormControl>
-            <Button 
-              variant="text" 
-              onClick={() => load_teleoscope_state(history_item_num)}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              Load
-            </Button>
             <Button
               onClick={() => {
                 reorient(client, search_term, teleoscope_id, checked, []);
