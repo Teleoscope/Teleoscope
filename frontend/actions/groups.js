@@ -4,18 +4,18 @@ export const Grouped = createSlice({
 	name: 'grouped',
 	initialState: {
 		groups: [
-			{
-				label: "Red",
-				color: "red"
-			},
-			{
-				label: "Blue",
-				color: "blue"
-			},
-			{
-				label: 'Green',
-				color: 'green'
-			}
+			// {
+			// 	label: "Red",
+			// 	color: "red"
+			// },
+			// {
+			// 	label: "Blue",
+			// 	color: "blue"
+			// },
+			// {
+			// 	label: 'Green',
+			// 	color: 'green'
+			// }
 		],
 		value: []
 		// value: [id: '', label: 'Red']
@@ -42,7 +42,6 @@ export const Grouped = createSlice({
 			}
 			
 			state.value = temp;
-			console.log(state.value);
 		},
 
 		addGroup: (state, action) => {

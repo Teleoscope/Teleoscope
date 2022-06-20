@@ -24,6 +24,7 @@ import { searcher } from "../actions/searchterm";
 import { addGroup } from "../actions/groups";
 import { unstable_composeClasses } from "@mui/material";
 
+
 const filter = createFilterOptions();
 let grouped_data = [];
 let grouped = false;
@@ -254,7 +255,7 @@ const keyChange = (e) => {
                 <Button
                   type="submit"
                   onClick={() => {
-                    dispatch(addGroup({ label: document.getElementById('name').value, color: setRandomColor() }))
+                    dispatch(addGroup({ label: dialogValue.label, color: setRandomColor() }))
                   }}>Add</Button>
               </DialogActions>
             </form>
