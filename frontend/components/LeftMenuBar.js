@@ -24,14 +24,14 @@ import { searcher } from "../actions/searchterm";
 import { addGroup } from "../actions/groups";
 import { unstable_composeClasses } from "@mui/material";
 
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
+
 const filter = createFilterOptions();
 let grouped_data = [];
 let grouped = false;
 
 function useQuery(q, shouldSend) {
   const API_URL = shouldSend ? `/api/cleanposts/${q}` : "";
-  const { data, error } = useSWR(API_URL, fetcher);
+  const { data, error } = useSWR(API_URL);
   let ret = {
     posts: data ? data : [{ query: "_none" }],
     loading: !error && !data,
@@ -68,7 +68,7 @@ export default function LeftMenuBar(props) {
 
   const setRandomColor = () => {
     const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-    document.body.style.backgroundColor = "#" + randomColor;
+    // document.body.style.backgroundColor = "#" + randomColor;
     return "#" + randomColor;
   }
 
@@ -77,7 +77,6 @@ export default function LeftMenuBar(props) {
       label: '',
       color: '',
     });
-
     toggleOpen(false);
   };
 
@@ -198,7 +197,7 @@ const keyChange = (e) => {
               return filtered;
             }}
             id="Add Group"
-            options={labels}
+            options={Object.keys(labels)}
             getOptionLabel={(option) => {
               // e.g value selected with enter, right from the input
               if (typeof option === 'string') {
@@ -255,7 +254,7 @@ const keyChange = (e) => {
                 <Button
                   type="submit"
                   onClick={() => {
-                    dispatch(addGroup({ label: document.getElementById('name').value, color: setRandomColor() }))
+                    dispatch(addGroup({ label: dialogValue.label, color: setRandomColor() }))
                   }}>Add</Button>
               </DialogActions>
             </form>
@@ -265,8 +264,8 @@ const keyChange = (e) => {
 
 
       <FormControlLabel
-        style={{ marginLeft: 20, marginTop: 10 }}
-        control={<Checkbox style={{ marginRight: 10 }} />}
+        style={{ marginLeft: 0, marginTop: 0 }}
+        control={<Checkbox style={{ marginRight: 0 }} />}
         onChange={() => setBookmarked(!bookmarked)}
         label="Bookmarked Items Only"
       />
