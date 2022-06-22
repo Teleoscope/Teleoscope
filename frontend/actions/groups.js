@@ -20,6 +20,7 @@ export const Grouped = createSlice({
 		},
 		addGroup: (state, action) => {
 			var temp = {...state.groups};
+			console.log(temp)
 			temp[action.payload.label] = action.payload.color;
 			state.groups = temp;
 		}

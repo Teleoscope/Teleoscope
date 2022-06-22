@@ -93,7 +93,8 @@ export default function LeftMenuBarGroups() {
    return (
       <React.Fragment>
          <Autocomplete
-            value={value}
+            //value={value}
+            //value="test"
             onChange={(event, newValue) => {
                onChangeHandler(event, newValue)
             }}
@@ -111,22 +112,22 @@ export default function LeftMenuBarGroups() {
             }}
             id="Add Group"
             options={Object.keys(labels)}
-            getOptionLabel={(option) => {
-               // e.g value selected with enter, right from the input
-               if (typeof option === 'string') {
-                  return option;
-               }
-               if (option.inputValue) {
-                  // if the user is typing then populate the text field with what they are typing 
-                  return option.inputValue;
-               }
-               return option.label;
-            }}
+            // getOptionLabel={(option) => {
+            //    // e.g value selected with enter, right from the input
+            //    if (typeof option === 'string') {
+            //       return option;
+            //    }
+            //    if (option.inputValue) {
+            //       // if the user is typing then populate the text field with what they are typing 
+            //       return option.inputValue;
+            //    }
+            //    return option.label;
+            // }}
             style={{ width: "100%", borderRadius: "0 !important" }}
             selectOnFocus
             clearOnBlur
             handleHomeEndKeys
-            renderOption={(props, option) => <li {...props}>{option.label}</li>}
+            //renderOption={(props, option) => <li {...props}>{option}</li>}
             sx={{ width: 300 }}
             freeSolo
             renderInput={(params) =>
