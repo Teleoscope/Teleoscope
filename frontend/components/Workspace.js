@@ -15,13 +15,13 @@ export default function Workspace(props) {
       <Grid item xs={12}>
         <TopBar/>
       </Grid>
-      <Grid item xs={2}>
+      <Grid item xs={6}>
         <LeftMenuBar />
       </Grid>
-      <Grid item xs={8}>
+      <Grid item xs={3}>
         <WindowManager />
       </Grid>
-      <Grid item xs={2}>
+      <Grid item xs={3}>
         <RightMenuBar/>
       </Grid>
     </Grid>

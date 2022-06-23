@@ -21,7 +21,10 @@ export const Bookmark = createSlice({
 		  temp.push(id)
 		}
 		state.value = temp
-    }
+    },
+	loadBookmarkedPosts: (state, action) => {
+		state.value = action.payload;
+	}
   },
 })
 

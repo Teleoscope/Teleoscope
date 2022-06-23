@@ -24,7 +24,7 @@ import { historyActivator, loadActiveHistoryItem } from "../actions/activeHistor
 import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
 import { dragged, addWindow, removeWindow, reload } from "../actions/windows";
-import { mark } from "../actions/bookmark";
+import { mark, loadBookmarkedPosts } from "../actions/bookmark";
 
 // utilities
 import {client_init, reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session} from "../components/Stomp.js";
@@ -150,10 +150,14 @@ export default function TopBar(props) {
 
   const load_UI_state = () => {
     // TODO
+    var history_length = session[history].length
+    console.log("Length of history is: ", history_length);
+    var history_item = session[history_length-1]
+    dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
     //dispatch(loadSearchTerm(history_item["search_term"]));
     //dispatch(loadAddedPosts(history_item["added"]));
     // this needs to access the saved windows
-    dispatch(reload(session["checked"]));
+    //dispatch(reload(session["checked"]));
   }
 
   return (
