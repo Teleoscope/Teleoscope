@@ -21,11 +21,9 @@ import { useSelector, useDispatch } from "react-redux";
 import { activator } from "../actions/activeTeleoscopeID";
 
 
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
-
 function useTeleoscope(id) {
   console.log(id)
-  const { data, error } = useSWR(`/api/teleoscopes/${id}`, fetcher);
+  const { data, error } = useSWR(`/api/teleoscopes/${id}`);
   return {
     teleoscope: data,
     loading: !error && !data,

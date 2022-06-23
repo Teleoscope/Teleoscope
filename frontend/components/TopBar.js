@@ -21,7 +21,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { teleoscopeActivator, loadActiveTeleoscopeID } from "../actions/activeTeleoscopeID";
 import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
 import { historyActivator, loadActiveHistoryItem } from "../actions/activeHistoryItem";
-import { adder, loadAddedPosts } from "../actions/addtoworkspace";
 import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
 
@@ -31,9 +30,8 @@ import randomstring from "randomstring";
 import { useCookies } from "react-cookie";
 
 
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
 function useTeleoscopes() {
-  const { data, error } = useSWR(`/api/teleoscopes/`, fetcher);
+  const { data, error } = useSWR(`/api/teleoscopes/`);
   return {
     teleoscopes: data,
     loading: !error && !data,
@@ -42,7 +40,7 @@ function useTeleoscopes() {
 }
 
 function useTeleoscope(id) {
-  const { data, error } = useSWR(`/api/teleoscopes/${id}`, fetcher);
+  const { data, error } = useSWR(`/api/teleoscopes/${id}`);
   return {
     teleoscope: data,
     teleoscope_loading: !error && !data,
@@ -51,7 +49,7 @@ function useTeleoscope(id) {
 }
 
 function useSessions() {
-  const { data, error } = useSWR(`/api/sessions/`, fetcher);
+  const { data, error } = useSWR(`/api/sessions/`);
   return {
     sessions: data,
     sessions_loading: !error && !data,
@@ -61,7 +59,7 @@ function useSessions() {
 
 
 function useSession(id) {
-  const { data, error } = useSWR(`/api/sessions/${id}`, fetcher);
+  const { data, error } = useSWR(`/api/sessions/${id}`);
   return {
     session: data,
     session_loading: !error && !data,
@@ -70,7 +68,7 @@ function useSession(id) {
 }
 
 function useUsers() {
-  const { data, error } = useSWR(`/api/users/`, fetcher);
+  const { data, error } = useSWR(`/api/users/`);
   return {
     users: data,
     users_loading: !error && !data,
@@ -98,7 +96,6 @@ export default function TopBar(props) {
   const { session, session_loading, session_error } = useSession(session_id);
   
   const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
-  const added = useSelector((state) => state.adder.value); // TODO rename
   const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
 
   const handleCookie = (username) => {
@@ -148,7 +145,6 @@ export default function TopBar(props) {
   const load_teleoscope_state = (history_item_num) => {
     var history_item = teleoscope["history"][history_item_num]
     dispatch(loadSearchTerm(history_item["search_term"]));
-    dispatch(loadAddedPosts(history_item["added"]));
     dispatch(loadCheckedPosts(history_item["checked"]));
   }
 
@@ -156,7 +152,6 @@ export default function TopBar(props) {
     var history_item = session["history"][session["history"].length - 1]
     dispatch(loadActiveTeleoscopeID(history_item["teleoscope_id"]));
     dispatch(loadSearchTerm(history_item["search_term"]));
-    dispatch(loadAddedPosts(history_item["added"]));
     dispatch(loadCheckedPosts(history_item["checked"]));
   }
 
@@ -188,7 +183,6 @@ export default function TopBar(props) {
                 { // history_item in save_UI_state in Stomp.js
                     "teleoscope_id": teleoscope_id,
                     "search_term": search_term,
-                    "added": added,
                     "checked": checked
                 })
               }
@@ -232,7 +226,6 @@ export default function TopBar(props) {
                 teleoscope_id,
                 {
                   "search_term": search_term,
-                  "added": added,
                   "checked": checked
                 })}
                 style={{
@@ -356,7 +349,6 @@ export default function TopBar(props) {
                       }
                     }}
             />
-
 
           </Stack>
         </Toolbar>
