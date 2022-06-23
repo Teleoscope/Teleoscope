@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 export default function PostText(props) {
    const text = props.text;
    return (
-      <Typography>
+      <Typography sx={{margin:"1em"}}>
          {text}
       </Typography>
       )
