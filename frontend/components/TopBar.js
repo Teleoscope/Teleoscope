@@ -164,8 +164,22 @@ export default function TopBar(props) {
         style={{ height: 75, backgroundColor: "#4E5CBC" }}
       >
         <Toolbar sx={{}} >
-          <Stack spacing={4} direction="row">
-            <Button 
+          <Stack spacing={1} direction="row">
+            <Button
+              size="small" 
+              variant="text" 
+              onClick={() => dispatch(addWindow({i: "note", x: 0, y: 0, w: 10, h: 10, type: "Note"}))}
+              style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              New Note
+            </Button>
+            <Button
+              size="small" 
               variant="text" 
               onClick={() => initialize_session(client, cookies.user)}
               style={{
@@ -177,7 +191,8 @@ export default function TopBar(props) {
             >
               New session
             </Button>
-            <Button 
+            <Button
+              size="small" 
               variant="text" 
               onClick={() => save_UI_state(
                 client, 
@@ -196,7 +211,8 @@ export default function TopBar(props) {
             >
               Save Workspace
             </Button>
-            <Button 
+            <Button
+              size="small" 
               variant="text" 
               onClick={() => load_UI_state()}
               style={{
@@ -208,7 +224,8 @@ export default function TopBar(props) {
             >
               Load Workspace
             </Button>
-            <Button 
+            <Button
+              size="small" 
               variant="text" 
               onClick={() => initialize_teleoscope(client, search_term, session_id)}
               style={{
@@ -239,6 +256,7 @@ export default function TopBar(props) {
               </Select>
             </FormControl>
             <Button
+              size="small"
               onClick={() => {
                 // negative docs array is empty
                 reorient(client, search_term, teleoscope_id, checked, []);
@@ -255,6 +273,7 @@ export default function TopBar(props) {
               Orient Towards
             </Button>
             <Button
+              size="small"
               onClick={() => {
                 // positive docs array is empty
                 reorient(client, search_term, teleoscope_id, [], checked);

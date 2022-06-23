@@ -10,6 +10,7 @@ import BookmarkSelector from "../components/BookmarkSelector"
 import PostTitle from "./PostTitle";
 import Expander from "./Expander"
 import PostListItem from "./PostListItem"
+import Notes from "./Notes"
 
 
 // css
@@ -32,7 +33,6 @@ const ReactGridLayout = WidthProvider(RGL);
 function wrapLayout(windows, checked, dispatch) {
   var ret = windows.map((w) => {
     var pc = checked.indexOf(w.i)
-
     if (w.type == "Post") {
       return (
         <Card
@@ -44,9 +44,7 @@ function wrapLayout(windows, checked, dispatch) {
             boxShadow: pc >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
 
           }}
-        >
-        
-        
+        >      
         <CardActionArea
           onClick={() => handleClick(w.i, pc, dispatch)}
         >
@@ -54,7 +52,14 @@ function wrapLayout(windows, checked, dispatch) {
         </CardActionArea>
         </Card>
         )
-    }  
+    }
+    if (w.type == "Note") {
+      return (
+        <Card key={w.i} style={{backgroundColor: "yellow"}}>
+          <Notes></Notes>
+        </Card>
+      )
+    }
   })
 	return ret;
 }
@@ -75,7 +80,7 @@ export default function WindowManager(props) {
 	const dispatch = useDispatch();
 
   const dropping = (layout, item, e) => {
-    dispatch(addWindow({i: dragged_id, x: 0, y: 0, w: 3, h: 1}));
+    dispatch(addWindow({i: dragged_id, x: 0, y: 0, w: 3, h: 1, type: "Post"}));
   }
 
   return (

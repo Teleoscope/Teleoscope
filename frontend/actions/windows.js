@@ -26,7 +26,7 @@ export const Windows = createSlice({
 					y: action.payload.y,
 					w: action.payload.w,
 					h: action.payload.h,
-					type: "Post"
+					type: action.payload.type,
 				};
 				temp.push(obj);
 				state.windows = temp;
