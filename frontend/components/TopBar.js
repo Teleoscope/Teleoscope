@@ -148,13 +148,13 @@ export default function TopBar(props) {
   const load_teleoscope_state = (history_item_num) => {
     dispatch(historyActivator(history_item_num));
     var history_item = teleoscope["history"][history_item_num];
-    dispatch(loadSearchTerm(history_item["search_term"]));
-    dispatch(loadAddedPosts(history_item["added"]));
-    dispatch(loadCheckedPosts(history_item["checked"]));
   }
 
   const load_UI_state = () => {
-
+    // TODO
+    //dispatch(loadSearchTerm(history_item["search_term"]));
+    //dispatch(loadAddedPosts(history_item["added"]));
+    //dispatch(loadCheckedPosts(history_item["checked"]));
   }
 
   return (
