@@ -23,7 +23,7 @@ import CardActionArea from '@mui/material/CardActionArea';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { addWindow, reload } from "../actions/windows";
+import { addWindow, loadWindows } from "../actions/windows";
 import { checker } from "../actions/checkedPosts";
 
 const ReactGridLayout = WidthProvider(RGL);
@@ -90,7 +90,7 @@ export default function WindowManager(props) {
         onDrop={(layout, item, e) => {dropping(layout, item, e)}}
         isDroppable={true}
         droppingItem={{ i: dragged_id + "_temp", w: 2, h: 1 }}
-        onLayoutChange={(layout) => dispatch(reload(layout))}
+        onLayoutChange={(layout) => dispatch(loadWindows(layout))}
         style={{
           // backgroundColor:"blue",
           minHeight: "100%",
