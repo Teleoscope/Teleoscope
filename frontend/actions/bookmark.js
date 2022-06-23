@@ -29,6 +29,6 @@ export const Bookmark = createSlice({
 })
 
 // Action creators are generated for each case reducer function
-export const { mark, unbookmark } = Bookmark.actions
+export const { mark, loadBookmarkedPosts } = Bookmark.actions
 
 export default Bookmark.reducer
