@@ -151,11 +151,10 @@ export default function TopBar(props) {
   const load_UI_state = () => {
     // TODO
     var history_length = session["history"].length;
-    //console.log("Length of history is: ", history_length);
     var history_item = session["history"][history_length-1];
-    //console.log("Returned history item is: ", history_item);
     dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
+
   }
 
   return (

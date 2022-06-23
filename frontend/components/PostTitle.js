@@ -33,9 +33,7 @@ const postTitle = (post) => {
 
 
 export default function PostTitle(props) {
-
    const title = postTitle(props.post);
-
    return (
       <Typography
          variant="body1"

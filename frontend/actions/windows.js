@@ -19,10 +19,9 @@ export const Windows = createSlice({
 		},
 		addWindow: (state, action) => {
 			var temp = [...state.windows];
-			console.log("action.payload", action.payload)
 			if (!temp.find(item => item.i === action.payload.i)) {
 				var obj = {
-					i: action.payload.i,
+					i: action.payload.i.split("_")[0],
 					x: action.payload.x, 
 					y: action.payload.y,
 					w: action.payload.w,
