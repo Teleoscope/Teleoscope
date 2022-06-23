@@ -143,16 +143,15 @@ export default function TopBar(props) {
 
 
   const load_teleoscope_state = (history_item_num) => {
-    var history_item = teleoscope["history"][history_item_num]
-    dispatch(loadSearchTerm(history_item["search_term"]));
-    dispatch(loadCheckedPosts(history_item["checked"]));
+    dispatch(historyActivator(history_item_num));
+    var history_item = teleoscope["history"][history_item_num];
   }
 
-  const reload = () => {
-    var history_item = session["history"][session["history"].length - 1]
-    dispatch(loadActiveTeleoscopeID(history_item["teleoscope_id"]));
-    dispatch(loadSearchTerm(history_item["search_term"]));
-    dispatch(loadCheckedPosts(history_item["checked"]));
+  const load_UI_state = () => {
+    // TODO
+    //dispatch(loadSearchTerm(history_item["search_term"]));
+    //dispatch(loadAddedPosts(history_item["added"]));
+    //dispatch(loadCheckedPosts(history_item["checked"]));
   }
 
   return (
@@ -193,11 +192,11 @@ export default function TopBar(props) {
                 fontWeight: 700,
               }}
             >
-              Save
+              Save Workspace
             </Button>
             <Button 
               variant="text" 
-              onClick={() => reload()}
+              onClick={() => load_UI_state()}
               style={{
                 backgroundColor: "#FFFFFF",
                 color: "black",
@@ -205,7 +204,7 @@ export default function TopBar(props) {
                 fontWeight: 700,
               }}
             >
-              Load
+              Load Workspace
             </Button>
             <Button 
               variant="text" 
@@ -219,24 +218,6 @@ export default function TopBar(props) {
             >
               New Teleoscope
             </Button>
-            <Button
-              variant="text"
-              onClick={() => save_teleoscope_state(
-                client, 
-                teleoscope_id,
-                {
-                  "search_term": search_term,
-                  "checked": checked
-                })}
-                style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              Save Teleoscope
-            </Button>
             <FormControl 
               sx={{width: 200, backgroundColor: 'white', }}
               variant="filled"
@@ -247,7 +228,7 @@ export default function TopBar(props) {
                 id="demo-simple-select"
                 value={history_item_num}
                 label="History Item"
-                onChange={(event) => dispatch(historyActivator(event.target.value))}
+                onChange={(event) => load_teleoscope_state(event.target.value)}
               >
                 {!teleoscope_loading && !teleoscope_error ? teleoscope["history"].map((h, i) => {
                   return (
@@ -255,20 +236,9 @@ export default function TopBar(props) {
                 )}):[]}
               </Select>
             </FormControl>
-            <Button 
-              variant="text" 
-              onClick={() => load_teleoscope_state(history_item_num)}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              Load
-            </Button>
             <Button
               onClick={() => {
+                // negative docs array is empty
                 reorient(client, search_term, teleoscope_id, checked, []);
                 dispatch(uncheckall(teleoscope_id))
               }}
@@ -278,10 +248,25 @@ export default function TopBar(props) {
                 fontSize: 12,
                 fontWeight: 700,
               }}
-
             >
               <BiotechIcon />
-              Reorient
+              Orient Towards
+            </Button>
+            <Button
+              onClick={() => {
+                // positive docs array is empty
+                reorient(client, search_term, teleoscope_id, [], checked);
+                dispatch(uncheckall(teleoscope_id))
+              }}
+              style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              <BiotechIcon />
+              Orient Away
             </Button>
             <FormControl 
               sx={{width: 200, backgroundColor: 'white', }}
@@ -298,23 +283,23 @@ export default function TopBar(props) {
                 {getTeleoscopes()}
               </Select>
             </FormControl>
-                  <TextField
-                    id="input-with-icon-textfield"
-                    InputProps={{
-                                  startAdornment: (
-                                                    <InputAdornment position="start">
-                                                      <AccountCircle />
-                                                    </InputAdornment>
-                                  ),
-                    }}
-                    label="Username" 
-                    variant="standard"
-                    defaultValue={cookies.user}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleCookie(e.target.value)
-                      }
-                    }}
+            <TextField
+              id="input-with-icon-textfield"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <AccountCircle />
+                  </InputAdornment>
+                ),
+              }}
+              label="Username" 
+              variant="standard"
+              defaultValue={cookies.user}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  handleCookie(e.target.value)
+                }
+              }}
             />
             <FormControl 
               sx={{width: 200, backgroundColor: 'white', }}
@@ -331,25 +316,6 @@ export default function TopBar(props) {
                 {getSessions(cookies.user)}
               </Select>
             </FormControl>
-                  <TextField
-                    id="input-with-icon-textfield"
-                    InputProps={{
-                                  startAdornment: (
-                                                    <InputAdornment position="start">
-                                                      <AccountCircle />
-                                                    </InputAdornment>
-                                  ),
-                    }}
-                    label="Username" 
-                    variant="standard"
-                    defaultValue={cookies.user}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleCookie(e.target.value)
-                      }
-                    }}
-            />
-
           </Stack>
         </Toolbar>
       </AppBar>

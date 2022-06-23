@@ -185,24 +185,24 @@ def initialize_teleoscope(*args, **kwargs):
     return return_ids
 
 @app.task
-def save_teleoscope_state(*args, **kwargs):
+def save_teleoscope_state(history_obj):
     # Error checking
-    if '_id' not in kwargs:
+    if '_id' not in history_obj:
         logging.info(f"_id not in kwargs.")
         raise Exception("_id not in kwargs")
-    if 'history_item' not in kwargs:
+    if 'history_item' not in history_obj:
         logging.info(f"history_item not in kwargs.")
         raise Exception("history_item not in kwargs")
     db = utils.connect()
-    logging.info(f'Saving state for teleoscope {kwargs["_id"]}.')
-    _id = str(kwargs["_id"])
+    logging.info(f'Saving state for teleoscope {history_obj["_id"]}.')
+    _id = str(history_obj["_id"])
     obj_id = ObjectId(_id)
     # check if teleoscope id is valid, if not, raise exception
     if not db.teleoscopes.find_one({"_id": obj_id}):
         logging.info(f"Teleoscope {_id} not found.")
         raise Exception("Teleoscope not found")
-    history_item = kwargs["history_item"]
-    result = db.teleoscopes.update({"_id": obj_id}, {'$push': {"history": kwargs["history_item"]}})
+    history_item = history_obj["history_item"]
+    result = db.teleoscopes.update({"_id": obj_id}, {'$push': {"history": history_item}})
     logging.info(f'Returned: {result}')
 
 @app.task
@@ -363,13 +363,26 @@ class reorient(Task):
         rank_slice = newRanks[0:500]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
 
-        # update stateVector
-        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "stateVector" : qprime.tolist()}})
-        # update rankedPosts
-        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "ranked_post_ids" : gridfsObj}})
-        # update a slice of rank_slice
-        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "rank_slice" : rank_slice}})
+        # # update stateVector
+        # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "stateVector" : qprime.tolist()}})
+        # # update rankedPosts
+        # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "ranked_post_ids" : gridfsObj}})
+        # # update a slice of rank_slice
+        # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "rank_slice" : rank_slice}})
 
-        return 200 # TODO: what to return?
+
+        # ! Teleoscope history item -> return this and use it in a chain
+        # positive docs
+        # negative docs
+        # stateVector
+        # ranked_post_ids
+        # rank_slice
+        history_obj =  {'_id': teleoscope_id, 'history_item': {'positive_docs': positive_docs, 
+                                                               'negative_docs': negative_docs, 
+                                                               'stateVector': qprime.tolist(), 
+                                                               'ranked_post_ids': gridfsObj, 
+                                                               'rank_slice': rank_slice}}
+        
+        return history_obj
 
 robj = app.register_task(reorient())

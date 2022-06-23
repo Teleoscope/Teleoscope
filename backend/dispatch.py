@@ -11,7 +11,7 @@ import string
 import gridfs
 import numpy as np
 import tensorflow_hub as hub
-from celery import Celery
+from celery import Celery, chain
 from celery import bootsteps
 from kombu import Consumer, Exchange, Queue
 
@@ -92,11 +92,25 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         
 
         if b['task'] == "reorient":
+            '''
             res = robj.delay(
                 teleoscope_id=b['args']["teleoscope_id"],
                 positive_docs=b['args']["positive_docs"],
                 negative_docs=b['args']["negative_docs"]
             )
+            '''
+
+            workflow = chain(
+                robj.s(teleoscope_id=b['args']["teleoscope_id"], 
+                        positive_docs=b['args']["positive_docs"],
+                        negative_docs=b['args']["negative_docs"]),
+                tasks.save_teleoscope_state.s())
+            
+            workflow.apply_async()
+                
+
+
+
 
 
 
