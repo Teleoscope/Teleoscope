@@ -23,7 +23,7 @@ import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionI
 import { historyActivator, loadActiveHistoryItem } from "../actions/activeHistoryItem";
 import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
-import { dragged, addWindow, removeWindow, reload } from "../actions/windows";
+import { dragged, addWindow, removeWindow, loadWindows } from "../actions/windows";
 import { mark, loadBookmarkedPosts } from "../actions/bookmark";
 
 // utilities
@@ -99,7 +99,7 @@ export default function TopBar(props) {
   
   const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
   const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
-  const windows = useSelector((state) => state.windows.value);
+  const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
 
   const handleCookie = (username) => {
@@ -151,14 +151,11 @@ export default function TopBar(props) {
   const load_UI_state = () => {
     // TODO
     var history_length = session["history"].length;
-    console.log("Length of history is: ", history_length);
+    //console.log("Length of history is: ", history_length);
     var history_item = session["history"][history_length-1];
-    console.log("Returned history item is: ", history_item);
+    //console.log("Returned history item is: ", history_item);
     dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
-    //dispatch(loadSearchTerm(history_item["search_term"]));
-    //dispatch(loadAddedPosts(history_item["added"]));
-    // this needs to access the saved windows
-    //dispatch(reload(session["checked"]));
+    dispatch(loadWindows(history_item["windows"]));
   }
 
   return (
@@ -187,8 +184,8 @@ export default function TopBar(props) {
                 client, 
                 session_id, 
                 { // history_item in save_UI_state in Stomp.js
+                    "bookmarks": bookmarks,
                     "windows": windows,
-                    "bookmarks": bookmarks
                 })
               }
               style={{

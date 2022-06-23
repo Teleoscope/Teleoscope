@@ -32,6 +32,7 @@ export const Windows = createSlice({
 				temp.push(obj);
 				state.windows = temp;
 			}
+			console.log("There are now ", state.windows.length, " elements in the windows array.");
 		},
 		removeWindow: (state, action) => {
 			var temp = [...state.windows];
@@ -43,7 +44,7 @@ export const Windows = createSlice({
 			}
 			state.windows = temp;
 		},
-		reload: (state, action) => {
+		loadWindows: (state, action) => {
 			for (var index in action.payload) {
 				var update = action.payload[index];
 				var item = state.windows.find(item => item.i === update.i)
@@ -61,5 +62,5 @@ export const Windows = createSlice({
 	}
 })
 
-export const { addWindow, removeWindow, reload, dragged } = Windows.actions
+export const { addWindow, removeWindow, loadWindows, dragged } = Windows.actions
 export default Windows.reducer

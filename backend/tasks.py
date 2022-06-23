@@ -226,6 +226,8 @@ def save_UI_state(*args, **kwargs):
     
     db.sessions.update({"_id": session_id}, {'$push': {"history": kwargs["history_item"]}})
 
+    return 200 # success
+
 @app.task
 def initialize_session(*args, **kwargs):
     db = utils.connect()
