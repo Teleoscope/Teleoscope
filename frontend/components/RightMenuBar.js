@@ -32,48 +32,12 @@ function useTeleoscope(id) {
 }
 
 export default function RightMenuBar(props) {
-  const [queries, setQueries] = useState([]);
-  const [posts, setPosts] = useState([]);
-  const [hover, setHover] = useState(false);
   const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value);
   const { teleoscope, loading, error } = useTeleoscope(teleoscope_id);
-  console.log("This is the teleoscope id: " + teleoscope_id)
-  var data = teleoscope ? teleoscope.rank_slice.slice(0, 10).map((post_and_rank) => {
-        var post = post_and_rank[0];
-        var rank = post_and_rank[1];
-        return [post, rank];
-      })
-    : []; // this is a hack
-
-  const handleOpenPost = (id) => {
-    var temp = [...posts];
-    var i = temp.indexOf(id);
-    if (i < 0) {
-      temp.push(id);
-    }
-    setPosts(temp);
-  };
-
-  const handleClosePost = (id) => {
-    var temp = [...posts];
-    // console.log("temp1", temp, id)
-    var i = temp.indexOf(id);
-    temp.splice(i, 1);
-    setPosts(temp);
-    setHover(false);
-    // console.log("temp2", temp, i)
-  };
-
-  const handleChildHover = (i) => {
-    setHover(i);
-  };
-
-  var ids = posts;
-  const handleIDs = (data) => {
-    ids = data["rank_slice"];
-    setPosts(ids);
-  };
-
+  var data = [];
+  if (teleoscope) {
+    data = teleoscope["history"][teleoscope["history"].length - 1]["rank_slice"];
+  }
   return (
     <div className="rightMenuBar">
       <Box
@@ -95,7 +59,6 @@ export default function RightMenuBar(props) {
         <PostList
           data={data}
           workspace={false}
-          addItemToWorkSpace={props.addItemToWorkSpace}
         />
       </Box>
     </div>
