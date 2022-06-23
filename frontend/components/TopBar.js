@@ -23,6 +23,8 @@ import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionI
 import { historyActivator, loadActiveHistoryItem } from "../actions/activeHistoryItem";
 import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
+import { dragged, addWindow, removeWindow, reload } from "../actions/windows";
+import { mark } from "../actions/bookmark";
 
 // utilities
 import {client_init, reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session} from "../components/Stomp.js";
@@ -97,6 +99,8 @@ export default function TopBar(props) {
   
   const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
   const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
+  const windows = useSelector((state) => state.windows.value);
+  const bookmarks = useSelector((state) => state.bookmarker.value);
 
   const handleCookie = (username) => {
     setCookie("user", username, {
@@ -107,9 +111,6 @@ export default function TopBar(props) {
   
   const dispatch = useDispatch();
   const client = client_init();
-
-
-
 
   const getTeleoscopes = () => {
     if (teleoscopes && session) {
@@ -151,7 +152,8 @@ export default function TopBar(props) {
     // TODO
     //dispatch(loadSearchTerm(history_item["search_term"]));
     //dispatch(loadAddedPosts(history_item["added"]));
-    //dispatch(loadCheckedPosts(history_item["checked"]));
+    // this needs to access the saved windows
+    dispatch(reload(session["checked"]));
   }
 
   return (
@@ -180,9 +182,8 @@ export default function TopBar(props) {
                 client, 
                 session_id, 
                 { // history_item in save_UI_state in Stomp.js
-                    "teleoscope_id": teleoscope_id,
-                    "search_term": search_term,
-                    "checked": checked
+                    "windows": windows,
+                    "bookmarks": bookmarks
                 })
               }
               style={{
