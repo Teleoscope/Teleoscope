@@ -76,7 +76,7 @@ export default function WorkspaceItem(props) {
       <Grid item xs={12}>
         <Stack direction="row">
           <GroupSelector id={props.id}/>
-          <PostTitle post={post ? post : {}} size="sm"/>
+          <PostTitle post={post ? post : {}} size="sm" noWrap={true}/>
           <IconButton size="small" onClick={() => dispatch(removeWindow(props.id))}>
             <CloseIcon fontSize="small" />
           </IconButton>

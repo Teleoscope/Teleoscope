@@ -35,7 +35,7 @@ function wrapLayout(windows, checked, dispatch) {
 
     if (w.type == "Post") {
       return (
-        <Card 
+        <Card
           key={w.i}
           variant="outlined"
           style={{
@@ -75,10 +75,10 @@ export default function WindowManager(props) {
 	const dispatch = useDispatch();
 
   const dropping = (layout, item, e) => {
-    console.log("Dropping", layout, item, e);
-    dispatch(addWindow(item));
+    dispatch(addWindow({i: dragged_id, x: 0, y: 0, w: 3, h: 1}));
   }
-    return (
+
+  return (
       <ReactGridLayout
         className="layout"
         layout={windows}
@@ -92,12 +92,12 @@ export default function WindowManager(props) {
         droppingItem={{ i: dragged_id + "_temp", w: 2, h: 1 }}
         onLayoutChange={(layout) => dispatch(loadWindows(layout))}
         style={{
-          // backgroundColor:"blue",
+          backgroundColor: "#EEEEEE",
           minHeight: "100%",
           zIndex: 0
         }}
       >
       {wrapLayout(windows, checked, dispatch)}
       </ReactGridLayout>
-    );
+  )
 }
