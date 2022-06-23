@@ -31,6 +31,7 @@
     "celery-node": "^0.5.8",
     "crypto-js": "^4.1.1",
     "crypto-random-string": "^4.0.0",
+    "draft-js": "^0.11.7",
     "fs": "^0.0.1-security",
     "lodash": "^4.17.21",
     "mongodb": "^3.7.3",
