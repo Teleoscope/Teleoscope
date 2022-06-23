@@ -44,9 +44,11 @@ export const Windows = createSlice({
 			state.windows = temp;
 		},
 		loadWindows: (state, action) => {
+			var temp = [...state.windows];
+			console.log(temp)
 			for (var index in action.payload) {
 				var update = action.payload[index];
-				var item = state.windows.find(item => item.i === update.i)
+				var item = temp.find(item => item.i === update.i)
 				if (item) {
 					Object.keys(update).forEach((key, ind) => {
 						if (item.hasOwnProperty(key)) {
@@ -54,9 +56,11 @@ export const Windows = createSlice({
 						}
 					});
 				} else {
-					console.log("drop", update);
+
+					temp.push(update);
 				}
 			}
+			state.windows = temp;
 		}
 	}
 })
