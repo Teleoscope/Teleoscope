@@ -216,14 +216,15 @@ def save_UI_state(*args, **kwargs):
         raise Exception("history_item not in kwargs")
     db = utils.connect()
     logging.info(f'Saving state for {kwargs["session_id"]}.')
-    session_id = kwargs["session_id"]
+    session_id = ObjectId(str(kwargs["session_id"]))
     # check if session id is valid, if not, raise exception
-    if not db.sessions.find_one({"_id": ObjectId(str(session_id))}):
+    if not db.sessions.find_one({"_id": session_id}):
         logging.info(f"Session {session_id} not found.")
         raise Exception("Session not found")
+    
     history_item = kwargs["history_item"]
     
-    db.sessions.update({"session_id": kwargs["session_id"]}, {'$push': {"history": kwargs["history_item"]}})
+    db.sessions.update({"_id": session_id}, {'$push': {"history": kwargs["history_item"]}})
 
 @app.task
 def initialize_session(*args, **kwargs):
