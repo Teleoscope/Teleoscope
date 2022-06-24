@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
 import PostList from "./PostList";
-import useSWR, { mutate } from "swr";
 
 // material ui
 import Box from "@mui/material/Box";
@@ -20,20 +19,13 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import { useSelector, useDispatch } from "react-redux";
 import { activator } from "../actions/activeTeleoscopeID";
 
-
-function useTeleoscope(id) {
-  console.log(id)
-  const { data, error } = useSWR(`/api/teleoscopes/${id}`);
-  return {
-    teleoscope: data,
-    loading: !error && !data,
-    error: error,
-  };
-}
+//utils
+import useSWRAbstract from "../util/swr"
 
 export default function RightMenuBar(props) {
   const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value);
-  const { teleoscope, loading, error } = useTeleoscope(teleoscope_id);
+
+  const { teleoscope, teleoscope_loading, teleoscope_error } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
   var data = [];
   if (teleoscope) {
     data = teleoscope["history"][teleoscope["history"].length - 1]["rank_slice"];
