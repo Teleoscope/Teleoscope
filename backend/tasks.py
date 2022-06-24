@@ -180,8 +180,12 @@ def add_note(*args, **kwargs):
             "timestamp": datetime.datetime.utcnow()
         }]
     }
-    res = db.notes.insert_one(obj)
-    logging.info(f"Added note for post {kwargs['postid']} with result {res}.")
+    try:
+        res = db.notes.insert_one(obj)
+        logging.info(f"Added note for post {kwargs['postid']} with result {res}.")
+    except:
+        logging.info(f"Error for post {kwargs['postid']}.")
+
 
 @app.task
 def update_note(*args, **kwargs):
