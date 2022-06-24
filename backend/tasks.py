@@ -180,13 +180,13 @@ def add_note(*args, **kwargs):
             "timestamp": datetime.datetime.utcnow()
         }]
     }
-    db.notes.insert_one(obj)
-    logging.info(f"Added note for post {kwargs['postid']}...")
+    res = db.notes.insert_one(obj)
+    logging.info(f"Added note for post {kwargs['postid']} with result {res}.")
 
 @app.task
 def update_note(*args, **kwargs):
     db = utils.connect()
-    db.notes.update_one({"id": kwargs["postid"]}, {"$push":
+    res = db.notes.update_one({"postid": kwargs["postid"]}, {"$push":
             {
                 "history":
                 {
@@ -195,7 +195,7 @@ def update_note(*args, **kwargs):
                 }
             }
         })
-    logging.info(f"Updated note for post {kwargs['postid']}...")
+    logging.info(f"Updated note for post {kwargs['postid']} with result {res}.")
 
 '''
 querySearch:
