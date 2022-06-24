@@ -184,10 +184,7 @@ def add_note(*args, **kwargs):
 @app.task
 def update_note(*args, **kwargs):
     db = utils.connect()
-    db.notes.update_one({
-        "id": kwargs["postid"]},
-        {
-            "$push":
+    db.notes.update_one({"id": kwargs["postid"]}, {"$push":
             {
                 "history":
                 {
