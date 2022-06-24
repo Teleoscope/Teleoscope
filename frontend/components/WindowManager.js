@@ -10,6 +10,7 @@ import BookmarkSelector from "../components/BookmarkSelector"
 import PostTitle from "./PostTitle";
 import Expander from "./Expander"
 import PostListItem from "./PostListItem"
+import Notes from "./Notes"
 
 
 // css
@@ -23,7 +24,7 @@ import CardActionArea from '@mui/material/CardActionArea';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { addWindow, reload } from "../actions/windows";
+import { addWindow, loadWindows } from "../actions/windows";
 import { checker } from "../actions/checkedPosts";
 
 const ReactGridLayout = WidthProvider(RGL);
@@ -32,10 +33,9 @@ const ReactGridLayout = WidthProvider(RGL);
 function wrapLayout(windows, checked, dispatch) {
   var ret = windows.map((w) => {
     var pc = checked.indexOf(w.i)
-
     if (w.type == "Post") {
       return (
-        <Card 
+        <Card
           key={w.i}
           variant="outlined"
           style={{
@@ -44,9 +44,7 @@ function wrapLayout(windows, checked, dispatch) {
             boxShadow: pc >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
 
           }}
-        >
-        
-        
+        >      
         <CardActionArea
           onClick={() => handleClick(w.i, pc, dispatch)}
         >
@@ -54,7 +52,14 @@ function wrapLayout(windows, checked, dispatch) {
         </CardActionArea>
         </Card>
         )
-    }  
+    }
+    if (w.type == "Note") {
+      return (
+        <Card key={w.i} style={{backgroundColor: "yellow"}}>
+          <Notes></Notes>
+        </Card>
+      )
+    }
   })
 	return ret;
 }
@@ -75,10 +80,10 @@ export default function WindowManager(props) {
 	const dispatch = useDispatch();
 
   const dropping = (layout, item, e) => {
-    console.log("Dropping", layout, item, e);
-    dispatch(addWindow(item));
+    dispatch(addWindow({i: dragged_id, x: 0, y: 0, w: 3, h: 1, type: "Post"}));
   }
-    return (
+
+  return (
       <ReactGridLayout
         className="layout"
         layout={windows}
@@ -89,15 +94,15 @@ export default function WindowManager(props) {
         compactionType={false}
         onDrop={(layout, item, e) => {dropping(layout, item, e)}}
         isDroppable={true}
-        droppingItem={{ i: dragged_id, w: 2, h: 1 }}
-        onLayoutChange={(layout) => dispatch(reload(layout))}
+        droppingItem={{ i: dragged_id + "_temp", w: 2, h: 1 }}
+        onLayoutChange={(layout) => dispatch(loadWindows(layout))}
         style={{
-          // backgroundColor:"blue",
+          backgroundColor: "#EEEEEE",
           minHeight: "100%",
           zIndex: 0
         }}
       >
       {wrapLayout(windows, checked, dispatch)}
       </ReactGridLayout>
-    );
+  )
 }

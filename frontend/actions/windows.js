@@ -19,19 +19,19 @@ export const Windows = createSlice({
 		},
 		addWindow: (state, action) => {
 			var temp = [...state.windows];
-			console.log("action.payload", action.payload)
 			if (!temp.find(item => item.i === action.payload.i)) {
 				var obj = {
-					i: action.payload.i,
+					i: action.payload.i.split("_")[0],
 					x: action.payload.x, 
 					y: action.payload.y,
 					w: action.payload.w,
 					h: action.payload.h,
-					type: "Post"
+					type: action.payload.type,
 				};
 				temp.push(obj);
 				state.windows = temp;
 			}
+			console.log("There are now ", state.windows.length, " elements in the windows array.");
 		},
 		removeWindow: (state, action) => {
 			var temp = [...state.windows];
@@ -43,10 +43,11 @@ export const Windows = createSlice({
 			}
 			state.windows = temp;
 		},
-		reload: (state, action) => {
+		loadWindows: (state, action) => {
+			var temp = [...state.windows];
 			for (var index in action.payload) {
 				var update = action.payload[index];
-				var item = state.windows.find(item => item.i === update.i)
+				var item = temp.find(item => item.i === update.i)
 				if (item) {
 					Object.keys(update).forEach((key, ind) => {
 						if (item.hasOwnProperty(key)) {
@@ -54,12 +55,16 @@ export const Windows = createSlice({
 						}
 					});
 				} else {
-					console.log("drop", update);
+					if (update.hasOwnProperty("i")) {
+						console.log(update)
+						temp.push(update);
+					}
 				}
 			}
+			state.windows = temp;
 		}
 	}
 })
 
-export const { addWindow, removeWindow, reload, dragged } = Windows.actions
+export const { addWindow, removeWindow, loadWindows, dragged } = Windows.actions
 export default Windows.reducer

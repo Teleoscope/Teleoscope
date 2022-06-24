@@ -3,6 +3,7 @@ import React, { useState } from "react";
 // MUI imports
 import ListItemText from "@material-ui/core/ListItemText";
 import Typography from '@mui/material/Typography';
+import Tooltip from '@mui/material/Tooltip';
 
 // fonts
 import '@fontsource/roboto/300.css';
@@ -31,17 +32,16 @@ const postTitle = (post) => {
 
 };
 
-
 export default function PostTitle(props) {
-
    const title = postTitle(props.post);
-
    return (
+      <Tooltip title={title} placement="top">
       <Typography
          variant="body1"
-         noWrap={true}
+         noWrap={props.noWrap}
       >
          {title}
       </Typography>
+      </Tooltip>
    )
 }

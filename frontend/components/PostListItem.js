@@ -60,7 +60,7 @@ export default function PostListItem(props) {
       className="droppable-element"
       style={{ borderBottom: "1px solid  #eceeee" }}
       id={props.id}
-      onDragStart={(e, data) => { dispatch(dragged(props.id)) }}
+      onDragStart={(e, data) => {dispatch(dragged(props.id))}}
     >
       <Grid container spacing={2}>
         <Grid item xs={1}>
@@ -69,8 +69,8 @@ export default function PostListItem(props) {
         <Grid item xs={2}>
           <GroupSelector id={props.id} />
         </Grid>
-        <Grid item wrap="nowrap" xs={7}>
-          <PostTitle post={post ? post : {}} />
+        <Grid item xs={7}>
+          <PostTitle post={post ? post : {} } noWrap={false} />
         </Grid>
         <Grid item xs={2}>
           <IconButton onClick={() => setOpen(!open)}>

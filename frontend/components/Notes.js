@@ -1,35 +1,49 @@
-import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
+// import React from 'react';
+// import ReactDOM from 'react-dom';
+// import {Editor, EditorState} from 'draft-js';
+// import 'draft-js/dist/Draft.css';
+// 
+// export default function MyEditor(props) {
+//   const [editorState, setEditorState] = React.useState(
+//     () => EditorState.createEmpty(),
+//   );
+// 
+//   return (
+//     <div style={{margin: "10px"}}>
+//     <Editor 
+//       editorState={editorState} 
+//       onChange={setEditorState} />
+//     </div>
+//   )
+// }
+// 
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    '& .MuiTextField-root': {
-      // margin: theme.spacing(1),
-      width: '25ch',
-    },
-  },
-}));
 
-export default function MultilineTextFields(props) {
-  const classes = useStyles();
-  const [value, setValue] = React.useState('Enter notes...');
+import React from "react";
+import { Editor, EditorState } from "draft-js";
+import "draft-js/dist/Draft.css";
 
-  const handleChange = (event) => {
-    setValue(event.target.value);
-  };
+export default function MyEditor() {
+  const [editorState, setEditorState] = React.useState(() =>
+    EditorState.createEmpty()
+  );
+
+  const editor = React.useRef(null);
+  function focusEditor() {
+    editor.current.focus();
+  }
 
   return (
-    props.show ?
-    <form className={classes.root} noValidate autoComplete="off">
-        <TextField
-          id="standard-multiline-flexible"
-          // label="Notes"
-          multiline
-          // rowsMax={4}
-          value={value}
-          onChange={handleChange}
-        />
-    </form> : null
+    <div
+      style={{ margin: "10px", minHeight: "6em", cursor: "text" }}
+      onClick={focusEditor}
+    >
+      <Editor
+        ref={editor}
+        editorState={editorState}
+        onChange={setEditorState}
+        // placeholder="Write something!"
+      />
+    </div>
   );
 }
