@@ -179,7 +179,7 @@ def add_note(*args, **kwargs):
         }]
     }
     db.notes.insert_one(obj)
-    logging.info(f"Added note for post {kwargs["postid"]}...")
+    logging.info(f"Added note for post {kwargs['postid']}...")
 
 @app.task
 def update_note(*args, **kwargs):
@@ -196,7 +196,7 @@ def update_note(*args, **kwargs):
                 }
             }
         })
-    logging.info(f"Updated note for post {kwargs["postid"]}...")
+    logging.info(f"Updated note for post {kwargs['postid']}...")
 
 
 querySearch:
