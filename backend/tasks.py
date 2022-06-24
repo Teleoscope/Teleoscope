@@ -163,6 +163,42 @@ def add_group(*args, **kwargs):
     return res
 
 '''
+add_note
+input:
+    id: postid (string) 
+purpose: adds a note to the notes collection
+'''
+@app.task
+def add_note(*args, **kwargs):
+    db = utils.connect()
+    obj = {
+        "postid": kwargs["postid"],
+        "history": [{
+            "content": {},
+            "timestamp": datetime.datetime.utcnow()
+        }]
+    }
+    db.notes.insert_one(obj)
+    logging.info(f"Added note for post {kwargs["postid"]}...")
+
+@app.task
+def update_note(*args, **kwargs):
+    db = utils.connect()
+    db.notes.update_one({
+        "id": kwargs["postid"]},
+        {
+            "$push":
+            {
+                "history":
+                {
+                    "content": kwargs["content"],
+                    "timestamp": datetime.datetime.utcnow()
+                }
+            }
+        })
+    logging.info(f"Updated note for post {kwargs["postid"]}...")
+
+
 querySearch:
 Performs a text query on aita.clean.posts.v2 text index.
 If the query string alredy exists in the teleoscopes collection, returns existing reddit_ids.

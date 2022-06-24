@@ -121,19 +121,6 @@ export default function TopBar(props) {
             <Button
               size="small" 
               variant="text" 
-              onClick={() => dispatch(addWindow({i: "note", x: 0, y: 0, w: 10, h: 10, type: "Note"}))}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              New Note
-            </Button>
-            <Button
-              size="small" 
-              variant="text" 
               onClick={() => initialize_session(client, cookies.user)}
               style={{
                 backgroundColor: "#FFFFFF",

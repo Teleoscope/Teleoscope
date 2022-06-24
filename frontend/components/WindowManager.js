@@ -12,7 +12,6 @@ import Expander from "./Expander"
 import PostListItem from "./PostListItem"
 import Notes from "./Notes"
 
-
 // css
 import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
@@ -20,7 +19,6 @@ import "react-resizable/css/styles.css"
 // mui
 import Card from '@mui/material/Card';
 import Paper from '@mui/material/Paper';
-import CardActionArea from '@mui/material/CardActionArea';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -45,32 +43,19 @@ function wrapLayout(windows, checked, dispatch) {
 
           }}
         >      
-        <CardActionArea
-          onClick={() => handleClick(w.i, pc, dispatch)}
-        >
           <WorkspaceItem id={w.i} />
-        </CardActionArea>
         </Card>
         )
     }
     if (w.type == "Note") {
       return (
         <Card key={w.i} style={{backgroundColor: "yellow"}}>
-          <Notes></Notes>
+          <Notes id={w.i}></Notes>
         </Card>
       )
     }
   })
 	return ret;
-}
-
-// strangely, this is needed
-function handleClick(id, index, dispatch) {
-  if (index < 0) {
-    dispatch(checker(id))
-  } else {
-    dispatch(checker(id))
-  }
 }
 
 export default function WindowManager(props) {

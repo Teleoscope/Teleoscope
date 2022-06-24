@@ -118,6 +118,25 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
 
+        
+        if b['task'] == "add_note":
+            res = tasks.add_note.signature(
+                args=(),
+                kwargs={
+                    "postid": b["args"]["postid"],
+                }
+            )
+            res.apply_async()
+
+        if b['task'] == "update_note":
+            res = tasks.update_note.signature(
+                args=(),
+                kwargs={
+                    "postid": b["args"]["postid"],
+                    "content": b["args"]["content"],
+                }
+            )
+            res.apply_async()
 
 app.steps['consumer'].add(WebTaskConsumer)
 
