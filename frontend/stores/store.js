@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit'
+import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit'
 
 import SearchTerm from "../actions/searchterm"
 import ActiveTeleoscopeID from "../actions/activeTeleoscopeID"
@@ -20,5 +20,16 @@ export default configureStore({
     grouper: Grouped,
     windows: Windows,
   },
+  middleware: (getDefaultMiddleware) => 
+    getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore these action types
+        ignoredActions: ['your/action/type'],
+        // Ignore these field paths in all actions
+        ignoredActionPaths: ['payload.client'],
+        // Ignore these paths in the state
+        ignoredPaths: ['items.dates'],
+      },
+    })
 })
 

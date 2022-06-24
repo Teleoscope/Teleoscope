@@ -1,16 +1,15 @@
 // actions.js
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import {client_init, add_group} from "../components/Stomp.js";
+import { add_group } from "../components/Stomp";
 
-const initialState: {
+const initialState = {
 	groups: {
 		// "label": "#ffffff"
 	},
 	grouped_posts: [
 		// {id: 'wer123', label: 'Red'}
-	],
-	client: client_init()
-},
+	]
+}
 
 export const Grouped = createSlice({
 	name: 'grouped',
@@ -27,7 +26,7 @@ export const Grouped = createSlice({
 		addGroup: (state, action) => {
 			var temp = {...state.groups};
 			temp[action.payload.label] = action.payload.color;
-			add_group(state.client, action.payload.label, action.payload.color);
+			add_group(action.payload.client, action.payload.label, action.payload.color);
 			state.groups = temp;
 		}
 	},

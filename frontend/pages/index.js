@@ -12,13 +12,19 @@ import store from "../stores/store";
 // custom components
 import Workspace from "../components/Workspace";
 
+// contexts
+import { StompContext, client } from "../context/StompContext"
+
 // API fetcher for SWR global config
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
+
+
 
 
 export default function Home({ isConnected }) {
   return (
     <SWRConfig value={{ fetcher }}>
+    <StompContext.Provider value={client}>
     <CookiesProvider>
         <div className="container">
           <Head>
@@ -33,6 +39,7 @@ export default function Home({ isConnected }) {
           </main>
         </div>
     </CookiesProvider>
+    </StompContext.Provider>
     </SWRConfig>
   );
 }

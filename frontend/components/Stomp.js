@@ -4,13 +4,8 @@ import { Client, Message } from "@stomp/stompjs";
 // possibly best to move this into an action? I'm unsure
 Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
 
-// enforcing light singleton pattern
-var g_client;
-
 export function client_init() {
-  if (g_client) {
-    return g_client;
-  }
+
   console.log("Initializing Stomp client...")
   const client = new Client({
     brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:3311/ws`,
@@ -42,7 +37,6 @@ export function client_init() {
   };
 
   client.activate();
-  g_client = client;
   return client;
 }
 
@@ -129,4 +123,5 @@ export function add_group(client, label, color) {
       color: color
     }
   }
+  publish(client, body);
 }
