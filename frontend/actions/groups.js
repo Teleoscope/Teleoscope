@@ -8,11 +8,23 @@ const initialState = {
 	},
 	grouped_posts: [
 		// {id: 'wer123', label: 'Red'}
-	]
+	],
+	loading: false
 }
 
-export const Grouped = createSlice({
-	name: 'grouped',
+export const getGroups = createAsyncThunk(
+	'groups/getGroups',
+	async (thunkAPI) => {
+		const res = await fetch('/api/groups').then(
+
+			(data) => data.json()
+		)	
+	console.log("groups fetch", res)
+	return res
+})
+
+export const Groups = createSlice({
+	name: 'groups',
 	initialState,
 	reducers: {
 		group: (state, action) => {
@@ -30,9 +42,26 @@ export const Grouped = createSlice({
 			state.groups = temp;
 		}
 	},
+	extraReducers: {
+		[getGroups.pending]: (state) => {
+			state.loading = true;
+		},
+		[getGroups.fulfilled]: (state, {payload}) => {
+			state.loading = false
+			var groups = {}
+			payload.forEach((g) => {
+				groups[g.label] = g.color;
+			})
+			console.log("groups fulfilled", groups)
+			state.groups = groups;
+		},
+		[getGroups.rejected]: (state) => {
+			state.loading = false
+		},
+	},
 })
 
 // Action creators are generated for each case reducer function
-export const { group, addGroup } = Grouped.actions
+export const { group, addGroup } = Groups.actions
 
-export default Grouped.reducer
+export default Groups.reducer

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Head from "next/head";
 
 import { Provider } from "react-redux";
@@ -22,6 +22,8 @@ const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
 
 export default function Home({ isConnected }) {
+
+
   return (
     <SWRConfig value={{ fetcher }}>
     <StompContext.Provider value={client}>

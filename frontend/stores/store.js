@@ -6,7 +6,7 @@ import ActiveSessionID from "../actions/activeSessionID"
 import ActiveHistoryItem from "../actions/activeHistoryItem"
 import CheckedPosts from "../actions/checkedPosts"
 import Bookmark from "../actions/bookmark"
-import Grouped from '../actions/groups'
+import Groups from '../actions/groups'
 import Windows from '../actions/windows'
 
 export default configureStore({
@@ -17,7 +17,7 @@ export default configureStore({
     activeHistoryItem: ActiveHistoryItem,
     checkedPosts: CheckedPosts,
     bookmarker: Bookmark,
-    grouper: Grouped,
+    grouper: Groups,
     windows: Windows,
   },
   middleware: (getDefaultMiddleware) => 
