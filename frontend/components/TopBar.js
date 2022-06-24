@@ -30,73 +30,22 @@ import { mark, loadBookmarkedPosts } from "../actions/bookmark";
 import {client_init, reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session} from "../components/Stomp.js";
 import randomstring from "randomstring";
 import { useCookies } from "react-cookie";
-
-
-function useTeleoscopes() {
-  const { data, error } = useSWR(`/api/teleoscopes/`);
-  return {
-    teleoscopes: data,
-    loading: !error && !data,
-    error: error,
-  };
-}
-
-function useTeleoscope(id) {
-  const { data, error } = useSWR(`/api/teleoscopes/${id}`);
-  return {
-    teleoscope: data,
-    teleoscope_loading: !error && !data,
-    teleoscope_error: error,
-  };
-}
-
-function useSessions() {
-  const { data, error } = useSWR(`/api/sessions/`);
-  return {
-    sessions: data,
-    sessions_loading: !error && !data,
-    sessions_error: error,
-  };  
-}
-
-
-function useSession(id) {
-  const { data, error } = useSWR(`/api/sessions/${id}`);
-  return {
-    session: data,
-    session_loading: !error && !data,
-    session_error: error,
-  };  
-}
-
-function useUsers() {
-  const { data, error } = useSWR(`/api/users/`);
-  return {
-    users: data,
-    users_loading: !error && !data,
-    users_error: error,
-  };  
-}
+import useSWRAbstract from "../util/swr"
 
 export default function TopBar(props) {
 
-  const { teleoscopes, loading, error } = useTeleoscopes();
-  const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value); // TODO rename
-  const { teleoscope, teleoscope_loading, teleoscope_error } = useTeleoscope(teleoscope_id);
+  // const { teleoscopes, loading, error } = useTeleoscopes();
+  const { teleoscopes, teleoscopes_loading, teleoscopes_error } = useSWRAbstract("teleoscopes", `/api/teleoscopes/`);
+  const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value);
+  const { teleoscope, teleoscope_loading, teleoscope_error } = useSWRAbstract("teleoscope",`/api/teleoscopes/${teleoscope_id}`);
+  const { sessions, sessions_loading, sessions_error } = useSWRAbstract("sessions", `/api/sessions/`);
+  const { users, users_loading, users_error } = useSWRAbstract("users", `/api/users/`);
+  const session_id = useSelector((state) => state.activeSessionID.value);
+  const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
 
-
-  console.log("teleoscope id is: ", teleoscope_id);
-
-  const history_item_num = useSelector((state) => state.activeHistoryItem.value);
-
-  const { sessions, sessions_loading, sessions_error } = useSessions();
-  const { users, users_loading, users_error } = useUsers();
-  
   const [cookies, setCookie] = useCookies(["user"]);
-  const session_id = useSelector((state) => state.activeSessionID.value); // TODO rename
 
-  const { session, session_loading, session_error } = useSession(session_id);
-  
+  const history_item_num = useSelector((state) => state.activeHistoryItem.value);  
   const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
   const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
   const windows = useSelector((state) => state.windows.windows); // TODO rename
