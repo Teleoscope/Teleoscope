@@ -195,7 +195,7 @@ def update_note(*args, **kwargs):
         })
     logging.info(f"Updated note for post {kwargs['postid']}...")
 
-
+'''
 querySearch:
 Performs a text query on aita.clean.posts.v2 text index.
 If the query string alredy exists in the teleoscopes collection, returns existing reddit_ids.
