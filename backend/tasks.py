@@ -138,6 +138,30 @@ def add_multiple_posts_to_database(posts):
 
 
 '''
+add_group
+input: 
+    label (string, arbitrary)
+    color (string, hex color)
+purpose: adds a group to the group collection
+'''
+@app.task 
+def add_group(*args, **kwargs):
+    db = utils.connect()
+    obj = {
+        "color": kwargs["color"],
+        "history": [
+            {
+                "included_posts": [],
+                "label": kwargs["label"]
+            }
+        ]
+    }
+
+    res = db.groups.insert_one(obj)
+    logging.info(f"Added group {obj['history'][0]['label']} with result {res}.")
+    return res
+
+'''
 querySearch:
 Performs a text query on aita.clean.posts.v2 text index.
 If the query string alredy exists in the teleoscopes collection, returns existing reddit_ids.

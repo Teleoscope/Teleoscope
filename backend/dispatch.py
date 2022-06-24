@@ -107,11 +107,16 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 tasks.save_teleoscope_state.s())
             
             workflow.apply_async()
-                
-
-
-
-
+        
+        if b['task'] == "add_group":
+            res = tasks.add_group.signature(
+                args=(),
+                kwargs={
+                    "label": b["args"]["label"],
+                    "color": b["args"]["color"]
+                }
+            )
+            res.apply_async()
 
 
 app.steps['consumer'].add(WebTaskConsumer)
