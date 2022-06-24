@@ -1,14 +1,20 @@
 // actions.js
-import { createSlice } from '@reduxjs/toolkit'
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import {client_init, add_group} from "../components/Stomp.js";
+
+const initialState: {
+	groups: {
+		// "label": "#ffffff"
+	},
+	grouped_posts: [
+		// {id: 'wer123', label: 'Red'}
+	],
+	client: client_init()
+},
+
 export const Grouped = createSlice({
 	name: 'grouped',
-	initialState: {
-		groups: {
-			// "label": "#ffffff"
-		},
-		grouped_posts: []
-			// {id: 'wer123', label: 'Red'}
-	},
+	initialState,
 	reducers: {
 		group: (state, action) => {
 			var temp = [...state.grouped_posts];
@@ -21,6 +27,7 @@ export const Grouped = createSlice({
 		addGroup: (state, action) => {
 			var temp = {...state.groups};
 			temp[action.payload.label] = action.payload.color;
+			add_group(state.client, action.payload.label, action.payload.color);
 			state.groups = temp;
 		}
 	},

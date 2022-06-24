@@ -120,3 +120,13 @@ export function initialize_session(client, username) {
   publish(client, body);
   return body;
 }
+
+export function add_group(client, label, color) {
+  var body = {
+    task: 'add_group',
+    args: {
+      label: label,
+      color: color
+    }
+  }
+}
