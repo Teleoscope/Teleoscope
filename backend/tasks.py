@@ -149,6 +149,7 @@ def add_group(*args, **kwargs):
     db = utils.connect()
     obj = {
         "color": kwargs["color"],
+        "label": kwargs["label"],
         "history": [
             {
                 "included_posts": [],
