@@ -1,5 +1,5 @@
 import React, {useContext} from "react";
-import { Editor, EditorState } from "draft-js";
+import { Editor, EditorState, convertFromRaw, convertToRaw } from "draft-js";
 import "draft-js/dist/Draft.css";
 
 // mui
@@ -27,22 +27,40 @@ import { StompContext } from '../context/StompContext'
 export default function Note(props) {
   const postid = props.id.split("%")[0]
   const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${postid}`);
+  const { note, note_loading, note_error} = useSWRAbstract("note", `/api/notes/${postid}`);
   const dispatch = useDispatch();
   const client = useContext(StompContext)
-
-  const handleBlur = () => {
-    update_note(client, postid, editorState.getCurrentContent())
+  const editor = React.useRef(null);
+  
+  const handleLoad = () => {
+    if (note) {
+      console.log("editor", note)
+      var item = note["history"][note["history"].length - 1];
+      if (item) {
+        console.log("editor", item)
+        return EditorState.createWithContent(convertFromRaw(item["content"]));
+      }
+    }
+    return EditorState.createEmpty()
   }
+  const [editorState, setEditorState] = React.useState(() => handleLoad());
+
+  // Handlers
+  const handleBlur = () => {
+    var content = editorState.getCurrentContent();
+    update_note(client, postid, convertToRaw(content))
+  }
+
+
+  const handleFocus = () => {
+    
+  }
+
   const handleClose = () => {
-    update_note(client, postid, editorState.getCurrentContent())
+    update_note(client, postid, convertToRaw(editorState.getCurrentContent()))
     dispatch(removeWindow(props.id))
   }
 
-  const [editorState, setEditorState] = React.useState(() =>
-    EditorState.createEmpty()
-  );
-
-  const editor = React.useRef(null);
   const focusEditor = () => {
     editor.current.focus();
   }
@@ -64,8 +82,9 @@ export default function Note(props) {
         ref={editor}
         editorState={editorState}
         onBlur={handleBlur}
+        onFocus={handleFocus}
         onChange={setEditorState}
-        placeholder={post ? post["title"] : props.id}
+        // placeholder={post ? post["title"] : props.id}
       />
     </Stack>
   );
