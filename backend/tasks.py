@@ -249,11 +249,8 @@ def update_group_label(*args, **kwargs):
                 }
             }
         )
-
-
-
-
-
+    except:
+        logging.info(f"Failed to update group label for {kwargs["label"]}.")
 
 '''
 add_group
