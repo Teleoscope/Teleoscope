@@ -38,7 +38,7 @@ export default function LeftMenuBarGroups() {
    const session_id = useSelector((state) => state.activeSessionID.value);
    const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
 
-   const i = -1;
+   var i = -1;
    const colors = [
       "#17becf",
       "#bcbd22",
