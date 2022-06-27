@@ -186,7 +186,7 @@ export default function LeftMenuBarGroups() {
                   <Button
                      type="submit"
                      onClick={() => {
-                        dispatch(addGroup({ label: dialogValue.label, color: setRandomColor(), session_id: session_id }))
+                        dispatch(addGroup({ client: client, label: dialogValue.label, color: setRandomColor(), session_id: session_id }))
                      }}>Add</Button>
                </DialogActions>
             </form>
