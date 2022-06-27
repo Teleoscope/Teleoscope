@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 
 // MUI 
 import TextField from "@material-ui/core/TextField";
@@ -36,8 +36,9 @@ export default function LeftMenuBarGroups() {
    const [text, setText] = useState("");
 
    const { sessions, sessions_loading, sessions_error } = useSWRAbstract("sessions", `/api/sessions/`);
-   const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
    const session_id = useSelector((state) => state.activeSessionID.value);
+   const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+
 
    const handleClose = () => {
       setDialogValue({
