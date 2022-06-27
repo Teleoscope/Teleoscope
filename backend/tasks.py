@@ -157,6 +157,7 @@ def save_group_state(*args, **kwargs):
         raise Exception("history_item not in kwargs")
     db = utils.connect()
     group_id, history_item = ObjectId(kwargs['group_id']), kwargs['history_item']
+    history_item["timestamp"] =  datetime.datetime.utcnow()
     # Find group with group_id
     group = db.groups.find_one({'_id': group_id})
     if group:
