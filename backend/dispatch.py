@@ -117,7 +117,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 }
             )
             res.apply_async()
-
         
         if b['task'] == "add_note":
             res = tasks.add_note.signature(
