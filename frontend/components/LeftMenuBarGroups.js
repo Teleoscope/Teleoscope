@@ -28,6 +28,20 @@ export default function LeftMenuBarGroups() {
    const [open, toggleOpen] = React.useState(false);
    const [text, setText] = useState("");
 
+   const i = -1;
+   const colors = [
+      "#17becf",
+      "#bcbd22",
+      "#7f7f7f",
+      "#e377c2",
+      "#8c564b",
+      "#9467bd",
+      "#d62728",
+      "#2ca02c",
+      "#ff7f0e",
+      "#1f77b4"
+   ];
+
    const handleClose = () => {
       setDialogValue({
          label: '',
@@ -90,20 +104,28 @@ export default function LeftMenuBarGroups() {
    const filteredOptionsHandler = (options, params) => {
       const filtered = filter(options, params);
 
-               if (params.inputValue !== '') {
-                  filtered.push({
-                     inputValue: params.inputValue,
-                     label: `Add "${params.inputValue}"`,
-                  });
-               }
+      if (params.inputValue !== '') {
+         filtered.push({
+            inputValue: params.inputValue,
+            label: `Add "${params.inputValue}"`,
+         });
+      }
 
-               return filtered;
+      return filtered;
    }
 
+
    const setRandomColor = () => {
-      const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-      return "#" + randomColor;
-    };
+      if (!i > colors.length) {
+         i++
+         return colors[i];
+      } else { i = -1; }
+      // or we can call the randomColorSelector
+   }
+   // const setRandomColor = () => {
+   //    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+   //    return "#" + randomColor;
+   // };
 
    return (
       <React.Fragment>
