@@ -19,6 +19,10 @@ import BookmarkSelector from "./BookmarkSelector";
 import PostTitle from './PostTitle';
 import Expander from "./Expander";
 
+
+//utils
+import useSWRAbstract from "../util/swr"
+
 const useStyles = makeStyles((theme) => ({
   margin: {
     margin: theme.spacing(1),
@@ -38,18 +42,9 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function usePost(postid) {
-  const { data, error } = useSWR(`/api/posts/${postid}`);
-  return {
-    post: data,
-    loading: !error && !data,
-    error: error,
-  };
-}
-
 export default function PostListItem(props) {
   const classes = useStyles();
-  const { post, loading, error } = usePost(props.id);
+  const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${props.id}`);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
 

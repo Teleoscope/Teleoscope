@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import useSWR from "swr";
 import useDimensions from "react-cool-dimensions";
 
 // material ui
@@ -26,15 +25,8 @@ import PostText from "./PostText"
 import GroupSelector from "./GroupSelector"
 import Expander from "./Expander"
 
-
-function usePost(postid) {
-  const { data, error } = useSWR(`/api/posts/${postid}`);
-  return {
-    post: data,
-    loading: !error && !data,
-    error: error,
-  };
-}
+//utils
+import useSWRAbstract from "../util/swr"
 
 function getsize(w) {
   if (w < 300) {
@@ -68,7 +60,7 @@ export default function WorkspaceItem(props) {
   const [open, setOpen] = React.useState(false);
   const [viewMore, setViewMore] = React.useState(false);
 
-  const { post, loading, error } = usePost(props.id);
+  const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${props.id}`);
 
 
   return (
