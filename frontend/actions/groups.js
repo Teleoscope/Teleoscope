@@ -1,7 +1,6 @@
 // actions.js
 import { speedDialIconClasses } from '@mui/material';
-import { createSlice } from '@reduxjs/toolkit';
-import { createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { add_group } from "../components/Stomp";
 
 
@@ -17,7 +16,7 @@ const initialState = {
 
 export const getGroups = createAsyncThunk(
 	'groups/getGroups',
-	async (thunkAPI) => {
+	async (id, thunkAPI) => {
 		const res = await fetch('/api/groups').then(
 
 			(data) => data.json()
@@ -71,6 +70,7 @@ export const Groups = createSlice({
 			})
 			console.log("groups fulfilled", groups)
 			state.groups = groups;
+			state.grouped_posts = groupedPosts;
 		},
 		[getGroups.rejected]: (state) => {
 			state.loading = false
