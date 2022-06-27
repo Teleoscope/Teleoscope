@@ -178,7 +178,7 @@ def add_post_to_group(*args, **kwargs):
 
     group_id = ObjectId(kwargs["group_id"])
     group = db.groups.find_one({'_id': group_id})
-    history_item = group["history_item"][-1]
+    history_item = group["history"][-1]
     history_item["included_posts"].append(kwargs["post_id"])
     history_item["action"] = "Add post to group"
     if group:
@@ -204,7 +204,7 @@ def remove_post_from_group(*args, **kwargs):
     
     try:
         group = db.groups.find_one({'_id': group_id})
-        history_item = group["history_item"][-1]
+        history_item = group["history"][-1]
         history_item["included_posts"].remove(kwargs["post_id"])
         history_item["action"] = "Remove post from group"
         db.groups.update_one({'_id': group_id}, {
