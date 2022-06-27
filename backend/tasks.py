@@ -418,7 +418,18 @@ def initialize_session(*args, **kwargs):
     if user is None:
         logging.info(f'User {username} does not exist.')
         raise Exception(f"User {username} does not exist.")
-    result = db.sessions.insert_one({"username": username, "history":[], "teleoscopes":[]})
+    obj = { 
+        "username": username,
+        "history": [
+            {
+                "bookmarks": [],
+                "windows": [],
+                "groups":[]
+            }
+        ],
+        "teleoscopes":[]
+    }
+    result = db.sessions.insert_one(obj)
     db.users.update_one({"username": username}, {"$push": {"sessions":result.inserted_id}})
 
 '''
