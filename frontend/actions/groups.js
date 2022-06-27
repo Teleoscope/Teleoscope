@@ -1,22 +1,18 @@
 // actions.js
 import { speedDialIconClasses } from '@mui/material';
-import { createSlice } from '@reduxjs/toolkit'
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk } from '@reduxjs/toolkit'
 import { add_group } from "../components/Stomp";
 
-export const Grouped = createSlice({
-	name: 'grouped',
-	initialState: {
+
+const initialState = {
 		groups: {
 			// "label": "#ffffff"
 		},
-		grouped_posts: []
+		grouped_posts: [
 			// {id: 'wer123', label: 'Red'}
-	},
-	grouped_posts: [
-		// {id: 'wer123', label: 'Red'}
-	],
-	loading: false
+		],
+		loading: false
 }
 
 export const getGroups = createAsyncThunk(
