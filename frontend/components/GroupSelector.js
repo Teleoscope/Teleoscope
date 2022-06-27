@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 
 // Mui imports
 import { FormControl } from "@material-ui/core";
@@ -17,8 +17,14 @@ import CircleIcon from '@mui/icons-material/Circle';
 import { useSelector, useDispatch } from "react-redux";
 import { group, addGroup } from "../actions/groups";
 
+// contexts
+import { StompContext } from '../context/StompContext';
+import { save_group_state } from '../components/Stomp';
+
 
 export default function groupSelector(props) {
+
+   const client = useContext(StompContext);
 
    const dispatch = useDispatch();
    const grouped_posts = useSelector((state) => state.grouper.grouped_posts);

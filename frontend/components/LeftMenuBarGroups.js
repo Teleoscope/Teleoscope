@@ -27,7 +27,7 @@ let grouped = false;
 
 export default function LeftMenuBarGroups() {
 
-   const client = useContext(StompContext)
+   const client = useContext(StompContext);
 
    const dispatch = useDispatch();
    const [value, setValue] = React.useState(null);
