@@ -35,7 +35,6 @@ import useSWRAbstract from "../util/swr"
 // contexts
 import { StompContext } from '../context/StompContext'
 
-
 export default function TopBar(props) {
 
   // const { teleoscopes, loading, error } = useTeleoscopes();
@@ -119,19 +118,6 @@ export default function TopBar(props) {
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
-            <Button
-              size="small" 
-              variant="text" 
-              onClick={() => dispatch(addWindow({i: "note", x: 0, y: 0, w: 10, h: 10, type: "Note"}))}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              New Note
-            </Button>
             <Button
               size="small" 
               variant="text" 

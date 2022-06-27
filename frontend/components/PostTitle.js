@@ -38,6 +38,7 @@ export default function PostTitle(props) {
       <Tooltip title={title} placement="top">
       <Typography
          variant="body1"
+         color={props.color ? props.color : "black"}
          noWrap={props.noWrap}
       >
          {title}

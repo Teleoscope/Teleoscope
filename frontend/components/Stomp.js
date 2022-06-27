@@ -125,3 +125,24 @@ export function add_group(client, label, color) {
   }
   publish(client, body);
 }
+
+export function add_note(client, postid) {
+  var body = {
+    task: 'add_note',
+    args: {
+      postid: postid,
+    }
+  }
+  publish(client, body);
+}
+
+export function update_note(client, postid, content) {
+  var body = {
+    task: 'update_note',
+    args: {
+      postid: postid,
+      content: content
+    }
+  }
+  publish(client, body);
+}
