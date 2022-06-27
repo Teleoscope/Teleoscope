@@ -138,6 +138,34 @@ def add_multiple_posts_to_database(posts):
         target.insert_many(posts)
 
 
+'''
+save_group_state
+input: 
+    group_id: String
+    history_item: Dict
+purpose: This function saves the state of a group to the database
+Effects: Throws exception
+'''
+@app.task
+def save_group_state(*args, **kwargs):
+    # Error checking
+    if 'group_id' not in kwargs:
+        logging.info(f"session_id not in kwargs.")
+        raise Exception("session_id not in kwargs")
+    if 'history_item' not in kwargs:
+        logging.info(f"history_item not in kwargs.")
+        raise Exception("history_item not in kwargs")
+    db = utils.connect()
+    group_id, history_item = ObjectId(kwargs['group_id']), kwargs['history_item']
+    # Find group with group_id
+    group = db.groups.find_one({'_id': group_id})
+    if group:
+        # Update group with history_item
+        db.groups.update_one({'_id': group_id}, {'$push': {'history': history_item}})
+    else:
+        raise Exception(f"Group with id {group_id} not found")
+
+
 
 '''
 add_group

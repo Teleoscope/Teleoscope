@@ -118,6 +118,17 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
         
+        if b['task'] == "save_group_state":
+            res = tasks.save_group_state.signature(
+                args=(),
+                kwargs={
+                    "group_id": b["args"]["group_id"],
+                    "history_item": b["args"]["history_item"]
+                }
+            )
+            res.apply_async()
+
+        
         if b['task'] == "add_note":
             res = tasks.add_note.signature(
                 args=(),
