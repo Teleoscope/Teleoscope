@@ -17,12 +17,17 @@ import { searcher } from "../actions/searchterm";
 import { addGroup } from "../actions/groups";
 import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
 
+// contexts
+import { StompContext } from '../context/StompContext'
+
 // global variables
 const filter = createFilterOptions();
 let grouped_data = [];
 let grouped = false;
 
 export default function LeftMenuBarGroups() {
+
+   const client = useContext(StompContext)
 
    const dispatch = useDispatch();
    const [value, setValue] = React.useState(null);
