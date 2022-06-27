@@ -1,17 +1,16 @@
 // actions.js
 import { speedDialIconClasses } from '@mui/material';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { add_group } from "../components/Stomp";
-
+import { add_group, save_group_state } from "../components/Stomp";
 
 const initialState = {
-	groups: {
-		// "label": "#ffffff"
-	},
-	grouped_posts: [
-		// {id: 'wer123', label: 'Red'}
-	],
-	loading: false
+		groups: {
+			// "_id": "#ffffff"
+		},
+		grouped_posts: [
+			// {id: 'wer123', _id: 'friend'}
+		],
+		loading: false
 }
 
 export const getGroups = createAsyncThunk(
@@ -49,7 +48,8 @@ export const Groups = createSlice({
 		addGroup: (state, action) => {
 			var temp = { ...state.groups };
 			temp[action.payload.label] = action.payload.color;
-			add_group(action.payload.client, action.payload.label, action.payload.color);
+			console.log("Associating this group with session id ", action.payload.session_id);
+			add_group(action.payload.client, action.payload.label, action.payload.color, action.payload.session_id);
 			state.groups = temp;
 		}
 	},
@@ -62,10 +62,10 @@ export const Groups = createSlice({
 			var groups = {}
 			var groupedPosts = [];
 			payload.forEach((g) => {
-				groups[g.label] = g.color;
+				groups[g._id] = g.color;
 				var lastItem = g.history[g.history.length - 1];
 				lastItem.included_posts.forEach((i) => {
-					groupedPosts.push({ id: i, label: g.label });
+					groupedPosts.push({ id: i, _id: g._id });
 				})
 			})
 			console.log("groups fulfilled", groups)

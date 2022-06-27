@@ -138,6 +138,119 @@ def add_multiple_posts_to_database(posts):
         target.insert_many(posts)
 
 
+'''
+save_group_state
+input: 
+    group_id: String
+    history_item: Dict
+purpose: This function saves the state of a group to the database
+Effects: Throws exception
+'''
+@app.task
+def save_group_state(*args, **kwargs):
+    # Error checking
+    if 'group_id' not in kwargs:
+        logging.info(f"session_id not in kwargs.")
+        raise Exception("session_id not in kwargs")
+    if 'history_item' not in kwargs:
+        logging.info(f"history_item not in kwargs.")
+        raise Exception("history_item not in kwargs")
+    db = utils.connect()
+    group_id, history_item = ObjectId(kwargs['group_id']), kwargs['history_item']
+    history_item["timestamp"] =  datetime.datetime.utcnow()
+    # Find group with group_id
+    group = db.groups.find_one({'_id': group_id})
+    if group:
+        # Update group with history_item
+        db.groups.update_one({'_id': group_id}, {'$push': {'history': history_item}})
+    else:
+        raise Exception(f"Group with id {group_id} not found")
+
+'''
+add_post_to_group
+'''
+@app.task
+def add_post_to_group(*args, **kwargs):
+    db = utils.connect()
+    if "group_id" not in kwargs:
+        logging.info(f"Warning: group_id not in kwargs.")
+        raise Exception("group_id not in kwargs")
+
+    group_id = ObjectId(kwargs["group_id"])
+    group = db.groups.find_one({'_id': group_id})
+    history_item = group["history_item"][-1]
+    history_item["included_posts"].append(kwargs["post_id"])
+    history_item["action"] = "Add post to group"
+    if group:
+        db.groups.update_one({'_id': group_id}, {
+            "$push":
+                {
+                    "history": history_item
+                }
+            }
+        )
+
+'''
+remove_post_from_group
+'''
+@app.task
+def remove_post_from_group(*args, **kwargs):
+    db = utils.connect()
+    if "group_id" not in kwargs:
+        logging.info(f"Warning: group_id not in kwargs.")
+        raise Exception("group_id not in kwargs")
+
+    group_id = ObjectId(kwargs["group_id"])
+    
+    try:
+        group = db.groups.find_one({'_id': group_id})
+        history_item = group["history_item"][-1]
+        history_item["included_posts"].remove(kwargs["post_id"])
+        history_item["action"] = "Remove post from group"
+        db.groups.update_one({'_id': group_id}, {
+            "$push":
+                {
+                    "history": history_item
+                }
+            }
+        )
+    except:
+        logging.info(f"Post_id {kwargs['post_id']} not in group {kwargs['group_id']}.")
+
+    
+        
+
+'''
+update_group_label
+'''
+@app.task
+def update_group_label(*args, **kwargs):
+    db = utils.connect()
+    if "group_id" not in kwargs:
+        logging.info(f"Warning: group_id not in kwargs.")
+        raise Exception("group_id not in kwargs")
+
+    group_id = ObjectId(kwargs["group_id"])
+    group = db.groups.find_one({'_id': group_id})
+    try:
+        history_item = group["history_item"][-1]
+        db.groups.update_one({'_id': group_id}, {
+            "$push":
+                {
+                    "history": history_item
+                }
+            }
+        )
+        db.groups.update_one(
+            {'_id': group_id}, 
+            {'$set': 
+                {
+                    'label': kwargs["label"]
+                }
+            }
+        )
+    except:
+        logging.info(f"Failed to update group label for {kwargs['label']}.")
 
 '''
 add_group
@@ -160,21 +273,24 @@ def add_group(*args, **kwargs):
         ]
     }
 
-    res = db.groups.insert_one(obj)
-    logging.info(f"Added group {obj['history'][0]['label']} with result {res}.")
-    return res
+    _id = ObjectId(str(kwargs["session_id"]))
+    groups_res = db.groups.insert_one(obj)
+    logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
+    sessions_res = db.sessions.update_one({'_id': _id}, {'$push': {"groups": groups_res.inserted_id}})
+    logging.info(f"Associated group {obj['history'][0]['label']} with session {_id}.")
+    return groups_res.inserted_id
 
 '''
 add_note
 input:
-    id: postid (string) 
+    id: post_id (string) 
 purpose: adds a note to the notes collection
 '''
 @app.task
 def add_note(*args, **kwargs):
     db = utils.connect()
     obj = {
-        "postid": kwargs["postid"],
+        "post_id": kwargs["post_id"],
         "history": [{
             "content": {},
             "timestamp": datetime.datetime.utcnow()
@@ -182,15 +298,15 @@ def add_note(*args, **kwargs):
     }
     try:
         res = db.notes.insert_one(obj)
-        logging.info(f"Added note for post {kwargs['postid']} with result {res}.")
+        logging.info(f"Added note for post {kwargs['post_id']} with result {res}.")
     except:
-        logging.info(f"Error for post {kwargs['postid']}.")
+        logging.info(f"Error for post {kwargs['post_id']}.")
 
 
 @app.task
 def update_note(*args, **kwargs):
     db = utils.connect()
-    res = db.notes.update_one({"postid": kwargs["postid"]}, {"$push":
+    res = db.notes.update_one({"post_id": kwargs["post_id"]}, {"$push":
             {
                 "history":
                 {
@@ -199,7 +315,7 @@ def update_note(*args, **kwargs):
                 }
             }
         })
-    logging.info(f"Updated note for post {kwargs['postid']} with result {res}.")
+    logging.info(f"Updated note for post {kwargs['post_id']} with result {res}.")
 
 '''
 querySearch:
@@ -302,7 +418,18 @@ def initialize_session(*args, **kwargs):
     if user is None:
         logging.info(f'User {username} does not exist.')
         raise Exception(f"User {username} does not exist.")
-    result = db.sessions.insert_one({"username": username, "history":[], "teleoscopes":[]})
+    obj = { 
+        "username": username,
+        "history": [
+            {
+                "bookmarks": [],
+                "windows": [],
+                "groups":[]
+            }
+        ],
+        "teleoscopes":[]
+    }
+    result = db.sessions.insert_one(obj)
     db.users.update_one({"username": username}, {"$push": {"sessions":result.inserted_id}})
 
 '''
