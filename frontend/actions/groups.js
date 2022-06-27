@@ -50,7 +50,8 @@ export const Groups = createSlice({
 		addGroup: (state, action) => {
 			var temp = {...state.groups}; 
 			temp[action.payload.label] = action.payload.color;
-			add_group(action.payload.client, action.payload.label, action.payload.color);
+			console.log("Associating this group with session id ", action.payload.session_id);
+			add_group(action.payload.client, action.payload.label, action.payload.color, action.payload.session_id);
 			state.groups = temp;
 		}
 	},

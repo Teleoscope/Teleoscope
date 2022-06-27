@@ -115,10 +115,11 @@ export function initialize_session(client, username) {
   return body;
 }
 
-export function add_group(client, label, color) {
+export function add_group(client, label, color, session_id) {
   var body = {
     task: 'add_group',
     args: {
+      session_id: session_id,
       label: label,
       color: color
     }

@@ -188,8 +188,10 @@ def add_group(*args, **kwargs):
         ]
     }
 
-    res = db.groups.insert_one(obj)
-    logging.info(f"Added group {obj['history'][0]['label']} with result {res}.")
+    _id = ObjectId(str(kwargs["session_id"]))
+    groups_res = db.groups.insert_one(obj)
+    # sessions_res = db.session.update_one({'_id': _id}, {'$push': {"groups": _id}})
+    logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
     return res
 
 '''

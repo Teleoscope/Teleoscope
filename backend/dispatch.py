@@ -113,7 +113,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 args=(),
                 kwargs={
                     "label": b["args"]["label"],
-                    "color": b["args"]["color"]
+                    "color": b["args"]["color"],
+                    "session_id": b["args"]["session_id"]
                 }
             )
             res.apply_async()

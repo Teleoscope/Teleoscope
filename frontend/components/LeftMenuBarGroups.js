@@ -11,9 +11,11 @@ import Button from '@mui/material/Button';
 import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 
 // actions
+import useSWRAbstract from "../util/swr"
 import { useSelector, useDispatch } from "react-redux";
 import { searcher } from "../actions/searchterm";
 import { addGroup } from "../actions/groups";
+import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
 
 // global variables
 const filter = createFilterOptions();
@@ -27,6 +29,10 @@ export default function LeftMenuBarGroups() {
    const labels = useSelector((state) => state.grouper.groups);
    const [open, toggleOpen] = React.useState(false);
    const [text, setText] = useState("");
+
+   const { sessions, sessions_loading, sessions_error } = useSWRAbstract("sessions", `/api/sessions/`);
+   const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+   const session_id = useSelector((state) => state.activeSessionID.value);
 
    const handleClose = () => {
       setDialogValue({
@@ -174,7 +180,7 @@ export default function LeftMenuBarGroups() {
                   <Button
                      type="submit"
                      onClick={() => {
-                        dispatch(addGroup({ label: dialogValue.label, color: setRandomColor() }))
+                        dispatch(addGroup({ label: dialogValue.label, color: setRandomColor(), session_id: session_id }))
                      }}>Add</Button>
                </DialogActions>
             </form>
