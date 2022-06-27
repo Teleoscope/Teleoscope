@@ -5,6 +5,8 @@ export default async (req, res) => {
   const { db } = await connectToDatabase();
   const { session_args } = req.query;
   var ret;
+
+  console.log("This is the session argument", session_args)
   if(!session_args) {
     ret = await db.collection("sessions").find({}).limit(20).toArray();
   } else if (session_args.length === 1) {
@@ -23,5 +25,6 @@ export default async (req, res) => {
     ret = filteredGroups;
   }
   // returns groups or list of session objects dependending on the conditionals
+  console.log("This is the session argument2", session_args)
   res.json(ret);
 };
