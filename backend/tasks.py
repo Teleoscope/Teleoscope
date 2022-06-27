@@ -359,8 +359,8 @@ def initialize_teleoscope(*args, **kwargs):
     return_ids = [x['id'] for x in cursor]
 
     # store results in teleoscopes collection
-    db.teleoscopes.update_one({'_id': teleoscope_id.inserted_id}, {'$set': {'reddit_ids': return_ids}})
-    db.sessions.update_one({'_id': ObjectId(str(kwargs["session_id"]))}, {'$push': {"teleoscopes": teleoscope_id.inserted_id}})
+    db.teleoscopes.update_one({'_id': ObjectId(teleoscope_id.inserted_id)}, {'$set': {'reddit_ids': return_ids}})
+    db.sessions.update_one({'_id': ObjectId(str(kwargs["session_id"]))}, {'$push': {"teleoscopes": ObjectId(teleoscope_id.inserted_id)}})
     logging.info(f"label {label} added to teleoscopes collection")
     return return_ids
 
