@@ -56,12 +56,12 @@ export default function groupSelector(props) {
       );
     };
 
-    const handleSelect = (label) => {
+    const handleSelect = (_id) => {
       console.log("The groups have ", groups);
       if (grouped_posts.find((item) => item.id == props.id)) {
-         //remove_post_from_group(client, group_id, props.id);
+         remove_post_from_group(client, _id, props.id);
       } else {
-         //add_post_to_group(client, group_id, props.id);
+         add_post_to_group(client, _id, props.id);
       }
       handleClose();
     }
@@ -79,8 +79,8 @@ export default function groupSelector(props) {
    return (
       <div>
          <IconButton onClick={handleClick}>
-         {groups_this_post_belongs_to.map(({id, label}) => {
-            return (<CircleIcon sx={{ color: groups[label] }} style={{ fontSize: 15 }} />)})}
+         {groups_this_post_belongs_to.map(({id, _id}) => {
+            return (<CircleIcon sx={{ color: groups[_id] }} style={{ fontSize: 15 }} />)})}
          {groups_this_post_belongs_to.length == 0 ? 
                      <CircleIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} /> : ""}
          </IconButton>
