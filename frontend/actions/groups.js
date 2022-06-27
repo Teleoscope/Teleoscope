@@ -14,7 +14,11 @@ export const Grouped = createSlice({
 		group: (state, action) => {
 			var temp = [...state.grouped_posts];
 			console.log(action.payload);
+
+			// filters out any duplicates 
 			var filter = temp.filter(item => action.payload.id == item.id && action.payload.label == item.label)
+
+			// if there aren't duplicates then we push, else find index and splice
 			if (filter.length == 0) {
 				temp.push({id: action.payload.id, label: action.payload.label})	
 				state.grouped_posts = temp;
@@ -25,8 +29,7 @@ export const Grouped = createSlice({
 			}
 		},
 		addGroup: (state, action) => {
-			var temp = {...state.groups};
-			console.log(temp)
+			var temp = {...state.groups}; 
 			temp[action.payload.label] = action.payload.color;
 			state.groups = temp;
 		}

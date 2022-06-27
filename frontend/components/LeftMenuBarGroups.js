@@ -58,6 +58,8 @@ export default function LeftMenuBarGroups() {
    };
 
    const onChangeHandler = (event, newValue) => {
+
+      // both newValue when being an added group and when being an existing group is of type string
       if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
          grouped_data = groupDataMaker(newValue.label);
          grouped = true;
@@ -85,21 +87,8 @@ export default function LeftMenuBarGroups() {
       }
    };
 
-   const setRandomColor = () => {
-      const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-      return "#" + randomColor;
-    };
-
-   return (
-      <React.Fragment>
-         <Autocomplete
-            //value={value}
-            //value="test"
-            onChange={(event, newValue) => {
-               onChangeHandler(event, newValue)
-            }}
-            filterOptions={(options, params) => {
-               const filtered = filter(options, params);
+   const filteredOptionsHandler = (options, params) => {
+      const filtered = filter(options, params);
 
                if (params.inputValue !== '') {
                   filtered.push({
@@ -109,7 +98,24 @@ export default function LeftMenuBarGroups() {
                }
 
                return filtered;
+   }
+
+   const setRandomColor = () => {
+      const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+      return "#" + randomColor;
+    };
+
+   return (
+      <React.Fragment>
+         <Autocomplete
+            value={value}
+            onChange={(event, newValue) => {
+               console.log(newValue)
+               onChangeHandler(event, newValue)
             }}
+
+            // creates the add button when the input doesn't match any of the existing groups
+            filterOptions={(options, params) => filteredOptionsHandler(options, params)}
             id="Add Group"
             options={Object.keys(labels)}
             // getOptionLabel={(option) => {
