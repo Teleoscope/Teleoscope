@@ -3,6 +3,8 @@ from warnings import simplefilter
 from gridfs import GridFS
 from celery import Celery, Task
 from bson.objectid import ObjectId
+import datetime
+
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -138,6 +140,68 @@ def add_multiple_posts_to_database(posts):
 
 
 '''
+add_group
+input: 
+    label (string, arbitrary)
+    color (string, hex color)
+purpose: adds a group to the group collection
+'''
+@app.task 
+def add_group(*args, **kwargs):
+    db = utils.connect()
+    obj = {
+        "color": kwargs["color"],
+        "label": kwargs["label"],
+        "history": [
+            {
+                "included_posts": [],
+                "label": kwargs["label"]
+            }
+        ]
+    }
+
+    res = db.groups.insert_one(obj)
+    logging.info(f"Added group {obj['history'][0]['label']} with result {res}.")
+    return res
+
+'''
+add_note
+input:
+    id: postid (string) 
+purpose: adds a note to the notes collection
+'''
+@app.task
+def add_note(*args, **kwargs):
+    db = utils.connect()
+    obj = {
+        "postid": kwargs["postid"],
+        "history": [{
+            "content": {},
+            "timestamp": datetime.datetime.utcnow()
+        }]
+    }
+    try:
+        res = db.notes.insert_one(obj)
+        logging.info(f"Added note for post {kwargs['postid']} with result {res}.")
+    except:
+        logging.info(f"Error for post {kwargs['postid']}.")
+
+
+@app.task
+def update_note(*args, **kwargs):
+    db = utils.connect()
+    res = db.notes.update_one({"postid": kwargs["postid"]}, {"$push":
+            {
+                "history":
+                {
+                    "content": kwargs["content"],
+                    "timestamp": datetime.datetime.utcnow()
+                }
+            }
+        })
+    logging.info(f"Updated note for post {kwargs['postid']} with result {res}.")
+
+'''
 querySearch:
 Performs a text query on aita.clean.posts.v2 text index.
 If the query string alredy exists in the teleoscopes collection, returns existing reddit_ids.
@@ -185,24 +249,24 @@ def initialize_teleoscope(*args, **kwargs):
     return return_ids
 
 @app.task
-def save_teleoscope_state(*args, **kwargs):
+def save_teleoscope_state(history_obj):
     # Error checking
-    if '_id' not in kwargs:
+    if '_id' not in history_obj:
         logging.info(f"_id not in kwargs.")
         raise Exception("_id not in kwargs")
-    if 'history_item' not in kwargs:
+    if 'history_item' not in history_obj:
         logging.info(f"history_item not in kwargs.")
         raise Exception("history_item not in kwargs")
     db = utils.connect()
-    logging.info(f'Saving state for teleoscope {kwargs["_id"]}.')
-    _id = str(kwargs["_id"])
+    logging.info(f'Saving state for teleoscope {history_obj["_id"]}.')
+    _id = str(history_obj["_id"])
     obj_id = ObjectId(_id)
     # check if teleoscope id is valid, if not, raise exception
     if not db.teleoscopes.find_one({"_id": obj_id}):
         logging.info(f"Teleoscope {_id} not found.")
         raise Exception("Teleoscope not found")
-    history_item = kwargs["history_item"]
-    result = db.teleoscopes.update({"_id": obj_id}, {'$push': {"history": kwargs["history_item"]}})
+    history_item = history_obj["history_item"]
+    result = db.teleoscopes.update({"_id": obj_id}, {'$push': {"history": history_item}})
     logging.info(f'Returned: {result}')
 
 @app.task
@@ -216,14 +280,17 @@ def save_UI_state(*args, **kwargs):
         raise Exception("history_item not in kwargs")
     db = utils.connect()
     logging.info(f'Saving state for {kwargs["session_id"]}.')
-    session_id = kwargs["session_id"]
+    session_id = ObjectId(str(kwargs["session_id"]))
     # check if session id is valid, if not, raise exception
-    if not db.sessions.find_one({"_id": ObjectId(str(session_id))}):
+    if not db.sessions.find_one({"_id": session_id}):
         logging.info(f"Session {session_id} not found.")
         raise Exception("Session not found")
+    
     history_item = kwargs["history_item"]
     
-    db.sessions.update({"session_id": kwargs["session_id"]}, {'$push': {"history": kwargs["history_item"]}})
+    db.sessions.update({"_id": session_id}, {'$push': {"history": kwargs["history_item"]}})
+
+    return 200 # success
 
 @app.task
 def initialize_session(*args, **kwargs):
@@ -363,13 +430,26 @@ class reorient(Task):
         rank_slice = newRanks[0:500]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
 
-        # update stateVector
-        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "stateVector" : qprime.tolist()}})
-        # update rankedPosts
-        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "ranked_post_ids" : gridfsObj}})
-        # update a slice of rank_slice
-        self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "rank_slice" : rank_slice}})
+        # # update stateVector
+        # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "stateVector" : qprime.tolist()}})
+        # # update rankedPosts
+        # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "ranked_post_ids" : gridfsObj}})
+        # # update a slice of rank_slice
+        # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "rank_slice" : rank_slice}})
 
-        return 200 # TODO: what to return?
+
+        # ! Teleoscope history item -> return this and use it in a chain
+        # positive docs
+        # negative docs
+        # stateVector
+        # ranked_post_ids
+        # rank_slice
+        history_obj =  {'_id': teleoscope_id, 'history_item': {'positive_docs': positive_docs, 
+                                                               'negative_docs': negative_docs, 
+                                                               'stateVector': qprime.tolist(), 
+                                                               'ranked_post_ids': gridfsObj, 
+                                                               'rank_slice': rank_slice}}
+        
+        return history_obj
 
 robj = app.register_task(reorient())

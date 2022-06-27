@@ -19,6 +19,10 @@ import BookmarkSelector from "./BookmarkSelector";
 import PostTitle from './PostTitle';
 import Expander from "./Expander";
 
+
+//utils
+import useSWRAbstract from "../util/swr"
+
 const useStyles = makeStyles((theme) => ({
   margin: {
     margin: theme.spacing(1),
@@ -38,18 +42,9 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function usePost(postid) {
-  const { data, error } = useSWR(`/api/posts/${postid}`);
-  return {
-    post: data,
-    loading: !error && !data,
-    error: error,
-  };
-}
-
 export default function PostListItem(props) {
   const classes = useStyles();
-  const { post, loading, error } = usePost(props.id);
+  const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${props.id}`);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
 
@@ -60,7 +55,7 @@ export default function PostListItem(props) {
       className="droppable-element"
       style={{ borderBottom: "1px solid  #eceeee" }}
       id={props.id}
-      onDragStart={(e, data) => { dispatch(dragged(props.id)) }}
+      onDragStart={(e, data) => {dispatch(dragged(props.id))}}
     >
       <Grid container spacing={2}>
         <Grid item xs={1}>
@@ -69,8 +64,8 @@ export default function PostListItem(props) {
         <Grid item xs={2}>
           <GroupSelector id={props.id} />
         </Grid>
-        <Grid item wrap="nowrap" xs={7}>
-          <PostTitle post={post ? post : {}} />
+        <Grid item xs={7}>
+          <PostTitle post={post ? post : {} } noWrap={false} />
         </Grid>
         <Grid item xs={2}>
           <IconButton onClick={() => setOpen(!open)}>

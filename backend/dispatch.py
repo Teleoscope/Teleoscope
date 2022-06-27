@@ -11,7 +11,7 @@ import string
 import gridfs
 import numpy as np
 import tensorflow_hub as hub
-from celery import Celery
+from celery import Celery, chain
 from celery import bootsteps
 from kombu import Consumer, Exchange, Queue
 
@@ -92,13 +92,50 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         
 
         if b['task'] == "reorient":
+            '''
             res = robj.delay(
                 teleoscope_id=b['args']["teleoscope_id"],
                 positive_docs=b['args']["positive_docs"],
                 negative_docs=b['args']["negative_docs"]
             )
+            '''
 
+            workflow = chain(
+                robj.s(teleoscope_id=b['args']["teleoscope_id"], 
+                        positive_docs=b['args']["positive_docs"],
+                        negative_docs=b['args']["negative_docs"]),
+                tasks.save_teleoscope_state.s())
+            
+            workflow.apply_async()
+        
+        if b['task'] == "add_group":
+            res = tasks.add_group.signature(
+                args=(),
+                kwargs={
+                    "label": b["args"]["label"],
+                    "color": b["args"]["color"]
+                }
+            )
+            res.apply_async()
+        
+        if b['task'] == "add_note":
+            res = tasks.add_note.signature(
+                args=(),
+                kwargs={
+                    "postid": b["args"]["postid"],
+                }
+            )
+            res.apply_async()
 
+        if b['task'] == "update_note":
+            res = tasks.update_note.signature(
+                args=(),
+                kwargs={
+                    "postid": b["args"]["postid"],
+                    "content": b["args"]["content"],
+                }
+            )
+            res.apply_async()
 
 app.steps['consumer'].add(WebTaskConsumer)
 

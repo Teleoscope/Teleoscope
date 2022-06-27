@@ -4,8 +4,8 @@ import { Client, Message } from "@stomp/stompjs";
 // possibly best to move this into an action? I'm unsure
 Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
 
-
 export function client_init() {
+
   console.log("Initializing Stomp client...")
   const client = new Client({
     brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:3311/ws`,
@@ -113,4 +113,36 @@ export function initialize_session(client, username) {
   }
   publish(client, body);
   return body;
+}
+
+export function add_group(client, label, color) {
+  var body = {
+    task: 'add_group',
+    args: {
+      label: label,
+      color: color
+    }
+  }
+  publish(client, body);
+}
+
+export function add_note(client, postid) {
+  var body = {
+    task: 'add_note',
+    args: {
+      postid: postid,
+    }
+  }
+  publish(client, body);
+}
+
+export function update_note(client, postid, content) {
+  var body = {
+    task: 'update_note',
+    args: {
+      postid: postid,
+      content: content
+    }
+  }
+  publish(client, body);
 }

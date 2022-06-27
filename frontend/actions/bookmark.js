@@ -1,4 +1,4 @@
-// actions.js
+// bookmark.js
 import { createSlice } from '@reduxjs/toolkit'
 export const Bookmark = createSlice({
   name: 'bookmark',
@@ -21,11 +21,14 @@ export const Bookmark = createSlice({
 		  temp.push(id)
 		}
 		state.value = temp
-    }
+    },
+	loadBookmarkedPosts: (state, action) => {
+		state.value = action.payload;
+	}
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { mark, unbookmark } = Bookmark.actions
+export const { mark, loadBookmarkedPosts } = Bookmark.actions
 
 export default Bookmark.reducer

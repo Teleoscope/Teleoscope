@@ -31,6 +31,7 @@
     "celery-node": "^0.5.8",
     "crypto-js": "^4.1.1",
     "crypto-random-string": "^4.0.0",
+    "draft-js": "^0.11.7",
     "fs": "^0.0.1-security",
     "lodash": "^4.17.21",
     "mongodb": "^3.7.3",
@@ -47,6 +48,7 @@
     "react-redux": "^7.2.8",
     "react-selectable-fast": "^3.4.0",
     "redux": "^4.2.0",
+    "redux-thunk": "^2.4.1",
     "swr": "^0.5.5",
     "websocket": "^1.0.34",
     "ws": "^8.6.0"
