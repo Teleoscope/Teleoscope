@@ -15,13 +15,20 @@ export default async (req, res) => {
     var groups = await db.collection("groups").find({}).toArray();
     var session = await db.collection("sessions").findOne({_id: ObjectId(sessionsargs[0])});
     var lastItem = session.history[session.history.length - 1];
-    var sessionGroups = lastItem.groups;
+    var sessionGroups = lastItem.groups.map((group) => {
+      return group.toString();
+    });
     var filteredGroups = groups.filter((group) => {
-      if (sessionGroups.includes(group._id)) {
+      console.log("session groups", typeof(sessionGroups[0]))
+      console.log("group id", group._id)
+      var g = group._id.toString();
+      if (sessionGroups.includes(g)) {
+        console.log("Returned True")
         return true;
-      } else {return false;}
+      } else {
+        console.log("FALSE")
+        return false;}
     })
-    
     ret = filteredGroups;
   }
   // returns groups or list of session objects dependending on the conditionals
