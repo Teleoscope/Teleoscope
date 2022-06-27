@@ -126,8 +126,8 @@ export function add_group(client, label, color) {
   publish(client, body);
 }
 
-export function add_doc_to_group(client, postid) {
-  
+export function add_doc_to_group(client, groupid, history_item) {
+
 }
 
 export function add_note(client, postid) {
