@@ -126,6 +126,18 @@ export function add_group(client, label, color) {
   publish(client, body);
 }
 
+export function save_group_state(client, groupid, history_item) {
+  var body = {
+    task: 'save_group_state',
+    args: {
+      group_id: group_id,
+      history_item: history_item
+    }
+  }
+  publish(client, body);
+  return body;
+}
+
 export function add_note(client, postid) {
   var body = {
     task: 'add_note',
