@@ -6,7 +6,6 @@ export default async (req, res) => {
   const { sessionsargs } = req.query;
   var ret;
 
-  console.log("This is the session argument", sessionsargs)
   if(!sessionsargs) {
     ret = await db.collection("sessions").find({}).limit(20).toArray();
   } else if (sessionsargs.length === 1) {
@@ -18,13 +17,13 @@ export default async (req, res) => {
     var lastItem = session.history[session.history.length - 1];
     var sessionGroups = lastItem.groups;
     var filteredGroups = groups.filter((group) => {
-      if (sessionGroups.findIndex(group._id) > -1) {
+      if (sessionGroups.includes(group._id)) {
         return true;
       } else {return false;}
     })
+    
     ret = filteredGroups;
   }
   // returns groups or list of session objects dependending on the conditionals
-  console.log("This is the session argument2", sessionsargs)
   res.json(ret);
 };
