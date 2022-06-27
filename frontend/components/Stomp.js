@@ -165,7 +165,8 @@ export function add_post_to_group(client, group_id, post_id) {
       group_id: group_id,
       post_id: post_id
     }
-    publish(client, body)
+  }
+  publish(client, body)
 }
 
 /**
@@ -178,7 +179,8 @@ export function remove_post_from_group(client, group_id, post_id) {
       group_id: group_id,
       post_id: post_id
     }
-    publish(client, body)
+  }
+  publish(client, body)
 }
 
 /**
@@ -186,11 +188,12 @@ export function remove_post_from_group(client, group_id, post_id) {
  */
 export function update_group_label(client, group_id, label) {
   var body = {
-  task: 'update_group_label',
-  args: {
-    group_id: group_id,
-    label: label
-  } 
+    task: 'update_group_label',
+    args: {
+      group_id: group_id,
+      label: label
+    }
+  }
   publish(client, body)
 }
 
