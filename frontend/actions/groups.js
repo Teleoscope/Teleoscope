@@ -1,10 +1,17 @@
 // actions.js
+import { speedDialIconClasses } from '@mui/material';
+import { createSlice } from '@reduxjs/toolkit'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { add_group } from "../components/Stomp";
 
-const initialState = {
-	groups: {
-		// "label": "#ffffff"
+export const Grouped = createSlice({
+	name: 'grouped',
+	initialState: {
+		groups: {
+			// "label": "#ffffff"
+		},
+		grouped_posts: []
+			// {id: 'wer123', label: 'Red'}
 	},
 	grouped_posts: [
 		// {id: 'wer123', label: 'Red'}
@@ -29,14 +36,23 @@ export const Groups = createSlice({
 	reducers: {
 		group: (state, action) => {
 			var temp = [...state.grouped_posts];
+			console.log(action.payload);
+
+			// filters out any duplicates 
 			var filter = temp.filter(item => action.payload.id == item.id && action.payload.label == item.label)
+
+			// if there aren't duplicates then we push, else find index and splice
 			if (filter.length == 0) {
 				temp.push({id: action.payload.id, label: action.payload.label})	
+				state.grouped_posts = temp;
+			} else {
+				var postIndex = temp.indexOf(action.payload)
+				temp.splice(postIndex, 1);
 				state.grouped_posts = temp;
 			}
 		},
 		addGroup: (state, action) => {
-			var temp = {...state.groups};
+			var temp = {...state.groups}; 
 			temp[action.payload.label] = action.payload.color;
 			add_group(action.payload.client, action.payload.label, action.payload.color);
 			state.groups = temp;
