@@ -17,7 +17,7 @@ const initialState = {
 export const getGroups = createAsyncThunk(
 	'groups/getGroups',
 	async (id, thunkAPI) => {
-		const res = await fetch('/api/groups').then(
+		const res = await fetch(`/api/sessions/${id}/groups`).then(
 
 			(data) => data.json()
 		)

@@ -3,18 +3,18 @@ import { ObjectId } from 'bson';
 
 export default async (req, res) => {
   const { db } = await connectToDatabase();
-  const { session_args } = req.query;
+  const { sessionsargs } = req.query;
   var ret;
 
-  console.log("This is the session argument", session_args)
-  if(!session_args) {
+  console.log("This is the session argument", sessionsargs)
+  if(!sessionsargs) {
     ret = await db.collection("sessions").find({}).limit(20).toArray();
-  } else if (session_args.length === 1) {
-    ret = await db.collection("sessions").findOne({_id: ObjectId(session_args[0])});
-  } else if (session_args.length === 2) {
+  } else if (sessionsargs.length === 1) {
+    ret = await db.collection("sessions").findOne({_id: ObjectId(sessionsargs[0])});
+  } else if (sessionsargs.length === 2 && sessionsargs[1] === "groups") {
     // returns groups
     var groups = await db.collection("groups").find({}).toArray();
-    var session = await db.collection("sessions").findOne({_id: ObjectId(session_args[0])});
+    var session = await db.collection("sessions").findOne({_id: ObjectId(sessionsargs[0])});
     var lastItem = session.history[session.history.length - 1];
     var sessionGroups = lastItem.groups;
     var filteredGroups = groups.filter((group) => {
@@ -25,6 +25,6 @@ export default async (req, res) => {
     ret = filteredGroups;
   }
   // returns groups or list of session objects dependending on the conditionals
-  console.log("This is the session argument2", session_args)
+  console.log("This is the session argument2", sessionsargs)
   res.json(ret);
 };
