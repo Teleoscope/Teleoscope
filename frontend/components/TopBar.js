@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import useSWR, { mutate } from "swr";
 
 // material ui
@@ -27,10 +27,13 @@ import { dragged, addWindow, removeWindow, loadWindows } from "../actions/window
 import { mark, loadBookmarkedPosts } from "../actions/bookmark";
 
 // utilities
-import {client_init, reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session} from "../components/Stomp.js";
+import { reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session } from "../components/Stomp.js";
 import randomstring from "randomstring";
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../util/swr"
+
+// contexts
+import { StompContext } from '../context/StompContext'
 
 export default function TopBar(props) {
 
@@ -51,6 +54,8 @@ export default function TopBar(props) {
   const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
 
+  const client = useContext(StompContext)
+
   const handleCookie = (username) => {
     setCookie("user", username, {
       path: "/"
@@ -59,7 +64,6 @@ export default function TopBar(props) {
   }
   
   const dispatch = useDispatch();
-  const client = client_init();
 
   const getTeleoscopes = () => {
     if (teleoscopes && session) {
@@ -114,19 +118,6 @@ export default function TopBar(props) {
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
-            <Button
-              size="small" 
-              variant="text" 
-              onClick={() => dispatch(addWindow({i: "note", x: 0, y: 0, w: 10, h: 10, type: "Note"}))}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              New Note
-            </Button>
             <Button
               size="small" 
               variant="text" 

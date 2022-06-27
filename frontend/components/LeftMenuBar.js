@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import PostList from "../components/PostList";
 import useSWR from "swr";
 
@@ -24,6 +24,8 @@ import { searcher } from "../actions/searchterm";
 import { addGroup } from "../actions/groups";
 import { unstable_composeClasses } from "@mui/material";
 
+// contexts
+import { StompContext } from '../context/StompContext'
 
 const filter = createFilterOptions();
 let grouped_data = [];
@@ -65,6 +67,8 @@ export default function LeftMenuBar(props) {
   const { posts, loading, error } = useQuery(search_term, true);
   const [value, setValue] = React.useState(null);
   const [open, toggleOpen] = React.useState(false);
+
+  const client = useContext(StompContext)
 
   const setRandomColor = () => {
     const randomColor = Math.floor(Math.random() * 16777215).toString(16);
@@ -254,7 +258,7 @@ const keyChange = (e) => {
                 <Button
                   type="submit"
                   onClick={() => {
-                    dispatch(addGroup({ label: dialogValue.label, color: setRandomColor() }))
+                    dispatch(addGroup({ client: client, label: dialogValue.label, color: setRandomColor() }))
                   }}>Add</Button>
               </DialogActions>
             </form>

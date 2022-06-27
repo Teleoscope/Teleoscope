@@ -1,4 +1,4 @@
-// actions.js
+// bookmark.js
 import { createSlice } from '@reduxjs/toolkit'
 export const Bookmark = createSlice({
   name: 'bookmark',

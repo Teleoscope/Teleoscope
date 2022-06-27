@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 // mui
 import Grid from '@mui/material/Grid';
@@ -9,7 +9,18 @@ import LeftMenuBar from "../components/LeftMenuBar";
 import RightMenuBar from "../components/RightMenuBar";
 import WindowManager from "../components/WindowManager";
 
+// actions
+import { getGroups } from "../actions/groups"
+
+
+import { useDispatch } from "react-redux";
+
 export default function Workspace(props) {
+
+  // call to intialize stores
+  const dispatch = useDispatch()
+  useEffect(() => {dispatch(getGroups())},[])
+  
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
