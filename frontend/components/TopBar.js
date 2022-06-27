@@ -67,7 +67,11 @@ export default function TopBar(props) {
 
   const getTeleoscopes = () => {
     if (teleoscopes && session) {
-      var ts = teleoscopes.filter((t) => {return session["teleoscopes"].indexOf(t["_id"]) > -1});
+      var ts = teleoscopes.filter((t) => {
+        console.log(t)
+        return session["teleoscopes"].includes(t._id)
+        
+      });
       return ts.map((t) => {
                   return (
                     <MenuItem value={t["_id"]}>{t["label"]}</MenuItem>
@@ -83,7 +87,7 @@ export default function TopBar(props) {
       if (sessions && users) {
         for (const i in users) {
           var user = users[i];
-          if (user["username"] == username) {
+          if (user["username"] == username && user["sessions"].length > 0) {
             return user["sessions"].map((s) => {
                 return (<MenuItem value={s}>{s}</MenuItem>)
               })
