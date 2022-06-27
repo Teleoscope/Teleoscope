@@ -19,7 +19,7 @@ import { group, addGroup } from "../actions/groups";
 
 // contexts
 import { StompContext } from '../context/StompContext';
-import { save_group_state } from '../components/Stomp';
+import { add_post_to_group, remove_post_from_group} from '../components/Stomp';
 
 
 export default function groupSelector(props) {
@@ -57,7 +57,12 @@ export default function groupSelector(props) {
     };
 
     const handleSelect = (label) => {
-      dispatch(group({ id: props.id, label: label }));
+      console.log("The groups have ", groups);
+      if (grouped_posts.find((item) => item.id == props.id)) {
+         //remove_post_from_group(client, group_id, props.id);
+      } else {
+         //add_post_to_group(client, group_id, props.id);
+      }
       handleClose();
     }
 
@@ -84,12 +89,12 @@ export default function groupSelector(props) {
             onClose={handleClose}
             open={open}
          >
-            {Object.keys(groups).map(label => (
+            {Object.keys(groups).map(_id => (
                <MenuItem 
-                  value={label} 
-                  onClick={() => handleSelect(label)}>
-                  <CircleIcon sx={{ color: groups[label] }} style={{ fontSize: 15 }} />
-                  <ListItemText primary={label} />
+                  value={_id} 
+                  onClick={() => handleSelect(_id)}>
+                  <CircleIcon sx={{ color: groups[_id] }} style={{ fontSize: 15 }} />
+                  <ListItemText primary={_id} />
                </MenuItem>
             ))}
             {Object.keys(groups).length == 0 ? <MenuItem>No groups added yet...</MenuItem> : ""}

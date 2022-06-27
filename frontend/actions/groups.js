@@ -7,10 +7,10 @@ import { add_group, save_group_state } from "../components/Stomp";
 
 const initialState = {
 		groups: {
-			// "label": "#ffffff"
+			// "_id": "#ffffff"
 		},
 		grouped_posts: [
-			// {id: 'wer123', label: 'Red'}
+			// {id: 'wer123', _id: 'friend'}
 		],
 		loading: false
 }
@@ -63,7 +63,7 @@ export const Groups = createSlice({
 			state.loading = false
 			var groups = {}
 			payload.forEach((g) => {
-				groups[g.label] = g.color;
+				groups[g._id] = g.color;
 			})
 			console.log("groups fulfilled", groups)
 			state.groups = groups;
