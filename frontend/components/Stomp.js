@@ -59,7 +59,7 @@ export function publish(client, body) {
     headers: headers,
     body: JSON.stringify(body),
   });
-  console.log("sent", body);
+  console.log("Sent from Stomp.js: ", body);
   return body;
 }
 

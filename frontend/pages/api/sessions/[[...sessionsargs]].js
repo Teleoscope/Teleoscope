@@ -7,7 +7,7 @@ export default async (req, res) => {
   var ret;
 
   if(!sessionsargs) {
-    ret = await db.collection("sessions").find({}).limit(20).toArray();
+    ret = await db.collection("sessions").find({}).toArray();
   } else if (sessionsargs.length === 1) {
     ret = await db.collection("sessions").findOne({_id: ObjectId(sessionsargs[0])});
   } else if (sessionsargs.length === 2 && sessionsargs[1] === "groups") {

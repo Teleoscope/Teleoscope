@@ -19,19 +19,19 @@ import { useDispatch } from "react-redux";
 export default function Workspace(props) {
 
   const session_id = useSelector((state) => state.activeSessionID.value);
-
-
-  // call to intialize stores
-  const dispatch = useDispatch()
-  useEffect(() => {dispatch(getGroups(session_id))},[])
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      dispatch(getGroups(session_id))
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-  
+//   
+// 
+//   call to intialize stores
+//   const dispatch = useDispatch()
+//   useEffect(() => {dispatch(getGroups(session_id))},[])
+// 
+//   useEffect(() => {
+//     const interval = setInterval(() => {
+//       dispatch(getGroups(session_id))
+//     }, 2000);
+//     return () => clearInterval(interval);
+//   }, []);
+//   
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
