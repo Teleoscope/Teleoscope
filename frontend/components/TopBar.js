@@ -68,14 +68,9 @@ export default function TopBar(props) {
   const getTeleoscopes = () => {
     if (teleoscopes && session) {
       var ts = teleoscopes.filter((t) => {
-        console.log(t)
-        return session["teleoscopes"].includes(t._id)
-        
-      });
+        return session["teleoscopes"].includes(t._id) });
       return ts.map((t) => {
-                  return (
-                    <MenuItem value={t["_id"]}>{t["label"]}</MenuItem>
-                )
+                  return (<MenuItem value={t["_id"]}>{t["label"]}</MenuItem>)
       });
     }
     return (
