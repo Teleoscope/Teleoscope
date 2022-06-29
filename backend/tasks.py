@@ -359,6 +359,7 @@ def initialize_teleoscope(*args, **kwargs):
                     "reddit_ids": return_ids,
                     "positive_docs": [],
                     "negative_docs": [],
+                    "stateVector": [],
                     "ranked_post_ids": None
                 }
             ]
