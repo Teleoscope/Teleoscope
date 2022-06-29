@@ -346,7 +346,7 @@ def initialize_teleoscope(*args, **kwargs):
     labelAsTextSearch = {"$text": {"$search": label}}
     cursor = db.clean.posts.v2.find(labelAsTextSearch, projection = {'id':1})
     return_ids = [x['id'] for x in cursor]
-    rank_slice = [(1.0, x) for x in return_ids[0:min(500, len(return_ids))]]
+    rank_slice = [(x, 1.0) for x in return_ids[0:min(500, len(return_ids))]]
 
     logging.info(f"About to insert a new teleoscope for {label}.")
     # create a new query document
