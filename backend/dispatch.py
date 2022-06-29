@@ -100,7 +100,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             workflow = chain(
                 robj.s(teleoscope_id=b['args']["teleoscope_id"],
                        positive_docs=b['args']["positive_docs"],
-                       negative_docs=b['args']["negative_docs"])
+                       negative_docs=b['args']["negative_docs"]),
                 tasks.save_teleoscope_state.s()
             )
 
