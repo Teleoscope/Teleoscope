@@ -3,10 +3,14 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 const initialState = {
 		groups: {
-			// "_id": "#ffffff"
+			// _id: {
+		    //     color: "#ffffff"
+		    //     label: "name"
+		    // }
 		},
 		grouped_posts: [
-			// {id: 'wer123', _id: 'friend'}
+			// post id, object id
+			// {id: 'wer123', _id: 1234098jasdf }
 		],
 		loading: false
 }
@@ -53,7 +57,10 @@ export const Groups = createSlice({
 			var groups = {}
 			var groupedPosts = [];
 			payload.forEach((g) => {
-				groups[g._id] = g.color;
+				groups[g._id] = {
+					color: g.color,
+					label: g.label
+				}
 				var lastItem = g.history[g.history.length - 1];
 				lastItem.included_posts.forEach((i) => {
 					groupedPosts.push({ id: i, _id: g._id });

@@ -608,6 +608,7 @@ class reorient(Task):
         # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "rank_slice" : rank_slice}})
 
         # ! Teleoscope history item -> return this and use it in a chain
+        # label
         # positive docs
         # negative docs
         # stateVector
@@ -616,6 +617,7 @@ class reorient(Task):
         history_obj = {
             '_id': teleoscope_id,
             'history_item': {
+                'label': teleoscope['history'][-1]['label'],
                 'positive_docs': positive_docs,
                 'negative_docs': negative_docs,
                 'stateVector': qprime.tolist(),

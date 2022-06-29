@@ -12,7 +12,6 @@ import Select from '@mui/material/Select';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import CircleIcon from '@mui/icons-material/Circle';
 
-
 // actions 
 import { useSelector, useDispatch } from "react-redux";
 import { group, addGroup } from "../actions/groups";
@@ -21,6 +20,8 @@ import { group, addGroup } from "../actions/groups";
 import { StompContext } from '../context/StompContext';
 import { add_post_to_group, remove_post_from_group} from '../components/Stomp';
 
+//utils
+import useSWRAbstract from "../util/swr"
 
 export default function groupSelector(props) {
 
@@ -93,8 +94,8 @@ export default function groupSelector(props) {
                <MenuItem 
                   value={_id} 
                   onClick={() => handleSelect(_id)}>
-                  <CircleIcon sx={{ color: groups[_id] }} style={{ fontSize: 15 }} />
-                  <ListItemText primary={_id} />
+                  <CircleIcon sx={{ color: groups[_id].color }} style={{ fontSize: 15 }} />
+                  <ListItemText primary={groups[_id].label} />
                </MenuItem>
             ))}
             {Object.keys(groups).length == 0 ? <MenuItem>No groups added yet...</MenuItem> : ""}
