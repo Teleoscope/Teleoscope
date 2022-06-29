@@ -577,7 +577,7 @@ class reorient(Task):
 
         # check if stateVector exists
         stateVector = None
-        if len(teleoscope['stateVector']) > 0:
+        if len(teleoscope['history'][-1]['stateVector']) > 0:
             stateVector = np.array(teleoscope['history'][-1]['stateVector'])
         else:
             docs = positive_docs + negative_docs
