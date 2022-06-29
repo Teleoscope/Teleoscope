@@ -11,7 +11,6 @@ import RightMenuBar from "../components/RightMenuBar";
 import WindowManager from "../components/WindowManager";
 
 export default function Workspace(props) {
-  
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>

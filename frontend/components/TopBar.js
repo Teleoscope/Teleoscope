@@ -79,6 +79,11 @@ export default function TopBar(props) {
       )
   }
  
+  const handleSessionChange = (event) => {
+    dispatch(sessionActivator(event.target.value))
+    dispatch(getGroups(event.target.value))
+  }
+
   const getSessions = (username) => {
       if (sessions && users) {
         for (const i in users) {
@@ -272,7 +277,7 @@ export default function TopBar(props) {
                 id="demo-simple-select"
                 value={session_id}
                 label="Session ID"
-                onChange={(event) => dispatch(sessionActivator(event.target.value))}
+                onChange={(event) => handleSessionChange(event)}
               >
                 {getSessions(cookies.user)}
               </Select>
