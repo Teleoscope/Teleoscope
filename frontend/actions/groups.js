@@ -52,6 +52,7 @@ export const Groups = createSlice({
 			temp[action.payload.label] = action.payload.color;
 			add_group(action.payload.client, action.payload.label, action.payload.color);
 			state.groups = temp;
+			console.log(state.groups)
 		}
 	},
 	extraReducers: {

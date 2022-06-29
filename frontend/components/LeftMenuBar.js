@@ -20,6 +20,7 @@ import { StompContext } from '../context/StompContext'
 
 // global variables
 let grouped_data = [];
+//let grouped = filteredGroups !== undefined ? true : false;
 let grouped = false;
 
 function useQuery(q, shouldSend) {
@@ -50,7 +51,8 @@ function arrayUnique(array) {
 export default function LeftMenuBar(props) {
   const search_term = useSelector((state) => state.searchTerm.value);
   const bookmarks = useSelector((state) => state.bookmarker.value);
-  const groups = useSelector((state) => state.grouper.value);
+  const filteredGroups = useSelector((state) => state.filters.value);
+  const filterSelected = useSelector((state) => state.filters.selected);
   const dispatch = useDispatch();
   const [bookmarked, setBookmarked] = useState(false);
   const { posts, loading, error } = useQuery(search_term, true);
@@ -99,14 +101,7 @@ export default function LeftMenuBar(props) {
     return [post, 1.0];
   });
 
-  // const groupDataMaker = (groupName) => {
-  //   let filteredGroups = groups.filter(posts => posts.label === groupName);
-  //   return !filteredGroups ? (
-  //     "There is no posts that fit the selected filters")
-  //     : (filteredGroups.map((posts) => {
-  //       return [posts.id, 1.0];
-  //     }))
-  // }
+
 
   // const bookmarkToggler = (e) => {
   //   bookmarked = !bookmarked;
@@ -133,9 +128,9 @@ export default function LeftMenuBar(props) {
           label="Bookmarked Items Only"
         />
 
-        {bookmarked && grouped ? (<PostList data={arrayUnique(bookmarked_data.concat(grouped_data))} pagination={true} />) :
+        {bookmarked && filterSelected ? (<PostList data={arrayUnique(bookmarked_data.concat(filteredGroups))} pagination={true} />) :
           (bookmarked ? (<PostList data={bookmarked_data} pagination={true} />) :
-            (grouped ? (<PostList data={grouped_data} pagination={true} />) :
+            (filterSelected ? (<PostList data={filteredGroups} pagination={true} />) :
               (<PostList data={data} pagination={true} />)))}
       </Box>
     </div >
