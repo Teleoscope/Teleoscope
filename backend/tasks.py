@@ -351,7 +351,7 @@ def initialize_teleoscope(*args, **kwargs):
     teleoscope_id = db.teleoscopes.insert_one({
             "history": [
                 {
-                    "label": {label},
+                    "label": label,
                     "rank_slice": return_ids[0:min(500, len(return_ids))],
                     "reddit_ids": return_ids,
                     "positive_docs":[],
