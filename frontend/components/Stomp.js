@@ -20,8 +20,8 @@ export function client_init() {
       console.log(str);
     },
     reconnectDelay: 5000,
-    heartbeatIncoming: 4000,
-    heartbeatOutgoing: 4000,
+    heartbeatIncoming: 10000,
+    heartbeatOutgoing: 10000,
   });
   
   /**

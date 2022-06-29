@@ -29,10 +29,9 @@ export default function RightMenuBar(props) {
   var data = [];
   if (teleoscope) {
     var history = teleoscope["history"];
-    var h_item = history[history.length - 1];
-    console.log("teleoscope history",teleoscope, history, h_item)
-    data = h_item["rank_slice"];
-    
+    var history_item = history[history.length - 1];
+    data = history_item["rank_slice"];
+    console.log("teleoscope history",teleoscope, history, history_item, data)
   }
   return (
     <div className="rightMenuBar">

@@ -83,7 +83,8 @@ def read_and_validate_post(path_to_post):
     post = {
             'id': data['id'],
             'title': data['title'],
-            'selftext': data['selftext']}
+            'selftext': data['selftext']
+    }
 
     return post
 
@@ -345,17 +346,19 @@ def initialize_teleoscope(*args, **kwargs):
     labelAsTextSearch = {"$text": {"$search": label}}
     cursor = db.clean.posts.v2.find(labelAsTextSearch, projection = {'id':1})
     return_ids = [x['id'] for x in cursor]
+    rank_slice = [(1.0, x) for x in return_ids[0:min(500, len(return_ids))]]
 
     logging.info(f"About to insert a new teleoscope for {label}.")
     # create a new query document
+
     teleoscope_id = db.teleoscopes.insert_one({
             "history": [
                 {
                     "label": label,
-                    "rank_slice": return_ids[0:min(500, len(return_ids))],
+                    "rank_slice": rank_slice,
                     "reddit_ids": return_ids,
-                    "positive_docs":[],
-                    "negative_docs":[],
+                    "positive_docs": [],
+                    "negative_docs": [],
                     "ranked_post_ids": None
                 }
             ]
