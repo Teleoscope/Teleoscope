@@ -1,6 +1,5 @@
 // actions.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { add_group, save_group_state } from "../components/Stomp";
 
 const initialState = {
 		groups: {
@@ -16,9 +15,9 @@ export const getGroups = createAsyncThunk(
 	'groups/getGroups',
 	async (id, thunkAPI) => {
 		const res = await fetch(`/api/sessions/${id}/groups`).then(
-
 			(data) => data.json()
 		)
+
 		console.log("groups fetch", res)
 		return res
 	})
@@ -44,13 +43,6 @@ export const Groups = createSlice({
 				state.grouped_posts = temp;
 			}
 		},
-		addGroup: (state, action) => {
-			var temp = { ...state.groups };
-			temp[action.payload.label] = action.payload.color;
-			console.log("Associating this group with session id ", action.payload.session_id);
-			add_group(action.payload.client, action.payload.label, action.payload.color, action.payload.session_id);
-			state.groups = temp;
-		}
 	},
 	extraReducers: {
 		[getGroups.pending]: (state) => {

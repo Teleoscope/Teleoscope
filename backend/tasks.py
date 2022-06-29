@@ -334,33 +334,44 @@ def initialize_teleoscope(*args, **kwargs):
     if 'label' not in kwargs:
         logging.info(f"label not in kwargs.")
         raise Exception("label not in kwargs")
-    
+
     db = utils.connect()
     label = kwargs["label"]
     if label == "":
         logging.info(f"label {label} is empty.")
         return []
 
-    logging.info("About to insert a new document")
-    # create a new query document
-    teleoscope_id = db.teleoscopes.insert_one({
-        "label": label,
-        "rank_slice": [],
-        "reddit_ids": [],
-        "history": []
-        }
-    )
-    # TODO: Add more robust error handling in case of failures, maybe transactions to remove data from mongo in case of failures
-    logging.info(f"The new teleoscope has an id of: {teleoscope_id.inserted_id}")
-
     # perform text search query
     labelAsTextSearch = {"$text": {"$search": label}}
     cursor = db.clean.posts.v2.find(labelAsTextSearch, projection = {'id':1})
     return_ids = [x['id'] for x in cursor]
 
-    # store results in teleoscopes collection
-    db.teleoscopes.update_one({'_id': ObjectId(teleoscope_id.inserted_id)}, {'$set': {'reddit_ids': return_ids}})
-    db.sessions.update_one({'_id': ObjectId(str(kwargs["session_id"]))}, {'$push': {"teleoscopes": ObjectId(teleoscope_id.inserted_id)}})
+    logging.info(f"About to insert a new teleoscope for {label}.")
+    # create a new query document
+    teleoscope_id = db.teleoscopes.insert_one({
+            "history": [
+                {
+                    "label": {label},
+                    "rank_slice": return_ids[0:min(500, len(return_ids))],
+                    "reddit_ids": return_ids,
+                    "positive_docs":[],
+                    "negative_docs":[],
+                    "ranked_post_ids": None
+                }
+            ]
+        }
+    )
+    # TODO: Add more robust error handling in case of failures,
+    # maybe transactions to remove data from mongo in case of failures
+    logging.info(f"New teleoscope id: {teleoscope_id.inserted_id}.")
+
+    db.sessions.update_one({'_id': ObjectId(str(kwargs["session_id"]))},
+        {
+            '$push': {
+                "teleoscopes": ObjectId(teleoscope_id.inserted_id)
+            }
+        }
+    )
     logging.info(f"label {label} added to teleoscopes collection")
     return return_ids
 
@@ -382,7 +393,13 @@ def save_teleoscope_state(history_obj):
         logging.info(f"Teleoscope {_id} not found.")
         raise Exception("Teleoscope not found")
     history_item = history_obj["history_item"]
-    result = db.teleoscopes.update({"_id": obj_id}, {'$push': {"history": history_item}})
+    result = db.teleoscopes.update({"_id": obj_id},
+        {
+            '$push': {
+                "history": history_item
+            }
+        }
+    )
     logging.info(f'Returned: {result}')
 
 @app.task
@@ -408,6 +425,10 @@ def save_UI_state(*args, **kwargs):
 
     return 200 # success
 
+
+'''
+initialize_session
+'''
 @app.task
 def initialize_session(*args, **kwargs):
     db = utils.connect()
@@ -418,27 +439,35 @@ def initialize_session(*args, **kwargs):
     if user is None:
         logging.info(f'User {username} does not exist.')
         raise Exception(f"User {username} does not exist.")
-    obj = { 
+    obj = {
         "username": username,
         "history": [
             {
                 "bookmarks": [],
                 "windows": [],
-                "groups":[]
+                "groups": []
             }
         ],
-        "teleoscopes":[]
+        "teleoscopes": []
     }
     result = db.sessions.insert_one(obj)
-    db.users.update_one({"username": username}, {"$push": {"sessions":result.inserted_id}})
+    db.users.update_one({"username": username},
+        {
+            "$push": {
+                "sessions": result.inserted_id
+            }
+        }
+    )
+
 
 '''
 TODO:
-1. As we move towards/away from docs, we need to keep track of which docs have been moved towards/away from
-   because those docs should not be show in the ranked documents.
+1. As we move towards/away from docs, we need to keep track of which
+   docs have been moved towards/away from because those docs should
+   not be show in the ranked documents.
 '''
 class reorient(Task):
-    
+
     def __init__(self):
         self.postsCached = False
         self.allPostIDs = None
@@ -448,35 +477,40 @@ class reorient(Task):
 
     def cachePostsData(self, path='/home/phb/embeddings/'):
         # cache embeddings
-        self.allPostVectors = np.load(path + 'embeddings.npz', allow_pickle=False)['posts']
+        loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
+        self.allPostVectors = loadPosts['posts']
         # cache posts ids
         with open(path + '/ids.pkl', 'rb') as handle:
-                self.allPostIDs = pickle.load(handle)
+            self.allPostIDs = pickle.load(handle)
 
         self.postsCached = True
 
         return
+
+
     '''
     Computes the resultant vector for positive and negative docs.
-    Resultant vector is the final vector that the stateVector of the teleoscope should move towards/away from.
+    Resultant vector is the final vector that the stateVector of
+    the teleoscope should move towards/away from.
     '''
     def computeResultantVector(self, positive_docs, negative_docs):
-        # get vectors for positive and negative doc ids using utils.getPostVector function
+        # get vectors for positive and negative doc ids
+        # using utils.getPostVector function
         # TODO: OPTIMIZE
-        
-        posVecs = [] # vectors we want to move towards
+
+        posVecs = []  # vectors we want to move towards
         for pos_id in positive_docs:
             v = utils.getPostVector(self.db, pos_id)
             posVecs.append(v)
 
-        negVecs = [] # vectors we want to move away from
+        negVecs = []  # vectors we want to move away from
         for neg_id in negative_docs:
             v = utils.getPostVector(self.db, neg_id)
             negVecs.append(v)
-        
-        avgPosVec = None # avg positive vector
-        avgNegVec = None # avg negative vector
-        direction = 1 # direction of movement
+
+        avgPosVec = None  # avg positive vector
+        avgNegVec = None  # avg negative vector
+        direction = 1  # direction of movement
 
         # handle different cases of number of docs in each list
         if len(posVecs) >= 1:
@@ -534,22 +568,27 @@ class reorient(Task):
         _id = ObjectId(teleoscope_id)
         teleoscope = self.db.teleoscopes.find_one({"_id": _id})
 
-        if teleoscope == None:
-           logging.info(f'Teleoscope with id {_id} does not exist!')
-           return 400 # fail
+        if teleoscope is None:
+            logging.info(f'Teleoscope with id {_id} does not exist!')
+            return 400  # fail
 
         # check if stateVector exists
         stateVector = None
-        if 'stateVector' in teleoscope:
-            stateVector = np.array(teleoscope['stateVector'])
+        if len(teleoscope['stateVector']) > 0:
+            stateVector = np.array(teleoscope['history'][-1]['stateVector'])
         else:
             docs = positive_docs + negative_docs
             first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
             logging.info(f'Results of finding first_doc: {first_doc}.')
-            stateVector = first_doc['selftextVector'] # grab selftextVector
+            stateVector = first_doc['selftextVector']  # grab selftextVector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
-        qprime = utils.moveVector(sourceVector=stateVector, destinationVector=resultantVec, direction=direction) # move qvector towards/away from feedbackVector
+        # move qvector towards/away from feedbackVector
+        qprime = utils.moveVector(
+            sourceVector=stateVector,
+            destinationVector=resultantVec,
+            direction=direction
+        )
         scores = utils.calculateSimilarity(self.allPostVectors, qprime)
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
         gridfsObj = self.gridfsUpload("teleoscopes", newRanks)
@@ -564,19 +603,23 @@ class reorient(Task):
         # # update a slice of rank_slice
         # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "rank_slice" : rank_slice}})
 
-
         # ! Teleoscope history item -> return this and use it in a chain
         # positive docs
         # negative docs
         # stateVector
         # ranked_post_ids
         # rank_slice
-        history_obj =  {'_id': teleoscope_id, 'history_item': {'positive_docs': positive_docs, 
-                                                               'negative_docs': negative_docs, 
-                                                               'stateVector': qprime.tolist(), 
-                                                               'ranked_post_ids': gridfsObj, 
-                                                               'rank_slice': rank_slice}}
-        
+        history_obj = {
+            '_id': teleoscope_id,
+            'history_item': {
+                'positive_docs': positive_docs,
+                'negative_docs': negative_docs,
+                'stateVector': qprime.tolist(),
+                'ranked_post_ids': gridfsObj,
+                'rank_slice': rank_slice
+            }
+        }
+
         return history_obj
 
 robj = app.register_task(reorient())

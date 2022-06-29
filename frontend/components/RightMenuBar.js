@@ -28,7 +28,11 @@ export default function RightMenuBar(props) {
   const { teleoscope, teleoscope_loading, teleoscope_error } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
   var data = [];
   if (teleoscope) {
-    data = teleoscope["history"][teleoscope["history"].length - 1]["rank_slice"];
+    var history = teleoscope["history"];
+    var h_item = history[history.length - 1];
+    console.log("teleoscope history",teleoscope, history, h_item)
+    data = h_item["rank_slice"];
+    
   }
   return (
     <div className="rightMenuBar">

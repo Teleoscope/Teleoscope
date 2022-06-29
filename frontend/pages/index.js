@@ -18,9 +18,6 @@ import { StompContext, client } from "../context/StompContext"
 // API fetcher for SWR global config
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
-
-
-
 export default function Home({ isConnected }) {
 
 
