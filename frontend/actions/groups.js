@@ -32,7 +32,6 @@ export const Groups = createSlice({
 	reducers: {
 		group: (state, action) => {
 			var temp = [...state.grouped_posts];
-			console.log(action.payload);
 
 			// filters out any duplicates 
 			var filter = temp.filter(item => action.payload.id == item.id && action.payload.label == item.label)
@@ -42,7 +41,9 @@ export const Groups = createSlice({
 				temp.push({id: action.payload.id, label: action.payload.label})	
 				state.grouped_posts = temp;
 			} else {
-				var postIndex = temp.indexOf(action.payload)
+				var postIndex = temp.findIndex((object) => {
+					return (object.id === action.payload.id) && (object.label === action.payload.label)
+				});
 				temp.splice(postIndex, 1);
 				state.grouped_posts = temp;
 			}
@@ -52,7 +53,6 @@ export const Groups = createSlice({
 			temp[action.payload.label] = action.payload.color;
 			add_group(action.payload.client, action.payload.label, action.payload.color);
 			state.groups = temp;
-			console.log(state.groups)
 		}
 	},
 	extraReducers: {
