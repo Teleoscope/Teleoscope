@@ -28,9 +28,15 @@ export default function groupSelector(props) {
    const client = useContext(StompContext);
 
    const dispatch = useDispatch();
-   const grouped_posts = useSelector((state) => state.grouper.grouped_posts);
-   const groups_this_post_belongs_to = grouped_posts.filter(e => e.id == props.id)
-   const groups = useSelector((state) => state.grouper.groups);
+
+   const session_id = useSelector((state) => state.activeSessionID.value);
+   const { groups, groups_loading, groups_error } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
+   console.log("groups", groups, `/api/sessions/${session_id}/groups`);
+   const group_labels = groups ? groups.map((g) => {return g.label}) : []
+
+   const groups_this_post_belongs_to = groups ? groups.filter((g) => {
+      return g.history[g.history.length - 1].included_posts.includes(props.id)
+   }) : [];
 
    const [menuItem, setMenuItem] = React.useState([]);
 
@@ -90,15 +96,14 @@ export default function groupSelector(props) {
             onClose={handleClose}
             open={open}
          >
-            {Object.keys(groups).map(_id => (
+            {groups ? Object.keys(groups).map(_id => (
                <MenuItem 
                   value={_id} 
                   onClick={() => handleSelect(_id)}>
                   <CircleIcon sx={{ color: groups[_id].color }} style={{ fontSize: 15 }} />
                   <ListItemText primary={groups[_id].label} />
                </MenuItem>
-            ))}
-            {Object.keys(groups).length == 0 ? <MenuItem>No groups added yet...</MenuItem> : ""}
+            )) : <MenuItem>No groups added yet...</MenuItem>}
          </Menu>
       </div>
    )

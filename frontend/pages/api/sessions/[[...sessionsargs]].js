@@ -19,14 +19,10 @@ export default async (req, res) => {
       return group.toString();
     });
     var filteredGroups = groups.filter((group) => {
-      console.log("session groups", typeof(sessionGroups[0]))
-      console.log("group id", group._id)
       var g = group._id.toString();
       if (sessionGroups.includes(g)) {
-        console.log("Returned True")
         return true;
       } else {
-        console.log("FALSE")
         return false;}
     })
     ret = filteredGroups;

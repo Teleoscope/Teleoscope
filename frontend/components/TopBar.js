@@ -102,7 +102,6 @@ export default function TopBar(props) {
       )    
   }
 
-
   const load_teleoscope_state = (history_item_num) => {
     dispatch(historyActivator(history_item_num));
     var history_item = teleoscope["history"][history_item_num];

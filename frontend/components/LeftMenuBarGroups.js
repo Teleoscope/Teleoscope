@@ -17,6 +17,9 @@ import { searcher } from "../actions/searchterm";
 import { addGroup } from "../actions/groups";
 import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
 
+// utils
+import { add_group } from "../components/Stomp.js";
+
 // contexts
 import { StompContext } from '../context/StompContext'
 
@@ -37,8 +40,8 @@ export default function LeftMenuBarGroups() {
    const { sessions, sessions_loading, sessions_error } = useSWRAbstract("sessions", `/api/sessions/`);
    const session_id = useSelector((state) => state.activeSessionID.value);
    const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+   const [colourIndex, setColourIndex] = useState(0);
 
-   var i = -1;
    const colors = [
       "#17becf",
       "#bcbd22",
@@ -51,8 +54,6 @@ export default function LeftMenuBarGroups() {
       "#ff7f0e",
       "#1f77b4"
    ];
-
-
 
    const handleClose = () => {
       setDialogValue({
@@ -68,7 +69,6 @@ export default function LeftMenuBarGroups() {
          label: dialogValue.label,
          color: parseInt(dialogValue.color, 10),
       });
-
       handleClose();
    };
 
@@ -84,7 +84,6 @@ export default function LeftMenuBarGroups() {
    };
 
    const onChangeHandler = (event, newValue) => {
-
       // both newValue when being an added group and when being an existing group is of type string
       if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
          grouped_data = groupDataMaker(newValue.label);
@@ -128,11 +127,13 @@ export default function LeftMenuBarGroups() {
 
 
    const setRandomColor = () => {
-      if (!i > colors.length) {
-         i++
-         return colors[i];
-      } else { i = -1; }
-      // or we can call the randomColorSelector
+      var ret = colors[colourIndex]
+      if (colourIndex + 1 < colors.length - 1) {
+         setColourIndex(colourIndex + 1);
+      } else {
+         setColourIndex(0);
+      }
+      return ret;
    }
    // const setRandomColor = () => {
    //    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
@@ -152,17 +153,6 @@ export default function LeftMenuBarGroups() {
             filterOptions={(options, params) => filteredOptionsHandler(options, params)}
             id="Add Group"
             options={Object.keys(labels)}
-            // getOptionLabel={(option) => {
-            //    // e.g value selected with enter, right from the input
-            //    if (typeof option === 'string') {
-            //       return option;
-            //    }
-            //    if (option.inputValue) {
-            //       // if the user is typing then populate the text field with what they are typing 
-            //       return option.inputValue;
-            //    }
-            //    return option.label;
-            // }}
             style={{ width: "100%", borderRadius: "0 !important" }}
             selectOnFocus
             clearOnBlur
@@ -208,7 +198,8 @@ export default function LeftMenuBarGroups() {
                   <Button
                      type="submit"
                      onClick={() => {
-                        dispatch(addGroup({ client: client, label: dialogValue.label, color: setRandomColor(), session_id: session_id }))
+                        var colour = setRandomColor()
+                        add_group(client, dialogValue.label, colour, session_id)
                      }}>Add</Button>
                </DialogActions>
             </form>
