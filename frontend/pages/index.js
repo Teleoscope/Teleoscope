@@ -25,7 +25,7 @@ export default function Home({ isConnected }) {
     <SWRConfig value={{ 
       fetcher: fetcher,
       errorRetryCount: 10,
-      refreshInterval: 500
+      refreshInterval: 250
     }}>
     <StompContext.Provider value={client}>
     <CookiesProvider>

@@ -600,7 +600,7 @@ class reorient(Task):
             return 400  # fail
 
         # check if stateVector exists
-        stateVector = None
+        stateVector = []
         if len(teleoscope['history'][-1]['stateVector']) > 0:
             stateVector = np.array(teleoscope['history'][-1]['stateVector'])
         else:
