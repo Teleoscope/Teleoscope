@@ -285,7 +285,7 @@ def add_group(*args, **kwargs):
         {
             '$push': {
                         "history": {
-                            "groups": session["history"].push(groups_res.inserted_id),
+                            "groups": session["history"].append(groups_res.inserted_id),
                             "bookmarks": session["bookmarks"],
                             "windows": session["windows"]
                         }
