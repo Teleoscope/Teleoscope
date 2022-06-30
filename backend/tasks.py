@@ -433,14 +433,22 @@ def save_UI_state(*args, **kwargs):
     db = utils.connect()
     logging.info(f'Saving state for {kwargs["session_id"]}.')
     session_id = ObjectId(str(kwargs["session_id"]))
+    session = db.sessions.find_one({"_id": session_id})
     # check if session id is valid, if not, raise exception
-    if not db.sessions.find_one({"_id": session_id}):
+    if not session:
         logging.info(f"Session {session_id} not found.")
         raise Exception("Session not found")
     
     history_item = kwargs["history_item"]
-    
-    db.sessions.update({"_id": session_id}, {'$push': {"history": kwargs["history_item"]}})
+    groups = session["history"][-1]["groups"]
+    history_item["groups"] = groups
+    db.sessions.update({"_id": session_id},
+        {
+            '$push': {
+                "history": history_item
+            }
+        }
+    )
 
     return 200 # success
 

@@ -11,6 +11,7 @@ import IconButton from '@mui/material/IconButton';
 import Select from '@mui/material/Select';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import CircleIcon from '@mui/icons-material/Circle';
+import Tooltip from '@mui/material/Tooltip';
 
 // actions 
 import { useSelector, useDispatch } from "react-redux";
@@ -37,7 +38,7 @@ export default function groupSelector(props) {
    const groups_this_post_belongs_to = groups ? groups.filter((g) => {
       return g.history[g.history.length - 1].included_posts.includes(props.id)
    }) : [];
-
+   console.log("groups this post belongs to", groups_this_post_belongs_to)
    const [menuItem, setMenuItem] = React.useState([]);
 
    const ITEM_HEIGHT = 48;
@@ -64,8 +65,7 @@ export default function groupSelector(props) {
     };
 
     const handleSelect = (_id) => {
-      console.log("The groups have ", groups);
-      if (grouped_posts.find((item) => item.id == props.id)) {
+      if (groups_this_post_belongs_to.find((item) => item.id == props.id)) {
          remove_post_from_group(client, _id, props.id);
       } else {
          add_post_to_group(client, _id, props.id);
@@ -86,8 +86,14 @@ export default function groupSelector(props) {
    return (
       <div>
          <IconButton onClick={handleClick}>
-         {groups_this_post_belongs_to.map(({id, _id}) => {
-            return (<CircleIcon sx={{ color: groups[_id] }} style={{ fontSize: 15 }} />)})}
+         {groups_this_post_belongs_to.map((g) => {
+            return (
+
+               <Tooltip title={g.label} placement="top">
+               <CircleIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
+               </Tooltip>
+            )
+         })}
          {groups_this_post_belongs_to.length == 0 ? 
                      <CircleIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} /> : ""}
          </IconButton>
@@ -96,14 +102,18 @@ export default function groupSelector(props) {
             onClose={handleClose}
             open={open}
          >
-            {groups ? Object.keys(groups).map(_id => (
-               <MenuItem 
-                  value={_id} 
+            {groups ? groups.map((g) => {
+               var _id = g._id
+
+               return (
+
+               <MenuItem
+                  value={_id}
                   onClick={() => handleSelect(_id)}>
-                  <CircleIcon sx={{ color: groups[_id].color }} style={{ fontSize: 15 }} />
-                  <ListItemText primary={groups[_id].label} />
+                  <CircleIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
+                  <ListItemText primary={g.label} />
                </MenuItem>
-            )) : <MenuItem>No groups added yet...</MenuItem>}
+            )}) : <MenuItem>No groups added yet...</MenuItem>}
          </Menu>
       </div>
    )

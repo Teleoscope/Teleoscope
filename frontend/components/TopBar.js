@@ -113,7 +113,6 @@ export default function TopBar(props) {
     var history_item = session["history"][history_length-1];
     dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
-
   }
 
   return (
