@@ -35,17 +35,17 @@ import { add_note } from "../components/Stomp.js";
 // contexts
 import { StompContext } from '../context/StompContext'
 
-function getsize(w) {
-  if (w < 300) {
+function getSize(w) {
+  if (w < 100) {
     return "xs"
   }
-  if (w < 300) {
+  if (w < 200) {
     return "sm"
   }
   if (w < 300) {
     return "md"
   }
-  if (w < 500) {
+  if (w < 400) {
     return "lg"
   }
   return "xl"
@@ -75,7 +75,7 @@ export default function WorkspaceItem(props) {
     add_note(client, props.id);
   }
 
-  const size = getsize(width);
+  const size = getSize(width);
   const container = React.useRef(null);
   const dispatch = useDispatch();
   const checked = useSelector((state) => state.checkedPosts.value);
@@ -88,6 +88,18 @@ export default function WorkspaceItem(props) {
   var pc = checked.indexOf(props.id)
   const client = useContext(StompContext)
 
+  const getWidth = () => {
+    if (size == "xs") {
+      return width/20 + "px";
+    } else if (size == "sm") {
+      return width/10 + "px";
+    } else  if (size == "md") {
+      return width/2 + "px";
+    } else {
+      return width / 1.5 + "px";
+    }
+  }
+
   return (
     <Grid container spacing={2} ref={observe}>
       <Grid item xs={12}>
@@ -97,9 +109,16 @@ export default function WorkspaceItem(props) {
 
         >
           <GroupSelector id={props.id}/>
+          <div style={{width: getWidth()}}>
           <CardActionArea onClick={() => handleClick(props.id, pc)}>
-            <PostTitle post={post ? post : {}} size="sm" noWrap={true}/>  
+            <PostTitle 
+              post={post ? post : {}} 
+              size="sm" 
+              noWrap={true}
+              
+            />  
           </CardActionArea>
+          </div>
           <IconButton onClick={() => handleAddNote()}>
             <CreateIcon fontSize="small" />
           </IconButton>

@@ -16,6 +16,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { searcher } from "../actions/searchterm";
 import { addGroup } from "../actions/groups";
 import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
+import { addWindow} from "../actions/windows";
 
 // utils
 import { add_group } from "../components/Stomp.js";
@@ -23,24 +24,25 @@ import { add_group } from "../components/Stomp.js";
 // contexts
 import { StompContext } from '../context/StompContext'
 
-// global variables
-const filter = createFilterOptions();
-let grouped_data = [];
-let grouped = false;
-
 export default function LeftMenuBarGroups() {
 
-   const client = useContext(StompContext);
 
+   const [groupedData, setGroupedData] = React.useState([]);
+   const [grouped, setGrouped] = React.useState(false)
+   
+   const client = useContext(StompContext);
+   const filter = createFilterOptions();
    const dispatch = useDispatch();
    const [value, setValue] = React.useState(null);
-   const labels = useSelector((state) => state.grouper.groups);
+   
    const [open, toggleOpen] = React.useState(false);
    const [text, setText] = useState("");
    const { sessions, sessions_loading, sessions_error } = useSWRAbstract("sessions", `/api/sessions/`);
    const session_id = useSelector((state) => state.activeSessionID.value);
    const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
    const [colourIndex, setColourIndex] = useState(0);
+   const { groups, groups_loading, groups_error } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
+   const group_labels = groups ? groups.map((g) => {return g.label}) : []
 
    const colors = [
       "#17becf",
@@ -84,30 +86,45 @@ export default function LeftMenuBarGroups() {
    };
 
    const onChangeHandler = (event, newValue) => {
+      console.log("newValue", newValue)
       // both newValue when being an added group and when being an existing group is of type string
       if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
-         grouped_data = groupDataMaker(newValue.label);
-         grouped = true;
+         groupedData = groupDataMaker(newValue.label);
+         setGrouped(true);
       } else {
-         grouped = false;
-      } if (typeof newValue === 'string') {
+         console.log("newValue else", newValue)
+         setGrouped(false);
+      } 
+
+      if (typeof newValue === 'string') {
+         console.log("newValue === string", newValue)
          // timeout to avoid instant validation of the dialog's form.
          // TODO: seems like a bit of a hack, what behaviour is being suppressed here?
          // is there another way to modify it?
          setTimeout(() => {
-            toggleOpen(true);
+            if (group_labels.includes(newValue)) {
+               var g = groups.find(g => g.label == newValue)
+               var postids = g.history[g.history.length - 1]["included_posts"];
+               postids.forEach((id)=> {
+                  dispatch(addWindow({i: id, x: 0, y: 0, w: 3, h: 3, type: "Post"}));
+               })
+            }
+            
+            toggleOpen(false);
             setDialogValue({
                label: newValue,
                color: '',
             });
          });
       } else if (newValue && newValue.inputValue) {
+         console.log("newValue && newValue.inputValue", newValue)
          toggleOpen(true);
          setDialogValue({
             label: newValue.inputValue,
             color: '',
          });
       } else {
+         console.log("newValue setValue", newValue)
          setValue(newValue);
       }
    };
@@ -145,14 +162,12 @@ export default function LeftMenuBarGroups() {
          <Autocomplete
             value={value}
             onChange={(event, newValue) => {
-               console.log(newValue)
                onChangeHandler(event, newValue)
             }}
-
             // creates the add button when the input doesn't match any of the existing groups
             filterOptions={(options, params) => filteredOptionsHandler(options, params)}
             id="Add Group"
-            options={Object.keys(labels)}
+            options={group_labels}
             style={{ width: "100%", borderRadius: "0 !important" }}
             selectOnFocus
             clearOnBlur

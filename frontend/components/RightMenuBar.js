@@ -54,6 +54,7 @@ export default function RightMenuBar(props) {
         <PostList
           data={data}
           workspace={false}
+          pagination={true}
         />
       </Box>
     </div>

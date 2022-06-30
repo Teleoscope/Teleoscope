@@ -32,13 +32,11 @@ export default function groupSelector(props) {
 
    const session_id = useSelector((state) => state.activeSessionID.value);
    const { groups, groups_loading, groups_error } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
-   console.log("groups", groups, `/api/sessions/${session_id}/groups`);
    const group_labels = groups ? groups.map((g) => {return g.label}) : []
 
    const groups_this_post_belongs_to = groups ? groups.filter((g) => {
       return g.history[g.history.length - 1].included_posts.includes(props.id)
    }) : [];
-   console.log("groups this post belongs to", groups_this_post_belongs_to)
    const [menuItem, setMenuItem] = React.useState([]);
 
    const ITEM_HEIGHT = 48;
