@@ -18,14 +18,15 @@ import { StompContext, client } from "../context/StompContext"
 // API fetcher for SWR global config
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
-
-
-
 export default function Home({ isConnected }) {
 
 
   return (
-    <SWRConfig value={{ fetcher }}>
+    <SWRConfig value={{ 
+      fetcher: fetcher,
+      errorRetryCount: 10,
+      refreshInterval: 500
+    }}>
     <StompContext.Provider value={client}>
     <CookiesProvider>
         <div className="container">

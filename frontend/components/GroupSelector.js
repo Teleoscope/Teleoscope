@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 
 // Mui imports
 import { FormControl } from "@material-ui/core";
@@ -11,20 +11,32 @@ import IconButton from '@mui/material/IconButton';
 import Select from '@mui/material/Select';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import CircleIcon from '@mui/icons-material/Circle';
-
+import Tooltip from '@mui/material/Tooltip';
 
 // actions 
 import { useSelector, useDispatch } from "react-redux";
 import { group, addGroup } from "../actions/groups";
 
+// contexts
+import { StompContext } from '../context/StompContext';
+import { add_post_to_group, remove_post_from_group} from '../components/Stomp';
+
+//utils
+import useSWRAbstract from "../util/swr"
 
 export default function groupSelector(props) {
 
-   const dispatch = useDispatch();
-   const grouped_posts = useSelector((state) => state.grouper.grouped_posts);
-   const groups_this_post_belongs_to = grouped_posts.filter(e => e.id == props.id)
-   const groups = useSelector((state) => state.grouper.groups);
+   const client = useContext(StompContext);
 
+   const dispatch = useDispatch();
+
+   const session_id = useSelector((state) => state.activeSessionID.value);
+   const { groups, groups_loading, groups_error } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
+   const group_labels = groups ? groups.map((g) => {return g.label}) : []
+
+   const groups_this_post_belongs_to = groups ? groups.filter((g) => {
+      return g.history[g.history.length - 1].included_posts.includes(props.id)
+   }) : [];
    const [menuItem, setMenuItem] = React.useState([]);
 
    const ITEM_HEIGHT = 48;
@@ -50,8 +62,12 @@ export default function groupSelector(props) {
       );
     };
 
-    const handleSelect = (label) => {
-      dispatch(group({ id: props.id, label: label }));
+    const handleSelect = (_id) => {
+      if (groups_this_post_belongs_to.find((item) => item.id == props.id)) {
+         remove_post_from_group(client, _id, props.id);
+      } else {
+         add_post_to_group(client, _id, props.id);
+      }
       handleClose();
     }
 
@@ -68,8 +84,14 @@ export default function groupSelector(props) {
    return (
       <div>
          <IconButton onClick={handleClick}>
-         {groups_this_post_belongs_to.map(({id, label}) => {
-            return (<CircleIcon sx={{ color: groups[label] }} style={{ fontSize: 15 }} />)})}
+         {groups_this_post_belongs_to.map((g) => {
+            return (
+
+               <Tooltip title={g.label} placement="top">
+               <CircleIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
+               </Tooltip>
+            )
+         })}
          {groups_this_post_belongs_to.length == 0 ? 
                      <CircleIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} /> : ""}
          </IconButton>
@@ -78,15 +100,18 @@ export default function groupSelector(props) {
             onClose={handleClose}
             open={open}
          >
-            {Object.keys(groups).map(label => (
-               <MenuItem 
-                  value={label} 
-                  onClick={() => handleSelect(label)}>
-                  <CircleIcon sx={{ color: groups[label] }} style={{ fontSize: 15 }} />
-                  <ListItemText primary={label} />
+            {groups ? groups.map((g) => {
+               var _id = g._id
+
+               return (
+
+               <MenuItem
+                  value={_id}
+                  onClick={() => handleSelect(_id)}>
+                  <CircleIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
+                  <ListItemText primary={g.label} />
                </MenuItem>
-            ))}
-            {Object.keys(groups).length == 0 ? <MenuItem>No groups added yet...</MenuItem> : ""}
+            )}) : <MenuItem>No groups added yet...</MenuItem>}
          </Menu>
       </div>
    )

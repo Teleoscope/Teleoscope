@@ -28,7 +28,10 @@ export default function RightMenuBar(props) {
   const { teleoscope, teleoscope_loading, teleoscope_error } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
   var data = [];
   if (teleoscope) {
-    data = teleoscope["history"][teleoscope["history"].length - 1]["rank_slice"];
+    var history = teleoscope["history"];
+    var history_item = history[history.length - 1];
+    data = history_item["rank_slice"];
+    console.log("teleoscope history",teleoscope, history, history_item, data)
   }
   return (
     <div className="rightMenuBar">
@@ -51,6 +54,7 @@ export default function RightMenuBar(props) {
         <PostList
           data={data}
           workspace={false}
+          pagination={true}
         />
       </Box>
     </div>
