@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 
 // MUI 
 import TextField from "@material-ui/core/TextField";
@@ -11,26 +11,55 @@ import Button from '@mui/material/Button';
 import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 
 // actions
+import useSWRAbstract from "../util/swr"
 import { useSelector, useDispatch } from "react-redux";
 import { searcher } from "../actions/searchterm";
 import { addGroup } from "../actions/groups";
 import { filter } from "../actions/filteredPosts"
 import { pressed } from "../actions/filteredPosts"
+import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
+import { addWindow} from "../actions/windows";
 
+// utils
+import { add_group } from "../components/Stomp.js";
 
-// global variables
-const filterOptions = createFilterOptions();
-let grouped_data = [];
-let grouped = false;
+// contexts
+import { StompContext } from '../context/StompContext'
 
 export default function LeftMenuBarGroups() {
 
+
+   const filterOptions = createFilterOptions();
+   const [groupedData, setGroupedData] = React.useState([]);
+   const [grouped, setGrouped] = React.useState(false)
+   
+   const client = useContext(StompContext);
+   const filter = createFilterOptions();
    const dispatch = useDispatch();
-   const groups = useSelector((state) => state.grouper.grouped_posts);
+   //const groups = useSelector((state) => state.grouper.grouped_posts);
    const [value, setValue] = React.useState(null);
-   const labels = useSelector((state) => state.grouper.groups);
+   
    const [open, toggleOpen] = React.useState(false);
    const [text, setText] = useState("");
+   const { sessions, sessions_loading, sessions_error } = useSWRAbstract("sessions", `/api/sessions/`);
+   const session_id = useSelector((state) => state.activeSessionID.value);
+   const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+   const [colourIndex, setColourIndex] = useState(0);
+   const { groups, groups_loading, groups_error } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
+   const group_labels = groups ? groups.map((g) => {return g.label}) : []
+
+   const colors = [
+      "#17becf",
+      "#bcbd22",
+      "#7f7f7f",
+      "#e377c2",
+      "#8c564b",
+      "#9467bd",
+      "#d62728",
+      "#2ca02c",
+      "#ff7f0e",
+      "#1f77b4"
+   ];
 
    const handleClose = () => {
       setDialogValue({
@@ -46,7 +75,6 @@ export default function LeftMenuBarGroups() {
          label: dialogValue.label,
          color: parseInt(dialogValue.color, 10),
       });
-
       handleClose();
    };
 
@@ -69,32 +97,46 @@ export default function LeftMenuBarGroups() {
             return [posts.id, 1.0];
          }))
    }
-
    const onChangeHandler = (event, newValue) => {
+      console.log("newValue", newValue)
       // both newValue when being an added group and when being an existing group is of type string
       if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
-         dispatch(filter(groupDataMaker(newValue.label)));
-         dispatch(pressed(true));
+         groupedData = groupDataMaker(newValue.label);
+         setGrouped(true);
       } else {
-         dispatch(pressed(false));
-      } if (typeof newValue === 'string') {
+         console.log("newValue else", newValue)
+         setGrouped(false);
+      } 
+
+      if (typeof newValue === 'string') {
+         console.log("newValue === string", newValue)
          // timeout to avoid instant validation of the dialog's form.
          // TODO: seems like a bit of a hack, what behaviour is being suppressed here?
          // is there another way to modify it?
          setTimeout(() => {
-            toggleOpen(true);
+            if (group_labels.includes(newValue)) {
+               var g = groups.find(g => g.label == newValue)
+               var postids = g.history[g.history.length - 1]["included_posts"];
+               postids.forEach((id)=> {
+                  dispatch(addWindow({i: id, x: 0, y: 0, w: 3, h: 3, type: "Post"}));
+               })
+            }
+            
+            toggleOpen(false);
             setDialogValue({
                label: newValue,
                color: '',
             });
          });
       } else if (newValue && newValue.inputValue) {
+         console.log("newValue && newValue.inputValue", newValue)
          toggleOpen(true);
          setDialogValue({
             label: newValue.inputValue,
             color: '',
          });
       } else {
+         console.log("newValue setValue", newValue)
          setValue(newValue);
       }
    };
@@ -112,10 +154,6 @@ export default function LeftMenuBarGroups() {
       return filtered;
    }
 
-   const setRandomColor = () => {
-      const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-      return "#" + randomColor;
-   };
 
    const setOptions = () => {
       let ret = [];
@@ -126,6 +164,20 @@ export default function LeftMenuBarGroups() {
       return ret;
    };
 
+   const setRandomColor = () => {
+      var ret = colors[colourIndex]
+      if (colourIndex + 1 < colors.length - 1) {
+         setColourIndex(colourIndex + 1);
+      } else {
+         setColourIndex(0);
+      }
+      return ret;
+   }
+   // const setRandomColor = () => {
+   //    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+   //    return "#" + randomColor;
+   // };
+
    return (
       <React.Fragment>
          <Autocomplete
@@ -133,7 +185,6 @@ export default function LeftMenuBarGroups() {
             onChange={(event, newValue) => {
                onChangeHandler(event, newValue)
             }}
-
             // creates the add button when the input doesn't match any of the existing groups
             filterOptions={(options, params) => filteredOptionsHandler(options, params)}
             id="Add Group"
@@ -194,7 +245,8 @@ export default function LeftMenuBarGroups() {
                   <Button
                      type="submit"
                      onClick={() => {
-                        dispatch(addGroup({ label: dialogValue.label, color: setRandomColor() }))
+                        var colour = setRandomColor()
+                        add_group(client, dialogValue.label, colour, session_id)
                      }}>Add</Button>
                </DialogActions>
             </form>
