@@ -11,6 +11,7 @@ import PostTitle from "./PostTitle";
 import Expander from "./Expander"
 import PostListItem from "./PostListItem"
 import Notes from "./Notes"
+import Teleoscope from "./Teleoscope"
 
 // css
 import "react-grid-layout/css/styles.css"
@@ -37,7 +38,7 @@ function wrapLayout(windows, checked, dispatch) {
           key={w.i}
           variant="outlined"
           style={{
-            borderWidth: pc >= 0  ? 2 : 0,
+            borderWidth: pc >= 0  ? 4 : 0,
             borderColor: pc >= 0 ? "#4e5cbc" : "white",
             boxShadow: pc >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
 
@@ -54,6 +55,14 @@ function wrapLayout(windows, checked, dispatch) {
         </Card>
       )
     }
+    if (w.type == "Teleoscope") {
+      return (
+        <div key="teleoscope">
+        <Teleoscope></Teleoscope>
+        </div>
+      )
+    }
+
   })
 	return ret;
 }
@@ -71,6 +80,7 @@ export default function WindowManager(props) {
   return (
       <ReactGridLayout
         className="layout"
+        allowOverlap={true}
         layout={windows}
         cols={12}
         containerPadding={[0,0]}
