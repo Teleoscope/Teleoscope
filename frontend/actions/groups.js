@@ -1,30 +1,30 @@
 // actions.js
-import { speedDialIconClasses } from '@mui/material';
-import { createSlice } from '@reduxjs/toolkit';
-import { createAsyncThunk } from '@reduxjs/toolkit'
-import { add_group } from "../components/Stomp";
-
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 const initialState = {
 		groups: {
-			// "label": "#ffffff"
+			// _id: {
+		    //     color: "#ffffff"
+		    //     label: "name"
+		    // }
 		},
 		grouped_posts: [
-			// {id: 'wer123', label: 'Red'}
+			// post id, object id
+			// {id: 'wer123', _id: 1234098jasdf }
 		],
 		loading: false
 }
 
 export const getGroups = createAsyncThunk(
 	'groups/getGroups',
-	async (thunkAPI) => {
-		const res = await fetch('/api/groups').then(
-
+	async (id, thunkAPI) => {
+		const res = await fetch(`/api/sessions/${id}/groups`).then(
 			(data) => data.json()
-		)	
-	console.log("groups fetch", res)
-	return res
-})
+		)
+
+		console.log("groups fetch", res)
+		return res
+	})
 
 export const Groups = createSlice({
 	name: 'groups',
@@ -39,7 +39,7 @@ export const Groups = createSlice({
 
 			// if there aren't duplicates then we push, else find index and splice
 			if (filter.length == 0) {
-				temp.push({id: action.payload.id, label: action.payload.label})	
+				temp.push({ id: action.payload.id, label: action.payload.label })
 				state.grouped_posts = temp;
 			} else {
 				var postIndex = temp.indexOf(action.payload)
@@ -47,25 +47,28 @@ export const Groups = createSlice({
 				state.grouped_posts = temp;
 			}
 		},
-		addGroup: (state, action) => {
-			var temp = {...state.groups}; 
-			temp[action.payload.label] = action.payload.color;
-			add_group(action.payload.client, action.payload.label, action.payload.color);
-			state.groups = temp;
-		}
 	},
 	extraReducers: {
 		[getGroups.pending]: (state) => {
 			state.loading = true;
 		},
-		[getGroups.fulfilled]: (state, {payload}) => {
+		[getGroups.fulfilled]: (state, { payload }) => {
 			state.loading = false
 			var groups = {}
+			var groupedPosts = [];
 			payload.forEach((g) => {
-				groups[g.label] = g.color;
+				groups[g._id] = {
+					color: g.color,
+					label: g.label
+				}
+				var lastItem = g.history[g.history.length - 1];
+				lastItem.included_posts.forEach((i) => {
+					groupedPosts.push({ id: i, _id: g._id });
+				})
 			})
 			console.log("groups fulfilled", groups)
 			state.groups = groups;
+			state.grouped_posts = groupedPosts;
 		},
 		[getGroups.rejected]: (state) => {
 			state.loading = false

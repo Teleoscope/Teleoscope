@@ -25,6 +25,7 @@ import { searcher, loadSearchTerm } from "../actions/searchterm";
 import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
 import { dragged, addWindow, removeWindow, loadWindows } from "../actions/windows";
 import { mark, loadBookmarkedPosts } from "../actions/bookmark";
+import { getGroups } from "../actions/groups";
 
 // utilities
 import { reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session } from "../components/Stomp.js";
@@ -67,23 +68,29 @@ export default function TopBar(props) {
 
   const getTeleoscopes = () => {
     if (teleoscopes && session) {
-      var ts = teleoscopes.filter((t) => {return session["teleoscopes"].indexOf(t["_id"]) > -1});
-      return ts.map((t) => {
-                  return (
-                    <MenuItem value={t["_id"]}>{t["label"]}</MenuItem>
-                )
+      var ts = teleoscopes.filter((t) => {
+        return session["teleoscopes"].includes(t._id) 
       });
+      if (ts.length > 0 ) {
+        return ts.map((t) => {
+          var latest_t = t['history'][t['history'].length - 1];
+          return (<MenuItem value={t["_id"]}>{latest_t["label"]}</MenuItem>)
+        });  
+      }
     }
-    return (
-            <MenuItem>No Teleoscopes started for this session...</MenuItem>
-      )
+    return (<MenuItem>No Teleoscopes started for this session...</MenuItem>)
   }
  
+  const handleSessionChange = (event) => {
+    dispatch(sessionActivator(event.target.value))
+    dispatch(getGroups(event.target.value))
+  }
+
   const getSessions = (username) => {
       if (sessions && users) {
         for (const i in users) {
           var user = users[i];
-          if (user["username"] == username) {
+          if (user["username"] == username && user["sessions"].length > 0) {
             return user["sessions"].map((s) => {
                 return (<MenuItem value={s}>{s}</MenuItem>)
               })
@@ -95,7 +102,6 @@ export default function TopBar(props) {
       )    
   }
 
-
   const load_teleoscope_state = (history_item_num) => {
     dispatch(historyActivator(history_item_num));
     var history_item = teleoscope["history"][history_item_num];
@@ -104,10 +110,9 @@ export default function TopBar(props) {
   const load_UI_state = () => {
     // TODO
     var history_length = session["history"].length;
-    var history_item = session["history"][history_length-1];
+    var history_item = session["history"][history_length - 1];
     dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
-
   }
 
   return (
@@ -272,7 +277,7 @@ export default function TopBar(props) {
                 id="demo-simple-select"
                 value={session_id}
                 label="Session ID"
-                onChange={(event) => dispatch(sessionActivator(event.target.value))}
+                onChange={(event) => handleSessionChange(event)}
               >
                 {getSessions(cookies.user)}
               </Select>
