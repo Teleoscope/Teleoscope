@@ -157,7 +157,7 @@ export default function LeftMenuBarGroups() {
 
    const setOptions = () => {
       let ret = [];
-      let keys = Object.keys(labels);
+      let keys = Object.keys(group_labels);
       keys.forEach( element =>
          ret.push({label: element})
       );
