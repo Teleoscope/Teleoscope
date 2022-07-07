@@ -48,7 +48,7 @@ export default function RightMenuBar(props) {
             marginLeft: 50,
           }}
         >
-          Recommended Documents
+          Teleoscope results
         </div>
         <hr />
         <PostList

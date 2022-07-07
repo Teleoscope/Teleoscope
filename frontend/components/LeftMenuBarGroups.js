@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 
 // MUI 
-import TextField from "@material-ui/core/TextField";
+import TextField from "@mui/material/TextField";
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
