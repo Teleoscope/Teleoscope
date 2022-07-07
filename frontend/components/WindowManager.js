@@ -4,7 +4,6 @@ import RGL, { WidthProvider } from "react-grid-layout";
 
 // custom
 import WorkspaceItem from "../components/WorkspaceItem";
-import ResponsivePostContent from "../components/ResponsivePostContent";
 import GroupSelector from "../components/GroupSelector"
 import BookmarkSelector from "../components/BookmarkSelector"
 import PostTitle from "./PostTitle";
