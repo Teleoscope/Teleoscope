@@ -2,12 +2,12 @@ import React, { useState, useContext, useEffect, useRef } from 'react';
 import useDimensions from "react-cool-dimensions";
 
 // material ui
-import { makeStyles } from "@material-ui/core/styles";
+import { makeStyles } from "@mui/material/styles";
 import IconButton from "@mui/material/IconButton";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Stack from '@mui/material/Stack';
-import Grid from "@material-ui/core/Grid";
+import Grid from "@mui/material/Grid";
 import CardActionArea from '@mui/material/CardActionArea';
 
 // icons

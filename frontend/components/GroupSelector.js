@@ -1,9 +1,10 @@
 import React, { useState, useContext } from "react";
 
 // Mui imports
-import { FormControl } from "@material-ui/core";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ListItemText from "@material-ui/core/ListItemText";
+import FormControl from '@mui/material/FormControl';
+
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
 import InputLabel from '@mui/material/InputLabel';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 // MUI imports
-import Collapse from "@material-ui/core/Collapse";
+import Collapse from '@mui/material/Collapse';
 import Button from "@mui/material/Button";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";

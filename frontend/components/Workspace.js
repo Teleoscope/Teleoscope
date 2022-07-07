@@ -13,6 +13,7 @@ import WindowManager from "../components/WindowManager";
 export default function Workspace(props) {
   return (
     <Grid container spacing={2}>
+      {props.isConnected ? <p>Connecting!</p> : <span></span>}
       <Grid item xs={12}>
         <TopBar/>
       </Grid>

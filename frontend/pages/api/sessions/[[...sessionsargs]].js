@@ -1,8 +1,9 @@
-import { connectToDatabase } from "../../../util/mongodb";
+import clientPromise from '../../../util/mongodb';
 import { ObjectId } from 'bson';
 
 export default async (req, res) => {
-  const { db } = await connectToDatabase();
+  const client = await clientPromise;
+  const db = await client.db('aita');
   const { sessionsargs } = req.query;
   var ret;
 

@@ -29,7 +29,6 @@ import { getGroups } from "../actions/groups";
 
 // utilities
 import { reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session } from "../components/Stomp.js";
-import randomstring from "randomstring";
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../util/swr"
 
