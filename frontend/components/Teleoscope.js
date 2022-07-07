@@ -1,5 +1,6 @@
 // Teleoscope.js
 import React, { useState } from 'react';
+import { useCookies } from "react-cookie";
 
 // mui
 import { styled, alpha } from '@mui/material/styles';
@@ -77,8 +78,15 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 export default function BottomAppBar() {
   const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value);
-
+  const [cookies, setCookie] = useCookies(["user"]);
+  const { user } = useSWRAbstract("user", `/api/users/${cookies.user}`);
+  
+  // const last_session = user ? user["sessions"][user["sessions"].length - 1] : false;
+  // console.log("last_session", last_session)
+  // const teleoscopes = last_session ? last_session["history"][last_session["history"].length - 1]["teleoscopes"] : [];
+  // console.log("teleoscopes",teleoscopes)
   const { teleoscope, teleoscope_loading, teleoscope_error } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
+  
   var data = [];
   if (teleoscope) {
     var history = teleoscope["history"];

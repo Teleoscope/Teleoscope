@@ -78,7 +78,7 @@ export default function Workspace(props) {
         }
       >
         <MenuItem onClick={handleNewTeleoscope}>New Teleoscope</MenuItem>
-        <MenuItem onClick={handleNewSearch}>New search</MenuItem>
+        <MenuItem onClick={handleNewSearch}>New Search</MenuItem>
     </Menu>
     </div>
 

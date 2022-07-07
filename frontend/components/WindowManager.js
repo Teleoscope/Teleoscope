@@ -58,9 +58,9 @@ function wrapLayout(windows, checked, dispatch) {
     }
     if (w.type == "Teleoscope") {
       return (
-        <div key={w.i}>
+        <Card key={w.i}>
           <Teleoscope></Teleoscope>
-        </div>
+        </Card>
       )
     }
     if (w.type == "Search") {
