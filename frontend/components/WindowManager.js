@@ -1,6 +1,8 @@
 // imports
 import React from "react";
 import RGL, { WidthProvider } from "react-grid-layout";
+import useDimensions from "react-cool-dimensions";
+import { SizeMe } from 'react-sizeme'
 
 // custom
 import WorkspaceItem from "../components/WorkspaceItem";
@@ -11,6 +13,7 @@ import Expander from "./Expander"
 import PostListItem from "./PostListItem"
 import Notes from "./Notes"
 import Teleoscope from "./Teleoscope"
+import Search from "../components/Search";
 
 // css
 import "react-grid-layout/css/styles.css"
@@ -26,7 +29,6 @@ import { addWindow, loadWindows } from "../actions/windows";
 import { checker } from "../actions/checkedPosts";
 
 const ReactGridLayout = WidthProvider(RGL);
-
 
 function wrapLayout(windows, checked, dispatch) {
   var ret = windows.map((w) => {
@@ -56,22 +58,30 @@ function wrapLayout(windows, checked, dispatch) {
     }
     if (w.type == "Teleoscope") {
       return (
-        <div key="teleoscope">
-        <Teleoscope></Teleoscope>
+        <div key={w.i}>
+          <Teleoscope></Teleoscope>
         </div>
       )
     }
+    if (w.type == "Search") {
+      return (
+       <Card key={w.i}>
+         <Search></Search>
+       </Card>
+      )
+    }
+
 
   })
 	return ret;
 }
 
 export default function WindowManager(props) {
+  console.log("RGL",ReactGridLayout?.state?.width)
   const windows = useSelector((state) => state.windows.windows);
   const dragged_id = useSelector((state) => state.windows.dragged);
   const checked = useSelector((state) => state.checkedPosts.value);
 	const dispatch = useDispatch();
-
   const dropping = (layout, item, e) => {
     dispatch(addWindow({i: dragged_id, x: 0, y: 0, w: 3, h: 1, type: "Post"}));
   }
@@ -79,12 +89,11 @@ export default function WindowManager(props) {
   return (
       <ReactGridLayout
         className="layout"
-        allowOverlap={true}
+        allowOverlap={false}
         layout={windows}
         cols={12}
         containerPadding={[0,0]}
         rowHeight={30}
-        width={1200}
         compactionType={false}
         onDrop={(layout, item, e) => {dropping(layout, item, e)}}
         isDroppable={true}
@@ -92,7 +101,7 @@ export default function WindowManager(props) {
         onLayoutChange={(layout) => dispatch(loadWindows(layout))}
         style={{
           backgroundColor: "#EEEEEE",
-          minHeight: "100%",
+          minHeight: "100vh",
           zIndex: 0
         }}
       >

@@ -51,38 +51,46 @@ export default function WorkspaceItem(props) {
   const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${props.id}`);
 
   var pc = checked.indexOf(props.id)
+  var w = windows.find(i => i.i == props.id);
 
-  const getWidth = () => {
-    var w = windows.find(i => i.i == props.id);
-    if (w) {
-      return w.w * 50
-    }
-    return 100;
+  // Todo: make this conversion automatic
+  const cw = 6.25 // column width in em at 16pts, 6.25 = 100px
+
+  // Layout small
+  if (w.h == 1) {
+    return (
+    <Stack direction="row" justifyContent="space-between">
+        
+        <GroupSelector id={props.id}/>
+
+        <div style={{width: w.w == 1 ? 3 * cw : ((w.w * cw) - cw) + "em", marginTop: "0.25em"}}>
+          <CardActionArea onClick={() => handleClick(props.id, pc)}>
+            <PostTitle post={post} noWrap={true}/> 
+          </CardActionArea>
+        </div>
+
+        <CloseButton id={props.id} />
+    </Stack>
+    )
   }
 
-
+  // Layout large
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-        >
+        <Stack direction="row" justifyContent="space-between">
           <GroupSelector id={props.id}/>
-          <div style={{width: getWidth()}}>
+          
           <CardActionArea onClick={() => handleClick(props.id, pc)}>
-            <PostTitle
-              post={post ? post : {}} 
-              noWrap={true}
-            />  
+            <PostTitle post={post} noWrap={false}/>  
           </CardActionArea>
-          </div>
+          
           <NoteButton id={props.id}/>
           <CloseButton id={props.id}/>
         </Stack>
       </Grid>
       <Grid item xs={12}>
-        <PostText text={post ? post["selftext"] : "Content not available"}></PostText>
+        <PostText post={post}></PostText>
       </Grid>
     </Grid>
     );
