@@ -1,7 +1,7 @@
 module.exports = {
   preset: "@shelf/jest-mongodb",
+  // preset: 'ts-jest',
   transform: {
-    '^.+\\.(ts|tsx)?$': 'ts-jest',
     "^.+\\.(js|jsx)$": "babel-jest",
   }
 };

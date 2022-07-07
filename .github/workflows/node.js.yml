@@ -43,7 +43,7 @@ jobs:
       working-directory: ./frontend    
     - run: echo "NEXT_PUBLIC_RABBITMQ_HOST=test" >> .env.local
       working-directory: ./frontend    
-    - run: npm i -g npm@latest
+    - run: npm i -g npm@latest --force --include=dev
       working-directory: ./frontend
     - run: npm run test
       working-directory: ./frontend    
