@@ -44,14 +44,15 @@ export default function Workspace(props) {
 
   const handleNewTeleoscope = () => {
     dispatch(addWindow(
-      {i: "teleoscope_loading", x:0, y:0, w:1, h:1, type: "Teleoscope", isResizable: false})
+      {i: "teleoscope", x:0, y:0, w:2, h:10, type: "Teleoscope", isResizable: false})
     );
     handleClose();
   }
 
   const handleNewSearch = () => {
+
     dispatch(addWindow(
-      {i: "search", x:0, y:0, w:5, h:5, type: "Search", isResizable: false})
+      {i: "search", x:0, y:0, w:2, h:10, type: "Search", isResizable: false})
     );
     handleClose();
   }

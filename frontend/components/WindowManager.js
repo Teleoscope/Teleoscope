@@ -98,6 +98,7 @@ export default function WindowManager(props) {
         onDrop={(layout, item, e) => {dropping(layout, item, e)}}
         isDroppable={true}
         droppingItem={{ i: dragged_id + "_temp", w: 2, h: 1 }}
+        draggableHandle=".drag-handle"
         onLayoutChange={(layout) => dispatch(loadWindows(layout))}
         style={{
           backgroundColor: "#EEEEEE",

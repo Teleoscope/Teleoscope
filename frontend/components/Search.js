@@ -1,130 +1,126 @@
-import React, { useState, useContext } from "react";
-import PostList from "../components/PostList";
-import useSWR from "swr";
+import React, { useState } from 'react';
 
-// material ui
-import Box from "@mui/material/Box";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
+// mui
+import { styled, alpha } from '@mui/material/styles';
+import InputBase from '@mui/material/InputBase';
 
-// actions
-import { useSelector, useDispatch } from "react-redux";
-import { unstable_composeClasses } from "@mui/material";
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import CssBaseline from '@mui/material/CssBaseline';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import ListItemText from '@mui/material/ListItemText';
+import ListSubheader from '@mui/material/ListSubheader';
+import Avatar from '@mui/material/Avatar';
+import MenuIcon from '@mui/icons-material/Menu';
+import AddIcon from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
+import MoreIcon from '@mui/icons-material/MoreVert';
+import LoadingButton from '@mui/lab/LoadingButton';
 
-// customs 
-import LeftMenuBarSearch from "./LeftMenuBarSearch";
-import LeftMenuBarGroups from "./LeftMenuBarGroups";
+// custom components
+import PostList from "./PostList"
+import CloseButton from "./CloseButton"
 
-// contexts
-import { StompContext } from '../context/StompContext'
+// util
+import useSWRAbstract from "../util/swr"
 
-// global variables
-let grouped_data = [];
-let grouped = false;
+const Search = styled('div')(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: alpha(theme.palette.common.white, 0.15),
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.common.white, 0.25),
+  },
+  marginLeft: 0,
+  width: '100%',
+  [theme.breakpoints.up('sm')]: {
+    width: 'auto',
+  },
+}));
 
-function useQuery(q, shouldSend) {
-  const API_URL = shouldSend ? `/api/cleanposts/${q}` : "";
-  const { data, error } = useSWR(API_URL);
-  let ret = {
-    posts: data ? data : [{ query: "_none" }],
-    loading: !error && !data,
-    error: error ? error : "",
-  };
-  return ret;
-}
+const SearchIconWrapper = styled('div')(({ theme }) => ({
+  padding: theme.spacing(0, 2),
+  height: '100%',
+  position: 'absolute',
+  pointerEvents: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+}));
 
-function arrayUnique(array) {
-  console.log(array)
-  var a = array.concat();
-  for (var i = 0; i < a.length; ++i) {
-    for (var j = i + 1; j < a.length; ++j) {
-      if (a[i][0] === a[j][0]) {
-        a.splice(j--, 1);
-      }
-    }
-  }
-
-  return a;
-}
-
-export default function LeftMenuBar(props) {
-  const search_term = useSelector((state) => state.searchTerm.value);
-  const bookmarks = useSelector((state) => state.bookmarker.value);
-  const groups = useSelector((state) => state.grouper.value);
-  const dispatch = useDispatch();
-  const [bookmarked, setBookmarked] = useState(false);
-  const { posts, loading, error } = useQuery(search_term, true);
-  const [value, setValue] = React.useState(null);
-  const [open, toggleOpen] = React.useState(false);
-
-  const client = useContext(StompContext)
-
-  const setRandomColor = () => {
-    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-    // document.body.style.backgroundColor = "#" + randomColor;
-    return "#" + randomColor;
-  }
-
-  const handleClose = () => {
-    setDialogValue({
-      label: '',
-      color: '',
-    });
-    toggleOpen(false);
-  };
-
-  const [dialogValue, setDialogValue] = React.useState({
-    label: '',
-    color: '',
-  });
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    setValue({
-      label: dialogValue.label,
-      color: parseInt(dialogValue.color, 10),
-    });
-
-    handleClose();
-  };
-
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: 'inherit',
+  '& .MuiInputBase-input': {
+    padding: theme.spacing(1, 1, 1, 0),
+    // vertical padding + font size from searchIcon
+    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    transition: theme.transitions.create('width'),
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+      width: '12ch',
+      '&:focus': {
+        width: '20ch',
+      },
+    },
+  },
+}));
+export default function BottomAppBar() {
+  const [query, setQuery] = useState("");
+  const {posts, posts_loading, posts_error} = useSWRAbstract("posts",`/api/cleanposts/${query}`);
 
   // this is a hard-coded hack for ranking of post_id
-  let data = posts.map((post) => {
-    return [post.id, 1.0];
-  });
+  const data = posts ? posts.map((post) => {return [post.id, 1.0];}) : [];
 
-  // another hard-coded hack for ranking of post_id
-  let bookmarked_data = bookmarks.map((post) => {
-    return [post, 1.0];
-  });
+  const handleSetQuery = (e) => {
+    setTimeout(() => {
+      setQuery(e.target.value);
+    },1000);
+  }
 
-
-
-  return (
-    <div className="leftMenuBar">
-      <Box
-        sx={{
-          width: "100%",
-          bgcolor: "background.paper",
-          height: "100vh",
-        }}
-      >
-        <LeftMenuBarSearch />
-        <LeftMenuBarGroups />
+  return (  
+      <div style={{overflow:"auto", height:"100%"}}>
+        <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
+          Search {query != "" ? `"${query}"` : "all posts"}
+        </Typography>
+        {posts_loading ? <LoadingButton loading={true}/> : <PostList data={data}></PostList>}
         
-        <FormControlLabel
-          style={{ marginLeft: 0, marginTop: 0 }}
-          control={<Checkbox style={{ marginRight: 0 }} />}
-          onChange={() => setBookmarked(!bookmarked)}
-          label="Bookmarked Items Only"
-        />
+      
+      <AppBar 
+        className="drag-handle" 
+        position="fixed" 
+        color="primary" 
+        sx={{ top: 'auto', bottom: 0 }}
+      >
+        <Toolbar>
+          <Search>
+            <SearchIconWrapper>
+              <SearchIcon />
+            </SearchIconWrapper>
+            <StyledInputBase
+              placeholder="Search…"
+              inputProps={{ 'aria-label': 'search' }}
+              onChange={(e) => handleSetQuery(e)}
+            />
+          </Search>
+                    <Typography
+            variant="caption"
+            noWrap
+            component="div"
+            sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
+          >
+            
+          </Typography>
+          <CloseButton id="search" />
+        </Toolbar>
 
-        {bookmarked && grouped ? (<PostList data={arrayUnique(bookmarked_data.concat(grouped_data))} pagination={true} />) :
-          (bookmarked ? (<PostList data={bookmarked_data} pagination={true} />) :
-            (grouped ? (<PostList data={grouped_data} pagination={true} />) :
-              (<PostList data={data} pagination={true} />)))}
-      </Box>
-    </div >
+        
+      </AppBar>
+      </div>
   );
 }
