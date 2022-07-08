@@ -76,17 +76,12 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     },
   },
 }));
-export default function BottomAppBar() {
-  const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value);
+export default function Teleoscope(props) {
+  const teleoscope_id = props.id;
   const [cookies, setCookie] = useCookies(["user"]);
   const { user } = useSWRAbstract("user", `/api/users/${cookies.user}`);
-  
-  // const last_session = user ? user["sessions"][user["sessions"].length - 1] : false;
-  // console.log("last_session", last_session)
-  // const teleoscopes = last_session ? last_session["history"][last_session["history"].length - 1]["teleoscopes"] : [];
-  // console.log("teleoscopes",teleoscopes)
-  const { teleoscope, teleoscope_loading, teleoscope_error } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
-  
+  const { teleoscope, teleoscope_loading } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
+
   var data = [];
   if (teleoscope) {
     var history = teleoscope["history"];
@@ -110,7 +105,7 @@ export default function BottomAppBar() {
         sx={{ top: 'auto', bottom: 0 }}
       >
         <Toolbar>
-          <CloseButton id="teleoscope" />
+          <CloseButton id={teleoscope_id} />
         </Toolbar>
       </AppBar>
       </div>

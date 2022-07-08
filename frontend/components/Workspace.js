@@ -4,8 +4,10 @@ import { useSelector } from "react-redux";
 // mui
 import Grid from '@mui/material/Grid';
 import Menu from '@mui/material/Menu';
+import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
 
 // custom components
 import TopBar from "../components/TopBar";
@@ -18,11 +20,25 @@ import Search from "../components/Search";
 import { addWindow } from "../actions/windows";
 import { useDispatch } from "react-redux";
 
+// util
+import useSWRAbstract from "../util/swr"
+
 
 export default function Workspace(props) {
   const dispatch = useDispatch();
   const [contextMenu, setContextMenu] = React.useState(null);
+  const session_id = useSelector((state) => state.activeSessionID.value);
+  const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
+  const teleoscopes = teleoscopes_raw?.map((t) => {
+    var ret = {
+      _id: t._id,
+      label: t.history[t.history.length - 1].label
+    }
+    return ret;
+  });
+  console.log("teleoscopes", teleoscopes, teleoscopes_raw, `/api/sessions/${session_id}/teleoscopes`)
 
+  
   const handleContextMenu = (event) => {
     event.preventDefault();
     setContextMenu(
@@ -44,7 +60,13 @@ export default function Workspace(props) {
 
   const handleNewTeleoscope = () => {
     dispatch(addWindow(
-      {i: "teleoscope", x:0, y:0, w:2, h:10, type: "Teleoscope", isResizable: false})
+      {i: "teleoscope_new", x:0, y:0, w:2, h:10, type: "Teleoscope", isResizable: false})
+    );
+    handleClose();
+  }
+  const handleExistingTeleoscope = (t) => {
+    dispatch(addWindow(
+      {i: t + "_teleoscope", x:0, y:0, w:2, h:10, type: "Teleoscope", isResizable: false})
     );
     handleClose();
   }
@@ -78,6 +100,13 @@ export default function Workspace(props) {
         }
       >
         <MenuItem onClick={handleNewTeleoscope}>New Teleoscope</MenuItem>
+        <Divider />
+        {teleoscopes?.map((t) => { 
+          return <MenuItem onClick={() => handleExistingTeleoscope(t._id)}>{t.label}</MenuItem>  
+        })}
+        <Divider />
+
+
         <MenuItem onClick={handleNewSearch}>New Search</MenuItem>
     </Menu>
     </div>

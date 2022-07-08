@@ -59,7 +59,7 @@ function wrapLayout(windows, checked, dispatch) {
     if (w.type == "Teleoscope") {
       return (
         <Card key={w.i}>
-          <Teleoscope></Teleoscope>
+          <Teleoscope id={w.i}></Teleoscope>
         </Card>
       )
     }
