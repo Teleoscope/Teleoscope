@@ -99,21 +99,6 @@ export default function LeftMenuBar(props) {
     return [post, 1.0];
   });
 
-  // const groupDataMaker = (groupName) => {
-  //   let filteredGroups = groups.filter(posts => posts.label === groupName);
-  //   return !filteredGroups ? (
-  //     "There is no posts that fit the selected filters")
-  //     : (filteredGroups.map((posts) => {
-  //       return [posts.id, 1.0];
-  //     }))
-  // }
-
-  // const bookmarkToggler = (e) => {
-  //   bookmarked = !bookmarked;
-  //   console.log(bookmarked);
-  // };
-
-
   return (
     <div className="leftMenuBar">
       <Box
