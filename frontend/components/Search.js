@@ -88,7 +88,7 @@ export default function BottomAppBar() {
         <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
           Search {query != "" ? `"${query}"` : "all posts"}
         </Typography>
-        {posts_loading ? <LoadingButton loading={true}/> : <PostList data={data}></PostList>}
+        {posts_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
         
       
       <AppBar 
