@@ -64,16 +64,28 @@ export function publish(client, body) {
 }
 
 /**
- * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
+ * Requests to create a new session object in MongoDB.
  */
-export function reorient(client, search_term, teleoscope_id, positive_docs, negative_docs) {
+export function initialize_session(client, username) {
   var body = {
-    task: "reorient",
+    task: 'initialize_session',
     args: {
-      query: search_term, // TODO
-      teleoscope_id: teleoscope_id, // TODO
-      positive_docs: positive_docs,
-      negative_docs: negative_docs,
+      username: username,
+    }
+  }
+  publish(client, body);
+  return body;
+}
+
+/**
+ * Saves the workspace UI state (window locations, bookmarks)
+ */
+ export function save_UI_state(client, session_id, history_item) {
+  var body = {
+    task: 'save_UI_state',
+    args: {
+      session_id: session_id,
+      history_item: history_item
     }
   }
   publish(client, body);
@@ -109,34 +121,6 @@ export function save_teleoscope_state(client, _id, history_item) {
   }
   console.log("The object id is: " + _id);
   publish(client, body);
-}
-
-/**
- * Saves the workspace UI state (window locations, bookmarks)
- */
-export function save_UI_state(client, session_id, history_item) {
-  var body = {
-    task: 'save_UI_state',
-    args: {
-      session_id: session_id,
-      history_item: history_item
-    }
-  }
-  publish(client, body);
-  return body;
-}
-
-/**
- * Requests to create a new session object in MongoDB.
- */
-export function initialize_session(client, username) {
-  var body = {
-    task: 'initialize_session',
-    args: {
-      username: username,
-    }
-  }
-  publish(client, body);
   return body;
 }
 
@@ -153,6 +137,7 @@ export function add_group(client, label, color, session_id) {
     }
   }
   publish(client, body);
+  return body;
 }
 
 /**
@@ -167,6 +152,7 @@ export function add_post_to_group(client, group_id, post_id) {
     }
   }
   publish(client, body)
+  return body;
 }
 
 /**
@@ -181,6 +167,7 @@ export function remove_post_from_group(client, group_id, post_id) {
     }
   }
   publish(client, body)
+  return body;
 }
 
 /**
@@ -195,6 +182,7 @@ export function update_group_label(client, group_id, label) {
     }
   }
   publish(client, body)
+  return body;
 }
 
 /**
@@ -208,6 +196,7 @@ export function add_note(client, post_id) {
     }
   }
   publish(client, body);
+  return body;
 }
 
 /**
@@ -222,4 +211,22 @@ export function update_note(client, post_id, content) {
     }
   }
   publish(client, body);
+  return body;
+}
+
+/**
+ * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
+ */
+ export function reorient(client, search_term, teleoscope_id, positive_docs, negative_docs) {
+  var body = {
+    task: "reorient",
+    args: {
+      query: search_term, // TODO
+      teleoscope_id: teleoscope_id, // TODO
+      positive_docs: positive_docs,
+      negative_docs: negative_docs,
+    }
+  }
+  publish(client, body);
+  return body;
 }
