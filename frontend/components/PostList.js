@@ -35,13 +35,13 @@ export default function PostList(props) {
 
   // pagination
   const [pageNumber, setPageNumber] = useState(1);
-  const itemsPerPage = 12;
-  var displayPagination = false;
+  const itemsPerPage = 10;
+  var displayPagination = true;
   var pageCount = 0;
   var paginatedItems = [];
 
   if (data) {
-    displayPagination = data.length > itemsPerPage && props.pagination;
+    displayPagination = (data.length > itemsPerPage) && props.pagination;
     pageCount = Math.ceil(data.length / itemsPerPage);
     paginatedItems = data.slice(
       (pageNumber - 1) * itemsPerPage,
