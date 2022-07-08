@@ -87,16 +87,15 @@ export default function Teleoscope(props) {
     var history = teleoscope["history"];
     var history_item = history[history.length - 1];
     data = history_item["rank_slice"];
-    console.log("teleoscope history",teleoscope, history, history_item, data)
   }
 
 
   return (  
       <div style={{overflow:"auto", height:"100%"}}>
         <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
-        Teleoscope {teleoscope_id}
+        Teleoscope: {teleoscope?.history[teleoscope?.history.length - 1].label}
         </Typography>
-        {teleoscope_loading ? <LoadingButton loading={true}/> : <PostList data={data}></PostList>}
+        {teleoscope_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
         
       <AppBar 
         className="drag-handle" 

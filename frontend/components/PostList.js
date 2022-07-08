@@ -31,8 +31,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 */
 export default function PostList(props) {
-  let sortable = props.data;
-  // const classes = useStyles();
+  const data = props.data;
 
   // pagination
   const [pageNumber, setPageNumber] = useState(1);
@@ -41,10 +40,10 @@ export default function PostList(props) {
   var pageCount = 0;
   var paginatedItems = [];
 
-  if (sortable) {
-    displayPagination = sortable.length > itemsPerPage && props.pagination;
-    pageCount = Math.ceil(sortable.length / itemsPerPage);
-    paginatedItems = sortable.slice(
+  if (data) {
+    displayPagination = data.length > itemsPerPage && props.pagination;
+    pageCount = Math.ceil(data.length / itemsPerPage);
+    paginatedItems = data.slice(
       (pageNumber - 1) * itemsPerPage,
       pageNumber * itemsPerPage - 1
     );
@@ -55,7 +54,7 @@ export default function PostList(props) {
   };
   // className={classes.idlist} in List
   return (
-    <List  dense={true}>
+    <List dense={true}>
       {displayPagination
         ? paginatedItems.map((pair) => {
             return (
@@ -64,7 +63,7 @@ export default function PostList(props) {
               </PostListItem>
             );
           })
-        : sortable.map((pair) => {
+        : data.map((pair) => {
             return (
               <PostListItem id={pair[0]} key={pair[0] + "PostListItem"}>
                 {" "}
