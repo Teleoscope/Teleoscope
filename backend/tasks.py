@@ -176,14 +176,19 @@ def add_post_to_group(*args, **kwargs):
     if "group_id" not in kwargs:
         logging.info(f"Warning: group_id not in kwargs.")
         raise Exception("group_id not in kwargs")
-
+    if "post_id" not in kwargs:
+        logging.info(f"Warning: post_id not in kwargs.")
+        raise Exception("post_id not in kwargs")
     group_id = ObjectId(kwargs["group_id"])
     group = db.groups.find_one({'_id': group_id})
+    # Check if group exists
+    if not group:
+        logging.info(f"Warning: group with id {group_id} not found.")
+        raise Exception(f"group with id {group_id} not found")
     history_item = group["history"][-1]
     history_item["included_posts"].append(kwargs["post_id"])
     history_item["action"] = "Add post to group"
-    if group:
-        db.groups.update_one({'_id': group_id}, {
+    db.groups.update_one({'_id': group_id}, {
             "$push":
                 {
                     "history": history_item
@@ -200,25 +205,25 @@ def remove_post_from_group(*args, **kwargs):
     if "group_id" not in kwargs:
         logging.info(f"Warning: group_id not in kwargs.")
         raise Exception("group_id not in kwargs")
+    if "post_id" not in kwargs:
+        logging.info(f"Warning: post_id not in kwargs.")
+        raise Exception("post_id not in kwargs")
 
     group_id = ObjectId(kwargs["group_id"])
-    
-    try:
-        group = db.groups.find_one({'_id': group_id})
-        history_item = group["history"][-1]
-        history_item["included_posts"].remove(kwargs["post_id"])
-        history_item["action"] = "Remove post from group"
-        db.groups.update_one({'_id': group_id}, {
-            "$push":
-                {
-                    "history": history_item
-                }
+    group = db.groups.find_one({'_id': group_id})
+    if not group:
+        logging.info(f"Warning: group with id {group_id} not found.")
+        raise Exception(f"group with id {group_id} not found")
+    history_item = group["history"][-1]
+    history_item["included_posts"].remove(kwargs["post_id"])
+    history_item["action"] = "Remove post from group"
+    db.groups.update_one({'_id': group_id}, {
+        "$push":
+            {
+                "history": history_item
             }
-        )
-    except:
-        logging.info(f"Post_id {kwargs['post_id']} not in group {kwargs['group_id']}.")
-
-    
+        }
+    )
         
 
 '''
@@ -262,6 +267,16 @@ purpose: adds a group to the group collection
 '''
 @app.task 
 def add_group(*args, **kwargs):
+    # Error checking
+    if "label" not in kwargs:
+        logging.info(f"Warning: label not in kwargs.")
+        raise Exception("label not in kwargs")
+    if "color" not in kwargs:
+        logging.info(f"Warning: color not in kwargs.")
+        raise Exception("color not in kwargs")
+    if "session_id" not in kwargs:
+        logging.info(f"Warning: session_id not in kwargs.")
+        raise Exception("session_id not in kwargs")
     db = utils.connect()
     obj = {
         "color": kwargs["color"],
@@ -273,12 +288,14 @@ def add_group(*args, **kwargs):
             }
         ]
     }
-
     _id = ObjectId(str(kwargs["session_id"]))
     groups_res = db.groups.insert_one(obj)
     logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
 
     session = db.sessions.find_one({'_id': _id})
+    if not session:
+        logging.info(f"Warning: session with id {_id} not found.")
+        raise Exception(f"session with id {_id} not found")
     groups = session["history"][-1]["groups"]
     groups.append(groups_res.inserted_id)
     sessions_res = db.sessions.update_one({'_id': _id},
@@ -304,7 +321,15 @@ purpose: adds a note to the notes collection
 '''
 @app.task
 def add_note(*args, **kwargs):
+    # Error checking
+    if "post_id" not in kwargs:
+        logging.info(f"Warning: post_id not in kwargs.")
+        raise Exception("post_id not in kwargs")
+    # Try finding post
     db = utils.connect()
+    if not db.posts.find_one({'id': kwargs["post_id"]}):
+        logging.info(f"Warning: post with id {kwargs['post_id']} not found.")
+        raise Exception(f"post with id {kwargs['post_id']} not found")
     obj = {
         "post_id": kwargs["post_id"],
         "history": [{
@@ -316,12 +341,22 @@ def add_note(*args, **kwargs):
         res = db.notes.insert_one(obj)
         logging.info(f"Added note for post {kwargs['post_id']} with result {res}.")
     except:
-        logging.info(f"Error for post {kwargs['post_id']}.")
+        logging.info(f"Error during insert for post {kwargs['post_id']}.")
 
 
 @app.task
 def update_note(*args, **kwargs):
+    # Error checking
+    if "post_id" not in kwargs:
+        logging.info(f"Warning: note_id not in kwargs.")
+        raise Exception("note_id not in kwargs")
+    if "content" not in kwargs:
+        logging.info(f"Warning: content not in kwargs.")
+        raise Exception("content not in kwargs")
     db = utils.connect()
+    if not db.notes.find_one({'post_id': kwargs["post_id"]}):
+        logging.info(f"Warning: note with id {kwargs['post_id']} not found.")
+        raise Exception(f"note with id {kwargs['post_id']} not found")
     res = db.notes.update_one({"post_id": kwargs["post_id"]}, {"$push":
             {
                 "history":
@@ -600,7 +635,7 @@ class reorient(Task):
             return 400  # fail
 
         # check if stateVector exists
-        stateVector = None
+        stateVector = []
         if len(teleoscope['history'][-1]['stateVector']) > 0:
             stateVector = np.array(teleoscope['history'][-1]['stateVector'])
         else:

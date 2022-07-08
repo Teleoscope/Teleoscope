@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 
 // material ui
-import { makeStyles, useTheme } from "@material-ui/core/styles";
-import List from "@material-ui/core/List";
+
+
+import List from "@mui/material/List";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 
@@ -11,7 +12,7 @@ import PostListItem from "../components/PostListItem";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-
+/*
 const useStyles = makeStyles((theme) => ({
   margin: {
     margin: theme.spacing(1),
@@ -28,10 +29,10 @@ const useStyles = makeStyles((theme) => ({
     top: "10px",
   },
 }));
-
+*/
 export default function PostList(props) {
   let sortable = props.data;
-  const classes = useStyles();
+  // const classes = useStyles();
 
   // pagination
   const [pageNumber, setPageNumber] = useState(1);
@@ -52,9 +53,9 @@ export default function PostList(props) {
   const changePage = (event, value) => {
     setPageNumber(value);
   };
-
+  // className={classes.idlist} in List
   return (
-    <List className={classes.idlist} dense={true}>
+    <List  dense={true}>
       {displayPagination
         ? paginatedItems.map((pair) => {
             return (
