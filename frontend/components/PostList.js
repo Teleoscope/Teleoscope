@@ -48,7 +48,7 @@ export default function PostList(props) {
       pageNumber * itemsPerPage - 1
     );
   }
-
+  
   const changePage = (event, value) => {
     setPageNumber(value);
   };
