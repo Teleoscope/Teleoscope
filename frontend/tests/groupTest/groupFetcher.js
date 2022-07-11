@@ -4,5 +4,5 @@ import request from './request';
 // we expect the request.js module to return a promise, we can chain a call to then
 // to receive a group
 export function getGroup(groupID) {
-   return request(`/pages/api/groups/${groupID}`).then(group => group);
+   return request(`/pages/api/groups/${groupID}`).then(group => group); // return the group with the groupID
 } 
