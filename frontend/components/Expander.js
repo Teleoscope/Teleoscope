@@ -16,19 +16,17 @@ export default function Expander(props) {
 
 
    const post = props.post;
+   console.log("post",post)
 
    return (
          <Collapse timeout="auto" unmountOnExit in={open}>
-               <PostText text={post ? post["selftext"] : "Content not available"}></PostText>
+               <PostText post={post}></PostText>
                <Button
                   variant="text"
                   style={{ fontSize: 11, margin: "0 auto", display: "flex" }}
                   onClick={() => setViewMore(!viewMore)}
                >
                   {viewMore ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                  <div style={{ textDecoration: "underline" }}>
-                     {viewMore ? "View Less" : "View More"}
-                  </div>
                </Button>
          </Collapse>
       
