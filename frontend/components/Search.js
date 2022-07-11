@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
 // mui
 import { styled, alpha } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
-
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -22,6 +22,13 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import LoadingButton from '@mui/lab/LoadingButton';
+import useScrollTrigger from '@mui/material/useScrollTrigger';
+import Slide from '@mui/material/Slide';
+import Container from '@mui/material/Container';
+
+// actions
+import { useSelector, useDispatch } from "react-redux";
+import { updateWindow } from "../actions/windows";
 
 // custom components
 import PostList from "./PostList"
@@ -70,9 +77,36 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     },
   },
 }));
-export default function BottomAppBar() {
+
+function HideOnScroll(props) {
+  const { children, window } = props;
+  // Note that you normally won't need to set the window ref as useScrollTrigger
+  // will default to window.
+  // This is only being set here because the demo is in an iframe.
+  const trigger = useScrollTrigger({
+    target: window ? window() : undefined,
+  });
+
+  return (
+    <Slide appear={false} direction="down" in={!trigger}>
+      {children}
+    </Slide>
+  );
+}
+
+HideOnScroll.propTypes = {
+  children: PropTypes.element.isRequired,
+  /**
+   * Injected by the documentation to work in an iframe.
+   * You won't need it on your project.
+   */
+  window: PropTypes.func,
+};
+
+export default function BottomAppBar(props) {
   const [query, setQuery] = useState("");
   const {posts, posts_loading, posts_error} = useSWRAbstract("posts",`/api/cleanposts/${query}`);
+  const dispatch = useDispatch();
 
   // this is a hard-coded hack for ranking of post_id
   const data = posts ? posts.map((post) => {return [post.id, 1.0];}) : [];
@@ -80,47 +114,41 @@ export default function BottomAppBar() {
   const handleSetQuery = (e) => {
     setTimeout(() => {
       setQuery(e.target.value);
+      dispatch(updateWindow({i:"%search", term:e.target.value}));
     },1000);
   }
 
   return (  
-      <div style={{overflow:"auto", height:"100%"}}>
-        <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
-          Search {query != "" ? `"${query}"` : "all posts"}
-        </Typography>
-        {posts_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
-        
-      
-      <AppBar 
-        className="drag-handle" 
-        position="fixed" 
-        color="primary" 
-        sx={{ top: 'auto', bottom: 0 }}
-      >
-        <Toolbar>
-          <Search>
-            <SearchIconWrapper>
-              <SearchIcon />
-            </SearchIconWrapper>
-            <StyledInputBase
-              placeholder="Search…"
-              inputProps={{ 'aria-label': 'search' }}
-              onChange={(e) => handleSetQuery(e)}
-            />
-          </Search>
-                    <Typography
-            variant="caption"
-            noWrap
-            component="div"
-            sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
-          >
-            
-          </Typography>
-          <CloseButton id="search" />
-        </Toolbar>
+   <div style={{overflow:"auto", height:"100%"}}>
+      <CssBaseline />
+      <HideOnScroll {...props}>
+        <AppBar className="drag-handle" color="primary">
+          <Toolbar variant="dense">
+            <Search>
+              <SearchIconWrapper>
+                <SearchIcon />
+              </SearchIconWrapper>
+              <StyledInputBase
+                  placeholder="Search…"
+                  inputProps={{ 'aria-label': 'search' }}
+                  onChange={(e) => handleSetQuery(e)}
+              />
+            </Search>
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}/>
+            <CloseButton id="search" />
+          </Toolbar>
+        </AppBar>
+      </HideOnScroll>
+      <Toolbar variant="dense" />
+      <Container>
+        <Box sx={{ my: 2 }}>
 
-        
-      </AppBar>
-      </div>
-  );
+          <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
+            Search {query != "" ? `"${query}"` : "all posts"}
+          </Typography>
+          {posts_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
+        </Box>
+      </Container>      
+    </div>
+      );
 }

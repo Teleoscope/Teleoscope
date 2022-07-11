@@ -74,10 +74,20 @@ export default function Workspace(props) {
   const handleNewSearch = () => {
 
     dispatch(addWindow(
-      {i: "search", x:0, y:0, w:2, h:10, type: "Search", isResizable: false})
+      {i: "%search", x:0, y:0, w:2, h:10, type: "Search", isResizable: false})
     );
     handleClose();
   }
+
+  const handleNewGroupPalette = () => {
+
+    dispatch(addWindow(
+      {i: "group", x:0, y:0, w:2, h:10, type: "Group Palette", isResizable: false})
+    );
+    handleClose();
+  }
+
+  
 
   return (
     <div onContextMenu={handleContextMenu} style={{ cursor: 'context-menu' }}>
@@ -106,8 +116,10 @@ export default function Workspace(props) {
         })}
         <Divider />
 
-
         <MenuItem onClick={handleNewSearch}>New Search</MenuItem>
+
+        <Divider />
+        <MenuItem onClick={handleNewGroupPalette}>New Group Palette</MenuItem>        
     </Menu>
     </div>
 

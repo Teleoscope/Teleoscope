@@ -81,7 +81,7 @@ export default function WorkspaceItem(props) {
         <Stack direction="row" justifyContent="space-between">
           <GroupSelector id={props.id}/>
           
-          <CardActionArea onClick={() => handleClick(props.id, pc)}>
+          <CardActionArea className="drag-handle" onClick={() => handleClick(props.id, pc)}>
             <PostTitle post={post} noWrap={false}/>  
           </CardActionArea>
           
