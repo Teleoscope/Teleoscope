@@ -67,7 +67,7 @@ export default function Note(props) {
 
   return (
 
-    <Stack direction="column" onClick={focusEditor} style={{marginLeft: "10px", cursor: "text" }}>
+    <Stack direction="column" onClick={focusEditor} style={{marginLeft: "10px", cursor: "text"}}>
       <Stack 
         direction="row-reverse" 
         justifyContent="space-between"
