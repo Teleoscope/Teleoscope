@@ -24,10 +24,28 @@ export default async (req, res) => {
       if (sessionGroups.includes(g)) {
         return true;
       } else {
-        return false;}
+        return false;
+      }
     })
     ret = filteredGroups;
+  } else if (sessionsargs.length === 2 && sessionsargs[1] === "teleoscopes") {
+    // returns teleoscopes
+    var teleoscopes = await db.collection("teleoscopes").find({}).toArray();
+    var session = await db.collection("sessions").findOne({_id: ObjectId(sessionsargs[0])});
+    var session_teleoscopes = session.teleoscopes.map((t_id) => {
+      return t_id.toString();
+    });
+    var filtered_teleoscopes = teleoscopes.filter((teleoscope) => {
+      var t = teleoscope._id.toString();
+      if (session_teleoscopes.includes(t)) {
+        return true;
+      } else {
+        return false;
+      }
+    })
+    ret = filtered_teleoscopes;
   }
+
   // returns groups or list of session objects dependending on the conditionals
   res.json(ret);
 };

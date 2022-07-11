@@ -10,7 +10,6 @@ export const Windows = createSlice({
 		// Added options:
 		//	- surface: "Card", "AppBar", "Paper", "Accordion" // MUI surfaces
 		windows: [
-		{i: "teleoscope", x:0, y:0, w:1, h:1, type: "Teleoscope", isResizable: false}
 		],
 		dragged: ""
 	},
@@ -27,6 +26,8 @@ export const Windows = createSlice({
 					y: action.payload.y,
 					w: action.payload.w,
 					h: action.payload.h,
+					// isResizable: action.payload.type == "Teleoscope" ? false : true,
+					isResizable: action.payload.type == "Teleoscope" ? true : true,
 					type: action.payload.type,
 				};
 				temp.push(obj);

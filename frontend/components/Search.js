@@ -1,6 +1,4 @@
-// Teleoscope.js
 import React, { useState } from 'react';
-import { useCookies } from "react-cookie";
 
 // mui
 import { styled, alpha } from '@mui/material/styles';
@@ -24,10 +22,6 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import LoadingButton from '@mui/lab/LoadingButton';
-
-// actions
-import { useSelector, useDispatch } from "react-redux";
-
 
 // custom components
 import PostList from "./PostList"
@@ -76,27 +70,27 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     },
   },
 }));
-export default function Teleoscope(props) {
-  const teleoscope_id = props.id;
-  const [cookies, setCookie] = useCookies(["user"]);
-  const { user } = useSWRAbstract("user", `/api/users/${cookies.user}`);
-  const { teleoscope, teleoscope_loading } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
+export default function BottomAppBar() {
+  const [query, setQuery] = useState("");
+  const {posts, posts_loading, posts_error} = useSWRAbstract("posts",`/api/cleanposts/${query}`);
 
-  var data = [];
-  if (teleoscope) {
-    var history = teleoscope["history"];
-    var history_item = history[history.length - 1];
-    data = history_item["rank_slice"];
+  // this is a hard-coded hack for ranking of post_id
+  const data = posts ? posts.map((post) => {return [post.id, 1.0];}) : [];
+
+  const handleSetQuery = (e) => {
+    setTimeout(() => {
+      setQuery(e.target.value);
+    },1000);
   }
-
 
   return (  
       <div style={{overflow:"auto", height:"100%"}}>
         <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
-        Teleoscope: {teleoscope?.history[teleoscope?.history.length - 1].label}
+          Search {query != "" ? `"${query}"` : "all posts"}
         </Typography>
-        {teleoscope_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
+        {posts_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
         
+      
       <AppBar 
         className="drag-handle" 
         position="fixed" 
@@ -104,8 +98,28 @@ export default function Teleoscope(props) {
         sx={{ top: 'auto', bottom: 0 }}
       >
         <Toolbar>
-          <CloseButton id={teleoscope_id} />
+          <Search>
+            <SearchIconWrapper>
+              <SearchIcon />
+            </SearchIconWrapper>
+            <StyledInputBase
+              placeholder="Search…"
+              inputProps={{ 'aria-label': 'search' }}
+              onChange={(e) => handleSetQuery(e)}
+            />
+          </Search>
+                    <Typography
+            variant="caption"
+            noWrap
+            component="div"
+            sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
+          >
+            
+          </Typography>
+          <CloseButton id="search" />
         </Toolbar>
+
+        
       </AppBar>
       </div>
   );

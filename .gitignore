@@ -131,8 +131,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-note*
-notes*
 auth.py
 test.py
 archive/*
