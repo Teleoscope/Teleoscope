@@ -1,5 +1,4 @@
 import clientPromise from '../../../util/mongodb';
-import { ObjectId } from 'bson';
 
 export default async (req, res) => {
   const client = await clientPromise;
