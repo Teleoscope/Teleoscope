@@ -399,12 +399,11 @@ def initialize_teleoscope(*args, **kwargs):
     if 'label' not in kwargs:
         logging.info(f"label not in kwargs.")
         raise Exception("label not in kwargs")
-
-    session, db = utils.create_transaction_session()
     label = kwargs["label"]
     if label == "":
         logging.info(f"label {label} is empty.")
         return []
+    session, db = utils.create_transaction_session()
 
     # perform text search query
     labelAsTextSearch = {"$text": {"$search": label}}
