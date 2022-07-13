@@ -4,6 +4,7 @@ import tensorflow_hub as hub
 import numpy as np
 # installed modules
 from pymongo import MongoClient
+import pymongo.errors
 import gridfs
 from tqdm import tqdm
 import logging 
@@ -24,11 +25,6 @@ def unpacker(cursor, key):
 
 
 def connect():
-    # client = MongoClient('127.0.0.1:27017',
-    #             username=auth.u,
-    #             password=auth.p,
-    #             authSource='aita',
-    #             authMechanism='SCRAM-SHA-256')
     autht = "authSource=aita&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
@@ -38,6 +34,37 @@ def connect():
     )
     client = MongoClient(connect_str, connectTimeoutMS=50000, serverSelectionTimeoutMS = 50000)
     return client.aita
+
+def create_transaction_session():
+    autht = "authSource=aita&authMechanism=SCRAM-SHA-256"
+    connect_str = (
+        f'mongodb://'
+        f'{auth.mongodb["username"]}:'
+        f'{auth.mongodb["password"]}@'
+        f'{auth.mongodb["host"]}/?{autht}'
+    )
+    client = MongoClient(connect_str, connectTimeoutMS=50000, serverSelectionTimeoutMS = 50000)
+
+    session = client.start_session()
+    db = client.aita
+    return session, db
+
+def commit_with_retry(session):
+    while True:
+        try:
+            # Commit uses write concern set at transaction start.
+            session.commit_transaction()
+            print("Transaction committed.")
+            break
+        except (pymongo.errors.ConnectionFailure, pymongo.errors.OperationFailure) as exc:
+            # Can retry commit
+            if exc.has_error_label("UnknownTransactionCommitResult"):
+                print("UnknownTransactionCommitResult, retrying "
+                      "commit operation ...")
+                continue
+            else:
+                print("Error during commit ...")
+                raise
 
 
 # list(mongodb docs) -> list(str)

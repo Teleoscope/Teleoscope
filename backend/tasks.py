@@ -117,10 +117,15 @@ purpose: This function adds a single post to the database
 '''
 @app.task
 def add_single_post_to_database(post):
-	db = utils.connect()
-	if 'error' not in post:
-		target = db.clean.posts.v3
-		target.insert_one(post)
+    if 'error' not in post:
+         # Create session
+        session, db = utils.create_transaction_session()
+        target = db.clean.posts.test 
+        with session.start_transaction():
+            # Insert post into database
+            target.insert_one(post, session=session)
+            # Commit the session with retry
+            utils.commit_with_retry(session)
 
 '''
 add_single_post_to_database
@@ -132,11 +137,16 @@ purpose: This function adds multiple posts to the database
 '''
 @app.task
 def add_multiple_posts_to_database(posts):
-    db = utils.connect()
     posts = (list (filter (lambda x: 'error' not in x, posts)))
+    # Create session
+    session, db = utils.create_transaction_session()
     if len(posts) > 0:
-        target = db.clean.posts.v3
-        target.insert_many(posts)
+        target = db.clean.posts.test
+        with session.start_transaction():
+            # Insert posts into database
+            target.insert_many(posts, session=session)
+            # Commit the session with retry
+            utils.commit_with_retry(session)
 
 
 '''
@@ -156,14 +166,16 @@ def save_group_state(*args, **kwargs):
     if 'history_item' not in kwargs:
         logging.info(f"history_item not in kwargs.")
         raise Exception("history_item not in kwargs")
-    db = utils.connect()
+    session, db = utils.create_transaction_session()
     group_id, history_item = ObjectId(kwargs['group_id']), kwargs['history_item']
     history_item["timestamp"] =  datetime.datetime.utcnow()
     # Find group with group_id
     group = db.groups.find_one({'_id': group_id})
     if group:
-        # Update group with history_item
-        db.groups.update_one({'_id': group_id}, {'$push': {'history': history_item}})
+        with session.start_transaction():
+            # Update group with history_item
+            db.groups.update_one({'_id': group_id}, {'$push': {'history': history_item}}, session=session)
+            utils.commit_with_retry(session)
     else:
         raise Exception(f"Group with id {group_id} not found")
 
