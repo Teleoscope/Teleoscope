@@ -184,13 +184,13 @@ add_post_to_group
 '''
 @app.task
 def add_post_to_group(*args, **kwargs):
-    db = utils.connect()
     if "group_id" not in kwargs:
         logging.info(f"Warning: group_id not in kwargs.")
         raise Exception("group_id not in kwargs")
     if "post_id" not in kwargs:
         logging.info(f"Warning: post_id not in kwargs.")
         raise Exception("post_id not in kwargs")
+    session, db = utils.create_transaction_session()
     group_id = ObjectId(kwargs["group_id"])
     group = db.groups.find_one({'_id': group_id})
     # Check if group exists
@@ -200,27 +200,27 @@ def add_post_to_group(*args, **kwargs):
     history_item = group["history"][-1]
     history_item["included_posts"].append(kwargs["post_id"])
     history_item["action"] = "Add post to group"
-    db.groups.update_one({'_id': group_id}, {
-            "$push":
-                {
-                    "history": history_item
-                }
-            }
-        )
+    with session.start_transaction():
+        db.groups.update_one({'_id': group_id}, {
+                "$push":
+                    {
+                        "history": history_item
+                    }
+                }, session=session)
+        utils.commit_with_retry(session)
 
 '''
 remove_post_from_group
 '''
 @app.task
 def remove_post_from_group(*args, **kwargs):
-    db = utils.connect()
     if "group_id" not in kwargs:
         logging.info(f"Warning: group_id not in kwargs.")
         raise Exception("group_id not in kwargs")
     if "post_id" not in kwargs:
         logging.info(f"Warning: post_id not in kwargs.")
         raise Exception("post_id not in kwargs")
-
+    session, db = utils.create_transaction_session()
     group_id = ObjectId(kwargs["group_id"])
     group = db.groups.find_one({'_id': group_id})
     if not group:
@@ -229,13 +229,14 @@ def remove_post_from_group(*args, **kwargs):
     history_item = group["history"][-1]
     history_item["included_posts"].remove(kwargs["post_id"])
     history_item["action"] = "Remove post from group"
-    db.groups.update_one({'_id': group_id}, {
-        "$push":
-            {
-                "history": history_item
-            }
-        }
-    )
+    with session.start_transaction():
+        db.groups.update_one({'_id': group_id}, {
+            "$push":
+                {
+                    "history": history_item
+                }
+            }, session=session)
+        utils.commit_with_retry(session)
         
 
 '''
@@ -243,32 +244,32 @@ update_group_label
 '''
 @app.task
 def update_group_label(*args, **kwargs):
-    db = utils.connect()
     if "group_id" not in kwargs:
         logging.info(f"Warning: group_id not in kwargs.")
         raise Exception("group_id not in kwargs")
 
+    session, db = utils.create_transaction_session()
     group_id = ObjectId(kwargs["group_id"])
     group = db.groups.find_one({'_id': group_id})
-    try:
-        history_item = group["history_item"][-1]
+    if not group:
+        logging.info(f"Warning: group with id {group_id} not found.")
+        raise Exception(f"group with id {group_id} not found")
+    history_item = group["history_item"][-1]
+    with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
-            "$push":
-                {
-                    "history": history_item
-                }
-            }
-        )
+                "$push":
+                    {
+                        "history": history_item
+                    }
+                }, session = session)
         db.groups.update_one(
-            {'_id': group_id}, 
-            {'$set': 
-                {
-                    'label': kwargs["label"]
-                }
-            }
-        )
-    except:
-        logging.info(f"Failed to update group label for {kwargs['label']}.")
+                {'_id': group_id}, 
+                {'$set': 
+                    {
+                        'label': kwargs["label"]
+                    }
+                }, session=session)
+        utils.commit_with_retry(session)
 
 '''
 add_group
@@ -289,7 +290,6 @@ def add_group(*args, **kwargs):
     if "session_id" not in kwargs:
         logging.info(f"Warning: session_id not in kwargs.")
         raise Exception("session_id not in kwargs")
-    db = utils.connect()
     obj = {
         "color": kwargs["color"],
         "label": kwargs["label"],
@@ -301,28 +301,29 @@ def add_group(*args, **kwargs):
         ]
     }
     _id = ObjectId(str(kwargs["session_id"]))
-    groups_res = db.groups.insert_one(obj)
-    logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
-
-    session = db.sessions.find_one({'_id': _id})
-    if not session:
-        logging.info(f"Warning: session with id {_id} not found.")
-        raise Exception(f"session with id {_id} not found")
-    groups = session["history"][-1]["groups"]
-    groups.append(groups_res.inserted_id)
-    sessions_res = db.sessions.update_one({'_id': _id},
-        {
-            '$push': {
-                        "history": {
-                            "groups": groups,
-                            "bookmarks": session["history"][-1]["bookmarks"],
-                            "windows": session["history"][-1]["windows"]
-                        }
-            }
-        }
-    )
-    logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
-    return groups_res.inserted_id
+    transaction_session, db = utils.create_transaction_session()
+    with transaction_session.start_transaction():
+        groups_res = db.groups.insert_one(obj, session=transaction_session)
+        logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
+        session = db.sessions.find_one({'_id': _id}, session=transaction_session)
+        if not session:
+            logging.info(f"Warning: session with id {_id} not found.")
+            raise Exception(f"session with id {_id} not found")
+        groups = session["history"][-1]["groups"]
+        groups.append(groups_res.inserted_id)
+        sessions_res = db.sessions.update_one({'_id': _id},
+            {
+                '$push': {
+                            "history": {
+                                "groups": groups,
+                                "bookmarks": session["history"][-1]["bookmarks"],
+                                "windows": session["history"][-1]["windows"]
+                            }
+                }
+            }, session=transaction_session)
+        logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
+        utils.commit_with_retry(transaction_session)
+        return groups_res.inserted_id
 
 
 '''
@@ -338,7 +339,7 @@ def add_note(*args, **kwargs):
         logging.info(f"Warning: post_id not in kwargs.")
         raise Exception("post_id not in kwargs")
     # Try finding post
-    db = utils.connect()
+    session, db = utils.create_transaction_session()
     if not db.posts.find_one({'id': kwargs["post_id"]}):
         logging.info(f"Warning: post with id {kwargs['post_id']} not found.")
         raise Exception(f"post with id {kwargs['post_id']} not found")
@@ -349,11 +350,10 @@ def add_note(*args, **kwargs):
             "timestamp": datetime.datetime.utcnow()
         }]
     }
-    try:
-        res = db.notes.insert_one(obj)
+    with session.start_transaction():
+        res = db.notes.insert_one(obj, session=session)
         logging.info(f"Added note for post {kwargs['post_id']} with result {res}.")
-    except:
-        logging.info(f"Error during insert for post {kwargs['post_id']}.")
+        utils.commit_with_retry(session)
 
 
 @app.task
@@ -365,20 +365,22 @@ def update_note(*args, **kwargs):
     if "content" not in kwargs:
         logging.info(f"Warning: content not in kwargs.")
         raise Exception("content not in kwargs")
-    db = utils.connect()
+    session, db = utils.commit_with_retry()
     if not db.notes.find_one({'post_id': kwargs["post_id"]}):
         logging.info(f"Warning: note with id {kwargs['post_id']} not found.")
         raise Exception(f"note with id {kwargs['post_id']} not found")
-    res = db.notes.update_one({"post_id": kwargs["post_id"]}, {"$push":
-            {
-                "history":
+    with session.start_transaction():
+        res = db.notes.update_one({"post_id": kwargs["post_id"]}, {"$push":
                 {
-                    "content": kwargs["content"],
-                    "timestamp": datetime.datetime.utcnow()
+                    "history":
+                    {
+                        "content": kwargs["content"],
+                        "timestamp": datetime.datetime.utcnow()
+                    }
                 }
-            }
-        })
-    logging.info(f"Updated note for post {kwargs['post_id']} with result {res}.")
+            }, session=session)
+        utils.commit_with_retry(session)
+        logging.info(f"Updated note for post {kwargs['post_id']} with result {res}.")
 
 '''
 querySearch:
@@ -398,7 +400,7 @@ def initialize_teleoscope(*args, **kwargs):
         logging.info(f"label not in kwargs.")
         raise Exception("label not in kwargs")
 
-    db = utils.connect()
+    session, db = utils.create_transaction_session()
     label = kwargs["label"]
     if label == "":
         logging.info(f"label {label} is empty.")
@@ -412,32 +414,29 @@ def initialize_teleoscope(*args, **kwargs):
 
     logging.info(f"About to insert a new teleoscope for {label}.")
     # create a new query document
+    with session.start_transaction():
+        teleoscope_id = db.teleoscopes.insert_one({
+                "history": [
+                    {
+                        "label": label,
+                        "rank_slice": rank_slice,
+                        "reddit_ids": return_ids,
+                        "positive_docs": [],
+                        "negative_docs": [],
+                        "stateVector": [],
+                        "ranked_post_ids": None
+                    }
+                ]
+            }, session=session)
+        logging.info(f"New teleoscope id: {teleoscope_id.inserted_id}.")
 
-    teleoscope_id = db.teleoscopes.insert_one({
-            "history": [
-                {
-                    "label": label,
-                    "rank_slice": rank_slice,
-                    "reddit_ids": return_ids,
-                    "positive_docs": [],
-                    "negative_docs": [],
-                    "stateVector": [],
-                    "ranked_post_ids": None
+        db.sessions.update_one({'_id': ObjectId(str(kwargs["session_id"]))},
+            {
+                '$push': {
+                    "teleoscopes": ObjectId(teleoscope_id.inserted_id)
                 }
-            ]
-        }
-    )
-    # TODO: Add more robust error handling in case of failures,
-    # maybe transactions to remove data from mongo in case of failures
-    logging.info(f"New teleoscope id: {teleoscope_id.inserted_id}.")
-
-    db.sessions.update_one({'_id': ObjectId(str(kwargs["session_id"]))},
-        {
-            '$push': {
-                "teleoscopes": ObjectId(teleoscope_id.inserted_id)
-            }
-        }
-    )
+            }, session=session)
+        utils.commit_with_retry(session)
     logging.info(f"label {label} added to teleoscopes collection")
     return return_ids
 
@@ -450,7 +449,7 @@ def save_teleoscope_state(history_obj):
     if 'history_item' not in history_obj:
         logging.info(f"history_item not in kwargs.")
         raise Exception("history_item not in kwargs")
-    db = utils.connect()
+    session, db = utils.create_transaction_session()
     logging.info(f'Saving state for teleoscope {history_obj["_id"]}.')
     _id = str(history_obj["_id"])
     obj_id = ObjectId(_id)
@@ -459,14 +458,15 @@ def save_teleoscope_state(history_obj):
         logging.info(f"Teleoscope {_id} not found.")
         raise Exception("Teleoscope not found")
     history_item = history_obj["history_item"]
-    result = db.teleoscopes.update({"_id": obj_id},
-        {
-            '$push': {
-                "history": history_item
-            }
-        }
-    )
-    logging.info(f'Returned: {result}')
+    with session.start_transaction():
+        result = db.teleoscopes.update({"_id": obj_id},
+            {
+                '$push': {
+                    "history": history_item
+                }
+            }, session=session)
+        logging.info(f'Saving teleoscope state: {result}')
+        utils.commit_with_retry(session)
 
 @app.task
 def save_UI_state(*args, **kwargs):
@@ -477,7 +477,7 @@ def save_UI_state(*args, **kwargs):
     if 'history_item' not in kwargs:
         logging.info(f"history_item not in kwargs.")
         raise Exception("history_item not in kwargs")
-    db = utils.connect()
+    session, db = utils.create_transaction_session()
     logging.info(f'Saving state for {kwargs["session_id"]}.')
     session_id = ObjectId(str(kwargs["session_id"]))
     session = db.sessions.find_one({"_id": session_id})
@@ -489,13 +489,14 @@ def save_UI_state(*args, **kwargs):
     history_item = kwargs["history_item"]
     groups = session["history"][-1]["groups"]
     history_item["groups"] = groups
-    db.sessions.update({"_id": session_id},
-        {
-            '$push': {
-                "history": history_item
-            }
-        }
-    )
+    with session.start_transaction():
+        db.sessions.update({"_id": session_id},
+            {
+                '$push': {
+                    "history": history_item
+                }
+            }, session=session)
+        utils.commit_with_retry(session)
 
     return 200 # success
 
@@ -505,7 +506,7 @@ initialize_session
 '''
 @app.task
 def initialize_session(*args, **kwargs):
-    db = utils.connect()
+    transaction_session, db = utils.create_transaction_session()
     username = kwargs["username"]
     logging.info(f'Initializing sesssion for user {username}.')
     # Check if user exists and throw error if not
@@ -524,14 +525,15 @@ def initialize_session(*args, **kwargs):
         ],
         "teleoscopes": []
     }
-    result = db.sessions.insert_one(obj)
-    db.users.update_one({"username": username},
-        {
-            "$push": {
-                "sessions": result.inserted_id
-            }
-        }
-    )
+    with transaction_session.start_transaction():
+        result = db.sessions.insert_one(obj, session=transaction_session)
+        db.users.update_one({"username": username},
+            {
+                "$push": {
+                    "sessions": result.inserted_id
+                }
+            }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
 
 
 '''
