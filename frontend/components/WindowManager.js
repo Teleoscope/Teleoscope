@@ -14,6 +14,8 @@ import PostListItem from "./PostListItem"
 import Notes from "./Notes"
 import Teleoscope from "./Teleoscope"
 import Search from "../components/Search";
+import GroupPalette from "../components/GroupPalette";
+import Group from "../components/Group";
 
 // css
 import "react-grid-layout/css/styles.css"
@@ -70,6 +72,20 @@ function wrapLayout(windows, checked, dispatch) {
        </Card>
       )
     }
+    if (w.type == "Group Palette") {
+      return (
+       <Card key={w.i}>
+        <GroupPalette></GroupPalette>
+       </Card>
+      )
+    }
+    if (w.type == "Group") {
+      return (
+       <div key={w.i}>
+        <Group id={w.i}></Group>
+       </div>
+      )
+    }
 
 
   })
@@ -83,7 +99,11 @@ export default function WindowManager(props) {
   const checked = useSelector((state) => state.checkedPosts.value);
 	const dispatch = useDispatch();
   const dropping = (layout, item, e) => {
-    dispatch(addWindow({i: dragged_id, x: 0, y: 0, w: 3, h: 1, type: "Post"}));
+    if (dragged_id.split("_")[1] == "group") {
+      dispatch(addWindow({i: dragged_id, x: 0, y: 0, w: 5, h: 1, type: "Group"}));  
+    } else {
+      dispatch(addWindow({i: dragged_id, x: 0, y: 0, w: 3, h: 1, type: "Post"}));
+    }
   }
 
   return (
