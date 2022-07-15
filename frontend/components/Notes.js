@@ -66,8 +66,8 @@ export default function Note(props) {
   }
 
   return (
-
-    <Stack direction="column" onClick={focusEditor} style={{marginLeft: "10px", cursor: "text" }}>
+    <div style={{ overflow: "auto", height: "100%"}}>
+    <Stack direction="column" onClick={focusEditor} style={{marginLeft: "10px", cursor: "text"}}>
       <Stack 
         direction="row-reverse" 
         justifyContent="space-between"
@@ -87,5 +87,6 @@ export default function Note(props) {
         // placeholder={post ? post["title"] : props.id}
       />
     </Stack>
+    </div>
   );
 }
