@@ -43,9 +43,9 @@ def import_multiple_posts(path_to_folder):
 
 
 if __name__ == '__main__':
-	if sys.argv[1] == '-f':
+	if len(sys.argv) > 2 and sys.argv[1] == '-f':
 		import_single_post(sys.argv[2])
-	elif sys.argv[1] == '-d':
+	elif len(sys.argv) > 2 and sys.argv[1] == '-d':
 		import_multiple_posts(sys.argv[2])
 	else:
 		print('Invalid arguments. Use -f for single post or -d for folder\n')
