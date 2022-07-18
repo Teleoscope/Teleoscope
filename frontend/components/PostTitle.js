@@ -19,6 +19,7 @@ const postTitle = (post) => {
    var regex = new RegExp(
       "(AITA for|aita for|AITA if|WIBTA if|AITA|aita|WIBTA)"
    );
+
    if (post.hasOwnProperty("title")) {
       var title = post["title"].replace(regex, "");
       var charlist = " -";
@@ -32,17 +33,18 @@ const postTitle = (post) => {
 
 };
 
+
 export default function PostTitle(props) {
    const title = postTitle(props.post);
    return (
       <Tooltip title={title} placement="top">
-      <Typography
-         variant="body1"
-         color={props.color ? props.color : "black"}
-         noWrap={props.noWrap}
-      >
-         {title}
-      </Typography>
+         <Typography
+            variant="body1"
+            color={props.color ? props.color : "black"}
+            noWrap={props.noWrap}
+         >
+            {title}
+         </Typography>
       </Tooltip>
    )
 }

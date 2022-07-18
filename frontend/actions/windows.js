@@ -10,7 +10,6 @@ export const Windows = createSlice({
 		// Added options:
 		//	- surface: "Card", "AppBar", "Paper", "Accordion" // MUI surfaces
 		windows: [
-		{i: "teleoscope", x:0, y:0, w:1, h:1, type: "Teleoscope", isResizable: false}
 		],
 		dragged: ""
 	},
@@ -27,20 +26,28 @@ export const Windows = createSlice({
 					y: action.payload.y,
 					w: action.payload.w,
 					h: action.payload.h,
+					// isResizable: action.payload.type == "Teleoscope" ? false : true,
+					isResizable: action.payload.type == "Teleoscope" ? true : true,
 					type: action.payload.type,
 				};
 				temp.push(obj);
 				state.windows = temp;
 			}
-			console.log("There are now ", state.windows.length, " elements in the windows array.");
 		},
 		removeWindow: (state, action) => {
 			var temp = [...state.windows];
 			var ids = state.windows.map((w) => {return w.i});
 			var index = ids.indexOf(action.payload);
-			console.log("removeWindow", temp, ids, index)
 			if (index > -1) {
 				temp.splice(index, 1);
+			}
+			state.windows = temp;
+		},
+		updateWindow: (state, action) => {
+			var temp = [...state.windows];
+			var index = temp.findIndex((w) => w.i == action.payload.i);
+			if (index > 0) {
+				temp[index].i = action.payload.term + "%search";
 			}
 			state.windows = temp;
 		},
@@ -67,5 +74,5 @@ export const Windows = createSlice({
 	}
 })
 
-export const { addWindow, removeWindow, loadWindows, dragged } = Windows.actions
+export const { addWindow, removeWindow, loadWindows, dragged, updateWindow } = Windows.actions
 export default Windows.reducer
