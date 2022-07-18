@@ -291,12 +291,11 @@ def add_group(*args, **kwargs):
         logging.info(f"Warning: session_id not in kwargs.")
         raise Exception("session_id not in kwargs")
     obj = {
-        "color": kwargs["color"],
-        "label": kwargs["label"],
         "history": [
             {
-                "included_posts": [],
-                "label": kwargs["label"]
+                "color": kwargs["color"],
+                "label": kwargs["label"],
+                "included_posts": []
             }
         ]
     }
