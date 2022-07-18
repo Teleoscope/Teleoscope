@@ -308,14 +308,17 @@ def add_group(*args, **kwargs):
 
     # session_id must be cast from an int to mongo ObjectId
     _id = ObjectId(str(kwargs["session_id"]))
+    # call needs to be transactional due to groups & sessions collections being updated
     transaction_session, db = utils.create_transaction_session()
     with transaction_session.start_transaction():
         groups_res = db.groups.insert_one(obj, session=transaction_session)
         logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
+        # add created groups document to the correct session
         session = db.sessions.find_one({'_id': _id}, session=transaction_session)
         if not session:
             logging.info(f"Warning: session with id {_id} not found.")
             raise Exception(f"session with id {_id} not found")
+        # TODO: 0-index history
         groups = session["history"][-1]["groups"]
         groups.append(groups_res.inserted_id)
         sessions_res = db.sessions.update_one({'_id': _id},
@@ -509,6 +512,9 @@ def save_UI_state(*args, **kwargs):
 
 '''
 initialize_session
+input: 
+    username (string, arbitrary)
+purpose: adds a session to the sessions collection
 '''
 @app.task
 def initialize_session(*args, **kwargs):
