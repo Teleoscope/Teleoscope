@@ -276,7 +276,8 @@ add_group
 input: 
     label (string, arbitrary)
     color (string, hex color)
-purpose: adds a group to the group collection
+    session_id (int, represents ObjectId in int)
+purpose: adds a group to the group collection and links newly created group to corresponding session
 '''
 @app.task 
 def add_group(*args, **kwargs):
@@ -290,16 +291,22 @@ def add_group(*args, **kwargs):
     if "session_id" not in kwargs:
         logging.info(f"Warning: session_id not in kwargs.")
         raise Exception("session_id not in kwargs")
+    
+    # Creating document to be inserted into mongoDB
     obj = {
+        "creation_time": datetime.datetime.utcnow(),
         "color": kwargs["color"],
         "label": kwargs["label"],
         "history": [
             {
+                "timestamp": datetime.datetime.utcnow(),
                 "included_posts": [],
                 "label": kwargs["label"]
             }
         ]
     }
+
+    # session_id must be cast from an int to mongo ObjectId
     _id = ObjectId(str(kwargs["session_id"]))
     transaction_session, db = utils.create_transaction_session()
     with transaction_session.start_transaction():
