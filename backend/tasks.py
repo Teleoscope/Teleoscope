@@ -308,15 +308,18 @@ def add_group(*args, **kwargs):
         if not session:
             logging.info(f"Warning: session with id {_id} not found.")
             raise Exception(f"session with id {_id} not found")
-        groups = session["history"][-1]["groups"]
+        groups = session["history"][0]["groups"]
         groups.append(groups_res.inserted_id)
         sessions_res = db.sessions.update_one({'_id': _id},
             {
                 '$push': {
                             "history": {
-                                "groups": groups,
-                                "bookmarks": session["history"][-1]["bookmarks"],
-                                "windows": session["history"][-1]["windows"]
+                                '$each': [{
+                                    "groups": groups,
+                                    "bookmarks": session["history"][0]["bookmarks"],
+                                    "windows": session["history"][0]["windows"]
+                                }],
+                                '$position': 0
                             }
                 }
             }, session=transaction_session)
