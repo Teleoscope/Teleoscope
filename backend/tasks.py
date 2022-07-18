@@ -148,6 +148,92 @@ def add_multiple_posts_to_database(posts):
             # Commit the session with retry
             utils.commit_with_retry(session)
 
+'''
+initialize_session
+input: 
+    username (string, arbitrary)
+purpose: adds a session to the sessions collection
+'''
+@app.task
+def initialize_session(*args, **kwargs):
+    transaction_session, db = utils.create_transaction_session()
+    username = kwargs["username"]
+    logging.info(f'Initializing sesssion for user {username}.')
+    # Check if user exists and throw error if not
+    user = db.users.find_one({"username": username})
+    if user is None:
+        logging.info(f'User {username} does not exist.')
+        raise Exception(f"User {username} does not exist.")
+    obj = {
+        "creation_time": datetime.datetime.utcnow(),
+        "username": username,
+        "history": [
+            {
+                "timestamp": datetime.datetime.utcnow(),
+                "bookmarks": [],
+                "windows": [],
+                "groups": []
+            }
+        ],
+        "teleoscopes": []
+    }
+    with transaction_session.start_transaction():
+        result = db.sessions.insert_one(obj, session=transaction_session)
+        db.users.update_one({"username": username},
+            {
+                "$push": {
+                    "sessions": result.inserted_id
+                }
+            }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
+    return 200 # success
+
+'''
+save_UI_state
+input: 
+    session_id (int, represents ObjectId in int)
+    history_item (Dict)
+purpose: updates a session document in the sessions collection
+'''
+@app.task
+def save_UI_state(*args, **kwargs):
+    # Error checking
+    if 'session_id' not in kwargs:
+        logging.info(f"session_id not in kwargs.")
+        raise Exception("session_id not in kwargs")
+    if 'history_item' not in kwargs:
+        logging.info(f"history_item not in kwargs.")
+        raise Exception("history_item not in kwargs")
+    session, db = utils.create_transaction_session()
+    logging.info(f'Saving state for {kwargs["session_id"]}.')
+    # session_id needs to be typecast to ObjectId
+    session_id = ObjectId(str(kwargs["session_id"]))
+    session = db.sessions.find_one({"_id": session_id})
+    # check if session id is valid, if not, raise exception
+    if not session:
+        logging.info(f"Session {session_id} not found.")
+        raise Exception("Session not found")
+    
+    history_item = kwargs["history_item"]
+    # timestamp API call
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    # extract latest collection of groups in session history
+    groups = session["history"][0]["groups"]
+    # update history_item to have the correct groups
+    history_item["groups"] = groups
+    with session.start_transaction():
+        db.sessions.update({"_id": session_id},
+            {
+                '$push': {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }
+            }, session=session)
+        utils.commit_with_retry(session)
+
+    return 200 # success
 
 '''
 save_group_state
@@ -476,79 +562,6 @@ def save_teleoscope_state(history_obj):
             }, session=session)
         logging.info(f'Saving teleoscope state: {result}')
         utils.commit_with_retry(session)
-
-@app.task
-def save_UI_state(*args, **kwargs):
-    # Error checking
-    if 'session_id' not in kwargs:
-        logging.info(f"session_id not in kwargs.")
-        raise Exception("session_id not in kwargs")
-    if 'history_item' not in kwargs:
-        logging.info(f"history_item not in kwargs.")
-        raise Exception("history_item not in kwargs")
-    session, db = utils.create_transaction_session()
-    logging.info(f'Saving state for {kwargs["session_id"]}.')
-    session_id = ObjectId(str(kwargs["session_id"]))
-    session = db.sessions.find_one({"_id": session_id})
-    # check if session id is valid, if not, raise exception
-    if not session:
-        logging.info(f"Session {session_id} not found.")
-        raise Exception("Session not found")
-    
-    history_item = kwargs["history_item"]
-    groups = session["history"][-1]["groups"]
-    history_item["groups"] = groups
-    with session.start_transaction():
-        db.sessions.update({"_id": session_id},
-            {
-                '$push': {
-                    "history": history_item
-                }
-            }, session=session)
-        utils.commit_with_retry(session)
-
-    return 200 # success
-
-
-'''
-initialize_session
-input: 
-    username (string, arbitrary)
-purpose: adds a session to the sessions collection
-'''
-@app.task
-def initialize_session(*args, **kwargs):
-    transaction_session, db = utils.create_transaction_session()
-    username = kwargs["username"]
-    logging.info(f'Initializing sesssion for user {username}.')
-    # Check if user exists and throw error if not
-    user = db.users.find_one({"username": username})
-    if user is None:
-        logging.info(f'User {username} does not exist.')
-        raise Exception(f"User {username} does not exist.")
-    obj = {
-        "creation_time": datetime.datetime.utcnow(),
-        "username": username,
-        "history": [
-            {
-                "timestamp": datetime.datetime.utcnow(),
-                "bookmarks": [],
-                "windows": [],
-                "groups": []
-            }
-        ],
-        "teleoscopes": []
-    }
-    with transaction_session.start_transaction():
-        result = db.sessions.insert_one(obj, session=transaction_session)
-        db.users.update_one({"username": username},
-            {
-                "$push": {
-                    "sessions": result.inserted_id
-                }
-            }, session=transaction_session)
-        utils.commit_with_retry(transaction_session)
-
 
 '''
 TODO:
