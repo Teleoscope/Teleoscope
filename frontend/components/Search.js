@@ -119,11 +119,7 @@ export default function BottomAppBar(props) {
   }
 
   return (  
-   <div style={{overflow:"auto", height:"100%"}}>
-      <CssBaseline />
-      <HideOnScroll {...props}>
-        <AppBar className="drag-handle" color="primary">
-          <Toolbar variant="dense">
+   <div>
             <Search>
               <SearchIconWrapper>
                 <SearchIcon />
@@ -134,21 +130,12 @@ export default function BottomAppBar(props) {
                   onChange={(e) => handleSetQuery(e)}
               />
             </Search>
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}/>
-            <CloseButton id="search" />
-          </Toolbar>
-        </AppBar>
-      </HideOnScroll>
-      <Toolbar variant="dense" />
-      <Container>
-        <Box sx={{ my: 2 }}>
-
           <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
             Search {query != "" ? `"${query}"` : "all posts"}
           </Typography>
           {posts_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
-        </Box>
-      </Container>      
+        
+      
     </div>
       );
 }

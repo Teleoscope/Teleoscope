@@ -1,109 +1,48 @@
 // imports
 import React from "react";
 import RGL, { WidthProvider } from "react-grid-layout";
-import useDimensions from "react-cool-dimensions";
-import { SizeMe } from 'react-sizeme'
 
 // custom
-import WorkspaceItem from "../components/WorkspaceItem";
-import GroupSelector from "../components/GroupSelector"
-import BookmarkSelector from "../components/BookmarkSelector"
-import PostTitle from "./PostTitle";
-import Expander from "./Expander"
-import PostListItem from "./PostListItem"
-import Notes from "./Notes"
-import Teleoscope from "./Teleoscope"
-import Search from "../components/Search";
-import GroupPalette from "../components/GroupPalette";
-import Group from "../components/Group";
+import Window from "../components/Window"
 
 // css
 import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
 
-// mui
-import Card from '@mui/material/Card';
-import Paper from '@mui/material/Paper';
-
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { addWindow, loadWindows } from "../actions/windows";
-import { checker } from "../actions/checkedPosts";
 
 const ReactGridLayout = WidthProvider(RGL);
 
-function wrapLayout(windows, checked, dispatch) {
-  var ret = windows.map((w) => {
-    var pc = checked.indexOf(w.i)
-    if (w.type == "Post") {
-      return (
-        <Card
-          key={w.i}
-          variant="outlined"
-          style={{
-            borderWidth: pc >= 0  ? 4 : 0,
-            borderColor: pc >= 0 ? "#4e5cbc" : "white",
-            boxShadow: pc >= 0 ? "1px 1px 8px #888888" : "2px 2px 8px #888888",
-
-          }}
-        >      
-          <WorkspaceItem id={w.i} />
-        </Card>
-        )
-    }
-    if (w.type == "Note") {
-      return (
-        <Card key={w.i} style={{backgroundColor: "yellow"}}>
-          <Notes id={w.i}></Notes>
-        </Card>
-      )
-    }
-    if (w.type == "Teleoscope") {
-      return (
-        <Card key={w.i}>
-          <Teleoscope id={w.i}></Teleoscope>
-        </Card>
-      )
-    }
-    if (w.type == "Search") {
-      return (
-       <Card key={w.i}>
-         <Search></Search>
-       </Card>
-      )
-    }
-    if (w.type == "Group Palette") {
-      return (
-       <Card key={w.i}>
-        <GroupPalette></GroupPalette>
-       </Card>
-      )
-    }
-    if (w.type == "Group") {
-      return (
-       <div key={w.i}>
-        <Group id={w.i}></Group>
-       </div>
-      )
-    }
+const item = id => {
+  return { 
+  i: id,
+  x: 0,
+  y: 0,
+  w: 2,
+  h: 4,
+  minW: 1,
+  maxW: 10000,
+  minH: 1,
+  maxH: 10000,
+  static: false,
+  isDraggable: true,
+  isResizable: true,
+  resizeHandles: ['se'], // <'s' | 'w' | 'e' | 'n' | 'sw' | 'nw' | 'se' | 'ne'> 
+  isBounded: false,
+  type: "Post"
+}}
 
 
-  })
-	return ret;
-}
 
 export default function WindowManager(props) {
-  console.log("RGL",ReactGridLayout?.state?.width)
   const windows = useSelector((state) => state.windows.windows);
   const dragged_id = useSelector((state) => state.windows.dragged);
-  const checked = useSelector((state) => state.checkedPosts.value);
+  console.log("windox", windows)
 	const dispatch = useDispatch();
   const dropping = (layout, item, e) => {
-    if (dragged_id.split("_")[1] == "group") {
-      dispatch(addWindow({i: dragged_id, x: 0, y: 0, w: 5, h: 1, type: "Group"}));  
-    } else {
-      dispatch(addWindow({i: dragged_id, x: 0, y: 0, w: 3, h: 1, type: "Post"}));
-    }
+    dispatch(addWindow({i: dragged_id, type: "Post", ...item}))
   }
 
   return (
@@ -114,11 +53,13 @@ export default function WindowManager(props) {
         cols={12}
         containerPadding={[0,0]}
         rowHeight={30}
-        compactionType={false}
+        compactType={false}
         onDrop={(layout, item, e) => {dropping(layout, item, e)}}
         isDroppable={true}
-        droppingItem={{ i: dragged_id + "_temp", w: 2, h: 1 }}
+        droppingItem={item(dragged_id)}
         draggableHandle=".drag-handle"
+        allowOverlap={true}
+        preventCollision={true}
         onLayoutChange={(layout) => dispatch(loadWindows(layout))}
         style={{
           backgroundColor: "#EEEEEE",
@@ -126,7 +67,12 @@ export default function WindowManager(props) {
           zIndex: 0
         }}
       >
-      {wrapLayout(windows, checked, dispatch)}
+      {windows.map((w) => {
+        const ref = React.createRef()
+        return (<Window ref={ref} windata={w} key={w.i}/>)
+      })}
       </ReactGridLayout>
   )
 }
+
+
