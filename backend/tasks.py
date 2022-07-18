@@ -301,7 +301,7 @@ def add_group(*args, **kwargs):
                 "color": kwargs["color"],
                 "included_posts": [],
                 "label": kwargs["label"]
-            }
+            }]
     }
 
     # session_id must be cast from an int to mongo ObjectId
