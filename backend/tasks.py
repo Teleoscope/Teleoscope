@@ -527,9 +527,11 @@ def initialize_session(*args, **kwargs):
         logging.info(f'User {username} does not exist.')
         raise Exception(f"User {username} does not exist.")
     obj = {
+        "creation_time": datetime.datetime.utcnow(),
         "username": username,
         "history": [
             {
+                "timestamp": datetime.datetime.utcnow(),
                 "bookmarks": [],
                 "windows": [],
                 "groups": []
