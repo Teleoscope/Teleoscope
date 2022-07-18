@@ -294,16 +294,14 @@ def add_group(*args, **kwargs):
     
     # Creating document to be inserted into mongoDB
     obj = {
-        "creation_time": datetime.datetime.utcnow(),
-        "color": kwargs["color"],
-        "label": kwargs["label"],
+        "creation_time": datetime.datetime.utcnow()
         "history": [
             {
                 "timestamp": datetime.datetime.utcnow(),
+                "color": kwargs["color"],
                 "included_posts": [],
                 "label": kwargs["label"]
             }
-        ]
     }
 
     # session_id must be cast from an int to mongo ObjectId
@@ -318,16 +316,18 @@ def add_group(*args, **kwargs):
         if not session:
             logging.info(f"Warning: session with id {_id} not found.")
             raise Exception(f"session with id {_id} not found")
-        # TODO: 0-index history
-        groups = session["history"][-1]["groups"]
+        groups = session["history"][0]["groups"]
         groups.append(groups_res.inserted_id)
         sessions_res = db.sessions.update_one({'_id': _id},
             {
                 '$push': {
                             "history": {
-                                "groups": groups,
-                                "bookmarks": session["history"][-1]["bookmarks"],
-                                "windows": session["history"][-1]["windows"]
+                                '$each': [{
+                                    "groups": groups,
+                                    "bookmarks": session["history"][0]["bookmarks"],
+                                    "windows": session["history"][0]["windows"]
+                                }],
+                                '$position': 0
                             }
                 }
             }, session=transaction_session)
