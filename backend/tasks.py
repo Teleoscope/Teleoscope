@@ -294,7 +294,7 @@ def add_group(*args, **kwargs):
     
     # Creating document to be inserted into mongoDB
     obj = {
-        "creation_time": datetime.datetime.utcnow()
+        "creation_time": datetime.datetime.utcnow(),
         "history": [
             {
                 "timestamp": datetime.datetime.utcnow(),
