@@ -19,6 +19,7 @@ export const Windows = createSlice({
 		},
 		addWindow: (state, action) => {
 			var temp = [...state.windows];
+			// if we cannot find a window with the same payload in the workspace then we can add that window
 			if (!temp.find(item => item.i === action.payload.i)) {
 				var obj = {
 					i: action.payload.i.split("_")[0],
@@ -35,7 +36,7 @@ export const Windows = createSlice({
 			}
 		},
 		removeWindow: (state, action) => {
-			var temp = [...state.windows];
+			var temp = [...state.windows];	
 			var ids = state.windows.map((w) => {return w.i});
 			var index = ids.indexOf(action.payload);
 			if (index > -1) {

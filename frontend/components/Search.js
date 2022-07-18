@@ -135,7 +135,7 @@ export default function BottomAppBar(props) {
               />
             </Search>
             <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}/>
-            <CloseButton id="search" />
+            <CloseButton id="%search" />
           </Toolbar>
         </AppBar>
       </HideOnScroll>

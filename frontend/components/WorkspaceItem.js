@@ -8,6 +8,7 @@ import Card from "@mui/material/Card";
 import Stack from '@mui/material/Stack';
 import Grid from "@mui/material/Grid";
 import CardActionArea from '@mui/material/CardActionArea';
+import Box from '@mui/material/Box';
 
 // icons
 import ExpandLess from "@mui/icons-material/ExpandLess";
@@ -50,7 +51,9 @@ export default function WorkspaceItem(props) {
 
   const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${props.id}`);
 
+  // props checked
   var pc = checked.indexOf(props.id)
+  //window
   var w = windows.find(i => i.i == props.id);
 
   // Todo: make this conversion automatic
@@ -59,39 +62,43 @@ export default function WorkspaceItem(props) {
   // Layout small
   if (w.h == 1) {
     return (
-    <Stack direction="row" justifyContent="space-between">
-        
-        <GroupSelector id={props.id}/>
+      <Stack direction="row" justifyContent="space-between">
 
-        <div style={{width: w.w == 1 ? 3 * cw : ((w.w * cw) - cw) + "em", marginTop: "0.25em"}}>
+        <GroupSelector id={props.id} />
+
+        <div style={{ width: w.w == 1 ? 3 * cw : ((w.w * cw) - cw) + "em", marginTop: "0.25em" }}>
           <CardActionArea onClick={() => handleClick(props.id, pc)}>
-            <PostTitle post={post} noWrap={true}/> 
+            <PostTitle post={post} noWrap={true} />
           </CardActionArea>
         </div>
 
         <CloseButton id={props.id} />
-    </Stack>
+      </Stack>
     )
   }
 
   // Layout large
   return (
+    // <div style={{ overflow: "auto", height: "100%" }}>
     <Grid container spacing={2}>
       <Grid item xs={12}>
         <Stack direction="row" justifyContent="space-between">
-          <GroupSelector id={props.id}/>
-          
+          <GroupSelector id={props.id} />
+
           <CardActionArea className="drag-handle" onClick={() => handleClick(props.id, pc)}>
-            <PostTitle post={post} noWrap={false}/>  
+            <PostTitle post={post} noWrap={false} />
           </CardActionArea>
-          
-          <NoteButton id={props.id}/>
-          <CloseButton id={props.id}/>
+
+          <NoteButton id={props.id} />
+          <CloseButton id={props.id} />
         </Stack>
       </Grid>
       <Grid item xs={12}>
-        <PostText post={post}></PostText>
+        <Box style={{ maxHeight: '100vh', overflow: 'scroll' }}>
+          <PostText post={post}></PostText>
+        </Box>
       </Grid>
     </Grid>
-    );
+    // </div>
+  );
 }
