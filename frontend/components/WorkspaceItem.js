@@ -62,7 +62,9 @@ export default function WorkspaceItem(props) {
   // Layout small
   if (w.h == 1) {
     return (
-      <Stack direction="row" justifyContent="space-between">
+    <Stack direction="row" justifyContent="space-between">
+        {/* <div style={{paddingTop:"100px" }}>hi</div> */}
+        <GroupSelector id={props.id}/>
 
         <GroupSelector id={props.id} />
 
