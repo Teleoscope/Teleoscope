@@ -18,19 +18,32 @@ export const Windows = createSlice({
 			state.dragged = action.payload;
 		},
 		addWindow: (state, action) => {
+			var item = {
+				i: "default_window",
+				x: 0,
+				y: 0,
+				w: 1,
+				h: 1,
+				minW: 1,
+				maxW: 10000,
+				minH: 1,
+				maxH: 10000,
+				static: false,
+				isDraggable: true,
+				isResizable: true,
+				resizeHandles: ['se'], // <'s' | 'w' | 'e' | 'n' | 'sw' | 'nw' | 'se' | 'ne'> 
+				isBounded: false,
+				type: "Default"
+			}
+			// make sure that each default option that is being overridden
+			// is set in the final object that gets sent to the window store
+			Object.keys(action.payload).forEach((opt) => {
+				item[opt] = action.payload[opt];
+			})
 			var temp = [...state.windows];
+			
 			if (!temp.find(item => item.i === action.payload.i)) {
-				var obj = {
-					i: action.payload.i.split("_")[0],
-					x: action.payload.x, 
-					y: action.payload.y,
-					w: action.payload.w,
-					h: action.payload.h,
-					// isResizable: action.payload.type == "Teleoscope" ? false : true,
-					isResizable: action.payload.type == "Teleoscope" ? true : true,
-					type: action.payload.type,
-				};
-				temp.push(obj);
+				temp.push(item);
 				state.windows = temp;
 			}
 		},
@@ -43,6 +56,26 @@ export const Windows = createSlice({
 			}
 			state.windows = temp;
 		},
+		minimizeWindow: (state, action) => {
+			var temp = [...state.windows];
+			var ids = state.windows.map((w) => {return w.i});
+			var index = ids.indexOf(action.payload);
+			if (index > -1) {
+				temp[index].w = 1;
+				temp[index].h = 1;
+			}
+			state.windows = temp;	
+		},
+		maximizeWindow: (state, action) => {
+			var temp = [...state.windows];
+			var ids = state.windows.map((w) => {return w.i});
+			var index = ids.indexOf(action.payload);
+			if (index > -1) {
+				temp[index].w = 2;
+				temp[index].h = 6;
+			}
+			state.windows = temp;	
+		},		
 		updateWindow: (state, action) => {
 			var temp = [...state.windows];
 			var index = temp.findIndex((w) => w.i == action.payload.i);
@@ -62,11 +95,6 @@ export const Windows = createSlice({
 							item[key] = update[key];
 						}
 					});
-				} else {
-					if (update.hasOwnProperty("i")) {
-						console.log(update)
-						temp.push(update);
-					}
 				}
 			}
 			state.windows = temp;
@@ -74,5 +102,5 @@ export const Windows = createSlice({
 	}
 })
 
-export const { addWindow, removeWindow, loadWindows, dragged, updateWindow } = Windows.actions
+export const { addWindow, removeWindow, loadWindows, dragged, updateWindow, minimizeWindow, maximizeWindow } = Windows.actions
 export default Windows.reducer

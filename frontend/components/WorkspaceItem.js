@@ -60,7 +60,7 @@ export default function WorkspaceItem(props) {
   if (w.h == 1) {
     return (
     <Stack direction="row" justifyContent="space-between">
-        
+        {/* <div style={{paddingTop:"100px" }}>hi</div> */}
         <GroupSelector id={props.id}/>
 
         <div style={{width: w.w == 1 ? 3 * cw : ((w.w * cw) - cw) + "em", marginTop: "0.25em"}}>
@@ -69,7 +69,6 @@ export default function WorkspaceItem(props) {
           </CardActionArea>
         </div>
 
-        <CloseButton id={props.id} />
     </Stack>
     )
   }
@@ -86,7 +85,6 @@ export default function WorkspaceItem(props) {
           </CardActionArea>
           
           <NoteButton id={props.id}/>
-          <CloseButton id={props.id}/>
         </Stack>
       </Grid>
       <Grid item xs={12}>
