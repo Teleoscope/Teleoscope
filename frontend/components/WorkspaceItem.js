@@ -96,7 +96,7 @@ export default function WorkspaceItem(props) {
         </Stack>
       </Grid>
       <Grid item xs={12}>
-        <Box style={{ maxHeight: '100vh', overflow: 'scroll' }}>
+        <Box style={{ maxHeight: '100vh', overflow: 'auto', height: "50%" }}>
           <PostText post={post}></PostText>
         </Box>
       </Grid>

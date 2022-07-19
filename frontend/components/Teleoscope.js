@@ -91,7 +91,7 @@ export default function Teleoscope(props) {
 
 
   return (  
-      <div>
+      <div style={{overflow:"auto", height: "100%"}}>
         <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
         Teleoscope: {teleoscope?.history[teleoscope?.history.length - 1].label}
         </Typography>
