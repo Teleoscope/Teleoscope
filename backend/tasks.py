@@ -205,6 +205,7 @@ def save_UI_state(*args, **kwargs):
         logging.info(f"history_item not in kwargs.")
         raise Exception("history_item not in kwargs")
     # session, db = utils.create_transaction_session()
+    transaction_session, db = utils.create_transaction_session()
     logging.info(f'Saving state for {kwargs["session_id"]}.')
     # session_id needs to be typecast to ObjectId
     session_id = ObjectId(str(kwargs["session_id"]))
@@ -221,7 +222,6 @@ def save_UI_state(*args, **kwargs):
     groups = session["history"][0]["groups"]
     # update history_item to have the correct groups
     history_item["groups"] = groups
-    transaction_session, db = utils.create_transaction_session()
     with transaction_session.start_transaction():
         db.sessions.update({"_id": session_id},
             {
