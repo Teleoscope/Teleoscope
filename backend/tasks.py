@@ -297,6 +297,48 @@ def initialize_teleoscope(*args, **kwargs):
     return return_ids
 
 '''
+save_teleoscope_state
+input:
+    _id (int, represents ObjectId for a teleoscope)
+    history_item (Dict)
+purpose: save the current state of a teleoscope
+'''
+@app.task
+def save_teleoscope_state(history_obj):
+    # Error checking
+    if '_id' not in history_obj:
+        logging.info(f"_id not in kwargs.")
+        raise Exception("_id not in kwargs")
+    if 'history_item' not in history_obj:
+        logging.info(f"history_item not in kwargs.")
+        raise Exception("history_item not in kwargs")
+
+    session, db = utils.create_transaction_session()
+    logging.info(f'Saving state for teleoscope {history_obj["_id"]}.')
+    _id = str(history_obj["_id"])
+    obj_id = ObjectId(_id)
+
+    # check if teleoscope id is valid, if not, raise exception
+    if not db.teleoscopes.find_one({"_id": obj_id}):
+        logging.info(f"Teleoscope {_id} not found.")
+        raise Exception("Teleoscope not found")
+
+    history_item = history_obj["history_item"]
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    with session.start_transaction():
+        result = db.teleoscopes.update({"_id": obj_id},
+            {
+                '$push': {
+                    "history": {
+                        "$each": [history_item]
+                        "$position": 0
+                    }
+                }
+            }, session=session)
+        logging.info(f'Saving teleoscope state: {result}')
+        utils.commit_with_retry(session)
+
+'''
 save_group_state
 input: 
     group_id: String
@@ -326,97 +368,7 @@ def save_group_state(*args, **kwargs):
     else:
         raise Exception(f"Group with id {group_id} not found")
 
-'''
-add_post_to_group
-'''
-@app.task
-def add_post_to_group(*args, **kwargs):
-    if "group_id" not in kwargs:
-        logging.info(f"Warning: group_id not in kwargs.")
-        raise Exception("group_id not in kwargs")
-    if "post_id" not in kwargs:
-        logging.info(f"Warning: post_id not in kwargs.")
-        raise Exception("post_id not in kwargs")
-    session, db = utils.create_transaction_session()
-    group_id = ObjectId(kwargs["group_id"])
-    group = db.groups.find_one({'_id': group_id})
-    # Check if group exists
-    if not group:
-        logging.info(f"Warning: group with id {group_id} not found.")
-        raise Exception(f"group with id {group_id} not found")
-    history_item = group["history"][-1]
-    history_item["included_posts"].append(kwargs["post_id"])
-    history_item["action"] = "Add post to group"
-    with session.start_transaction():
-        db.groups.update_one({'_id': group_id}, {
-                "$push":
-                    {
-                        "history": history_item
-                    }
-                }, session=session)
-        utils.commit_with_retry(session)
 
-'''
-remove_post_from_group
-'''
-@app.task
-def remove_post_from_group(*args, **kwargs):
-    if "group_id" not in kwargs:
-        logging.info(f"Warning: group_id not in kwargs.")
-        raise Exception("group_id not in kwargs")
-    if "post_id" not in kwargs:
-        logging.info(f"Warning: post_id not in kwargs.")
-        raise Exception("post_id not in kwargs")
-    session, db = utils.create_transaction_session()
-    group_id = ObjectId(kwargs["group_id"])
-    group = db.groups.find_one({'_id': group_id})
-    if not group:
-        logging.info(f"Warning: group with id {group_id} not found.")
-        raise Exception(f"group with id {group_id} not found")
-    history_item = group["history"][-1]
-    history_item["included_posts"].remove(kwargs["post_id"])
-    history_item["action"] = "Remove post from group"
-    with session.start_transaction():
-        db.groups.update_one({'_id': group_id}, {
-            "$push":
-                {
-                    "history": history_item
-                }
-            }, session=session)
-        utils.commit_with_retry(session)
-        
-
-'''
-update_group_label
-'''
-@app.task
-def update_group_label(*args, **kwargs):
-    if "group_id" not in kwargs:
-        logging.info(f"Warning: group_id not in kwargs.")
-        raise Exception("group_id not in kwargs")
-
-    session, db = utils.create_transaction_session()
-    group_id = ObjectId(kwargs["group_id"])
-    group = db.groups.find_one({'_id': group_id})
-    if not group:
-        logging.info(f"Warning: group with id {group_id} not found.")
-        raise Exception(f"group with id {group_id} not found")
-    history_item = group["history_item"][-1]
-    with session.start_transaction():
-        db.groups.update_one({'_id': group_id}, {
-                "$push":
-                    {
-                        "history": history_item
-                    }
-                }, session = session)
-        db.groups.update_one(
-                {'_id': group_id}, 
-                {'$set': 
-                    {
-                        'label': kwargs["label"]
-                    }
-                }, session=session)
-        utils.commit_with_retry(session)
 
 '''
 add_group
@@ -483,6 +435,121 @@ def add_group(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
         return groups_res.inserted_id
 
+'''
+add_post_to_group
+input:
+    group_id (int, represents ObjectId for a group)
+    post_id (string, arbitrary)
+purpose: adds a post_id to a group
+'''
+@app.task
+def add_post_to_group(*args, **kwargs):
+    if "group_id" not in kwargs:
+        logging.info(f"Warning: group_id not in kwargs.")
+        raise Exception("group_id not in kwargs")
+    if "post_id" not in kwargs:
+        logging.info(f"Warning: post_id not in kwargs.")
+        raise Exception("post_id not in kwargs")
+
+    session, db = utils.create_transaction_session()
+    group_id = ObjectId(kwargs["group_id"])
+    group = db.groups.find_one({'_id': group_id})
+    # Check if group exists
+    if not group:
+        logging.info(f"Warning: group with id {group_id} not found.")
+        raise Exception(f"group with id {group_id} not found")
+
+    history_item = group["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["included_posts"].append(kwargs["post_id"])
+    history_item["action"] = "Add post to group"
+    with session.start_transaction():
+        db.groups.update_one({'_id': group_id}, {
+                "$push":
+                    {
+                        "history": {
+                            "$each": [history_item],
+                            "$position": 0
+                        }
+                    }
+                }, session=session)
+        utils.commit_with_retry(session)
+
+'''
+remove_post_from_group
+input:
+    group_id (int, represents ObjectId for a group)
+    post_id (string, arbitrary)
+purpose: remove the post_id from the included_posts of the specified group_id
+'''
+@app.task
+def remove_post_from_group(*args, **kwargs):
+    if "group_id" not in kwargs:
+        logging.info(f"Warning: group_id not in kwargs.")
+        raise Exception("group_id not in kwargs")
+    if "post_id" not in kwargs:
+        logging.info(f"Warning: post_id not in kwargs.")
+        raise Exception("post_id not in kwargs")
+
+    session, db = utils.create_transaction_session()
+    group_id = ObjectId(kwargs["group_id"])
+    group = db.groups.find_one({'_id': group_id})
+    if not group:
+        logging.info(f"Warning: group with id {group_id} not found.")
+        raise Exception(f"group with id {group_id} not found")
+
+    history_item = group["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["included_posts"].remove(kwargs["post_id"])
+    history_item["action"] = "Remove post from group"
+    with session.start_transaction():
+        db.groups.update_one({'_id': group_id}, {
+            "$push":
+                {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }
+            }, session=session)
+        utils.commit_with_retry(session)
+        
+
+'''
+update_group_label
+input:
+    group_id (int, represents ObjectId for a group)
+    label (string, arbitrary)
+purpose: update the label of the specified group_id
+'''
+@app.task
+def update_group_label(*args, **kwargs):
+    if "group_id" not in kwargs:
+        logging.info(f"Warning: group_id not in kwargs.")
+        raise Exception("group_id not in kwargs")
+
+    session, db = utils.create_transaction_session()
+    group_id = ObjectId(kwargs["group_id"])
+    group = db.groups.find_one({'_id': group_id})
+    if not group:
+        logging.info(f"Warning: group with id {group_id} not found.")
+        raise Exception(f"group with id {group_id} not found")
+    
+
+    history_item = group["history_item"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["action"] = "Update group label"
+    with session.start_transaction():
+        db.groups.update_one({'_id': group_id}, {
+                "$push":
+                    {
+                        "history": {
+                            "$each": [history_item],
+                            "$position": 0
+                        }
+                    }
+                }, session = session)
+        utils.commit_with_retry(session)
 
 '''
 add_note
@@ -501,8 +568,10 @@ def add_note(*args, **kwargs):
     if not db.posts.find_one({'id': kwargs["post_id"]}):
         logging.info(f"Warning: post with id {kwargs['post_id']} not found.")
         raise Exception(f"post with id {kwargs['post_id']} not found")
+
     obj = {
         "post_id": kwargs["post_id"],
+        "creation_time": datetime.datetime.utcnow(),
         "history": [{
             "content": {},
             "timestamp": datetime.datetime.utcnow()
@@ -523,50 +592,26 @@ def update_note(*args, **kwargs):
     if "content" not in kwargs:
         logging.info(f"Warning: content not in kwargs.")
         raise Exception("content not in kwargs")
+
     session, db = utils.commit_with_retry()
     if not db.notes.find_one({'post_id': kwargs["post_id"]}):
         logging.info(f"Warning: note with id {kwargs['post_id']} not found.")
         raise Exception(f"note with id {kwargs['post_id']} not found")
+
     with session.start_transaction():
         res = db.notes.update_one({"post_id": kwargs["post_id"]}, {"$push":
                 {
-                    "history":
-                    {
+                    "history": {
+                        "$each": [{
                         "content": kwargs["content"],
                         "timestamp": datetime.datetime.utcnow()
+                        }],
+                        "$position": 0
                     }
                 }
             }, session=session)
         utils.commit_with_retry(session)
         logging.info(f"Updated note for post {kwargs['post_id']} with result {res}.")
-
-@app.task
-def save_teleoscope_state(history_obj):
-    # Error checking
-    if '_id' not in history_obj:
-        logging.info(f"_id not in kwargs.")
-        raise Exception("_id not in kwargs")
-    if 'history_item' not in history_obj:
-        logging.info(f"history_item not in kwargs.")
-        raise Exception("history_item not in kwargs")
-    session, db = utils.create_transaction_session()
-    logging.info(f'Saving state for teleoscope {history_obj["_id"]}.')
-    _id = str(history_obj["_id"])
-    obj_id = ObjectId(_id)
-    # check if teleoscope id is valid, if not, raise exception
-    if not db.teleoscopes.find_one({"_id": obj_id}):
-        logging.info(f"Teleoscope {_id} not found.")
-        raise Exception("Teleoscope not found")
-    history_item = history_obj["history_item"]
-    with session.start_transaction():
-        result = db.teleoscopes.update({"_id": obj_id},
-            {
-                '$push': {
-                    "history": history_item
-                }
-            }, session=session)
-        logging.info(f'Saving teleoscope state: {result}')
-        utils.commit_with_retry(session)
 
 '''
 TODO:
