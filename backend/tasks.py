@@ -330,7 +330,7 @@ def save_teleoscope_state(history_obj):
             {
                 '$push': {
                     "history": {
-                        "$each": [history_item]
+                        "$each": [history_item],
                         "$position": 0
                     }
                 }
