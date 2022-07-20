@@ -237,6 +237,66 @@ def save_UI_state(*args, **kwargs):
     return 200 # success
 
 '''
+initialize_teleoscope:
+Performs a text query on aita.clean.posts.v2 text index.
+If the query string already exists in the teleoscopes collection, returns existing reddit_ids.
+Otherwise, adds the query to the teleoscopes collection and performs a text query the results of which are added to the
+teleoscopes collection and returned.
+TODO: 
+1. We can use GridFS to store the results of the query if needed (if sizeof(reddit_ids) > 16MB).
+   Doesnt seem to be an issue right now.
+2. Checks for both teleoscope_id and query. Need confirmation from frontend on whether the teleoscope_id and/or query will already exist?
+   If not, then who updates them?
+'''
+@app.task
+def initialize_teleoscope(*args, **kwargs):
+    if 'label' not in kwargs:
+        logging.info(f"label not in kwargs.")
+        raise Exception("label not in kwargs")
+    label = kwargs["label"]
+    if label == "":
+        logging.info(f"label {label} is empty.")
+        return []
+    session, db = utils.create_transaction_session()
+
+    # perform text search query
+    labelAsTextSearch = {"$text": {"$search": label}}
+    cursor = db.clean.posts.v2.find(labelAsTextSearch, projection = {'id':1})
+    return_ids = [x['id'] for x in cursor]
+    rank_slice = [(x, 1.0) for x in return_ids[0:min(500, len(return_ids))]]
+
+    logging.info(f"About to insert a new teleoscope for {label}.")
+    # create a new query document
+    with session.start_transaction():
+        teleoscope_id = db.teleoscopes.insert_one({
+                "creation_time": datetime.datetime.utcnow(),
+                "history": [
+                    {
+                        "timestamp": datetime.datetime.utcnow(),
+                        "label": label,
+                        "rank_slice": rank_slice,
+                        "reddit_ids": return_ids,
+                        "positive_docs": [],
+                        "negative_docs": [],
+                        "stateVector": [],
+                        "ranked_post_ids": None
+                    }
+                ]
+            }, session=session)
+        logging.info(f"New teleoscope id: {teleoscope_id.inserted_id}.")
+
+        # associate the newly created teleoscope with correct session
+        db.sessions.update_one({'_id': ObjectId(str(kwargs["session_id"]))},
+            {
+                '$push': {
+                    "teleoscopes": ObjectId(teleoscope_id.inserted_id)
+                }
+            }, session=session)
+        utils.commit_with_retry(session)
+    logging.info(f"label {label} added to teleoscopes collection")
+    return return_ids
+
+'''
 save_group_state
 input: 
     group_id: String
@@ -478,63 +538,6 @@ def update_note(*args, **kwargs):
             }, session=session)
         utils.commit_with_retry(session)
         logging.info(f"Updated note for post {kwargs['post_id']} with result {res}.")
-
-'''
-querySearch:
-Performs a text query on aita.clean.posts.v2 text index.
-If the query string alredy exists in the teleoscopes collection, returns existing reddit_ids.
-Otherwise, adds the query to the teleoscopes collection and performs a text query the results of which are added to the
-teleoscopes collection and returned.
-TODO: 
-1. We can use GridFS to store the results of the query if needed (if sizeof(reddit_ids) > 16MB).
-   Doesnt seem to be an issue right now.
-2. Checks for both teleoscope_id and query. Need confirmation from frontend on whether the teleoscope_id and/or query will already exist?
-   If not, then who updates them?
-'''
-@app.task
-def initialize_teleoscope(*args, **kwargs):
-    if 'label' not in kwargs:
-        logging.info(f"label not in kwargs.")
-        raise Exception("label not in kwargs")
-    label = kwargs["label"]
-    if label == "":
-        logging.info(f"label {label} is empty.")
-        return []
-    session, db = utils.create_transaction_session()
-
-    # perform text search query
-    labelAsTextSearch = {"$text": {"$search": label}}
-    cursor = db.clean.posts.v2.find(labelAsTextSearch, projection = {'id':1})
-    return_ids = [x['id'] for x in cursor]
-    rank_slice = [(x, 1.0) for x in return_ids[0:min(500, len(return_ids))]]
-
-    logging.info(f"About to insert a new teleoscope for {label}.")
-    # create a new query document
-    with session.start_transaction():
-        teleoscope_id = db.teleoscopes.insert_one({
-                "history": [
-                    {
-                        "label": label,
-                        "rank_slice": rank_slice,
-                        "reddit_ids": return_ids,
-                        "positive_docs": [],
-                        "negative_docs": [],
-                        "stateVector": [],
-                        "ranked_post_ids": None
-                    }
-                ]
-            }, session=session)
-        logging.info(f"New teleoscope id: {teleoscope_id.inserted_id}.")
-
-        db.sessions.update_one({'_id': ObjectId(str(kwargs["session_id"]))},
-            {
-                '$push': {
-                    "teleoscopes": ObjectId(teleoscope_id.inserted_id)
-                }
-            }, session=session)
-        utils.commit_with_retry(session)
-    logging.info(f"label {label} added to teleoscopes collection")
-    return return_ids
 
 @app.task
 def save_teleoscope_state(history_obj):
