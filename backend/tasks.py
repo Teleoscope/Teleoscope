@@ -204,7 +204,7 @@ def save_UI_state(*args, **kwargs):
     if 'history_item' not in kwargs:
         logging.info(f"history_item not in kwargs.")
         raise Exception("history_item not in kwargs")
-    # session, db = utils.create_transaction_session()
+    #session, db = utils.create_transaction_session()
     transaction_session, db = utils.create_transaction_session()
     logging.info(f'Saving state for {kwargs["session_id"]}.')
     # session_id needs to be typecast to ObjectId
