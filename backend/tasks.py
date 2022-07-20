@@ -231,7 +231,7 @@ def save_UI_state(*args, **kwargs):
                         "$position": 0
                     }
                 }
-            })
+            }, session=transaction_session)
         utils.commit_with_retry(transaction_session)
 
     return 200 # success
@@ -470,6 +470,7 @@ def add_group(*args, **kwargs):
                 '$push': {
                             "history": {
                                 '$each': [{
+                                    "timestamp": datetime.datetime.utcnow(),
                                     "groups": groups,
                                     "bookmarks": session["history"][0]["bookmarks"],
                                     "windows": session["history"][0]["windows"]
