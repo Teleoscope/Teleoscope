@@ -231,7 +231,7 @@ def save_UI_state(*args, **kwargs):
                         "$position": 0
                     }
                 }
-            }, session=transaction_session)
+            })
         utils.commit_with_retry(transaction_session)
 
     return 200 # success
