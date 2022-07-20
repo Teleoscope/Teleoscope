@@ -221,7 +221,8 @@ def save_UI_state(*args, **kwargs):
     groups = session["history"][0]["groups"]
     # update history_item to have the correct groups
     history_item["groups"] = groups
-    with session.start_transaction():
+    transaction_session, db = utils.create_transaction_session()
+    with transaction_session.start_transaction():
         db.sessions.update({"_id": session_id},
             {
                 '$push': {
@@ -230,8 +231,8 @@ def save_UI_state(*args, **kwargs):
                         "$position": 0
                     }
                 }
-            }, session=session)
-        utils.commit_with_retry(session)
+            }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
 
     return 200 # success
 
