@@ -15,6 +15,7 @@ import LeftMenuBar from "../components/LeftMenuBar";
 import RightMenuBar from "../components/RightMenuBar";
 import WindowManager from "../components/WindowManager";
 import Search from "../components/Search";
+import MenuActions from "../components/MenuActions"
 
 // actions
 import { addWindow } from "../actions/windows";
@@ -52,41 +53,22 @@ export default function Workspace(props) {
     );
   };
 
+  const handleDispatch = (menu_action) => {
+    dispatch(addWindow(menu_action));
+    handleClose();
+  }
+
   const handleClose = () => {
     setContextMenu(null);
   };
 
-  const handleNewTeleoscope = () => {
-    dispatch(addWindow(
-      {i: "teleoscope_new", x:0, y:0, w:2, h:10, type: "Teleoscope", isResizable: true})
-    );
-    handleClose();
-  }
   const handleExistingTeleoscope = (t) => {
-    dispatch(addWindow(
-      {i: t + "_teleoscope", x:0, y:0, w:2, h:10, type: "Teleoscope", isResizable: true})
-    );
+    var w = MenuActions()["Teleoscope"].default_window
+    w.i = t + "_" + w.i;
+    dispatch(addWindow(w))
     handleClose();
   }
-
-  const handleNewSearch = () => {
-
-    dispatch(addWindow(
-      {i: "%search", x:0, y:0, w:2, h:10, type: "Search", isResizable: true})
-    );
-    handleClose();
-  }
-
-  const handleNewGroupPalette = () => {
-
-    dispatch(addWindow(
-      {i: "group", x:0, y:0, w:2, h:10, type: "Group Palette", isResizable: true})
-    );
-    handleClose();
-  }
-
   
-
   return (
     <div onContextMenu={handleContextMenu} style={{ cursor: 'context-menu' }}>
     <Grid container spacing={2}>
@@ -107,17 +89,17 @@ export default function Workspace(props) {
             : undefined
         }
       >
-        <MenuItem onClick={handleNewTeleoscope}>New Teleoscope</MenuItem>
+        <MenuItem onClick={()=>handleDispatch("Teleoscope")}>New Teleoscope</MenuItem>
         <Divider />
         {teleoscopes?.map((t) => { 
           return <MenuItem onClick={() => handleExistingTeleoscope(t._id)}>{t.label}</MenuItem>  
         })}
         <Divider />
 
-        <MenuItem onClick={handleNewSearch}>New Search</MenuItem>
+        <MenuItem onClick={()=>handleDispatch("Search")}>New Search</MenuItem>
 
         <Divider />
-        <MenuItem onClick={handleNewGroupPalette}>New Group Palette</MenuItem>        
+        <MenuItem onClick={()=>handleDispatch("Group")}>New Group Palette</MenuItem>        
     </Menu>
     </div>
 

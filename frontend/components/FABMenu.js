@@ -13,10 +13,11 @@ import MenuActions from "../components/MenuActions"
 import { addWindow } from "../actions/windows";
 import { useDispatch } from "react-redux";
 
-const actions = MenuActions();
+
 
 export default function FABMenu(props) {
   const dispatch = useDispatch();
+  const actions = MenuActions();
 
   return (
        <SpeedDial
@@ -25,12 +26,12 @@ export default function FABMenu(props) {
          // sx={{ position: 'absolute', top: 16, left: 16 }}
          icon={<SpeedDialIcon />}
        >
-         {actions.map((action) => (
+         {Object.keys(actions).map((action) => (
            <SpeedDialAction
-             key={action.name}
-             icon={action.icon}
-             tooltipTitle={action.name}
-             onClick={() => dispatch(addWindow(action.default_window))}
+             key={action}
+             icon={actions[action].icon}
+             tooltipTitle={actions[action].name}
+             onClick={() => dispatch(addWindow(actions[action].default_window))}
            />
          ))}
        </SpeedDial>

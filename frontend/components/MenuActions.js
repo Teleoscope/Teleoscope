@@ -6,23 +6,20 @@ import SearchIcon from '@mui/icons-material/Search';
 import FlareIcon from '@mui/icons-material/Flare';
 import TopicIcon from '@mui/icons-material/Topic';
 
-const actions = [
-  { 
+const actions = {
+  Search: { 
     icon: <SearchIcon />, 
-    name: 'Search', 
-    default_window: {i: "%search", x:0, y:0, w:2, h:10, type: "Search", isResizable: true}
+    default_window: {i: "%search", w:2, h:10, type: "Search", isResizable: true}
   },
-  { 
+  Teleoscope: { 
     icon: <FlareIcon />, 
-    name: 'Teleoscope', 
-    default_window: {i: "teleoscope_new", x:0, y:0, w:2, h:10, type: "Teleoscope", isResizable: true}
+    default_window: {i: "teleoscope_new", w:2, h:10, type: "Teleoscope", isResizable: true}
   },
-  { 
+  Groups: { 
     icon: <TopicIcon />, 
-    name: 'Groups', 
-    default_window: {i: "group", x:0, y:0, w:2, h:10, type: "Group Palette", isResizable: true}
+    default_window: {i: "group", w:2, h:10, type: "Group Palette", isResizable: true}
   },
-];
+};
 
 export default function MenuActions() {
   return actions;
