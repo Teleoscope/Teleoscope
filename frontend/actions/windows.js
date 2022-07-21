@@ -48,7 +48,7 @@ export const Windows = createSlice({
 			}
 		},
 		removeWindow: (state, action) => {
-			var temp = [...state.windows];
+			var temp = [...state.windows];	
 			var ids = state.windows.map((w) => {return w.i});
 			var index = ids.indexOf(action.payload);
 			if (index > -1) {
