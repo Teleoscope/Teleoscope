@@ -31,6 +31,9 @@ import { add_group } from "../components/Stomp.js";
 // contexts
 import { StompContext } from '../context/StompContext'
 
+// custom components
+import CloseButton from "./CloseButton"
+
 export default function LeftMenuBarGroups() {
 
 
@@ -165,7 +168,7 @@ export default function LeftMenuBarGroups() {
    // };
 
    return (
-   	<div>
+   	<div style={{overflow:"auto", height: "100%"}}>
       <React.Fragment>
          <Autocomplete
             value={value}
@@ -191,6 +194,7 @@ export default function LeftMenuBarGroups() {
                   onKeyDown={(e) => keyChange(e)}
                   style={{ width: "100%", borderRadius: "0 !important" }} />}
          />
+         <CloseButton id="group" />
          <Dialog open={open} onClose={handleClose}>
             <form onSubmit={handleSubmit}>
                <DialogTitle>Add a new group</DialogTitle>
