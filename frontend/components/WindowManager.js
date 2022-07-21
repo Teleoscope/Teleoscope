@@ -39,7 +39,6 @@ const item = id => {
 export default function WindowManager(props) {
   const windows = useSelector((state) => state.windows.windows);
   const dragged_id = useSelector((state) => state.windows.dragged);
-  console.log("windox", windows)
 	const dispatch = useDispatch();
   const dropping = (layout, item, e) => {
     dispatch(addWindow({i: dragged_id, type: "Post", ...item}))
@@ -58,7 +57,7 @@ export default function WindowManager(props) {
         isDroppable={true}
         droppingItem={item(dragged_id)}
         draggableHandle=".drag-handle"
-        allowOverlap={true}
+        allowOverlap={false}
         preventCollision={true}
         onLayoutChange={(layout) => dispatch(loadWindows(layout))}
         style={{

@@ -119,7 +119,7 @@ export default function BottomAppBar(props) {
   }
 
   return (
-    <div style={{overflow:"auto", height: "100%"}}>
+    <div>
       <Search>
         <SearchIconWrapper>
           <SearchIcon />

@@ -168,7 +168,7 @@ export default function LeftMenuBarGroups() {
    // };
 
    return (
-   	<div style={{overflow:"auto", height: "100%"}}>
+   	<div>
       <React.Fragment>
          <Autocomplete
             value={value}
