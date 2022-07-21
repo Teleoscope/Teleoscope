@@ -5,23 +5,20 @@ import Box from '@mui/material/Box';
 import SpeedDial from '@mui/material/SpeedDial';
 import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 import SpeedDialAction from '@mui/material/SpeedDialAction';
-import FileCopyIcon from '@mui/icons-material/FileCopyOutlined';
-import SaveIcon from '@mui/icons-material/Save';
-import PrintIcon from '@mui/icons-material/Print';
-import ShareIcon from '@mui/icons-material/Share';
-import SearchIcon from '@mui/icons-material/Search';
-import FlareIcon from '@mui/icons-material/Flare';
-import TopicIcon from '@mui/icons-material/Topic';
 
-const actions = [
-  { icon: <SearchIcon />, name: 'Search' },
-  { icon: <FlareIcon />, name: 'Teleoscope' },
-  { icon: <TopicIcon />, name: 'Groups' },
-];
+// custom
+import MenuActions from "../components/MenuActions"
+
+// actions
+import { addWindow } from "../actions/windows";
+import { useDispatch } from "react-redux";
+
+const actions = MenuActions();
 
 export default function FABMenu(props) {
+  const dispatch = useDispatch();
+
   return (
-    
        <SpeedDial
          ariaLabel="SpeedDial basic example"
          direction="down"
@@ -33,6 +30,7 @@ export default function FABMenu(props) {
              key={action.name}
              icon={action.icon}
              tooltipTitle={action.name}
+             onClick={() => dispatch(addWindow(action.default_window))}
            />
          ))}
        </SpeedDial>

@@ -93,7 +93,7 @@ export default function Teleoscope(props) {
   return (  
       <div style={{overflow:"auto", height: "100%"}}>
         <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
-        Teleoscope: {teleoscope?.history[teleoscope?.history.length - 1].label}
+        Teleoscope: {teleoscope ? teleoscope?.history[teleoscope?.history.length - 1].label : "No documents selected..."}
         </Typography>
         {teleoscope_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
       </div>

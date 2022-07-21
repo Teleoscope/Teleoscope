@@ -72,7 +72,6 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 				onMouseUp={onMouseUp}
 				onTouchEnd={onTouchEnd}				
 			><FABMenu></FABMenu>
-				
 			</div>
 		)
 	}
