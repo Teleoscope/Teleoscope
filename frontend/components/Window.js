@@ -45,9 +45,7 @@ const innerContent = (type, id, props) => {
 	if (type == "Post") {
 		return <WorkspaceItem id={id}></WorkspaceItem>
 	}
-	if (type == "FABMenu") {
-		return <FABMenu />
-	}
+
 
 }
 
@@ -65,7 +63,18 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 	var pc = checked.indexOf(w.i);
 
 	if (w.type == "FABMenu") {
-		return innerContent(w.type, w.i, props);
+		return (
+			<div
+				style={{...style}}
+				className="drag-handle"
+				ref={ref}
+				onMouseDown={onMouseDown}
+				onMouseUp={onMouseUp}
+				onTouchEnd={onTouchEnd}				
+			><FABMenu></FABMenu>
+				
+			</div>
+		)
 	}
 
 	return (

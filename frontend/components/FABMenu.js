@@ -19,29 +19,23 @@ const actions = [
   { icon: <TopicIcon />, name: 'Groups' },
 ];
 
-export default function BasicSpeedDial(props) {
+export default function FABMenu(props) {
   return (
-    <div 
-      style={{backgroundColor:"red", ...props.style}}
-      className={props.className + " drag-handle"}
-
-      {...props}
-    >
-    Hi
-      {/* <SpeedDial */}
-      {/*   ariaLabel="SpeedDial basic example" */}
-      {/*   direction="down" */}
-      {/*   // sx={{ position: 'absolute', top: 16, left: 16 }} */}
-      {/*   icon={<SpeedDialIcon />} */}
-      {/* > */}
-      {/*   {actions.map((action) => ( */}
-      {/*     <SpeedDialAction */}
-      {/*       key={action.name} */}
-      {/*       icon={action.icon} */}
-      {/*       tooltipTitle={action.name} */}
-      {/*     /> */}
-      {/*   ))} */}
-      {/* </SpeedDial> */}
-    </div>
+    
+       <SpeedDial
+         ariaLabel="SpeedDial basic example"
+         direction="down"
+         // sx={{ position: 'absolute', top: 16, left: 16 }}
+         icon={<SpeedDialIcon />}
+       >
+         {actions.map((action) => (
+           <SpeedDialAction
+             key={action.name}
+             icon={action.icon}
+             tooltipTitle={action.name}
+           />
+         ))}
+       </SpeedDial>
+    
   );
 }
