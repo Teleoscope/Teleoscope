@@ -2,8 +2,9 @@
 import React from "react";
 
 // custom
-import Notes from "./Notes"
-import Teleoscope from "./Teleoscope"
+import FABMenu from "../components/FABMenu"
+import Notes from "../components/Notes"
+import Teleoscope from "../components/Teleoscope"
 import Search from "../components/Search";
 import GroupPalette from "../components/GroupPalette";
 import Group from "../components/Group";
@@ -44,6 +45,10 @@ const innerContent = (type, id, props) => {
 	if (type == "Post") {
 		return <WorkspaceItem id={id}></WorkspaceItem>
 	}
+	if (type == "FABMenu") {
+		return <FABMenu />
+	}
+
 }
 
 const button_style = {
@@ -58,6 +63,10 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 	const checked = useSelector((state) => state.checkedPosts.value);
 	var w = props.windata;
 	var pc = checked.indexOf(w.i);
+
+	if (w.type == "FABMenu") {
+		return innerContent(w.type, w.i, props);
+	}
 
 	return (
 		<Card

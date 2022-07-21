@@ -10,6 +10,16 @@ export const Windows = createSlice({
 		// Added options:
 		//	- surface: "Card", "AppBar", "Paper", "Accordion" // MUI surfaces
 		windows: [
+			{
+				i: "default_FABMenu", 
+				x:0, 
+				y:0, 
+				w:1, 
+				h:3,
+				isDraggable: true, 
+				isResizable: false, 
+				type: "FABMenu"
+			}
 		],
 		dragged: ""
 	},
