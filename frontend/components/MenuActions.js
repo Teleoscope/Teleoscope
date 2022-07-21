@@ -9,11 +9,11 @@ import TopicIcon from '@mui/icons-material/Topic';
 const actions = {
   Search: { 
     icon: <SearchIcon />, 
-    default_window: {i: "%search", w:2, h:10, type: "Search", isResizable: true}
+    default_window: {i: "%search", w:3, h:10, type: "Search", isResizable: true}
   },
   Teleoscope: { 
     icon: <FlareIcon />, 
-    default_window: {i: "%teleoscope", w:2, h:10, type: "Teleoscope", isResizable: true}
+    default_window: {i: "%teleoscope", w:3, h:10, type: "Teleoscope", isResizable: true}
   },
   Groups: { 
     icon: <TopicIcon />, 
