@@ -54,7 +54,7 @@ export default function Workspace(props) {
   };
 
   const handleDispatch = (menu_action) => {
-    dispatch(addWindow(menu_action));
+    dispatch(addWindow(MenuActions()[menu_action].default_window));
     handleClose();
   }
 
@@ -63,7 +63,7 @@ export default function Workspace(props) {
   };
 
   const handleExistingTeleoscope = (t) => {
-    var w = MenuActions()["Teleoscope"].default_window
+    var w = { ...MenuActions()["Teleoscope"].default_window };
     w.i = t + "_" + w.i;
     dispatch(addWindow(w))
     handleClose();

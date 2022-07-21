@@ -13,7 +13,7 @@ const actions = {
   },
   Teleoscope: { 
     icon: <FlareIcon />, 
-    default_window: {i: "teleoscope_new", w:2, h:10, type: "Teleoscope", isResizable: true}
+    default_window: {i: "%teleoscope", w:2, h:10, type: "Teleoscope", isResizable: true}
   },
   Groups: { 
     icon: <TopicIcon />, 

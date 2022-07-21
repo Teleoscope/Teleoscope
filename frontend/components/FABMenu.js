@@ -23,14 +23,13 @@ export default function FABMenu(props) {
        <SpeedDial
          ariaLabel="SpeedDial basic example"
          direction="down"
-         // sx={{ position: 'absolute', top: 16, left: 16 }}
          icon={<SpeedDialIcon />}
        >
          {Object.keys(actions).map((action) => (
            <SpeedDialAction
              key={action}
              icon={actions[action].icon}
-             tooltipTitle={actions[action].name}
+             tooltipTitle={action}
              onClick={() => dispatch(addWindow(actions[action].default_window))}
            />
          ))}
