@@ -21,7 +21,7 @@ export const Windows = createSlice({
 				type: "FABMenu"
 			}
 		],
-		dragged: ""
+		dragged: {id: "default", type: "Default"}
 	},
 	reducers: {
 		dragged: (state, action) => {

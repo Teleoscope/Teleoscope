@@ -51,6 +51,7 @@ export default function LeftMenuBarGroups() {
    const { groups, groups_loading, groups_error } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
    const group_labels = groups ? groups.map((g) => {return g.history[0].label}) : []
 
+
    const colors = [
       "#17becf",
       "#bcbd22",
@@ -231,14 +232,16 @@ export default function LeftMenuBarGroups() {
       </React.Fragment>
       <List>
       {group_labels.map((gl) => {
+         var the_group = groups.find((g) => g.label == gl);
+
          	return (
          		<div 
          			draggable={true}
-					onDragStart={(e, data) => {dispatch(dragged(gl + "_group"))}}
+					   onDragStart={(e, data) => {dispatch(dragged({id: the_group?._id, type: "Group"}))}}
          		>
          		<ListItem>
 					<ListItemIcon>
-                    	<FolderIcon sx={{ color: groups.find((g) => g.label == gl)?.color }}/>
+                    	<FolderIcon sx={{ color: the_group?.color }}/>
                   	</ListItemIcon>
                   	<ListItemText
 						primary={gl}

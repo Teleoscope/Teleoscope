@@ -16,7 +16,7 @@ import { addWindow, loadWindows } from "../actions/windows";
 
 const ReactGridLayout = WidthProvider(RGL);
 
-const item = id => {
+const item = (id, type) => {
   return { 
   i: id,
   x: 0,
@@ -32,18 +32,18 @@ const item = id => {
   isResizable: true,
   resizeHandles: ['se'], // <'s' | 'w' | 'e' | 'n' | 'sw' | 'nw' | 'se' | 'ne'> 
   isBounded: false,
-  type: "Post"
+  type: type
 }}
 
 
 
 export default function WindowManager(props) {
   const windows = useSelector((state) => state.windows.windows);
-  const dragged_id = useSelector((state) => state.windows.dragged);
+  const dragged_item = useSelector((state) => state.windows.dragged);
 	const dispatch = useDispatch();
 
   const dropping = (layout, item, e) => {
-    dispatch(addWindow({i: dragged_id, type: "Post", ...item}))
+    dispatch(addWindow({i: dragged_item.id, type: dragged_item.type, ...item}))
   }
 
   return (
@@ -54,10 +54,10 @@ export default function WindowManager(props) {
         cols={12}
         containerPadding={[0,0]}
         rowHeight={30}
-        compactType={false}
+        compactType={null}
         onDrop={(layout, item, e) => {dropping(layout, item, e)}}
         isDroppable={true}
-        droppingItem={item(dragged_id)}
+        droppingItem={item(dragged_item.id, dragged_item.type)}
         draggableHandle=".drag-handle"
         allowOverlap={true}
         preventCollision={true}

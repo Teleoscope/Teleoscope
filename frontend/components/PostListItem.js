@@ -21,25 +21,7 @@ import Expander from "./Expander";
 
 //utils
 import useSWRAbstract from "../util/swr"
-// 
-// const useStyles = makeStyles((theme) => ({
-//   margin: {
-//     margin: theme.spacing(1),
-//     padding: 5,
-//   },
-//   extendedIcon: {
-//     marginRight: theme.spacing(1),
-//   },
-//   floater: {
-//     position: "absolute",
-//     top: "10px",
-//   },
-//   itemAlign: {
-//     display: "flex",
-//     alignItems: "center",
-//     flexWrap: "wrap",
-//   },
-// }));
+
 
 export default function PostListItem(props) {
   const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${props.id}`);
@@ -53,7 +35,7 @@ export default function PostListItem(props) {
       className="droppable-element"
       style={{ borderBottom: "1px solid  #eceeee" }}
       id={props.id}
-      onDragStart={(e, data) => {dispatch(dragged(props.id))}}
+      onDragStart={(e, data) => {dispatch(dragged({id: props.id, type: "Post"}))}}
     >
       <Grid container spacing={2}>
         <Grid item xs={1}>

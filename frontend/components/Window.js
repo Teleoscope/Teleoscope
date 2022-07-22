@@ -9,6 +9,7 @@ import TeleoscopeDraft from "../components/TeleoscopeDraft"
 import Search from "../components/Search";
 import GroupPalette from "../components/GroupPalette";
 import Group from "../components/Group";
+import PostDraft from "../components/PostDraft";
 import WorkspaceItem from "../components/WorkspaceItem";
 import CloseButton from "../components/CloseButton";
 import MinimizeButton from "../components/MinimizeButton";
@@ -76,20 +77,47 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 			</div>
 		)
 	}
+	if (w.type == "Group") {
+		return (
+			<div
+				style={{...style}}
+				className="drag-handle"
+				ref={ref}
+				onMouseDown={onMouseDown}
+				onMouseUp={onMouseUp}
+				onTouchEnd={onTouchEnd}				
+			><Group id={w.i}></Group>
+			</div>
+		)
+	}
+	if (w.type == "Post") {
+		return (
+			<div
+				style={{...style}}
+				className="drag-handle"
+				ref={ref}
+				onMouseDown={onMouseDown}
+				onMouseUp={onMouseUp}
+				onTouchEnd={onTouchEnd}				
+			><PostDraft id={w.i}></PostDraft>
+			</div>
+		)
+	}
 
-	// 	if (w.type == "Teleoscope") {
-	// 	return (
-	// 		<div
-	// 			style={{...style}}
-	// 			className="drag-handle"
-	// 			ref={ref}
-	// 			onMouseDown={onMouseDown}
-	// 			onMouseUp={onMouseUp}
-	// 			onTouchEnd={onTouchEnd}				
-	// 		><TeleoscopeDraft></TeleoscopeDraft>
-	// 		</div>
-	// 	)
-	// }
+
+		if (w.type == "Teleoscope") {
+		return (
+			<div
+				style={{...style}}
+				className="drag-handle"
+				ref={ref}
+				onMouseDown={onMouseDown}
+				onMouseUp={onMouseUp}
+				onTouchEnd={onTouchEnd}				
+			><TeleoscopeDraft></TeleoscopeDraft>
+			</div>
+		)
+	}
 	
 	
 	return (

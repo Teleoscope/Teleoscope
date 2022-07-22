@@ -17,7 +17,6 @@ import BorderColorOutlinedIcon from "@mui/icons-material/BorderColorOutlined";
 
 // actions
 import { useSelector, useDispatch } from "react-redux"
-import { dragged, loadWindows } from "../actions/windows";
 import { checker } from "../actions/checkedPosts";
 
 // custom components
@@ -63,7 +62,7 @@ export default function WorkspaceItem(props) {
   if (w.h == 1) {
     return (
     <Stack direction="row" justifyContent="space-between">
-        {/* <div style={{paddingTop:"100px" }}>hi</div> */}
+        
         <GroupSelector id={props.id}/>
 
         <GroupSelector id={props.id} />
@@ -81,7 +80,7 @@ export default function WorkspaceItem(props) {
 
   // Layout large
   return (
-    // <div style={{ overflow: "auto", height: "100%" }}>
+    
     <Grid container spacing={2}>
       <Grid item xs={12}>
         <Stack direction="row" justifyContent="space-between">
@@ -101,6 +100,6 @@ export default function WorkspaceItem(props) {
         </Box>
       </Grid>
     </Grid>
-    // </div>
+    
   );
 }
