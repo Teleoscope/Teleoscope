@@ -99,7 +99,7 @@ export default function Workspace(props) {
         <MenuItem onClick={()=>handleDispatch("Search")}>New Search</MenuItem>
 
         <Divider />
-        <MenuItem onClick={()=>handleDispatch("Group")}>New Group Palette</MenuItem>        
+        <MenuItem onClick={()=>handleDispatch("Groups")}>New Group Palette</MenuItem>        
     </Menu>
     </div>
 

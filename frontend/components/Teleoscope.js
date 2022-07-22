@@ -23,6 +23,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import LoadingButton from '@mui/lab/LoadingButton';
+import FlareIcon from '@mui/icons-material/Flare';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -99,7 +100,20 @@ export default function Teleoscope(props) {
 
   if (teleoscope_id == "%teleoscope") {
     return (
+
+
         <div style={{overflow:"auto", height: "100%"}}>
+            <IconButton 
+      color="secondary"
+      sx={{
+        boxShadow: '3',
+
+      }}
+      variant="outlined"
+    >
+      <FlareIcon />
+    </IconButton>
+    
         <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
         All Teleoscopes
         </Typography>
@@ -119,6 +133,17 @@ export default function Teleoscope(props) {
   } else {
     return (
       <div style={{overflow:"auto", height: "100%"}}>
+          <IconButton 
+      color="secondary"
+      sx={{
+        boxShadow: '3',
+
+      }}
+      variant="outlined"
+    >
+      <FlareIcon />
+    </IconButton>
+    
       <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
           Teleoscope: {teleoscope?.history[teleoscope?.history.length - 1].label}
       </Typography>
