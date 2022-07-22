@@ -29,7 +29,7 @@ export default function RightMenuBar(props) {
   var data = [];
   if (teleoscope) {
     var history = teleoscope["history"];
-    var history_item = history[history.length - 1];
+    var history_item = history[0];
     data = history_item["rank_slice"];
     console.log("teleoscope history",teleoscope, history, history_item, data)
   }

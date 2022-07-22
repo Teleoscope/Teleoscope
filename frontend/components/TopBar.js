@@ -72,7 +72,7 @@ export default function TopBar(props) {
       });
       if (ts.length > 0 ) {
         return ts.map((t) => {
-          var latest_t = t['history'][t['history'].length - 1];
+          var latest_t = t['history'][0];
           return (<MenuItem value={t["_id"]}>{latest_t["label"]}</MenuItem>)
         });  
       }
@@ -108,8 +108,10 @@ export default function TopBar(props) {
 
   const load_UI_state = () => {
     // TODO
-    var history_length = session["history"].length;
-    var history_item = session["history"][history_length - 1];
+    console.log("Using session id ", session_id);
+    console.log("This is the session", session);
+    console.log("Loading UI state");
+    var history_item = session["history"][0];
     dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
   }

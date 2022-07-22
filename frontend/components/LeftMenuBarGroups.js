@@ -104,7 +104,7 @@ export default function LeftMenuBarGroups() {
          setTimeout(() => {
             if (group_labels.includes(newValue)) {
                var g = groups.find(g => g.label == newValue)
-               var postids = g.history[g.history.length - 1]["included_posts"];
+               var postids = g.history[0]["included_posts"];
                postids.forEach((id)=> {
                   dispatch(addWindow({i: id, x: 0, y: 0, w: 3, h: 3, type: "Post"}));
                })

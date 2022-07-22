@@ -48,7 +48,6 @@ export default function WindowManager(props) {
   return (
       <ReactGridLayout
         className="layout"
-        allowOverlap={false}
         layout={windows}
         cols={12}
         containerPadding={[0,0]}

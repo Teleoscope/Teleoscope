@@ -85,7 +85,7 @@ export default function Teleoscope(props) {
   var data = [];
   if (teleoscope) {
     var history = teleoscope["history"];
-    var history_item = history[history.length - 1];
+    var history_item = history[0];
     data = history_item["rank_slice"];
   }
 
@@ -93,7 +93,7 @@ export default function Teleoscope(props) {
   return (  
       <div style={{overflow:"auto", height: "100%"}}>
         <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
-        Teleoscope: {teleoscope?.history[teleoscope?.history.length - 1].label}
+        Teleoscope: {teleoscope?.history[0].label}
         </Typography>
         {teleoscope_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
       </div>

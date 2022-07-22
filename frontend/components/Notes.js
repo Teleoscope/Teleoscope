@@ -35,7 +35,7 @@ export default function Note(props) {
   const handleLoad = () => {
     if (note) {
       console.log("editor", note)
-      var item = note["history"][note["history"].length - 1];
+      var item = note["history"][0];
       if (item) {
         console.log("editor", item)
         return EditorState.createWithContent(convertFromRaw(item["content"]));
