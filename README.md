@@ -8,7 +8,7 @@ This project is a UI for filtering down a large number of documents for eventual
 3. Push your new branch and make a pull request. 
 
 ## Installation
-This was only tested on Ubuntu, but you should be able to install with the following:
+This was tested on Ubuntu and MacOS Monterey, but you should be able to install with the following:
 ```
 git clone https://github.com/Teleoscope/Teleoscope.git
 cd Teleoscope/backend
@@ -19,6 +19,8 @@ cd Teleoscope/frontend
 npm install
 touch .env.local
 ```
+
+Note that if you are installing on MacOS Monterey you will need to specify the use of `/usr/bin/python3` and `/usr/bin/pip3` (or you can create aliases for them by modifying your ~/.zshrc file). This will allow you to run the `pip install` command above.
 
 Edit `.env.local` to read:
 
