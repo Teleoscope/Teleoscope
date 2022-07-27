@@ -81,7 +81,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 
 // abstracting for Window Header & Body
-const TeleoscopeHeader = (props) => {
+const TeleoscopeHeader = ({props}) => {
   const teleoscope_id = props.id.split("_")[0];
   const [cookies, setCookie] = useCookies(["user"]);
   const { user } = useSWRAbstract("user", `/api/users/${cookies.user}`);
@@ -104,7 +104,7 @@ const TeleoscopeHeader = (props) => {
 
 }
 
-const TeleoscopeBody = (props) => {
+const TeleoscopeBody = ({props}) => {
   const teleoscope_id = props.id.split("_")[0];
   const [cookies, setCookie] = useCookies(["user"]);
   const { user } = useSWRAbstract("user", `/api/users/${cookies.user}`);

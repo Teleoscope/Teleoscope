@@ -106,7 +106,7 @@ HideOnScroll.propTypes = {
 };
 
 // splits the search into the header and the body
-const SearchHeader = (props) => {
+const SearchHeader = ({props}) => {
   const [query, setQuery] = useState("");
   const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${query}`);
   const dispatch = useDispatch();
@@ -135,13 +135,12 @@ const SearchHeader = (props) => {
   );
 }
 
-const SearchBody = (props) => {
+const SearchBody = ({props}) => {
   const [query, setQuery] = useState("");
   const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${query}`);
 
   // this is a hard-coded hack for ranking of post_id
   const data = posts ? posts.map((post) => { return [post.id, 1.0]; }) : [];
-
 
   return (
     <div>
@@ -157,7 +156,8 @@ export default function BottomAppBar(props) {
     <>
       <WindowHeader>
         <SearchHeader props={props} />
-      </WindowHeader><WindowBody>
+      </WindowHeader>
+      <WindowBody>
         <SearchBody props={props} />
       </WindowBody>
     </>

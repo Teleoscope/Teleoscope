@@ -13,6 +13,9 @@ import { dragged, addWindow, removeWindow, loadWindows } from "../actions/window
 
 // custom components
 import PostTitle from "./PostTitle"
+import { WindowHeader } from "./WindowHeader";
+import { WindowBody } from "./WindowBody";
+
 
 // icons
 import CloseIcon from "@mui/icons-material/Close";
@@ -23,6 +26,24 @@ import { update_note } from "../components/Stomp.js";
 
 // contexts
 import { StompContext } from '../context/StompContext'
+
+// abstracting Header and Body
+
+const NoteHeader = ({props}) => {
+  return (
+    <div>
+
+    </div>
+  )
+}
+
+const NoteBody = ({props}) => {
+  return (
+    <div>
+      
+    </div>
+  )
+}
 
 export default function Note(props) {
   const postid = props.id.split("%")[0]

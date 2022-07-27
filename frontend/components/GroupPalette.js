@@ -33,6 +33,26 @@ import { StompContext } from '../context/StompContext'
 
 // custom components
 import CloseButton from "./CloseButton"
+import { WindowHeader } from "./WindowHeader";
+import { WindowBody } from "./WindowBody";
+
+
+// abstracting Header and Body
+const GroupPaletteHeader = ({props}) => {
+   return (
+      <div>
+
+      </div>
+   )
+}
+
+const GroupPaletteBody = ({props}) => {
+   return (
+      <div>
+         
+      </div>
+   )
+}
 
 export default function LeftMenuBarGroups() {
 
