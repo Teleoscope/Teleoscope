@@ -33,6 +33,8 @@ import { updateWindow } from "../actions/windows";
 // custom components
 import PostList from "./PostList"
 import CloseButton from "./CloseButton"
+import { WindowHeader } from './WindowHeader';
+import { WindowBody } from './WindowBody';
 
 // util
 import useSWRAbstract from "../util/swr"
@@ -103,13 +105,11 @@ HideOnScroll.propTypes = {
   window: PropTypes.func,
 };
 
-export default function BottomAppBar(props) {
+// splits the search into the header and the body
+const SearchHeader = (props) => {
   const [query, setQuery] = useState("");
   const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${query}`);
   const dispatch = useDispatch();
-
-  // this is a hard-coded hack for ranking of post_id
-  const data = posts ? posts.map((post) => { return [post.id, 1.0]; }) : [];
 
   const handleSetQuery = (e) => {
     setTimeout(() => {
@@ -127,13 +127,39 @@ export default function BottomAppBar(props) {
         <StyledInputBase
           placeholder="Search…"
           inputProps={{ 'aria-label': 'search' }}
-          onChange={(e) => handleSetQuery(e)}
-        />
-      </Search>
-      <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
+          onChange={(e) => handleSetQuery(e)} />
+      </Search><Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
         Search {query != "" ? `"${query}"` : "all posts"}
       </Typography>
+    </div>
+  );
+}
+
+const SearchBody = (props) => {
+  const [query, setQuery] = useState("");
+  const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${query}`);
+
+  // this is a hard-coded hack for ranking of post_id
+  const data = posts ? posts.map((post) => { return [post.id, 1.0]; }) : [];
+
+
+  return (
+    <div>
       {posts_loading ? <LoadingButton loading={true} /> : <PostList pagination={true} data={data}></PostList>}
     </div>
+  )
+}
+
+
+
+export default function BottomAppBar(props) {
+  return (
+    <>
+      <WindowHeader>
+        <SearchHeader props={props} />
+      </WindowHeader><WindowBody>
+        <SearchBody props={props} />
+      </WindowBody>
+    </>
   );
 }

@@ -25,7 +25,7 @@ import { checker } from "../actions/checkedPosts";
 import { useSelector, useDispatch } from "react-redux";
 
 
-const innerContentScrollable = (type, id, props) => {
+const innerContent = (type, id, props) => {
 	if (type == "Teleoscope") {
 		return <Teleoscope id={id}></Teleoscope>
 	}
@@ -38,18 +38,12 @@ const innerContentScrollable = (type, id, props) => {
 	if (type == "Search") {
 		return <Search id={id}></Search>
 	}
-}
-
-const innerContentTextScrollable = (type, id, props) => {
 	if (type == "Note") {
 		return <Notes id={id}></Notes>
 	}
 	if (type == "Post") {
 		return <WorkspaceItem id={id}></WorkspaceItem>
 	}
-	// else {
-	// 	null
-	// }
 }
 
 const button_style = {
@@ -89,12 +83,9 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 				<MinimizeButton sx={button_style} id={w.i} />
 				<CloseButton sx={button_style} id={w.i} />
 			</div>
-
-			{innerContentTextScrollable(w.type, w.i, props)}
 			
-			<div style={{ overflow: "auto", height: "100%" }}>
-				{innerContentScrollable(w.type, w.i, props)}
-			</div>
+			{innerContent(w.type, w.i, props)}
+
 			<div
 				style={{
 					backgroundColor: "#CCCCCC",

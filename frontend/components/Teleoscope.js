@@ -32,6 +32,8 @@ import { useSelector, useDispatch } from "react-redux";
 // custom components
 import PostList from "./PostList"
 import CloseButton from "./CloseButton"
+import { WindowHeader } from './WindowHeader';
+import { WindowBody } from './WindowBody';
 
 // util
 import useSWRAbstract from "../util/swr"
@@ -76,7 +78,10 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     },
   },
 }));
-export default function Teleoscope(props) {
+
+
+// abstracting for Window Header & Body
+const TeleoscopeHeader = (props) => {
   const teleoscope_id = props.id.split("_")[0];
   const [cookies, setCookie] = useCookies(["user"]);
   const { user } = useSWRAbstract("user", `/api/users/${cookies.user}`);
@@ -89,13 +94,46 @@ export default function Teleoscope(props) {
     data = history_item["rank_slice"];
   }
 
-
-  return (  
-      <div>
-        <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
+  return (
+    <div>
+      <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
         Teleoscope: {teleoscope?.history[teleoscope?.history.length - 1].label}
-        </Typography>
-        {teleoscope_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
-      </div>
+      </Typography>
+    </div>
+  )
+
+}
+
+const TeleoscopeBody = (props) => {
+  const teleoscope_id = props.id.split("_")[0];
+  const [cookies, setCookie] = useCookies(["user"]);
+  const { user } = useSWRAbstract("user", `/api/users/${cookies.user}`);
+  const { teleoscope, teleoscope_loading } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
+
+  var data = [];
+  if (teleoscope) {
+    var history = teleoscope["history"];
+    var history_item = history[history.length - 1];
+    data = history_item["rank_slice"];
+  }
+
+  return (
+    <div>
+      {teleoscope_loading ? <LoadingButton loading={true} /> : <PostList pagination={true} data={data}></PostList>}
+    </div>
+  )
+}
+
+export default function Teleoscope(props) {
+  return (
+    <>
+      <WindowHeader>
+        <TeleoscopeHeader props={props} />
+      </WindowHeader>
+
+      <WindowBody>
+        <TeleoscopeBody props={props} />
+      </WindowBody>
+    </>
   );
 }
