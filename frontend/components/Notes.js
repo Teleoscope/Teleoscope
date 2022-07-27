@@ -1,4 +1,4 @@
-import React, {useContext} from "react";
+import React, { useContext } from "react";
 import { Editor, EditorState, convertFromRaw, convertToRaw } from "draft-js";
 import "draft-js/dist/Draft.css";
 
@@ -27,11 +27,11 @@ import { StompContext } from '../context/StompContext'
 export default function Note(props) {
   const postid = props.id.split("%")[0]
   const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${postid}`);
-  const { note, note_loading, note_error} = useSWRAbstract("note", `/api/notes/${postid}`);
+  const { note, note_loading, note_error } = useSWRAbstract("note", `/api/notes/${postid}`);
   const dispatch = useDispatch();
   const client = useContext(StompContext)
   const editor = React.useRef(null);
-  
+
   const handleLoad = () => {
     if (note) {
       console.log("editor", note)
@@ -53,7 +53,7 @@ export default function Note(props) {
 
 
   const handleFocus = () => {
-    
+
   }
 
   const handleClose = () => {
@@ -66,27 +66,26 @@ export default function Note(props) {
   }
 
   return (
-    <div style={{ overflow: "auto", height: "100%"}}>
-    <Stack direction="column" onClick={focusEditor} style={{marginLeft: "10px", cursor: "text"}}>
-      <Stack 
-        direction="row-reverse" 
-        justifyContent="space-between"
-
+    <div>
+      <Stack direction="column" onClick={focusEditor} style={{ marginLeft: "10px", cursor: "text" }}>
+        <Stack
+          direction="row-reverse"
+          justifyContent="space-between"
         >
-            <IconButton size="small" onClick={handleClose}>
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          <PostTitle post={post ? post : {}} size="sm" color="#AAAAAA" noWrap={true}/>  
+          <IconButton size="small" onClick={handleClose}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+          <PostTitle post={post ? post : {}} size="sm" color="#AAAAAA" noWrap={true} />
+        </Stack>
+          <Editor
+            ref={editor}
+            editorState={editorState}
+            onBlur={handleBlur}
+            onFocus={handleFocus}
+            onChange={setEditorState}
+          // placeholder={post ? post["title"] : props.id}
+          />
       </Stack>
-      <Editor
-        ref={editor}
-        editorState={editorState}
-        onBlur={handleBlur}
-        onFocus={handleFocus}
-        onChange={setEditorState}
-        // placeholder={post ? post["title"] : props.id}
-      />
-    </Stack>
     </div>
   );
 }

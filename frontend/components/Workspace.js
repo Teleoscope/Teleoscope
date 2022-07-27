@@ -36,8 +36,6 @@ export default function Workspace(props) {
     }
     return ret;
   });
-  console.log("teleoscopes", teleoscopes, teleoscopes_raw, `/api/sessions/${session_id}/teleoscopes`)
-
   
   const handleContextMenu = (event) => {
     event.preventDefault();
@@ -60,13 +58,13 @@ export default function Workspace(props) {
 
   const handleNewTeleoscope = () => {
     dispatch(addWindow(
-      {i: "teleoscope_new", x:0, y:0, w:2, h:10, type: "Teleoscope", isResizable: false})
+      {i: "teleoscope_new", x:0, y:0, w:2, h:10, type: "Teleoscope", isResizable: true})
     );
     handleClose();
   }
   const handleExistingTeleoscope = (t) => {
     dispatch(addWindow(
-      {i: t + "_teleoscope", x:0, y:0, w:2, h:10, type: "Teleoscope", isResizable: false})
+      {i: t + "_teleoscope", x:0, y:0, w:2, h:10, type: "Teleoscope", isResizable: true})
     );
     handleClose();
   }
@@ -74,7 +72,7 @@ export default function Workspace(props) {
   const handleNewSearch = () => {
 
     dispatch(addWindow(
-      {i: "%search", x:0, y:0, w:2, h:10, type: "Search", isResizable: false})
+      {i: "%search", x:0, y:0, w:2, h:10, type: "Search", isResizable: true})
     );
     handleClose();
   }
@@ -82,7 +80,7 @@ export default function Workspace(props) {
   const handleNewGroupPalette = () => {
 
     dispatch(addWindow(
-      {i: "group", x:0, y:0, w:2, h:10, type: "Group Palette", isResizable: false})
+      {i: "group", x:0, y:0, w:2, h:10, type: "Group Palette", isResizable: true})
     );
     handleClose();
   }

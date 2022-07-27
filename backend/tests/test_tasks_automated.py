@@ -106,7 +106,7 @@ def test_add_group_missing_label():
 # Case 2: Missing color
 def test_add_group_missing_color():
 	with pytest.raises(Exception):
-		tasks.add_group(l(), abel = "test", session_id = str(ObjectId()))
+		tasks.add_group((), abel = "test", session_id = str(ObjectId()))
 
 # Case 3: Missing session id
 def test_add_group_missing_session_id():
