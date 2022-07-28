@@ -105,18 +105,19 @@ HideOnScroll.propTypes = {
   window: PropTypes.func,
 };
 
-// splits the search into the header and the body
-const SearchHeader = ({props}) => {
-  const [query, setQuery] = useState("");
-  const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${query}`);
-  const dispatch = useDispatch();
+const [query, setQuery] = useState("");
+//const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${query}`);
+const dispatch = useDispatch();
 
-  const handleSetQuery = (e) => {
-    setTimeout(() => {
-      setQuery(e.target.value);
-      dispatch(updateWindow({ i: "%search", term: e.target.value }));
-    }, 1000);
-  }
+const handleSetQuery = (e) => {
+  setTimeout(() => {
+    setQuery(e.target.value);
+    dispatch(updateWindow({ i: "%search", term: e.target.value }));
+  }, 1000);
+};
+
+// splits the search into the header and the body
+const SearchHeader = ({ props }) => {
 
   return (
     <div>
@@ -128,15 +129,15 @@ const SearchHeader = ({props}) => {
           placeholder="Search…"
           inputProps={{ 'aria-label': 'search' }}
           onChange={(e) => handleSetQuery(e)} />
-      </Search><Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
+      </Search>
+      <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
         Search {query != "" ? `"${query}"` : "all posts"}
       </Typography>
     </div>
   );
 }
 
-const SearchBody = ({props}) => {
-  const [query, setQuery] = useState("");
+const SearchBody = ({ props }) => {
   const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${query}`);
 
   // this is a hard-coded hack for ranking of post_id

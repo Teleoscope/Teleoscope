@@ -72,7 +72,7 @@ export default function LeftMenuBarGroups() {
    const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
    const [colourIndex, setColourIndex] = useState(0);
    const { groups, groups_loading, groups_error } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
-   const group_labels = groups ? groups.map((g) => {return g.label}) : []
+   const group_labels = groups ? groups.map((g) => {return g.history[0].label}) : []
 
    const colors = [
       "#17becf",
@@ -188,7 +188,7 @@ export default function LeftMenuBarGroups() {
    // };
 
    return (
-   	<div>
+   	<div style={{overflow:"auto", height: "100%"}}>
       <React.Fragment>
          <Autocomplete
             value={value}

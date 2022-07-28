@@ -29,7 +29,7 @@ import { StompContext } from '../context/StompContext'
 
 // abstracting Header and Body
 
-const NoteHeader = ({props}) => {
+const NoteHeader = ({ props }) => {
   return (
     <div>
 
@@ -37,10 +37,10 @@ const NoteHeader = ({props}) => {
   )
 }
 
-const NoteBody = ({props}) => {
+const NoteBody = ({ props }) => {
   return (
     <div>
-      
+
     </div>
   )
 }
@@ -98,14 +98,14 @@ export default function Note(props) {
           </IconButton>
           <PostTitle post={post ? post : {}} size="sm" color="#AAAAAA" noWrap={true} />
         </Stack>
-          <Editor
-            ref={editor}
-            editorState={editorState}
-            onBlur={handleBlur}
-            onFocus={handleFocus}
-            onChange={setEditorState}
-          // placeholder={post ? post["title"] : props.id}
-          />
+        <Editor
+          ref={editor}
+          editorState={editorState}
+          onBlur={handleBlur}
+          onFocus={handleFocus}
+          onChange={setEditorState}
+        // placeholder={post ? post["title"] : props.id}
+        />
       </Stack>
     </div>
   );
