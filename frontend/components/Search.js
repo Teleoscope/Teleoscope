@@ -105,8 +105,13 @@ HideOnScroll.propTypes = {
   window: PropTypes.func,
 };
 
+let globalQuery = "";
+
+
+// splits the search into the header and the body
+const SearchHeader = ({ props }) => {
+
 const [query, setQuery] = useState("");
-//const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${query}`);
 const dispatch = useDispatch();
 
 const handleSetQuery = (e) => {
@@ -115,9 +120,6 @@ const handleSetQuery = (e) => {
     dispatch(updateWindow({ i: "%search", term: e.target.value }));
   }, 1000);
 };
-
-// splits the search into the header and the body
-const SearchHeader = ({ props }) => {
 
   return (
     <div>
@@ -130,6 +132,7 @@ const SearchHeader = ({ props }) => {
           inputProps={{ 'aria-label': 'search' }}
           onChange={(e) => handleSetQuery(e)} />
       </Search>
+      {globalQuery = query}
       <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
         Search {query != "" ? `"${query}"` : "all posts"}
       </Typography>
@@ -138,7 +141,7 @@ const SearchHeader = ({ props }) => {
 }
 
 const SearchBody = ({ props }) => {
-  const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${query}`);
+  const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${globalQuery}`);
 
   // this is a hard-coded hack for ranking of post_id
   const data = posts ? posts.map((post) => { return [post.id, 1.0]; }) : [];

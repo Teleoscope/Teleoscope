@@ -37,21 +37,19 @@ const NoteHeader = ({ props }) => {
   )
 }
 
-const NoteBody = ({ props }) => {
-  return (
-    <div>
 
-    </div>
-  )
-}
 
-export default function Note(props) {
-  const postid = props.id.split("%")[0]
-  const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${postid}`);
+const NoteBody = ({ props }, editor, postid) => {
   const { note, note_loading, note_error } = useSWRAbstract("note", `/api/notes/${postid}`);
-  const dispatch = useDispatch();
-  const client = useContext(StompContext)
-  const editor = React.useRef(null);
+
+  // Handlers
+  const handleBlur = () => {
+    var content = editorState.getCurrentContent();
+    update_note(client, postid, convertToRaw(content))
+  }
+
+  const handleFocus = () => {
+  }
 
   const handleLoad = () => {
     if (note) {
@@ -64,18 +62,31 @@ export default function Note(props) {
     }
     return EditorState.createEmpty()
   }
+
   const [editorState, setEditorState] = React.useState(() => handleLoad());
 
-  // Handlers
-  const handleBlur = () => {
-    var content = editorState.getCurrentContent();
-    update_note(client, postid, convertToRaw(content))
-  }
+  return (
+    <div>
+      <Editor
+        ref={editor}
+        editorState={editorState}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        onChange={setEditorState}
+      // placeholder={post ? post["title"] : props.id}
+      />
+    </div>
+  )
+}
 
-
-  const handleFocus = () => {
-
-  }
+export default function Note(props) {
+  const editor = React.useRef(null);
+  const postid = props.id.split("%")[0]
+  const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${postid}`);
+  const dispatch = useDispatch();
+  const client = useContext(StompContext)
+  // const editor = React.useRef(null);
+  
 
   const handleClose = () => {
     update_note(client, postid, convertToRaw(editorState.getCurrentContent()))
@@ -98,14 +109,9 @@ export default function Note(props) {
           </IconButton>
           <PostTitle post={post ? post : {}} size="sm" color="#AAAAAA" noWrap={true} />
         </Stack>
-        <Editor
-          ref={editor}
-          editorState={editorState}
-          onBlur={handleBlur}
-          onFocus={handleFocus}
-          onChange={setEditorState}
-        // placeholder={post ? post["title"] : props.id}
-        />
+        <WindowBody>
+          <NoteBody props={props} editor={editor} postid={postid}/>
+        </WindowBody>
       </Stack>
     </div>
   );
