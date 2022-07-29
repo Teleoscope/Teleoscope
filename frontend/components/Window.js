@@ -12,8 +12,6 @@ import Group from "../components/Group";
 import Post from "../components/Post";
 import WorkspaceItem from "../components/WorkspaceItem";
 import CloseButton from "../components/CloseButton";
-import MinimizeButton from "../components/MinimizeButton";
-import MaximizeButton from "../components/MaximizeButton";
 import WindowTopBar from "../components/WindowTopBar";
 
 // mui

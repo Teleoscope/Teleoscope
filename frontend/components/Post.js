@@ -4,8 +4,6 @@ import React, { useState } from "react";
 // custom
 import WorkspaceItem from "../components/WorkspaceItem";
 import CloseButton from "../components/CloseButton";
-import MinimizeButton from "../components/MinimizeButton";
-import MaximizeButton from "../components/MaximizeButton";
 import PostTitle from "./PostTitle"
 import PostText from "./PostText"
 import GroupSelector from "./GroupSelector"
