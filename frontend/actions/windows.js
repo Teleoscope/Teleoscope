@@ -1,6 +1,7 @@
 // windows.js
 import { createSlice } from '@reduxjs/toolkit'
 import _ from 'lodash';
+import { getDefaultWindow } from "../components/DefaultWindow"
 
 export const Windows = createSlice({
 	name: 'windows',
@@ -12,8 +13,8 @@ export const Windows = createSlice({
 		windows: [
 			{
 				i: "default_FABMenu", 
-				x:0, 
-				y:0, 
+				x:1, 
+				y:1,
 				w:1,
 				h:1,
 				isDraggable: true, 
@@ -21,30 +22,14 @@ export const Windows = createSlice({
 				type: "FABMenu"
 			}
 		],
-		dragged: ""
+		dragged: {id: "default", type: "Default"}
 	},
 	reducers: {
 		dragged: (state, action) => {
 			state.dragged = action.payload;
 		},
 		addWindow: (state, action) => {
-			var item = {
-				i: "default_window",
-				x: 0,
-				y: 0,
-				w: 1,
-				h: 1,
-				minW: 1,
-				maxW: 10000,
-				minH: 1,
-				maxH: 10000,
-				static: false,
-				isDraggable: true,
-				isResizable: true,
-				resizeHandles: ['se'], // <'s' | 'w' | 'e' | 'n' | 'sw' | 'nw' | 'se' | 'ne'> 
-				isBounded: false,
-				type: "Default"
-			}
+			var item = getDefaultWindow();
 			// make sure that each default option that is being overridden
 			// is set in the final object that gets sent to the window store
 			Object.keys(action.payload).forEach((opt) => {
@@ -73,6 +58,7 @@ export const Windows = createSlice({
 			if (index > -1) {
 				temp[index].w = 1;
 				temp[index].h = 1;
+				temp[index].isResizable = false;
 			}
 			state.windows = temp;	
 		},
@@ -81,11 +67,12 @@ export const Windows = createSlice({
 			var ids = state.windows.map((w) => {return w.i});
 			var index = ids.indexOf(action.payload);
 			if (index > -1) {
-				temp[index].w = 2;
+				temp[index].w = 8;
 				temp[index].h = 6;
+				temp[index].isResizable = true;
 			}
 			state.windows = temp;	
-		},		
+		},
 		updateWindow: (state, action) => {
 			var temp = [...state.windows];
 			var index = temp.findIndex((w) => w.i == action.payload.i);
@@ -94,11 +81,34 @@ export const Windows = createSlice({
 			}
 			state.windows = temp;
 		},
-		loadWindows: (state, action) => {
+		// checkWindow({i: str, check: bool})
+		checkWindow: (state, action) => {
+			var index = state.windows.findIndex((w) => w.i == action.payload.i);
+			if (index > 0) {
+				state.windows[index].isChecked = action.payload.check;
+			}
+		},
+		deselectAll: (state, action) => {
 			var temp = [...state.windows];
+			temp.forEach((w) => {
+				w.isChecked = false;	
+			})
+			state.windows = temp;			
+		},
+		selectAll: (state, action) => {
+			var temp = [...state.windows];
+			temp.forEach((w) => {
+				if (w.type == "Post") {
+					w.isChecked = true;		
+				}
+			})
+			state.windows = temp;			
+		},			
+		loadWindows: (state, action) => {
+			// var temp = [...state.windows];
 			for (var index in action.payload) {
 				var update = action.payload[index];
-				var item = temp.find(item => item.i === update.i)
+				var item = state.windows.find(item => item.i === update.i)
 				if (item) {
 					Object.keys(update).forEach((key, ind) => {
 						if (item.hasOwnProperty(key)) {
@@ -107,10 +117,21 @@ export const Windows = createSlice({
 					});
 				}
 			}
-			state.windows = temp;
+			
 		}
 	}
 })
 
-export const { addWindow, removeWindow, loadWindows, dragged, updateWindow, minimizeWindow, maximizeWindow } = Windows.actions
+export const { 
+	addWindow, 
+	removeWindow, 
+	loadWindows, 
+	dragged, 
+	updateWindow, 
+	minimizeWindow, 
+	maximizeWindow, 
+	checkWindow, 
+	selectAll, 
+	deselectAll 
+} = Windows.actions
 export default Windows.reducer

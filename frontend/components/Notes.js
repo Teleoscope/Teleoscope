@@ -4,6 +4,7 @@ import "draft-js/dist/Draft.css";
 
 // mui
 import Stack from '@mui/material/Stack';
+import Card from '@mui/material/Card';
 import IconButton from "@mui/material/IconButton";
 import Tooltip from '@mui/material/Tooltip';
 
@@ -66,17 +67,28 @@ export default function Note(props) {
   }
 
   return (
+    <Card
+      variant="outlined"
+      style={{
+        backgroundColor: "white",
+        height:"100%",
+        // marginBottom:"-1em"
+      }}
+      sx={{
+        boxShadow: '0',
+      }}
+    >
     <div style={{ overflow: "auto", height: "100%"}}>
     <Stack direction="column" onClick={focusEditor} style={{marginLeft: "10px", cursor: "text"}}>
       <Stack 
         direction="row-reverse" 
         justifyContent="space-between"
-
+        className="drag-handle"
         >
             <IconButton size="small" onClick={handleClose}>
               <CloseIcon fontSize="small" />
             </IconButton>
-          <PostTitle post={post ? post : {}} size="sm" color="#AAAAAA" noWrap={true}/>  
+          <PostTitle title={post ? post.title : ""} size="sm" color="#AAAAAA" noWrap={true}/>  
       </Stack>
       <Editor
         ref={editor}
@@ -88,5 +100,6 @@ export default function Note(props) {
       />
     </Stack>
     </div>
+    </Card>
   );
 }

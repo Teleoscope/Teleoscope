@@ -103,16 +103,7 @@ export default function Teleoscope(props) {
 
 
         <div style={{overflow:"auto", height: "100%"}}>
-            <IconButton 
-      color="secondary"
-      sx={{
-        boxShadow: '3',
-
-      }}
-      variant="outlined"
-    >
-      <FlareIcon />
-    </IconButton>
+            
     
         <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
         All Teleoscopes
@@ -133,16 +124,7 @@ export default function Teleoscope(props) {
   } else {
     return (
       <div style={{overflow:"auto", height: "100%"}}>
-          <IconButton 
-      color="secondary"
-      sx={{
-        boxShadow: '3',
 
-      }}
-      variant="outlined"
-    >
-      <FlareIcon />
-    </IconButton>
     
       <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
           Teleoscope: {teleoscope?.history[teleoscope?.history.length - 1].label}

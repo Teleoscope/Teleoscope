@@ -24,6 +24,8 @@ export default function FABMenu(props) {
          ariaLabel="SpeedDial basic example"
          direction="down"
          icon={<SpeedDialIcon />}
+         className="drag-handle" 
+
        >
          {Object.keys(actions).map((action) => (
            <SpeedDialAction

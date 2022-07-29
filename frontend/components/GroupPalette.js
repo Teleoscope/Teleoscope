@@ -3,6 +3,9 @@ import React, { useState, useContext } from "react";
 
 // MUI 
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
+import Card from '@mui/material/Card';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -50,6 +53,7 @@ export default function LeftMenuBarGroups() {
    const [colourIndex, setColourIndex] = useState(0);
    const { groups, groups_loading, groups_error } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
    const group_labels = groups ? groups.map((g) => {return g.history[0].label}) : []
+
 
    const colors = [
       "#17becf",
@@ -165,7 +169,10 @@ export default function LeftMenuBarGroups() {
    // };
 
    return (
-   	<div style={{overflow:"auto", height: "100%"}}>
+   	<div 
+         style={{overflow:"auto", height: "100%"}}
+         
+      >
       <React.Fragment>
          <Autocomplete
             value={value}
@@ -231,14 +238,16 @@ export default function LeftMenuBarGroups() {
       </React.Fragment>
       <List>
       {group_labels.map((gl) => {
+         var the_group = groups.find((g) => g.label == gl);
+
          	return (
          		<div 
          			draggable={true}
-					onDragStart={(e, data) => {dispatch(dragged(gl + "_group"))}}
+					   onDragStart={(e, data) => {dispatch(dragged({id: the_group?._id, type: "Group"}))}}
          		>
          		<ListItem>
 					<ListItemIcon>
-                    	<FolderIcon sx={{ color: groups.find((g) => g.label == gl)?.color }}/>
+                    	<FolderIcon sx={{ color: the_group?.color }}/>
                   	</ListItemIcon>
                   	<ListItemText
 						primary={gl}
@@ -250,5 +259,6 @@ export default function LeftMenuBarGroups() {
          })}	
       </List>
 	</div>
+
    )
 }

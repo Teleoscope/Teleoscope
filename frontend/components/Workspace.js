@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React, { createRef, useEffect } from "react";
 import { useSelector } from "react-redux";
+import Selecto from "react-selecto";
 
 // mui
 import Grid from '@mui/material/Grid';
@@ -11,14 +12,12 @@ import Divider from '@mui/material/Divider';
 
 // custom components
 import TopBar from "../components/TopBar";
-import LeftMenuBar from "../components/LeftMenuBar";
-import RightMenuBar from "../components/RightMenuBar";
 import WindowManager from "../components/WindowManager";
 import Search from "../components/Search";
 import MenuActions from "../components/MenuActions"
 
 // actions
-import { addWindow } from "../actions/windows";
+import { addWindow, selectAll, deselectAll } from "../actions/windows";
 import { useDispatch } from "react-redux";
 
 // util
@@ -68,15 +67,29 @@ export default function Workspace(props) {
     dispatch(addWindow(w))
     handleClose();
   }
+
+  const handleClick = (e) => {
+    // dispatch(deselectAll());
+  }
   
+  const ref = createRef()
   return (
-    <div onContextMenu={handleContextMenu} style={{ cursor: 'context-menu' }}>
+
+
+    <div 
+      onContextMenu={handleContextMenu}  
+      style={{ cursor: 'context-menu' }}
+      onClick={(e) => handleClick(e)}
+    >
+
     <Grid container spacing={2}>
       <Grid item xs={12}>
         <TopBar/>
       </Grid>
-      <Grid item xs={12}>
+      <Grid ref={ref} item xs={12}>
+        
         <WindowManager />
+
       </Grid>
     </Grid>
     <Menu
@@ -100,6 +113,10 @@ export default function Workspace(props) {
 
         <Divider />
         <MenuItem onClick={()=>handleDispatch("Groups")}>New Group Palette</MenuItem>        
+        <Divider />
+        <MenuItem onClick={()=> dispatch(selectAll())}>Select All</MenuItem>
+        <MenuItem onClick={()=> dispatch(deselectAll())}>Deselect All</MenuItem>
+
     </Menu>
     </div>
 
