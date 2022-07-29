@@ -11,7 +11,7 @@ import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import Select from '@mui/material/Select';
 import OutlinedInput from '@mui/material/OutlinedInput';
-import CircleIcon from '@mui/icons-material/Circle';
+import FolderIcon from '@mui/icons-material/Folder';
 import Tooltip from '@mui/material/Tooltip';
 
 // actions 
@@ -89,12 +89,12 @@ export default function groupSelector(props) {
             return (
 
                <Tooltip title={g.label} placement="top">
-               <CircleIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
+               <FolderIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
                </Tooltip>
             )
          })}
          {groups_this_post_belongs_to.length == 0 ? 
-                     <CircleIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} /> : ""}
+                     <FolderIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} /> : ""}
          </IconButton>
          <Menu
             anchorEl={anchorEl}
@@ -109,7 +109,7 @@ export default function groupSelector(props) {
                <MenuItem
                   value={_id}
                   onClick={() => handleSelect(_id)}>
-                  <CircleIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
+                  <FolderIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
                   <ListItemText primary={g.label} />
                </MenuItem>
             )}) : <MenuItem>No groups added yet...</MenuItem>}

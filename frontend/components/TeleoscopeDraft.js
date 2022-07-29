@@ -11,9 +11,10 @@ export default function TeleoscopeDraft() {
       color="secondary"
       sx={{
         boxShadow: '3',
-
+        backgroundColor: "white"
       }}
       variant="outlined"
+      className="drag-handle"
     >
       <FlareIcon />
     </IconButton>

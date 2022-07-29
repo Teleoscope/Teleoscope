@@ -3,6 +3,9 @@ import React, { useState, useContext } from "react";
 
 // MUI 
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
+import Card from '@mui/material/Card';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
@@ -166,7 +169,10 @@ export default function LeftMenuBarGroups() {
    // };
 
    return (
-   	<div style={{overflow:"auto", height: "100%"}}>
+   	<div 
+         style={{overflow:"auto", height: "100%"}}
+         
+      >
       <React.Fragment>
          <Autocomplete
             value={value}
@@ -253,5 +259,6 @@ export default function LeftMenuBarGroups() {
          })}	
       </List>
 	</div>
+
    )
 }

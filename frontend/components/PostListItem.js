@@ -45,7 +45,7 @@ export default function PostListItem(props) {
           <GroupSelector id={props.id} />
         </Grid>
         <Grid item xs={7}>
-          <PostTitle post={post ? post : {} } noWrap={false} />
+          <PostTitle title={post ? post.title : "" } noWrap={false} />
         </Grid>
         <Grid item xs={2}>
           <IconButton onClick={() => setOpen(!open)}>

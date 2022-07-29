@@ -11,19 +11,15 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
-//util
-import postTitle from "../util/posttitle"
-
 export default function PostTitle(props) {
-   const title = postTitle(props.post.title);
    return (
-      <Tooltip title={title} placement="top">
+      <Tooltip title={props.title} placement="top">
          <Typography
-            variant="body1"
+            variant={props.size=="small" ? "caption" : "subtitle"}
             color={props.color ? props.color : "black"}
             noWrap={props.noWrap}
          >
-            {title}
+            {props.title}
          </Typography>
       </Tooltip>
    )
