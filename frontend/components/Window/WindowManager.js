@@ -3,7 +3,7 @@ import React from "react";
 import RGL, { WidthProvider } from "react-grid-layout";
 
 // custom
-import Window from "../components/Window"
+import Window from "./Window"
 
 // css
 import "react-grid-layout/css/styles.css"
@@ -11,7 +11,7 @@ import "react-resizable/css/styles.css"
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { addWindow, loadWindows } from "../actions/windows";
+import { addWindow, loadWindows } from "../../actions/windows";
 
 const ReactGridLayout = WidthProvider(RGL);
 

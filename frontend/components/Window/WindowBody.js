@@ -1,12 +1,12 @@
 import styled from 'styled-components';
 
 // Component Imports
-import Notes from "./Notes"
-import WorkspaceItem from "../components/WorkspaceItem";
-import Teleoscope from "./Teleoscope"
-import Search from "../components/Search";
-import GroupPalette from "../components/GroupPalette";
-import Group from "../components/Group";
+import Notes from "../WindowModules/Notes"
+import WorkspaceItem from "../WorkspaceItem";
+import Teleoscope from "../WindowModules/Teleoscope"
+import Search from "../WindowModules/Search";
+import GroupPalette from "../WindowModules/GroupPalette";
+import Group from "../Group";
 
 // styling for the window body 
 const WindowBodyStyle = styled.div` 

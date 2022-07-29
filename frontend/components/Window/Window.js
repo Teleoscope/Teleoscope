@@ -2,15 +2,15 @@
 import React from "react";
 
 // custom
-import Notes from "./Notes"
-import Teleoscope from "./Teleoscope"
-import Search from "../components/Search";
-import GroupPalette from "../components/GroupPalette";
-import Group from "../components/Group";
-import WorkspaceItem from "../components/WorkspaceItem";
-import CloseButton from "../components/CloseButton";
-import MinimizeButton from "../components/MinimizeButton";
-import MaximizeButton from "../components/MaximizeButton";
+import Notes from "../WindowModules/Notes"
+import Teleoscope from "../WindowModules/Teleoscope"
+import Search from "../WindowModules/Search";
+import GroupPalette from "../WindowModules/GroupPalette";
+import Group from "../Group";
+import WorkspaceItem from "../WorkspaceItem";
+import CloseButton from "../CloseButton";
+import MinimizeButton from "../MinimizeButton";
+import MaximizeButton from "../MaximizeButton";
 
 // mui
 import Box from '@mui/material/Box';
@@ -21,7 +21,7 @@ import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
 
 // actions
-import { checker } from "../actions/checkedPosts";
+import { checker } from "../../actions/checkedPosts";
 import { useSelector, useDispatch } from "react-redux";
 
 

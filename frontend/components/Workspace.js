@@ -13,8 +13,8 @@ import Divider from '@mui/material/Divider';
 import TopBar from "../components/TopBar";
 import LeftMenuBar from "../components/LeftMenuBar";
 import RightMenuBar from "../components/RightMenuBar";
-import WindowManager from "../components/WindowManager";
-import Search from "../components/Search";
+import WindowManager from "./Window/WindowManager";
+import Search from "./WindowModules/Search";
 
 // actions
 import { addWindow } from "../actions/windows";

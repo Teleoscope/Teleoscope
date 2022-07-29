@@ -17,24 +17,24 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import FolderIcon from '@mui/icons-material/Folder';
 
 // actions
-import useSWRAbstract from "../util/swr"
+import useSWRAbstract from "../../util/swr"
 import { useSelector, useDispatch } from "react-redux";
-import { searcher } from "../actions/searchterm";
-import { addGroup } from "../actions/groups";
-import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
-import { addWindow} from "../actions/windows";
-import { dragged } from "../actions/windows";
+import { searcher } from "../../actions/searchterm";
+import { addGroup } from "../../actions/groups";
+import { sessionActivator, loadActiveSessionID } from "../../actions/activeSessionID";
+import { addWindow} from "../../actions/windows";
+import { dragged } from "../../actions/windows";
 
 // utils
-import { add_group } from "../components/Stomp.js";
+import { add_group } from "../Stomp.js";
 
 // contexts
-import { StompContext } from '../context/StompContext'
+import { StompContext } from '../../context/StompContext'
 
 // custom components
-import CloseButton from "./CloseButton"
-import { WindowHeader } from "./WindowHeader";
-import { WindowBody } from "./WindowBody";
+import CloseButton from "../CloseButton"
+import { WindowHeader } from "../Window/WindowHeader";
+import { WindowBody } from "../Window/WindowBody";
 
 
 // abstracting Header and Body

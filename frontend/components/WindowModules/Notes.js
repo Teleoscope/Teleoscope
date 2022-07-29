@@ -9,23 +9,23 @@ import Tooltip from '@mui/material/Tooltip';
 
 // actions
 import { useSelector, useDispatch } from "react-redux"
-import { dragged, addWindow, removeWindow, loadWindows } from "../actions/windows";
+import { dragged, addWindow, removeWindow, loadWindows } from "../../actions/windows";
 
 // custom components
-import PostTitle from "./PostTitle"
-import { WindowHeader } from "./WindowHeader";
-import { WindowBody } from "./WindowBody";
+import PostTitle from "../PostTitle"
+import { WindowHeader } from "../Window/WindowHeader";
+import { WindowBody } from "../Window/WindowBody";
 
 
 // icons
 import CloseIcon from "@mui/icons-material/Close";
 
 //utils
-import useSWRAbstract from "../util/swr"
-import { update_note } from "../components/Stomp.js";
+import useSWRAbstract from "../../util/swr"
+import { update_note } from "../Stomp.js";
 
 // contexts
-import { StompContext } from '../context/StompContext'
+import { StompContext } from '../../context/StompContext'
 
 // abstracting Header and Body
 
