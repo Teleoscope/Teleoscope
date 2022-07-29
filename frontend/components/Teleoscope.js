@@ -5,7 +5,6 @@ import { useCookies } from "react-cookie";
 // mui
 import { styled, alpha } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
-
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -24,6 +23,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import LoadingButton from '@mui/lab/LoadingButton';
+import FlareIcon from '@mui/icons-material/Flare';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -77,11 +77,20 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 export default function Teleoscope(props) {
-  const teleoscope_id = props.id.split("_")[0];
+  const [teleoscope_id, setTeleoscope_id] = useState(props.id.split("_")[0]);
   const [cookies, setCookie] = useCookies(["user"]);
   const { user } = useSWRAbstract("user", `/api/users/${cookies.user}`);
+  const session_id = useSelector((state) => state.activeSessionID.value);
   const { teleoscope, teleoscope_loading } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
-
+  const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
+  const teleoscopes = teleoscopes_raw?.map((t) => {
+    var ret = {
+      _id: t._id,
+      label: t.history[t.history.length - 1].label
+    }
+    return ret;
+  });
+  
   var data = [];
   if (teleoscope) {
     var history = teleoscope["history"];
@@ -89,13 +98,61 @@ export default function Teleoscope(props) {
     data = history_item["rank_slice"];
   }
 
+  if (teleoscope_id == "%teleoscope") {
+    return (
 
-  return (  
-      <div style={{overflow:"auto", height: "100%"}}>
+
+        <div style={{overflow:"auto", height: "100%"}}>
+            <IconButton 
+      color="secondary"
+      sx={{
+        boxShadow: '3',
+
+      }}
+      variant="outlined"
+    >
+      <FlareIcon />
+    </IconButton>
+    
         <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
-        Teleoscope: {teleoscope?.history[teleoscope?.history.length - 1].label}
+        All Teleoscopes
         </Typography>
+        <List>
+            {teleoscopes?.map((t) => { 
+              return ( <ListItem 
+                          id={t._id}
+                          onClick={() => setTeleoscope_id(t._id)}
+                      >{t.label}
+                       </ListItem>
+              )
+            })}
+        </List>
+        </div>
+    )    
+
+  } else {
+    return (
+      <div style={{overflow:"auto", height: "100%"}}>
+          <IconButton 
+      color="secondary"
+      sx={{
+        boxShadow: '3',
+
+      }}
+      variant="outlined"
+    >
+      <FlareIcon />
+    </IconButton>
+    
+      <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
+          Teleoscope: {teleoscope?.history[teleoscope?.history.length - 1].label}
+      </Typography>
         {teleoscope_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
       </div>
-  );
+    )
+    
+  }
+
+
+  
 }

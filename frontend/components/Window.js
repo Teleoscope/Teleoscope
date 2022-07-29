@@ -2,8 +2,10 @@
 import React from "react";
 
 // custom
-import Notes from "./Notes"
-import Teleoscope from "./Teleoscope"
+import FABMenu from "../components/FABMenu"
+import Notes from "../components/Notes"
+import Teleoscope from "../components/Teleoscope"
+import TeleoscopeDraft from "../components/TeleoscopeDraft"
 import Search from "../components/Search";
 import GroupPalette from "../components/GroupPalette";
 import Group from "../components/Group";
@@ -32,7 +34,7 @@ const innerContent = (type, id, props) => {
 	if (type == "Teleoscope") {
 		return <Teleoscope id={id}></Teleoscope>
 	}
-	if (type == "GroupPalette") {
+	if (type == "Group Palette") {
 		return <GroupPalette id={id}></GroupPalette>
 	}
 	if (type == "Group") {
@@ -44,6 +46,8 @@ const innerContent = (type, id, props) => {
 	if (type == "Post") {
 		return <WorkspaceItem id={id}></WorkspaceItem>
 	}
+
+
 }
 
 const button_style = {
@@ -59,6 +63,35 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 	var w = props.windata;
 	var pc = checked.indexOf(w.i);
 
+	if (w.type == "FABMenu") {
+		return (
+			<div
+				style={{...style}}
+				className="drag-handle"
+				ref={ref}
+				onMouseDown={onMouseDown}
+				onMouseUp={onMouseUp}
+				onTouchEnd={onTouchEnd}				
+			><FABMenu></FABMenu>
+			</div>
+		)
+	}
+
+	// 	if (w.type == "Teleoscope") {
+	// 	return (
+	// 		<div
+	// 			style={{...style}}
+	// 			className="drag-handle"
+	// 			ref={ref}
+	// 			onMouseDown={onMouseDown}
+	// 			onMouseUp={onMouseUp}
+	// 			onTouchEnd={onTouchEnd}				
+	// 		><TeleoscopeDraft></TeleoscopeDraft>
+	// 		</div>
+	// 	)
+	// }
+	
+	
 	return (
 		<Card
 			variant={pc >= 0 ? "outlined" : ""}
