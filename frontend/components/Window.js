@@ -5,7 +5,6 @@ import React, { useState } from "react";
 import FABMenu from "../components/FABMenu"
 import Notes from "../components/Notes"
 import Teleoscope from "../components/Teleoscope"
-import TeleoscopeDraft from "../components/TeleoscopeDraft"
 import Search from "../components/Search";
 import GroupPalette from "../components/GroupPalette";
 import Group from "../components/Group";
