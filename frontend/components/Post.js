@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 
 // custom
-import WorkspaceItem from "../components/WorkspaceItem";
 import CloseButton from "../components/CloseButton";
 import PostTitle from "./PostTitle"
 import PostText from "./PostText"

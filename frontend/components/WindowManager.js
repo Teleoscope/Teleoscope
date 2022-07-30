@@ -5,8 +5,8 @@ import RGL, { WidthProvider } from "react-grid-layout";
 // custom
 import Window from "../components/Window"
 import FABMenu from "../components/FABMenu"
-import Draggable from "../components/Draggable"
-import { getDefaultWindow } from "../components/DefaultWindow"
+import WindowFactory from "../components/WindowFactory"
+import { getDefaultWindow } from "../components/WindowDefault"
 
 // css
 import "react-grid-layout/css/styles.css"
@@ -137,7 +137,7 @@ export default function WindowManager(props) {
                 // backgroundColor: "red"
               }}
             >
-                <Draggable id={w.i} windata={w} />
+                <WindowFactory id={w.i} windata={w} />
             </div>
         )
       })}

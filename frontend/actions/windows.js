@@ -1,7 +1,7 @@
 // windows.js
 import { createSlice } from '@reduxjs/toolkit'
 import _ from 'lodash';
-import { getDefaultWindow } from "../components/DefaultWindow"
+import { getDefaultWindow } from "../components/WindowDefault"
 
 export const Windows = createSlice({
 	name: 'windows',

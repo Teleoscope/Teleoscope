@@ -9,7 +9,6 @@ import Search from "../components/Search";
 import GroupPalette from "../components/GroupPalette";
 import Group from "../components/Group";
 import Post from "../components/Post";
-import WorkspaceItem from "../components/WorkspaceItem";
 import CloseButton from "../components/CloseButton";
 import WindowTopBar from "../components/WindowTopBar";
 

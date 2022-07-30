@@ -24,7 +24,7 @@ import useSWRAbstract from "../util/swr"
 import { useSelector, useDispatch } from "react-redux";
 import { addGroup } from "../actions/groups";
 import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
-import { addWindow} from "../actions/windows";
+import { addWindow } from "../actions/windows";
 import { dragged } from "../actions/windows";
 
 // utils
@@ -35,7 +35,7 @@ import { StompContext } from '../context/StompContext'
 
 // custom components
 
-export default function LeftMenuBarGroups() {
+export default function GroupPalette() {
    const [groupedData, setGroupedData] = React.useState([]);
    const [grouped, setGrouped] = React.useState(false)
    

@@ -66,7 +66,7 @@ const WindowDefinitions = {
 	},
 }
 
-export default function Draggable(props) {
+export default function WindowFactory(props) {
 	const w = props.windata;
 	if (w.type == "FABMenu") {
 		return (
