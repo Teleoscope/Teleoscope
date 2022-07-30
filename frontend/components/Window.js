@@ -27,7 +27,6 @@ import Toolbar from '@mui/material/Toolbar'
 import TopicIcon from '@mui/icons-material/Topic';
 
 // actions
-import { checker } from "../actions/checkedPosts";
 import { useSelector, useDispatch } from "react-redux";
 import { minimizeWindow, maximizeWindow, checkWindow } from "../actions/windows";
 
@@ -53,7 +52,6 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 	}
 
 	const handleSelect = (e) => {
-		console.log("handleSelect", e)
 		if (e.shiftKey) {
 			dispatch(checkWindow({i: w.i, check: !w.isChecked}))	
 		}
@@ -61,11 +59,11 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 
   	const handleShow = () => {
   		if (show) {
-  			// dispatch(minimizeWindow(props.id));
+  			dispatch(minimizeWindow(props.id));
   			setShow(false);
   		}
   		if (!show && !drag) {
-  			// dispatch(maximizeWindow(props.id));
+  			dispatch(maximizeWindow(props.id));
   			setShow(true);
   		}
   	}

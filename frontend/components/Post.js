@@ -25,7 +25,6 @@ import CardActionArea from '@mui/material/CardActionArea';
 import Divider from '@mui/material/Divider';
 
 // actions
-import { checker } from "../actions/checkedPosts";
 import { useSelector, useDispatch } from "react-redux";
 import { minimizeWindow, maximizeWindow } from "../actions/windows";
 
@@ -43,19 +42,11 @@ import { PreprocessTitle, PreprocessText } from "../util/Preprocessers"
 
 export default function Post(props) {
   const [hover, setHover] = useState(false);
-  const { post } = useSWRAbstract("post", `/api/posts/${props.id}`);
+  const id = props.id.split("%")[0];
+  const { post } = useSWRAbstract("post", `/api/posts/${id}`);
   const title = post ? PreprocessTitle(post.title) : false;
   const text = post ? PreprocessText(post.selftext) : false;  
-
-    // strangely, this is needed
-    const dispatch = useDispatch();
-    const handleClick = (id, index) => {
-      if (index < 0) {
-        dispatch(checker(id))
-      } else {
-        dispatch(checker(id))
-      }
-    } 
+  const dispatch = useDispatch();
 
   return (
     <div style={{overflow: "auto", height: "100%", marginTop: "0em"}}>
@@ -70,8 +61,8 @@ export default function Post(props) {
               margin: 0
             }}
           >
-            <NoteButton id={props.id} />
-            <GroupSelector id={props.id} />
+            <NoteButton id={id} />
+            <GroupSelector id={id} />
           </Stack>
           <Divider />    
         <PostText text={text} /> 

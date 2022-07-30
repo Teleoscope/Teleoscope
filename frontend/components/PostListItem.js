@@ -35,7 +35,7 @@ export default function PostListItem(props) {
       className="droppable-element"
       style={{ borderBottom: "1px solid  #eceeee" }}
       id={props.id}
-      onDragStart={(e, data) => {dispatch(dragged({id: props.id, type: "Post"}))}}
+      onDragStart={(e, data) => {dispatch(dragged({id: props.id + "%post", type: "Post"}))}}
     >
       <Grid container spacing={2}>
         <Grid item xs={1}>
