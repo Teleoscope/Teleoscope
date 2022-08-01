@@ -51,9 +51,6 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
   			{ sx: {color :info.color} }
 		);
 	}
-  	
-  	
-
 
 	const dispatch = useDispatch();
 	
