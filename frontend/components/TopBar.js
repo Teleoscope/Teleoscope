@@ -18,11 +18,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { teleoscopeActivator, loadActiveTeleoscopeID } from "../actions/activeTeleoscopeID";
 import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
 import { historyActivator, loadActiveHistoryItem } from "../actions/activeHistoryItem";
-import { searcher, loadSearchTerm } from "../actions/searchterm";
-import { checker, uncheckall, loadCheckedPosts } from "../actions/checkedPosts";
 import { dragged, addWindow, removeWindow, loadWindows } from "../actions/windows";
 import { mark, loadBookmarkedPosts } from "../actions/bookmark";
 import { getGroups } from "../actions/groups";
@@ -38,9 +35,6 @@ import { StompContext } from '../context/StompContext'
 export default function TopBar(props) {
 
   // const { teleoscopes, loading, error } = useTeleoscopes();
-  const { teleoscopes, teleoscopes_loading, teleoscopes_error } = useSWRAbstract("teleoscopes", `/api/teleoscopes/`);
-  const teleoscope_id = useSelector((state) => state.activeTeleoscopeID.value);
-  const { teleoscope, teleoscope_loading, teleoscope_error } = useSWRAbstract("teleoscope",`/api/teleoscopes/${teleoscope_id}`);
   const { sessions, sessions_loading, sessions_error } = useSWRAbstract("sessions", `/api/sessions/`);
   const { users, users_loading, users_error } = useSWRAbstract("users", `/api/users/`);
   const session_id = useSelector((state) => state.activeSessionID.value);
@@ -49,8 +43,6 @@ export default function TopBar(props) {
   const [cookies, setCookie] = useCookies(["user"]);
 
   const history_item_num = useSelector((state) => state.activeHistoryItem.value);  
-  const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
-  const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
   const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
 
@@ -65,20 +57,6 @@ export default function TopBar(props) {
   
   const dispatch = useDispatch();
 
-  const getTeleoscopes = () => {
-    if (teleoscopes && session) {
-      var ts = teleoscopes.filter((t) => {
-        return session["teleoscopes"].includes(t._id) 
-      });
-      if (ts.length > 0 ) {
-        return ts.map((t) => {
-          var latest_t = t['history'][t['history'].length - 1];
-          return (<MenuItem value={t["_id"]}>{latest_t["label"]}</MenuItem>)
-        });  
-      }
-    }
-    return (<MenuItem>No Teleoscopes started for this session...</MenuItem>)
-  }
  
   const handleSessionChange = (event) => {
     dispatch(sessionActivator(event.target.value))
@@ -101,10 +79,7 @@ export default function TopBar(props) {
       )    
   }
 
-  const load_teleoscope_state = (history_item_num) => {
-    dispatch(historyActivator(history_item_num));
-    var history_item = teleoscope["history"][history_item_num];
-  }
+
 
   const load_UI_state = () => {
     // TODO

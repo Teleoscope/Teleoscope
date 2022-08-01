@@ -2,15 +2,6 @@
 import React, { useState } from "react";
 
 // custom
-import FABMenu from "../components/FABMenu"
-import Notes from "../components/Notes"
-import Teleoscope from "../components/Teleoscope"
-import Search from "../components/Search";
-import GroupPalette from "../components/GroupPalette";
-import Group from "../components/Group";
-import Post from "../components/Post";
-import WorkspaceItem from "../components/WorkspaceItem";
-import CloseButton from "../components/CloseButton";
 import WindowTopBar from "../components/WindowTopBar";
 
 // mui
@@ -27,7 +18,6 @@ import Toolbar from '@mui/material/Toolbar'
 import TopicIcon from '@mui/icons-material/Topic';
 
 // actions
-import { checker } from "../actions/checkedPosts";
 import { useSelector, useDispatch } from "react-redux";
 import { minimizeWindow, maximizeWindow, checkWindow } from "../actions/windows";
 
@@ -40,8 +30,6 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 	const [show, setShow] = useState(props.showWindow);
 	const [drag, setDrag] = useState(true);  	
   	const w = props.windata;
-	const { post } = useSWRAbstract("post", `/api/posts/${w.i.split("%")[0]}`);
-  	const title = post ? PreprocessTitle(post.title) : "Not loading...";
 	const dispatch = useDispatch();
 	
 	const handleMove = (e) => {
@@ -53,7 +41,6 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 	}
 
 	const handleSelect = (e) => {
-		console.log("handleSelect", e)
 		if (e.shiftKey) {
 			dispatch(checkWindow({i: w.i, check: !w.isChecked}))	
 		}
@@ -61,11 +48,11 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 
   	const handleShow = () => {
   		if (show) {
-  			// dispatch(minimizeWindow(props.id));
+  			dispatch(minimizeWindow(props.id));
   			setShow(false);
   		}
   		if (!show && !drag) {
-  			// dispatch(maximizeWindow(props.id));
+  			dispatch(maximizeWindow(props.id));
   			setShow(true);
   		}
   	}
@@ -104,7 +91,7 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 			onClick={(e) => handleSelect(e)}
 		>
 		<WindowTopBar 
-			title={w.type == "Post" ? title : w.type}
+			title={props.title}
 			id={props.id}
 			icon={props.icon}
 			handleShow={handleShow}

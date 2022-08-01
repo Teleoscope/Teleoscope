@@ -13,6 +13,8 @@ import Select from '@mui/material/Select';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import FolderIcon from '@mui/icons-material/Folder';
 import Tooltip from '@mui/material/Tooltip';
+import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
+import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 
 // actions 
 import { useSelector, useDispatch } from "react-redux";
@@ -63,11 +65,11 @@ export default function groupSelector(props) {
       );
     };
 
-    const handleSelect = (_id) => {
+    const handleSelect = (group_id) => {
       if (groups_this_post_belongs_to.find((item) => item.id == props.id)) {
-         remove_post_from_group(client, _id, props.id);
+         remove_post_from_group(client, group_id, props.id);
       } else {
-         add_post_to_group(client, _id, props.id);
+         add_post_to_group(client, group_id, props.id);
       }
       handleClose();
     }
@@ -82,19 +84,37 @@ export default function groupSelector(props) {
    };
 
 
+   const GroupIconHandler = (props) => {
+      if (props.groups.length == 0) {
+         return (
+               <FolderOutlinedIcon 
+                  sx={{ color: "#BBBBBB" }} 
+                  style={{ fontSize: 15 }} />
+         )
+      }
+      if (props.groups.length == 1) {
+         var g = props.groups[0];
+         return (
+               <Tooltip title={g.label} placement="top">
+               <FolderIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
+               </Tooltip>         
+         )
+      }
+      if (props.groups.length > 1) {
+         var g = props.groups[0];
+         return (
+               <Tooltip title={g.label} placement="top">
+               <FolderCopyIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
+               </Tooltip>
+            )
+      }
+   }
+
    return (
       <div>
          <IconButton onClick={handleClick}>
-         {groups_this_post_belongs_to.map((g) => {
-            return (
+            <GroupIconHandler groups={groups_this_post_belongs_to} />
 
-               <Tooltip title={g.label} placement="top">
-               <FolderIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
-               </Tooltip>
-            )
-         })}
-         {groups_this_post_belongs_to.length == 0 ? 
-                     <FolderIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} /> : ""}
          </IconButton>
          <Menu
             anchorEl={anchorEl}

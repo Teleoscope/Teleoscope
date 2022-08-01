@@ -1,12 +1,12 @@
 // imports
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import RGL, { WidthProvider } from "react-grid-layout";
 
 // custom
 import Window from "../components/Window"
 import FABMenu from "../components/FABMenu"
-import Draggable from "../components/Draggable"
-import { getDefaultWindow } from "../components/DefaultWindow"
+import WindowFactory from "../components/WindowFactory"
+import { getDefaultWindow } from "../components/WindowDefault"
 
 // css
 import "react-grid-layout/css/styles.css"
@@ -14,7 +14,21 @@ import "react-resizable/css/styles.css"
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { addWindow, loadWindows } from "../actions/windows";
+import { deselectAll, checkWindow, removeWindow, addWindow, loadWindows } from "../actions/windows";
+
+// utils
+import { 
+  reorient, 
+  initialize_teleoscope, 
+  save_UI_state, 
+  save_teleoscope_state, 
+  load_teleoscope_state, 
+  initialize_session, 
+  add_post_to_group 
+} from "../components/Stomp.js";
+
+// contexts
+import { StompContext } from '../context/StompContext'
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -34,62 +48,47 @@ const collides = (l1, l2) =>  {
   return true;
 }
 
-
-
 export default function WindowManager(props) {
+  const client = useContext(StompContext)
+
   const windows = useSelector((state) => state.windows.windows);
+  const posts = windows.filter(w => w.type == "Post");
+  const groups = windows.filter(w => w.type == "Group");
   const dragged_item = useSelector((state) => state.windows.dragged);
 	const dispatch = useDispatch();
-  const [ droppedWindow, setDroppedWindow ] = useState(false);
-  const [ receivingWindow, setReceivingWindow ] = useState(false);
 
   const dropping = (layout, item, e) => {
+    // var item = getDefaultWindow();
     dispatch(addWindow({i: dragged_item.id, type: dragged_item.type, ...item}));
   }
 
   const checkCollisions = (newItem, placeholder) => {
-    windows.forEach((w) => {
-      if (w.type == "Group" || w.type == "Post") {
+    groups.forEach((w) => {
         if (collides(w, placeholder)) {
-          console.log("collide", w, newItem);
-          return {
-            w: w, 
-            item: newItem,
-          };
-        }  
-      }
-    })
-    return {
-      w: false,
-      item: false
-    }
+          dispatch(checkWindow({i: w.i, check:true}));
+        } else if (w.isChecked == true) {
+          dispatch(checkWindow({i: w.i, check:false}));
+        }
+      });
   }
 
   const handleCollisions = (layout, newItem, placeholder) => {
-    var { w, item } = checkCollisions(newItem, placeholder);
-    if ( w && item ) {
-      setDroppedWindow(item);
-      setReceivingWindow(w);
-    } else {
-      setDroppedWindow(false);
-      setReceivingWindow(false);
+    if (newItem.i.split("%")[1] == "post") {
+      checkCollisions(newItem, placeholder);
     }
   }
-  const handleDragStop = (layout) => {
+
+  const handleDragStop = (layout, newItem) => {
     dispatch(loadWindows(layout))
-    if (droppedWindow && receivingWindow){
-      dropWindow(droppedWindow, receivingWindow);
-      setDroppedWindow(false);
-      setReceivingWindow(false);
+    var checked = windows.find(w => w.isChecked && w.type == "Group");
+    if (checked && newItem.i.split("%")[1] == "post") {
+      dispatch(removeWindow(newItem.i))
+      // TODO
+      add_post_to_group(client, checked.i.split("%")[0], newItem.i.split("%")[0])
+      dispatch(checkWindow({i: checked.i, check:false}));
     }
-  }
 
-  const dropWindow = (droppedWindow, receivingWindow) => {
-    // get rid of dropping
-    // if receiving is a Group, then add dropping to Group
-    // if receving is a post, make a new Group from both posts 
-    // and also get rid of receving
-
+    
   }
 
   // type ItemCallback = 
@@ -112,7 +111,7 @@ export default function WindowManager(props) {
         allowOverlap={true}
         preventCollision={true}
         onDrag={(layout, oldItem, newItem, placeholder, e, element) => handleCollisions(layout, newItem, placeholder)}
-        onDragStop={(layout)=> handleDragStop(layout)}
+        onDragStop={(layout, oldItem, newItem, placeholder, e, element) => handleDragStop(layout, newItem)}
         onResizeStop={(layout)=> dispatch(loadWindows(layout))}
         onLayoutChange={(layout) => {
           // dispatch(loadWindows(layout))
@@ -136,7 +135,7 @@ export default function WindowManager(props) {
                 // backgroundColor: "red"
               }}
             >
-                <Draggable id={w.i} windata={w} />
+                <WindowFactory id={w.i} windata={w} />
             </div>
         )
       })}

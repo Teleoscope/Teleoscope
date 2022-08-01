@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 
 // material ui
-
-
+import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
@@ -52,7 +51,6 @@ export default function PostList(props) {
   const changePage = (event, value) => {
     setPageNumber(value);
   };
-  // className={classes.idlist} in List
   return (
     <List dense={true}>
       {displayPagination

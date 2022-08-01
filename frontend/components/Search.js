@@ -114,10 +114,12 @@ export default function BottomAppBar(props) {
   const data = posts ? posts.map((post) => { return [post.id, 1.0]; }) : [];
 
   const handleSetQuery = (e) => {
-    setTimeout(() => {
-      setQuery(e.target.value);
-      dispatch(updateWindow({ i: "%search", term: e.target.value }));
-    }, 1000);
+    if (e.target.value != 'Enter') {
+      setTimeout(() => {
+        setQuery(e.target.value);
+        dispatch(updateWindow({ i: "%search", term: e.target.value }));
+      }, 250);  
+    }
   }
 
   return (

@@ -2,9 +2,10 @@ import React, { useState } from "react";
 
 
 // MUI imports
-import BookmarkIcon from "@mui/icons-material/Bookmark";
+import StarOutline from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
-
+import StarOutlineOutlinedIcon from '@mui/icons-material/StarOutlineOutlined';
+import StarOutlinedIcon from '@mui/icons-material/StarOutlined';
 
 // Actions
 import { useSelector, useDispatch } from "react-redux";
@@ -26,9 +27,9 @@ export default function BookmarkSelector(props) {
          onClick={() => dispatch(mark(postID))}
       >
          {marked ?
-            <BookmarkIcon color="secondary" style={{ fontSize: 20 }} />
+            <StarOutlinedIcon color="secondary" style={{ fontSize: 15 }} />
             :
-            <BookmarkIcon style={{ fontSize: 20 }} />
+            <StarOutlineOutlinedIcon style={{ fontSize: 15 }} />
          }
       </IconButton>
    )
