@@ -30,28 +30,6 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 	const [show, setShow] = useState(props.showWindow);
 	const [drag, setDrag] = useState(true);  	
   	const w = props.windata;
-
-  	const type = w.i.split("%")[1];
-  	const id = w.i.split("%")[0];
-
-	const { info } = useSWRAbstract("info", `/api/${type}s/${id}`);
-	
-	let title = w.type;
-	let color = w.color;
-	let icon = props.icon;
-
-	if (info && w.type == "Post") {
-		title = PreprocessTitle(info.title);
-	}
-	
-	if (info && w.type == "Group") {
-		title = info.label;
-		icon = React.cloneElement(
-  			props.icon, 
-  			{ sx: {color :info.color} }
-		);
-	}
-
 	const dispatch = useDispatch();
 	
 	const handleMove = (e) => {
@@ -93,7 +71,7 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 					border: w.isChecked ? "2px solid #4e5cbc" : "1px solid #DDDDDD",
             		boxShadow: '1',
          		}}
-  			>{icon}</IconButton>
+  			>{props.icon}</IconButton>
   		)
   	}
 
@@ -113,9 +91,9 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 			onClick={(e) => handleSelect(e)}
 		>
 		<WindowTopBar 
-			title={title}
+			title={props.title}
 			id={props.id}
-			icon={icon}
+			icon={props.icon}
 			handleShow={handleShow}
 			isChecked={w.isChecked}
 		/></CardActionArea>

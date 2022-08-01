@@ -48,8 +48,6 @@ const collides = (l1, l2) =>  {
   return true;
 }
 
-
-
 export default function WindowManager(props) {
   const client = useContext(StompContext)
 

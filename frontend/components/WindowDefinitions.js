@@ -17,49 +17,58 @@ import Teleoscope from "../components/Teleoscope"
 import Search from "../components/Search"
 import GroupPalette from "../components/GroupPalette"
 
+import { PreprocessTitle, PreprocessText } from "../util/Preprocessers"
+
 export default function WindowDefinitions() {
 	return {
 		"Note": {
-			icon: <CreateIcon fontSize="inherit" />,
+			icon: () =>{ return <CreateIcon fontSize="inherit" /> },
 			component: (w, id) => { return(<Notes id={id} windata={w}/>)},
 			showWindow: true,
 			title: () => {return "Note"},
+			tag: "note",
 		},
 		"FABMenu": {
-			icon: <AddIcon fontSize="inherit" />,
+			icon: () =>{ return <AddIcon fontSize="inherit" /> },
 			component: (w, id) => { return(<FABMenu id={id} windata={w}/>)},
 			showWindow: false,
 			title: () => {return "FABMenu"},
+			tag: "fabmenu",
 		},
 		"Group": {
-			icon: <TopicIcon fontSize="inherit" />,
+			icon: (d) => {return (<TopicIcon fontSize="inherit" sx={{color:d?.color}} />)},
 			component: (w, id) => { return(<Group id={id} windata={w}/>)},
 			showWindow: false,
-			title: () => {return "Group"},
+			title: (d) => {return d?.label},
+			tag: "group",
 		},
 		"Post": {
-			icon: <ShortTextIcon fontSize="inherit" />,
+			icon: () =>{ return <ShortTextIcon fontSize="inherit" /> },
 			component: (w, id) => { return(<Post id={id} windata={w}/>)},
 			showWindow: true,
-			title: () => {return "Post"},
+			title: (d) => {return PreprocessTitle(d?.title)},
+			tag: "post",
 		},
 		"Teleoscope": {
-			icon: <FlareIcon fontSize="inherit" />,
+			icon: () =>{ return <FlareIcon fontSize="inherit" /> },
 			component: (w, id) => { return(<Teleoscope id={id} windata={w}/>)},
 			showWindow: false,
 			title: () => {return "Teleoscope"},
+			tag: "teleoscope",
 		},
 		"Search": {
-			icon: <SearchIcon fontSize="inherit" />,
+			icon: () =>{ return <SearchIcon fontSize="inherit" /> },
 			component: (w, id) => { return(<Search id={id} windata={w}/>)},
 			showWindow: true,
 			title: () => {return "Search"},
+			tag: "search",
 		},
 		"Group Palette": {
-			icon: <FolderCopyIcon fontSize="inherit" />,
+			icon: () =>{ return <FolderCopyIcon fontSize="inherit" /> },
 			component: (w, id) => { return(<GroupPalette id={id} windata={w}/>)},
 			showWindow: true,
 			title: () => {return "Group Palette"},
+			tag: "grouppalette",
 		},
 	}
 }
