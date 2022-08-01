@@ -15,6 +15,9 @@ import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
 
+// custom
+import CommentPlugin, {  CommentNode, $createCommentNode, $isCommentNode } from "../components/TextLabels"
+
 import ListMaxIndentLevelPlugin from "../plugins/ListMaxIndentLevelPlugin";
 import CodeHighlightPlugin from "../plugins/CodeHighlightPlugin";
 import AutoLinkPlugin from "../plugins/AutoLinkPlugin";
@@ -53,7 +56,8 @@ export default function Editor(props) {
     TableCellNode,
     TableRowNode,
     AutoLinkNode,
-    LinkNode
+    LinkNode,
+    CommentNode
   ]
   };
   return (
@@ -66,6 +70,7 @@ export default function Editor(props) {
             placeholder={<Placeholder />}
           />
           <HistoryPlugin />
+          <CommentPlugin />
           <TreeViewPlugin />
           <AutoFocusPlugin />
           <CodeHighlightPlugin />
