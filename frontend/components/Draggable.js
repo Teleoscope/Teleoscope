@@ -12,14 +12,14 @@ import SearchIcon from '@mui/icons-material/Search';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 
 // custom
-import Notes from "../components/Notes"
+import Notes from "./WindowModules/Notes"
 import FABMenu from "../components/FABMenu"
 import Group from "../components/Group"
 import Post from "../components/Post"
-import Teleoscope from "../components/Teleoscope"
-import Search from "../components/Search"
-import GroupPalette from "../components/GroupPalette"
-import Window from "../components/Window"
+import Teleoscope from "./WindowModules/Teleoscope"
+import Search from "./WindowModules/Search"
+import GroupPalette from "./WindowModules/GroupPalette"
+import Window from "./Window/Window"
 
 const WindowDefinitions = {
 	"Note": {
