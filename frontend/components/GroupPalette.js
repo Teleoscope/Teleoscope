@@ -190,7 +190,7 @@ export default function GroupPalette() {
             freeSolo
             renderInput={(params) =>
                <TextField {...params}
-                  label="Post groups..."
+                  label="Search and Create groups..."
                   variant="filled"
                   placeholder="type to create, click to filter..."
                   onKeyDown={(e) => keyChange(e)}
