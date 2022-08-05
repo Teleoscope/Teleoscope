@@ -6,6 +6,7 @@ import { styled, alpha } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
 import CssBaseline from '@mui/material/CssBaseline';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -25,6 +26,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import useScrollTrigger from '@mui/material/useScrollTrigger';
 import Slide from '@mui/material/Slide';
 import Container from '@mui/material/Container';
+import Divider from '@mui/material/Divider';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -136,7 +138,10 @@ const handleSetQuery = (e) => {
       <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
         Search {query != "" ? `"${query}"` : "all posts"}
       </Typography>
+
+      {/* {posts_loading ? <LoadingButton loading={true} /> : <PostList pagination={true} data={data}></PostList>} */}
     </div>
+
   );
 }
 

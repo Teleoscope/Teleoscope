@@ -5,7 +5,6 @@ import { useCookies } from "react-cookie";
 // mui
 import { styled, alpha } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
-
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -24,6 +23,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import LoadingButton from '@mui/lab/LoadingButton';
+import FlareIcon from '@mui/icons-material/Flare';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -85,8 +85,17 @@ const TeleoscopeHeader = ({props}) => {
   const teleoscope_id = props.id.split("_")[0];
   const [cookies, setCookie] = useCookies(["user"]);
   const { user } = useSWRAbstract("user", `/api/users/${cookies.user}`);
+  const session_id = useSelector((state) => state.activeSessionID.value);
   const { teleoscope, teleoscope_loading } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
-
+  const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
+  const teleoscopes = teleoscopes_raw?.map((t) => {
+    var ret = {
+      _id: t._id,
+      label: t.history[t.history.length - 1].label
+    }
+    return ret;
+  });
+  
   var data = [];
   if (teleoscope) {
     var history = teleoscope["history"];

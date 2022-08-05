@@ -118,138 +118,140 @@ export default function TopBar(props) {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
-        style={{ height: 75, backgroundColor: "#4E5CBC" }}
+        style={{ height: 60, backgroundColor: "#4E5CBC" }}
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
-            <Button
-              size="small" 
-              variant="text" 
-              onClick={() => initialize_session(client, cookies.user)}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              New session
-            </Button>
-            <Button
-              size="small" 
-              variant="text" 
-              onClick={() => save_UI_state(
-                client, 
-                session_id, 
-                { // history_item in save_UI_state in Stomp.js
-                    "bookmarks": bookmarks,
-                    "windows": windows,
-                })
-              }
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              Save Workspace
-            </Button>
-            <Button
-              size="small" 
-              variant="text" 
-              onClick={() => load_UI_state()}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              Load Workspace
-            </Button>
-            <Button
-              size="small" 
-              variant="text" 
-              onClick={() => initialize_teleoscope(client, search_term, session_id)}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              New Teleoscope
-            </Button>
-            <FormControl 
-              sx={{width: 200, backgroundColor: 'white', }}
-              variant="filled"
-              >
-              <InputLabel id="demo-simple-select-label">Load History Item</InputLabel>
-              <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                value={history_item_num}
-                label="History Item"
-                onChange={(event) => load_teleoscope_state(event.target.value)}
-              >
-                {!teleoscope_loading && !teleoscope_error ? teleoscope["history"].map((h, i) => {
-                  return (
-                    <MenuItem value={i}>{i}</MenuItem>
-                )}):[]}
-              </Select>
-            </FormControl>
-            <Button
-              size="small"
-              onClick={() => {
-                // negative docs array is empty
-                reorient(client, search_term, teleoscope_id, checked, []);
-                dispatch(uncheckall(teleoscope_id))
-              }}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              <BiotechIcon />
-              Orient Towards
-            </Button>
-            <Button
-              size="small"
-              onClick={() => {
-                // positive docs array is empty
-                reorient(client, search_term, teleoscope_id, [], checked);
-                dispatch(uncheckall(teleoscope_id))
-              }}
-              style={{
-                backgroundColor: "#FFFFFF",
-                color: "black",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
-              <BiotechIcon />
-              Orient Away
-            </Button>
-            <FormControl 
-              sx={{width: 200, backgroundColor: 'white', }}
-              variant="filled"
-              >
-              <InputLabel id="demo-simple-select-label">Active Teleoscope</InputLabel>
-              <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                value={teleoscope_id}
-                label="Teleoscope ID"
-                onChange={(event) => dispatch(teleoscopeActivator(event.target.value))}
-              >
-                {getTeleoscopes()}
-              </Select>
-            </FormControl>
+          {/*  */}
+          {/*   <Button */}
+          {/*     size="small"  */}
+          {/*     variant="text"  */}
+          {/*     onClick={() => initialize_session(client, cookies.user)} */}
+          {/*     style={{ */}
+          {/*       backgroundColor: "#FFFFFF", */}
+          {/*       color: "black", */}
+          {/*       fontSize: 12, */}
+          {/*       fontWeight: 700, */}
+          {/*     }} */}
+          {/*   > */}
+          {/*     New session */}
+          {/*   </Button> */}
+          {/*   <Button */}
+          {/*     size="small"  */}
+          {/*     variant="text"  */}
+          {/*     onClick={() => save_UI_state( */}
+          {/*       client,  */}
+          {/*       session_id,  */}
+          {/*       { // history_item in save_UI_state in Stomp.js */}
+          {/*           "bookmarks": bookmarks, */}
+          {/*           "windows": windows, */}
+          {/*       }) */}
+          {/*     } */}
+          {/*     style={{ */}
+          {/*       backgroundColor: "#FFFFFF", */}
+          {/*       color: "black", */}
+          {/*       fontSize: 12, */}
+          {/*       fontWeight: 700, */}
+          {/*     }} */}
+          {/*   > */}
+          {/*     Save Workspace */}
+          {/*   </Button> */}
+          {/*   <Button */}
+          {/*     size="small"  */}
+          {/*     variant="text"  */}
+          {/*     onClick={() => load_UI_state()} */}
+          {/*     style={{ */}
+          {/*       backgroundColor: "#FFFFFF", */}
+          {/*       color: "black", */}
+          {/*       fontSize: 12, */}
+          {/*       fontWeight: 700, */}
+          {/*     }} */}
+          {/*   > */}
+          {/*     Load Workspace */}
+          {/*   </Button> */}
+          {/*   <Button */}
+          {/*     size="small"  */}
+          {/*     variant="text"  */}
+          {/*     onClick={() => initialize_teleoscope(client, search_term, session_id)} */}
+          {/*     style={{ */}
+          {/*       backgroundColor: "#FFFFFF", */}
+          {/*       color: "black", */}
+          {/*       fontSize: 12, */}
+          {/*       fontWeight: 700, */}
+          {/*     }} */}
+          {/*   > */}
+          {/*     New Teleoscope */}
+          {/*   </Button> */}
+          {/*   <FormControl  */}
+          {/*     sx={{width: 200, backgroundColor: 'white', }} */}
+          {/*     variant="filled" */}
+          {/*     > */}
+          {/*     <InputLabel id="demo-simple-select-label">Load History Item</InputLabel> */}
+          {/*     <Select */}
+          {/*       labelId="demo-simple-select-label" */}
+          {/*       id="demo-simple-select" */}
+          {/*       value={history_item_num} */}
+          {/*       label="History Item" */}
+          {/*       onChange={(event) => load_teleoscope_state(event.target.value)} */}
+          {/*     > */}
+          {/*       {!teleoscope_loading && !teleoscope_error ? teleoscope["history"].map((h, i) => { */}
+          {/*         return ( */}
+          {/*           <MenuItem value={i}>{i}</MenuItem> */}
+          {/*       )}):[]} */}
+          {/*     </Select> */}
+          {/*   </FormControl> */}
+          {/*   <Button */}
+          {/*     size="small" */}
+          {/*     onClick={() => { */}
+          {/*       // negative docs array is empty */}
+          {/*       reorient(client, search_term, teleoscope_id, checked, []); */}
+          {/*       dispatch(uncheckall(teleoscope_id)) */}
+          {/*     }} */}
+          {/*     style={{ */}
+          {/*       backgroundColor: "#FFFFFF", */}
+          {/*       color: "black", */}
+          {/*       fontSize: 12, */}
+          {/*       fontWeight: 700, */}
+          {/*     }} */}
+          {/*   > */}
+          {/*     <BiotechIcon /> */}
+          {/*     Orient Towards */}
+          {/*   </Button> */}
+          {/*   <Button */}
+          {/*     size="small" */}
+          {/*     onClick={() => { */}
+          {/*       // positive docs array is empty */}
+          {/*       reorient(client, search_term, teleoscope_id, [], checked); */}
+          {/*       dispatch(uncheckall(teleoscope_id)) */}
+          {/*     }} */}
+          {/*     style={{ */}
+          {/*       backgroundColor: "#FFFFFF", */}
+          {/*       color: "black", */}
+          {/*       fontSize: 12, */}
+          {/*       fontWeight: 700, */}
+          {/*     }} */}
+          {/*   > */}
+          {/*     <BiotechIcon /> */}
+          {/*     Orient Away */}
+          {/*   </Button> */}
+          {/*   <FormControl  */}
+          {/*     sx={{width: 200, backgroundColor: 'white', }} */}
+          {/*     variant="filled" */}
+          {/*     > */}
+          {/*     <InputLabel id="demo-simple-select-label">Active Teleoscope</InputLabel> */}
+          {/*     <Select */}
+          {/*       labelId="demo-simple-select-label" */}
+          {/*       id="demo-simple-select" */}
+          {/*       value={teleoscope_id} */}
+          {/*       label="Teleoscope ID" */}
+          {/*       onChange={(event) => dispatch(teleoscopeActivator(event.target.value))} */}
+          {/*     > */}
+          {/*       {getTeleoscopes()} */}
+          {/*     </Select> */}
+          {/*   </FormControl> */}
             <TextField
               id="input-with-icon-textfield"
+              sx={{width: 200, backgroundColor: 'white', }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">

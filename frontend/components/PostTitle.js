@@ -11,39 +11,15 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
-const postTitle = (post) => {
-   String.prototype.trimLeft = function (charlist) {
-      if (charlist === undefined) charlist = "s";
-      return this.replace(new RegExp("^[" + charlist + "]+"), "");
-   };
-   var regex = new RegExp(
-      "(AITA for|aita for|AITA if|WIBTA if|AITA|aita|WIBTA)"
-   );
-
-   if (post.hasOwnProperty("title")) {
-      var title = post["title"].replace(regex, "");
-      var charlist = " -";
-      title = title.trimLeft(charlist);
-      var first = title.slice(0, 1);
-      var ret = first.toUpperCase() + title.slice(1);
-      return ret;
-   } else {
-      return "Post Loading...";
-   }
-
-};
-
-
 export default function PostTitle(props) {
-   const title = postTitle(props.post);
    return (
-      <Tooltip title={title} placement="top">
+      <Tooltip title={props.title} placement="top">
          <Typography
-            variant="body1"
+            variant={props.size=="small" ? "caption" : "subtitle"}
             color={props.color ? props.color : "black"}
             noWrap={props.noWrap}
          >
-            {title}
+            {props.title}
          </Typography>
       </Tooltip>
    )

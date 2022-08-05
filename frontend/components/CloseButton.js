@@ -12,7 +12,7 @@ export default function CloseButton(props) {
   const dispatch = useDispatch();
   return (
     <IconButton sx={props.sx} {...props} onClick={() => dispatch(removeWindow(props.id))}>
-      <CloseIcon sx={props.sx} />
+      <CloseIcon sx={props.sx} fontSize="inherit" />
     </IconButton>
   )
 }
