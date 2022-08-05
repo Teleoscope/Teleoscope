@@ -29,8 +29,8 @@ import TopicIcon from '@mui/icons-material/Topic';
 // actions
 import { checker } from "../../actions/checkedPosts";
 import { useSelector, useDispatch } from "react-redux";
-import {WindowHeader} from "./WindowHeader";
-import {WindowBody} from "./WindowBody";
+import { WindowHeader } from "./WindowHeader";
+import { WindowBody } from "./WindowBody";
 import { minimizeWindow, maximizeWindow, checkWindow } from "../../actions/windows";
 
 // util
@@ -58,7 +58,7 @@ const innerContent = (type, id, props) => {
 	}
 }
 
-const WindowModule = ({component}, id) => {
+const WindowModule = ({ component }, id) => {
 	const Module = component;
 	return (
 		<Module id={id} />
@@ -75,12 +75,12 @@ const button_style = {
 
 export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onTouchEnd, ...props }, ref) => {
 	const [show, setShow] = useState(props.showWindow);
-	const [drag, setDrag] = useState(true);  	
-  	const w = props.windata;
+	const [drag, setDrag] = useState(true);
+	const w = props.windata;
 	const { post } = useSWRAbstract("post", `/api/posts/${w.i.split("%")[0]}`);
-  	const title = post ? PreprocessTitle(post.title) : "Not loading...";
+	const title = post ? PreprocessTitle(post.title) : "Not loading...";
 	const dispatch = useDispatch();
-	
+
 	const handleMove = (e) => {
 		if (e.buttons == 1) {
 			setDrag(true);
@@ -92,55 +92,55 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 	const handleSelect = (e) => {
 		console.log("handleSelect", e)
 		if (e.shiftKey) {
-			dispatch(checkWindow({i: w.i, check: !w.isChecked}))	
+			dispatch(checkWindow({ i: w.i, check: !w.isChecked }))
 		}
 	}
 
-  	const handleShow = () => {
-  		if (show) {
-  			// dispatch(minimizeWindow(props.id));
-  			setShow(false);
-  		}
-  		if (!show && !drag) {
-  			// dispatch(maximizeWindow(props.id));
-  			setShow(true);
-  		}
-  	}
+	const handleShow = () => {
+		if (show) {
+			// dispatch(minimizeWindow(props.id));
+			setShow(false);
+		}
+		if (!show && !drag) {
+			// dispatch(maximizeWindow(props.id));
+			setShow(true);
+		}
+	}
 
-  	if (!show) {
-  		return (
-  			<IconButton
-  				onClick={handleShow}
-  				className="drag-handle"
-  				onMouseMove={(e) => handleMove(e)}
-  				style={{
-  					backgroundColor: "white",
-  					cursor: "move",            		
-  				}}
+	if (!show) {
+		return (
+			<IconButton
+				onClick={handleShow}
+				className="drag-handle"
+				onMouseMove={(e) => handleMove(e)}
+				style={{
+					backgroundColor: "white",
+					cursor: "move",
+				}}
 				sx={{
 					border: w.isChecked ? "2px solid #4e5cbc" : "1px solid #DDDDDD",
-            		boxShadow: '1',
-         		}}
-  			>{props.icon}</IconButton>
-  		)
-  	}
+					boxShadow: '1',
+				}}
+			>{props.icon}</IconButton>
+		)
+	}
 
 	return (
 		<Card
 			variant="outlined"
 			style={{
 				borderColor: w.isChecked ? "#4e5cbc" : "#DDDDDD",
-            	borderWidth: w.isChecked ? 2 : 1,
-            	backgroundColor: "white",
-            	height:"100%",
-         	}}
-         	sx={{
-            	boxShadow: '1',
-         	}}
-		><CardActionArea
-			onClick={(e) => handleSelect(e)}
-		>
-			{/* <div
+				borderWidth: w.isChecked ? 2 : 1,
+				backgroundColor: "white",
+				height: "100%",
+			}}
+			sx={{
+				boxShadow: '1',
+			}}>
+
+			<CardActionArea
+				onClick={(e) => handleSelect(e)}>
+				{/* <div
 				style={{ backgroundColor: "#475c6c", height: "1em", cursor: "move" }}
 				className="drag-handle"
 			>
@@ -174,14 +174,16 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 				className="drag-handle"
 				{...props}
 			></div> */}
-		<WindowTopBar 
-			title={w.type == "Post" ? title : w.type}
-			id={props.id}
-			icon={props.icon}
-			handleShow={handleShow}
-			isChecked={w.isChecked}
-		/></CardActionArea>
-      		{props.inner}
+				<WindowTopBar
+					title={w.type == "Post" ? title : w.type}
+					id={props.id}
+					icon={props.icon}
+					handleShow={handleShow}
+					isChecked={w.isChecked}
+				/>
+			</CardActionArea>
+			{props.inner}
+			{console.log(props.inner)}
 		</Card>
 	)
 })    

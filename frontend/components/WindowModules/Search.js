@@ -160,11 +160,17 @@ const SearchBody = ({ props }) => {
 
 
 
-export default function BottomAppBar(props, {id}) {
+export default function BottomAppBar(props, id) {
   const header = (id === "header");
   return (
     <>
-      {header ?  <SearchHeader props={props} /> : <SearchBody props={props} />}
+      <WindowHeader>
+        <SearchHeader />
+      </WindowHeader>
+      <WindowBody>
+        <SearchBody />
+      </WindowBody>
+      {/* {header ?  <SearchHeader props={props} /> : <SearchBody props={props} />} */}
     </>
   );
 }
