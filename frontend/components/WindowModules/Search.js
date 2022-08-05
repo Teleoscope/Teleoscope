@@ -164,6 +164,8 @@ export default function BottomAppBar(props, id) {
   const header = (id === "header");
   return (
     <>
+    {/* The search return is split into two sections, the header and the body, both of which are passed as the children of the respective
+      window header and window body. In those two there are styling that are applied */}
       <WindowHeader>
         <SearchHeader />
       </WindowHeader>
