@@ -155,15 +155,11 @@ const SearchBody = ({ props }) => {
 
 
 
-export default function BottomAppBar(props) {
+export default function BottomAppBar(props, {id}) {
+  const header = (id === "header");
   return (
     <>
-      <WindowHeader>
-        <SearchHeader props={props} />
-      </WindowHeader>
-      <WindowBody>
-        <SearchBody props={props} />
-      </WindowBody>
+      {header ?  <SearchHeader props={props} /> : <SearchBody props={props} />}
     </>
   );
 }

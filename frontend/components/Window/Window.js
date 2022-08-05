@@ -23,6 +23,8 @@ import Toolbar from '@mui/material/Toolbar'
 // actions
 import { checker } from "../../actions/checkedPosts";
 import { useSelector, useDispatch } from "react-redux";
+import {WindowHeader} from "./WindowHeader";
+import {WindowBody} from "./WindowBody";
 
 
 const innerContent = (type, id, props) => {
@@ -44,6 +46,13 @@ const innerContent = (type, id, props) => {
 	if (type == "Post") {
 		return <WorkspaceItem id={id}></WorkspaceItem>
 	}
+}
+
+const WindowModule = ({component}, id) => {
+	const Module = component;
+	return (
+		<Module id={id} />
+	)
 }
 
 const button_style = {
@@ -83,8 +92,15 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 				<MinimizeButton sx={button_style} id={w.i} />
 				<CloseButton sx={button_style} id={w.i} />
 			</div>
-			
-			{innerContent(w.type, w.i, props)}
+
+			<WindowHeader>
+				<WindowModule component={innerContent(w.type, w.i, props)} id="header" />
+			</WindowHeader>
+
+			<WindowBody>
+				<WindowModule component={innerContent(w.type, w.i, props)} id="body" />
+			</WindowBody>
+
 
 			<div
 				style={{
