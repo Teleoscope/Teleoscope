@@ -16,6 +16,8 @@ from gensim.similarities import SparseTermSimilarityMatrix
 from gensim.similarities import SoftCosineSimilarity
 from gensim.utils import simple_preprocess
 
+from pymongo import ReadPreference
+
 # local files
 import auth
 
@@ -32,7 +34,13 @@ def connect():
         f'{auth.mongodb["password"]}@'
         f'{auth.mongodb["host"]}/?{autht}'
     )
-    client = MongoClient(connect_str, connectTimeoutMS=50000, serverSelectionTimeoutMS = 50000)
+    client = MongoClient(
+        connect_str, 
+        connectTimeoutMS=50000, 
+        serverSelectionTimeoutMS = 50000,
+        replicaSet="rs0", 
+        read_preference=ReadPreference.PRIMARY
+    )
     return client.aita
 
 def create_transaction_session():
