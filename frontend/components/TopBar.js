@@ -91,6 +91,7 @@ export default function TopBar(props) {
           var user = users[i];
           if (user["username"] == username && user["sessions"].length > 0) {
             return user["sessions"].map((s) => {
+                console.log("This thing is: ", (typeof s))
                 return (<MenuItem value={s}>{s}</MenuItem>)
               })
           }
@@ -122,20 +123,7 @@ export default function TopBar(props) {
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
-          {/*  */}
-          {/*   <Button */}
-          {/*     size="small"  */}
-          {/*     variant="text"  */}
-          {/*     onClick={() => initialize_session(client, cookies.user)} */}
-          {/*     style={{ */}
-          {/*       backgroundColor: "#FFFFFF", */}
-          {/*       color: "black", */}
-          {/*       fontSize: 12, */}
-          {/*       fontWeight: 700, */}
-          {/*     }} */}
-          {/*   > */}
-          {/*     New session */}
-          {/*   </Button> */}
+
           {/*   <Button */}
           {/*     size="small"  */}
           {/*     variant="text"  */}
@@ -281,7 +269,20 @@ export default function TopBar(props) {
                 onChange={(event) => handleSessionChange(event)}
               >
                 {getSessions(cookies.user)}
-              </Select>
+                <Button
+               size="small" 
+               variant="text" 
+               onClick={() => initialize_session(client, cookies.user)}
+               style={{
+                 backgroundColor: "#FFFFFF",
+                 color: "black",
+                 fontSize: 12,
+                 fontWeight: 700,
+               }}
+             >
+               New session
+             </Button>
+            </Select>
             </FormControl>
           </Stack>
         </Toolbar>
