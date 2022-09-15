@@ -91,12 +91,11 @@ export default function TopBar(props) {
           var user = users[i];
           if (user["username"] == username && user["sessions"].length > 0) {
             return user["sessions"].map((s) => {
-                // console.log("This thing is: ",  s)
-                // console.log("this is sessions", sessions)
+
                 var test = sessions.find(ss => ss._id == s)
                 console.log("this is test", test)
 
-                return (<MenuItem value={s}>{test['creation_time']}</MenuItem>)
+                return (<MenuItem value={s}>{test.history[0].label}</MenuItem>)
               })
           }
         }
@@ -120,25 +119,8 @@ export default function TopBar(props) {
   }
 
   const get_label = (username) => {
-    if (sessions && users) {
-      for (const i in users) {
-        var user = users[i];
-        if (user["username"] == username && user["sessions"].length > 0) {
-          return user["sessions"].map((s) => {
-              // console.log("This thing is: ",  s)
-              // console.log("this is sessions", sessions)
-              var ct = sessions.find(ss => ss._id == s)
-              //console.log("this is test", test)
-
-              return (ct['creation_time'])
-            })
-        }
-      }
-    }
-    return (
-        "temp - No sessions for this user"
-    ) 
-  }
+    return session.history[0].label
+  } 
 
   return (
     <Box sx={{ flexGrow: 1 }}>
