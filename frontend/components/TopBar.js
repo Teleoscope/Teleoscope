@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import useSWR, { mutate } from "swr";
+import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 
 // material ui
 import AppBar from "@mui/material/AppBar";
@@ -48,13 +49,14 @@ export default function TopBar(props) {
 
   const [cookies, setCookie] = useCookies(["user"]);
 
-  const history_item_num = useSelector((state) => state.activeHistoryItem.value);  
+  const history_item_num = useSelector((state) => state.activeHistoryItem.value);
   const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
   const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
   const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
+  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] }); // big_red_donkey
 
-  const client = useContext(StompContext)
+    const client = useContext(StompContext)
 
   const handleCookie = (username) => {
     setCookie("user", username, {
@@ -62,24 +64,24 @@ export default function TopBar(props) {
     });
     console.log(`Set username to ${username}.`);
   }
-  
+
   const dispatch = useDispatch();
 
   const getTeleoscopes = () => {
     if (teleoscopes && session) {
       var ts = teleoscopes.filter((t) => {
-        return session["teleoscopes"].includes(t._id) 
+        return session["teleoscopes"].includes(t._id)
       });
       if (ts.length > 0 ) {
         return ts.map((t) => {
           var latest_t = t['history'][t['history'].length - 1];
           return (<MenuItem value={t["_id"]}>{latest_t["label"]}</MenuItem>)
-        });  
+        });
       }
     }
     return (<MenuItem>No Teleoscopes started for this session...</MenuItem>)
   }
- 
+
   const handleSessionChange = (event) => {
     dispatch(sessionActivator(event.target.value))
     dispatch(getGroups(event.target.value))
@@ -91,18 +93,15 @@ export default function TopBar(props) {
           var user = users[i];
           if (user["username"] == username && user["sessions"].length > 0) {
             return user["sessions"].map((s) => {
-
-                var test = sessions.find(ss => ss._id == s)
-                console.log("this is test", test)
-
-                return (<MenuItem value={s}>{test.history[0].label}</MenuItem>)
+                var temp = sessions.find(ss => ss._id == s)
+                return (<MenuItem value={s}>{temp?.history[0].label}</MenuItem>)
               })
           }
         }
       }
       return (
           <MenuItem value={"No sessions for this user..."}>No sessions for this user...</MenuItem>
-      )    
+      )
   }
 
   const load_teleoscope_state = (history_item_num) => {
@@ -120,7 +119,7 @@ export default function TopBar(props) {
 
   const get_label = (username) => {
     return session.history[0].label
-  } 
+  }
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -255,7 +254,7 @@ export default function TopBar(props) {
                   </InputAdornment>
                 ),
               }}
-              label="Username" 
+              label="Username"
               variant="standard"
               defaultValue={cookies.user}
               onKeyPress={(e) => {
@@ -264,7 +263,7 @@ export default function TopBar(props) {
                 }
               }}
             />
-            <FormControl 
+            <FormControl
               sx={{width: 200, backgroundColor: 'white', }}
               variant="filled"
               >
@@ -278,9 +277,9 @@ export default function TopBar(props) {
               >
                 {getSessions(cookies.user)}
                 <Button
-               size="small" 
-               variant="text" 
-               onClick={() => initialize_session(client, cookies.user)}
+               size="small"
+               variant="text"
+               onClick={() => initialize_session(client, cookies.user, randomName)}
                style={{
                  backgroundColor: "#FFFFFF",
                  color: "black",

@@ -173,7 +173,7 @@ def initialize_session(*args, **kwargs):
                 "bookmarks": [],
                 "windows": [],
                 "groups": [],
-                "label": str(datetime.datetime.utcnow()),
+                "label": kwargs['label'],
             }
         ],
         "teleoscopes": []
