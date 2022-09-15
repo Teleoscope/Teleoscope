@@ -91,8 +91,12 @@ export default function TopBar(props) {
           var user = users[i];
           if (user["username"] == username && user["sessions"].length > 0) {
             return user["sessions"].map((s) => {
-                console.log("This thing is: ", (typeof s))
-                return (<MenuItem value={s}>{s}</MenuItem>)
+                // console.log("This thing is: ",  s)
+                // console.log("this is sessions", sessions)
+                var test = sessions.find(ss => ss._id == s)
+                console.log("this is test", test)
+
+                return (<MenuItem value={s}>{test['creation_time']}</MenuItem>)
               })
           }
         }
@@ -115,6 +119,27 @@ export default function TopBar(props) {
     dispatch(loadWindows(history_item["windows"]));
   }
 
+  const get_label = (username) => {
+    if (sessions && users) {
+      for (const i in users) {
+        var user = users[i];
+        if (user["username"] == username && user["sessions"].length > 0) {
+          return user["sessions"].map((s) => {
+              // console.log("This thing is: ",  s)
+              // console.log("this is sessions", sessions)
+              var ct = sessions.find(ss => ss._id == s)
+              //console.log("this is test", test)
+
+              return (ct['creation_time'])
+            })
+        }
+      }
+    }
+    return (
+        "temp - No sessions for this user"
+    ) 
+  }
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
@@ -124,26 +149,27 @@ export default function TopBar(props) {
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
 
-          {/*   <Button */}
-          {/*     size="small"  */}
-          {/*     variant="text"  */}
-          {/*     onClick={() => save_UI_state( */}
-          {/*       client,  */}
-          {/*       session_id,  */}
-          {/*       { // history_item in save_UI_state in Stomp.js */}
-          {/*           "bookmarks": bookmarks, */}
-          {/*           "windows": windows, */}
-          {/*       }) */}
-          {/*     } */}
-          {/*     style={{ */}
-          {/*       backgroundColor: "#FFFFFF", */}
-          {/*       color: "black", */}
-          {/*       fontSize: 12, */}
-          {/*       fontWeight: 700, */}
-          {/*     }} */}
-          {/*   > */}
-          {/*     Save Workspace */}
-          {/*   </Button> */}
+            <Button 
+               size="small"  
+               variant="text"  
+               onClick={() => save_UI_state( 
+                 client,  
+                 session_id,  
+                 { // history_item in save_UI_state in Stomp.js 
+                     "bookmarks": bookmarks, 
+                     "windows": windows, 
+                     "label": get_label(cookies.user),
+                 }) 
+               } 
+               style={{ 
+                 backgroundColor: "#FFFFFF", 
+                 color: "black", 
+                 fontSize: 12, 
+                 fontWeight: 700, 
+               }} 
+             >
+               Save Workspace 
+             </Button> 
           {/*   <Button */}
           {/*     size="small"  */}
           {/*     variant="text"  */}
