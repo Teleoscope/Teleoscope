@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import useSWR, { mutate } from "swr";
+import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 
 // material ui
 import AppBar from "@mui/material/AppBar";
@@ -53,8 +54,9 @@ export default function TopBar(props) {
   const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
   const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
+  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] }); // big_red_donkey
 
-  const client = useContext(StompContext)
+    const client = useContext(StompContext)
 
   const handleCookie = (username) => {
     setCookie("user", username, {
@@ -277,7 +279,7 @@ export default function TopBar(props) {
                 <Button
                size="small"
                variant="text"
-               onClick={() => initialize_session(client, cookies.user)}
+               onClick={() => initialize_session(client, cookies.user, randomName)}
                style={{
                  backgroundColor: "#FFFFFF",
                  color: "black",
