@@ -94,7 +94,7 @@ export default function TopBar(props) {
           if (user["username"] == username && user["sessions"].length > 0) {
             return user["sessions"].map((s) => {
                 var temp = sessions.find(ss => ss._id == s)
-                return (<MenuItem value={s}>{temp.history[0].label}</MenuItem>)
+                return (<MenuItem value={s}>{temp?.history[0].label}</MenuItem>)
               })
           }
         }
