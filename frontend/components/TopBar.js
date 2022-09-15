@@ -91,7 +91,11 @@ export default function TopBar(props) {
           var user = users[i];
           if (user["username"] == username && user["sessions"].length > 0) {
             return user["sessions"].map((s) => {
-                return (<MenuItem value={s}>{s}</MenuItem>)
+
+                var test = sessions.find(ss => ss._id == s)
+                console.log("this is test", test)
+
+                return (<MenuItem value={s}>{test.history[0].label}</MenuItem>)
               })
           }
         }
@@ -114,6 +118,10 @@ export default function TopBar(props) {
     dispatch(loadWindows(history_item["windows"]));
   }
 
+  const get_label = (username) => {
+    return session.history[0].label
+  } 
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
@@ -122,40 +130,28 @@ export default function TopBar(props) {
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
-          {/*  */}
-          {/*   <Button */}
-          {/*     size="small"  */}
-          {/*     variant="text"  */}
-          {/*     onClick={() => initialize_session(client, cookies.user)} */}
-          {/*     style={{ */}
-          {/*       backgroundColor: "#FFFFFF", */}
-          {/*       color: "black", */}
-          {/*       fontSize: 12, */}
-          {/*       fontWeight: 700, */}
-          {/*     }} */}
-          {/*   > */}
-          {/*     New session */}
-          {/*   </Button> */}
-          {/*   <Button */}
-          {/*     size="small"  */}
-          {/*     variant="text"  */}
-          {/*     onClick={() => save_UI_state( */}
-          {/*       client,  */}
-          {/*       session_id,  */}
-          {/*       { // history_item in save_UI_state in Stomp.js */}
-          {/*           "bookmarks": bookmarks, */}
-          {/*           "windows": windows, */}
-          {/*       }) */}
-          {/*     } */}
-          {/*     style={{ */}
-          {/*       backgroundColor: "#FFFFFF", */}
-          {/*       color: "black", */}
-          {/*       fontSize: 12, */}
-          {/*       fontWeight: 700, */}
-          {/*     }} */}
-          {/*   > */}
-          {/*     Save Workspace */}
-          {/*   </Button> */}
+
+            <Button 
+               size="small"  
+               variant="text"  
+               onClick={() => save_UI_state( 
+                 client,  
+                 session_id,  
+                 { // history_item in save_UI_state in Stomp.js 
+                     "bookmarks": bookmarks, 
+                     "windows": windows, 
+                     "label": get_label(cookies.user),
+                 }) 
+               } 
+               style={{ 
+                 backgroundColor: "#FFFFFF", 
+                 color: "black", 
+                 fontSize: 12, 
+                 fontWeight: 700, 
+               }} 
+             >
+               Save Workspace 
+             </Button> 
           {/*   <Button */}
           {/*     size="small"  */}
           {/*     variant="text"  */}
@@ -281,7 +277,20 @@ export default function TopBar(props) {
                 onChange={(event) => handleSessionChange(event)}
               >
                 {getSessions(cookies.user)}
-              </Select>
+                <Button
+               size="small" 
+               variant="text" 
+               onClick={() => initialize_session(client, cookies.user)}
+               style={{
+                 backgroundColor: "#FFFFFF",
+                 color: "black",
+                 fontSize: 12,
+                 fontWeight: 700,
+               }}
+             >
+               New session
+             </Button>
+            </Select>
             </FormControl>
           </Stack>
         </Toolbar>
