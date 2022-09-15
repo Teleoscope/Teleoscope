@@ -36,11 +36,13 @@ def connect():
     )
     client = MongoClient(
         connect_str, 
-        connectTimeoutMS=50000, 
+        connectTimeoutMS = 50000, 
         serverSelectionTimeoutMS = 50000,
-        replicaSet="rs0", 
-        read_preference=ReadPreference.PRIMARY
+        directConnection=True,
+        replicaSet = "rs0"
+        # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
+    # logging.log(f'Connected to MongoDB with user {auth.mongodb["username"]}.')
     return client.aita
 
 def create_transaction_session():
