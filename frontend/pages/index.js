@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Head from "next/head";
 
 import { Provider } from "react-redux";
@@ -19,32 +19,73 @@ import { StompContext, client } from "../context/StompContext"
 // API fetcher for SWR global config
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
+// import the login screen
+import LoginForm from "../components/Login/LoginForm"
+
 export default function Home({ isConnected }) {
 
+  // test user for login page
+  const adminUser = {
+    email: "admin@teleoscope.com",
+    password: "teleoscope"
+  }
+
+  // used to set the user from the login and to catch errors if the login is tried with bad credentials
+  const [user, setUser] = useState({ name: "Kenny", email: "" });
+  const [error, setError] = useState("");
+
+  // function for logging in the user
+  const Login = details => {
+    console.log(details)
+
+    if (details.email == adminUser.email && details.password == adminUser.password){
+      console.log("Logged In")
+      setUser({
+        name: details.name,
+        email: details.email
+      })
+    } else {
+      console.log("Details do not match")
+    }
+  }
+
+  // function for logging out the user
+  const Logout = () => {
+    setUser({
+      email: "",
+      password: ""
+    })
+  }
 
   return (
-    <SWRConfig value={{ 
-      fetcher: fetcher,
-      errorRetryCount: 10,
-      refreshInterval: 250
-    }}>
-    <StompContext.Provider value={client}>
-    <CookiesProvider>
-        <div className="container">
-          <Head>
-            <title>Explore Documents</title>
-            <link rel="icon" href="/favicon.ico" />
-          </Head>
+    <div>
+      {(user.email != "") ? (
+        <SWRConfig value={{
+          fetcher: fetcher,
+          errorRetryCount: 10,
+          refreshInterval: 250
+        }}>
+          <StompContext.Provider value={client}>
+            <CookiesProvider>
+              <div className="container">
+                <Head>
+                  <title>Explore Documents</title>
+                  <link rel="icon" href="/favicon.ico" />
+                </Head>
 
-          <main>
-            <Provider store={store}>
-              <Workspace isConnected={isConnected} />
-            </Provider>
-          </main>
-        </div>
-    </CookiesProvider>
-    </StompContext.Provider>
-    </SWRConfig>
+                <main>
+                  <Provider store={store}>
+                    <Workspace isConnected={isConnected} />
+                  </Provider>
+                </main>
+              </div>
+            </CookiesProvider>
+          </StompContext.Provider>
+        </SWRConfig>
+      ) : (
+        <LoginForm Login={Login} error={error}/>
+      )}
+    </div>
   );
 }
 
@@ -72,7 +113,7 @@ export async function getServerSideProps(context) {
     }
   }
 }
-// 
+//
 // 
 // Connect to MongoDB
 // export async function getServerSideProps(context) {
