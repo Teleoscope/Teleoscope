@@ -1,6 +1,5 @@
 # builtin modules
 import pickle
-import tensorflow_hub as hub
 import numpy as np
 # installed modules
 from pymongo import MongoClient
@@ -15,8 +14,6 @@ from gensim.similarities import WordEmbeddingSimilarityIndex
 from gensim.similarities import SparseTermSimilarityMatrix
 from gensim.similarities import SoftCosineSimilarity
 from gensim.utils import simple_preprocess
-
-from pymongo import ReadPreference
 
 # local files
 import auth
@@ -205,6 +202,7 @@ def getPostVector(db, post_id):
     return postVector
 
 def loadModel():
+    import tensorflow_hub as hub
     model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
     return model
 
