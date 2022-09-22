@@ -172,7 +172,8 @@ def initialize_session(*args, **kwargs):
                 "timestamp": datetime.datetime.utcnow(),
                 "bookmarks": [],
                 "windows": [],
-                "groups": []
+                "groups": [],
+                "label": kwargs['label'],
             }
         ],
         "teleoscopes": []
@@ -222,6 +223,7 @@ def save_UI_state(*args, **kwargs):
     groups = session["history"][0]["groups"]
     # update history_item to have the correct groups
     history_item["groups"] = groups
+
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
             {
