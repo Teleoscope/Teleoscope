@@ -19,12 +19,15 @@ import { StompContext, client } from "../context/StompContext"
 // API fetcher for SWR global config
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
-// import the login screen
+// import the login components
 import LoginForm from "../components/Login/LoginForm"
+import Registration from "../components/Login/Registration"
 
 export default function Home({ isConnected }) {
 
   // test user for login page
+  // This will be deleted when we connect it to
+  // mongoDB with actual login and passwords
   const adminUser = {
     email: "admin@teleoscope.com",
     password: "teleoscope"
@@ -33,12 +36,13 @@ export default function Home({ isConnected }) {
   // used to set the user from the login and to catch errors if the login is tried with bad credentials
   const [user, setUser] = useState({ name: "Kenny", email: "" });
   const [error, setError] = useState("");
+  const [registration, setRegistration] = useState(false);
 
   // function for logging in the user
+  // if the email and password match the mock user and password we then set 
+  // the name and email to that information
   const Login = details => {
-    console.log(details)
-
-    if (details.email == adminUser.email && details.password == adminUser.password){
+    if (details.email == adminUser.email && details.password == adminUser.password) {
       console.log("Logged In")
       setUser({
         name: details.name,
@@ -46,10 +50,11 @@ export default function Home({ isConnected }) {
       })
     } else {
       console.log("Details do not match")
+      console.log(details)
     }
   }
 
-  // function for logging out the user
+  // function for logging out the user, sets the email and password to null
   const Logout = () => {
     console.log("Logged Out")
     setUser({
@@ -58,34 +63,43 @@ export default function Home({ isConnected }) {
     })
   }
 
+  const Register = () => {
+    setRegistration(!registration)
+  }
+
   return (
     <div>
-      {(user.email != "") ? (
-        <SWRConfig value={{
-          fetcher: fetcher,
-          errorRetryCount: 10,
-          refreshInterval: 250
-        }}>
-          <StompContext.Provider value={client}>
-            <CookiesProvider>
-              <div className="container">
-                <Head>
-                  <title>Explore Documents</title>
-                  <link rel="icon" href="/favicon.ico" />
-                </Head>
+      {registration ?
+        <Registration setRegistration={Register}/> :
+        <div>
+          {(user.email != "") ? (
+            <SWRConfig value={{
+              fetcher: fetcher,
+              errorRetryCount: 10,
+              refreshInterval: 250
+            }}>
+              <StompContext.Provider value={client}>
+                <CookiesProvider>
+                  <div className="container">
+                    <Head>
+                      <title>Explore Documents</title>
+                      <link rel="icon" href="/favicon.ico" />
+                    </Head>
 
-                <main>
-                  <Provider store={store}>
-                    <Workspace isConnected={isConnected} Logout={Logout}/>
-                  </Provider>
-                </main>
-              </div>
-            </CookiesProvider>
-          </StompContext.Provider>
-        </SWRConfig>
-      ) : (
-        <LoginForm Login={Login} error={error}/>
-      )}
+                    <main>
+                      <Provider store={store}>
+                        <Workspace isConnected={isConnected} Logout={Logout} />
+                      </Provider>
+                    </main>
+                  </div>
+                </CookiesProvider>
+              </StompContext.Provider>
+            </SWRConfig>
+          ) : (
+            <LoginForm Login={Login} error={error} setRegistration={Register} />
+          )}
+        </div>
+      }
     </div>
   );
 }
