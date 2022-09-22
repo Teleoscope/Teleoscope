@@ -166,7 +166,7 @@ def initialize_session(*args, **kwargs):
     users = db.users.find({})
     usernames = [u["username"] for u in users]
     userlist = {u:"read" for u in usernames}
-    userlist.update({user,"write"})
+    userlist[user["username"]] = "write"
 
     if user is None:
         logging.info(f'User {username} does not exist.')
