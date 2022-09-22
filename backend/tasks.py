@@ -161,10 +161,12 @@ def initialize_session(*args, **kwargs):
     logging.info(f'Initializing sesssion for user {username}.')
     # Check if user exists and throw error if not
     user = db.users.find_one({"username": username})
-    users = db.users.find({}) # all users
-    usernames = [u["username"] for u in users]
 
-    userlist = {u:["write"] for u in usernames}
+    # grab all users for now (no 'team')
+    users = db.users.find({})
+    usernames = [u["username"] for u in users]
+    userlist = {u:"read" for u in usernames}
+    userlist.update({user,"write"})
 
     if user is None:
         logging.info(f'User {username} does not exist.')
