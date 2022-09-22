@@ -163,7 +163,8 @@ def initialize_session(*args, **kwargs):
     user = db.users.find_one({"username": username})
     users = db.users.find({}) # all users
     usernames = [u["username"] for u in users]
-    userlist = {u:["read", "write"] for u in usernames}
+
+    userlist = {u:["write"] for u in usernames}
 
     if user is None:
         logging.info(f'User {username} does not exist.')
@@ -185,7 +186,8 @@ def initialize_session(*args, **kwargs):
     with transaction_session.start_transaction():
         result = db.sessions.insert_one(obj, session=transaction_session)
         db.users.update_many(
-            {   "username": {
+            {
+                "username": {
                     "$in": usernames
                 }
             },
