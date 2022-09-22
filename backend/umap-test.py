@@ -7,7 +7,7 @@ import umap
 import hdbscan
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer
-
+import logging
 from sentence_transformers import SentenceTransformer
 from bertopic import BERTopic
 from sklearn.feature_extraction.text import CountVectorizer
@@ -21,7 +21,7 @@ posts = []
 for post in tqdm.tqdm(
     posts_collection.find(
         projection={'title': 1, 'id': 1, 'selftext':1, 'selftextVector': 1}
-    ).limit(60000), total=count_docs):
+    ), total=count_docs):
     posts.append(post)
 
 df = pd.DataFrame(posts)
@@ -33,10 +33,12 @@ subset2 = df[50000:60000]
 emb = subset["selftextVector"].to_list()
 emb2 = subset2["selftextVector"].to_list()
 
+logging.info("Embedding umap.")
 umap_embeddings = umap.UMAP(n_neighbors=15, 
                             n_components=5, 
                             metric='cosine').fit_transform(emb)
 
+logging.info("Clustering with HDBSCAN.")
 cluster = hdbscan.HDBSCAN(min_cluster_size=5,
                           metric='euclidean',                      
                           cluster_selection_method='eom').fit(umap_embeddings)
@@ -45,6 +47,7 @@ umap_data = umap.UMAP(n_neighbors=15, n_components=2, min_dist=0.0, metric='cosi
 result = pd.DataFrame(umap_data, columns=['x', 'y'])
 result['labels'] = cluster.labels_
 
+logging.info("Visualizing.")
 # Visualize clusters
 fig, ax = plt.subplots(figsize=(20, 10))
 outliers = result.loc[result.labels == -1, :]
@@ -56,6 +59,7 @@ plt.scatter(clustered.x, clustered.y, c=clustered.labels, s=0.5, cmap='hsv_r')
 plt.colorbar()
 fig.savefig('clusters.png', dpi=fig.dpi)
 
+logging.info("Calculating word frequency.")
 # Count word frequency per topic
 docs_df = pd.DataFrame(subset, columns=["selftext"])
 docs_df['Topic'] = cluster.labels_
@@ -91,6 +95,8 @@ def extract_topic_sizes(df):
                      .rename({"Topic": "Topic", "selftext": "Size"}, axis='columns')
                      .sort_values("Size", ascending=False))
     return topic_sizes
+
+logging.info("Running topic extractions.")
 
 top_n_words = extract_top_n_words_per_topic(tf_idf, count, docs_per_topic, n=20)
 topic_sizes = extract_topic_sizes(docs_df)
