@@ -84,7 +84,7 @@ export default function Workspace(props) {
 
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <TopBar/>
+        <TopBar Logout={props.Logout}/>
       </Grid>
       <Grid ref={ref} item xs={12}>
         

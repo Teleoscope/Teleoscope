@@ -51,6 +51,7 @@ export default function Home({ isConnected }) {
 
   // function for logging out the user
   const Logout = () => {
+    console.log("Logged Out")
     setUser({
       email: "",
       password: ""
@@ -75,7 +76,7 @@ export default function Home({ isConnected }) {
 
                 <main>
                   <Provider store={store}>
-                    <Workspace isConnected={isConnected} />
+                    <Workspace isConnected={isConnected} Logout={Logout}/>
                   </Provider>
                 </main>
               </div>

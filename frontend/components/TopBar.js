@@ -283,7 +283,7 @@ export default function TopBar(props) {
                 {getSessions(cookies.user)}
               </Select>
             </FormControl>
-            <Button onChange={() => Logout}>LogOut</Button>
+            <Button onClick={() => props.Logout()}>LogOut</Button>
           </Stack>
         </Toolbar>
       </AppBar>
