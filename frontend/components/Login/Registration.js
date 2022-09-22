@@ -14,6 +14,8 @@ export default function Registration(props) {
    const [passwordVisibility, setPasswordVisibility] = useState(false);
    //const dispatch = useDispatch();
 
+   // checks to see if all the fields are filled out 
+   // and dispathes it to the store
    const submitHandler = e => {
       e.preventDefault()
 

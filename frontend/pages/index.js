@@ -63,6 +63,7 @@ export default function Home({ isConnected }) {
     })
   }
 
+  // function to the registration hook to set registration to true or false
   const Register = () => {
     setRegistration(!registration)
   }
