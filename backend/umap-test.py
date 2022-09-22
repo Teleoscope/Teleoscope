@@ -1,6 +1,4 @@
-import pickle, tqdm, time, os, numpy as np, pandas as pd
-from pymongo import MongoClient
-from pprint import pprint 
+import tqdm, numpy as np, pandas as pd
 import matplotlib.pyplot as plt
 import utils
 import umap
@@ -8,8 +6,6 @@ import hdbscan
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer
 import logging
-from sentence_transformers import SentenceTransformer
-from bertopic import BERTopic
 from sklearn.feature_extraction.text import CountVectorizer
 
 pd.set_option('max_colwidth', 100)
