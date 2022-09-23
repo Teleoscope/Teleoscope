@@ -13,12 +13,12 @@ export default function LoginForm({ Login, setRegistration, error }) {
    const [details, setDetails] = useState({ name: '', email: '', password: '' });
    const [passwordVisibility, setPasswordVisibility] = useState(false);
 
-   //const dispatch = useDispatch();
+   const dispatch = useDispatch();
 
    const submitHandler = e => {
       e.preventDefault()
 
-      //dispatch(details)
+      dispatch(login(details))
       Login(details)
    }
    return (
