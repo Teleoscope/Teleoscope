@@ -5,13 +5,20 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { IconButton } from '@mui/material';
 
+// actions
+import { useDispatch } from "react-redux";
+import { login } from "../../actions/logins"
+
 export default function LoginForm({ Login, setRegistration, error }) {
    const [details, setDetails] = useState({ name: '', email: '', password: '' });
    const [passwordVisibility, setPasswordVisibility] = useState(false);
 
+   //const dispatch = useDispatch();
+
    const submitHandler = e => {
       e.preventDefault()
 
+      //dispatch(details)
       Login(details)
    }
    return (
