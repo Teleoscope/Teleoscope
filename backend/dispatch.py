@@ -73,7 +73,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.initialize_session.signature(
                 args=(),
                 kwargs={
-                    "username": b["args"]["username"]
+                    "username": b["args"]["username"],
+                    "label": b["args"]["label"]
                 },
             )
             res.apply_async()
