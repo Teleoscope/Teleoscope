@@ -16,7 +16,7 @@ def cluster_by_groups(group_id_strings):
 
     """
     # Create ObjectIds
-    group_ids = [ObjectId(str(id)) in group_id_strings]
+    group_ids = [ObjectId(str(id)) for id in group_id_strings]
 
     # connect to the database
     db = utils.connect()
