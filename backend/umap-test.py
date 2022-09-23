@@ -7,21 +7,83 @@ import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer
 import logging
 from sklearn.feature_extraction.text import CountVectorizer
+from bson.objectid import ObjectId
 
-pd.set_option('max_colwidth', 100)
+def cluster_by_groups(group_id_strings):
+    """Cluster documents using user-provided group ids
 
-db = utils.connect()
-posts_collection = db.clean.posts.v3
-count_docs = posts_collection.count_documents({})
-posts = []
-for post in tqdm.tqdm(
-    posts_collection.find(
-        projection={'title': 1, 'id': 1, 'selftext':1, 'selftextVector': 1}
-    ), total=count_docs):
-    posts.append(post)
+    group_id_strings : list(string) where the strings are MongoDB ObjectID format
 
-df = pd.DataFrame(posts)
-df.head()
+    """
+    # Create ObjectIds
+    group_ids = [ObjectId(str(id)) in group_id_strings]
+
+    # connect to the database
+    db = utils.connect()
+
+    # start by getting the groups
+    groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
+
+    # Count docs to feed to TQDM progress bar, also to test connection to database
+    count_docs = db.clean.posts.v3.count_documents({})
+    logging.info(f'There are {count_docs} in the collection.')
+
+    # cursor is a generator which means that it yields a new doc one at a time
+    cursor = db.clean.posts.v3.find(projection={'id': 1, 'selftextVector': 1}, batch_size=500)
+
+    # only needed for an intermediary variable for making the DataFrame
+    # tests on 600k docs shows that the list is a lot smaller (1/5) than the DataFrame, so possibly
+    # better to put directly into the numpy array on create, but haven't tested yet
+    post_ids = []
+    post_vectors = []
+
+    # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
+    # can accept generators for lazy calculation 
+    for post in tqdm.tqdm(cursor, total=count_docs):
+        post_ids.append(post["id"])
+        post_vectors.append(post["selftextVector"])
+    
+    logging.info("Creating data np.array...")
+    data = np.array(post_vectors)
+    logging.info(f'Post data np.array has shape {data.shape}')
+
+    # initialize labels to array of -1 for each post
+    # assuming a sparse labeling scheme
+    labels = np.full(data.shape[0], -1)
+
+    label = 1
+    # add the correct labels to the label np.array
+    for group in groups:
+        # grab latest history item for each group
+        group_post_ids = group["history"][0]["included_posts"]
+        # save label just in case (not pushed to MongoDB, only local)
+        group["label"] = label
+        # get the index of each post_id so that it's aligned with the label np.array
+        indices = [post_ids.index(gpid) for gpid in group_post_ids]
+        # add labels
+        for i in indices:
+            labels[i] = label
+        # increment label for next loop iteration
+        label = label + 1
+    
+    logging.info("Running UMAP embedding.")
+    fitter = umap.UMAP(n_neighbors=15, 
+                       n_components=5, 
+                       metric='cosine',
+                       verbose=True).fit(data, y=labels)
+    embedding = fitter.embedding_
+    
+    fig, ax = plt.subplots(1, figsize=(14, 10))
+    plt.scatter(*embedding.T, s=0.1, c=target, cmap='Spectral', alpha=1.0)
+    plt.setp(ax, xticks=[], yticks=[])
+    cbar = plt.colorbar(boundaries=np.arange(11)-0.5)
+    cbar.set_ticks(np.arange(10))
+    cbar.set_ticklabels([group["history"][0]["label"]])
+    plt.title('Clusters');
+    fig.savefig('clusters.png', dpi=fig.dpi)
+
+
+'''
 
 subset = df[:10000]
 subset2 = df[50000:60000]
@@ -32,7 +94,8 @@ emb2 = subset2["selftextVector"].to_list()
 logging.info("Embedding umap.")
 umap_embeddings = umap.UMAP(n_neighbors=15, 
                             n_components=5, 
-                            metric='cosine').fit_transform(emb)
+                            metric='cosine',
+                            verbose=True).fit_transform(emb)
 
 logging.info("Clustering with HDBSCAN.")
 cluster = hdbscan.HDBSCAN(min_cluster_size=5,
@@ -103,3 +166,4 @@ plt.bar(top_sizes['Topic'], top_sizes['Size'])
 plt.title('Size of Topics for Sample 1')
 
 fig.savefig('topics.png', dpi=fig.dpi)
+'''
