@@ -9,6 +9,22 @@ import logging
 from sklearn.feature_extraction.text import CountVectorizer
 from bson.objectid import ObjectId
 import gc
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '-d', '--debug',
+    help="Print lots of debugging statements",
+    action="store_const", dest="loglevel", const=logging.DEBUG,
+    default=logging.WARNING,
+)
+parser.add_argument(
+    '-v', '--verbose',
+    help="Be verbose",
+    action="store_const", dest="loglevel", const=logging.INFO,
+)
+args = parser.parse_args()    
+logging.basicConfig(level=args.loglevel)
 
 def cluster_by_groups(group_id_strings):
     """Cluster documents using user-provided group ids
@@ -90,7 +106,9 @@ def cluster_by_groups(group_id_strings):
     plt.title('Clusters');
     fig.savefig('clusters.png', dpi=fig.dpi)
     logging.info("Plots saved.")
-    
+
+if __name__ == "__main__":
+    cluster_by_groups(["62db047aaee56b83f2871510"])
 
 '''
 
