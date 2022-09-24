@@ -47,9 +47,8 @@ def cluster_by_groups(group_id_strings):
     logging.info("Creating data np.array...")
     data = np.array(post_vectors)
     logging.info(f'Post data np.array has shape {data.shape}')
+    post_vectors = [] # for garbage collection
 
-    post_vectors = []
-    gc.collect()
 
     # initialize labels to array of -1 for each post
     # assuming a sparse labeling scheme
@@ -70,11 +69,14 @@ def cluster_by_groups(group_id_strings):
         # increment label for next loop iteration
         label = label + 1
     
+    gc.collect()
+
     logging.info("Running UMAP embedding.")
     fitter = umap.UMAP(n_neighbors=15, 
                        n_components=5, 
                        metric='cosine',
-                       verbose=True).fit(data, y=labels)
+                       verbose=True,
+                       low_memory=True).fit(data, y=labels)
     embedding = fitter.embedding_
     
     fig, ax = plt.subplots(1, figsize=(14, 10))
