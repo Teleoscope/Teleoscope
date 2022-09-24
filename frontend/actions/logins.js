@@ -4,6 +4,7 @@ export const Logins = createSlice({
    name: 'logins',
    initialState: {
       /*
+      name: Theo
       email: admin@teleoscope.com
       password: teleoscope
     */
@@ -17,7 +18,7 @@ export const Logins = createSlice({
 
          // adds the login information to the state in order
          // for it to be tested in mongoDB
-         console.log(action.payload);
+         console.log("Action.Payload", action.payload);
          state.value = action.payload;
       }
    }

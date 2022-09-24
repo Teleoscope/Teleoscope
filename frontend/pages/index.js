@@ -70,8 +70,10 @@ export default function Home({ isConnected }) {
 
   return (
     <div>
-      {registration ?
-        <Registration setRegistration={Register}/> :
+      {registration ? (
+        <Provider store={store}>
+          <Registration setRegistration={Register} />
+        </Provider>) :
         <div>
           {(user.email != "") ? (
             <SWRConfig value={{
@@ -97,7 +99,9 @@ export default function Home({ isConnected }) {
               </StompContext.Provider>
             </SWRConfig>
           ) : (
-            <LoginForm Login={Login} error={error} setRegistration={Register} />
+            <Provider store={store}>
+              <LoginForm Login={Login} error={error} setRegistration={Register} />
+            </Provider>
           )}
         </div>
       }
