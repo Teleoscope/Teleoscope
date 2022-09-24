@@ -8,6 +8,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 import logging
 from sklearn.feature_extraction.text import CountVectorizer
 from bson.objectid import ObjectId
+import gc
 
 def cluster_by_groups(group_id_strings):
     """Cluster documents using user-provided group ids
@@ -46,6 +47,9 @@ def cluster_by_groups(group_id_strings):
     logging.info("Creating data np.array...")
     data = np.array(post_vectors)
     logging.info(f'Post data np.array has shape {data.shape}')
+
+    post_vectors = []
+    gc.collect()
 
     # initialize labels to array of -1 for each post
     # assuming a sparse labeling scheme
