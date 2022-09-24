@@ -75,10 +75,7 @@ def cluster_by_groups(group_id_strings):
     gc.collect()
 
     logging.info("Running UMAP embedding.")
-    fitter = umap.UMAP(n_neighbors=15, 
-                       n_components=5, 
-                       metric='cosine',
-                       verbose=True,
+    fitter = umap.UMAP(verbose=True,
                        low_memory=True).fit(data, y=labels)
     embedding = fitter.embedding_
     
