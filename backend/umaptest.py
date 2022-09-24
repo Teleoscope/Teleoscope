@@ -50,9 +50,7 @@ def cluster_by_groups(group_id_strings):
     logging.info("Creating data np.array...")
     data = np.array(post_vectors)
     logging.info(f'Post data np.array has shape {data.shape}')
-    post_vectors = [] # for garbage collection
-
-
+    
     # initialize labels to array of -1 for each post
     # assuming a sparse labeling scheme
     labels = np.full(data.shape[0], -1)
@@ -72,13 +70,17 @@ def cluster_by_groups(group_id_strings):
         # increment label for next loop iteration
         label = label + 1
     
+    # for garbage collection
+    del post_vectors
+    del cursor
     gc.collect()
 
     logging.info("Running UMAP embedding.")
     fitter = umap.UMAP(verbose=True,
                        low_memory=True).fit(data, y=labels)
     embedding = fitter.embedding_
-    
+
+    logging.info("Drawing plots...")
     fig, ax = plt.subplots(1, figsize=(14, 10))
     plt.scatter(*embedding.T, s=0.1, c=target, cmap='Spectral', alpha=1.0)
     plt.setp(ax, xticks=[], yticks=[])
@@ -87,7 +89,8 @@ def cluster_by_groups(group_id_strings):
     cbar.set_ticklabels([group["history"][0]["label"]])
     plt.title('Clusters');
     fig.savefig('clusters.png', dpi=fig.dpi)
-
+    logging.info("Plots saved.")
+    
 
 '''
 
