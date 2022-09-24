@@ -1,4 +1,4 @@
-import tqdm, numpy as np, pandas as pd
+import tqdm, numpy as np
 import matplotlib.pyplot as plt
 import utils
 import umap
@@ -23,13 +23,16 @@ def cluster_by_groups(group_id_strings):
     db = utils.connect()
 
     # start by getting the groups
+    logging.info(f'Getting all groups in {group_ids}.')
     groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
 
     # Count docs to feed to TQDM progress bar, also to test connection to database
+    logging.info("Couting documents...")
     count_docs = db.clean.posts.v3.count_documents({})
     logging.info(f'There are {count_docs} in the collection.')
 
     # cursor is a generator which means that it yields a new doc one at a time
+    logging.info("Getting posts cursor and building post vector and id list...")
     cursor = db.clean.posts.v3.find(projection={'id': 1, 'selftextVector': 1}, batch_size=500)
 
     # only needed for an intermediary variable for making the DataFrame
