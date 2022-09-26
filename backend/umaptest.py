@@ -46,7 +46,7 @@ def cluster_by_groups(group_id_strings):
     logging.info("Counting documents...")
     # count_docs = db.clean.posts.v3.count_documents({})
     # limiting for now
-    count_docs = 1000
+    count_docs = 100000
 
     logging.info(f'There are {count_docs} in the collection.')
 

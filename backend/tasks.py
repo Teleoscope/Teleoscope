@@ -240,7 +240,7 @@ def save_UI_state(*args, **kwargs):
 
 '''
 initialize_teleoscope:
-Performs a text query on aita.clean.posts.v2 text index.
+Performs a text query on aita.clean.posts.v3 text index.
 If the query string already exists in the teleoscopes collection, returns existing reddit_ids.
 Otherwise, adds the query to the teleoscopes collection and performs a text query the results of which are added to the
 teleoscopes collection and returned.
@@ -263,7 +263,7 @@ def initialize_teleoscope(*args, **kwargs):
 
     # perform text search query
     labelAsTextSearch = {"$text": {"$search": label}}
-    cursor = db.clean.posts.v2.find(labelAsTextSearch, projection = {'id':1})
+    cursor = db.clean.posts.v3.find(labelAsTextSearch, projection = {'id':1})
     return_ids = [x['id'] for x in cursor]
     rank_slice = [(x, 1.0) for x in return_ids[0:min(500, len(return_ids))]]
 
