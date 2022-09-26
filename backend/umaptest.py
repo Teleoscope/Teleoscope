@@ -43,19 +43,15 @@ def cluster_by_groups(group_id_strings):
     groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
 
     # Count docs to feed to TQDM progress bar, also to test connection to database
-    logging.info("Couting documents...")
+    logging.info("Counting documents...")
     count_docs = db.clean.posts.v3.count_documents({})
+
     logging.info(f'There are {count_docs} in the collection.')
 
     # cursor is a generator which means that it yields a new doc one at a time
     logging.info("Getting posts cursor and building post vector and id list...")
-    cursor = db.clean.posts.v3.find(projection={'id': 1, 'selftextVector': 1}, batch_size=500)
+    cursor = db.clean.posts.v3.find(projection={'id': 1, 'selftextVector': 1}, batch_size=500).limit(100000)
 
-    # only needed for an intermediary variable for making the DataFrame
-    # tests on 600k docs shows that the list is a lot smaller (1/5) than the DataFrame, so possibly
-    # better to put directly into the numpy array on create, but haven't tested yet
-    post_ids = []
-    post_vectors = []
 
     # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
     # can accept generators for lazy calculation 
