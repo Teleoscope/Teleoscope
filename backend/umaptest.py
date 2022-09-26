@@ -44,13 +44,15 @@ def cluster_by_groups(group_id_strings):
 
     # Count docs to feed to TQDM progress bar, also to test connection to database
     logging.info("Counting documents...")
-    count_docs = db.clean.posts.v3.count_documents({})
+    # count_docs = db.clean.posts.v3.count_documents({})
+    # limiting for now
+    count_docs = 100000
 
     logging.info(f'There are {count_docs} in the collection.')
 
     # cursor is a generator which means that it yields a new doc one at a time
     logging.info("Getting posts cursor and building post vector and id list...")
-    cursor = db.clean.posts.v3.find(projection={'id': 1, 'selftextVector': 1}, batch_size=500).limit(100000)
+    cursor = db.clean.posts.v3.find(projection={'id': 1, 'selftextVector': 1}, batch_size=500).limit(count_docs)
 
 
     # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
