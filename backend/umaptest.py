@@ -46,7 +46,7 @@ def cluster_by_groups(group_id_strings):
     logging.info("Counting documents...")
     # count_docs = db.clean.posts.v3.count_documents({})
     # limiting for now
-    count_docs = 100000
+    count_docs = 1000
 
     logging.info(f'There are {count_docs} in the collection.')
 
@@ -102,7 +102,7 @@ def cluster_by_groups(group_id_strings):
     fig, ax = plt.subplots(1, figsize=(14, 10))
     plt.scatter(*embedding.T, s=0.1, c=labels, cmap='Spectral', alpha=1.0)
     plt.setp(ax, xticks=[], yticks=[])
-    cbar = plt.colorbar(boundaries=np.arange(labelnames + 1)-0.5)
+    cbar = plt.colorbar(boundaries=np.arange(len(labelnames) + 1)-0.5)
     cbar.set_ticks(np.arange(len(labelnames)))
     cbar.set_ticklabels(labelnames)
     plt.title('Clusters');
