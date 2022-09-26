@@ -9,6 +9,7 @@ import Bookmark from "../actions/bookmark"
 import Groups from '../actions/groups'
 import Windows from '../actions/windows'
 import Login from '../actions/logins'
+import Register from '../actions/registration'
 
 export default configureStore({
   reducer: {
@@ -20,7 +21,8 @@ export default configureStore({
     bookmarker: Bookmark,
     grouper: Groups,
     windows: Windows,
-    checkLogin: Login
+    checkLogin: Login,
+    pushRegistration: Register
   },
   middleware: (getDefaultMiddleware) => 
     getDefaultMiddleware({

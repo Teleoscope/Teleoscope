@@ -1,17 +1,16 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-export const Logins = createSlice({
-   name: 'logins',
+export const Registration = createSlice({
+   name: 'registration',
    initialState: {
       /*
-      name maybe deleted for login state
       name: Theo
       email: admin@teleoscope.com
       password: teleoscope
     */
    },
    reducers: {
-      login: (state, action) => {
+      register: (state, action) => {
          // Redux Toolkit allows us to write "mutating" logic in reducers. It
          // doesn't actually mutate the state because it uses the Immer library,
          // which detects changes to a "draft state" and produces a brand new
@@ -19,13 +18,14 @@ export const Logins = createSlice({
 
          // adds the login information to the state in order
          // for it to be tested in mongoDB
-         console.log("Login Action.Payload", action.payload);
+         console.log("Register Action.Payload", action.payload);
          state.value = action.payload;
+         console.log("State Value", state.value)
       }
    }
 })
 
 // Action creators are generated for each case reducer function
-export const {login} = Logins.actions
+export const {register} = Registration.actions
 
-export default Logins.reducer
+export default Registration.reducer

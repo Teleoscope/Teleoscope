@@ -36,7 +36,7 @@ export default function Home({ isConnected }) {
   // used to set the user from the login and to catch errors if the login is tried with bad credentials
   const [user, setUser] = useState({ name: "Kenny", email: "" });
   const [error, setError] = useState("");
-  const [registration, setRegistration] = useState(false);
+  const [registration, setRegistrationPage] = useState(false);
 
   // function for logging in the user
   // if the email and password match the mock user and password we then set 
@@ -65,7 +65,7 @@ export default function Home({ isConnected }) {
 
   // function to the registration hook to set registration to true or false
   const Register = () => {
-    setRegistration(!registration)
+    setRegistrationPage(!registration)
   }
 
   return (
