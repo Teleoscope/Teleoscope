@@ -21,7 +21,7 @@ const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
 // import the login components
 import LoginForm from "../components/Login/LoginForm"
-import Registration from "../components/Login/Registration"
+import Registration from "../components/Login/RegistrationPage"
 
 export default function Home({ isConnected }) {
 

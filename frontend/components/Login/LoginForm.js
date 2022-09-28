@@ -22,7 +22,12 @@ export default function LoginForm({ Login, setRegistration, error }) {
       Login(details)
    }
    return (
-      <div>
+      <div 
+      style={{
+         display: 'flex',
+         alignItems: 'baseline',
+         justifyContent: 'center',
+       }}>
          <form onSubmit={submitHandler}>
             <div class="form-inner">
                <h2>Teleoscope Login</h2>
