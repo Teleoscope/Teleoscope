@@ -6,7 +6,6 @@ import hdbscan
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer
 import logging
-from sklearn.feature_extraction.text import CountVectorizer
 from bson.objectid import ObjectId
 import gc
 import argparse
@@ -26,12 +25,18 @@ parser.add_argument(
 args = parser.parse_args()    
 logging.basicConfig(level=args.loglevel)
 
-def cluster_by_groups(group_id_strings):
-    """Cluster documents using user-provided group ids
+
+
+def cluster_by_groups(group_id_strings, teleoscope_oid):
+    """Cluster documents using user-provided group ids.
+
+    teleoscope_oid: GridFS OID address for ranked posts. 
+    Note this assumes that a teleoscope has already been created for this group.
 
     group_id_strings : list(string) where the strings are MongoDB ObjectID format
 
     """
+
     # Create ObjectIds
     group_ids = [ObjectId(str(id)) for id in group_id_strings]
 
@@ -41,6 +46,11 @@ def cluster_by_groups(group_id_strings):
     # start by getting the groups
     logging.info(f'Getting all groups in {group_ids}.')
     groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
+
+    # get Teleoscope from GridFS
+    logging.info("Getting ordered posts...")
+    ordered_posts = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope_oid)))
+    print(ordered_posts[0:100], len(ordered_posts))
 
     # Count docs to feed to TQDM progress bar, also to test connection to database
     logging.info("Counting documents...")
@@ -65,9 +75,9 @@ def cluster_by_groups(group_id_strings):
     
     logging.info("Creating data np.array...")
     data = np.array(post_vectors)
-    logging.info(f'Post data np.array has shape {data.shape}')
+    logging.info(f'Post data np.array has shape {data.shape}') # (600000, 512)
     
-    # initialize labels to array of -1 for each post
+    # initialize labels to array of -1 for each post # (600000,)
     # assuming a sparse labeling scheme
     labels = np.full(data.shape[0], -1)
 
@@ -98,6 +108,7 @@ def cluster_by_groups(group_id_strings):
 
     labelnames = [group["history"][0]["label"] for group in groups]
 
+    # drawing plots
     logging.info("Drawing plots...")
     fig, ax = plt.subplots(1, figsize=(14, 10))
     plt.scatter(*embedding.T, s=0.1, c=labels, cmap='Spectral', alpha=1.0)

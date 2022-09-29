@@ -1,6 +1,5 @@
 import logging, pickle, utils, json, auth, numpy as np, tensorflow_hub as hub
 from warnings import simplefilter
-from gridfs import GridFS
 from celery import Celery, Task
 from bson.objectid import ObjectId
 import datetime
@@ -688,13 +687,6 @@ class reorient(Task):
         resultantVec /= np.linalg.norm(resultantVec)
         return resultantVec, direction
 
-    def gridfsUpload(self, namespace, data, encoding='utf-8'):
-         # convert to json
-        dumps = json.dumps(data)
-        fs = GridFS(self.db, namespace)
-        obj = fs.put(dumps, encoding=encoding)
-        return obj
-
     def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list):
         # either positive or negative docs should have at least one entry
         if len(positive_docs) == 0 and len(negative_docs) == 0:
@@ -746,7 +738,7 @@ class reorient(Task):
         )
         scores = utils.calculateSimilarity(self.allPostVectors, qprime)
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
-        gridfsObj = self.gridfsUpload("teleoscopes", newRanks)
+        gridfsObj = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
 
         rank_slice = newRanks[0:500]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
