@@ -128,7 +128,7 @@ def rankPostsBySimilarity(posts_ids, scores):
     return sorted([(post_id, score) for (post_id, score) in zip(posts_ids, scores)], key=lambda x:x[1], reverse=True)
 
 # upload to GridFS
-def gridfsUpload(db, data, encoding='utf-8'):
+def gridfsUpload(db, namespace, data, encoding='utf-8'):
     '''Uploads data to GridFS under a particular namespace.
 
     args:
@@ -177,6 +177,6 @@ def gridfsDownload(db, namespace, oid):
 
     '''
     fs = gridfs.GridFS(db, namespace)
-    obj = fs.get(oid)
+    obj = fs.get(oid).read()
     data = json.loads(obj)
     return data
