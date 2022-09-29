@@ -81,7 +81,6 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     # assuming a sparse labeling scheme
     data = np.array(post_vectors)
     labels = np.full(data.shape[0], -1)
-    logging.info(f'Post data np.array has shape {data.shape}') # (600000, 512)
 
     label = 1
     # add the correct labels to the label np.array
@@ -112,6 +111,8 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     del post_ids
     del cursor
     gc.collect()
+
+    logging.info(f'Post data np.array has shape {data.shape}') # (600000, 512)
 
     logging.info("Running UMAP embedding.")
     fitter = umap.UMAP(verbose=True,
