@@ -69,8 +69,8 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     
     # initialize labels to array of -1 for each post # (600000,)
     # assuming a sparse labeling scheme
-    labels = np.full(data.shape[0], -1)
     data = np.array(post_vectors)
+    labels = np.full(data.shape[0], -1)
     logging.info(f'Post data np.array has shape {data.shape}') # (600000, 512)
 
     label = 1
