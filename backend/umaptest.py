@@ -150,6 +150,8 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     plt.savefig("hdbscan.png")
     plt.clf()
 
+    labelnames = [group["history"][0] for group in groups]
+
     fig, ax = plt.subplots(1, figsize=(14, 10))
     plt.scatter(*embedding.T, s=0.1, c=labels, cmap='Spectral', alpha=1.0)
     plt.setp(ax, xticks=[], yticks=[])
