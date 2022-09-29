@@ -176,6 +176,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "session_oid": b["args"]["session_oid"]
                 }
             )
+            res.apply_async()
 
 
 app.steps['consumer'].add(WebTaskConsumer)
