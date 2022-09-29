@@ -50,7 +50,6 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
 
     # strip the post ids
     post_ids = {post[0]:[] for post in ordered_posts[0:limit]}
-    del ordered_posts
     
     # start by getting the groups
     logging.info(f'Getting all groups in {group_ids}.')
@@ -66,6 +65,8 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
         id = post["id"]
         if id in post_ids:
             post_ids[id] = post["selftextVector"]
+    
+    post_vectors = list(post_ids.values())
 
     logging.info("Creating data np.array...")
     data = np.array(post_vectors)
@@ -92,6 +93,8 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     
     # for garbage collection
     del post_vectors
+    del ordered_posts
+    del post_ids
     del cursor
     gc.collect()
 
