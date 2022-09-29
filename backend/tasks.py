@@ -646,8 +646,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid):
     
     import clustering
     logger.info(f'Starting clustering for groups {group_id_strings} in session {session_oid}.')
-    clustering.set_logger(logger)
-    clustering.cluster_by_groups(group_id_strings, teleoscope_oid, session_oid)
+    clustering.cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, logger)
 
 '''
 TODO:

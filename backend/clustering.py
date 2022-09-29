@@ -8,13 +8,8 @@ import logging
 from bson.objectid import ObjectId
 import gc
 import tasks
-logger = logging.getLogger(__name__)
 
-def set_logger(l):
-    global logger
-    logger = l
-
-def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=100000):
+def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, logger, limit=100000):
     """Cluster documents using user-provided group ids.
 
     teleoscope_oid: GridFS OID address for ranked posts. 
