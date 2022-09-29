@@ -49,7 +49,8 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     limit = min(limit, len(ordered_posts))
 
     # strip the post ids
-    post_ids = {post[0] for post in ordered_posts[0:limit]}
+    post_ids = {post[0]:[] for post in ordered_posts[0:limit]}
+    del ordered_posts
     
     # start by getting the groups
     logging.info(f'Getting all groups in {group_ids}.')
@@ -61,7 +62,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
 
     # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
     # can accept generators for lazy calculation 
-    for post in tqdm.tqdm(cursor, total=limit):
+    for post in tqdm.tqdm(cursor, total=600000):
         id = post["id"]
         if id in post_ids:
             post_ids[id] = post["selftextVector"]
