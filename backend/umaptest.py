@@ -58,16 +58,14 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
 
     # cursor is a generator which means that it yields a new doc one at a time
     logging.info("Getting posts cursor and building post vector and id list...")
-    cursor = db.clean.posts.v3.find({"id":{"$in": post_ids}},projection={'id': 1, 'selftextVector': 1}, batch_size=500)
+    cursor = db.clean.posts.v3.find({"id":{"$in": post_ids}}, projection={'id': 1, 'selftextVector': 1}, batch_size=500)
 
     # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
     # can accept generators for lazy calculation 
     for post in tqdm.tqdm(cursor, total=695206):
         id = post["id"]
-        try:
-            data[post_ids.index(id)] = post["selftextVector"]
-        except:
-            logging.debug(f'{id} not in post selection.')
+        data[post_ids.index(id)] = post["selftextVector"]
+
     
     logging.info("Creating data np.array...")
     logging.info(f'Post data np.array has shape {data.shape}') # (600000, 512)
