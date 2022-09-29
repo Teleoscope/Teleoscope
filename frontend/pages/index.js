@@ -91,6 +91,7 @@ export default function Home({ isConnected }) {
 
                     <main>
                       <Provider store={store}>
+                        { console.log("isConnected", isConnected) }
                         <Workspace isConnected={isConnected} Logout={Logout} />
                       </Provider>
                     </main>

@@ -3,7 +3,7 @@ import { Client, Message } from "@stomp/stompjs";
 // anywhere that needs to route a request to the server
 // possibly best to move this into an action? I'm unsure
 Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
-const bcrypt = require('bcrypt');
+//const bcrypt = require('bcrypt');
 
 /**
  * Initializes the client (there should only be one)
@@ -236,7 +236,7 @@ export function update_note(client, post_id, content) {
 /*
   Adds the users login credentials for verification
 */
-export function add_login(client, username, password){
+export function add_login(client, username, password) {
   var body = {
     task: "add_login",
     args: {
@@ -259,13 +259,14 @@ export function add_login(client, username, password){
 */
 export function create_account(client, name, username, password) {
   // hash(password) the function uses the bcrypt hashing algorithm for now
-  const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync());
+  //const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync());
   var body = {
     task: "create_account",
     args: {
       name: name,
       username: username,
-      password: hashedPassword
+      //password: hashedPassword
+      password: password
     }
   }
 

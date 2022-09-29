@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react';
 
 //mui
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -21,20 +21,23 @@ export default function Registration(props) {
    const [passwordVisibility, setPasswordVisibility] = useState(false);
    const [registered, setRegistered] = useState(false);
 
-   const dispatch = useDispatch();
    const client = useContext(StompContext);
+   const dispatch = useDispatch();
+
+   console.log("Client", client);
 
    // checks to see if all the fields are filled out 
    // and dispathes it to the store
    const submitHandler = e => {
       e.preventDefault()
+
       // displays the header tag saying that the account was registered
       setRegistered(!registered);
 
       // dispatches the users information to the store
       dispatch(register(details));
 
-      // sends the information through Stomp.js
+      // sends the information to Stomp.js
       create_account(client, details.name, details.username, details.password);
 
       // wait a second to display that the account was successfully registered

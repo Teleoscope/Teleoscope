@@ -17,7 +17,6 @@ import { StompContext } from '../context/StompContext'
 import { add_note } from "../components/Stomp.js";
 
 
-  
 export default function NoteButton(props) {
 	const client = useContext(StompContext)
 	const dispatch = useDispatch();
