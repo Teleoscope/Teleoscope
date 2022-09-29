@@ -48,7 +48,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     logging.info(f'Posts downloaded. Top post is {ordered_posts[0]} and length is {len(ordered_posts)}')
 
     # strip the post ids
-    post_ids = [post[0] for post in ordered_posts[0:limit]]
+    ordered_post_ids = [post[0] for post in ordered_posts[0:limit]]
     del ordered_posts
     
     # start by getting the groups
@@ -57,8 +57,9 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
 
     # cursor is a generator which means that it yields a new doc one at a time
     logging.info("Getting posts cursor and building post vector and id list...")
-    cursor = db.clean.posts.v3.find({"id": {"$in": post_ids}}, projection={'selftextVector': 1}, batch_size=500)
+    cursor = db.clean.posts.v3.find({"id": {"$in": ordered_post_ids}}, projection={'id': 1, 'selftextVector': 1}, batch_size=500)
 
+    post_ids = []
     post_vectors = []
 
     # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
