@@ -43,14 +43,19 @@ def cluster_by_groups(group_id_strings, teleoscope_oid):
     # connect to the database
     db = utils.create_transaction_session()
 
-    # start by getting the groups
-    logging.info(f'Getting all groups in {group_ids}.')
-    groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
-
     # get Teleoscope from GridFS
     logging.info("Getting ordered posts...")
     ordered_posts = utils.gridfsDownload(db, ObjectId(str(teleoscope_oid)))
     print(ordered_posts[0:100], len(ordered_posts))
+
+    # connect normally
+    db = utils.connect()    
+    
+    # start by getting the groups
+    logging.info(f'Getting all groups in {group_ids}.')
+    groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
+
+    
 
     # Count docs to feed to TQDM progress bar, also to test connection to database
     logging.info("Counting documents...")
