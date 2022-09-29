@@ -64,7 +64,10 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     # can accept generators for lazy calculation 
     for post in tqdm.tqdm(cursor, total=695206):
         id = post["id"]
-        data[post_ids.index(id)] = post["selftextVector"]
+        try:
+            data[post_ids.index(id)] = post["selftextVector"]
+        except:
+            logging.debug(f'{id} not in post selection.')
     
     logging.info("Creating data np.array...")
     logging.info(f'Post data np.array has shape {data.shape}') # (600000, 512)
