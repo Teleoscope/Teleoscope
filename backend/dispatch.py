@@ -45,11 +45,11 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
         message.ack()
-        b = json.loads(body)
+        b = json.loads(body)['task']
 
         # TODO: these should exactly implement the interface standard
         # TODO: make sure they look like Stomp.js
-        if b['task'] == "initialize_teleoscope":
+        if b == "initialize_teleoscope":
             res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
@@ -59,7 +59,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
 
-        if b['task'] == "save_teleoscope_state":
+        if b == "save_teleoscope_state":
             res = tasks.save_teleoscope_state.signature(
                 args=(),
                 kwargs={
@@ -69,7 +69,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
 
-        if b['task'] == 'initialize_session':
+        if b == 'initialize_session':
             res = tasks.initialize_session.signature(
                 args=(),
                 kwargs={
@@ -79,7 +79,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
 
-        if b['task'] == "save_UI_state":
+        if b == "save_UI_state":
             res = tasks.save_UI_state.signature(
                 args=(),
                 kwargs={
@@ -89,7 +89,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
 
-        if b['task'] == "reorient":
+        if b == "reorient":
             '''
             res = robj.delay(
                 teleoscope_id=b['args']["teleoscope_id"],
@@ -107,7 +107,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
             workflow.apply_async()
 
-        if b['task'] == "add_group":
+        if b == "add_group":
             res = tasks.add_group.signature(
                 args=(),
                 kwargs={
@@ -118,7 +118,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
 
-        if b['task'] == "add_post_to_group":
+        if b == "add_post_to_group":
             res = tasks.add_post_to_group.signature(
                 args=(),
                 kwargs={
@@ -128,7 +128,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
 
-        if b['task'] == "remove_post_from_group":
+        if b == "remove_post_from_group":
             res = tasks.remove_post_from_group.signature(
                 args=(),
                 kwargs={
@@ -138,7 +138,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
 
-        if b['task'] == "update_group_label":
+        if b == "update_group_label":
             res = tasks.update_group_label.signature(
                 args=(),
                 kwargs={
@@ -148,7 +148,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
 
-        if b['task'] == "add_note":
+        if b == "add_note":
             res = tasks.add_note.signature(
                 args=(),
                 kwargs={
@@ -157,7 +157,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
 
-        if b['task'] == "update_note":
+        if b == "update_note":
             res = tasks.update_note.signature(
                 args=(),
                 kwargs={
@@ -167,7 +167,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
             res.apply_async()
             
-        if b['tasks'] == "cluster_by_groups":
+        if b == "cluster_by_groups":
             res = tasks.cluster_by_groups.signature(
                 args=(),
                 kwargs={
