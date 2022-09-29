@@ -24,7 +24,7 @@ def connect():
         connectTimeoutMS = 50000, 
         serverSelectionTimeoutMS = 50000,
         directConnection=True,
-        # replicaSet = "rs0"
+        replicaSet = "rs0"
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
     # logging.log(f'Connected to MongoDB with user {auth.mongodb["username"]}.')

@@ -41,7 +41,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid):
     group_ids = [ObjectId(str(id)) for id in group_id_strings]
 
     # connect to the database
-    db = utils.connect()
+    db = utils.create_transaction_session()
 
     # start by getting the groups
     logging.info(f'Getting all groups in {group_ids}.')
