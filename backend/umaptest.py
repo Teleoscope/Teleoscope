@@ -140,9 +140,10 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
         logging.info(f'Post indices is {post_indices_scalar[0]}.')
         post_indices = [int(i) for i in post_indices_scalar]
         posts = []
-        logging.info(f'There are {len(posts)} posts for MLGroup {hdbscan_label}.')
         for i in post_indices:
             posts.append(post_ids[i])
+        
+        logging.info(f'There are {len(posts)} posts for MLGroup {hdbscan_label}.')
         tasks.add_group(
             human=False, 
             session_id=session_oid, 
