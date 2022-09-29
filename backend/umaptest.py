@@ -131,7 +131,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
                         min_cluster_size=500,
     ).fit_predict(umap_embeddings)
 
-    logging.info(f'HDBScan labels are {hdbscan_labels}.')
+    logging.info(f'HDBScan labels are in set {set(hdbscan_labels)}.')
 
     # drawing plots
     logging.info("Drawing plots...")
