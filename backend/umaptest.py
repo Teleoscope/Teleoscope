@@ -98,7 +98,8 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
                 logging.info(f'{id} not in current slice. Attempting to retreive from database...')
                 post = db.clean.posts.v3.find_one({"id": id}, projection=projection)
                 post_ids.append(id)
-                data = np.append(data, post["selftextVector"])
+                vector = np.array(post["selftextVector"])
+                data = np.append(data, vector)
                 
         # add labels
         for i in indices:
