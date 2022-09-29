@@ -158,7 +158,7 @@ def gridfsUpload(db, data, encoding='utf-8'):
     return obj
 
 # Download from GridFS
-def gridfsDownload(db, oid):
+def gridfsDownload(db, namespace, oid):
     '''Gets posts and scores from GridFS
 
     args:
@@ -176,7 +176,7 @@ def gridfsDownload(db, oid):
         data: [("v23oj1", 0.91), ... ]
 
     '''
-    fs = gridfs.GridFS(db)
+    fs = gridfs.GridFS(db, namespace)
     obj = fs.get(oid, db)
     data = json.loads(obj)
     return data
