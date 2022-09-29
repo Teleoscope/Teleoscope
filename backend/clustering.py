@@ -12,6 +12,7 @@ import tasks
 logger = logging.getLogger(__name__)
 
 def set_logger(new_logger):
+    global logger
     logger = new_logger
 
 def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=100000):
