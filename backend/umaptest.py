@@ -111,7 +111,6 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
     
     # for garbage collection
     del ordered_posts
-    del post_ids
     del cursor
     gc.collect()
 
