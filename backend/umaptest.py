@@ -123,7 +123,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid):
     logging.info("Plots saved.")
 
 if __name__ == "__main__":
-    cluster_by_groups(["62db047aaee56b83f2871510"], "62a7847cafc0c7302382912d")
+    cluster_by_groups(["62db047aaee56b83f2871510"], "62a7ca02d033034450035a91")
 
 '''
 
