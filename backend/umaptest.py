@@ -122,10 +122,34 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     
     embedding = fitter.embedding_
 
-    labelnames = [group["history"][0]["label"] for group in groups]
+    umap_embeddings = fitter.transform(data)
+    
+    logging.info("Clustering with HDBSCAN.")
+
+    hdbscan_labels = hdbscan.HDBSCAN(
+                        min_samples=10,
+                        min_cluster_size=500,
+    ).fit_predict(umap_embeddings)
+
+    logging.info(f'HDBScan labels are {hdbscan_labels}.')
 
     # drawing plots
     logging.info("Drawing plots...")
+    clustered = (hdbscan_labels >= 0)
+    plt.scatter(umap_embeddings[~clustered, 0],
+                umap_embeddings[~clustered, 1],
+                color=(0.5, 0.5, 0.5),
+                s=0.1,
+                alpha=0.5)
+    plt.scatter(umap_embeddings[clustered, 0],
+                umap_embeddings[clustered, 1],
+                c=hdbscan_labels[clustered],
+                s=0.1,
+                cmap='Spectral');
+
+    plt.savefig("hdbscan.png")
+    plt.clf()
+
     fig, ax = plt.subplots(1, figsize=(14, 10))
     plt.scatter(*embedding.T, s=0.1, c=labels, cmap='Spectral', alpha=1.0)
     plt.setp(ax, xticks=[], yticks=[])
