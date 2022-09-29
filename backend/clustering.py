@@ -32,21 +32,21 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
     db = utils.connect()
 
     # get Teleoscope from GridFS
-    logging.info("Getting ordered posts...")
+    logger.info("Getting ordered posts...")
     all_ordered_posts = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope_oid)))
     ordered_posts = all_ordered_posts[0:limit]
-    logging.info(f'Posts downloaded. Top post is {ordered_posts[0]} and length is {len(ordered_posts)}')
+    logger.info(f'Posts downloaded. Top post is {ordered_posts[0]} and length is {len(ordered_posts)}')
     limit = min(limit, len(ordered_posts))
     
     # start by getting the groups
-    logging.info(f'Getting all groups in {group_ids}.')
+    logger.info(f'Getting all groups in {group_ids}.')
     groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
     
     # projection includes only fields we want
     projection = {'id': 1, 'selftextVector': 1}
 
     # cursor is a generator which means that it yields a new doc one at a time
-    logging.info("Getting posts cursor and building post vector and id list...")
+    logger.info("Getting posts cursor and building post vector and id list...")
     cursor = db.clean.posts.v3.find(
         # query
         {"id":{"$in": [post[0] for post in ordered_posts]}},
@@ -64,7 +64,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
         post_ids.append(post["id"])
         post_vectors.append(post["selftextVector"])
         
-    logging.info("Creating data np.array...")
+    logger.info("Creating data np.array...")
     
     # initialize labels to array of -1 for each post # e.g., (600000,)
     # assuming a sparse labeling scheme
@@ -84,7 +84,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
             try:
                 post_ids.index(id)
             except:
-                logging.info(f'{id} not in current slice. Attempting to retreive from database...')
+                logger.info(f'{id} not in current slice. Attempting to retreive from database...')
                 post = db.clean.posts.v3.find_one({"id": id}, projection=projection)
                 post_ids.append(id)
                 vector = np.array(post["selftextVector"]).reshape((1, 512))
@@ -102,9 +102,9 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
     del cursor
     gc.collect()
 
-    logging.info(f'Post data np.array has shape {data.shape}.') # e.g., (600000, 512)
+    logger.info(f'Post data np.array has shape {data.shape}.') # e.g., (600000, 512)
 
-    logging.info("Running UMAP embedding.")
+    logger.info("Running UMAP embedding.")
     fitter = umap.UMAP(verbose=True,
                        low_memory=True).fit(data, y=labels)
     
@@ -112,26 +112,26 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
 
     umap_embeddings = fitter.transform(data)
     
-    logging.info("Clustering with HDBSCAN.")
+    logger.info("Clustering with HDBSCAN.")
 
     hdbscan_labels = hdbscan.HDBSCAN(
                         min_samples=10,
                         min_cluster_size=500,
     ).fit_predict(umap_embeddings)
 
-    logging.info(f'HDBScan labels are in set {set(hdbscan_labels)}.')
+    logger.info(f'HDBScan labels are in set {set(hdbscan_labels)}.')
 
     label_array = np.array(hdbscan_labels)
 
     for hdbscan_label in set(hdbscan_labels):
         post_indices_scalar = np.where(label_array == hdbscan_label)[0]
-        logging.info(f'Post indices is {post_indices_scalar[0]}.')
+        logger.info(f'Post indices is {post_indices_scalar[0]}.')
         post_indices = [int(i) for i in post_indices_scalar]
         posts = []
         for i in post_indices:
             posts.append(post_ids[i])
         
-        logging.info(f'There are {len(posts)} posts for MLGroup {hdbscan_label}.')
+        logger.info(f'There are {len(posts)} posts for MLGroup {hdbscan_label}.')
         tasks.add_group(
             human=False, 
             session_id=session_oid, 
@@ -141,7 +141,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
         )
 
     # drawing plots
-    logging.info("Drawing plots...")
+    logger.info("Drawing plots...")
     clustered = (hdbscan_labels >= 0)
     plt.scatter(umap_embeddings[~clustered, 0],
                 umap_embeddings[~clustered, 1],
@@ -167,7 +167,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
     cbar.set_ticklabels(labelnames)
     plt.title('Clusters');
     fig.savefig('clusters.png', dpi=fig.dpi)
-    logging.info("Plots saved.")
+    logger.info("Plots saved.")
 
 if __name__ == "__main__":
     cluster_by_groups(["62db047aaee56b83f2871510"], "62a7ca02d033034450035a91", "632ccbbdde62ba69239f6682")
