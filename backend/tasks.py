@@ -4,7 +4,7 @@ from celery import Celery, Task
 from bson.objectid import ObjectId
 import datetime
 from celery.utils.log import get_task_logger
-logger = get_task_logger(__name__)
+
 
 
 # ignore all future warnings
@@ -55,7 +55,7 @@ purpose: This function is used to validate a single post.
 @app.task
 def validate_post(data):
     if data.get('selftext', "") == "" or data.get('title', "") == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
-        logger.info(f"Post {data['id']} is missing required fields. Post not imported.")
+        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
         return {'error': 'Post is missing required fields.'}
 
     post = {
@@ -78,7 +78,7 @@ def read_and_validate_post(path_to_post):
     with open(path_to_post) as f:
             data = json.load(f)
     if data['selftext'] == "" or data['title'] == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
-        logger.info(f"Post {data['id']} is missing required fields. Post not imported.")
+        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
         return {'error': 'Post is missing required fields.'}
 
     post = {
@@ -160,11 +160,11 @@ purpose: adds a session to the sessions collection
 def initialize_session(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session()
     username = kwargs["username"]
-    logger.info(f'Initializing sesssion for user {username}.')
+    logging.info(f'Initializing sesssion for user {username}.')
     # Check if user exists and throw error if not
     user = db.users.find_one({"username": username})
     if user is None:
-        logger.info(f'User {username} does not exist.')
+        logging.info(f'User {username} does not exist.')
         raise Exception(f"User {username} does not exist.")
     obj = {
         "creation_time": datetime.datetime.utcnow(),
@@ -203,20 +203,20 @@ purpose: updates a session document in the sessions collection
 def save_UI_state(*args, **kwargs):
     # Error checking
     if 'session_id' not in kwargs:
-        logger.info(f"session_id not in kwargs.")
+        logging.info(f"session_id not in kwargs.")
         raise Exception("session_id not in kwargs")
     if 'history_item' not in kwargs:
-        logger.info(f"history_item not in kwargs.")
+        logging.info(f"history_item not in kwargs.")
         raise Exception("history_item not in kwargs")
     #session, db = utils.create_transaction_session()
     transaction_session, db = utils.create_transaction_session()
-    logger.info(f'Saving state for {kwargs["session_id"]}.')
+    logging.info(f'Saving state for {kwargs["session_id"]}.')
     # session_id needs to be typecast to ObjectId
     session_id = ObjectId(str(kwargs["session_id"]))
     session = db.sessions.find_one({"_id": session_id})
     # check if session id is valid, if not, raise exception
     if not session:
-        logger.info(f"Session {session_id} not found.")
+        logging.info(f"Session {session_id} not found.")
         raise Exception("Session not found")
     
     history_item = kwargs["history_item"]
@@ -256,11 +256,11 @@ TODO:
 @app.task
 def initialize_teleoscope(*args, **kwargs):
     if 'label' not in kwargs:
-        logger.info(f"label not in kwargs.")
+        logging.info(f"label not in kwargs.")
         raise Exception("label not in kwargs")
     label = kwargs["label"]
     if label == "":
-        logger.info(f"label {label} is empty.")
+        logging.info(f"label {label} is empty.")
         return []
     session, db = utils.create_transaction_session()
 
@@ -270,7 +270,7 @@ def initialize_teleoscope(*args, **kwargs):
     return_ids = [x['id'] for x in cursor]
     rank_slice = [(x, 1.0) for x in return_ids[0:min(500, len(return_ids))]]
 
-    logger.info(f"About to insert a new teleoscope for {label}.")
+    logging.info(f"About to insert a new teleoscope for {label}.")
     # create a new query document
     with session.start_transaction():
         teleoscope_id = db.teleoscopes.insert_one({
@@ -288,7 +288,7 @@ def initialize_teleoscope(*args, **kwargs):
                     }
                 ]
             }, session=session)
-        logger.info(f"New teleoscope id: {teleoscope_id.inserted_id}.")
+        logging.info(f"New teleoscope id: {teleoscope_id.inserted_id}.")
 
         # associate the newly created teleoscope with correct session
         db.sessions.update_one({'_id': ObjectId(str(kwargs["session_id"]))},
@@ -298,7 +298,7 @@ def initialize_teleoscope(*args, **kwargs):
                 }
             }, session=session)
         utils.commit_with_retry(session)
-    logger.info(f"label {label} added to teleoscopes collection")
+    logging.info(f"label {label} added to teleoscopes collection")
     return return_ids
 
 '''
@@ -312,20 +312,20 @@ purpose: save the current state of a teleoscope
 def save_teleoscope_state(history_obj):
     # Error checking
     if '_id' not in history_obj:
-        logger.info(f"_id not in kwargs.")
+        logging.info(f"_id not in kwargs.")
         raise Exception("_id not in kwargs")
     if 'history_item' not in history_obj:
-        logger.info(f"history_item not in kwargs.")
+        logging.info(f"history_item not in kwargs.")
         raise Exception("history_item not in kwargs")
 
     session, db = utils.create_transaction_session()
-    logger.info(f'Saving state for teleoscope {history_obj["_id"]}.')
+    logging.info(f'Saving state for teleoscope {history_obj["_id"]}.')
     _id = str(history_obj["_id"])
     obj_id = ObjectId(_id)
 
     # check if teleoscope id is valid, if not, raise exception
     if not db.teleoscopes.find_one({"_id": obj_id}):
-        logger.info(f"Teleoscope {_id} not found.")
+        logging.info(f"Teleoscope {_id} not found.")
         raise Exception("Teleoscope not found")
 
     history_item = history_obj["history_item"]
@@ -340,7 +340,7 @@ def save_teleoscope_state(history_obj):
                     }
                 }
             }, session=session)
-        logger.info(f'Saving teleoscope state: {result}')
+        logging.info(f'Saving teleoscope state: {result}')
         utils.commit_with_retry(session)
 
 '''
@@ -355,10 +355,10 @@ Effects: Throws exception
 def save_group_state(*args, **kwargs):
     # Error checking
     if 'group_id' not in kwargs:
-        logger.info(f"session_id not in kwargs.")
+        logging.info(f"session_id not in kwargs.")
         raise Exception("session_id not in kwargs")
     if 'history_item' not in kwargs:
-        logger.info(f"history_item not in kwargs.")
+        logging.info(f"history_item not in kwargs.")
         raise Exception("history_item not in kwargs")
     session, db = utils.create_transaction_session()
     group_id, history_item = ObjectId(kwargs['group_id']), kwargs['history_item']
@@ -386,13 +386,13 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
 
     # Error checking
     if "label" not in kwargs:
-        logger.info(f"Warning: label not in kwargs.")
+        logging.info(f"Warning: label not in kwargs.")
         raise Exception("label not in kwargs")
     if "color" not in kwargs:
-        logger.info(f"Warning: color not in kwargs.")
+        logging.info(f"Warning: color not in kwargs.")
         raise Exception("color not in kwargs")
     if "session_id" not in kwargs:
-        logger.info(f"Warning: session_id not in kwargs.")
+        logging.info(f"Warning: session_id not in kwargs.")
         raise Exception("session_id not in kwargs")
     
     # Creating document to be inserted into mongoDB
@@ -421,11 +421,11 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
 
     with transaction_session.start_transaction():
         groups_res = collection.insert_one(obj, session=transaction_session)
-        logger.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
+        logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
         # add created groups document to the correct session
         session = db.sessions.find_one({'_id': _id}, session=transaction_session)
         if not session:
-            logger.info(f"Warning: session with id {_id} not found.")
+            logging.info(f"Warning: session with id {_id} not found.")
             raise Exception(f"session with id {_id} not found")
         mlgroups = session["history"][0]["mlgroups"]
         groups = session["history"][0]["groups"]
@@ -450,7 +450,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                             }
                 }
             }, session=transaction_session)
-        logger.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
+        logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
         return groups_res.inserted_id
 
@@ -464,10 +464,10 @@ purpose: adds a post_id to a group
 @app.task
 def add_post_to_group(*args, **kwargs):
     if "group_id" not in kwargs:
-        logger.info(f"Warning: group_id not in kwargs.")
+        logging.info(f"Warning: group_id not in kwargs.")
         raise Exception("group_id not in kwargs")
     if "post_id" not in kwargs:
-        logger.info(f"Warning: post_id not in kwargs.")
+        logging.info(f"Warning: post_id not in kwargs.")
         raise Exception("post_id not in kwargs")
 
     session, db = utils.create_transaction_session()
@@ -475,7 +475,7 @@ def add_post_to_group(*args, **kwargs):
     group = db.groups.find_one({'_id': group_id})
     # Check if group exists
     if not group:
-        logger.info(f"Warning: group with id {group_id} not found.")
+        logging.info(f"Warning: group with id {group_id} not found.")
         raise Exception(f"group with id {group_id} not found")
 
     history_item = group["history"][0]
@@ -504,17 +504,17 @@ purpose: remove the post_id from the included_posts of the specified group_id
 @app.task
 def remove_post_from_group(*args, **kwargs):
     if "group_id" not in kwargs:
-        logger.info(f"Warning: group_id not in kwargs.")
+        logging.info(f"Warning: group_id not in kwargs.")
         raise Exception("group_id not in kwargs")
     if "post_id" not in kwargs:
-        logger.info(f"Warning: post_id not in kwargs.")
+        logging.info(f"Warning: post_id not in kwargs.")
         raise Exception("post_id not in kwargs")
 
     session, db = utils.create_transaction_session()
     group_id = ObjectId(kwargs["group_id"])
     group = db.groups.find_one({'_id': group_id})
     if not group:
-        logger.info(f"Warning: group with id {group_id} not found.")
+        logging.info(f"Warning: group with id {group_id} not found.")
         raise Exception(f"group with id {group_id} not found")
 
     history_item = group["history"][0]
@@ -544,14 +544,14 @@ purpose: update the label of the specified group_id
 @app.task
 def update_group_label(*args, **kwargs):
     if "group_id" not in kwargs:
-        logger.info(f"Warning: group_id not in kwargs.")
+        logging.info(f"Warning: group_id not in kwargs.")
         raise Exception("group_id not in kwargs")
 
     session, db = utils.create_transaction_session()
     group_id = ObjectId(kwargs["group_id"])
     group = db.groups.find_one({'_id': group_id})
     if not group:
-        logger.info(f"Warning: group with id {group_id} not found.")
+        logging.info(f"Warning: group with id {group_id} not found.")
         raise Exception(f"group with id {group_id} not found")
     
 
@@ -580,12 +580,12 @@ purpose: adds a note to the notes collection
 def add_note(*args, **kwargs):
     # Error checking
     if "post_id" not in kwargs:
-        logger.info(f"Warning: post_id not in kwargs.")
+        logging.info(f"Warning: post_id not in kwargs.")
         raise Exception("post_id not in kwargs")
     # Try finding post
     session, db = utils.create_transaction_session()
     if not db.posts.find_one({'id': kwargs["post_id"]}):
-        logger.info(f"Warning: post with id {kwargs['post_id']} not found.")
+        logging.info(f"Warning: post with id {kwargs['post_id']} not found.")
         raise Exception(f"post with id {kwargs['post_id']} not found")
 
     obj = {
@@ -598,7 +598,7 @@ def add_note(*args, **kwargs):
     }
     with session.start_transaction():
         res = db.notes.insert_one(obj, session=session)
-        logger.info(f"Added note for post {kwargs['post_id']} with result {res}.")
+        logging.info(f"Added note for post {kwargs['post_id']} with result {res}.")
         utils.commit_with_retry(session)
 
 
@@ -606,15 +606,15 @@ def add_note(*args, **kwargs):
 def update_note(*args, **kwargs):
     # Error checking
     if "post_id" not in kwargs:
-        logger.info(f"Warning: note_id not in kwargs.")
+        logging.info(f"Warning: note_id not in kwargs.")
         raise Exception("note_id not in kwargs")
     if "content" not in kwargs:
-        logger.info(f"Warning: content not in kwargs.")
+        logging.info(f"Warning: content not in kwargs.")
         raise Exception("content not in kwargs")
 
     session, db = utils.commit_with_retry()
     if not db.notes.find_one({'post_id': kwargs["post_id"]}):
-        logger.info(f"Warning: note with id {kwargs['post_id']} not found.")
+        logging.info(f"Warning: note with id {kwargs['post_id']} not found.")
         raise Exception(f"note with id {kwargs['post_id']} not found")
 
     with session.start_transaction():
@@ -630,7 +630,7 @@ def update_note(*args, **kwargs):
                 }
             }, session=session)
         utils.commit_with_retry(session)
-        logger.info(f"Updated note for post {kwargs['post_id']} with result {res}.")
+        logging.info(f"Updated note for post {kwargs['post_id']} with result {res}.")
 
 @app.task
 def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid):
@@ -646,8 +646,8 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid):
     """
     
     import clustering
-    logger.info(f'Starting clustering for groups {group_id_strings} in session {session_oid}.')
-    clustering.cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, logger)
+    logging.info(f'Starting clustering for groups {group_id_strings} in session {session_oid}.')
+    clustering.cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, get_task_logger("celery.task"))
 
 '''
 TODO:
@@ -735,7 +735,7 @@ class reorient(Task):
                 self.db = utils.connect()
 
             # do nothing since no feedback given on docs
-            logger.info(f'No positive or negative docs specified for teleoscope {teleoscope_id}.')
+            logging.info(f'No positive or negative docs specified for teleoscope {teleoscope_id}.')
             return 200 # trival pass
 
         # Check if post ids and vectors are cached
@@ -751,7 +751,7 @@ class reorient(Task):
         teleoscope = self.db.teleoscopes.find_one({"_id": _id})
 
         if teleoscope is None:
-            logger.info(f'Teleoscope with id {_id} does not exist!')
+            logging.info(f'Teleoscope with id {_id} does not exist!')
             return 400  # fail
 
         # check if stateVector exists
@@ -761,7 +761,7 @@ class reorient(Task):
         else:
             docs = positive_docs + negative_docs
             first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
-            logger.info(f'Results of finding first_doc: {first_doc}.')
+            logging.info(f'Results of finding first_doc: {first_doc}.')
             stateVector = first_doc['selftextVector']  # grab selftextVector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
@@ -776,7 +776,7 @@ class reorient(Task):
         gridfsObj = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
 
         rank_slice = newRanks[0:500]
-        logger.info(f'new rank slice has length {len(rank_slice)}.')
+        logging.info(f'new rank slice has length {len(rank_slice)}.')
 
         # # update stateVector
         # self.db.teleoscopes.update_one({"_id": _id}, {'$set': { "stateVector" : qprime.tolist()}})
