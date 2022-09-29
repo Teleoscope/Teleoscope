@@ -77,7 +77,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
         
     logging.info("Creating data np.array...")
     
-    # initialize labels to array of -1 for each post # (600000,)
+    # initialize labels to array of -1 for each post # e.g., (600000,)
     # assuming a sparse labeling scheme
     data = np.array(post_vectors)
     labels = np.full(data.shape[0], -1)
@@ -95,7 +95,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
             try:
                 post_ids.index(id)
             except:
-                logging.debug(f'{id} not in current slice. Attempting to retreive from database...')
+                logging.info(f'{id} not in current slice. Attempting to retreive from database...')
                 post = db.clean.posts.v3.find_one({"id": id}, projection=projection)
                 post_ids.append(id)
                 np.append(data, post["selftextVector"])
@@ -112,7 +112,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     del cursor
     gc.collect()
 
-    logging.info(f'Post data np.array has shape {data.shape}') # (600000, 512)
+    logging.info(f'Post data np.array has shape {data.shape}.') # e.g., (600000, 512)
 
     logging.info("Running UMAP embedding.")
     fitter = umap.UMAP(verbose=True,
