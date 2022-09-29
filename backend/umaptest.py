@@ -41,15 +41,12 @@ def cluster_by_groups(group_id_strings, teleoscope_oid):
     group_ids = [ObjectId(str(id)) for id in group_id_strings]
 
     # connect to the database
-    db = utils.create_transaction_session().aita
+    db = utils.create_transaction_session()[1]
 
     # get Teleoscope from GridFS
     logging.info("Getting ordered posts...")
     ordered_posts = utils.gridfsDownload(db, ObjectId(str(teleoscope_oid)))
     print(ordered_posts[0:100], len(ordered_posts))
-
-    # connect normally
-    db = utils.connect()    
     
     # start by getting the groups
     logging.info(f'Getting all groups in {group_ids}.')
