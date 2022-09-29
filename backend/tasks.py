@@ -3,6 +3,9 @@ from warnings import simplefilter
 from celery import Celery, Task
 from bson.objectid import ObjectId
 import datetime
+from celery.utils.log import get_task_logger
+logger = get_task_logger(__name__)
+
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
@@ -642,6 +645,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid):
 
     """
     import clustering
+    clustering.set_logger(logger)
     clustering.cluster_by_groups(group_id_strings, teleoscope_oid, session_oid)
 
 '''
