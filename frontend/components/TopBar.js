@@ -56,7 +56,7 @@ export default function TopBar(props) {
   const bookmarks = useSelector((state) => state.bookmarker.value);
   const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] }); // big_red_donkey
 
-    const client = useContext(StompContext)
+  const client = useContext(StompContext)
 
   const handleCookie = (username) => {
     setCookie("user", username, {

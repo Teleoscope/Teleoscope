@@ -4,28 +4,10 @@ import utils
 import umap
 import hdbscan
 import matplotlib.pyplot as plt
-from sklearn.feature_extraction.text import CountVectorizer
 import logging
 from bson.objectid import ObjectId
 import gc
-import argparse
 import tasks
-
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    '-d', '--debug',
-    help="Print lots of debugging statements",
-    action="store_const", dest="loglevel", const=logging.DEBUG,
-    default=logging.WARNING,
-)
-parser.add_argument(
-    '-v', '--verbose',
-    help="Be verbose",
-    action="store_const", dest="loglevel", const=logging.INFO,
-)
-args = parser.parse_args()    
-logging.basicConfig(level=args.loglevel)
-
 
 def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=100000):
     """Cluster documents using user-provided group ids.

@@ -235,7 +235,7 @@ export function update_note(client, post_id, content) {
 /**
  * Create MLGroups using the UMAP and HBDSCAN with the given groups' posts as seeds.
  */
-export default function cluster_by_groups(client, group_id_strings, teleoscope_oid, session_oid) {
+export function cluster_by_groups(client, group_id_strings, teleoscope_oid, session_oid) {
   var body = {
     task: "cluster_by_groups",
     args: {

@@ -1,4 +1,4 @@
-import React, { createRef, useEffect } from "react";
+import React, { createRef, useEffect, useContext } from "react";
 import { useSelector } from "react-redux";
 import Selecto from "react-selecto";
 
@@ -22,9 +22,14 @@ import { useDispatch } from "react-redux";
 
 // util
 import useSWRAbstract from "../util/swr"
+import { cluster_by_groups } from "../components/Stomp.js";
 
+// contexts
+import { StompContext } from '../context/StompContext'
 
 export default function Workspace(props) {
+  const client = useContext(StompContext)
+
   const dispatch = useDispatch();
   const [contextMenu, setContextMenu] = React.useState(null);
   const session_id = useSelector((state) => state.activeSessionID.value);
@@ -71,6 +76,10 @@ export default function Workspace(props) {
   const handleClick = (e) => {
     // dispatch(deselectAll());
   }
+
+  const handleTestClusters = () => {
+    cluster_by_groups(client, ["62db047aaee56b83f2871510"], "62a7ca02d033034450035a91", "632ccbbdde62ba69239f6682");
+  }
   
   const ref = createRef()
   return (
@@ -116,6 +125,8 @@ export default function Workspace(props) {
         <Divider />
         <MenuItem onClick={()=> dispatch(selectAll())}>Select All</MenuItem>
         <MenuItem onClick={()=> dispatch(deselectAll())}>Deselect All</MenuItem>
+        <Divider />
+        <MenuItem onClick={()=>handleTestClusters()}>Test Clusters</MenuItem>
 
     </Menu>
     </div>
