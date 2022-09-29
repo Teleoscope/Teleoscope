@@ -98,7 +98,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
                 logging.info(f'{id} not in current slice. Attempting to retreive from database...')
                 post = db.clean.posts.v3.find_one({"id": id}, projection=projection)
                 post_ids.append(id)
-                np.append(data, post["selftextVector"])
+                data = np.append(data, post["selftextVector"])
                 
         # add labels
         for i in indices:
@@ -117,6 +117,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     logging.info("Running UMAP embedding.")
     fitter = umap.UMAP(verbose=True,
                        low_memory=True).fit(data, y=labels)
+    
     embedding = fitter.embedding_
 
     labelnames = [group["history"][0]["label"] for group in groups]
