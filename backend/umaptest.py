@@ -28,7 +28,7 @@ logging.basicConfig(level=args.loglevel)
 
 
 
-def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=1000):
+def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=100000):
     """Cluster documents using user-provided group ids.
 
     teleoscope_oid: GridFS OID address for ranked posts. 

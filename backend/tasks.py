@@ -424,17 +424,24 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
         if not session:
             logging.info(f"Warning: session with id {_id} not found.")
             raise Exception(f"session with id {_id} not found")
-        groups = session["history"][0][collection_label]
-        groups.append(groups_res.inserted_id)
+        mlgroups = session["history"][0]["mlgroups"]
+        groups = session["history"][0]["groups"]
+
+        if human:
+            groups.append(groups_res.inserted_id)
+        else:
+            mlgroups.append(groups_res.inserted_id)
         sessions_res = db.sessions.update_one({'_id': _id},
             {
                 '$push': {
                             "history": {
                                 '$each': [{
                                     "timestamp": datetime.datetime.utcnow(),
-                                    collection_label: groups,
+                                    "groups": groups,
+                                    "mlgroups": mlgroups,
                                     "bookmarks": session["history"][0]["bookmarks"],
-                                    "windows": session["history"][0]["windows"]
+                                    "windows": session["history"][0]["windows"],
+                                    "label": session["history"][0]["label"]
                                 }],
                                 '$position': 0
                             }
