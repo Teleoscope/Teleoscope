@@ -1,15 +1,14 @@
 # builtin modules
 import json
 import numpy as np
+
 # installed modules
 from pymongo import MongoClient
 import pymongo.errors
 import logging 
-import gridfs
 
 # local files
 import auth
-
 
 def connect():
     autht = "authSource=aita&authMechanism=SCRAM-SHA-256"
@@ -151,6 +150,7 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
         kwargs: 'utf-8'
         obj: ObjectId('62ce71d36fee6e2ed60d1fb5')
     '''
+    import gridfs
     # convert to json
     dumps = json.dumps(data)
     fs = gridfs.GridFS(db)
@@ -176,6 +176,7 @@ def gridfsDownload(db, namespace, oid):
         data: [("v23oj1", 0.91), ... ]
 
     '''
+    import gridfs
     fs = gridfs.GridFS(db, namespace)
     obj = fs.get(oid).read()
     data = json.loads(obj)

@@ -1,4 +1,4 @@
-import logging, pickle, utils, json, auth, numpy as np, tensorflow_hub as hub
+import logging, pickle, utils, json, auth, numpy as np
 from warnings import simplefilter
 from celery import Celery, Task
 from bson.objectid import ObjectId
@@ -62,7 +62,6 @@ def validate_post(data):
 
     return post
 
-
 '''
 read_and_validate_post
 
@@ -97,13 +96,14 @@ purpose: This function is used to update the dictionary with a vectorized versio
 '''
 @app.task
 def vectorize_post(post):
-	if 'error' not in post:
-		embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-		post['vector'] = embed([post['title']]).numpy()[0].tolist()
-		post['selftextVector'] = embed([post['selftext']]).numpy()[0].tolist()
-		return post
-	else:
-		return post
+    import tensorflow_hub as hub
+    if 'error' not in post:
+        embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+        post['vector'] = embed([post['title']]).numpy()[0].tolist()
+        post['selftextVector'] = embed([post['selftext']]).numpy()[0].tolist()
+        return post
+    else:
+        return post
 
 
 '''
@@ -628,6 +628,21 @@ def update_note(*args, **kwargs):
             }, session=session)
         utils.commit_with_retry(session)
         logging.info(f"Updated note for post {kwargs['post_id']} with result {res}.")
+
+@app.task
+def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid):
+    """Cluster documents using user-provided group ids.
+
+    teleoscope_oid: GridFS OID address for ranked posts. 
+    Note this assumes that a teleoscope has already been created for this group.
+
+    group_id_strings : list(string) where the strings are MongoDB ObjectID format
+
+    session_oid: string OID for session to add mlgroups to
+
+    """
+    import clustering
+    clustering.cluster_by_groups(group_id_strings, teleoscope_oid, session_oid)
 
 '''
 TODO:
