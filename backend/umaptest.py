@@ -27,7 +27,7 @@ logging.basicConfig(level=args.loglevel)
 
 
 
-def cluster_by_groups(group_id_strings, teleoscope_oid):
+def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     """Cluster documents using user-provided group ids.
 
     teleoscope_oid: GridFS OID address for ranked posts. 
@@ -36,7 +36,6 @@ def cluster_by_groups(group_id_strings, teleoscope_oid):
     group_id_strings : list(string) where the strings are MongoDB ObjectID format
 
     """
-
     # Create ObjectIds
     group_ids = [ObjectId(str(id)) for id in group_id_strings]
 
@@ -46,32 +45,25 @@ def cluster_by_groups(group_id_strings, teleoscope_oid):
     # get Teleoscope from GridFS
     logging.info("Getting ordered posts...")
     ordered_posts = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope_oid)))
-    print(ordered_posts[0:100], len(ordered_posts))
+    logging.info(f'Posts downloaded. Top post is {ordered_posts[0]} and length is {len(ordered_posts)}')
+
+    # strip the post ids
+    post_ids = [post[0] for post in ordered_posts[0:limit]]
+    del ordered_posts
     
     # start by getting the groups
     logging.info(f'Getting all groups in {group_ids}.')
     groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
 
-    
-
-    # Count docs to feed to TQDM progress bar, also to test connection to database
-    logging.info("Counting documents...")
-    # count_docs = db.clean.posts.v3.count_documents({})
-    # limiting for now
-    count_docs = 100000
-
-    logging.info(f'There are {count_docs} in the collection.')
-
     # cursor is a generator which means that it yields a new doc one at a time
     logging.info("Getting posts cursor and building post vector and id list...")
-    cursor = db.clean.posts.v3.find(projection={'id': 1, 'selftextVector': 1}, batch_size=500).limit(count_docs)
+    cursor = db.clean.posts.v3.find({"id": {"$in": post_ids}}, projection={'selftextVector': 1}, batch_size=500)
 
-    post_ids = []
     post_vectors = []
 
     # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
     # can accept generators for lazy calculation 
-    for post in tqdm.tqdm(cursor, total=count_docs):
+    for post in tqdm.tqdm(cursor, total=limit):
         post_ids.append(post["id"])
         post_vectors.append(post["selftextVector"])
     
