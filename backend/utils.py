@@ -1,21 +1,14 @@
 # builtin modules
-import pickle
-import tensorflow_hub as hub
+import json
 import numpy as np
+
 # installed modules
 from pymongo import MongoClient
 import pymongo.errors
-import gridfs
 import logging 
-
 
 # local files
 import auth
-
-def unpacker(cursor, key):
-    for doc in cursor:
-        yield doc[key]
-
 
 def connect():
     autht = "authSource=aita&authMechanism=SCRAM-SHA-256"
@@ -25,7 +18,15 @@ def connect():
         f'{auth.mongodb["password"]}@'
         f'{auth.mongodb["host"]}/?{autht}'
     )
-    client = MongoClient(connect_str, connectTimeoutMS=50000, serverSelectionTimeoutMS = 50000)
+    client = MongoClient(
+        connect_str, 
+        connectTimeoutMS = 50000, 
+        serverSelectionTimeoutMS = 50000,
+        directConnection=True,
+        replicaSet = "rs0"
+        # read_preference = ReadPreference.PRIMARY_PREFERRED
+    )
+    # logging.log(f'Connected to MongoDB with user {auth.mongodb["username"]}.')
     return client.aita
 
 def create_transaction_session():
@@ -60,31 +61,6 @@ def commit_with_retry(session):
                 raise
 
 
-def get_gridfs(fs_db, oid):
-    db = connect()
-    fs = gridfs.GridFS(db, fs_db)
-    out = fs.get(oid)
-    data = pickle.loads(out.read())
-    return data
-
-
-def put_gridfs(m, fs_db, query_gfs, ext):
-    db = connect()
-    filename = f"{fs_db}/{query_gfs}.{ext}"
-    fs = gridfs.GridFS(db, fs_db)
-    f = pickle.dumps(m)
-    uid = fs.put(f, filename=filename)
-    return uid
-
-
-def safeget(mp, *keys):
-    for key in keys:
-        try:
-            mp = mp[key]
-        except KeyError:
-            return None
-    return mp
-
 
 # def update_embedding(q_vector, feedback_vector, feedback):
 #     SENSITIVITY = 0.75
@@ -114,6 +90,7 @@ def getPostVector(db, post_id):
     return postVector
 
 def loadModel():
+    import tensorflow_hub as hub
     model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
     return model
 
@@ -148,3 +125,59 @@ def calculateSimilarity(postVectors, queryVector):
 # create and return a list a tuples of (post_id, similarity_score) sorted by similarity score, high to low
 def rankPostsBySimilarity(posts_ids, scores):
     return sorted([(post_id, score) for (post_id, score) in zip(posts_ids, scores)], key=lambda x:x[1], reverse=True)
+
+# upload to GridFS
+def gridfsUpload(db, namespace, data, encoding='utf-8'):
+    '''Uploads data to GridFS under a particular namespace.
+
+    args:
+        db: database connection object
+        
+        namespace: string that is used to identify GridFS, 
+        i.e., namespace.chunks and namespace.files
+        
+        data: ordred list of tuples which are short string postid and 
+        float score [(string, float)] returned from rankPostsBySimilarity
+
+    kwargs:    
+        encoding: string representing text encoding
+
+    returns:
+        obj: MongoDB/BSON ObjectId()
+    
+    E.g.: 
+        args: db=connect(), namespace="teleoscopes", data=[("v23oj1", 0.91), ... ]
+        kwargs: 'utf-8'
+        obj: ObjectId('62ce71d36fee6e2ed60d1fb5')
+    '''
+    import gridfs
+    # convert to json
+    dumps = json.dumps(data)
+    fs = gridfs.GridFS(db)
+    obj = fs.put(dumps, encoding=encoding)
+    return obj
+
+# Download from GridFS
+def gridfsDownload(db, namespace, oid):
+    '''Gets posts and scores from GridFS
+
+    args:
+        db: database connection object
+        oid: MongoDB/BSON ObjectId
+        namespace: string used to identify GridFS, i.e., namespace.chunks and namespace.files
+
+    returns:
+        data: ordred list of tuples which are short string postid and 
+        float score [(string, float)] as returned from rankPostsBySimilarity
+    
+    E.g.,:
+        args:
+            db=connect(), oid=ObjectId('62ce71d36fee6e2ed60d1fb5'), namespace="teleoscopes"
+        data: [("v23oj1", 0.91), ... ]
+
+    '''
+    import gridfs
+    fs = gridfs.GridFS(db, namespace)
+    obj = fs.get(oid).read()
+    data = json.loads(obj)
+    return data

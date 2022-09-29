@@ -1,6 +1,5 @@
-import logging, pickle, utils, json, auth, numpy as np, tensorflow_hub as hub
+import logging, pickle, utils, json, auth, numpy as np
 from warnings import simplefilter
-from gridfs import GridFS
 from celery import Celery, Task
 from bson.objectid import ObjectId
 import datetime
@@ -63,7 +62,6 @@ def validate_post(data):
 
     return post
 
-
 '''
 read_and_validate_post
 
@@ -98,13 +96,14 @@ purpose: This function is used to update the dictionary with a vectorized versio
 '''
 @app.task
 def vectorize_post(post):
-	if 'error' not in post:
-		embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-		post['vector'] = embed([post['title']]).numpy()[0].tolist()
-		post['selftextVector'] = embed([post['selftext']]).numpy()[0].tolist()
-		return post
-	else:
-		return post
+    import tensorflow_hub as hub
+    if 'error' not in post:
+        embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+        post['vector'] = embed([post['title']]).numpy()[0].tolist()
+        post['selftextVector'] = embed([post['selftext']]).numpy()[0].tolist()
+        return post
+    else:
+        return post
 
 
 '''
@@ -180,6 +179,7 @@ def initialize_session(*args, **kwargs):
                 "bookmarks": [],
                 "windows": [],
                 "groups": [],
+                "mlgroups": [],
                 "label": kwargs['label'],
             }
         ],
@@ -252,7 +252,7 @@ def save_UI_state(*args, **kwargs):
 
 '''
 initialize_teleoscope:
-Performs a text query on aita.clean.posts.v2 text index.
+Performs a text query on aita.clean.posts.v3 text index.
 If the query string already exists in the teleoscopes collection, returns existing reddit_ids.
 Otherwise, adds the query to the teleoscopes collection and performs a text query the results of which are added to the
 teleoscopes collection and returned.
@@ -275,7 +275,7 @@ def initialize_teleoscope(*args, **kwargs):
 
     # perform text search query
     labelAsTextSearch = {"$text": {"$search": label}}
-    cursor = db.clean.posts.v2.find(labelAsTextSearch, projection = {'id':1})
+    cursor = db.clean.posts.v3.find(labelAsTextSearch, projection = {'id':1})
     return_ids = [x['id'] for x in cursor]
     rank_slice = [(x, 1.0) for x in return_ids[0:min(500, len(return_ids))]]
 
@@ -382,18 +382,17 @@ def save_group_state(*args, **kwargs):
     else:
         raise Exception(f"Group with id {group_id} not found")
 
-
-
-'''
-add_group
-input: 
-    label (string, arbitrary)
-    color (string, hex color)
-    session_id (int, represents ObjectId in int)
-purpose: adds a group to the group collection and links newly created group to corresponding session
-'''
 @app.task 
-def add_group(*args, **kwargs):
+def add_group(*args, human=True, included_posts=[], **kwargs):
+    '''
+    add_group
+    input: 
+        label (string, arbitrary)
+        color (string, hex color)
+        session_id (int, represents ObjectId in int)
+    purpose: adds a group to the group collection and links newly created group to corresponding session
+    '''
+
     # Error checking
     if "label" not in kwargs:
         logging.info(f"Warning: label not in kwargs.")
@@ -412,7 +411,7 @@ def add_group(*args, **kwargs):
             {
                 "timestamp": datetime.datetime.utcnow(),
                 "color": kwargs["color"],
-                "included_posts": [],
+                "included_posts": included_posts,
                 "label": kwargs["label"]
             }]
     }
@@ -421,16 +420,29 @@ def add_group(*args, **kwargs):
     _id = ObjectId(str(kwargs["session_id"]))
     # call needs to be transactional due to groups & sessions collections being updated
     transaction_session, db = utils.create_transaction_session()
+
+    collection = db.groups
+    collection_label = "groups"
+
+    if not human:
+        collection_label = "mlgroups"
+        collection = db.mlgroups
+
     with transaction_session.start_transaction():
-        groups_res = db.groups.insert_one(obj, session=transaction_session)
+        groups_res = collection.insert_one(obj, session=transaction_session)
         logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
         # add created groups document to the correct session
         session = db.sessions.find_one({'_id': _id}, session=transaction_session)
         if not session:
             logging.info(f"Warning: session with id {_id} not found.")
             raise Exception(f"session with id {_id} not found")
+        mlgroups = session["history"][0]["mlgroups"]
         groups = session["history"][0]["groups"]
-        groups.append(groups_res.inserted_id)
+
+        if human:
+            groups.append(groups_res.inserted_id)
+        else:
+            mlgroups.append(groups_res.inserted_id)
         sessions_res = db.sessions.update_one({'_id': _id},
             {
                 '$push': {
@@ -438,8 +450,10 @@ def add_group(*args, **kwargs):
                                 '$each': [{
                                     "timestamp": datetime.datetime.utcnow(),
                                     "groups": groups,
+                                    "mlgroups": mlgroups,
                                     "bookmarks": session["history"][0]["bookmarks"],
-                                    "windows": session["history"][0]["windows"]
+                                    "windows": session["history"][0]["windows"],
+                                    "label": session["history"][0]["label"]
                                 }],
                                 '$position': 0
                             }
@@ -627,6 +641,21 @@ def update_note(*args, **kwargs):
         utils.commit_with_retry(session)
         logging.info(f"Updated note for post {kwargs['post_id']} with result {res}.")
 
+@app.task
+def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid):
+    """Cluster documents using user-provided group ids.
+
+    teleoscope_oid: GridFS OID address for ranked posts. 
+    Note this assumes that a teleoscope has already been created for this group.
+
+    group_id_strings : list(string) where the strings are MongoDB ObjectID format
+
+    session_oid: string OID for session to add mlgroups to
+
+    """
+    import clustering
+    clustering.cluster_by_groups(group_id_strings, teleoscope_oid, session_oid)
+
 '''
 TODO:
 1. As we move towards/away from docs, we need to keep track of which
@@ -700,13 +729,6 @@ class reorient(Task):
         resultantVec /= np.linalg.norm(resultantVec)
         return resultantVec, direction
 
-    def gridfsUpload(self, namespace, data, encoding='utf-8'):
-         # convert to json
-        dumps = json.dumps(data)
-        fs = GridFS(self.db, namespace)
-        obj = fs.put(dumps, encoding=encoding)
-        return obj
-
     def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list):
         # either positive or negative docs should have at least one entry
         if len(positive_docs) == 0 and len(negative_docs) == 0:
@@ -758,7 +780,7 @@ class reorient(Task):
         )
         scores = utils.calculateSimilarity(self.allPostVectors, qprime)
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
-        gridfsObj = self.gridfsUpload("teleoscopes", newRanks)
+        gridfsObj = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
 
         rank_slice = newRanks[0:500]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
