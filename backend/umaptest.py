@@ -46,10 +46,10 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     logging.info("Getting ordered posts...")
     ordered_posts = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope_oid)))
     logging.info(f'Posts downloaded. Top post is {ordered_posts[0]} and length is {len(ordered_posts)}')
+    limit = min(limit, len(ordered_posts))
 
     # strip the post ids
-    ordered_post_ids = [post[0] for post in ordered_posts[0:limit]]
-    del ordered_posts
+    post_ids = {post[0] for post in ordered_posts[0:limit]}
     
     # start by getting the groups
     logging.info(f'Getting all groups in {group_ids}.')
@@ -57,17 +57,15 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
 
     # cursor is a generator which means that it yields a new doc one at a time
     logging.info("Getting posts cursor and building post vector and id list...")
-    cursor = db.clean.posts.v3.find({"id": {"$in": ordered_post_ids}}, projection={'id': 1, 'selftextVector': 1}, batch_size=500)
-
-    post_ids = []
-    post_vectors = []
+    cursor = db.clean.posts.v3.find(projection={'id': 1, 'selftextVector': 1}, batch_size=500)
 
     # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
     # can accept generators for lazy calculation 
     for post in tqdm.tqdm(cursor, total=limit):
-        post_ids.append(post["id"])
-        post_vectors.append(post["selftextVector"])
-    
+        id = post["id"]
+        if id in post_ids:
+            post_ids[id] = post["selftextVector"]
+
     logging.info("Creating data np.array...")
     data = np.array(post_vectors)
     logging.info(f'Post data np.array has shape {data.shape}') # (600000, 512)
