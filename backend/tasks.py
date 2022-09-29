@@ -172,6 +172,7 @@ def initialize_session(*args, **kwargs):
                 "bookmarks": [],
                 "windows": [],
                 "groups": [],
+                "mlgroups": [],
                 "label": kwargs['label'],
             }
         ],
@@ -369,18 +370,17 @@ def save_group_state(*args, **kwargs):
     else:
         raise Exception(f"Group with id {group_id} not found")
 
-
-
-'''
-add_group
-input: 
-    label (string, arbitrary)
-    color (string, hex color)
-    session_id (int, represents ObjectId in int)
-purpose: adds a group to the group collection and links newly created group to corresponding session
-'''
 @app.task 
-def add_group(*args, **kwargs):
+def add_group(*args, human=True, included_posts=[], **kwargs):
+    '''
+    add_group
+    input: 
+        label (string, arbitrary)
+        color (string, hex color)
+        session_id (int, represents ObjectId in int)
+    purpose: adds a group to the group collection and links newly created group to corresponding session
+    '''
+
     # Error checking
     if "label" not in kwargs:
         logging.info(f"Warning: label not in kwargs.")
@@ -399,7 +399,7 @@ def add_group(*args, **kwargs):
             {
                 "timestamp": datetime.datetime.utcnow(),
                 "color": kwargs["color"],
-                "included_posts": [],
+                "included_posts": included_posts,
                 "label": kwargs["label"]
             }]
     }
@@ -408,15 +408,23 @@ def add_group(*args, **kwargs):
     _id = ObjectId(str(kwargs["session_id"]))
     # call needs to be transactional due to groups & sessions collections being updated
     transaction_session, db = utils.create_transaction_session()
+
+    collection = db.groups
+    collection_label = "groups"
+
+    if not human:
+        collection_label = "mlgroups"
+        collection = db.mlgroups
+
     with transaction_session.start_transaction():
-        groups_res = db.groups.insert_one(obj, session=transaction_session)
+        groups_res = collection.insert_one(obj, session=transaction_session)
         logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
         # add created groups document to the correct session
         session = db.sessions.find_one({'_id': _id}, session=transaction_session)
         if not session:
             logging.info(f"Warning: session with id {_id} not found.")
             raise Exception(f"session with id {_id} not found")
-        groups = session["history"][0]["groups"]
+        groups = session["history"][0][collection_label]
         groups.append(groups_res.inserted_id)
         sessions_res = db.sessions.update_one({'_id': _id},
             {
@@ -424,7 +432,7 @@ def add_group(*args, **kwargs):
                             "history": {
                                 '$each': [{
                                     "timestamp": datetime.datetime.utcnow(),
-                                    "groups": groups,
+                                    collection_label: groups,
                                     "bookmarks": session["history"][0]["bookmarks"],
                                     "windows": session["history"][0]["windows"]
                                 }],

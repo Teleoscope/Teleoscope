@@ -9,6 +9,7 @@ import logging
 from bson.objectid import ObjectId
 import gc
 import argparse
+import tasks
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -27,7 +28,7 @@ logging.basicConfig(level=args.loglevel)
 
 
 
-def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
+def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=100000):
     """Cluster documents using user-provided group ids.
 
     teleoscope_oid: GridFS OID address for ranked posts. 
@@ -132,6 +133,21 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     ).fit_predict(umap_embeddings)
 
     logging.info(f'HDBScan labels are in set {set(hdbscan_labels)}.')
+
+    label_array = np.array(hdbscan_labels)
+
+    for hdbscan_label in set(hdbscan_labels):
+        post_indices = np.where(label_array == hdbscan_label)
+        posts = []
+        for i in post_indices:
+            posts.append(post_ids[i])
+        tasks.add_group(
+            human=False, 
+            session_id=session_oid, 
+            color="#8c564b",
+            included_posts=posts, 
+            label=hdbscan_label
+        )
 
     # drawing plots
     logging.info("Drawing plots...")
