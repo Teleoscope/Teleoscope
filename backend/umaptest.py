@@ -136,7 +136,8 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
     label_array = np.array(hdbscan_labels)
 
     for hdbscan_label in set(hdbscan_labels):
-        post_indices = np.where(label_array == hdbscan_label)
+        post_indices_scalar = np.where(label_array == hdbscan_label)
+        post_indices = [int(i) for i in post_indices_scalar]
         posts = []
         for i in post_indices:
             posts.append(post_ids[i])
