@@ -5,7 +5,7 @@ import numpy as np
 from pymongo import MongoClient
 import pymongo.errors
 import logging 
-from gridfs import GridFS
+import gridfs
 
 # local files
 import auth
@@ -128,7 +128,7 @@ def rankPostsBySimilarity(posts_ids, scores):
     return sorted([(post_id, score) for (post_id, score) in zip(posts_ids, scores)], key=lambda x:x[1], reverse=True)
 
 # upload to GridFS
-def gridfsUpload(db, namespace, data, encoding='utf-8'):
+def gridfsUpload(db, data, encoding='utf-8'):
     '''Uploads data to GridFS under a particular namespace.
 
     args:
@@ -153,12 +153,12 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
     '''
     # convert to json
     dumps = json.dumps(data)
-    fs = GridFS(db, namespace)
+    fs = gridfs.GridFS(db)
     obj = fs.put(dumps, encoding=encoding)
     return obj
 
 # Download from GridFS
-def gridfsDownload(db, namespace, oid):
+def gridfsDownload(db, oid):
     '''Gets posts and scores from GridFS
 
     args:
@@ -176,7 +176,7 @@ def gridfsDownload(db, namespace, oid):
         data: [("v23oj1", 0.91), ... ]
 
     '''
-    fs = GridFS(db, namespace)
+    fs = gridfs.GridFS(db)
     obj = fs.get(oid, db)
     data = json.loads(obj)
     return data

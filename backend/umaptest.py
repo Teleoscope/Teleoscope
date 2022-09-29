@@ -49,7 +49,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid):
 
     # get Teleoscope from GridFS
     logging.info("Getting ordered posts...")
-    ordered_posts = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope_oid)))
+    ordered_posts = utils.gridfsDownload(db, ObjectId(str(teleoscope_oid)))
     print(ordered_posts[0:100], len(ordered_posts))
 
     # Count docs to feed to TQDM progress bar, also to test connection to database
