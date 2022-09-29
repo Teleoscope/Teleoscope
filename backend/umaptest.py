@@ -100,7 +100,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
                 post_ids.append(id)
                 vector = np.array(post["selftextVector"]).reshape((1, 512))
                 data = np.append(data, vector, axis=0)
-                labels = np.append(-1)
+                labels = np.append(labels, -1)
                 
         # add labels
         for i in indices:
