@@ -41,7 +41,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid):
     group_ids = [ObjectId(str(id)) for id in group_id_strings]
 
     # connect to the database
-    db = utils.create_transaction_session()
+    db = utils.create_transaction_session().aita
 
     # get Teleoscope from GridFS
     logging.info("Getting ordered posts...")
