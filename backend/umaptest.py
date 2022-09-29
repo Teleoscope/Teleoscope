@@ -28,7 +28,7 @@ logging.basicConfig(level=args.loglevel)
 
 
 
-def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=100000):
+def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=1000):
     """Cluster documents using user-provided group ids.
 
     teleoscope_oid: GridFS OID address for ranked posts. 
@@ -137,6 +137,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
 
     for hdbscan_label in set(hdbscan_labels):
         post_indices_scalar = np.where(label_array == hdbscan_label)
+        logging.info(f'Post indices is shape: {post_indices_scalar.shape} and has values {post_indices_scalar}')
         post_indices = [int(i) for i in post_indices_scalar]
         posts = []
         for i in post_indices:
