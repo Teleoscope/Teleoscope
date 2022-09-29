@@ -147,7 +147,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=1000)
             session_id=session_oid, 
             color="#8c564b",
             included_posts=posts, 
-            label=hdbscan_label
+            label=int(hdbscan_label)
         )
 
     # drawing plots
