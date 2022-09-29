@@ -49,7 +49,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
     limit = min(limit, len(ordered_posts))
 
     # strip the post ids
-    post_ids = [post[0]:[] for post in ordered_posts[0:limit]]
+    post_ids = [post[0] for post in ordered_posts[0:limit]]
     data = np.empty((limit, 512))
     
     # start by getting the groups
