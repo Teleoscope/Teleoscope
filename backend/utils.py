@@ -177,6 +177,6 @@ def gridfsDownload(db, namespace, oid):
 
     '''
     fs = gridfs.GridFS(db, namespace)
-    obj = fs.get(oid, db)
+    obj = fs.get(oid)
     data = json.loads(obj)
     return data
