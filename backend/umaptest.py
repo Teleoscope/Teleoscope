@@ -44,17 +44,27 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
 
     # get Teleoscope from GridFS
     logging.info("Getting ordered posts...")
-    ordered_posts = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope_oid)))
+    all_ordered_posts = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope_oid)))
+    ordered_posts = all_ordered_posts[0:limit]
     logging.info(f'Posts downloaded. Top post is {ordered_posts[0]} and length is {len(ordered_posts)}')
     limit = min(limit, len(ordered_posts))
     
     # start by getting the groups
     logging.info(f'Getting all groups in {group_ids}.')
     groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
+    
+    # projection includes only fields we want
+    projection = {'id': 1, 'selftextVector': 1}
 
     # cursor is a generator which means that it yields a new doc one at a time
     logging.info("Getting posts cursor and building post vector and id list...")
-    cursor = db.clean.posts.v3.find({"id":{"$in": [post[0] for post in ordered_posts[0:limit]]}}, projection={'id': 1, 'selftextVector': 1}, batch_size=500)
+    cursor = db.clean.posts.v3.find(
+        # query
+        {"id":{"$in": [post[0] for post in ordered_posts]}},
+        projection=projection,
+        # batch size means number of posts at a time taken from MDB, no impact on iteration 
+        batch_size=500
+    )
 
     post_ids = []
     post_vectors = []
@@ -81,7 +91,16 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
         # save label just in case (not pushed to MongoDB, only local)
         group["label"] = label
         # get the index of each post_id so that it's aligned with the label np.array
-        indices = [post_ids.index(gpid) for gpid in group_post_ids]
+        indices = []
+        for id in group_post_ids:
+            try:
+                post_ids.index(id)
+            except:
+                logging.debug(f'{id} not in current slice. Attempting to retreive from database...')
+                post = db.clean.posts.v3.find_one({"id": id}, projection=projection)
+                post_ids.append(id)
+                data.append(post["selftextVector"])
+                
         # add labels
         for i in indices:
             labels[i] = label
