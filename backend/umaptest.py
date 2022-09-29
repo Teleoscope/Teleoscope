@@ -58,7 +58,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, limit=100000):
 
     # cursor is a generator which means that it yields a new doc one at a time
     logging.info("Getting posts cursor and building post vector and id list...")
-    cursor = db.clean.posts.v3.find(projection={'id': 1, 'selftextVector': 1}, batch_size=500)
+    cursor = db.clean.posts.v3.find({"id":{"$in": post_ids}},projection={'id': 1, 'selftextVector': 1}, batch_size=500)
 
     # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
     # can accept generators for lazy calculation 
