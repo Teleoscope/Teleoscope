@@ -48,153 +48,141 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         msg = json.loads(body)
         task = msg['task']
         args = msg['args']
-        kwargs = {}
-    
+
 
         # These should exactly implement the interface standard
         # Make sure they look like Stomp.js
 
-        match task:
+    
 
-            case ["initialize_teleoscope"]:
-                kwargs = {
-                        "label": args['label'],
-                        "session_id": args["session_id"]
+        if task == "initialize_teleoscope":
+            res = tasks.initialize_teleoscope.signature(
+                args=(),
+                kwargs={
+                    "label": args['label'],
+                    "session_id": args["session_id"]
+                },
+            )
+            res.apply_async()
+
+        if task == "save_teleoscope_state":
+            res = tasks.save_teleoscope_state.signature(
+                args=(),
+                kwargs={
+                    "_id": args["_id"],
+                    "history_item": args["history_item"]
+                },
+            )
+            res.apply_async()
+
+        if task == 'initialize_session':
+            res = tasks.initialize_session.signature(
+                args=(),
+                kwargs={
+                    "username": args["username"],
+                    "label": args["label"]
+                },
+            )
+            res.apply_async()
+
+        if task == "save_UI_state":
+            res = tasks.save_UI_state.signature(
+                args=(),
+                kwargs={
+                    "session_id": args["session_id"],
+                    "history_item": args["history_item"]
+                },
+            )
+            res.apply_async()
+
+        if task == "reorient":
+            '''
+            res = robj.delay(
+                teleoscope_id=args["teleoscope_id"],
+                positive_docs=args["positive_docs"],
+                negative_docs=args["negative_docs"]
+            )
+            '''
+
+            workflow = chain(
+                robj.s(teleoscope_id=args["teleoscope_id"],
+                       positive_docs=args["positive_docs"],
+                       negative_docs=args["negative_docs"]),
+                tasks.save_teleoscope_state.s()
+            )
+
+            workflow.apply_async()
+
+        if task == "add_group":
+            res = tasks.add_group.signature(
+                args=(),
+                kwargs={
+                    "label": args["label"],
+                    "color": args["color"],
+                    "session_id": args["session_id"]
                 }
-                res = tasks.initialize_teleoscope.signature(
-                    args=(),
-                    kwargs=kwargs,
-                )
-                res.apply_async()
+            )
+            res.apply_async()
 
-            case ["save_teleoscope_state"]:
-                kwargs = {
-                        "_id": args["_id"],
-                        "history_item": args["history_item"]
+        if task == "add_post_to_group":
+            res = tasks.add_post_to_group.signature(
+                args=(),
+                kwargs={
+                    "group_id": args["group_id"],
+                    "post_id": args["post_id"]
                 }
-                res = tasks.save_teleoscope_state.signature(
-                    args=(),
-                    kwargs=kwargs,
-                )
-                res.apply_async()
+            )
+            res.apply_async()
 
-            case ['initialize_session']:
-                kwargs = {
-                        "username": args["username"],
-                        "label": args["label"]
+        if task == "remove_post_from_group":
+            res = tasks.remove_post_from_group.signature(
+                args=(),
+                kwargs={
+                    "group_id": args["group_id"],
+                    "post_id": args["post_id"]
                 }
-                res = tasks.initialize_session.signature(
-                    args=(),
-                    kwargs=kwargs,
-                )
-                res.apply_async()
+            )
+            res.apply_async()
 
-            case ["save_UI_state"]:
-                kwargs = {
-                        "session_id": args["session_id"],
-                        "history_item": args["history_item"]
+        if task == "update_group_label":
+            res = tasks.update_group_label.signature(
+                args=(),
+                kwargs={
+                    "group_id": args["group_id"],
+                    "label": args["label"]
                 }
-                res = tasks.save_UI_state.signature(
-                    args=(),
-                    kwargs=kwargs,
-                )
-                res.apply_async()
+            )
+            res.apply_async()
 
-            case ["reorient"]:
-                '''
-                res = robj.delay(
-                    teleoscope_id=args["teleoscope_id"],
-                    positive_docs=args["positive_docs"],
-                    negative_docs=args["negative_docs"]
-                )
-                '''
-
-                workflow = chain(
-                    robj.s(teleoscope_id=args["teleoscope_id"],
-                        positive_docs=args["positive_docs"],
-                        negative_docs=args["negative_docs"]),
-                    tasks.save_teleoscope_state.s()
-                )
-
-                workflow.apply_async()
-
-            case ["add_group"]:
-                kwargs = {
-                        "label": args["label"],
-                        "color": args["color"],
-                        "session_id": args["session_id"]
+        if task == "add_note":
+            res = tasks.add_note.signature(
+                args=(),
+                kwargs={
+                    "post_id": args["post_id"],
                 }
-                res = tasks.add_group.signature(
-                    args=(),
-                    kwargs=kwargs,
-                )
-                res.apply_async()
+            )
+            res.apply_async()
 
-            case ["add_post_to_group"]:
-                kwargs = {
-                        "group_id": args["group_id"],
-                        "post_id": args["post_id"]
+        if task == "update_note":
+            res = tasks.update_note.signature(
+                args=(),
+                kwargs={
+                    "post_id": args["post_id"],
+                    "content": args["content"],
                 }
-                res = tasks.add_post_to_group.signature(
-                    args=(),
-                    kwargs=kwargs,
-                )
-                res.apply_async()
-
-            case ["remove_post_from_group"]:
-                kwargs = {
-                        "group_id": args["group_id"],
-                        "post_id": args["post_id"]
-                }
-                res = tasks.remove_post_from_group.signature(
-                    args=(),
-                    kwargs=kwargs
-                )
-                res.apply_async()
-
-            case ["update_group_label"]:
-                kwargs = {
-                        "group_id": args["group_id"],
-                        "label": args["label"]
-                }
-                res = tasks.update_group_label.signature(
-                    args=(),
-                    kwargs=kwargs,
-                )
-                res.apply_async()
-
-            case ["add_note"]:
-                kwargs = {
-                        "post_id": args["post_id"],
-                }
-                res = tasks.add_note.signature(
-                    args=(),
-                    kwargs=kwargs,
-                )
-                res.apply_async()
-
-            case ["update_note"]:
-                kwargs = {
-                        "post_id": args["post_id"],
-                        "content": args["content"],
-                }
-                res = tasks.update_note.signature(
-                    args=(),
-                    kwargs=kwargs,
-                )
-                res.apply_async()
+            )
+            res.apply_async()
             
-            case ["cluster_by_groups"]:
-                kwargs = {
-                        "group_id_strings": args["group_id_strings"],
-                        "teleoscope_oid": args["teleoscope_oid"],
-                        "session_oid": args["session_oid"]
+        if task == "cluster_by_groups":
+            res = tasks.cluster_by_groups.signature(
+                args=(),
+                kwargs={
+                    "group_id_strings": args["group_id_strings"],
+                    "teleoscope_oid": args["teleoscope_oid"],
+                    "session_oid": args["session_oid"]
                 }
-                res = tasks.cluster_by_groups.signature(
-                    args=(),
-                    kwargs=kwargs,
-                )
-                res.apply_async()
+            )
+            res.apply_async()
 
 
 app.steps['consumer'].add(WebTaskConsumer)
