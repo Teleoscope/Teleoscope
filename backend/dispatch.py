@@ -42,13 +42,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                          callbacks=[self.handle_message],
                          accept=['json', 'pickle'])]
 
-    def call(self, t, kwargs):
-        res = t.signature(
-            args=(),
-            kwargs=kwargs
-        )
-        res.apply_async()
-
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
         message.ack()
@@ -76,28 +69,28 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                         "label": args['label'],
                         "session_id": args["session_id"]
                 }
-                self.call(tasks.initialize_teleoscope, kwargs)
+                tasks.initialize_teleoscope.apply_async(args=[], kwargs=kwargs)
 
             case ["save_teleoscope_state"]:
                 kwargs = {
                         "_id": args["_id"],
                         "history_item": args["history_item"]
                 }
-                self.call(tasks.save_teleoscope_state, kwargs)
+                tasks.save_teleoscope_state.apply_async(args=[], kwargs=kwargs)
 
             case ['initialize_session']:
                 kwargs = {
                         "username": args["username"],
                         "label": args["label"]
                 }
-                self.call(tasks.initialize_session, kwargs)
+                tasks.initialize_session.apply_async(args=[], kwargs=kwargs)
 
             case ["save_UI_state"]:
                 kwargs = {
                         "session_id": args["session_id"],
                         "history_item": args["history_item"]
                 }
-                self.call(tasks.save_UI_state, kwargs)
+                tasks.save_UI_state.apply_async(args=[], kwargs=kwargs)
 
             case ["add_group"]:
                 kwargs = {
@@ -105,41 +98,41 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                         "color": args["color"],
                         "session_id": args["session_id"]
                 }
-                self.call(tasks.add_group, kwargs)
+                tasks.add_group.apply_async(args=[], kwargs=kwargs)
 
             case ["add_post_to_group"]:
                 kwargs = {
                         "group_id": args["group_id"],
                         "post_id": args["post_id"]
                 }
-                self.call(tasks.add_post_to_group, kwargs)
+                tasks.add_post_to_group.apply_async(args=[], kwargs=kwargs)
 
             case ["remove_post_from_group"]:
                 kwargs = {
                         "group_id": args["group_id"],
                         "post_id": args["post_id"]
                 }
-                self.call(tasks.remove_post_from_group, kwargs)
+                tasks.remove_post_from_group.apply_async(args=[], kwargs=kwargs)
 
             case ["update_group_label"]:
                 kwargs = {
                         "group_id": args["group_id"],
                         "label": args["label"]
                 }
-                self.call(tasks.update_group_label, kwargs)
+                tasks.update_group_label.apply_async(args=[], kwargs=kwargs)
 
             case ["add_note"]:
                 kwargs = {
                         "post_id": args["post_id"],
                 }
-                self.call(tasks.add_note, kwargs)
+                tasks.add_note.apply_async(args=[], kwargs=kwargs)
 
             case ["update_note"]:
                 kwargs = {
                         "post_id": args["post_id"],
                         "content": args["content"],
                 }
-                self.call(tasks.update_note, kwargs)
+                tasks.update_note.apply_async(args=[], kwargs=kwargs)
             
             case ["cluster_by_groups"]:
                 kwargs = {
@@ -147,7 +140,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                         "teleoscope_oid": args["teleoscope_oid"],
                         "session_oid": args["session_oid"]
                 }
-                self.call(tasks.cluster_by_groups, kwargs)
+                tasks.cluster_by_groups.apply_async(args=[], kwargs=kwargs)
 
 
 app.steps['consumer'].add(WebTaskConsumer)
