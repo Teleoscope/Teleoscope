@@ -3,6 +3,7 @@ from warnings import simplefilter
 import json
 import random
 import string
+import logging
 
 # installed modules
 from celery import chain
@@ -48,11 +49,10 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         msg = json.loads(body)
         task = msg['task']
         args = msg['args']
-
+        res = None
 
         # These should exactly implement the interface standard
         # Make sure they look like Stomp.js
-
     
 
         if task == "initialize_teleoscope":
@@ -63,7 +63,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "session_id": args["session_id"]
                 },
             )
-            res.apply_async()
 
         if task == "save_teleoscope_state":
             res = tasks.save_teleoscope_state.signature(
@@ -73,7 +72,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "history_item": args["history_item"]
                 },
             )
-            res.apply_async()
 
         if task == 'initialize_session':
             res = tasks.initialize_session.signature(
@@ -83,7 +81,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "label": args["label"]
                 },
             )
-            res.apply_async()
 
         if task == "save_UI_state":
             res = tasks.save_UI_state.signature(
@@ -93,7 +90,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "history_item": args["history_item"]
                 },
             )
-            res.apply_async()
 
         if task == "reorient":
             '''
@@ -103,15 +99,12 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 negative_docs=args["negative_docs"]
             )
             '''
-
-            workflow = chain(
+            res = chain(
                 robj.s(teleoscope_id=args["teleoscope_id"],
                        positive_docs=args["positive_docs"],
                        negative_docs=args["negative_docs"]),
                 tasks.save_teleoscope_state.s()
             )
-
-            workflow.apply_async()
 
         if task == "add_group":
             res = tasks.add_group.signature(
@@ -122,7 +115,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "session_id": args["session_id"]
                 }
             )
-            res.apply_async()
 
         if task == "add_post_to_group":
             res = tasks.add_post_to_group.signature(
@@ -132,7 +124,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "post_id": args["post_id"]
                 }
             )
-            res.apply_async()
 
         if task == "remove_post_from_group":
             res = tasks.remove_post_from_group.signature(
@@ -142,7 +133,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "post_id": args["post_id"]
                 }
             )
-            res.apply_async()
 
         if task == "update_group_label":
             res = tasks.update_group_label.signature(
@@ -152,7 +142,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "label": args["label"]
                 }
             )
-            res.apply_async()
 
         if task == "add_note":
             res = tasks.add_note.signature(
@@ -161,7 +150,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "post_id": args["post_id"],
                 }
             )
-            res.apply_async()
 
         if task == "update_note":
             res = tasks.update_note.signature(
@@ -171,7 +159,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "content": args["content"],
                 }
             )
-            res.apply_async()
             
         if task == "cluster_by_groups":
             res = tasks.cluster_by_groups.signature(
@@ -182,7 +169,11 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "session_oid": args["session_oid"]
                 }
             )
+
+        try:
             res.apply_async()
+        except:
+            logging.warning(f'Task {task} was not valid.')
 
 
 app.steps['consumer'].add(WebTaskConsumer)
