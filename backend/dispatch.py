@@ -43,7 +43,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                          accept=['json', 'pickle'])]
 
     def call(self, t, kwargs):
-        t.signature(
+        return t.signature(
             args=(),
             kwargs=kwargs
         ).apply_async()
