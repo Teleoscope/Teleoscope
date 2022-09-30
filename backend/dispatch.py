@@ -159,7 +159,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "content": args["content"],
                 }
             )
-            
+
         if task == "cluster_by_groups":
             res = tasks.cluster_by_groups.signature(
                 args=(),
@@ -173,7 +173,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         try:
             res.apply_async()
         except:
-            logging.warning(f'Task {task} was not valid.')
+            logging.warning(f'Task {task} for args {args} was not valid.')
 
 
 app.steps['consumer'].add(WebTaskConsumer)
