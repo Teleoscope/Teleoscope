@@ -3,6 +3,7 @@ from warnings import simplefilter
 import json
 import random
 import string
+import logging
 
 # installed modules
 from celery import chain
@@ -49,6 +50,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         task = msg['task']
         args = msg['args']
         kwargs = {}
+        res = None
     
 
         # These should exactly implement the interface standard
@@ -69,28 +71,28 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                         "label": args['label'],
                         "session_id": args["session_id"]
                 }
-                tasks.initialize_teleoscope.apply_async(args=[], kwargs=kwargs)
+                res = tasks.initialize_teleoscope.apply_async(args=[], kwargs=kwargs)
 
             case ["save_teleoscope_state"]:
                 kwargs = {
                         "_id": args["_id"],
                         "history_item": args["history_item"]
                 }
-                tasks.save_teleoscope_state.apply_async(args=[], kwargs=kwargs)
+                res = tasks.save_teleoscope_state.apply_async(args=[], kwargs=kwargs)
 
             case ['initialize_session']:
                 kwargs = {
                         "username": args["username"],
                         "label": args["label"]
                 }
-                tasks.initialize_session.apply_async(args=[], kwargs=kwargs)
+                res = tasks.initialize_session.apply_async(args=[], kwargs=kwargs)
 
             case ["save_UI_state"]:
                 kwargs = {
                         "session_id": args["session_id"],
                         "history_item": args["history_item"]
                 }
-                tasks.save_UI_state.apply_async(args=[], kwargs=kwargs)
+                res = tasks.save_UI_state.apply_async(args=[], kwargs=kwargs)
 
             case ["add_group"]:
                 kwargs = {
@@ -98,41 +100,41 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                         "color": args["color"],
                         "session_id": args["session_id"]
                 }
-                tasks.add_group.apply_async(args=[], kwargs=kwargs)
+                res = tasks.add_group.apply_async(args=[], kwargs=kwargs)
 
             case ["add_post_to_group"]:
                 kwargs = {
                         "group_id": args["group_id"],
                         "post_id": args["post_id"]
                 }
-                tasks.add_post_to_group.apply_async(args=[], kwargs=kwargs)
+                res = tasks.add_post_to_group.apply_async(args=[], kwargs=kwargs)
 
             case ["remove_post_from_group"]:
                 kwargs = {
                         "group_id": args["group_id"],
                         "post_id": args["post_id"]
                 }
-                tasks.remove_post_from_group.apply_async(args=[], kwargs=kwargs)
+                res = tasks.remove_post_from_group.apply_async(args=[], kwargs=kwargs)
 
             case ["update_group_label"]:
                 kwargs = {
                         "group_id": args["group_id"],
                         "label": args["label"]
                 }
-                tasks.update_group_label.apply_async(args=[], kwargs=kwargs)
+                res = tasks.update_group_label.apply_async(args=[], kwargs=kwargs)
 
             case ["add_note"]:
                 kwargs = {
                         "post_id": args["post_id"],
                 }
-                tasks.add_note.apply_async(args=[], kwargs=kwargs)
+                res = tasks.add_note.apply_async(args=[], kwargs=kwargs)
 
             case ["update_note"]:
                 kwargs = {
                         "post_id": args["post_id"],
                         "content": args["content"],
                 }
-                tasks.update_note.apply_async(args=[], kwargs=kwargs)
+                res = tasks.update_note.apply_async(args=[], kwargs=kwargs)
             
             case ["cluster_by_groups"]:
                 kwargs = {
@@ -140,7 +142,12 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                         "teleoscope_oid": args["teleoscope_oid"],
                         "session_oid": args["session_oid"]
                 }
-                tasks.cluster_by_groups.apply_async(args=[], kwargs=kwargs)
+                res = tasks.cluster_by_groups.apply_async(args=[], kwargs=kwargs)
+            
+        try:
+            res.get()
+        except:
+            logging.warning(f'Task for {task} was empty.')
 
 
 app.steps['consumer'].add(WebTaskConsumer)
