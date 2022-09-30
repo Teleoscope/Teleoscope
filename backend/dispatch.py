@@ -3,7 +3,6 @@ from warnings import simplefilter
 import json
 import random
 import string
-import logging
 
 # installed modules
 from celery import chain
@@ -50,49 +49,74 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         task = msg['task']
         args = msg['args']
         kwargs = {}
-        res = None
     
 
         # These should exactly implement the interface standard
         # Make sure they look like Stomp.js
 
         match task:
-            case ["reorient"]:
-                workflow = chain(
-                    robj.s(teleoscope_id=args["teleoscope_id"],
-                        positive_docs=args["positive_docs"],
-                        negative_docs=args["negative_docs"]),
-                    tasks.save_teleoscope_state.s()
-                )
-                workflow.apply_async()
 
             case ["initialize_teleoscope"]:
                 kwargs = {
                         "label": args['label'],
                         "session_id": args["session_id"]
                 }
-                res = tasks.initialize_teleoscope.apply_async(args=[], kwargs=kwargs)
+                res = tasks.initialize_teleoscope.signature(
+                    args=(),
+                    kwargs=kwargs,
+                )
+                res.apply_async()
 
             case ["save_teleoscope_state"]:
                 kwargs = {
                         "_id": args["_id"],
                         "history_item": args["history_item"]
                 }
-                res = tasks.save_teleoscope_state.apply_async(args=[], kwargs=kwargs)
+                res = tasks.save_teleoscope_state.signature(
+                    args=(),
+                    kwargs=kwargs,
+                )
+                res.apply_async()
 
             case ['initialize_session']:
                 kwargs = {
                         "username": args["username"],
                         "label": args["label"]
                 }
-                res = tasks.initialize_session.apply_async(args=[], kwargs=kwargs)
+                res = tasks.initialize_session.signature(
+                    args=(),
+                    kwargs=kwargs,
+                )
+                res.apply_async()
 
             case ["save_UI_state"]:
                 kwargs = {
                         "session_id": args["session_id"],
                         "history_item": args["history_item"]
                 }
-                res = tasks.save_UI_state.apply_async(args=[], kwargs=kwargs)
+                res = tasks.save_UI_state.signature(
+                    args=(),
+                    kwargs=kwargs,
+                )
+                res.apply_async()
+
+            case ["reorient"]:
+                '''
+                res = robj.delay(
+                    teleoscope_id=args["teleoscope_id"],
+                    positive_docs=args["positive_docs"],
+                    negative_docs=args["negative_docs"]
+                )
+                '''
+
+                workflow = chain(
+                    robj.s(teleoscope_id=args["teleoscope_id"],
+                        positive_docs=args["positive_docs"],
+                        negative_docs=args["negative_docs"]),
+                    tasks.save_teleoscope_state.s()
+                )
+
+                workflow.apply_async()
 
             case ["add_group"]:
                 kwargs = {
@@ -100,41 +124,65 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                         "color": args["color"],
                         "session_id": args["session_id"]
                 }
-                res = tasks.add_group.apply_async(args=[], kwargs=kwargs)
+                res = tasks.add_group.signature(
+                    args=(),
+                    kwargs=kwargs,
+                )
+                res.apply_async()
 
             case ["add_post_to_group"]:
                 kwargs = {
                         "group_id": args["group_id"],
                         "post_id": args["post_id"]
                 }
-                res = tasks.add_post_to_group.apply_async(args=[], kwargs=kwargs)
+                res = tasks.add_post_to_group.signature(
+                    args=(),
+                    kwargs=kwargs,
+                )
+                res.apply_async()
 
             case ["remove_post_from_group"]:
                 kwargs = {
                         "group_id": args["group_id"],
                         "post_id": args["post_id"]
                 }
-                res = tasks.remove_post_from_group.apply_async(args=[], kwargs=kwargs)
+                res = tasks.remove_post_from_group.signature(
+                    args=(),
+                    kwargs=kwargs
+                )
+                res.apply_async()
 
             case ["update_group_label"]:
                 kwargs = {
                         "group_id": args["group_id"],
                         "label": args["label"]
                 }
-                res = tasks.update_group_label.apply_async(args=[], kwargs=kwargs)
+                res = tasks.update_group_label.signature(
+                    args=(),
+                    kwargs=kwargs,
+                )
+                res.apply_async()
 
             case ["add_note"]:
                 kwargs = {
                         "post_id": args["post_id"],
                 }
-                res = tasks.add_note.apply_async(args=[], kwargs=kwargs)
+                res = tasks.add_note.signature(
+                    args=(),
+                    kwargs=kwargs,
+                )
+                res.apply_async()
 
             case ["update_note"]:
                 kwargs = {
                         "post_id": args["post_id"],
                         "content": args["content"],
                 }
-                res = tasks.update_note.apply_async(args=[], kwargs=kwargs)
+                res = tasks.update_note.signature(
+                    args=(),
+                    kwargs=kwargs,
+                )
+                res.apply_async()
             
             case ["cluster_by_groups"]:
                 kwargs = {
@@ -142,12 +190,11 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                         "teleoscope_oid": args["teleoscope_oid"],
                         "session_oid": args["session_oid"]
                 }
-                res = tasks.cluster_by_groups.apply_async(args=[], kwargs=kwargs)
-            
-        try:
-            res.get()
-        except:
-            logging.warning(f'Task for {task} was empty.')
+                res = tasks.cluster_by_groups.signature(
+                    args=(),
+                    kwargs=kwargs,
+                )
+                res.apply_async()
 
 
 app.steps['consumer'].add(WebTaskConsumer)
