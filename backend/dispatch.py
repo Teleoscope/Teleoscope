@@ -43,10 +43,11 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                          accept=['json', 'pickle'])]
 
     def call(self, t, kwargs):
-        return t.signature(
+        res = t.signature(
             args=(),
             kwargs=kwargs
-        ).apply_async()
+        )
+        res.apply_async()
 
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
