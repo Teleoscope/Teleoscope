@@ -10,7 +10,6 @@ import store from "../stores/store";
 
 // custom components
 import Workspace from "../components/Workspace";
-
 import clientPromise from '../util/mongodb';
 
 // contexts
@@ -70,10 +69,14 @@ export default function Home({ isConnected }) {
 
   return (
     <div>
-      {registration ? (
-        <Provider store={store}>
-          <Registration setRegistration={Register} />
-        </Provider>) :
+      {// set up as full page
+      registration ? (
+        <StompContext.Provider value={client}>
+          <Provider store={store}>
+            <Registration setRegistration={Register} />
+          </Provider>
+        </StompContext.Provider>
+        ) :
         <div>
           {(user.email != "") ? (
             <SWRConfig value={{
@@ -81,7 +84,6 @@ export default function Home({ isConnected }) {
               errorRetryCount: 10,
               refreshInterval: 250
             }}>
-              <StompContext.Provider value={client}>
                 <CookiesProvider>
                   <div className="container">
                     <Head>
@@ -91,19 +93,20 @@ export default function Home({ isConnected }) {
 
                     <main>
                       <Provider store={store}>
-                        { console.log("isConnected", isConnected) }
+                        {console.log("isConnected", isConnected)}
                         <Workspace isConnected={isConnected} Logout={Logout} />
                       </Provider>
                     </main>
                   </div>
                 </CookiesProvider>
-              </StompContext.Provider>
             </SWRConfig>
           ) : (
             <Provider store={store}>
               <LoginForm Login={Login} error={error} setRegistration={Register} />
             </Provider>
-          )}
+          )
+          }
+  
         </div>
       }
     </div>

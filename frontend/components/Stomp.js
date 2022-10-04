@@ -257,20 +257,19 @@ export function add_login(client, username, password) {
   //verify password
   const doesPasswordMatch = bcrypt.compareSync(yourPasswordFromLoginForm, yourHashedPassword)
 */
-export function create_account(client, name, username, password) {
-  // hash(password) the function uses the bcrypt hashing algorithm for now
+export function create_account(client, name, username, email, password) {
+  //hash(password) the function uses the bcrypt hashing algorithm for now
   //const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync());
   var body = {
     task: "create_account",
     args: {
       name: name,
       username: username,
+      email: email,
       //password: hashedPassword
       password: password
     }
   }
-
-  console.log("Account information hashed and push from Stomp.js")
 
   publish(client, body);
   return body;

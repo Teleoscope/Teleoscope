@@ -7,17 +7,17 @@ import { IconButton } from '@mui/material';
 
 // actions
 import { useDispatch } from "react-redux";
-import { register } from "../../actions/registration"
+import { register } from "../../../actions/registration"
 
 // contexts
-import { StompContext } from '../../context/StompContext'
+import { StompContext } from '../../../context/StompContext'
 
 // utils
-import { create_account } from "../Stomp.js";
+import { create_account } from "../../Stomp.js";
 
 export default function Registration(props) {
 
-   const [details, setDetails] = useState({ name: '', email: '', password: '' });
+   const [details, setDetails] = useState({ name: '', username: '', email: '', password: '' });
    const [passwordVisibility, setPasswordVisibility] = useState(false);
    const [registered, setRegistered] = useState(false);
 
@@ -38,7 +38,7 @@ export default function Registration(props) {
       dispatch(register(details));
 
       // sends the information to Stomp.js
-      create_account(client, details.name, details.username, details.password);
+      create_account(client, details.name, details.username, details.email, details.password);
 
       // wait a second to display that the account was successfully registered
       // before returning to the login page
@@ -53,16 +53,22 @@ export default function Registration(props) {
          <div
             style={{
                display: 'flex',
-               alignItems: 'baseline',
+               alignItems: 'center',
                justifyContent: 'center',
+               height: '40vh',
+               textAlign: 'right',
             }}>
             {/* // when the form is sumbitted the user information
-         // will be sent to the registration reducer */}
+             will be sent to the registration reducer */}
             <form onSubmit={submitHandler}>
                <h2>Teleoscope Account Registration</h2>
                <div className='form-group'>
                   <label htmlFor='name'>Name:</label>
                   <input type="text" name='registration-name' id='registration-name' onChange={e => setDetails({ ...details, name: e.target.value })} value={details.name} />
+               </div>
+               <div className='form-group'>
+                  <label htmlFor='name'>Username:</label>
+                  <input type="text" name='registration-name' id='registration-name' onChange={e => setDetails({ ...details, username: e.target.value })} value={details.username} />
                </div>
                <div className='form-group'>
                   <label htmlFor='email'>Email:</label>

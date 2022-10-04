@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 
 // mui imports
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -9,16 +9,28 @@ import { IconButton } from '@mui/material';
 import { useDispatch } from "react-redux";
 import { login } from "../../actions/logins"
 
+// contexts
+import { StompContext } from '../../context/StompContext'
+
+// utils
+import { add_login } from "../Stomp.js";
+
 export default function LoginForm({ Login, setRegistration, error }) {
    const [details, setDetails] = useState({ name: '', email: '', password: '' });
    const [passwordVisibility, setPasswordVisibility] = useState(false);
 
+   const client = useContext(StompContext);
    const dispatch = useDispatch();
 
    const submitHandler = e => {
       e.preventDefault()
 
+      // dispatches the login details to login store
       dispatch(login(details))
+      
+      // sends the information to Stomp.js
+      add_login(client, details.email, details.password)
+
       Login(details)
    }
    return (
