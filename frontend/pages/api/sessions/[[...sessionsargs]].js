@@ -15,7 +15,7 @@ export default async (req, res) => {
     // returns groups
     var groups = await db.collection("groups").find({}).toArray();
     var session = await db.collection("sessions").findOne({_id: ObjectId(sessionsargs[0])});
-    var lastItem = session.history[session.history.length - 1];
+    var lastItem = session.history[0]; // zero indexed
     var sessionGroups = lastItem.groups.map((group) => {
       return group.toString();
     });
