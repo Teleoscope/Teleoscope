@@ -15,7 +15,9 @@ import { StompContext } from '../../context/StompContext'
 // utils
 import { add_login } from "../Stomp.js";
 
-export default function LoginForm({ Login, setRegistration, error }) {
+export { LoginForm };
+
+function LoginForm({ Login, setRegistration, error }) {
    const [details, setDetails] = useState({ name: '', email: '', password: '' });
    const [passwordVisibility, setPasswordVisibility] = useState(false);
 

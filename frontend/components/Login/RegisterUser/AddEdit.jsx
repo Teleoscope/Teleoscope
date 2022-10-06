@@ -12,9 +12,13 @@ modeling complex, interdependent validations, or value transformation.
 
 import { Link } from '../Login';
 import { userService, alertService } from 'services';
-import { createStructuredSelector } from 'reselect';
+//import { createStructuredSelector } from 'reselect';
 
-export default function addEdit(props) {
+//import { alertService } from '../../../services/alert.service';
+//import { userService } from '../../../services/user.service';
+
+export { AddEdit };
+function AddEdit(props) {
    const user = props?.user;
    const isAddMode = !user;
    const router = useRouter();
