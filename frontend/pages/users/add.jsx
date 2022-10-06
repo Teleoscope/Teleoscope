@@ -1,4 +1,4 @@
-import { Layout, AddEdit } from 'components/users';
+import { Layout, AddEdit } from 'components/RegisterUser';
 
 export default Add;
 

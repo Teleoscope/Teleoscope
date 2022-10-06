@@ -1,7 +1,8 @@
 import { useRouter } from 'next/router';
 import PropTypes from 'prop-types';
 
-import { Link } from './Link';
+// import { Link } from './Link';
+import { Link } from 'components/Login';
 
 NavLink.propTypes = {
    href: PropTypes.string.isRequired,

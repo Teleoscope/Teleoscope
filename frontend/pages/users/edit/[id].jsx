@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
-import { Layout, AddEdit } from 'components/users';
-import { Spinner } from 'components';
+import { Layout, AddEdit } from 'components/RegisterUser';
+import { Spinner } from 'components/Login';
 import { userService, alertService } from 'services';
 
 export default Edit;

@@ -3,8 +3,10 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 
-import { Link } from '../../components/Login/Link';
-import { Layout } from '../../components/Login/Layout/Layout';
+// import { Link } from '../../components/Login/Link';
+// import { Layout } from '../../components/Login/Layout/Layout';
+import { Link } from 'components/Login';
+import { Layout } from 'components/Login/Layout';
 import { userService, alertService } from 'services';
 
 export default Login;
@@ -22,7 +24,7 @@ function Login() {
 
    // get functions to build form with useForm() hook
    const { register, handleSubmit, formState } = useForm(formOptions);
-   const { error } = formState;
+   const { errors } = formState;
 
    function onSubmit({ username, password }) {
       return userService.login(username, password).then(() => {

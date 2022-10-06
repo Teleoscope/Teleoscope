@@ -10,7 +10,8 @@ existing value, or both. Yup schema are extremely expressive and allow
 modeling complex, interdependent validations, or value transformation.
 */
 
-import { Link } from '../Login';
+//import { Link } from '../Login';
+import { Link } from 'components/Login'
 import { userService, alertService } from 'services';
 //import { createStructuredSelector } from 'reselect';
 

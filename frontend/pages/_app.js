@@ -12,8 +12,11 @@ import { useRouter } from 'next/router';
 
 import 'styles/global.css';
 
-import { userService } from '../services/user.service';
-import { Nav, Alert } from '../components/Login/Nav';
+//import { userService } from '../services/user.service';
+//import { Nav, Alert } from '../components/Login/Nav';
+
+import { Nav, Alert } from 'components/Login';
+import { userService } from 'services';
 
 export default App;
 
