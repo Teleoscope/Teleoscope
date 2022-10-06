@@ -41,7 +41,11 @@ export default function Workspace(props) {
     }
     return ret;
   });
-  
+  const { groups_raw } = useSWRAbstract("groups_raw", `/api/sessions/${session_id}/groups`);
+  const group_ids = groups_raw?.map((g) => {
+    return g._id;
+  })
+
   const handleContextMenu = (event) => {
     event.preventDefault();
     setContextMenu(
@@ -68,7 +72,7 @@ export default function Workspace(props) {
 
   const handleExistingTeleoscope = (t) => {
     var w = { ...MenuActions()["Teleoscope"].default_window };
-    w.i = t + w.i;
+    w.i = t + "_" + w.i;
     dispatch(addWindow(w))
     handleClose();
   }
@@ -78,7 +82,7 @@ export default function Workspace(props) {
   }
 
   const handleTestClusters = () => {
-    cluster_by_groups(client, ["62db047aaee56b83f2871510"], "62a7ca02d033034450035a91", "632ccbbdde62ba69239f6682");
+    cluster_by_groups(client, group_ids, "62a7ca02d033034450035a91", session_id);
   }
   
   const ref = createRef()
