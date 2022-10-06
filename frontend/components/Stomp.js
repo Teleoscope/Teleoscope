@@ -72,7 +72,7 @@ export function initialize_session(client, username, label, color) {
     args: {
       username: username,
       label: label,
-      color: color,
+      color: color
     }
   }
   publish(client, body);

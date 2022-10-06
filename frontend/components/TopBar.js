@@ -45,9 +45,8 @@ export default function TopBar(props) {
 
   const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
-  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals], length: 1, style: 'capital' });
+  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals], length: 1 });
   const randomColor = require('randomcolor');
-
   const client = useContext(StompContext)
 
   const handleCookie = (username) => {
@@ -107,11 +106,18 @@ export default function TopBar(props) {
   }
 
   const get_label = (username) => {
-    return session.history[0].label
+      return session["history"][0].label;
   }
 
   const get_color = (username) => {
-      return session.history[0].color
+
+      if (session == null) {
+          return "#4E5CBC"
+      }
+      else {
+          return session["history"][0].color
+      }
+
   }
 
 
@@ -119,7 +125,7 @@ export default function TopBar(props) {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
-        style={{ height: 60, backgroundColor: get_color(cookies.user) }}
+        style={{ height: 60, backgroundColor: get_color(cookies.user) }} // TODO : background color should reflect session color
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
@@ -134,6 +140,7 @@ export default function TopBar(props) {
                      "bookmarks": bookmarks, 
                      "windows": windows, 
                      "label": get_label(cookies.user),
+                     "color": get_color(cookies.user),
                  }) 
                } 
                style={{ 

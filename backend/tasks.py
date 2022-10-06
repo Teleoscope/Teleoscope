@@ -459,6 +459,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                                     "bookmarks": session["history"][0]["bookmarks"],
                                     "windows": session["history"][0]["windows"],
                                     "label": session["history"][0]["label"]
+                                    "color": session["history"][0]["color"]
                                 }],
                                 '$position': 0
                             }
