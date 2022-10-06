@@ -92,13 +92,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
         if task == "reorient":
-            '''
-            res = robj.delay(
-                teleoscope_id=args["teleoscope_id"],
-                positive_docs=args["positive_docs"],
-                negative_docs=args["negative_docs"]
-            )
-            '''
             res = chain(
                 robj.s(teleoscope_id=args["teleoscope_id"],
                        positive_docs=args["positive_docs"],
@@ -159,7 +152,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "content": args["content"],
                 }
             )
-
+        
         if task == "cluster_by_groups":
             res = tasks.cluster_by_groups.signature(
                 args=(),
