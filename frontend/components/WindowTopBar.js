@@ -13,7 +13,7 @@ import CloseButton from "../components/CloseButton"
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { minimizeWindow, maximizeWindow, checkWindow } from "../actions/windows";
+import { minimizeWindow, maximizeWindow, checkWindow, moveWindowToFront } from "../actions/windows";
 
 
 export default function WindowTopBar(props) {
@@ -23,7 +23,10 @@ export default function WindowTopBar(props) {
 		<Stack direction="row" alignItems="center" justifyContent="space-between">
 			<Stack direction="row" alignItems="center">
 			<IconButton size="small"
-				onClick={() => {props.handleShow()}}
+				onClick={() => {
+					props.handleShow();
+					dispatch(moveWindowToFront(props.id))
+				}}
 			>{props.icon}</IconButton>
 			<Tooltip title={props.title}>
 			<Typography 
