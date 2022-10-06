@@ -289,10 +289,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     # call needs to be transactional due to groups & sessions collections being updated
 
     collection = db.groups
-    collection_label = "groups"
-
     if not human:
-        collection_label = "mlgroups"
         collection = db.mlgroups
 
     with transaction_session.start_transaction():
@@ -493,7 +490,7 @@ def update_note(*args, **kwargs):
                 {
                     "history": {
                         "$each": [{
-                        "content": conent,
+                        "content": content,
                         "timestamp": datetime.datetime.utcnow()
                         }],
                         "$position": 0
