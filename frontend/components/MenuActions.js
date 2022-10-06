@@ -17,7 +17,7 @@ const actions = {
   },
   Groups: { 
     icon: <TopicIcon />, 
-    default_window: {i: "group", w:2, h:10, type: "Group Palette", isResizable: true}
+    default_window: {i: "%grouppalette", w:2, h:10, type: "Group Palette", isResizable: true}
   },
 };
 

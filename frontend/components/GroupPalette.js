@@ -22,10 +22,9 @@ import FolderIcon from '@mui/icons-material/Folder';
 // actions
 import useSWRAbstract from "../util/swr"
 import { useSelector, useDispatch } from "react-redux";
-import { searcher } from "../actions/searchterm";
 import { addGroup } from "../actions/groups";
 import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
-import { addWindow} from "../actions/windows";
+import { addWindow } from "../actions/windows";
 import { dragged } from "../actions/windows";
 
 // utils
@@ -36,7 +35,7 @@ import { StompContext } from '../context/StompContext'
 
 // custom components
 
-export default function LeftMenuBarGroups() {
+export default function GroupPalette() {
    const [groupedData, setGroupedData] = React.useState([]);
    const [grouped, setGrouped] = React.useState(false)
    
@@ -92,7 +91,6 @@ export default function LeftMenuBarGroups() {
 
    const keyChange = (e) => {
       if (e.code == "Enter") {
-         dispatch(searcher(text));
       }
    };
 
@@ -117,7 +115,7 @@ export default function LeftMenuBarGroups() {
                var g = groups.find(g => g.label == newValue)
                var postids = g.history[g.history.length - 1]["included_posts"];
                postids.forEach((id)=> {
-                  dispatch(addWindow({i: id, x: 0, y: 0, w: 3, h: 3, type: "Post"}));
+                  dispatch(addWindow({i: id + "%post", x: 0, y: 0, w: 3, h: 3, type: "Post"}));
                })
             }
             
@@ -192,7 +190,7 @@ export default function LeftMenuBarGroups() {
             freeSolo
             renderInput={(params) =>
                <TextField {...params}
-                  label="Post groups..."
+                  label="Search and Create groups..."
                   variant="filled"
                   placeholder="type to create, click to filter..."
                   onKeyDown={(e) => keyChange(e)}
@@ -243,7 +241,7 @@ export default function LeftMenuBarGroups() {
          	return (
          		<div 
          			draggable={true}
-					   onDragStart={(e, data) => {dispatch(dragged({id: the_group?._id, type: "Group"}))}}
+					   onDragStart={(e, data) => {dispatch(dragged({id: the_group?._id + "%group", type: "Group"}))}}
          		>
          		<ListItem>
 					<ListItemIcon>

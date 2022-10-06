@@ -12,7 +12,8 @@ import PostList from "../components/PostList"
 import useSWRAbstract from "../util/swr"
 
 export default function Group(props) {
-  const { group } = useSWRAbstract("group", `/api/groups/${props.id}`);
+  const id = props.id.split("%")[0];
+  const { group } = useSWRAbstract("group", `/api/groups/${id}`);
   const color = group?.color;
   const label = group?.label;
   console.log("groupy", group, label, color)

@@ -1,7 +1,7 @@
 // windows.js
 import { createSlice } from '@reduxjs/toolkit'
 import _ from 'lodash';
-import { getDefaultWindow } from "../components/DefaultWindow"
+import { getDefaultWindow } from "../components/WindowDefault"
 
 export const Windows = createSlice({
 	name: 'windows',
@@ -50,6 +50,18 @@ export const Windows = createSlice({
 				temp.splice(index, 1);
 			}
 			state.windows = temp;
+		},
+		moveWindowToFront: (state, action) => {
+			var temp = [...state.windows];	
+			var ids = state.windows.map((w) => {return w.i});
+			var index = ids.indexOf(action.payload);
+
+			if (index > -1) {
+				var tempitem = {...temp[index]}
+				temp.splice(index, 1);
+				temp.splice(0, 0, tempitem);
+			}
+			state.windows = temp;			
 		},
 		minimizeWindow: (state, action) => {
 			var temp = [...state.windows];
@@ -132,6 +144,7 @@ export const {
 	maximizeWindow, 
 	checkWindow, 
 	selectAll, 
-	deselectAll 
+	deselectAll,
+	moveWindowToFront 
 } = Windows.actions
 export default Windows.reducer
