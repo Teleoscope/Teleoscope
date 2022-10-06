@@ -655,7 +655,9 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid):
     session_oid: string OID for session to add mlgroups to
 
     """
+    
     import clustering
+    logging.info(f'Starting clustering for groups {group_id_strings} in session {session_oid}.')
     clustering.cluster_by_groups(group_id_strings, teleoscope_oid, session_oid)
 
 '''

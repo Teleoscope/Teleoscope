@@ -3,6 +3,7 @@ from warnings import simplefilter
 import json
 import random
 import string
+import logging
 
 # installed modules
 from celery import chain
@@ -45,137 +46,127 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
         message.ack()
-        b = json.loads(body)
+        msg = json.loads(body)
+        task = msg['task']
+        args = msg['args']
+        res = None
 
-        # TODO: these should exactly implement the interface standard
-        # TODO: make sure they look like Stomp.js
-        if b['task'] == "initialize_teleoscope":
+        # These should exactly implement the interface standard
+        # Make sure they look like Stomp.js
+    
+
+        if task == "initialize_teleoscope":
             res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
-                    "label": b['args']['label'],
-                    "session_id": b["args"]["session_id"]
+                    "label": args['label'],
+                    "session_id": args["session_id"]
                 },
             )
-            res.apply_async()
 
-        if b['task'] == "save_teleoscope_state":
+        if task == "save_teleoscope_state":
             res = tasks.save_teleoscope_state.signature(
                 args=(),
                 kwargs={
-                    "_id": b["args"]["_id"],
-                    "history_item": b["args"]["history_item"]
+                    "_id": args["_id"],
+                    "history_item": args["history_item"]
                 },
             )
-            res.apply_async()
 
-        if b['task'] == 'initialize_session':
+        if task == 'initialize_session':
             res = tasks.initialize_session.signature(
                 args=(),
                 kwargs={
-                    "username": b["args"]["username"],
-                    "label": b["args"]["label"]
+                    "username": args["username"],
+                    "label": args["label"]
                 },
             )
-            res.apply_async()
 
-        if b['task'] == "save_UI_state":
+        if task == "save_UI_state":
             res = tasks.save_UI_state.signature(
                 args=(),
                 kwargs={
-                    "session_id": b["args"]["session_id"],
-                    "history_item": b["args"]["history_item"]
+                    "session_id": args["session_id"],
+                    "history_item": args["history_item"]
                 },
             )
-            res.apply_async()
 
-        if b['task'] == "reorient":
-            '''
-            res = robj.delay(
-                teleoscope_id=b['args']["teleoscope_id"],
-                positive_docs=b['args']["positive_docs"],
-                negative_docs=b['args']["negative_docs"]
-            )
-            '''
-
-            workflow = chain(
-                robj.s(teleoscope_id=b['args']["teleoscope_id"],
-                       positive_docs=b['args']["positive_docs"],
-                       negative_docs=b['args']["negative_docs"]),
+        if task == "reorient":
+            res = chain(
+                robj.s(teleoscope_id=args["teleoscope_id"],
+                       positive_docs=args["positive_docs"],
+                       negative_docs=args["negative_docs"]),
                 tasks.save_teleoscope_state.s()
             )
 
-            workflow.apply_async()
-
-        if b['task'] == "add_group":
+        if task == "add_group":
             res = tasks.add_group.signature(
                 args=(),
                 kwargs={
-                    "label": b["args"]["label"],
-                    "color": b["args"]["color"],
-                    "session_id": b["args"]["session_id"]
+                    "label": args["label"],
+                    "color": args["color"],
+                    "session_id": args["session_id"]
                 }
             )
-            res.apply_async()
 
-        if b['task'] == "add_post_to_group":
+        if task == "add_post_to_group":
             res = tasks.add_post_to_group.signature(
                 args=(),
                 kwargs={
-                    "group_id": b["args"]["group_id"],
-                    "post_id": b["args"]["post_id"]
+                    "group_id": args["group_id"],
+                    "post_id": args["post_id"]
                 }
             )
-            res.apply_async()
 
-        if b['task'] == "remove_post_from_group":
+        if task == "remove_post_from_group":
             res = tasks.remove_post_from_group.signature(
                 args=(),
                 kwargs={
-                    "group_id": b["args"]["group_id"],
-                    "post_id": b["args"]["post_id"]
+                    "group_id": args["group_id"],
+                    "post_id": args["post_id"]
                 }
             )
-            res.apply_async()
 
-        if b['task'] == "update_group_label":
+        if task == "update_group_label":
             res = tasks.update_group_label.signature(
                 args=(),
                 kwargs={
-                    "group_id": b["args"]["group_id"],
-                    "label": b["args"]["label"]
+                    "group_id": args["group_id"],
+                    "label": args["label"]
                 }
             )
-            res.apply_async()
 
-        if b['task'] == "add_note":
+        if task == "add_note":
             res = tasks.add_note.signature(
                 args=(),
                 kwargs={
-                    "post_id": b["args"]["post_id"],
+                    "post_id": args["post_id"],
                 }
             )
-            res.apply_async()
 
-        if b['task'] == "update_note":
+        if task == "update_note":
             res = tasks.update_note.signature(
                 args=(),
                 kwargs={
-                    "post_id": b["args"]["post_id"],
-                    "content": b["args"]["content"],
+                    "post_id": args["post_id"],
+                    "content": args["content"],
                 }
             )
-            res.apply_async()
-            
-        if b['task'] == "cluster_by_groups":
+        
+        if task == "cluster_by_groups":
             res = tasks.cluster_by_groups.signature(
                 args=(),
                 kwargs={
-                    "group_id_strings": b["args"]["group_id_strings"],
-                    "teleoscope_oid": b["args"]["teleoscope_oid"],
-                    "session_oid": b["args"]["session_oid"]
+                    "group_id_strings": args["group_id_strings"],
+                    "teleoscope_oid": args["teleoscope_oid"],
+                    "session_oid": args["session_oid"]
                 }
             )
+
+        try:
+            res.apply_async()
+        except:
+            logging.warning(f'Task {task} for args {args} was not valid.')
 
 
 app.steps['consumer'].add(WebTaskConsumer)
