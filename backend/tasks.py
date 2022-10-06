@@ -458,7 +458,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                                     "mlgroups": mlgroups,
                                     "bookmarks": session["history"][0]["bookmarks"],
                                     "windows": session["history"][0]["windows"],
-                                    "label": session["history"][0]["label"]
+                                    "label": session["history"][0]["label"],
                                     "color": session["history"][0]["color"]
                                 }],
                                 '$position': 0
