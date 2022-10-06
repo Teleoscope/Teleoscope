@@ -24,14 +24,14 @@ app.conf.update(
 )
 
 
-"""
-initialize_session
-input: 
-    username (string, arbitrary)
-purpose: adds a session to the sessions collection
-"""
 @app.task
 def initialize_session(*args, **kwargs):
+    """
+    Adds a session to the sessions collection.
+    
+    kwargs: 
+        username: (string, arbitrary)
+    """
     transaction_session, db = utils.create_transaction_session()
     
     # handle kwargs
@@ -82,15 +82,15 @@ def initialize_session(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
     return 200 # success
 
-"""
-save_UI_state
-input: 
-    session_id (int, represents ObjectId in int)
-    history_item (Dict)
-purpose: updates a session document in the sessions collection
-"""
+
 @app.task
 def save_UI_state(*args, **kwargs):
+    """
+    Updates a session document in the sessions collection.
+    kwargs: 
+        session_id: (int, represents ObjectId in int)
+        history_item: (Dict)
+    """
     transaction_session, db = utils.create_transaction_session()
     
     # handle kwargs
@@ -131,20 +131,20 @@ def save_UI_state(*args, **kwargs):
 
     return 200 # success
 
-"""
-initialize_teleoscope:
-Performs a text query on aita.clean.posts.v3 text index.
-If the query string already exists in the teleoscopes collection, returns existing reddit_ids.
-Otherwise, adds the query to the teleoscopes collection and performs a text query the results of which are added to the
-teleoscopes collection and returned.
-TODO: 
-1. We can use GridFS to store the results of the query if needed (if sizeof(reddit_ids) > 16MB).
-   Doesnt seem to be an issue right now.
-2. Checks for both teleoscope_id and query. Need confirmation from frontend on whether the teleoscope_id and/or query will already exist?
-   If not, then who updates them?
-"""
+
 @app.task
 def initialize_teleoscope(*args, **kwargs):
+    """
+    initialize_teleoscope:
+    Performs a text query on aita.clean.posts.v3 text index.
+    If the query string already exists in the teleoscopes collection, returns existing reddit_ids.
+    Otherwise, adds the query to the teleoscopes collection and performs a text query the results of which are added to the
+    teleoscopes collection and returned.
+    
+    kwargs:
+        label: string
+        session_id: string
+    """
     session, db = utils.create_transaction_session()
 
     # handle kwargs
