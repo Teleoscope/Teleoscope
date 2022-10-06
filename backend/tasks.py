@@ -142,22 +142,13 @@ def initialize_teleoscope(*args, **kwargs):
     teleoscopes collection and returned.
     
     kwargs:
-        label: string
         session_id: string
     """
     session, db = utils.create_transaction_session()
 
     # handle kwargs
-    label = kwargs["label"]
     session_id = kwargs["session_id"]
 
-    # perform text search query
-    labelAsTextSearch = {"$text": {"$search": label}}
-    cursor = db.clean.posts.v3.find(labelAsTextSearch, projection = {'id':1})
-    return_ids = [x['id'] for x in cursor]
-    rank_slice = [(x, 1.0) for x in return_ids[0:min(500, len(return_ids))]]
-
-    logging.info(f"About to insert a new teleoscope for {label}.")
     # create a new query document
     with session.start_transaction():
         teleoscope_id = db.teleoscopes.insert_one({
@@ -165,9 +156,9 @@ def initialize_teleoscope(*args, **kwargs):
                 "history": [
                     {
                         "timestamp": datetime.datetime.utcnow(),
-                        "label": label,
-                        "rank_slice": rank_slice,
-                        "reddit_ids": return_ids,
+                        "label": "default",
+                        "rank_slice": [],
+                        "reddit_ids": [],
                         "positive_docs": [],
                         "negative_docs": [],
                         "stateVector": [],
@@ -185,8 +176,7 @@ def initialize_teleoscope(*args, **kwargs):
                 }
             }, session=session)
         utils.commit_with_retry(session)
-    logging.info(f"label {label} added to teleoscopes collection")
-    return return_ids
+    return []
 
 
 @app.task

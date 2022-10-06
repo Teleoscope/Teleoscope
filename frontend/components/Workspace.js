@@ -22,7 +22,7 @@ import { useDispatch } from "react-redux";
 
 // util
 import useSWRAbstract from "../util/swr"
-import { cluster_by_groups } from "../components/Stomp.js";
+import { cluster_by_groups } from "../components/Stomp.ts";
 
 // contexts
 import { StompContext } from '../context/StompContext'

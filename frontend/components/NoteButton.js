@@ -14,7 +14,7 @@ import { StompContext } from '../context/StompContext'
 
 
 // utils
-import { add_note } from "../components/Stomp.js";
+import { add_note } from "../components/Stomp.ts";
 
 
   

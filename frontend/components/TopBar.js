@@ -26,7 +26,7 @@ import { mark, loadBookmarkedPosts } from "../actions/bookmark";
 import { getGroups } from "../actions/groups";
 
 // utilities
-import { reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session } from "../components/Stomp.js";
+import { reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session } from "../components/Stomp.ts";
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../util/swr"
 
@@ -43,9 +43,9 @@ export default function TopBar(props) {
 
   const [cookies, setCookie] = useCookies(["user"]);
 
-  const history_item_num = useSelector((state) => state.activeHistoryItem.value);
-  const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
-  const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
+  // const history_item_num = useSelector((state) => state.activeHistoryItem.value);
+  // const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
+  // const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
   const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
   const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] }); // big_red_donkey
@@ -127,7 +127,7 @@ export default function TopBar(props) {
                onClick={() => save_UI_state( 
                  client,  
                  session_id,  
-                 { // history_item in save_UI_state in Stomp.js 
+                 { // history_item in save_UI_state in Stomp 
                      "bookmarks": bookmarks, 
                      "windows": windows, 
                      "label": get_label(cookies.user),

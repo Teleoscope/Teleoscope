@@ -1,4 +1,4 @@
-import { client_init, publish, initialize_session, save_UI_state, initialize_teleoscope, save_teleoscope_state, add_group, add_post_to_group, remove_post_from_group, update_group_label, add_note, update_note, reorient } from "../components/Stomp.js";
+import { client_init, publish, initialize_session, save_UI_state, initialize_teleoscope, save_teleoscope_state, add_group, add_post_to_group, remove_post_from_group, update_group_label, add_note, update_note, reorient } from "../components/Stomp.ts";
 
 class DummyClient {
 	publish(msg) {
@@ -15,18 +15,19 @@ test("Testing dummy client publish.", () => {
 })
 
 // publish
-test("Testing Stomp.js publish with dummy client.", () => {
+test("Testing Stomp publish with dummy client.", () => {
 	expect(publish(new DummyClient(), {})).toStrictEqual({});
 })
 
 // initialize_session() return value
 test("Testing initialize_session return value.", () => {
-	expect(initialize_session(new DummyClient(), "paul"
+	expect(initialize_session(new DummyClient(), "paul", "test"
 	)).toStrictEqual(
 		{
 			"task": "initialize_session",
 			"args": {
-				"username": "paul"
+				"username": "paul",
+				"label": "test"
 			}
 		}
 	);
@@ -57,13 +58,11 @@ test("Testing save_UI_state return value.", () => {
 
 // initialize_teleoscope() return value
 test("Testing initialize_teleoscope return value.", () => {
-	expect(initialize_teleoscope(new DummyClient(), "test label", '62a24ba3a43e59841cacad9d'
+	expect(initialize_teleoscope(new DummyClient(), '62a24ba3a43e59841cacad9d'
 	)).toStrictEqual(
 		{
 			"task": "initialize_teleoscope",
 			"args": {
-				"label": "test label",
-				// This is not a valid booking id - needs to be hex alphanurmeric
 				"session_id": '62a24ba3a43e59841cacad9d',
 			}
 		}
@@ -75,12 +74,13 @@ test("Testing save_teleoscope_state return value.", () => {
 	expect(save_teleoscope_state(
 		new DummyClient(), 
 		'62a24ba3a43e59841cacad9d',
-		{"label": "wifi",
-		 "positive_docs": [],
-		 "negative_docs": [],
-		 "stateVector": [],
-		 "ranked_post_ids": '62a96ba3a43e59841cacad9d',
-		 "rank_slice": []}
+		{
+			"label": "wifi",
+			"positive_docs": [],
+			"negative_docs": [],
+			"stateVector": [],
+			"ranked_post_ids": '62a96ba3a43e59841cacad9d',
+			"rank_slice": []}
 		 )).toStrictEqual(
 			 {
 				 "task": "save_teleoscope_state",
@@ -205,7 +205,6 @@ test("Testing update_note return value.", () => {
 test("Testing reorient return value.", () => {
 	expect(reorient(
 		new DummyClient(),
-		"wifi",
 		'62a24ba3a43e59841cacad9d',
 		['v20r7t'],
 		[]
@@ -213,7 +212,6 @@ test("Testing reorient return value.", () => {
 		{
 			"task": "reorient",
 			"args": {
-				"query": "wifi",
 				"teleoscope_id": '62a24ba3a43e59841cacad9d',
 				"positive_docs": ['v20r7t'],
 				"negative_docs": []

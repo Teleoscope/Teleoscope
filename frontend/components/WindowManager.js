@@ -25,7 +25,7 @@ import {
   load_teleoscope_state, 
   initialize_session, 
   add_post_to_group 
-} from "../components/Stomp.js";
+} from "../components/Stomp.ts";
 
 // contexts
 import { StompContext } from '../context/StompContext'
