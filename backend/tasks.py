@@ -160,12 +160,19 @@ def initialize_session(*args, **kwargs):
     logging.info(f'Initializing sesssion for user {username}.')
     # Check if user exists and throw error if not
     user = db.users.find_one({"username": username})
+
+    # grab all users for now (no 'team')
+    users = db.users.find({})
+    usernames = [u["username"] for u in users]
+    userlist = {u:"read" for u in usernames}
+    userlist[user["username"]] = "write"
+
     if user is None:
         logging.info(f'User {username} does not exist.')
         raise Exception(f"User {username} does not exist.")
     obj = {
         "creation_time": datetime.datetime.utcnow(),
-        "username": username,
+        "userlist": userlist,
         "history": [
             {
                 "timestamp": datetime.datetime.utcnow(),
@@ -180,7 +187,12 @@ def initialize_session(*args, **kwargs):
     }
     with transaction_session.start_transaction():
         result = db.sessions.insert_one(obj, session=transaction_session)
-        db.users.update_one({"username": username},
+        db.users.update_many(
+            {
+                "username": {
+                    "$in": usernames
+                }
+            },
             {
                 "$push": {
                     "sessions": result.inserted_id
