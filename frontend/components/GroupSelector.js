@@ -38,7 +38,7 @@ export default function groupSelector(props) {
    const group_labels = groups ? groups.map((g) => {return g.label}) : []
 
    const groups_this_post_belongs_to = groups ? groups.filter((g) => {
-      return g.history[g.history.length - 1].included_posts.includes(props.id)
+      return g.history[0].included_posts.includes(props.id)
    }) : [];
    const [menuItem, setMenuItem] = React.useState([]);
 

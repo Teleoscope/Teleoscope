@@ -61,7 +61,7 @@ export const Groups = createSlice({
 					color: g.color,
 					label: g.label
 				}
-				var lastItem = g.history[g.history.length - 1];
+				var lastItem = g.history[0];
 				lastItem.included_posts.forEach((i) => {
 					groupedPosts.push({ id: i, _id: g._id });
 				})
