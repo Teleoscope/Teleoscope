@@ -1,28 +1,14 @@
 # builtin modules
-import pickle
-import tensorflow_hub as hub
+import json
 import numpy as np
+
 # installed modules
 from pymongo import MongoClient
 import pymongo.errors
-import gridfs
-from tqdm import tqdm
 import logging 
-
-import gensim.downloader as api
-from gensim.corpora import Dictionary
-from gensim.similarities import WordEmbeddingSimilarityIndex
-from gensim.similarities import SparseTermSimilarityMatrix
-from gensim.similarities import SoftCosineSimilarity
-from gensim.utils import simple_preprocess
 
 # local files
 import auth
-
-def unpacker(cursor, key):
-    for doc in cursor:
-        yield doc[key]
-
 
 def connect():
     autht = "authSource=aita&authMechanism=SCRAM-SHA-256"
@@ -32,7 +18,15 @@ def connect():
         f'{auth.mongodb["password"]}@'
         f'{auth.mongodb["host"]}/?{autht}'
     )
-    client = MongoClient(connect_str, connectTimeoutMS=50000, serverSelectionTimeoutMS = 50000)
+    client = MongoClient(
+        connect_str, 
+        connectTimeoutMS = 50000, 
+        serverSelectionTimeoutMS = 50000,
+        directConnection=True,
+        replicaSet = "rs0"
+        # read_preference = ReadPreference.PRIMARY_PREFERRED
+    )
+    # logging.log(f'Connected to MongoDB with user {auth.mongodb["username"]}.')
     return client.aita
 
 def create_transaction_session():
@@ -67,105 +61,6 @@ def commit_with_retry(session):
                 raise
 
 
-# list(mongodb docs) -> list(str)
-def redditids(results):
-    ids = [r["id"] for r in results]
-    return ids
-
-
-# list(mongodb docs) -> list(list(str))
-def preprocess(results):
-    selftext_only = [simple_preprocess(d["selftext"]) for d in results]
-    return selftext_only
-
-
-# str -> query
-def query(s):
-    mdb_query = {"$text": {"$search": s}}
-    return mdb_query
-
-
-# query -> docs
-def find(_query):
-    db = connect()
-    print("asdf")
-    count = db.posts.count(_query)
-    cursor = tqdm(db.posts.find(_query), total=count)
-    results = list(cursor)
-    return results
-
-
-# docs -> dictionary
-def dictionary(docs):
-    _dictionary = Dictionary(docs)
-    return _dictionary
-
-
-# docs, dictionary -> corpus
-def corpus(docs, _dictionary):
-    bow_corpus = [_dictionary.doc2bow(doc) for doc in docs]
-    return bow_corpus
-
-
-# str -> model
-def load(uri):
-    model = api.load(uri)
-    similarity_index = WordEmbeddingSimilarityIndex(model)
-    return similarity_index
-
-
-# model, _dictionary -> sparse term similarity matrix
-def sparse_tsm(model, _dictionary):
-    similarity_matrix = SparseTermSimilarityMatrix(model, _dictionary)
-    return similarity_matrix
-
-
-# bow_corpus, sparseTSM, int -> soft cos sim index
-def soft_cos_sim(bow_corpus, similarity_matrix, n=100):
-    scs = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=n)
-    return scs
-
-
-# dictionary, str -> bow
-def bow(_dictionary, doc):
-    ret = _dictionary.doc2bow(doc.lower().split())
-    return ret
-
-
-# _dictionary, str -> list of docs
-def query_scs_helper(scs, _dictionary, s):
-    processed_query = bow(_dictionary, s)
-    print(processed_query)
-    sims = scs[processed_query]
-    print(sims)
-    return sims
-
-
-def get_gridfs(fs_db, oid):
-    db = connect()
-    fs = gridfs.GridFS(db, fs_db)
-    out = fs.get(oid)
-    data = pickle.loads(out.read())
-    return data
-
-
-def put_gridfs(m, fs_db, query_gfs, ext):
-    db = connect()
-    filename = f"{fs_db}/{query_gfs}.{ext}"
-    fs = gridfs.GridFS(db, fs_db)
-    f = pickle.dumps(m)
-    uid = fs.put(f, filename=filename)
-    return uid
-
-
-def safeget(mp, *keys):
-    for key in keys:
-        try:
-            mp = mp[key]
-        except KeyError:
-            return None
-    return mp
-
 
 # def update_embedding(q_vector, feedback_vector, feedback):
 #     SENSITIVITY = 0.75
@@ -195,6 +90,7 @@ def getPostVector(db, post_id):
     return postVector
 
 def loadModel():
+    import tensorflow_hub as hub
     model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
     return model
 
@@ -229,3 +125,59 @@ def calculateSimilarity(postVectors, queryVector):
 # create and return a list a tuples of (post_id, similarity_score) sorted by similarity score, high to low
 def rankPostsBySimilarity(posts_ids, scores):
     return sorted([(post_id, score) for (post_id, score) in zip(posts_ids, scores)], key=lambda x:x[1], reverse=True)
+
+# upload to GridFS
+def gridfsUpload(db, namespace, data, encoding='utf-8'):
+    '''Uploads data to GridFS under a particular namespace.
+
+    args:
+        db: database connection object
+        
+        namespace: string that is used to identify GridFS, 
+        i.e., namespace.chunks and namespace.files
+        
+        data: ordred list of tuples which are short string postid and 
+        float score [(string, float)] returned from rankPostsBySimilarity
+
+    kwargs:    
+        encoding: string representing text encoding
+
+    returns:
+        obj: MongoDB/BSON ObjectId()
+    
+    E.g.: 
+        args: db=connect(), namespace="teleoscopes", data=[("v23oj1", 0.91), ... ]
+        kwargs: 'utf-8'
+        obj: ObjectId('62ce71d36fee6e2ed60d1fb5')
+    '''
+    import gridfs
+    # convert to json
+    dumps = json.dumps(data)
+    fs = gridfs.GridFS(db)
+    obj = fs.put(dumps, encoding=encoding)
+    return obj
+
+# Download from GridFS
+def gridfsDownload(db, namespace, oid):
+    '''Gets posts and scores from GridFS
+
+    args:
+        db: database connection object
+        oid: MongoDB/BSON ObjectId
+        namespace: string used to identify GridFS, i.e., namespace.chunks and namespace.files
+
+    returns:
+        data: ordred list of tuples which are short string postid and 
+        float score [(string, float)] as returned from rankPostsBySimilarity
+    
+    E.g.,:
+        args:
+            db=connect(), oid=ObjectId('62ce71d36fee6e2ed60d1fb5'), namespace="teleoscopes"
+        data: [("v23oj1", 0.91), ... ]
+
+    '''
+    import gridfs
+    fs = gridfs.GridFS(db, namespace)
+    obj = fs.get(oid).read()
+    data = json.loads(obj)
+    return data

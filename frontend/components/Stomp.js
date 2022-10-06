@@ -66,11 +66,12 @@ export function publish(client, body) {
 /**
  * Requests to create a new session object in MongoDB.
  */
-export function initialize_session(client, username) {
+export function initialize_session(client, username, label) {
   var body = {
     task: 'initialize_session',
     args: {
       username: username,
+      label: label,
     }
   }
   publish(client, body);
@@ -225,6 +226,22 @@ export function update_note(client, post_id, content) {
       teleoscope_id: teleoscope_id, // TODO
       positive_docs: positive_docs,
       negative_docs: negative_docs,
+    }
+  }
+  publish(client, body);
+  return body;
+}
+
+/**
+ * Create MLGroups using the UMAP and HBDSCAN with the given groups' posts as seeds.
+ */
+export default function cluster_by_groups(client, group_id_strings, teleoscope_oid, session_oid) {
+  var body = {
+    task: "cluster_by_groups",
+    args: {
+      group_id_strings: group_id_strings,
+      teleoscope_oid: teleoscope_oid,
+      session_oid: session_oid,
     }
   }
   publish(client, body);

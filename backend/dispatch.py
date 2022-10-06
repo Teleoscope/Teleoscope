@@ -73,7 +73,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.initialize_session.signature(
                 args=(),
                 kwargs={
-                    "username": b["args"]["username"]
+                    "username": b["args"]["username"],
+                    "label": b["args"]["label"]
                 },
             )
             res.apply_async()
@@ -165,6 +166,16 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 }
             )
             res.apply_async()
+            
+        if b['task'] == "cluster_by_groups":
+            res = tasks.cluster_by_groups.signature(
+                args=(),
+                kwargs={
+                    "group_id_strings": b["args"]["group_id_strings"],
+                    "teleoscope_oid": b["args"]["teleoscope_oid"],
+                    "session_oid": b["args"]["session_oid"]
+                }
+            )
 
 
 app.steps['consumer'].add(WebTaskConsumer)

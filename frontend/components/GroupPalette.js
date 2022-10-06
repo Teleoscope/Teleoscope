@@ -236,7 +236,7 @@ export default function GroupPalette() {
       </React.Fragment>
       <List>
       {group_labels.map((gl) => {
-         var the_group = groups.find((g) => g.label == gl);
+         var the_group = groups.find(g => g.label == gl);
 
          	return (
          		<div 
