@@ -181,6 +181,7 @@ def initialize_session(*args, **kwargs):
                 "groups": [],
                 "mlgroups": [],
                 "label": kwargs['label'],
+                "color": kwargs['color'],
             }
         ],
         "teleoscopes": []
@@ -237,6 +238,8 @@ def save_UI_state(*args, **kwargs):
     history_item["groups"] = groups
     # update history_item to have the correct label
     history_item["label"] = session["history"][0]["label"]
+    # update history_item to have the correct color
+    history_item["color"] = session["history"][0]["color"]
 
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},

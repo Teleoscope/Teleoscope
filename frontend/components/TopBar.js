@@ -45,7 +45,8 @@ export default function TopBar(props) {
 
   const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
-  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] }); // big_red_donkey
+  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals], length: 1, style: 'capital' });
+  const randomColor = require('randomcolor');
 
   const client = useContext(StompContext)
 
@@ -109,11 +110,16 @@ export default function TopBar(props) {
     return session.history[0].label
   }
 
+  const get_color = (username) => {
+      return session.history[0].color
+  }
+
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
-        style={{ height: 60, backgroundColor: "#4E5CBC" }}
+        style={{ height: 60, backgroundColor: get_color(cookies.user) }}
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
@@ -267,7 +273,7 @@ export default function TopBar(props) {
                 <Button
                size="small"
                variant="text"
-               onClick={() => initialize_session(client, cookies.user, randomName)}
+               onClick={() => initialize_session(client, cookies.user, randomName, randomColor())}
                style={{
                  backgroundColor: "#FFFFFF",
                  color: "black",
