@@ -113,7 +113,7 @@ export default function GroupPalette() {
          setTimeout(() => {
             if (group_labels.includes(newValue)) {
                var g = groups.find(g => g.label == newValue)
-               var postids = g.history[g.history.length - 1]["included_posts"];
+               var postids = g.history[0]["included_posts"];
                postids.forEach((id)=> {
                   dispatch(addWindow({i: id + "%post", x: 0, y: 0, w: 3, h: 3, type: "Post"}));
                })
@@ -236,7 +236,7 @@ export default function GroupPalette() {
       </React.Fragment>
       <List>
       {group_labels.map((gl) => {
-         var the_group = groups.find(g => g.label == gl);
+         var the_group = groups.find(g => g.history[0].label == gl);
 
          	return (
          		<div 
@@ -245,7 +245,7 @@ export default function GroupPalette() {
          		>
          		<ListItem>
 					<ListItemIcon>
-                    	<FolderIcon sx={{ color: the_group?.color }}/>
+                    	<FolderIcon sx={{ color: the_group?.history[0].color }}/>
                   	</ListItemIcon>
                   	<ListItemText
 						primary={gl}

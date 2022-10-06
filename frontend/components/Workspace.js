@@ -37,7 +37,7 @@ export default function Workspace(props) {
   const teleoscopes = teleoscopes_raw?.map((t) => {
     var ret = {
       _id: t._id,
-      label: t.history[t.history.length - 1].label
+      label: t.history[0].label
     }
     return ret;
   });

@@ -43,9 +43,6 @@ export default function TopBar(props) {
 
   const [cookies, setCookie] = useCookies(["user"]);
 
-  const history_item_num = useSelector((state) => state.activeHistoryItem.value);
-  const search_term = useSelector((state) => state.searchTerm.value); // TODO rename
-  const checked = useSelector((state) => state.checkedPosts.value); // TODO rename
   const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
   const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] }); // big_red_donkey
@@ -68,7 +65,7 @@ export default function TopBar(props) {
       });
       if (ts.length > 0 ) {
         return ts.map((t) => {
-          var latest_t = t['history'][t['history'].length - 1];
+          var latest_t = t['history'][0];
           return (<MenuItem value={t["_id"]}>{latest_t["label"]}</MenuItem>)
         });
       }
@@ -103,7 +100,7 @@ export default function TopBar(props) {
   const load_UI_state = () => {
     // TODO
     var history_length = session["history"].length;
-    var history_item = session["history"][history_length - 1];
+    var history_item = session["history"][0];
     dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
   }
