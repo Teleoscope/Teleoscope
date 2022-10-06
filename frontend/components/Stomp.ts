@@ -50,9 +50,17 @@ export function client_init() {
 }
 
 /**
+ * Type definition for Body
+ */
+interface Body {
+  task: string,
+  args: Object
+}
+
+/**
  * Publishes a message to RabbitMQ.
  */
-export function publish(client: Client, body) {
+export function publish(client: Client, body: Body) {
   var headers = {};
   client.publish({
     destination: "/queue/" + process.env.NEXT_PUBLIC_RABBITMQ_VHOST, // TODO: rename queue
@@ -66,7 +74,7 @@ export function publish(client: Client, body) {
 /**
  * Requests to create a new session object in MongoDB.
  */
-export function initialize_session(client, username, label) {
+export function initialize_session(client: Client, username: string, label: string) {
   var body = {
     task: 'initialize_session',
     args: {
@@ -81,7 +89,7 @@ export function initialize_session(client, username, label) {
 /**
  * Saves the workspace UI state (window locations, bookmarks)
  */
- export function save_UI_state(client: Client, session_id, history_item) {
+ export function save_UI_state(client: Client, session_id: string, history_item) {
   var body = {
     task: 'save_UI_state',
     args: {
@@ -119,7 +127,6 @@ export function save_teleoscope_state(client: Client, _id: string, history_item)
       history_item: history_item
     }
   }
-  console.log("The object id is: " + _id);
   publish(client, body);
   return body;
 }
