@@ -21,13 +21,14 @@ test("Testing Stomp publish with dummy client.", () => {
 
 // initialize_session() return value
 test("Testing initialize_session return value.", () => {
-	expect(initialize_session(new DummyClient(), "paul", "test"
-	)).toStrictEqual(
+	expect(initialize_session(new DummyClient(), "paul", "test", "#ffffff")
+	).toStrictEqual(
 		{
 			"task": "initialize_session",
 			"args": {
 				"username": "paul",
-				"label": "test"
+				"label": "test",
+				"color": "#ffffff"
 			}
 		}
 	);

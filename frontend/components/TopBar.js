@@ -40,7 +40,7 @@ export default function TopBar(props) {
   const { users, users_loading, users_error } = useSWRAbstract("users", `/api/users/`);
   const session_id = useSelector((state) => state.activeSessionID.value);
   const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
-
+  console.log("Session top", session, session_id);
   const [cookies, setCookie] = useCookies(["user"]);
 
   const windows = useSelector((state) => state.windows.windows); // TODO rename
@@ -98,26 +98,21 @@ export default function TopBar(props) {
 
 
   const load_UI_state = () => {
-    // TODO
-    var history_length = session["history"].length;
-    var history_item = session["history"][0];
+    var history_item = session.history[0];
     dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
   }
 
-  const get_label = (username) => {
-      return session["history"][0].label;
+  const get_label = () => {
+      return session.history[0].label;
   }
 
-  const get_color = (username) => {
-
-      if (session == null) {
-          return "#4E5CBC"
-      }
-      else {
-          return session["history"][0].color
-      }
-
+  const get_color = () => {
+    console.log("Session color", session)
+    if (session) {
+      return session.history[0].color
+    }
+    return "#4E5CBC"
   }
 
 
@@ -125,7 +120,7 @@ export default function TopBar(props) {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
-        style={{ height: 60, backgroundColor: get_color(cookies.user) }} // TODO : background color should reflect session color
+        style={{ height: 60, backgroundColor: get_color() }} // TODO : background color should reflect session color
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
@@ -139,8 +134,8 @@ export default function TopBar(props) {
                  { // history_item in save_UI_state in Stomp 
                      "bookmarks": bookmarks, 
                      "windows": windows, 
-                     "label": get_label(cookies.user),
-                     "color": get_color(cookies.user),
+                     "label": get_label(),
+                     "color": get_color(),
                  }) 
                } 
                style={{ 

@@ -1,6 +1,6 @@
 import React, { useRef, createRef, useEffect, useContext } from "react";
 import { useAppSelector, useAppDispatch } from '../hooks'
-import { RootState, AppDispatch } from '../stores/store'
+import { RootState } from '../stores/store'
 
 // mui
 import Grid from '@mui/material/Grid';
