@@ -6,7 +6,7 @@ import Bookmark from "../actions/bookmark"
 import Groups from '../actions/groups'
 import Windows from '../actions/windows'
 
-export default configureStore({
+const store = configureStore({
   reducer: {
     activeSessionID: ActiveSessionID,
     activeHistoryItem: ActiveHistoryItem,
@@ -27,3 +27,10 @@ export default configureStore({
     })
 })
 
+
+// Infer the `RootState` and `AppDispatch` types from the store itself
+export type RootState = ReturnType<typeof store.getState>
+// Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
+export type AppDispatch = typeof store.dispatch
+
+export default store;

@@ -1,20 +1,17 @@
-import React, { createRef, useEffect, useContext } from "react";
-import { useSelector } from "react-redux";
-import Selecto from "react-selecto";
+import React, { useRef, createRef, useEffect, useContext } from "react";
+import { useAppSelector, useAppDispatch } from '../hooks'
+import { RootState, AppDispatch } from '../stores/store'
 
 // mui
 import Grid from '@mui/material/Grid';
 import Menu from '@mui/material/Menu';
-import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
-import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 
 // custom components
-import TopBar from "../components/TopBar";
-import WindowManager from "../components/WindowManager";
-import Search from "../components/Search";
-import MenuActions from "../components/MenuActions"
+import TopBar from "./TopBar";
+import WindowManager from "./WindowManager";
+import MenuActions from "./MenuActions"
 
 // actions
 import { addWindow, selectAll, deselectAll } from "../actions/windows";
@@ -22,17 +19,24 @@ import { useDispatch } from "react-redux";
 
 // util
 import useSWRAbstract from "../util/swr"
-import { cluster_by_groups } from "../components/Stomp.ts";
+import { cluster_by_groups } from "./Stomp";
 
 // contexts
 import { StompContext } from '../context/StompContext'
+import internal from "stream";
 
 export default function Workspace(props) {
   const client = useContext(StompContext)
 
-  const dispatch = useDispatch();
-  const [contextMenu, setContextMenu] = React.useState(null);
-  const session_id = useSelector((state) => state.activeSessionID.value);
+  const dispatch = useAppDispatch();
+
+  interface MouseCoords {
+    mouseX: number,
+    mouseY: number
+  }
+
+  const [contextMenu, setContextMenu] = React.useState<MouseCoords | null>(null);
+  const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
   const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
   const teleoscopes = teleoscopes_raw?.map((t) => {
     var ret = {
@@ -85,7 +89,7 @@ export default function Workspace(props) {
     cluster_by_groups(client, group_ids, "62a7ca02d033034450035a91", session_id);
   }
   
-  const ref = createRef()
+  const ref = useRef();
   return (
 
 
@@ -99,7 +103,7 @@ export default function Workspace(props) {
       <Grid item xs={12}>
         <TopBar/>
       </Grid>
-      <Grid ref={ref} item xs={12}>
+      <Grid item xs={12}>
         
         <WindowManager />
 
@@ -127,10 +131,10 @@ export default function Workspace(props) {
         <Divider />
         <MenuItem onClick={()=>handleDispatch("Groups")}>New Group Palette</MenuItem>        
         <Divider />
-        <MenuItem onClick={()=> dispatch(selectAll())}>Select All</MenuItem>
-        <MenuItem onClick={()=> dispatch(deselectAll())}>Deselect All</MenuItem>
+        <MenuItem onClick={()=> dispatch(selectAll(null))}>Select All</MenuItem>
+        <MenuItem onClick={()=> dispatch(deselectAll(null))}>Deselect All</MenuItem>
         <Divider />
-        <MenuItem onClick={()=>handleTestClusters()}>Test Clusters</MenuItem>
+        <MenuItem onClick={()=>handleTestClusters()}>Test Clusterings</MenuItem>
 
     </Menu>
     </div>
