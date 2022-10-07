@@ -4,9 +4,12 @@ import Router from 'next/router';
 
 import { fetchWrapper } from '../helpers/fetch-wrapper';
 
+// returns and object { apiURL: localhost:3000/api}
 const { publicRuntimeConfig } = getConfig();
-const baseUrl = `${publicRuntimeConfig.apiUrl}/users`;
-const userSubject = new BehaviorSubject(process.browser && JSON.parse(localStorage.getItem('user')));
+
+// baseUrl is just localhost:3000/api/users
+const baseUrl = `${publicRuntimeConfig.apiUrl}/loginusers`;
+const userSubject = new BehaviorSubject(process.browser && JSON.parse(localStorage.getItem('user'))); // have to change this to get from mongoDB
 
 export const userService = {
     user: userSubject.asObservable(),

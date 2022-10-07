@@ -12,9 +12,6 @@ import { useRouter } from 'next/router';
 
 import 'styles/global.css';
 
-//import { userService } from '../services/user.service';
-//import { Nav, Alert } from '../components/Login/Nav';
-
 import { Nav, Alert } from 'components/Login';
 import { userService } from 'services';
 
@@ -28,6 +25,10 @@ function App({ Component, pageProps }) {
     useEffect(() => {
         // on initial load - run auth check 
         authCheck(router.asPath);
+
+        console.log('Router Path', router.asPath)
+        console.log('Router Pathname', router.pathname)
+        console.log('Router router', router.route)
 
         // on route change start - hide page content by setting authorized to false  
         const hideContent = () => setAuthorized(false);
@@ -64,17 +65,14 @@ function App({ Component, pageProps }) {
     return (
         <>
             <Head>
-                <title>Teleoscope Login</title>
-                
-                {/* eslint-disable-next-line @next/next/no-css-tags */}
+                <title>Teleoscope</title>
                 <link href="//netdna.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
             </Head>
 
             <div className={`app-container ${user ? 'bg-light' : ''}`}>
                 <Nav />
                 <Alert />
-                {authorized &&
-                    <Component {...pageProps} />
+                {authorized && <Component {...pageProps} />
                 }
             </div>
         </>
