@@ -32,6 +32,7 @@ import useSWRAbstract from "../util/swr"
 
 // contexts
 import { StompContext } from '../context/StompContext'
+import randomColor from "randomcolor";
 
 export default function TopBar(props) {
 
@@ -95,6 +96,23 @@ export default function TopBar(props) {
       )
   }
 
+  const getUsers = (username) => {
+      if (session) {
+          for (const i in users) {
+              var user = users[i];
+              if (user["username"] != username) {
+                  return (<MenuItem value={user}>{user["username"]}</MenuItem>)
+              }
+          }
+      }
+      return (
+          <MenuItem value={"No session selected..."}>No session selected...</MenuItem>
+      )
+  }
+
+    const addUser = (event) => {
+        // TODO: add user to sessions userlist
+    }
 
 
   const load_UI_state = () => {
@@ -110,14 +128,8 @@ export default function TopBar(props) {
   }
 
   const get_color = (username) => {
-
-      if (session == null) {
-          return "#4E5CBC"
-      }
-      else {
-          return session["history"][0].color
-      }
-
+      if (session == null) { return "#4E5CBC" }
+      else { return session["history"][0].color }
   }
 
 
@@ -292,6 +304,23 @@ export default function TopBar(props) {
              </Button>
             </Select>
             </FormControl>
+
+              <FormControl
+                  sx={{width: 200, backgroundColor: 'white', }}
+                  variant="filled"
+              >
+                  <InputLabel id="demo-simple-select-label">Add User to Session</InputLabel>
+                  <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      // value={session_id}
+                      // label="Session ID"
+                      onChange={(event) => addUser(event)}
+                  >
+                      {getUsers(cookies.user)}
+
+                  </Select>
+              </FormControl>
           </Stack>
         </Toolbar>
       </AppBar>
