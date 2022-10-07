@@ -32,6 +32,7 @@ import { add_group } from "../components/Stomp.ts";
 
 // contexts
 import { StompContext } from '../context/StompContext'
+import randomColor from "randomcolor";
 
 // custom components
 
@@ -52,20 +53,7 @@ export default function GroupPalette() {
    const [colourIndex, setColourIndex] = useState(0);
    const { groups, groups_loading, groups_error } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
    const group_labels = groups ? groups.map((g) => {return g.history[0].label}) : []
-
-
-   const colors = [
-      "#17becf",
-      "#bcbd22",
-      "#7f7f7f",
-      "#e377c2",
-      "#8c564b",
-      "#9467bd",
-      "#d62728",
-      "#2ca02c",
-      "#ff7f0e",
-      "#1f77b4"
-   ];
+   const randomColor = require('randomcolor');
 
    const handleClose = () => {
       setDialogValue({
@@ -113,7 +101,7 @@ export default function GroupPalette() {
          setTimeout(() => {
             if (group_labels.includes(newValue)) {
                var g = groups.find(g => g.label == newValue)
-               var postids = g.history[g.history.length - 1]["included_posts"];
+               var postids = g.history[0]["included_posts"];
                postids.forEach((id)=> {
                   dispatch(addWindow({i: id + "%post", x: 0, y: 0, w: 3, h: 3, type: "Post"}));
                })
@@ -150,21 +138,6 @@ export default function GroupPalette() {
 
       return filtered;
    }
-
-
-   const setRandomColor = () => {
-      var ret = colors[colourIndex]
-      if (colourIndex + 1 < colors.length - 1) {
-         setColourIndex(colourIndex + 1);
-      } else {
-         setColourIndex(0);
-      }
-      return ret;
-   }
-   // const setRandomColor = () => {
-   //    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-   //    return "#" + randomColor;
-   // };
 
    return (
    	<div 
@@ -225,10 +198,8 @@ export default function GroupPalette() {
                   <Button onClick={handleClose}>Cancel</Button>
                   <Button
                      type="submit"
-                     onClick={() => {
-                        var colour = setRandomColor()
-                        add_group(client, dialogValue.label, colour, session_id)
-                     }}>Add</Button>
+                     onClick={() => add_group(client, dialogValue.label, randomColor(), session_id)
+                     }>Add</Button>
                </DialogActions>
             </form>
          </Dialog>
@@ -236,7 +207,7 @@ export default function GroupPalette() {
       </React.Fragment>
       <List>
       {group_labels.map((gl) => {
-         var the_group = groups.find(g => g.label == gl);
+         var the_group = groups.find(g => g.history[0].label == gl);
 
          	return (
          		<div 
@@ -245,7 +216,7 @@ export default function GroupPalette() {
          		>
          		<ListItem>
 					<ListItemIcon>
-                    	<FolderIcon sx={{ color: the_group?.color }}/>
+                    	<FolderIcon sx={{ color: the_group?.history[0].color }}/>
                   	</ListItemIcon>
                   	<ListItemText
 						primary={gl}

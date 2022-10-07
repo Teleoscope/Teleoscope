@@ -69,7 +69,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 args=(),
                 kwargs={
                     "username": args["username"],
-                    "label": args["label"]
+                    "label": args["label"],
+                    "color": args["color"]
                 },
             )
 

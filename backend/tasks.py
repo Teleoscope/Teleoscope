@@ -61,7 +61,8 @@ def initialize_session(*args, **kwargs):
                 "windows": [],
                 "groups": [],
                 "mlgroups": [],
-                "label": label,
+                "label": kwargs['label'],
+                "color": kwargs['color'],
             }
         ],
         "teleoscopes": []
@@ -116,6 +117,8 @@ def save_UI_state(*args, **kwargs):
     
     # update history_item to have the correct label
     history_item["label"] = session["history"][0]["label"]
+    # update history_item to have the correct color
+    history_item["color"] = session["history"][0]["color"]
 
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
@@ -307,7 +310,8 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                                     "mlgroups": mlgroups,
                                     "bookmarks": session["history"][0]["bookmarks"],
                                     "windows": session["history"][0]["windows"],
-                                    "label": session["history"][0]["label"]
+                                    "label": session["history"][0]["label"],
+                                    "color": session["history"][0]["color"]
                                 }],
                                 '$position': 0
                             }

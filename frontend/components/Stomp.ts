@@ -74,12 +74,13 @@ export function publish(client: Client, body: Body) {
 /**
  * Requests to create a new session object in MongoDB.
  */
-export function initialize_session(client: Client, username: string, label: string) {
+export function initialize_session(client: Client, username: string, label: string, color: string) {
   var body = {
     task: 'initialize_session',
     args: {
       username: username,
       label: label,
+      color: color
     }
   }
   publish(client, body);
