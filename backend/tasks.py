@@ -167,7 +167,7 @@ def initialize_session(*args, **kwargs):
 #     userlist = {u:"read" for u in usernames}
 #     userlist[user["username"]] = "write"
 
-    userlist = {user:'owner'}
+    userlist = {user["username"]:"owner"}
 
     if user is None:
         logging.info(f'User {username} does not exist.')
