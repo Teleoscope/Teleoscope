@@ -12,9 +12,9 @@ export function client_init() {
   const client = new Client({
     brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:3311/ws`,
     connectHeaders: {
-      login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME,
-      passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD,
-      host: process.env.NEXT_PUBLIC_RABBITMQ_VHOST,
+      login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME!,
+      passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD!,
+      host: process.env.NEXT_PUBLIC_RABBITMQ_VHOST!,
     },
     debug: function (str) {
       console.log(str);
@@ -50,23 +50,31 @@ export function client_init() {
 }
 
 /**
+ * Type definition for Body
+ */
+interface Body {
+  task: string,
+  args: Object
+}
+
+/**
  * Publishes a message to RabbitMQ.
  */
-export function publish(client, body) {
+export function publish(client: Client, body: Body) {
   var headers = {};
   client.publish({
     destination: "/queue/" + process.env.NEXT_PUBLIC_RABBITMQ_VHOST, // TODO: rename queue
     headers: headers,
     body: JSON.stringify(body),
   });
-  console.log("Sent from Stomp.js: ", body);
+  console.log("Sent from Stomp: ", body);
   return body;
 }
 
 /**
  * Requests to create a new session object in MongoDB.
  */
-export function initialize_session(client, username, label, color) {
+export function initialize_session(client: Client, username: string, label: string, color: string) {
   var body = {
     task: 'initialize_session',
     args: {
@@ -82,7 +90,7 @@ export function initialize_session(client, username, label, color) {
 /**
  * Saves the workspace UI state (window locations, bookmarks)
  */
- export function save_UI_state(client, session_id, history_item) {
+ export function save_UI_state(client: Client, session_id: string, history_item) {
   var body = {
     task: 'save_UI_state',
     args: {
@@ -97,11 +105,10 @@ export function initialize_session(client, username, label, color) {
 /**
  * Requests to create a Teleoscope object in MongoDB.
  */
-export function initialize_teleoscope(client, search_term, session_id) {
+export function initialize_teleoscope(client: Client, session_id: string) {
   var body = {
     task: 'initialize_teleoscope',
     args: {
-      label: search_term,
       session_id: session_id
     }
   }
@@ -112,7 +119,7 @@ export function initialize_teleoscope(client, search_term, session_id) {
 /**
  * Saves a Teleoscope history item.
  */
-export function save_teleoscope_state(client, _id, history_item) {
+export function save_teleoscope_state(client: Client, _id: string, history_item) {
   //const obj_id = ObjectId(_id);
   var body = {
     task: 'save_teleoscope_state',
@@ -121,7 +128,6 @@ export function save_teleoscope_state(client, _id, history_item) {
       history_item: history_item
     }
   }
-  console.log("The object id is: " + _id);
   publish(client, body);
   return body;
 }
@@ -129,7 +135,7 @@ export function save_teleoscope_state(client, _id, history_item) {
 /**
  * Requests to create a new group object in MongoDB.
  */
-export function add_group(client, label, color, session_id) {
+export function add_group(client: Client, label: string, color: string, session_id: string) {
   var body = {
     task: 'add_group',
     args: {
@@ -145,7 +151,7 @@ export function add_group(client, label, color, session_id) {
 /**
  * Add a post to a group.
  */
-export function add_post_to_group(client, group_id, post_id) {
+export function add_post_to_group(client: Client, group_id: string, post_id: string) {
   var body = {
     task: 'add_post_to_group',
     args: {
@@ -160,7 +166,7 @@ export function add_post_to_group(client, group_id, post_id) {
 /**
  * Remove a post from a group.
  */
-export function remove_post_from_group(client, group_id, post_id) {
+export function remove_post_from_group(client: Client, group_id: string, post_id: string) {
   var body = {
     task: 'remove_post_from_group',
     args: {
@@ -175,7 +181,7 @@ export function remove_post_from_group(client, group_id, post_id) {
 /**
  * Update a group's label.
  */
-export function update_group_label(client, group_id, label) {
+export function update_group_label(client: Client, group_id: string, label: string) {
   var body = {
     task: 'update_group_label',
     args: {
@@ -190,7 +196,7 @@ export function update_group_label(client, group_id, label) {
 /**
  * Request to add a note for a particular post.
  */
-export function add_note(client, post_id) {
+export function add_note(client: Client, post_id: string) {
   var body = {
     task: 'add_note',
     args: {
@@ -204,7 +210,7 @@ export function add_note(client, post_id) {
 /**
  * Updates a note's content.
  */
-export function update_note(client, post_id, content) {
+export function update_note(client: Client, post_id: string, content) {
   var body = {
     task: 'update_note',
     args: {
@@ -219,11 +225,10 @@ export function update_note(client, post_id, content) {
 /**
  * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
  */
- export function reorient(client, search_term, teleoscope_id, positive_docs, negative_docs) {
+ export function reorient(client: Client, teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>) {
   var body = {
     task: "reorient",
     args: {
-      query: search_term, // TODO
       teleoscope_id: teleoscope_id, // TODO
       positive_docs: positive_docs,
       negative_docs: negative_docs,
@@ -236,7 +241,7 @@ export function update_note(client, post_id, content) {
 /**
  * Create MLGroups using the UMAP and HBDSCAN with the given groups' posts as seeds.
  */
-export function cluster_by_groups(client, group_id_strings, teleoscope_oid, session_oid) {
+export function cluster_by_groups(client: Client, group_id_strings: Array<string>, teleoscope_oid: string, session_oid: string) {
   var body = {
     task: "cluster_by_groups",
     args: {

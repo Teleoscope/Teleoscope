@@ -4,7 +4,7 @@ console.log("Reloading ActiveSessionID ");
 export const ActiveSessionID = createSlice({
   name: 'activeSessionID',
   initialState: {
-    value: -1,
+    value: "-1",
   },
   reducers: {
     sessionActivator: (state, action) => {

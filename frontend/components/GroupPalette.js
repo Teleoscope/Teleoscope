@@ -28,7 +28,7 @@ import { addWindow } from "../actions/windows";
 import { dragged } from "../actions/windows";
 
 // utils
-import { add_group } from "../components/Stomp.js";
+import { add_group } from "../components/Stomp.ts";
 
 // contexts
 import { StompContext } from '../context/StompContext'

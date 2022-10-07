@@ -20,7 +20,7 @@ import CloseIcon from "@mui/icons-material/Close";
 
 //utils
 import useSWRAbstract from "../util/swr"
-import { update_note } from "../components/Stomp.js";
+import { update_note } from "../components/Stomp.ts";
 
 // contexts
 import { StompContext } from '../context/StompContext'

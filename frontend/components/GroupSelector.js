@@ -22,7 +22,7 @@ import { group, addGroup } from "../actions/groups";
 
 // contexts
 import { StompContext } from '../context/StompContext';
-import { add_post_to_group, remove_post_from_group} from '../components/Stomp';
+import { add_post_to_group, remove_post_from_group} from '../components/Stomp.ts';
 
 //utils
 import useSWRAbstract from "../util/swr"

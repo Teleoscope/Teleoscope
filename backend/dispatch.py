@@ -28,13 +28,6 @@ queue = Queue(
     auth.rabbitmq["vhost"])
 
 
-def get_random_string(length):
-    # choose from all lowercase letter
-    letters = string.ascii_lowercase
-    result_str = ''.join(random.choice(letters) for i in range(length))
-    return result_str
-
-
 class WebTaskConsumer(bootsteps.ConsumerStep):
 
     def get_consumers(self, channel):
@@ -52,14 +45,12 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         res = None
 
         # These should exactly implement the interface standard
-        # Make sure they look like Stomp.js
-    
+        # Make sure they look like Stomp
 
         if task == "initialize_teleoscope":
             res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
-                    "label": args['label'],
                     "session_id": args["session_id"]
                 },
             )
