@@ -193,7 +193,7 @@ def initialize_session(*args, **kwargs):
         db.users.update_many(
             {
                 "username": {
-                    "$in": usernames
+                    "$in": user
                 }
             },
             {
