@@ -1,5 +1,5 @@
 // WindowTopBar.js
-import React, {useState} from "react";
+import React, { useState } from "react";
 
 // MUI
 import Stack from "@mui/material/Stack";
@@ -17,32 +17,32 @@ import { minimizeWindow, maximizeWindow, checkWindow, moveWindowToFront } from "
 
 
 export default function WindowTopBar(props) {
-	const dispatch = useDispatch();	
+	const dispatch = useDispatch();
 	return (
-		<div className="drag-handle" style={{cursor:"move"}}>
-		<Stack direction="row" alignItems="center" justifyContent="space-between">
-			<Stack direction="row" alignItems="center">
-			<IconButton size="small"
-				onClick={() => {
-					props.handleShow();
-					dispatch(moveWindowToFront(props.id))
-				}}
-			>{props.icon}</IconButton>
-			<Tooltip title={props.title}>
-			<Typography 
-				variant="subtitle" 
-				gutterBottom 
-				component="div" 
-				noWrap
-				sx={{pt:0.6}} 
-				// className="drag-handle"
-			>{props.title}
-			</Typography>
-			</Tooltip>
+		<div className="drag-handle" style={{ cursor: "move" }}>
+			<Stack direction="row" alignItems="center" justifyContent="space-between">
+				<Stack direction="row" alignItems="center">
+					<IconButton size="small"
+						onClick={() => {
+							props.handleShow();
+							dispatch(moveWindowToFront(props.id))
+						}}
+					>{props.icon}</IconButton>
+					<Tooltip title={props.title}>
+						<Typography
+							variant="subtitle"
+							gutterBottom
+							component="div"
+							noWrap
+							sx={{ pt: 0.6 }}
+						// className="drag-handle"
+						>{props.title}
+						</Typography>
+					</Tooltip>
+				</Stack>
+				<CloseButton id={props.id} size="small" />
 			</Stack>
-			<CloseButton id={props.id} size="small"/>
-		</Stack>
-		<Divider></Divider>
+			<Divider></Divider>
 		</div>
 	)
 }

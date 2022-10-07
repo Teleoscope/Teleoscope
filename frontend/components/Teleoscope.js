@@ -73,7 +73,7 @@ export default function Teleoscope(props) {
     }
     return ret;
   });
-  
+
   var data = [];
   if (teleoscope) {
     var history = teleoscope["history"];
@@ -85,39 +85,39 @@ export default function Teleoscope(props) {
     return (
 
 
-        <div style={{overflow:"auto", height: "100%"}}>
-            
-    
+      <div style={{ overflow: "auto", height: "100%" }}>
+
+
         <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
-        All Teleoscopes
+          All Teleoscopes
         </Typography>
         <List>
-            {teleoscopes?.map((t) => { 
-              return ( <ListItem 
-                          id={t._id}
-                          onClick={() => setTeleoscope_id(t._id)}
-                      >{t.label}
-                       </ListItem>
-              )
-            })}
+          {teleoscopes?.map((t) => {
+            return (<ListItem
+              id={t._id}
+              onClick={() => setTeleoscope_id(t._id)}
+            >{t.label}
+            </ListItem>
+            )
+          })}
         </List>
-        </div>
-    )    
+      </div>
+    )
 
   } else {
     return (
-      <div style={{overflow:"auto", height: "100%"}}>
+      <div style={{ overflow: "auto", height: "100%" }}>
 
-    
-      <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
+
+        <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
           Teleoscope: {teleoscope?.history[0].label}
-      </Typography>
-        {teleoscope_loading ? <LoadingButton loading={true}/> : <PostList pagination={true} data={data}></PostList>}
+        </Typography>
+        {teleoscope_loading ? <LoadingButton loading={true} /> : <PostList pagination={true} data={data}></PostList>}
       </div>
     )
-    
+
   }
 
 
-  
+
 }

@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 
 // MUI imports
-import ListItemText from "@mui/material/ListItemText";
 import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 
@@ -15,7 +14,7 @@ export default function PostTitle(props) {
    return (
       <Tooltip title={props.title} placement="top">
          <Typography
-            variant={props.size=="small" ? "caption" : "subtitle"}
+            variant={props.size == "small" ? "caption" : "subtitle"}
             color={props.color ? props.color : "black"}
             noWrap={props.noWrap}
          >

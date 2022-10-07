@@ -1,28 +1,21 @@
 import React, { useState, useContext } from "react";
 
 // Mui imports
-import FormControl from '@mui/material/FormControl';
-
-import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import InputLabel from '@mui/material/InputLabel';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
-import Select from '@mui/material/Select';
-import OutlinedInput from '@mui/material/OutlinedInput';
 import FolderIcon from '@mui/icons-material/Folder';
 import Tooltip from '@mui/material/Tooltip';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 
 // actions 
-import { useSelector, useDispatch } from "react-redux";
-import { group, addGroup } from "../actions/groups";
+import { useSelector } from "react-redux";
 
 // contexts
 import { StompContext } from '../context/StompContext';
-import { add_post_to_group, remove_post_from_group} from '../components/Stomp.ts';
+import { add_post_to_group, remove_post_from_group } from '../components/Stomp.ts';
 
 //utils
 import useSWRAbstract from "../util/swr"
@@ -30,83 +23,55 @@ import useSWRAbstract from "../util/swr"
 export default function groupSelector(props) {
 
    const client = useContext(StompContext);
-
-   const dispatch = useDispatch();
-
    const session_id = useSelector((state) => state.activeSessionID.value);
-   const { groups, groups_loading, groups_error } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
-   const group_labels = groups ? groups.map((g) => {return g.label}) : []
+   const { groups } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
 
    const groups_this_post_belongs_to = groups ? groups.filter((g) => {
       return g.history[0].included_posts.includes(props.id)
    }) : [];
-   const [menuItem, setMenuItem] = React.useState([]);
-
-   const ITEM_HEIGHT = 48;
-   const ITEM_PADDING_TOP = 8;
 
    const [anchorEl, setAnchorEl] = useState(null);
    const open = Boolean(anchorEl);
    const handleClick = (event) => {
-     setAnchorEl(event.currentTarget);
+      setAnchorEl(event.currentTarget);
    };
 
    const handleClose = () => {
       setAnchorEl(null);
    };
 
-   const handleChange = (event) => {
-      const {
-        target: { value },
-      } = event;
-      setMenuItem(
-        // On autofill we get a stringified value.
-        typeof value === 'string' ? value.split(',') : value,
-      );
-    };
-
-    const handleSelect = (group_id) => {
+   const handleSelect = (group_id) => {
       if (groups_this_post_belongs_to.find((item) => item.id == props.id)) {
          remove_post_from_group(client, group_id, props.id);
       } else {
          add_post_to_group(client, group_id, props.id);
       }
       handleClose();
-    }
-
-   const MenuProps = {
-      PaperProps: {
-         style: {
-            maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-            width: 250,
-         },
-      },
-   };
-
+   }
 
    const GroupIconHandler = (props) => {
       if (props.groups.length == 0) {
          return (
-               <FolderOutlinedIcon 
-                  sx={{ color: "#BBBBBB" }} 
-                  style={{ fontSize: 15 }} />
+            <FolderOutlinedIcon
+               sx={{ color: "#BBBBBB" }}
+               style={{ fontSize: 15 }} />
          )
       }
       if (props.groups.length == 1) {
          var g = props.groups[0];
          return (
-               <Tooltip title={g.label} placement="top">
+            <Tooltip title={g.label} placement="top">
                <FolderIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
-               </Tooltip>         
+            </Tooltip>
          )
       }
       if (props.groups.length > 1) {
          var g = props.groups[0];
          return (
-               <Tooltip title={g.label} placement="top">
+            <Tooltip title={g.label} placement="top">
                <FolderCopyIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
-               </Tooltip>
-            )
+            </Tooltip>
+         )
       }
    }
 
@@ -126,13 +91,14 @@ export default function groupSelector(props) {
 
                return (
 
-               <MenuItem
-                  value={_id}
-                  onClick={() => handleSelect(_id)}>
-                  <FolderIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
-                  <ListItemText primary={g.label} />
-               </MenuItem>
-            )}) : <MenuItem>No groups added yet...</MenuItem>}
+                  <MenuItem
+                     value={_id}
+                     onClick={() => handleSelect(_id)}>
+                     <FolderIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
+                     <ListItemText primary={g.label} />
+                  </MenuItem>
+               )
+            }) : <MenuItem>No groups added yet...</MenuItem>}
          </Menu>
       </div>
    )

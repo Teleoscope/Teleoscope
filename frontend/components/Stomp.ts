@@ -1,4 +1,4 @@
-import { Client, Message } from "@stomp/stompjs";
+import { Client } from "@stomp/stompjs";
 // TODO: look at websocket example code here and replicate
 // anywhere that needs to route a request to the server
 // possibly best to move this into an action? I'm unsure
@@ -23,13 +23,13 @@ export function client_init() {
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000,
   });
-  
+
   /**
    * Called when the client connects to RabbitMQ.
    */
   client.onConnect = function (frame) {
-      // Do something, all subscribes must be done is this callback
-      // This is needed because this will be executed after a (re)connect
+    // Do something, all subscribes must be done is this callback
+    // This is needed because this will be executed after a (re)connect
     console.log("Connected to RabbitMQ webSTOMP server.");
   };
 
@@ -90,7 +90,7 @@ export function initialize_session(client: Client, username: string, label: stri
 /**
  * Saves the workspace UI state (window locations, bookmarks)
  */
- export function save_UI_state(client: Client, session_id: string, history_item) {
+export function save_UI_state(client: Client, session_id: string, history_item) {
   var body = {
     task: 'save_UI_state',
     args: {
@@ -225,7 +225,7 @@ export function update_note(client: Client, post_id: string, content) {
 /**
  * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
  */
- export function reorient(client: Client, teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>) {
+export function reorient(client: Client, teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>) {
   var body = {
     task: "reorient",
     args: {
