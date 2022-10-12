@@ -5,10 +5,6 @@ import { Provider } from "react-redux";
 import { CookiesProvider } from "react-cookie";
 import { SWRConfig } from 'swr'
 
-// Login
-import { userService } from '../services/user.service';
-import { Link } from '../components/Login/Link';
-
 // store
 import store from "../stores/store";
 
@@ -22,125 +18,35 @@ import { StompContext, client } from "../context/StompContext"
 // API fetcher for SWR global config
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
-// import the login components
-import LoginForm from "../components/Login/LoginForm"
-import Registration from "../components/Login/RegisterUser/RegistrationPage";
 
 export default function Home({ isConnected }) {
-
-  // test user for login page
-  // This will be deleted when we connect it to
-  // mongoDB with actual login and passwords
-  const adminUser = {
-    email: "admin@teleoscope.com",
-    password: "teleoscope"
-  }
-
-  // // used to set the user from the login and to catch errors if the login is tried with bad credentials
-  // const [user, setUser] = useState({ name: "Kenny", email: "" });
-  // const [error, setError] = useState("");
-  // const [registration, setRegistrationPage] = useState(false);
-
-  // // function for logging in the user
-  // // if the email and password match the mock user and password we then set 
-  // // the name and email to that information
-  // const Login = details => {
-  //   if (details.email == adminUser.email && details.password == adminUser.password) {
-  //     console.log("Logged In")
-  //     setUser({
-  //       name: details.name,
-  //       email: details.email
-  //     })
-  //   } else {
-  //     console.log("Details do not match")
-  //     console.log(details)
-  //   }
-  // }
-
-  // // function for logging out the user, sets the email and password to null
-  // const Logout = () => {
-  //   console.log("Logged Out")
-  //   setUser({
-  //     email: "",
-  //     password: ""
-  //   })
-  // }
-
-  // // function to the registration hook to set registration to true or false
-  // const Register = () => {
-  //   setRegistrationPage(!registration)
-  // }
-
   return (
-  //   <div>
-  //     {// set up as full page
-  //     registration ? (
-  //       <StompContext.Provider value={client}>
-  //         <Provider store={store}>
-  //           <Registration setRegistration={Register} />
-  //         </Provider>
-  //       </StompContext.Provider>
-  //       ) :
-  //       <div>
-  //         {(user.email != "") ? (
-  //           <SWRConfig value={{
-  //             fetcher: fetcher,
-  //             errorRetryCount: 10,
-  //             refreshInterval: 250
-  //           }}>
-  //               <CookiesProvider>
-  //                 <div className="container">
-  //                   <Head>
-  //                     <title>Explore Documents</title>
-  //                     <link rel="icon" href="/favicon.ico" />
-  //                   </Head>
-
-  //                   <main>
-  //                     <Provider store={store}>
-  //                       {console.log("isConnected", isConnected)}
-  //                       <Workspace isConnected={isConnected} Logout={Logout} />
-  //                     </Provider>
-  //                   </main>
-  //                 </div>
-  //               </CookiesProvider>
-  //           </SWRConfig>
-  //         ) : (
-  //           <Provider store={store}>
-  //             <LoginForm Login={Login} error={error} setRegistration={Register} />
-  //           </Provider>
-  //         )
-  //         }
-  
-  //       </div>
-  //     }
-  //   </div>
-  // );
-  <div className="p-4">
+    <div className="p-4">
+      <div className="container">
+        <SWRConfig value={{
+          fetcher: fetcher,
+          errorRetryCount: 10,
+          refreshInterval: 250
+        }}>
+          <CookiesProvider>
             <div className="container">
-            <SWRConfig value={{
-              fetcher: fetcher,
-              errorRetryCount: 10,
-              refreshInterval: 250
-            }}>
-                <CookiesProvider>
-                  <div className="container">
-                    <Head>
-                      <title>Explore Documents</title>
-                      <link rel="icon" href="/favicon.ico" />
-                    </Head>
+              <Head>
+                <title>Explore Documents</title>
+                <link rel="icon" href="/favicon.ico" />
+              </Head>
 
-                    <main>
-                      <Provider store={store}>
-                        {console.log("isConnected", isConnected)}
-                        <Workspace isConnected={isConnected} Logout={Logout} />
-                      </Provider>
-                    </main>
-                  </div>
-                </CookiesProvider>
-            </SWRConfig>
+              <main>
+                <Provider store={store}>
+                  {console.log("isConnected", isConnected)}
+                  <Workspace isConnected={isConnected}/>
+                </Provider>
+              </main>
             </div>
-        </div>
-    );
+          </CookiesProvider>
+        </SWRConfig>
+      </div>
+    </div>
+  );
 }
 
 

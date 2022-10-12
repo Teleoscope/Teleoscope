@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 
 import { Link, Spinner } from 'components/Login';
-import { Layout } from 'components/Registeruser';
+import Layout from 'components/Login/Registeruser'
+//import { Layout } from '../../components/Login/RegisterUser/Layout';
 import { userService } from 'services';
 
 export default Index;

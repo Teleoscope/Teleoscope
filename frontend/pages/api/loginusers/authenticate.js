@@ -12,6 +12,7 @@ export default apiHandler({
 
 function authenticate(req, res) {
     const { username, password } = req.body;
+    console.log('Req Body', req.body)
     const user = usersRepo.find(u => u.username === username);
 
     // validate

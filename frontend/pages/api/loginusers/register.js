@@ -7,8 +7,11 @@ export default apiHandler({
 });
 
 function register(req, res) {
+
+    console.log('Req Body', req.body);
     // split out password from user details 
     const { password, ...user } = req.body;
+    console.log('Registration Req', req.body)
 
     // validate
     if (usersRepo.find(x => x.username === user.username))

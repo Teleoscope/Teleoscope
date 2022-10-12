@@ -1,6 +1,5 @@
 import getConfig from 'next/config';
 
-//import { userService } from '../services/user.service';
 import { userService } from 'services';
 
 const { publicRuntimeConfig } = getConfig();
@@ -27,7 +26,8 @@ function post(url, body) {
       credentials: 'include',
       body: JSON.stringify(body)
    };
-   return fetch(url, requestOptions).then(handleResponse);
+   return fetch(url, requestOptions);
+   //.then(handleResponse);
 }
 
 function put(url, body) {
@@ -55,6 +55,7 @@ function authHeader(url) {
    const user = userService.userValue;
    const isLoggedIn = user && user.token;
    const isApiUrl = url.startsWith(publicRuntimeConfig.apiUrl);
+
    if (isLoggedIn && isApiUrl) {
       return { Authorization: `Bearer ${user.token}` };
    } else {
@@ -63,8 +64,11 @@ function authHeader(url) {
 }
 
 function handleResponse(response) {
+   console.log('Response', response)
    return response.text().then(text => {
       const data = text && JSON.parse(text);
+      console.log('Text', text)
+      console.log('data', data)
 
       if (!response.ok) {
          if ([401, 403].includes(response.status) && userService.userValue) {

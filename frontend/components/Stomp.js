@@ -257,19 +257,22 @@ export function add_login(client, username, password) {
   //verify password
   const doesPasswordMatch = bcrypt.compareSync(yourPasswordFromLoginForm, yourHashedPassword)
 */
-export function create_account(client, name, username, email, password) {
+export function create_account(client, jsonData) {
   //hash(password) the function uses the bcrypt hashing algorithm for now
   //const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync());
+
+  const {firstName, lastName, username, password} = jsonData;
   var body = {
     task: "create_account",
     args: {
-      name: name,
+      firstName: firstName,
+      lastName: lastName,
       username: username,
-      email: email,
-      //password: hashedPassword
       password: password
     }
   }
+
+  console.log(args);
 
   publish(client, body);
   return body;

@@ -26,10 +26,6 @@ function App({ Component, pageProps }) {
         // on initial load - run auth check 
         authCheck(router.asPath);
 
-        console.log('Router Path', router.asPath)
-        console.log('Router Pathname', router.pathname)
-        console.log('Router router', router.route)
-
         // on route change start - hide page content by setting authorized to false  
         const hideContent = () => setAuthorized(false);
         router.events.on('routeChangeStart', hideContent);
@@ -42,14 +38,13 @@ function App({ Component, pageProps }) {
             router.events.off('routeChangeStart', hideContent);
             router.events.off('routeChangeComplete', authCheck);
         }
-
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     function authCheck(url) {
         // redirect to login page if accessing a private page and not logged in 
         setUser(userService.userValue);
-        const publicPaths = ['/account/login', '/account/register'];
+        const publicPaths = ['/account/login', '/account/register', 'api/loginusers/register'];
         const path = url.split('?')[0];
         if (!userService.userValue && !publicPaths.includes(path)) {
             setAuthorized(false);

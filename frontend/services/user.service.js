@@ -1,3 +1,4 @@
+import { useContext } from 'react';
 import { BehaviorSubject } from 'rxjs';
 import getConfig from 'next/config';
 import Router from 'next/router';
@@ -7,11 +8,12 @@ import { fetchWrapper } from '../helpers/fetch-wrapper';
 // returns and object { apiURL: localhost:3000/api}
 const { publicRuntimeConfig } = getConfig();
 
-// baseUrl is just localhost:3000/api/users
+// baseUrl is just localhost:3000/api/loginusers
 const baseUrl = `${publicRuntimeConfig.apiUrl}/loginusers`;
 const userSubject = new BehaviorSubject(process.browser && JSON.parse(localStorage.getItem('user'))); // have to change this to get from mongoDB
 
 export const userService = {
+    userSubject: userSubject,
     user: userSubject.asObservable(),
     get userValue () { return userSubject.value },
     login,
