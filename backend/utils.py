@@ -67,6 +67,7 @@ def mergeCollections():
     for post in cursor:
         findres = list(db.clean.posts.v3.find({"id": post["id"]}))
         if len(findres) == 0:
+            print(post["id"], "not found")
             db.clean.posts.v3.update_one({"id": post["id"]}, {"$set": post}, upsert=True)
         else:
             print(post["id"], "found")
