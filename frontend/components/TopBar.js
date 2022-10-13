@@ -16,6 +16,11 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import InputAdornment from '@mui/material/InputAdornment';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import OutlinedInput from '@mui/material/OutlinedInput';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -26,7 +31,17 @@ import { mark, loadBookmarkedPosts } from "../actions/bookmark";
 import { getGroups } from "../actions/groups";
 
 // utilities
-import { reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session } from "../components/Stomp.ts";
+import {
+    reorient,
+    initialize_teleoscope,
+    save_UI_state,
+    save_teleoscope_state,
+    load_teleoscope_state,
+    initialize_session,
+    add_group,
+    add_user_to_session
+} from "../components/Stomp.ts";
+
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../util/swr"
 
@@ -40,7 +55,8 @@ export default function TopBar(props) {
   const { users, users_loading, users_error } = useSWRAbstract("users", `/api/users/`);
   const session_id = useSelector((state) => state.activeSessionID.value);
   const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
-  console.log("Session top", session, session_id);
+  const [value, setValue] = React.useState(null);
+  const [open, toggleOpen] = React.useState(false);
   const [cookies, setCookie] = useCookies(["user"]);
 
   const windows = useSelector((state) => state.windows.windows); // TODO rename
@@ -95,9 +111,22 @@ export default function TopBar(props) {
       )
   }
 
-
+  const getUsers = (username) => {
+      if (session) {
+          for (const i in users) {
+              var user = users[i];
+              if (user["username"] != username) {
+                  return (<MenuItem value={user}>{user["username"]}</MenuItem>)
+              }
+          }
+      }
+      return (
+          <MenuItem value={"No session selected..."}>No session selected...</MenuItem>
+      )
+  }
 
   const load_UI_state = () => {
+
     var history_item = session.history[0];
     dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
@@ -118,38 +147,31 @@ export default function TopBar(props) {
   
 
 
+  const [dialogValue, setDialogValue] = React.useState({
+      label: '',
+  });
+
+  const handleClickOpen = () => {
+      toggleOpen(true);
+  };
+
+  const handleClose = () => {
+        setDialogValue({
+            label: '',
+        });
+        toggleOpen(false);
+  };
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
-        style={{ height: 60, backgroundColor: get_color() }} // TODO : background color should reflect session color
+        style={{ height: 60, backgroundColor: get_color(cookies.user) }} // TODO : background color should reflect session color
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
 
-            <Button 
-               size="small"  
-               variant="text"  
-               onClick={() => save_UI_state( 
-                 client,  
-                 session_id,  
-                 { // history_item in save_UI_state in Stomp 
-                     "bookmarks": bookmarks, 
-                     "windows": windows, 
-                     "label": get_label(),
-                     "color": get_color(),
-                 }) 
-               } 
-               style={{ 
-                 backgroundColor: "#FFFFFF", 
-                 color: "black", 
-                 fontSize: 12, 
-                 fontWeight: 700, 
-               }} 
-             >
-               Save Workspace 
-             </Button> 
-      
+
             <TextField
               id="input-with-icon-textfield"
               sx={{width: 200, backgroundColor: 'white', }}
@@ -173,11 +195,11 @@ export default function TopBar(props) {
               sx={{width: 200, backgroundColor: 'white', }}
               variant="filled"
               >
-              <InputLabel id="demo-simple-select-label">Active Session</InputLabel>
+                <InputLabel id="demo-simple-select-label">Session</InputLabel>
               <Select
                 labelId="demo-simple-select-label"
                 id="demo-simple-select"
-                value={session_id}
+                // value={session_id}
                 label="Session ID"
                 onChange={(event) => handleSessionChange(event)}
               >
@@ -197,6 +219,76 @@ export default function TopBar(props) {
              </Button>
             </Select>
             </FormControl>
+              <Button
+                  onClick={handleClickOpen}
+                  style={{
+                  backgroundColor: "#FFFFFF",
+                  color: "black",
+                  fontSize: 12,
+                  fontWeight: 700,
+              }}>
+                  Add User to Session
+              </Button>
+              <Dialog disableEscapeKeyDown open={open} onClose={handleClose}>
+                  <DialogTitle>Collaborate with User</DialogTitle>
+                  <DialogContent>
+                      <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
+                          <FormControl
+                              sx={{width: 200, backgroundColor: 'white', }}
+                              variant="filled"
+                          >
+                              <InputLabel id="demo-simple-select-label">User</InputLabel>
+                              <Select
+                                  labelId="demo-simple-select-label"
+                                  id="demo-simple-select"
+                                  // value={session_id}
+                                  // label="Session ID"
+                                  onChange={(event) =>
+                                      setDialogValue({
+                                          label: event.target.value.username,
+
+                                      })
+                                  }
+                              >
+                                  {getUsers(cookies.user)}
+
+                              </Select>
+                          </FormControl>
+                      </Box>
+                  </DialogContent>
+                  <DialogActions>
+                      <Button onClick={handleClose}>Cancel</Button>
+                      <Button
+                          type="submit"
+                          onClick={() => {
+                              add_user_to_session(client, dialogValue.label, session_id)
+                              handleClose()
+                          } // add user to userlist
+                          }>Add</Button>
+                  </DialogActions>
+              </Dialog>
+              <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => save_UI_state( // could maybe use a check that sees if a session is active
+                      client,
+                      session_id,
+                      { // history_item in save_UI_state in Stomp.js
+                          "bookmarks": bookmarks,
+                          "windows": windows,
+                          "label": get_label(cookies.user),
+                          "color": get_color(cookies.user),
+                      })
+                  }
+                  style={{
+                      backgroundColor: "#FFFFFF",
+                      color: "black",
+                      fontSize: 12,
+                      fontWeight: 700,
+                  }}
+              >
+                  Save Workspace
+              </Button>
           </Stack>
         </Toolbar>
       </AppBar>
