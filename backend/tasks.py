@@ -255,7 +255,7 @@ def save_teleoscope_state(*args, **kwargs):
 
     history_item["timestamp"] = datetime.datetime.utcnow()
     with session.start_transaction():
-        result = db.teleoscopes.update({"_id": obj_id},
+        result = db.teleoscopes.update_one({"_id": obj_id},
             {
                 '$push': {
                     "history": {
