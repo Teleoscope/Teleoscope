@@ -17,10 +17,10 @@ export default function Group(props) {
   const color = group?.color;
   const label = group?.label;
   console.log("groupy", group, label, color)
-  const data = group?.history[0].included_posts.map((p) => {return [p, 1.0]});
+  const data = group?.history[0].included_posts.map((p) => { return [p, 1.0] });
 
   return (
-    <div style={{overflow:"auto", height: "100%"}}>
+    <div style={{ overflow: "auto", height: "100%" }}>
       <PostList data={data} pagination={true}></PostList>
     </div>
   );

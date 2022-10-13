@@ -118,12 +118,12 @@ export default function BottomAppBar(props) {
       setTimeout(() => {
         setQuery(e.target.value);
         dispatch(updateWindow({ i: "%search", term: e.target.value }));
-      }, 250);  
+      }, 250);
     }
   }
 
   return (
-      <div style={{overflow:"auto", height: "100%"}}>
+    <div style={{ overflow: "auto", height: "100%" }}>
       <Search>
         <SearchIconWrapper>
           <SearchIcon />

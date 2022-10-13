@@ -30,4 +30,3 @@ test('Getting a single session by ID.', () => {
     .then(res => res.json())
     .then(data => expect(data).toMatchObject(session_example))
 });
-
