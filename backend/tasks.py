@@ -720,7 +720,7 @@ class reorient(Task):
         history_obj = {
             '_id': teleoscope_id,
             'history_item': {
-                'label': teleoscope['history'][-1]['label'],
+                'label': teleoscope['history'][0]['label'],
                 'positive_docs': positive_docs,
                 'negative_docs': negative_docs,
                 'stateVector': qprime.tolist(),

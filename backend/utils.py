@@ -61,6 +61,11 @@ def commit_with_retry(session):
                 raise
 
 
+def mergeCollections():
+    db = connect()
+    cursor = db.clean.posts.v2.find({})
+    for post in cursor:
+        db.clean.posts.v3.update({"id": post["id"]}, post, upsert=True)
 
 # def update_embedding(q_vector, feedback_vector, feedback):
 #     SENSITIVITY = 0.75
