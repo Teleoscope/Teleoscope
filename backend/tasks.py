@@ -63,9 +63,9 @@ def initialize_session(*args, **kwargs):
                 "mlgroups": [],
                 "label": kwargs['label'],
                 "color": kwargs['color'],
+                "teleoscopes": []
             }
         ],
-        "teleoscopes": []
     }
     with transaction_session.start_transaction():
         result = db.sessions.insert_one(obj, session=transaction_session)
@@ -154,7 +154,7 @@ def initialize_teleoscope(*args, **kwargs):
 
     # create a new query document
     with session.start_transaction():
-        teleoscope_id = db.teleoscopes.insert_one({
+        teleoscope_result = db.teleoscopes.insert_one({
                 "creation_time": datetime.datetime.utcnow(),
                 "history": [
                     {
@@ -169,13 +169,18 @@ def initialize_teleoscope(*args, **kwargs):
                     }
                 ]
             }, session=session)
-        logging.info(f"New teleoscope id: {teleoscope_id.inserted_id}.")
+        logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
+
+        ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))})
+        history_item = ui_session["history"][0]
+        history_item["timestamp"] = datetime.datetime.utcnow()
+        history_item["teleoscopes"].append(ObjectId(teleoscope_result.inserted_id))
 
         # associate the newly created teleoscope with correct session
         db.sessions.update_one({'_id': ObjectId(str(session_id))},
             {
                 '$push': {
-                    "teleoscopes": ObjectId(teleoscope_id.inserted_id)
+                    "history": history_item
                 }
             }, session=session)
         utils.commit_with_retry(session)
