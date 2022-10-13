@@ -411,12 +411,14 @@ def add_post_to_group(*args, **kwargs):
                     }
                 }, session=session)
         utils.commit_with_retry(session)
-    # res = chain(
-    #             robj.s(teleoscope_id=group[],
-    #                    positive_docs=args["positive_docs"],
-    #                    negative_docs=args["negative_docs"]),
-    #             save_teleoscope_state.s()
-    # )
+    logging.info(f'Reorienting teleoscope {group["teleoscope"]} for group {group["history"][0]["label"]}.')
+    res = chain(
+                robj.s(teleoscope_id=ObjectId(str(group["teleoscope"])),
+                       positive_docs=[post_id],
+                       negative_docs=[]),
+                save_teleoscope_state.s()
+    )
+    return res
 
 @app.task
 def remove_post_from_group(*args, **kwargs):
