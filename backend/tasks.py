@@ -712,7 +712,7 @@ class reorient(Task):
         )
         scores = utils.calculateSimilarity(self.allPostVectors, qprime)
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
-        gridfsObj = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
+        gridfs_id = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
 
         rank_slice = newRanks[0:500]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
@@ -724,7 +724,7 @@ class reorient(Task):
                 'positive_docs': positive_docs,
                 'negative_docs': negative_docs,
                 'stateVector': qprime.tolist(),
-                'ranked_post_ids': gridfsObj,
+                'ranked_post_ids': ObjectId(str(gridfs_id)),
                 'rank_slice': rank_slice
             }
         }
