@@ -65,7 +65,11 @@ def mergeCollections():
     db = connect()
     cursor = db.clean.posts.v2.find({})
     for post in cursor:
-        db.clean.posts.v3.update_one({"id": post["id"]}, {"$set": post}, upsert=True)
+        findres = list(db.clean.posts.v3.find({"id": post["id"]}))
+        if len(findres) == 0:
+            db.clean.posts.v3.update_one({"id": post["id"]}, {"$set": post}, upsert=True)
+        else:
+            print(post["id"], "found")
 
 # def update_embedding(q_vector, feedback_vector, feedback):
 #     SENSITIVITY = 0.75
