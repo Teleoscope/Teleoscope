@@ -1,6 +1,6 @@
 import logging, pickle, utils, json, auth, numpy as np
 from warnings import simplefilter
-from celery import Celery, Task
+from celery import Celery, Task, chain
 from bson.objectid import ObjectId
 import datetime
 
@@ -315,7 +315,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     label = kwargs["label"]
     _id = ObjectId(str(kwargs["session_id"]))
 
-    teleoscope_result = initialize_teleoscope(_id)
+    teleoscope_result = initialize_teleoscope(session_id=_id)
 
     # Creating document to be inserted into mongoDB
     obj = {
@@ -411,12 +411,12 @@ def add_post_to_group(*args, **kwargs):
                     }
                 }, session=session)
         utils.commit_with_retry(session)
-    res = chain(
-                robj.s(teleoscope_id=args["teleoscope_id"],
-                       positive_docs=args["positive_docs"],
-                       negative_docs=args["negative_docs"]),
-                tasks.save_teleoscope_state.s()
-            )
+    # res = chain(
+    #             robj.s(teleoscope_id=group[],
+    #                    positive_docs=args["positive_docs"],
+    #                    negative_docs=args["negative_docs"]),
+    #             save_teleoscope_state.s()
+    # )
 
 @app.task
 def remove_post_from_group(*args, **kwargs):
