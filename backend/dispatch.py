@@ -83,6 +83,15 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 },
             )
 
+        if task == "add_user_to_session":
+            res = tasks.add_group.signature(
+                args=(),
+                kwargs={
+                    "username": args["username"],
+                    "session_id": args["session_id"]
+                }
+            )
+
         if task == "save_UI_state":
             res = tasks.save_UI_state.signature(
                 args=(),

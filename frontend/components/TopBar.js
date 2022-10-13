@@ -31,13 +31,21 @@ import { mark, loadBookmarkedPosts } from "../actions/bookmark";
 import { getGroups } from "../actions/groups";
 
 // utilities
-import { reorient, initialize_teleoscope, save_UI_state, save_teleoscope_state, load_teleoscope_state, initialize_session } from "../components/Stomp.js";
+import {
+    reorient,
+    initialize_teleoscope,
+    save_UI_state,
+    save_teleoscope_state,
+    load_teleoscope_state,
+    initialize_session,
+    add_group,
+    add_user_to_session
+} from "../components/Stomp.js";
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../util/swr"
 
 // contexts
 import { StompContext } from '../context/StompContext'
-import randomColor from "randomcolor";
 
 export default function TopBar(props) {
 
@@ -115,11 +123,6 @@ export default function TopBar(props) {
       )
   }
 
-    const addUser = (event) => {
-        // TODO: add user to sessions userlist
-    }
-
-
   const load_UI_state = () => {
     // TODO
     var history_length = session["history"].length;
@@ -137,9 +140,9 @@ export default function TopBar(props) {
       else { return session["history"][0].color }
   }
 
-  const handleChange = () => {
-      setAge(Number(event.target.value) || '');
-  };
+  const [dialogValue, setDialogValue] = React.useState({
+      label: '',
+  });
 
   const handleClickOpen = () => {
       toggleOpen(true);
@@ -148,15 +151,9 @@ export default function TopBar(props) {
   const handleClose = () => {
         setDialogValue({
             label: '',
-            color: '',
         });
         toggleOpen(false);
   };
-
-    const [dialogValue, setDialogValue] = React.useState({
-        label: '',
-        color: '',
-    });
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -282,11 +279,11 @@ export default function TopBar(props) {
               sx={{width: 200, backgroundColor: 'white', }}
               variant="filled"
               >
-              <InputLabel id="demo-simple-select-label">Active Session</InputLabel>
+                <InputLabel id="demo-simple-select-label">Session</InputLabel>
               <Select
                 labelId="demo-simple-select-label"
                 id="demo-simple-select"
-                value={session_id}
+                // value={session_id}
                 label="Session ID"
                 onChange={(event) => handleSessionChange(event)}
               >
@@ -330,7 +327,12 @@ export default function TopBar(props) {
                                   id="demo-simple-select"
                                   // value={session_id}
                                   // label="Session ID"
-                                  onChange={(event) => addUser(event)} // TODO: instantiate collaborator
+                                  onChange={(event) =>
+                                      setDialogValue({
+                                          label: event.target.value.username,
+
+                                      })
+                                  }
                               >
                                   {getUsers(cookies.user)}
 
@@ -340,14 +342,16 @@ export default function TopBar(props) {
                   </DialogContent>
                   <DialogActions>
                       <Button onClick={handleClose}>Cancel</Button>
-                      <Button onClick={handleClose} // TODO: on click add user to userlist
-                      >Add</Button>
+                      <Button
+                          type="submit"
+                          onClick={() => add_user_to_session(client, dialogValue.label, session_id) // add user to userlist
+                          }>Add</Button>
                   </DialogActions>
               </Dialog>
               <Button
                   size="small"
                   variant="text"
-                  onClick={() => save_UI_state(
+                  onClick={() => save_UI_state( // could maybe use a check that sees if a session is active
                       client,
                       session_id,
                       { // history_item in save_UI_state in Stomp.js

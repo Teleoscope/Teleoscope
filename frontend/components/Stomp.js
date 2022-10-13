@@ -80,6 +80,21 @@ export function initialize_session(client, username, label, color) {
 }
 
 /**
+ * adds user to userlist of a session in MongoDB.
+ */
+export function add_user_to_session(client, username, session_id) {
+  var body = {
+    task: 'add_user_to_session',
+    args: {
+      username: username,
+      session_id: session_id,
+    }
+  }
+  publish(client, body);
+  return body;
+}
+
+/**
  * Saves the workspace UI state (window locations, bookmarks)
  */
  export function save_UI_state(client, session_id, history_item) {

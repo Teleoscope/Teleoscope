@@ -194,6 +194,52 @@ def initialize_session(*args, **kwargs):
     return 200 # success
 
 '''
+add_user_to_session
+input:
+    username (string, name of user to add to session) NOTE maybe do with objectID?
+    session_id (int, represents ObjectId in int)
+
+purpose: updates the userlist in a session to include input user
+'''
+@app.task
+def add_user_to_session(*args, **kwargs):
+
+    transaction_session, db = utils.create_transaction_session()
+
+    logging.info(f'adding user to {kwargs["session_id"]}.')
+
+    # session_id needs to be typecast to ObjectId
+    session_id = ObjectId(str(kwargs["session_id"]))
+    session = db.sessions.find_one({"_id": session_id})
+
+    username = kwargs["username"]
+    user = db.users.find_one({"username": username})
+
+    userlist = session["userlist"]
+    userlist[username] = "collaborator"
+
+    # update session with new userlist that includes collaborator
+    with transaction_session.start_transaction():
+        db.sessions.update_one({"_id": session_id},
+            {
+                '$set': {
+                    "userlist" : userlist,
+                }
+            }, session=transaction_session)
+
+        db.users.update_one(
+            {"username": username},
+            {
+                "$push": {
+                    "sessions": session_id
+                }
+            }, session=transaction_session)
+
+        utils.commit_with_retry(transaction_session)
+
+    return 200 # success
+
+'''
 save_UI_state
 input: 
     session_id (int, represents ObjectId in int)
