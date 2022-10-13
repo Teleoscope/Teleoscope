@@ -73,14 +73,7 @@ export default function GroupPalette(props) {
 
    const onChangeHandler = (event, newValue) => {
       console.log("newValue", newValue)
-      // both newValue when being an added group and when being an existing group is of type string
-      if (typeof newValue === 'object' && newValue !== null && !newValue.label.includes("Add")) {
-         groupedData = groupDataMaker(newValue.label);
-         setGrouped(true);
-      } else {
-         console.log("newValue else", newValue)
-         setGrouped(false);
-      }
+
 
       if (typeof newValue === 'string') {
          console.log("newValue === string", newValue)

@@ -5,7 +5,7 @@ import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 import SpeedDialAction from '@mui/material/SpeedDialAction';
 
 // custom
-import MenuActions from "../components/MenuActions"
+import MenuActions from "../components/ContextMenuActions"
 
 // actions
 import { addWindow } from "../actions/windows";

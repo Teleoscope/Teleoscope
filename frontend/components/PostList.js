@@ -27,26 +27,23 @@ export default function PostList(props) {
     );
   }
 
+  const BuildPostListItem = (pair) => {
+    return (
+      <PostListItem id={pair[0]} key={pair[0] + "PostListItem"} {...props}>
+        {" "}
+      </PostListItem>
+    );
+  }
+
   const changePage = (event, value) => {
     setPageNumber(value);
   };
   return (
     <List dense={true}>
       {displayPagination
-        ? paginatedItems.map((pair) => {
-          return (
-            <PostListItem id={pair[0]} key={pair[0] + "PostListItem"}>
-              {" "}
-            </PostListItem>
-          );
-        })
-        : data.map((pair) => {
-          return (
-            <PostListItem id={pair[0]} key={pair[0] + "PostListItem"}>
-              {" "}
-            </PostListItem>
-          );
-        })}
+        ? paginatedItems.map(pair => BuildPostListItem(pair))
+        : data.map(pair => BuildPostListItem(pair))
+      }
 
       {displayPagination ? (
         <Stack style={{ paddingTop: 30 }}>

@@ -32,7 +32,7 @@ export default async (req, res) => {
     // returns teleoscopes
     var teleoscopes = await db.collection("teleoscopes").find({}).toArray();
     var session = await db.collection("sessions").findOne({_id: ObjectId(sessionsargs[0])});
-    var session_teleoscopes = session.teleoscopes.map((t_id) => {
+    var session_teleoscopes = session.history[0].teleoscopes.map((t_id) => {
       return t_id.toString();
     });
     var filtered_teleoscopes = teleoscopes.filter((teleoscope) => {
