@@ -190,12 +190,8 @@ def initialize_session(*args, **kwargs):
     }
     with transaction_session.start_transaction():
         result = db.sessions.insert_one(obj, session=transaction_session)
-        db.users.update_many(
-            {
-                "username": {
-                    "$in": usernames
-                }
-            },
+        db.users.update_one(
+            {"username": username},
             {
                 "$push": {
                     "sessions": result.inserted_id
