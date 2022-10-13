@@ -12,9 +12,6 @@ import store from "../stores/store";
 import Workspace from "../components/Workspace";
 import clientPromise from '../util/mongodb';
 
-// contexts
-import { StompContext, client } from "../context/StompContext"
-
 // API fetcher for SWR global config
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
