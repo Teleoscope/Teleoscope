@@ -1,5 +1,4 @@
-import React, { useState, useContext } from "react";
-import useSWR, { mutate } from "swr";
+import React, { useContext } from "react";
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 
 // material ui
@@ -7,7 +6,6 @@ import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
-import BiotechIcon from "@mui/icons-material/Biotech";
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
@@ -20,25 +18,18 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import OutlinedInput from '@mui/material/OutlinedInput';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { sessionActivator, loadActiveSessionID } from "../actions/activeSessionID";
-import { historyActivator, loadActiveHistoryItem } from "../actions/activeHistoryItem";
-import { dragged, addWindow, removeWindow, loadWindows } from "../actions/windows";
-import { mark, loadBookmarkedPosts } from "../actions/bookmark";
+import { sessionActivator } from "../actions/activeSessionID";
+import { loadWindows } from "../actions/windows";
+import { loadBookmarkedPosts } from "../actions/bookmark";
 import { getGroups } from "../actions/groups";
 
 // utilities
 import {
-    reorient,
-    initialize_teleoscope,
     save_UI_state,
-    save_teleoscope_state,
-    load_teleoscope_state,
     initialize_session,
-    add_group,
     add_user_to_session
 } from "../components/Stomp.ts";
 

@@ -241,9 +241,9 @@ def save_teleoscope_state(*args, **kwargs):
     """
     session, db = utils.create_transaction_session()
 
-    # handle kwargs
-    _id = str(kwargs["_id"])
-    history_item = kwargs["history_item"]
+    # handle args
+    history_item = args[0]["history_item"]
+    _id = str(args[0]["_id"])
 
     logging.info(f'Saving state for teleoscope {_id}.')
     obj_id = ObjectId(_id)
@@ -326,7 +326,8 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                 "timestamp": datetime.datetime.utcnow(),
                 "color": color,
                 "included_posts": included_posts,
-                "label": label
+                "label": label,
+                "action" : "initialize group"
             }]
     }
     
@@ -397,6 +398,9 @@ def add_post_to_group(*args, **kwargs):
 
     history_item = group["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
+    if post_id in history_item["included_posts"]:
+        logging.log(f'Post {post_id} already in group {group["history"][0]["label"]}.')
+        return
     history_item["included_posts"].append(post_id)
     history_item["action"] = "Add post to group"
 
@@ -418,7 +422,8 @@ def add_post_to_group(*args, **kwargs):
                        negative_docs=[]),
                 save_teleoscope_state.s()
     )
-    return res.apply_async()
+    res.apply_async()
+    return res.get()
 
 @app.task
 def remove_post_from_group(*args, **kwargs):
