@@ -418,7 +418,7 @@ def add_post_to_group(*args, **kwargs):
                        negative_docs=[]),
                 save_teleoscope_state.s()
     )
-    return res
+    return res.apply_async()
 
 @app.task
 def remove_post_from_group(*args, **kwargs):
