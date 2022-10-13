@@ -260,7 +260,10 @@ export default function TopBar(props) {
                       <Button onClick={handleClose}>Cancel</Button>
                       <Button
                           type="submit"
-                          onClick={() => add_user_to_session(client, dialogValue.label, session_id) // add user to userlist
+                          onClick={() => {
+                              add_user_to_session(client, dialogValue.label, session_id)
+                              handleClose()
+                          } // add user to userlist
                           }>Add</Button>
                   </DialogActions>
               </Dialog>
