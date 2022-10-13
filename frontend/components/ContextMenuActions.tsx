@@ -1,3 +1,4 @@
+import React from 'react';
 import SearchIcon from '@mui/icons-material/Search';
 import FlareIcon from '@mui/icons-material/Flare';
 import TopicIcon from '@mui/icons-material/Topic';

@@ -9,14 +9,14 @@ import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
 
 // custom components
-import MenuActions from "./MenuActions"
+import MenuActions from "./ContextMenuActions"
 
 // actions
 import { addWindow, selectAll, deselectAll } from "../actions/windows";
 
 // util
 import useSWRAbstract from "../util/swr"
-import { cluster_by_groups } from "./Stomp";
+import { cluster_by_groups, initialize_teleoscope } from "./Stomp";
 
 // contexts
 import { StompContext } from '../context/StompContext'
@@ -54,7 +54,10 @@ export default function ContextMenu(props) {
     const handleTestClusters = () => {
         cluster_by_groups(client, group_ids, "62a7ca02d033034450035a91", session_id);
     }
-    const ref = useRef();
+
+    const handleNewTeleoscope = (s_id) => {
+        initialize_teleoscope(client, s_id);
+    }
 
     return (
         <Menu
@@ -67,7 +70,11 @@ export default function ContextMenu(props) {
                     : undefined
             }
         >
-            <MenuItem onClick={() => handleOpenNewWindow("Teleoscope")}>New Teleoscope</MenuItem>
+            <MenuItem onClick={() => {
+                handleOpenNewWindow("Teleoscope");
+                handleNewTeleoscope(session_id);
+            }
+                }>New Teleoscope</MenuItem>
             <Divider />
             {teleoscopes?.map((t) => {
                 return (

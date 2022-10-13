@@ -26,6 +26,9 @@ export default function PostListItem(props) {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [hover, setHover] = useState(false);
+
+  const showGroupIcon = props.hasOwnProperty("showGroupIcon") ? props.showGroupIcon : true;
+
   return (
 
     <div
@@ -54,7 +57,7 @@ export default function PostListItem(props) {
           alignItems="center"
         >
           <BookmarkSelector id={props.id} />
-          <GroupSelector id={props.id} />
+          {showGroupIcon ? <GroupSelector id={props.id} /> : null}
           <PostTitle title={title} noWrap={false} />
         </Stack>
 

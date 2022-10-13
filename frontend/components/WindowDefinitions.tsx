@@ -37,10 +37,10 @@ export default function WindowDefinitions() {
 			tag: "fabmenu",
 		},
 		"Group": {
-			icon: (d) => { return (<TopicIcon fontSize="inherit" sx={{ color: d?.color }} />) },
+			icon: (d) => { return (<TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />) },
 			component: (w, id) => { return (<Group id={id} windata={w} />) },
 			showWindow: false,
-			title: (d) => { return d?.label },
+			title: (d) => { return d?.history[0].label },
 			tag: "group",
 		},
 		"Post": {

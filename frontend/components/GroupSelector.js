@@ -58,7 +58,7 @@ export default function groupSelector(props) {
          )
       }
       if (props.groups.length == 1) {
-         var g = props.groups[0];
+         var g = props.groups[0].history[0];
          return (
             <Tooltip title={g.label} placement="top">
                <FolderIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
@@ -66,7 +66,7 @@ export default function groupSelector(props) {
          )
       }
       if (props.groups.length > 1) {
-         var g = props.groups[0];
+         var g = props.groups[0].history[0];
          return (
             <Tooltip title={g.label} placement="top">
                <FolderCopyIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
@@ -79,7 +79,6 @@ export default function groupSelector(props) {
       <div>
          <IconButton onClick={handleClick}>
             <GroupIconHandler groups={groups_this_post_belongs_to} />
-
          </IconButton>
          <Menu
             anchorEl={anchorEl}
@@ -94,8 +93,8 @@ export default function groupSelector(props) {
                   <MenuItem
                      value={_id}
                      onClick={() => handleSelect(_id)}>
-                     <FolderIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
-                     <ListItemText primary={g.label} />
+                     <FolderIcon sx={{ color: g.history[0].color }} style={{ fontSize: 15 }} />
+                     <ListItemText primary={g.history[0].label} />
                   </MenuItem>
                )
             }) : <MenuItem>No groups added yet...</MenuItem>}
