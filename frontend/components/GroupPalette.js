@@ -31,7 +31,7 @@ import randomColor from "randomcolor";
 
 // custom components
 
-export default function GroupPalette() {
+export default function GroupPalette(props) {
 
 
    const client = useContext(StompContext);

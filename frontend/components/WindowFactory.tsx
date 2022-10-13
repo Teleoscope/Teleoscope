@@ -1,7 +1,6 @@
-// Draggable.js
-import React, { useState } from "react";
-import Window from "../components/Window"
-import WindowDefinitions from "../components/WindowDefinitions"
+import React from "react";
+import Window from "./Window"
+import WindowDefinitions from "./WindowDefinitions"
 import useSWRAbstract from "../util/swr"
 
 export default function WindowFactory(props) {

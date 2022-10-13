@@ -1,7 +1,8 @@
+import React from 'react'
+
 // mui
 import ShortTextIcon from '@mui/icons-material/ShortText';
 import TopicIcon from '@mui/icons-material/Topic';
-import FolderIcon from '@mui/icons-material/Folder';
 import FlareIcon from '@mui/icons-material/Flare';
 import CreateIcon from '@mui/icons-material/Create';
 import AddIcon from '@mui/icons-material/Add';
@@ -9,13 +10,13 @@ import SearchIcon from '@mui/icons-material/Search';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 
 // custom
-import Notes from "../components/Notes"
-import FABMenu from "../components/FABMenu"
-import Group from "../components/Group"
-import Post from "../components/Post"
-import Teleoscope from "../components/Teleoscope"
-import Search from "../components/Search"
-import GroupPalette from "../components/GroupPalette"
+import Notes from "./Notes"
+import FABMenu from "./FABMenu"
+import Group from "./Group"
+import Post from "./Post"
+import Teleoscope from "./Teleoscope"
+import Search from "./Search"
+import GroupPalette from "./GroupPalette"
 
 import { PreprocessTitle, PreprocessText } from "../util/Preprocessers"
 

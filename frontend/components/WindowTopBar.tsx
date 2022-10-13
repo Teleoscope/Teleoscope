@@ -1,5 +1,5 @@
 // WindowTopBar.js
-import React, { useState } from "react";
+import React from "react";
 
 // MUI
 import Stack from "@mui/material/Stack";
@@ -9,11 +9,11 @@ import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 
 // custom
-import CloseButton from "../components/CloseButton"
+import CloseButton from "./CloseButton"
 
 // actions
-import { useSelector, useDispatch } from "react-redux";
-import { minimizeWindow, maximizeWindow, checkWindow, moveWindowToFront } from "../actions/windows";
+import { useDispatch } from "react-redux";
+import { moveWindowToFront } from "../actions/windows";
 
 
 export default function WindowTopBar(props) {
@@ -30,7 +30,7 @@ export default function WindowTopBar(props) {
 					>{props.icon}</IconButton>
 					<Tooltip title={props.title}>
 						<Typography
-							variant="subtitle"
+							variant="subtitle1"
 							gutterBottom
 							component="div"
 							noWrap

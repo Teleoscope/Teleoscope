@@ -2,20 +2,22 @@
 import React, { useState, useContext } from "react";
 import RGL, { WidthProvider } from "react-grid-layout";
 
+import { useAppSelector, useAppDispatch } from '../hooks'
+import { RootState } from '../stores/store'
+
 // custom
-import WindowFactory from "../components/WindowFactory"
-import { getDefaultWindow } from "../components/WindowDefault"
+import WindowFactory from "./WindowFactory"
+import { getDefaultWindow } from "./WindowDefault"
 
 // css
 import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
 
 // actions
-import { useSelector, useDispatch } from "react-redux";
 import { deselectAll, checkWindow, removeWindow, addWindow, loadWindows } from "../actions/windows";
 
 // utils
-import { add_post_to_group } from "../components/Stomp.ts";
+import { add_post_to_group } from "../components/Stomp";
 
 // contexts
 import { StompContext } from '../context/StompContext'
@@ -41,11 +43,11 @@ const collides = (l1, l2) => {
 export default function WindowManager(props) {
   const client = useContext(StompContext)
 
-  const windows = useSelector((state) => state.windows.windows);
+  const windows = useAppSelector((state: RootState) => state.windows.windows);
   const posts = windows.filter(w => w.type == "Post");
   const groups = windows.filter(w => w.type == "Group");
-  const dragged_item = useSelector((state) => state.windows.dragged);
-  const dispatch = useDispatch();
+  const dragged_item = useAppSelector((state: RootState) => state.windows.dragged);
+  const dispatch = useAppDispatch();
 
   const dropping = (layout, item, e) => {
     // var item = getDefaultWindow();
@@ -112,7 +114,7 @@ export default function WindowManager(props) {
       }}
     >
       {windows.map((w) => {
-        const ref = React.createRef()
+        const ref = React.createRef<HTMLDivElement>();
         return (
           <div
             ref={ref}
