@@ -147,13 +147,13 @@ def initialize_teleoscope(*args, **kwargs):
     kwargs:
         session_id: string
     """
-    session, db = utils.create_transaction_session()
+    transaction_session, db = utils.create_transaction_session()
 
     # handle kwargs
     session_id = kwargs["session_id"]
 
     # create a new query document
-    with session.start_transaction():
+    with transaction_session.start_transaction():
         teleoscope_result = db.teleoscopes.insert_one({
                 "creation_time": datetime.datetime.utcnow(),
                 "history": [
@@ -168,7 +168,7 @@ def initialize_teleoscope(*args, **kwargs):
                         "ranked_post_ids": None
                     }
                 ]
-            }, session=session)
+            }, session=transaction_session)
         logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
 
         ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))})
@@ -177,13 +177,17 @@ def initialize_teleoscope(*args, **kwargs):
         history_item["teleoscopes"].append(ObjectId(teleoscope_result.inserted_id))
 
         # associate the newly created teleoscope with correct session
-        db.sessions.update_one({'_id': ObjectId(str(session_id))},
+
+        db.sessions.update_one({"_id": ObjectId(str(session_id))},
             {
                 '$push': {
-                    "history": history_item
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
                 }
-            }, session=session)
-        utils.commit_with_retry(session)
+            }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
     return []
 
 
