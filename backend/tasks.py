@@ -183,11 +183,15 @@ def initialize_teleoscope(*args, **kwargs):
     
     kwargs:
         session_id: string
+        label: string (optional)
     """
     transaction_session, db = utils.create_transaction_session()
 
     # handle kwargs
     session_id = kwargs["session_id"]
+    label = "default"
+    if "label" in kwargs:
+        label = kwargs["label"]
 
     ret = None
 
@@ -198,7 +202,7 @@ def initialize_teleoscope(*args, **kwargs):
                 "history": [
                     {
                         "timestamp": datetime.datetime.utcnow(),
-                        "label": "default",
+                        "label": label,
                         "rank_slice": [],
                         "reddit_ids": [],
                         "positive_docs": [],
@@ -315,7 +319,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     label = kwargs["label"]
     _id = ObjectId(str(kwargs["session_id"]))
 
-    teleoscope_result = initialize_teleoscope(session_id=_id)
+    teleoscope_result = initialize_teleoscope(session_id=_id, label=label)
 
     # Creating document to be inserted into mongoDB
     obj = {
