@@ -75,7 +75,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
         if task == "add_user_to_session":
-            res = tasks.add_group.signature(
+            res = tasks.add_user_to_session.signature(
                 args=(),
                 kwargs={
                     "username": args["username"],
