@@ -63,7 +63,7 @@ def commit_with_retry(session):
 
 def mergeCollections():
     db = connect()
-    cursor = db.clean.posts.v2.find({"id":"hetv62"})
+    cursor = db.clean.posts.v2.find({})
     for post in cursor:
         db.clean.posts.v3.update_one({"id": post["id"]}, {"$set": post}, upsert=True)
 
