@@ -16,6 +16,11 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import InputAdornment from '@mui/material/InputAdornment';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import OutlinedInput from '@mui/material/OutlinedInput';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -41,9 +46,9 @@ export default function TopBar(props) {
   const { users, users_loading, users_error } = useSWRAbstract("users", `/api/users/`);
   const session_id = useSelector((state) => state.activeSessionID.value);
   const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
-
+  const [value, setValue] = React.useState(null);
+  const [open, toggleOpen] = React.useState(false);
   const [cookies, setCookie] = useCookies(["user"]);
-
   const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
   const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals], length: 1 });
@@ -132,6 +137,26 @@ export default function TopBar(props) {
       else { return session["history"][0].color }
   }
 
+  const handleChange = () => {
+      setAge(Number(event.target.value) || '');
+  };
+
+  const handleClickOpen = () => {
+      toggleOpen(true);
+  };
+
+  const handleClose = () => {
+        setDialogValue({
+            label: '',
+            color: '',
+        });
+        toggleOpen(false);
+  };
+
+    const [dialogValue, setDialogValue] = React.useState({
+        label: '',
+        color: '',
+    });
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -141,29 +166,6 @@ export default function TopBar(props) {
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
-
-            <Button 
-               size="small"  
-               variant="text"  
-               onClick={() => save_UI_state( 
-                 client,  
-                 session_id,  
-                 { // history_item in save_UI_state in Stomp.js 
-                     "bookmarks": bookmarks, 
-                     "windows": windows, 
-                     "label": get_label(cookies.user),
-                     "color": get_color(cookies.user),
-                 }) 
-               } 
-               style={{ 
-                 backgroundColor: "#FFFFFF", 
-                 color: "black", 
-                 fontSize: 12, 
-                 fontWeight: 700, 
-               }} 
-             >
-               Save Workspace 
-             </Button> 
           {/*   <Button */}
           {/*     size="small"  */}
           {/*     variant="text"  */}
@@ -304,23 +306,66 @@ export default function TopBar(props) {
              </Button>
             </Select>
             </FormControl>
+              <Button
+                  onClick={handleClickOpen}
+                  style={{
+                  backgroundColor: "#FFFFFF",
+                  color: "black",
+                  fontSize: 12,
+                  fontWeight: 700,
+              }}>
+                  Add User to Session
+              </Button>
+              <Dialog disableEscapeKeyDown open={open} onClose={handleClose}>
+                  <DialogTitle>Collaborate with User</DialogTitle>
+                  <DialogContent>
+                      <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
+                          <FormControl
+                              sx={{width: 200, backgroundColor: 'white', }}
+                              variant="filled"
+                          >
+                              <InputLabel id="demo-simple-select-label">User</InputLabel>
+                              <Select
+                                  labelId="demo-simple-select-label"
+                                  id="demo-simple-select"
+                                  // value={session_id}
+                                  // label="Session ID"
+                                  onChange={(event) => addUser(event)} // TODO: instantiate collaborator
+                              >
+                                  {getUsers(cookies.user)}
 
-              <FormControl
-                  sx={{width: 200, backgroundColor: 'white', }}
-                  variant="filled"
+                              </Select>
+                          </FormControl>
+                      </Box>
+                  </DialogContent>
+                  <DialogActions>
+                      <Button onClick={handleClose}>Cancel</Button>
+                      <Button onClick={handleClose} // TODO: on click add user to userlist
+                      >Add</Button>
+                  </DialogActions>
+              </Dialog>
+              <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => save_UI_state(
+                      client,
+                      session_id,
+                      { // history_item in save_UI_state in Stomp.js
+                          "bookmarks": bookmarks,
+                          "windows": windows,
+                          "label": get_label(cookies.user),
+                          "color": get_color(cookies.user),
+                      })
+                  }
+                  style={{
+                      backgroundColor: "#FFFFFF",
+                      color: "black",
+                      fontSize: 12,
+                      fontWeight: 700,
+                  }}
               >
-                  <InputLabel id="demo-simple-select-label">Add User to Session</InputLabel>
-                  <Select
-                      labelId="demo-simple-select-label"
-                      id="demo-simple-select"
-                      // value={session_id}
-                      // label="Session ID"
-                      onChange={(event) => addUser(event)}
-                  >
-                      {getUsers(cookies.user)}
-
-                  </Select>
-              </FormControl>
+                  Save Workspace
+              </Button>
           </Stack>
         </Toolbar>
       </AppBar>
