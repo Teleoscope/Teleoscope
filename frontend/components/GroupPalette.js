@@ -38,9 +38,10 @@ export default function GroupPalette(props) {
    const filter = createFilterOptions();
    const dispatch = useDispatch();
    const [value, setValue] = React.useState(null);
-
+   
    const [open, toggleOpen] = React.useState(false);
    const session_id = useSelector((state) => state.activeSessionID.value);
+
    const { groups } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
    const group_labels = groups ? groups.map((g) => { return g.history[0].label }) : []
 
@@ -74,7 +75,6 @@ export default function GroupPalette(props) {
    const onChangeHandler = (event, newValue) => {
       console.log("newValue", newValue)
 
-
       if (typeof newValue === 'string') {
          console.log("newValue === string", newValue)
          // timeout to avoid instant validation of the dialog's form.
@@ -84,6 +84,7 @@ export default function GroupPalette(props) {
             if (group_labels.includes(newValue)) {
                var g = groups.find(g => g.label == newValue)
                var postids = g.history[0]["included_posts"];
+
                postids.forEach((id) => {
                   dispatch(addWindow({ i: id + "%post", x: 0, y: 0, w: 3, h: 3, type: "Post" }));
                })
@@ -210,6 +211,5 @@ export default function GroupPalette(props) {
             })}
          </List>
       </div>
-
    )
 }
