@@ -152,6 +152,8 @@ def initialize_teleoscope(*args, **kwargs):
     # handle kwargs
     session_id = kwargs["session_id"]
 
+    ret = None
+
     # create a new query document
     with transaction_session.start_transaction():
         teleoscope_result = db.teleoscopes.insert_one({
@@ -170,7 +172,7 @@ def initialize_teleoscope(*args, **kwargs):
                 ]
             }, session=transaction_session)
         logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
-
+        ret = teleoscope_result
         ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))})
         history_item = ui_session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
@@ -188,7 +190,7 @@ def initialize_teleoscope(*args, **kwargs):
                 }
             }, session=transaction_session)
         utils.commit_with_retry(transaction_session)
-    return []
+    return ret
 
 
 @app.task
@@ -276,9 +278,12 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     label = kwargs["label"]
     _id = ObjectId(str(kwargs["session_id"]))
 
+    teleoscope_result = initialize_teleoscope(_id)
+
     # Creating document to be inserted into mongoDB
     obj = {
         "creation_time": datetime.datetime.utcnow(),
+        "teleoscope": teleoscope_result.inserted_id,
         "history": [
             {
                 "timestamp": datetime.datetime.utcnow(),
@@ -357,6 +362,7 @@ def add_post_to_group(*args, **kwargs):
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["included_posts"].append(post_id)
     history_item["action"] = "Add post to group"
+
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
                 "$push":
@@ -368,7 +374,12 @@ def add_post_to_group(*args, **kwargs):
                     }
                 }, session=session)
         utils.commit_with_retry(session)
-
+    res = chain(
+                robj.s(teleoscope_id=args["teleoscope_id"],
+                       positive_docs=args["positive_docs"],
+                       negative_docs=args["negative_docs"]),
+                tasks.save_teleoscope_state.s()
+            )
 
 @app.task
 def remove_post_from_group(*args, **kwargs):
