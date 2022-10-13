@@ -40,7 +40,7 @@ import {
     initialize_session,
     add_group,
     add_user_to_session
-} from "../components/Stomp.js";
+} from "../components/Stomp.ts";
 
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../util/swr"
