@@ -1,4 +1,6 @@
 // next.config.js
+
+require('dotenv').config({ path: './.env' })
 module.exports = {
   async headers() {
     return [
