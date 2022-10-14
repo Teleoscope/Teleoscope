@@ -36,5 +36,6 @@ export default function Clusters(props) {
            )
         })}
      </List>
-
+    )
+}
         
