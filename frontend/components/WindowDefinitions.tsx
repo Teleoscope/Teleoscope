@@ -86,7 +86,7 @@ export default function WindowDefinitions() {
 			showWindow: true,
 			title: () => { return "Clusters" },
 			color: () => { return "#4e5cbc"},
-			tag: "grouppalette",
+			tag: "clusters",
 		},
 		"Cluster": {
 			icon: (d) => { return (<TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />) },
