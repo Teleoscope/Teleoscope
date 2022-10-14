@@ -42,11 +42,10 @@ import { StompContext } from '../context/StompContext'
 export default function TopBar(props) {
 
   // const { teleoscopes, loading, error } = useTeleoscopes();
-  const { sessions, sessions_loading, sessions_error } = useSWRAbstract("sessions", `/api/sessions/`);
-  const { users, users_loading, users_error } = useSWRAbstract("users", `/api/users/`);
+  const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
+  const { users } = useSWRAbstract("users", `/api/users/`);
   const session_id = useSelector((state) => state.activeSessionID.value);
-  const { session, session_loading, session_error } = useSWRAbstract("session", `/api/sessions/${session_id}`);
-  const [value, setValue] = React.useState(null);
+  const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
   const [open, toggleOpen] = React.useState(false);
   const [cookies, setCookie] = useCookies(["user"]);
 
@@ -64,21 +63,6 @@ export default function TopBar(props) {
   }
 
   const dispatch = useDispatch();
-
-  const getTeleoscopes = () => {
-    if (teleoscopes && session) {
-      var ts = teleoscopes.filter((t) => {
-        return session["teleoscopes"].includes(t._id)
-      });
-      if (ts.length > 0 ) {
-        return ts.map((t) => {
-          var latest_t = t['history'][0];
-          return (<MenuItem value={t["_id"]}>{latest_t["label"]}</MenuItem>)
-        });
-      }
-    }
-    return (<MenuItem>No Teleoscopes started for this session...</MenuItem>)
-  }
   
   const handleSessionChange = (event) => {
     dispatch(sessionActivator(event.target.value))
@@ -128,7 +112,6 @@ export default function TopBar(props) {
   }
 
   const get_color = () => {
-    console.log("Session color", session)
     if (session) {
       return session.history[0].color
     }
@@ -157,7 +140,7 @@ export default function TopBar(props) {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
-        style={{ height: 60, backgroundColor: get_color(cookies.user) }} // TODO : background color should reflect session color
+        style={{ height: 60, backgroundColor: get_color(cookies.user) }} 
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">

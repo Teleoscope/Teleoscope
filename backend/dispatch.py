@@ -159,7 +159,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 args=(),
                 kwargs={
                     "group_id_strings": args["group_id_strings"],
-                    "teleoscope_oid": args["teleoscope_oid"],
                     "session_oid": args["session_oid"]
                 }
             )

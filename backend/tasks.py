@@ -580,7 +580,7 @@ def cluster_by_groups(*args, **kwargs):
     """
     import clustering
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
-    clustering.cluster_by_groups(kwargs["group_id_strings"], kwargs["teleoscope_oid"], kwargs["session_oid"])
+    clustering.cluster_by_groups(kwargs["group_id_strings"], kwargs["session_oid"])
 
 
 class reorient(Task):
@@ -714,7 +714,7 @@ class reorient(Task):
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
         gridfs_id = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
 
-        rank_slice = newRanks[0:500]
+        rank_slice = newRanks[0:100]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
 
         history_obj = {

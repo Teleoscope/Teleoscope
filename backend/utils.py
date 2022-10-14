@@ -88,8 +88,7 @@ moveVector:
 '''
 # TODO: is this commutative? i.e. can we go from x -> y and then y -> x by the same reverse action?
 # TODO: 
-def moveVector(sourceVector, destinationVector, direction, magnitude = None):
-    magnitude = magnitude if magnitude is not None else 0.75
+def moveVector(sourceVector, destinationVector, direction, magnitude = 0.50):
     new_q = sourceVector + direction*magnitude*(destinationVector - sourceVector)
     new_q = new_q / np.linalg.norm(new_q)
     return new_q

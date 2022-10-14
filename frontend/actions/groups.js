@@ -21,8 +21,6 @@ export const getGroups = createAsyncThunk(
 		const res = await fetch(`/api/sessions/${id}/groups`).then(
 			(data) => data.json()
 		)
-
-		console.log("groups fetch", res)
 		return res
 	})
 

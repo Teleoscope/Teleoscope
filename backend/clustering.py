@@ -9,11 +9,8 @@ from bson.objectid import ObjectId
 import gc
 import tasks
 
-def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=100000):
+def cluster_by_groups(group_id_strings, session_oid, limit=100000):
     """Cluster documents using user-provided group ids.
-
-    teleoscope_oid: GridFS OID address for ranked posts. 
-    Note this assumes that a teleoscope has already been created for this group.
 
     group_id_strings : list(string) where the strings are MongoDB ObjectID format
 
@@ -22,6 +19,13 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
     """
     # Create ObjectIds
     group_ids = [ObjectId(str(id)) for id in group_id_strings]
+
+    # start by getting the groups
+    logging.info(f'Getting all groups in {group_ids}.')
+    groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
+
+    # default to ordering posts relative to first group's teleoscope
+    teleoscope_oid = groups[0]["teleoscope"]
 
     # connect to the database
     db = utils.connect()
@@ -33,9 +37,7 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
     logging.info(f'Posts downloaded. Top post is {ordered_posts[0]} and length is {len(ordered_posts)}')
     limit = min(limit, len(ordered_posts))
     
-    # start by getting the groups
-    logging.info(f'Getting all groups in {group_ids}.')
-    groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
+
     
     # projection includes only fields we want
     projection = {'id': 1, 'selftextVector': 1}

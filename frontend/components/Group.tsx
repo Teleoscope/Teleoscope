@@ -18,6 +18,7 @@ export default function Group(props) {
         pagination={true} 
         showGroupIcon={false} 
         showOrientIcon={true} 
+        showRemoveIcon={true}
         group={group}
       ></PostList>
     </div>
