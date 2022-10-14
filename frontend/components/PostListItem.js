@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 
 // material ui
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
+import FlareIcon from '@mui/icons-material/Flare';
+import RemoveIcon from '@mui/icons-material/Remove';
+
 // actions
 import { useDispatch } from "react-redux";
 import { dragged } from "../actions/windows";
@@ -13,14 +16,17 @@ import { dragged } from "../actions/windows";
 import GroupSelector from "./GroupSelector";
 import BookmarkSelector from "./BookmarkSelector";
 import PostTitle from './PostTitle';
-import Expander from "./Expander";
 
 //utils
 import useSWRAbstract from "../util/swr"
 import { PreprocessTitle } from "../util/Preprocessers"
+import { remove_post_from_group, reorient } from "./Stomp";
 
+// contexts
+import { StompContext } from '../context/StompContext'
 
 export default function PostListItem(props) {
+  const client = useContext(StompContext)
   const { post } = useSWRAbstract("post", `/api/posts/${props.id}`);
   const title = post ? PreprocessTitle(post.title) : false;
   const dispatch = useDispatch();
@@ -28,6 +34,16 @@ export default function PostListItem(props) {
   const [hover, setHover] = useState(false);
 
   const showGroupIcon = props.hasOwnProperty("showGroupIcon") ? props.showGroupIcon : true;
+
+  const handleOrientTowards = () => {
+    reorient(client, props.group.teleoscope, [props.id], [])
+  }
+  const handleOrientAway = () => {
+    reorient(client, props.group.teleoscope, [], [props.id])
+  }
+  const handleRemove = () => {
+    remove_post_from_group(client, props.group._id, props.id)
+  }
 
   return (
 
@@ -61,11 +77,27 @@ export default function PostListItem(props) {
           <PostTitle title={title} noWrap={false} />
         </Stack>
 
-        <IconButton onClick={() => setOpen(!open)}>
+        {props.hasOwnProperty("group") ? (
+        <div>
+          <IconButton sx={{ width: 20, height: 20 }} onClick={() => handleOrientTowards()}>
+            {<FlareIcon sx={{ '&:hover': {color: 'blue'}, width: 20, height: 20 }}></FlareIcon>}
+          </IconButton> 
+          {/* <IconButton onClick={() => handleOrientAway()}>
+            {<FlareIcon sx={{ color: "red" }}></FlareIcon>}
+          </IconButton> */}
+          <IconButton sx={{ width: 20, height: 20 }} onClick={() => handleRemove()}>
+            <RemoveIcon sx={{ '&:hover': {color: 'red'}, width: 20, height: 20 }}></RemoveIcon>
+          </IconButton>
+        </div>
+        ) 
+      
+        : ""}
+
+        {/* <IconButton onClick={() => setOpen(!open)}>
           {open ? <ExpandLess /> : <ExpandMore />}
         </IconButton>
 
-        {open ? <Expander post={post ? post : {}} /> : ""}
+        {open ? <Expander post={post ? post : {}} /> : ""} */}
 
       </Stack>
 

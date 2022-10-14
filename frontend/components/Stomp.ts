@@ -258,12 +258,11 @@ export function reorient(client: Client, teleoscope_id: string, positive_docs: A
 /**
  * Create MLGroups using the UMAP and HBDSCAN with the given groups' posts as seeds.
  */
-export function cluster_by_groups(client: Client, group_id_strings: Array<string>, teleoscope_oid: string, session_oid: string) {
+export function cluster_by_groups(client: Client, group_id_strings: Array<string>, session_oid: string) {
   var body = {
     task: "cluster_by_groups",
     args: {
       group_id_strings: group_id_strings,
-      teleoscope_oid: teleoscope_oid,
       session_oid: session_oid,
     }
   }

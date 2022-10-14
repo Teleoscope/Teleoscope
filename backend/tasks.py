@@ -1,6 +1,6 @@
 import logging, pickle, utils, json, auth, numpy as np
 from warnings import simplefilter
-from celery import Celery, Task
+from celery import Celery, Task, chain
 from bson.objectid import ObjectId
 import datetime
 
@@ -183,11 +183,15 @@ def initialize_teleoscope(*args, **kwargs):
     
     kwargs:
         session_id: string
+        label: string (optional)
     """
     transaction_session, db = utils.create_transaction_session()
 
     # handle kwargs
     session_id = kwargs["session_id"]
+    label = "default"
+    if "label" in kwargs:
+        label = kwargs["label"]
 
     ret = None
 
@@ -198,7 +202,7 @@ def initialize_teleoscope(*args, **kwargs):
                 "history": [
                     {
                         "timestamp": datetime.datetime.utcnow(),
-                        "label": "default",
+                        "label": label,
                         "rank_slice": [],
                         "reddit_ids": [],
                         "positive_docs": [],
@@ -241,9 +245,9 @@ def save_teleoscope_state(*args, **kwargs):
     """
     session, db = utils.create_transaction_session()
 
-    # handle kwargs
-    _id = str(kwargs["_id"])
-    history_item = kwargs["history_item"]
+    # handle args
+    history_item = args[0]["history_item"]
+    _id = str(args[0]["_id"])
 
     logging.info(f'Saving state for teleoscope {_id}.')
     obj_id = ObjectId(_id)
@@ -255,7 +259,7 @@ def save_teleoscope_state(*args, **kwargs):
 
     history_item["timestamp"] = datetime.datetime.utcnow()
     with session.start_transaction():
-        result = db.teleoscopes.update({"_id": obj_id},
+        result = db.teleoscopes.update_one({"_id": obj_id},
             {
                 '$push': {
                     "history": {
@@ -315,7 +319,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     label = kwargs["label"]
     _id = ObjectId(str(kwargs["session_id"]))
 
-    teleoscope_result = initialize_teleoscope(_id)
+    teleoscope_result = initialize_teleoscope(session_id=_id, label=label)
 
     # Creating document to be inserted into mongoDB
     obj = {
@@ -326,7 +330,8 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                 "timestamp": datetime.datetime.utcnow(),
                 "color": color,
                 "included_posts": included_posts,
-                "label": label
+                "label": label,
+                "action" : "initialize group"
             }]
     }
     
@@ -397,6 +402,9 @@ def add_post_to_group(*args, **kwargs):
 
     history_item = group["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
+    if post_id in history_item["included_posts"]:
+        logging.log(f'Post {post_id} already in group {group["history"][0]["label"]}.')
+        return
     history_item["included_posts"].append(post_id)
     history_item["action"] = "Add post to group"
 
@@ -411,12 +419,15 @@ def add_post_to_group(*args, **kwargs):
                     }
                 }, session=session)
         utils.commit_with_retry(session)
+    logging.info(f'Reorienting teleoscope {group["teleoscope"]} for group {group["history"][0]["label"]}.')
     res = chain(
-                robj.s(teleoscope_id=args["teleoscope_id"],
-                       positive_docs=args["positive_docs"],
-                       negative_docs=args["negative_docs"]),
-                tasks.save_teleoscope_state.s()
-            )
+                robj.s(teleoscope_id=ObjectId(str(group["teleoscope"])),
+                       positive_docs=[post_id],
+                       negative_docs=[]),
+                save_teleoscope_state.s()
+    )
+    res.apply_async()
+    return None
 
 @app.task
 def remove_post_from_group(*args, **kwargs):
@@ -569,7 +580,7 @@ def cluster_by_groups(*args, **kwargs):
     """
     import clustering
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
-    clustering.cluster_by_groups(kwargs["group_id_strings"], kwargs["teleoscope_oid"], kwargs["session_oid"])
+    clustering.cluster_by_groups(kwargs["group_id_strings"], kwargs["session_oid"])
 
 
 class reorient(Task):
@@ -701,19 +712,19 @@ class reorient(Task):
         )
         scores = utils.calculateSimilarity(self.allPostVectors, qprime)
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
-        gridfsObj = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
+        gridfs_id = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
 
-        rank_slice = newRanks[0:500]
+        rank_slice = newRanks[0:100]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
 
         history_obj = {
             '_id': teleoscope_id,
             'history_item': {
-                'label': teleoscope['history'][-1]['label'],
+                'label': teleoscope['history'][0]['label'],
                 'positive_docs': positive_docs,
                 'negative_docs': negative_docs,
                 'stateVector': qprime.tolist(),
-                'ranked_post_ids': gridfsObj,
+                'ranked_post_ids': ObjectId(str(gridfs_id)),
                 'rank_slice': rank_slice
             }
         }

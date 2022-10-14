@@ -13,7 +13,14 @@ export default function Group(props) {
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
-      <PostList data={data} pagination={true} showGroupIcon={false}></PostList>
+      <PostList 
+        data={data} 
+        pagination={true} 
+        showGroupIcon={false} 
+        showOrientIcon={true} 
+        showRemoveIcon={true}
+        group={group}
+      ></PostList>
     </div>
   );
 }

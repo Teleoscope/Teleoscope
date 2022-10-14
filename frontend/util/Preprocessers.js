@@ -6,7 +6,7 @@ export function PreprocessTitle(title) {
         return this.replace(new RegExp("^[" + charlist + "]+"), "");
    	  };
    	  var regex = new RegExp(
-       "(AITA for|aita for|AITA if|WIBTA if|AITA|aita|WIBTA)"
+       "(AITA for|aita for|AITA if|WIBTA if|AITA|aita|WIBTA)(\\s*\\?*)"
    	  );
       var title = title.replace(regex, "");
       var charlist = " -";

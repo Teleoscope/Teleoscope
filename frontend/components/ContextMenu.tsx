@@ -51,10 +51,6 @@ export default function ContextMenu(props) {
         props.handleCloseContextMenu();
     }
 
-    const handleTestClusters = () => {
-        cluster_by_groups(client, group_ids, "62a7ca02d033034450035a91", session_id);
-    }
-
     const handleNewTeleoscope = (s_id) => {
         initialize_teleoscope(client, s_id);
     }
@@ -102,11 +98,6 @@ export default function ContextMenu(props) {
                 Deselect All
             </MenuItem>
             <Divider />
-
-            <MenuItem onClick={() => handleTestClusters()}>
-                Test Clusterings
-            </MenuItem>
-
         </Menu>
     )
 }
