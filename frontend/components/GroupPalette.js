@@ -77,7 +77,10 @@ export default function GroupPalette(props) {
 
    const onChangeHandler = (event, newValue) => {
       if (typeof newValue === 'string') {
+         console.log("newValue === string", newValue)
          // timeout to avoid instant validation of the dialog's form.
+         // TODO: seems like a bit of a hack, what behaviour is being suppressed here?
+         // is there another way to modify it?
          setTimeout(() => {
             if (group_labels.includes(newValue)) {
                var g = groups.find(g => g.label == newValue)
@@ -124,54 +127,29 @@ export default function GroupPalette(props) {
       cluster_by_groups(client, groups.map(g => g._id), session_id)
    }
 
-   const handleOnDragStart = (e, data, group) => {
-      dispatch(dragged({ id: group?._id + "%group", type: "Group" }))
-   }
-
-   const GroupList = () => {
-      return (
-         <List>
-               {group_labels.map((gl) => {
-                  var group = groups.find(g => g.history[0].label == gl);
-
-                  return (
-                     <div draggable={true} onDragStart={(e, data) => handleOnDragStart(e, data, group)}>
-                        <ListItem>
-                           <ListItemIcon>
-                              <FolderIcon sx={{ color: group?.history[0].color }} />
-                           </ListItemIcon>
-                           <ListItemText
-                              primary={gl}
-                              secondary={gl ? 'Description' : null}
-                           />
-                        </ListItem>
-                     </div>
-                  )
-               })}
-            </List>
-      )
-   }
-
-
    return (
       <div style={{ overflow: "auto", height: "100%" }}>
-         <Stack direction="row" justifyContent="right" alignItems="center" style={{margin: 0}}>
-            <IconButton onClick={() => runClusters()}><Diversity2Icon></Diversity2Icon></IconButton>
-         </Stack>
-         <Divider />
-         <React.Fragment>
+      <Stack direction="row" justifyContent="right" alignItems="center" style={{ margin: 0 }}>
+      <IconButton onClick={() => runClusters()}><Diversity2Icon></Diversity2Icon></IconButton>
+      </Stack>
+      <Divider />
+         <div>
             <Autocomplete
+               value={value}
+               onChange={(event, newValue) => {
+                  onChangeHandler(event, newValue)
+               }}
+               // creates the add button when the input doesn't match any of the existing groups
+               filterOptions={(options, params) => filteredOptionsHandler(options, params)}
+               id="Add Group"
+               options={group_labels}
+               style={{ width: "100%", borderRadius: "0 !important" }}
                selectOnFocus
                clearOnBlur
                handleHomeEndKeys
-               freeSolo
-               id="Add Group"
-               value={value}
-               options={group_labels}
+               //renderOption={(props, option) => <li {...props}>{option}</li>}
                sx={{ width: 300 }}
-               style={{ width: "100%", borderRadius: "0 !important" }}
-               onChange={(event, newValue) => {onChangeHandler(event, newValue)}}
-               filterOptions={(options, params) => filteredOptionsHandler(options, params)}
+               freeSolo
                renderInput={(params) =>
                   <TextField {...params}
                      label="Search and Create groups..."
@@ -184,30 +162,59 @@ export default function GroupPalette(props) {
                <form onSubmit={handleSubmit}>
                   <DialogTitle>Add a new group</DialogTitle>
                   <DialogContent>
-                     <DialogContentText>Input your group name and a random color will be matched to the group!</DialogContentText>
+                     <DialogContentText>
+                        Input your group name and a random color will be matched to the group!
+                     </DialogContentText>
                      <TextField
-                        autoFocus
                         variant="filled"
                         placeholder="Add group name"
+                        style={{ width: "100%", borderRadius: "0 !important" }}
+                        autoFocus
                         margin="dense"
                         id="name"
+                        value={dialogValue.label}
+                        onChange={(event) =>
+                           setDialogValue({
+                              ...dialogValue,
+                              tag: event.target.value,
+                           })
+                        }
                         label="group name"
                         type="text"
-                        value={dialogValue.label}
-                        style={{ width: "100%", borderRadius: "0 !important" }}
-                        onChange={(event) => setDialogValue({...dialogValue, tag: event.target.value,})}
                      />
                   </DialogContent>
                   <DialogActions>
                      <Button onClick={handleClose}>Cancel</Button>
-                     <Button type="submit"
-                        onClick={() => add_group(client, dialogValue.label, randomColor(), session_id)}
-                     >Add</Button>
+                     <Button
+                        type="submit"
+                        onClick={() => add_group(client, dialogValue.label, randomColor(), session_id)
+                        }>Add</Button>
                   </DialogActions>
                </form>
             </Dialog>
-         </React.Fragment>
-         <GroupList></GroupList>
+         </div>
+         <List>
+            {group_labels.map((gl) => {
+               var the_group = groups.find(g => g.history[0].label == gl);
+
+               return (
+                  <div
+                     draggable={true}
+                     onDragStart={(e, data) => { dispatch(dragged({ id: the_group?._id + "%group", type: "Group" })) }}
+                  >
+                     <ListItem>
+                        <ListItemIcon>
+                           <FolderIcon sx={{ color: the_group?.history[0].color }} />
+                        </ListItemIcon>
+                        <ListItemText
+                           primary={gl}
+                           secondary={gl ? 'Description' : null}
+                        />
+                     </ListItem>
+                  </div>
+               )
+            })}
+         </List>
       </div>
    )
 }
