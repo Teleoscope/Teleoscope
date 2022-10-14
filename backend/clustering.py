@@ -30,16 +30,12 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
     # default to ordering posts relative to first group's teleoscope
     teleoscope_oid = groups[0]["teleoscope"]
 
-
-
     # get Teleoscope from GridFS
     logging.info("Getting ordered posts...")
     all_ordered_posts = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope_oid)))
     ordered_posts = all_ordered_posts[0:limit]
     logging.info(f'Posts downloaded. Top post is {ordered_posts[0]} and length is {len(ordered_posts)}')
     limit = min(limit, len(ordered_posts))
-    
-
     
     # projection includes only fields we want
     projection = {'id': 1, 'selftextVector': 1}
