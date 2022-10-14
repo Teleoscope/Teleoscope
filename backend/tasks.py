@@ -55,7 +55,7 @@ def initialize_session(*args, **kwargs):
                 "bookmarks": [],
                 "windows": [],
                 "groups": [],
-                "mlgroups": [],
+                "clusters": [],
                 "label": kwargs['label'],
                 "color": kwargs['color'],
                 "teleoscopes": []
@@ -339,7 +339,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
 
     collection = db.groups
     if not human:
-        collection = db.mlgroups
+        collection = db.clusters
 
     with transaction_session.start_transaction():
         groups_res = collection.insert_one(obj, session=transaction_session)
@@ -349,13 +349,13 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
         if not session:
             logging.info(f"Warning: session with id {_id} not found.")
             raise Exception(f"session with id {_id} not found")
-        mlgroups = session["history"][0]["mlgroups"]
+        clusters = session["history"][0]["clusters"]
         groups = session["history"][0]["groups"]
 
         if human:
             groups.append(groups_res.inserted_id)
         else:
-            mlgroups.append(groups_res.inserted_id)
+            clusters.append(groups_res.inserted_id)
         sessions_res = db.sessions.update_one({'_id': _id},
             {
                 '$push': {
@@ -363,7 +363,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                                 '$each': [{
                                     "timestamp": datetime.datetime.utcnow(),
                                     "groups": groups,
-                                    "mlgroups": mlgroups,
+                                    "clusters": clusters,
                                     "bookmarks": session["history"][0]["bookmarks"],
                                     "windows": session["history"][0]["windows"],
                                     "label": session["history"][0]["label"],
@@ -576,7 +576,7 @@ def cluster_by_groups(*args, **kwargs):
 
         group_id_strings: list(string) where the strings are MongoDB ObjectID format
 
-        session_oid: string OID for session to add mlgroups to
+        session_oid: string OID for session to add clusters to
     """
     import clustering
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
