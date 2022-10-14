@@ -427,7 +427,7 @@ def add_post_to_group(*args, **kwargs):
                 save_teleoscope_state.s()
     )
     res.apply_async()
-    return res.get()
+    return None
 
 @app.task
 def remove_post_from_group(*args, **kwargs):
