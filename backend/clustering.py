@@ -17,6 +17,9 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
     session_oid: string OID for session to add mlgroups to
 
     """
+    # connect to the database
+    db = utils.connect()
+    
     # Create ObjectIds
     group_ids = [ObjectId(str(id)) for id in group_id_strings]
 
@@ -27,8 +30,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
     # default to ordering posts relative to first group's teleoscope
     teleoscope_oid = groups[0]["teleoscope"]
 
-    # connect to the database
-    db = utils.connect()
+
 
     # get Teleoscope from GridFS
     logging.info("Getting ordered posts...")
