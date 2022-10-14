@@ -37,8 +37,6 @@ import { cluster_by_groups } from "./Stomp";
 // custom components
 
 export default function GroupPalette(props) {
-
-
    const client = useContext(StompContext);
    const filter = createFilterOptions();
    const dispatch = useDispatch();
@@ -130,25 +128,12 @@ export default function GroupPalette(props) {
    }
 
    return (
-      <div
-         style={{ overflow: "auto", height: "100%" }}
-
-      >
-
-      <Stack
-        direction="row"
-        justifyContent="right"
-        alignItems="center"
-        style={{
-          margin: 0
-        }}
-      >
-      <IconButton onClick={() => runClusters()}>
-         <Diversity2Icon></Diversity2Icon>
-      </IconButton>
+      <div style={{ overflow: "auto", height: "100%" }}>
+      <Stack direction="row" justifyContent="right" alignItems="center" style={{ margin: 0 }}>
+      <IconButton onClick={() => runClusters()}><Diversity2Icon></Diversity2Icon></IconButton>
       </Stack>
       <Divider />
-         <React.Fragment>
+         <div>
             <Autocomplete
                value={value}
                onChange={(event, newValue) => {
@@ -207,8 +192,7 @@ export default function GroupPalette(props) {
                   </DialogActions>
                </form>
             </Dialog>
-
-         </React.Fragment>
+         </div>
          <List>
             {group_labels.map((gl) => {
                var the_group = groups.find(g => g.history[0].label == gl);

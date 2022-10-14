@@ -319,7 +319,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     label = kwargs["label"]
     _id = ObjectId(str(kwargs["session_id"]))
 
-    teleoscope_result = initialize_teleoscope(session_id=_id, label=label)
+    teleoscope_result = initialize_teleoscope(session_id=_id, label=label)    
 
     # Creating document to be inserted into mongoDB
     obj = {
@@ -376,6 +376,17 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
             }, session=transaction_session)
         logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
+
+        if len(included_posts) > 0:
+            logging.info(f'Reorienting teleoscope {teleoscope_result.inserted_id} for group {label}.')
+            res = chain(
+                    robj.s(teleoscope_id=teleoscope_result.inserted_id,
+                        positive_docs=included_posts,
+                        negative_docs=[]),
+                    save_teleoscope_state.s()
+            )
+            res.apply_async()
+        
         return groups_res.inserted_id
 
 
