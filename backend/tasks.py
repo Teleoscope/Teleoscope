@@ -378,9 +378,9 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
         utils.commit_with_retry(transaction_session)
 
         if len(included_posts) > 0:
-            logging.info(f'Reorienting teleoscope {teleoscope_result.included_id} for group {label}.')
+            logging.info(f'Reorienting teleoscope {teleoscope_result.inserted_id} for group {label}.')
             res = chain(
-                    robj.s(teleoscope_id=teleoscope_result.included_id,
+                    robj.s(teleoscope_id=teleoscope_result.inserted_id,
                         positive_docs=included_posts,
                         negative_docs=[]),
                     save_teleoscope_state.s()
