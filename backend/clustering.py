@@ -29,7 +29,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
 
     # default to ordering posts relative to first group's teleoscope
     teleoscope_oid = groups[0]["teleoscope"]
-    teleoscope = db.teleoscopes.find({"_id": ObjectId(str(teleoscope_oid))})
+    teleoscope = db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
 
 
     # get Teleoscope from GridFS
