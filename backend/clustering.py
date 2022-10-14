@@ -14,7 +14,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
 
     group_id_strings : list(string) where the strings are MongoDB ObjectID format
 
-    session_oid: string OID for session to add mlgroups to
+    session_oid: string OID for session to add clusters to
 
     """
     # connect to the database

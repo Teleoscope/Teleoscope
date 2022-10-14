@@ -19,6 +19,7 @@ import Teleoscope from "./Teleoscope"
 import Search from "./Search"
 import GroupPalette from "./GroupPalette"
 import Clusters from './Clusters';
+import Cluster from './Cluster';
 
 import { PreprocessTitle, PreprocessText } from "../util/Preprocessers"
 
@@ -86,6 +87,14 @@ export default function WindowDefinitions() {
 			title: () => { return "Clusters" },
 			color: () => { return "#4e5cbc"},
 			tag: "grouppalette",
+		},
+		"Cluster": {
+			icon: (d) => { return (<TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />) },
+			component: (w, id) => { return (<Cluster id={id} windata={w} />) },
+			showWindow: false,
+			title: (d) => { return d?.history[0].label },
+			color: (d) => { return d?.history[0].color },
+			tag: "cluster",
 		},
 	}
 }
