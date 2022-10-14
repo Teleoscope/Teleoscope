@@ -12,7 +12,7 @@ test('Getting one session from a list of sessions.', () => {
             "bookmarks": [],
             "windows": [],
             "groups": [],
-            "mlgroups": [],
+            "clusters": [],
             "label": "poised",
             "color": "#7c4bcc"
           }
