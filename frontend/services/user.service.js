@@ -12,6 +12,8 @@ const { publicRuntimeConfig } = getConfig();
 const baseUrl = `${publicRuntimeConfig.apiUrl}/loginusers`;
 const userSubject = new BehaviorSubject(process.browser && JSON.parse(localStorage.getItem('user'))); // have to change this to get from mongoDB
 
+// run sessions through subscriber
+
 export const userService = {
     userSubject: userSubject,
     user: userSubject.asObservable(),
@@ -43,6 +45,9 @@ function logout() {
     Router.push('/account/login');
 }
 
+
+// call stompts
+// local register for validation and then finally push to stomp (do something with the return value, for valudation reasons)
 function register(user) {
     return fetchWrapper.post(`${baseUrl}/register`, user);
 }

@@ -19,6 +19,8 @@ function get(url) {
    return fetch(url, requestOptions).then(handleResponse);
 }
 
+
+// handled with stompts
 function post(url, body) {
    const requestOptions = {
       method: 'POST',
@@ -32,6 +34,7 @@ function post(url, body) {
    //.then(handleResponse);
 }
 
+// stompts
 function put(url, body) {
    const requestOptions = {
       method: 'PUT',

@@ -1,0 +1,6 @@
+resolve the updates from rabbitMQ
+
+- Write stompjs call without connecting it to the call, dummy one, and seeing what return value that we need
+- dont delete anything just yet
+- swr vs behavioursubject (service vs subscriber)
+   - useful for constantly updating data, not super different from subscribe
