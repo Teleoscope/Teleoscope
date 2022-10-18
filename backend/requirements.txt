@@ -74,3 +74,5 @@ urllib3==1.26.12
 webencodings==0.5.1
 xarray==2022.6.0
 zict==2.2.0
+tensorflow
+tensorflow_hub
