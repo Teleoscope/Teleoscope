@@ -1,6 +1,6 @@
 from pydoc import pathdirs
 from celery import chain, group
-from tasks import read_and_validate_post, vectorize_post, add_single_post_to_database, add_multiple_posts_to_database, validate_post
+from import_post_tasks import read_and_validate_post, vectorize_post, add_single_post_to_database, add_multiple_posts_to_database, validate_post
 import glob, sys, utils, json, tensorflow_hub as hub
 
 
