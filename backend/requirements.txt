@@ -76,3 +76,4 @@ xarray
 zict
 tensorflow
 tensorflow_hub
+zstandard
