@@ -1,16 +1,21 @@
+import { useContext } from "react";
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 
+// custom components
 import { Link } from 'components/Login';
 import { Layout } from 'components/Login/Layout';
 import { userService, alertService } from 'services';
+import { register_account } from 'components/Stomp';
+import { StompContext } from '../../context/StompContext'
 
 export default Register;
 
 function Register() {
     const router = useRouter();
+    const client = useContext(StompContext);
 
     // form validation rules 
     const validationSchema = Yup.object().shape({
@@ -31,6 +36,9 @@ function Register() {
     const { errors } = formState;
 
     function onSubmit(user) {
+
+        register_account(client, user);
+
         return userService.register(user)
             .then(() => {
                 alertService.success('Registration successful', { keepAfterRouteChange: true });

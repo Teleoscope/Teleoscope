@@ -12,7 +12,6 @@ import { useRouter } from 'next/router';
 
 import 'styles/global.css';
 
-import { Nav, Alert } from 'components/Login';
 import { userService } from 'services';
 
 export default App;
@@ -45,7 +44,7 @@ function App({ Component, pageProps }) {
         // redirect to login page if accessing a private page and not logged in 
         setUser(userService.userValue);
         console.log('User', user)
-        const publicPaths = ['/account/login', '/account/register', '/api/loginusers/register'];
+        const publicPaths = ['/account/login', '/account/register'];
         const path = url.split('?')[0];
         console.log('Path', path)
         if (!userService.userValue && !publicPaths.includes(path)) {
@@ -67,10 +66,7 @@ function App({ Component, pageProps }) {
             </Head>
 
             <div className={`app-container ${user ? 'bg-light' : ''}`}>
-                <Nav />
-                <Alert />
-                {authorized && <Component {...pageProps} />
-                }
+                {authorized && <Component {...pageProps} />}
             </div>
         </>
     );

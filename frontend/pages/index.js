@@ -18,15 +18,17 @@ const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
 export default function Home({ isConnected }) {
   return (
-    <div className="p-4">
-      <div className="container">
+    <div>
+    {/*  <div className="w-100 p-3">
+       <div className="container"> */}
         <SWRConfig value={{
           fetcher: fetcher,
           errorRetryCount: 10,
           refreshInterval: 250
         }}>
           <CookiesProvider>
-            <div className="container">
+            <div>
+            {/* <div className="container-fluid"> */}
               <Head>
                 <title>Explore Documents</title>
                 <link rel="icon" href="/favicon.ico" />
@@ -34,15 +36,13 @@ export default function Home({ isConnected }) {
 
               <main>
                 <Provider store={store}>
-                  {console.log("isConnected", isConnected)}
-                  <Workspace isConnected={isConnected}/>
+                  <Workspace isConnected={isConnected} />
                 </Provider>
               </main>
             </div>
           </CookiesProvider>
         </SWRConfig>
       </div>
-    </div>
   );
 }
 
@@ -58,7 +58,7 @@ export async function getServerSideProps(context) {
     // `const db = client.db("myDatabase")`
     //
     // Then you can execute queries against your database like so:
-    // db.find({}) or any of the MongoDB Node Driver commands
+    // db.find({ }) or any of the MongoDB Node Driver commands
 
     return {
       props: { isConnected: true },

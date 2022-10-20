@@ -36,6 +36,10 @@ import useSWRAbstract from "../util/swr"
 // contexts
 import { StompContext } from '../context/StompContext'
 
+// custom
+import { Nav } from 'components/Login';
+import { Alert } from 'components/Login';
+
 export default function TopBar(props) {
 
   // const { teleoscopes, loading, error } = useTeleoscopes();
@@ -129,6 +133,9 @@ export default function TopBar(props) {
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
+
+            <Nav />
+            <Alert />
 
             <Button 
                size="small"  
@@ -291,7 +298,6 @@ export default function TopBar(props) {
              </Button>
             </Select>
             </FormControl>
-            <Button onClick={() => props.Logout()}>LogOut</Button>
           </Stack>
         </Toolbar>
       </AppBar>

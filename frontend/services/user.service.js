@@ -1,5 +1,6 @@
 import { useContext } from 'react';
 import { BehaviorSubject } from 'rxjs';
+//import useSWR from 'swr';
 import getConfig from 'next/config';
 import Router from 'next/router';
 
@@ -12,12 +13,19 @@ const { publicRuntimeConfig } = getConfig();
 const baseUrl = `${publicRuntimeConfig.apiUrl}/loginusers`;
 const userSubject = new BehaviorSubject(process.browser && JSON.parse(localStorage.getItem('user'))); // have to change this to get from mongoDB
 
+
+//const fetcher = (url) => fetch(url).then((res) => res.json());
+// fetcher is a function that returns the data
+//const userSubjectSWR = useSWR(JSON.parse(localStorage.getItem('user')), fetcher);
+
+
+
 // run sessions through subscriber
 
 export const userService = {
     userSubject: userSubject,
     user: userSubject.asObservable(),
-    get userValue () { return userSubject.value },
+    get userValue() { return userSubject.value },
     login,
     logout,
     register,

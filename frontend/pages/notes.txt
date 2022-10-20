@@ -4,3 +4,9 @@ resolve the updates from rabbitMQ
 - dont delete anything just yet
 - swr vs behavioursubject (service vs subscriber)
    - useful for constantly updating data, not super different from subscribe
+
+- swr and rxjs get fetch data from the apis
+- apis user clientpromise to populate data from the database
+- What I need to don
+   - Get data from login (hash it, and secure it) and pass it to mongodb
+   
