@@ -613,6 +613,11 @@ class reorient(Task):
 
         try:
             loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
+            with open(path + 'ids.pkl', 'rb') as handle:
+                self.allPostIDs = pickle.load(handle)
+            self.allPostVectors = loadPosts['posts']
+            self.postsCached = True
+
         except:            
             db = utils.connect()
             allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1, '_id':0}, batching=True, batchSize=10000)
@@ -620,19 +625,12 @@ class reorient(Task):
             vecs = np.array([x['selftextVector'] for x in allPosts])
 
             np.savez(path + 'embeddings.npz', posts=vecs)
-
             with open(path + 'ids.pkl', 'wb') as handle:
                 pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            
-            loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
-            
-        self.allPostVectors = loadPosts['posts']
-        # cache posts ids
-        with open(path + 'ids.pkl', 'rb') as handle:
-            self.allPostIDs = pickle.load(handle)
 
-        self.postsCached = True
-
+            self.allPostIDs = ids
+            self.allPostVectors = vecs
+            self.postsCached = True
         return
 
 
