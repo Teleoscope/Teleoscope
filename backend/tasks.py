@@ -414,7 +414,7 @@ def add_post_to_group(*args, **kwargs):
     history_item = group["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
     if post_id in history_item["included_posts"]:
-        logging.log(f'Post {post_id} already in group {group["history"][0]["label"]}.')
+        logging.info(f'Post {post_id} already in group {group["history"][0]["label"]}.')
         return
     history_item["included_posts"].append(post_id)
     history_item["action"] = "Add post to group"
