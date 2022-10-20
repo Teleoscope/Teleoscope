@@ -402,6 +402,11 @@ def add_post_to_group(*args, **kwargs):
         logging.info(f"Warning: group with id {group_id} not found.")
         raise Exception(f"group with id {group_id} not found")
 
+    # check if post has already been added
+    if post_id in group:
+        logging.info(f'Post {post_id} is already in group')
+        raise Exception(f'Post {post_id} is already in group')
+
     history_item = group["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["included_posts"].append(post_id)
