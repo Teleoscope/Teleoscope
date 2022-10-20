@@ -17,11 +17,11 @@ CELERY_BROKER_URL = (
 )
 
 app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
-app.conf.update(
-    task_serializer='pickle',
-    accept_content=['pickle'],  # Ignore other content
-    result_serializer='pickle',
-)
+# app.conf.update(
+#     task_serializer='pickle',
+#     accept_content=['pickle'],  # Ignore other content
+#     result_serializer='pickle',
+# )
 
 
 @app.task
