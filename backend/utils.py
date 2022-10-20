@@ -11,7 +11,7 @@ import logging
 import auth
 
 def connect():
-    autht = "authSource=aita&authMechanism=SCRAM-SHA-256"
+    autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
         f'{auth.mongodb["username"]}:'
@@ -30,7 +30,7 @@ def connect():
     return client.aita
 
 def create_transaction_session():
-    autht = "authSource=aita&authMechanism=SCRAM-SHA-256"
+    autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
         f'{auth.mongodb["username"]}:'

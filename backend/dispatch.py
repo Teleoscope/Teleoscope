@@ -1,8 +1,6 @@
 # builtin modules
 from warnings import simplefilter
 import json
-import random
-import string
 import logging
 
 # installed modules
