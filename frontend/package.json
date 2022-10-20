@@ -10,7 +10,7 @@
     "dev": "next dev",
     "build": "next build",
     "test": "jest",
-    "start": "next start"
+    "start": "next start -p 80"
   },
   "author": "",
   "license": "ISC",
