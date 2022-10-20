@@ -10,7 +10,7 @@ Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
 export function client_init() {
   console.log("Initializing Stomp client...")
   const client = new Client({
-    brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:3311/ws`,
+    brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:15674/ws`,
     connectHeaders: {
       login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME!,
       passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD!,
