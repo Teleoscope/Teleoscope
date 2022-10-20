@@ -622,7 +622,7 @@ class reorient(Task):
             np.savez(path + 'embeddings.npz', posts=vecs)
 
             with open(path + 'ids.pkl', 'wb') as handle:
-                pkl.dump(ids, handle, protocol=pkl.HIGHEST_PROTOCOL)
+                pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
             
             loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
             
