@@ -22,14 +22,7 @@ export default function Post(props) {
   return (
     <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
 
-      <Stack
-        direction="row"
-        justifyContent="right"
-        alignItems="center"
-        style={{
-          margin: 0
-        }}
-      >
+      <Stack direction="row" justifyContent="right" alignItems="center" style={{ margin: 0 }}>
         <NoteButton id={id} />
         <GroupSelector id={id} />
       </Stack>

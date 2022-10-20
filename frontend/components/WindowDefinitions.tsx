@@ -15,6 +15,7 @@ import Notes from "./Notes"
 import FABMenu from "./FABMenu"
 import Group from "./Group"
 import Post from "./Post"
+import TeleoscopePalette from "./TeleoscopePalette"
 import Teleoscope from "./Teleoscope"
 import Search from "./Search"
 import GroupPalette from "./GroupPalette"
@@ -60,7 +61,15 @@ export default function WindowDefinitions() {
 			icon: () => { return <FlareIcon fontSize="inherit" /> },
 			component: (w, id) => { return (<Teleoscope id={id} windata={w} />) },
 			showWindow: false,
-			title: () => { return "Teleoscope" },
+			title: (d) => { return `${d?.history[0].label}` },
+			color: () => { return "#4e5cbc"},
+			tag: "teleoscope",
+		},
+		"Teleoscope Palette": {
+			icon: () => { return <FlareIcon fontSize="inherit" /> },
+			component: (w, id) => { return (<TeleoscopePalette id={id} windata={w} />) },
+			showWindow: false,
+			title: () => { return `Teleoscopes` },
 			color: () => { return "#4e5cbc"},
 			tag: "teleoscope",
 		},
