@@ -76,8 +76,6 @@ export default function WindowManager(props) {
       add_post_to_group(client, checked.i.split("%")[0], newItem.i.split("%")[0])
       dispatch(checkWindow({ i: checked.i, check: false }));
     }
-
-
   }
 
   // type ItemCallback = 
