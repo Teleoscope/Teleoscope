@@ -628,7 +628,7 @@ class reorient(Task):
             
         self.allPostVectors = loadPosts['posts']
         # cache posts ids
-        with open(path + '/ids.pkl', 'rb') as handle:
+        with open(path + 'ids.pkl', 'rb') as handle:
             self.allPostIDs = pickle.load(handle)
 
         self.postsCached = True
