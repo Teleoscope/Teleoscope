@@ -77,7 +77,7 @@ def initialize_session(*args, **kwargs):
 '''
 add_user_to_session
 input:
-    username (string, name of user to add to session) NOTE maybe do with objectID?
+    username (string, name of user to add to session)
     session_id (int, represents ObjectId in int)
 
 purpose: updates the userlist in a session to include input user
@@ -97,11 +97,18 @@ def add_user_to_session(*args, **kwargs):
     user = db.users.find_one({"username": username})
 
     userlist = session["userlist"]
+
+    # check if user has already been added
+    if username in userlist:
+        logging.info(f'User {username} is already on userlist')
+        raise Exception(f'User {username} is already on userlist')
+
     userlist[username] = "collaborator"
 
     # update session with new userlist that includes collaborator
     with transaction_session.start_transaction():
-        db.sessions.update_one({"_id": session_id},
+        db.sessions.update_one(
+            {"_id": session_id},
             {
                 '$set': {
                     "userlist" : userlist,

@@ -111,6 +111,7 @@ export default function TopBar(props) {
       )
   }
 
+  // get users that are NOT in session.userlist
   const getUsers = (username) => {
       if (session) {
           for (const i in users) {
@@ -241,12 +242,9 @@ export default function TopBar(props) {
                               <Select
                                   labelId="demo-simple-select-label"
                                   id="demo-simple-select"
-                                  // value={session_id}
-                                  // label="Session ID"
                                   onChange={(event) =>
                                       setDialogValue({
                                           label: event.target.value.username,
-
                                       })
                                   }
                               >
@@ -263,7 +261,7 @@ export default function TopBar(props) {
                           onClick={() => {
                               add_user_to_session(client, dialogValue.label, session_id)
                               handleClose()
-                          } // add user to userlist
+                          }
                           }>Add</Button>
                   </DialogActions>
               </Dialog>
