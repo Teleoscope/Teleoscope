@@ -13,7 +13,6 @@ def import_single_post(path_to_post):
 def import_multiple_posts(path_to_folder):
 	# Get all paths in the folder
 	paths = glob.glob(path_to_folder + '/*.json')
-	paths.sort(key = lambda x: int("".join([d for d in x if d.isdigit()])))
 	embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 	for path in paths:
 		curr_page = path.split("/")[-1]
