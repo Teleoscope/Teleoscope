@@ -608,6 +608,9 @@ class reorient(Task):
 
     def cachePostsData(self, path='~/embeddings/'):
         # cache embeddings
+        from pathlib import Path
+        Path(path).mkdir(parents=True, exist_ok=True)
+
         try:
             loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
         except:            
@@ -616,11 +619,12 @@ class reorient(Task):
             ids = [x['id'] for x in allPosts]
             vecs = np.array([x['selftextVector'] for x in allPosts])
 
-            np.savez('~/embeddings/embeddings.npz', posts=vecs)
+            np.savez(path + 'embeddings.npz', posts=vecs)
 
-            with open('~/embeddings/ids.pkl', 'wb') as handle:
+            with open(path + 'ids.pkl', 'wb') as handle:
                 pkl.dump(ids, handle, protocol=pkl.HIGHEST_PROTOCOL)
-                loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
+            
+            loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
             
         self.allPostVectors = loadPosts['posts']
         # cache posts ids
