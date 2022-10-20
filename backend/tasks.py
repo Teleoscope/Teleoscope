@@ -432,7 +432,7 @@ def add_post_to_group(*args, **kwargs):
         utils.commit_with_retry(session)
     logging.info(f'Reorienting teleoscope {group["teleoscope"]} for group {group["history"][0]["label"]}.')
     res = chain(
-                robj.s(teleoscope_id=ObjectId(str(group["teleoscope"])),
+                robj.s(teleoscope_id=str(group["teleoscope"]),
                        positive_docs=[post_id],
                        negative_docs=[]),
                 save_teleoscope_state.s()
