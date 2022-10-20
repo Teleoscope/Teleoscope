@@ -608,7 +608,20 @@ class reorient(Task):
 
     def cachePostsData(self, path='~/embeddings/'):
         # cache embeddings
-        loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
+        try:
+            loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
+        except:            
+            db = utils.connect()
+            allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1, '_id':0}, batching=True, batchSize=10000)
+            ids = [x['id'] for x in allPosts]
+            vecs = np.array([x['selftextVector'] for x in allPosts])
+
+            np.savez('~/embeddings/embeddings.npz', posts=vecs)
+
+            with open('~/embeddings/ids.pkl', 'wb') as handle:
+                pkl.dump(ids, handle, protocol=pkl.HIGHEST_PROTOCOL)
+                loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
+            
         self.allPostVectors = loadPosts['posts']
         # cache posts ids
         with open(path + '/ids.pkl', 'rb') as handle:
