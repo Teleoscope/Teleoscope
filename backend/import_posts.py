@@ -1,6 +1,6 @@
 from pydoc import pathdirs
 from celery import chain, group
-from tasks import read_and_validate_post, vectorize_post, add_single_post_to_database, add_multiple_posts_to_database, validate_post
+from import_post_tasks import read_and_validate_post, vectorize_post, add_single_post_to_database, add_multiple_posts_to_database, validate_post
 import glob, sys, utils, json, tensorflow_hub as hub
 
 
@@ -13,7 +13,6 @@ def import_single_post(path_to_post):
 def import_multiple_posts(path_to_folder):
 	# Get all paths in the folder
 	paths = glob.glob(path_to_folder + '/*.json')
-	paths.sort(key = lambda x: int("".join([d for d in x if d.isdigit()])))
 	embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 	for path in paths:
 		curr_page = path.split("/")[-1]

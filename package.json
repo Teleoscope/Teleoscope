@@ -1,5 +1,7 @@
 {
   "dependencies": {
     "react-redux": "^8.0.2"
+  "devDependencies": {
+    "@types/node": "^18.8.3"
   }
 }

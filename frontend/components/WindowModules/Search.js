@@ -110,22 +110,17 @@ HideOnScroll.propTypes = {
 let globalQuery = "";
 
 
-// splits the search into the header and the body
-const SearchHeader = ({ props }) => {
-
-const [query, setQuery] = useState("");
-const dispatch = useDispatch();
-
-const handleSetQuery = (e) => {
-  setTimeout(() => {
-    setQuery(e.target.value);
-    globalQuery = e.target.value;
-    dispatch(updateWindow({ i: "%search", term: e.target.value }));
-  }, 1000);
-};
+  const handleSetQuery = (e) => {
+    if (e.target.value != 'Enter') {
+      setTimeout(() => {
+        setQuery(e.target.value);
+        dispatch(updateWindow({ i: "%search", term: e.target.value }));
+      }, 250);
+    }
+  }
 
   return (
-    <div>
+    <div style={{ overflow: "auto", height: "100%" }}>
       <Search>
         <SearchIconWrapper>
           <SearchIcon />
@@ -143,7 +138,7 @@ const handleSetQuery = (e) => {
     </div>
 
   );
-}
+
 
 const SearchBody = ({ props }) => {
   const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${globalQuery}`);

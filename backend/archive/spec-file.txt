@@ -1,0 +1,24 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+@EXPLICIT
+https://repo.anaconda.com/pkgs/main/linux-64/ca-certificates-2022.07.19-h06a4308_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libstdcxx-ng-11.2.0-h1234567_1.tar.bz2
+https://repo.anaconda.com/pkgs/main/noarch/tzdata-2022a-hda174b7_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/ld_impl_linux-64-2.38-h1181459_1.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libgcc-ng-11.2.0-h1234567_1.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/bzip2-1.0.8-h7b6447c_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libffi-3.3-he6710b0_2.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libuuid-1.0.3-h7f8727e_2.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/ncurses-6.3-h5eee18b_3.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/openssl-1.1.1q-h7f8727e_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/xz-5.2.5-h7f8727e_1.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/zlib-1.2.12-h5eee18b_3.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/readline-8.1.2-h7f8727e_1.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/tk-8.6.12-h1ccaba5_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/sqlite-3.39.2-h5082296_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/python-3.10.4-h12debd9_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/certifi-2022.6.15-py310h06a4308_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/noarch/wheel-0.37.1-pyhd3eb1b0_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/setuptools-63.4.1-py310h06a4308_0.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/pip-22.1.2-py310h06a4308_0.tar.bz2

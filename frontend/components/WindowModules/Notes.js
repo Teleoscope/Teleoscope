@@ -9,8 +9,8 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from '@mui/material/Tooltip';
 
 // actions
-import { useSelector, useDispatch } from "react-redux"
-import { dragged, addWindow, removeWindow, loadWindows } from "../../actions/windows";
+import { useDispatch } from "react-redux"
+import { removeWindow } from "../actions/windows";
 
 // custom components
 import PostTitle from "../PostTitle"
@@ -22,8 +22,8 @@ import { WindowBody } from "../Window/WindowBody";
 import CloseIcon from "@mui/icons-material/Close";
 
 //utils
-import useSWRAbstract from "../../util/swr"
-import { update_note } from "../Stomp.js";
+import useSWRAbstract from "../util/swr"
+import { update_note } from "../components/Stomp.ts";
 
 // contexts
 import { StompContext } from '../../context/StompContext'
@@ -51,6 +51,14 @@ const NoteBody = ({ props }, editor, postid) => {
 
   const handleFocus = () => {
   }
+
+export default function Note(props) {
+  const postid = props.id.split("%")[0]
+  const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${postid}`);
+  const { note, note_loading, note_error } = useSWRAbstract("note", `/api/notes/${postid}`);
+  const dispatch = useDispatch();
+  const client = useContext(StompContext)
+  const editor = React.useRef(null);
 
   const handleLoad = () => {
     if (note) {
@@ -88,6 +96,9 @@ export default function Note(props) {
   const client = useContext(StompContext)
   // const editor = React.useRef(null);
 
+  const handleFocus = () => {
+
+  }
 
   const handleClose = () => {
     update_note(client, postid, convertToRaw(editorState.getCurrentContent()))
@@ -136,6 +147,14 @@ export default function Note(props) {
             </IconButton>
             <PostTitle title={post ? post.title : ""} size="sm" color="#AAAAAA" noWrap={true} />
           </Stack>
+          <Editor
+            ref={editor}
+            editorState={editorState}
+            onBlur={handleBlur}
+            onFocus={handleFocus}
+            onChange={setEditorState}
+          // placeholder={post ? post["title"] : props.id}
+          />
         </Stack>
       </div>
     </Card>

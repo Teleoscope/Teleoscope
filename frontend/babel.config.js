@@ -3,7 +3,10 @@ module.exports = api => {
 	api.cache(true);
 	if (isTest) {
 		return {
-			presets: [['@babel/preset-env', {targets: {node: 'current'}}]],			
+			presets: [
+				['@babel/preset-env', {targets: {node: 'current'}}],
+				'@babel/preset-typescript',
+			  ],			
 		}
 	}
 	return {

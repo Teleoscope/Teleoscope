@@ -1,4 +1,6 @@
 // next.config.js
+
+require('dotenv').config({ path: './.env' })
 module.exports = {
   reactStrictMode: true,
     serverRuntimeConfig: {
@@ -9,6 +11,7 @@ module.exports = {
             ? 'http://localhost:3000/api' // development api
             : 'http://localhost:3000/api' // production api
     },
+  distDir: 'build',
   async headers() {
     return [
       {

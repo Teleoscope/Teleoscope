@@ -1,23 +1,17 @@
 import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit'
 
-import SearchTerm from "../actions/searchterm"
-import ActiveTeleoscopeID from "../actions/activeTeleoscopeID"
 import ActiveSessionID from "../actions/activeSessionID"
 import ActiveHistoryItem from "../actions/activeHistoryItem"
-import CheckedPosts from "../actions/checkedPosts"
 import Bookmark from "../actions/bookmark"
 import Groups from '../actions/groups'
 import Windows from '../actions/windows'
 import Login from '../actions/logins'
 import Register from '../actions/registration'
 
-export default configureStore({
+const store = configureStore({
   reducer: {
-    searchTerm: SearchTerm,
-    activeTeleoscopeID: ActiveTeleoscopeID,
     activeSessionID: ActiveSessionID,
     activeHistoryItem: ActiveHistoryItem,
-    checkedPosts: CheckedPosts,
     bookmarker: Bookmark,
     grouper: Groups,
     windows: Windows,
@@ -37,3 +31,10 @@ export default configureStore({
     })
 })
 
+
+// Infer the `RootState` and `AppDispatch` types from the store itself
+export type RootState = ReturnType<typeof store.getState>
+// Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
+export type AppDispatch = typeof store.dispatch
+
+export default store;
