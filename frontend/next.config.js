@@ -4,7 +4,7 @@ require('dotenv').config({ path: './.env' })
 module.exports = {
   reactStrictMode: true,
     serverRuntimeConfig: {
-        secret: 'THIS IS USED TO SIGN AND VERIFY JWT TOKENS, REPLACE IT WITH YOUR OWN SECRET, IT CAN BE ANY STRING'
+        secret: 'THIS IS USED TO SIGN AND VERIFY JWT TOKENS, WE NEED TO REPLACE IT WITH OUR OWN TOKEN'
     },
     publicRuntimeConfig: {
         apiUrl: process.env.NODE_ENV === 'development'
@@ -34,6 +34,5 @@ module.exports = {
     ];
   },
 };
-
 
 

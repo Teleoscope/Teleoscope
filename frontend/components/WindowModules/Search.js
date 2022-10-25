@@ -33,10 +33,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { updateWindow } from "../../actions/windows";
 
 // custom components
-import PostList from "../PostList"
+import PostList from "../Posts/PostList"
 import CloseButton from "../CloseButton"
-import { WindowHeader } from '../Window/WindowHeader';
-import { WindowBody } from '../Window/WindowBody';
 
 // util
 import useSWRAbstract from "../../util/swr"
@@ -107,8 +105,13 @@ HideOnScroll.propTypes = {
   window: PropTypes.func,
 };
 
-let globalQuery = "";
+export default function BottomAppBar(props) {
+  const [query, setQuery] = useState("");
+  const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${query}`);
+  const dispatch = useDispatch();
 
+  // this is a hard-coded hack for ranking of post_id
+  const data = posts ? posts.map((post) => { return [post.id, 1.0]; }) : [];
 
   const handleSetQuery = (e) => {
     if (e.target.value != 'Enter') {
@@ -128,46 +131,12 @@ let globalQuery = "";
         <StyledInputBase
           placeholder="Search…"
           inputProps={{ 'aria-label': 'search' }}
-          onChange={(e) => handleSetQuery(e)}/>
+          onChange={(e) => handleSetQuery(e)}
+        />
       </Search>
-      <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
-        Search {query != "" ? `"${query}"` : "all posts"}
-      </Typography>
 
-      {/* {posts_loading ? <LoadingButton loading={true} /> : <PostList pagination={true} data={data}></PostList>} */}
-    </div>
-
-  );
-
-
-const SearchBody = ({ props }) => {
-  const { posts, posts_loading, posts_error } = useSWRAbstract("posts", `/api/cleanposts/${globalQuery}`);
-
-  // this is a hard-coded hack for ranking of post_id
-  const data = posts ? posts.map((post) => { return [post.id, 1.0]; }) : [];
-
-  return (
-    <div>
       {posts_loading ? <LoadingButton loading={true} /> : <PostList pagination={true} data={data}></PostList>}
     </div>
-  )
-}
 
-
-
-export default function BottomAppBar(props, id) {
-  const header = (id === "header");
-  return (
-    <>
-    {/* The search return is split into two sections, the header and the body, both of which are passed as the children of the respective
-      window header and window body. In those two there are styling that are applied */}
-      <WindowHeader>
-        <SearchHeader />
-      </WindowHeader>
-      <WindowBody>
-        <SearchBody />
-      </WindowBody>
-      {/* {header ?  <SearchHeader props={props} /> : <SearchBody props={props} />} */}
-    </>
   );
 }

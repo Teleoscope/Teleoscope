@@ -22,23 +22,20 @@ import Diversity2Icon from '@mui/icons-material/Diversity2';
 // actions
 import useSWRAbstract from "../../util/swr"
 import { useSelector, useDispatch } from "react-redux";
-import { addWindow } from "../actions/windows";
-import { dragged } from "../actions/windows";
+import { addWindow } from "../../actions/windows";
+import { dragged } from "../../actions/windows";
 
 // utils
-import { add_group } from "../components/Stomp.ts";
+import { add_group } from "../Stomp.ts";
 
 // contexts
-import { StompContext } from '../context/StompContext'
+import { StompContext } from '../../context/StompContext'
 import randomColor from "randomcolor";
 import { IconButton } from "@mui/material";
-import { cluster_by_groups } from "./Stomp";
+import { cluster_by_groups } from "../Stomp";
 
 // custom components
 import CloseButton from "../CloseButton"
-import { WindowHeader } from "../Window/WindowHeader";
-import { WindowBody } from "../Window/WindowBody";
-
 
 // abstracting Header and Body
 const GroupPaletteHeader = ({props}) => {

@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 // custom
-import PostList from "./PostList"
+import PostList from "./Posts/PostList";
 
 //utils
 import useSWRAbstract from "../util/swr"

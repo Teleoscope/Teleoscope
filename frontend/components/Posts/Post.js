@@ -3,16 +3,16 @@ import React from "react";
 
 // custom
 import PostText from "./PostText"
-import GroupSelector from "./GroupSelector"
-import NoteButton from "./NoteButton"
+import GroupSelector from "../GroupSelector"
+import NoteButton from "../NoteButton"
 
 // mui
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 
 //utils
-import useSWRAbstract from "../util/swr"
-import { PreprocessText } from "../util/Preprocessers"
+import useSWRAbstract from "../../util/swr"
+import { PreprocessText } from "../../util/Preprocessers"
 
 export default function Post(props) {
   const id = props.id.split("%")[0];

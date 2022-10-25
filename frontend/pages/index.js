@@ -6,10 +6,10 @@ import { CookiesProvider } from "react-cookie";
 import { SWRConfig } from 'swr'
 
 // store
-import store from "../stores/store";
+import { store } from '../stores/store.ts';
 
 // custom components
-import Workspace from "../components/Workspace";
+import Workspace from '../components/Workspace.tsx';
 import clientPromise from '../util/mongodb';
 
 // API fetcher for SWR global config

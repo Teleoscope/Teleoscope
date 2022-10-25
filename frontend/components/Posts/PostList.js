@@ -6,7 +6,7 @@ import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 
 // custom components
-import PostListItem from "../components/PostListItem";
+import PostListItem from "./PostListItem";
 
 export default function PostList(props) {
   const data = props.data;

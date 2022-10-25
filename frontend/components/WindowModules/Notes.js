@@ -10,47 +10,20 @@ import Tooltip from '@mui/material/Tooltip';
 
 // actions
 import { useDispatch } from "react-redux"
-import { removeWindow } from "../actions/windows";
+import { removeWindow } from "../../actions/windows";
 
 // custom components
-import PostTitle from "../PostTitle"
-import { WindowHeader } from "../Window/WindowHeader";
-import { WindowBody } from "../Window/WindowBody";
-
+import PostTitle from "../Posts/PostTitle"
 
 // icons
 import CloseIcon from "@mui/icons-material/Close";
 
 //utils
-import useSWRAbstract from "../util/swr"
-import { update_note } from "../components/Stomp.ts";
+import useSWRAbstract from "../../util/swr"
+import { update_note } from "../Stomp.ts";
 
 // contexts
 import { StompContext } from '../../context/StompContext'
-
-// abstracting Header and Body
-
-const NoteHeader = ({ props }) => {
-  return (
-    <div>
-
-    </div>
-  )
-}
-
-
-
-const NoteBody = ({ props }, editor, postid) => {
-  const { note, note_loading, note_error } = useSWRAbstract("note", `/api/notes/${postid}`);
-
-  // Handlers
-  const handleBlur = () => {
-    var content = editorState.getCurrentContent();
-    update_note(client, postid, convertToRaw(content))
-  }
-
-  const handleFocus = () => {
-  }
 
 export default function Note(props) {
   const postid = props.id.split("%")[0]
@@ -71,30 +44,14 @@ export default function Note(props) {
     }
     return EditorState.createEmpty()
   }
-
   const [editorState, setEditorState] = React.useState(() => handleLoad());
 
-  return (
-    <div>
-      <Editor
-        ref={editor}
-        editorState={editorState}
-        onBlur={handleBlur}
-        onFocus={handleFocus}
-        onChange={setEditorState}
-      // placeholder={post ? post["title"] : props.id}
-      />
-    </div>
-  )
-}
+  // Handlers
+  const handleBlur = () => {
+    var content = editorState.getCurrentContent();
+    update_note(client, postid, convertToRaw(content))
+  }
 
-export default function Note(props) {
-  const editor = React.useRef(null);
-  const postid = props.id.split("%")[0]
-  const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${postid}`);
-  const dispatch = useDispatch();
-  const client = useContext(StompContext)
-  // const editor = React.useRef(null);
 
   const handleFocus = () => {
 
@@ -110,20 +67,6 @@ export default function Note(props) {
   }
 
   return (
-    // <div>
-    //   <Stack direction="column" onClick={focusEditor} style={{ marginLeft: "10px", cursor: "text" }}>
-    //     <Stack
-    //       direction="row-reverse"
-    //       justifyContent="space-between"
-    //     >
-    //       <IconButton size="small" onClick={handleClose}>
-    //         <CloseIcon fontSize="small" />
-    //       </IconButton>
-    //       <PostTitle post={post ? post : {}} size="sm" color="#AAAAAA" noWrap={true} />
-    //     </Stack>
-    //     <WindowBody>
-    //       <NoteBody props={props} editor={editor} postid={postid}/>
-    //     </WindowBody>
     <Card
       variant="outlined"
       style={{

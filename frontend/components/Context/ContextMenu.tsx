@@ -1,7 +1,7 @@
 import React, { useRef, useContext } from "react";
 
-import { useAppSelector, useAppDispatch } from '../hooks'
-import { RootState } from '../stores/store'
+import { useAppSelector, useAppDispatch } from '../../hooks'
+import { RootState } from '../../stores/store'
 
 // mui
 import Menu from '@mui/material/Menu';
@@ -12,14 +12,14 @@ import Divider from '@mui/material/Divider';
 import MenuActions from "./ContextMenuActions"
 
 // actions
-import { addWindow, selectAll, deselectAll } from "../actions/windows";
+import { addWindow, selectAll, deselectAll } from "../../actions/windows";
 
 // util
-import useSWRAbstract from "../util/swr"
-import { cluster_by_groups, initialize_teleoscope } from "./Stomp";
+import useSWRAbstract from "../../util/swr"
+import { cluster_by_groups, initialize_teleoscope } from "../Stomp";
 
 // contexts
-import { StompContext } from '../context/StompContext'
+import { StompContext } from '../../context/StompContext'
 export default function ContextMenu(props) {
     const client = useContext(StompContext)
 

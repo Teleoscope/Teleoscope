@@ -40,8 +40,8 @@ import useSWRAbstract from "../util/swr"
 import { StompContext } from '../context/StompContext'
 
 // custom
-import { Nav } from 'components/Login';
-import { Alert } from 'components/Login';
+import { Nav } from './Login/Nav';
+import { Alert } from './Login/Alert';
 
 export default function TopBar(props) {
 

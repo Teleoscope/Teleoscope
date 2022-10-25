@@ -10,9 +10,11 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
-import 'styles/global.css';
+import '../styles/global.css';
 
-import { userService } from 'services';
+
+import { userService } from '../services/user.service';
+//import { userService } from 'services';
 
 export default App;
 

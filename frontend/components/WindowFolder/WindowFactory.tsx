@@ -1,7 +1,7 @@
 import React from "react";
 import Window from "./Window"
 import WindowDefinitions from "./WindowDefinitions"
-import useSWRAbstract from "../util/swr"
+import useSWRAbstract from "../../util/swr"
 
 export default function WindowFactory(props) {
 	const w = props.windata;
