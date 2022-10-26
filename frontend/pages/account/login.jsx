@@ -3,11 +3,11 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 
-// import { Link } from '../../components/Login/Link';
-// import { Layout } from '../../components/Login/Layout/Layout';
-import { Link } from 'components/Login';
-import { Layout } from 'components/Login/Layout';
-import { userService, alertService } from 'services';
+import { Link } from '../../components/Login/Link';
+import { Layout } from '../../components/Login/Layout/Layout';
+//import { Link } from 'components/Login';
+//import { Layout } from 'components/Login/Layout';
+import { userService, alertService } from '../../services/index';
 
 export default Login;
 

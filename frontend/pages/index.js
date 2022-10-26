@@ -13,8 +13,8 @@ import Workspace from '../components/Workspace';
 import clientPromise from '../util/mongodb';
 
 // API fetcher for SWR global config
-const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
-
+//const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
+const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
 export default function Home({ isConnected }) {
   return (

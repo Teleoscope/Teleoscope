@@ -11,7 +11,7 @@
     "build": "next build",
     "test": "jest",
     "start": "next start -p 80",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint package.json"
   },
   "author": "",
   "license": "ISC",
@@ -69,6 +69,7 @@
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "@typescript-eslint/parser": "^5.41.0",
     "eslint": "^8.26.0",
+    "eslint-plugin-json": "^3.1.0",
     "jest": "^29.1.2",
     "jest-dev-server": "^6.1.1",
     "jest-puppeteer": "^6.1.1",

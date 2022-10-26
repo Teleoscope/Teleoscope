@@ -5,10 +5,10 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 
 // custom components
-import { Link } from 'components/Login';
-import { Layout } from 'components/Login/Layout';
-import { userService, alertService } from 'services';
-import { register_account } from 'components/Stomp';
+import { Link } from '../../components/Login/index';
+import { Layout } from '../../components/Login/Layout/index';
+import { userService, alertService } from '../../services/index';
+import { register_account } from '../../components/Stomp';
 import { StompContext } from '../../context/StompContext'
 
 export default Register;

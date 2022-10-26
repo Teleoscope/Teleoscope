@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 
-import { userService } from 'services';
+import { userService } from '../../../services/user.service';
 
 export { Layout };
 
