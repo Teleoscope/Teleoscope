@@ -2,7 +2,9 @@ import { Client } from "@stomp/stompjs";
 // TODO: look at websocket example code here and replicate
 // anywhere that needs to route a request to the server
 // possibly best to move this into an action? I'm unsure
-Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
+import {WebsocketBuilder} from 'websocket-ts';
+//Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
+Object.assign(global, WebsocketBuilder);
 //const bcrypt = require('bcrypt');
 
 /**
@@ -55,14 +57,15 @@ export function client_init() {
  */
 interface Body {
   task: string,
-  args: Object
+  // args: Object
+  args: Record<string, unknown>
 }
 
 /**
  * Publishes a message to RabbitMQ.
  */
 export function publish(client: Client, body: Body) {
-  var headers = {};
+  const headers = {};
   client.publish({
     destination: "/queue/" + process.env.NEXT_PUBLIC_RABBITMQ_VHOST, // TODO: rename queue
     headers: headers,
@@ -77,7 +80,7 @@ export function publish(client: Client, body: Body) {
  */
 
 export function initialize_session(client: Client, username: string, label: string, color: string) {
-  var body = {
+  const body = {
     task: 'initialize_session',
     args: {
       username: username,
@@ -93,7 +96,7 @@ export function initialize_session(client: Client, username: string, label: stri
  * adds user to userlist of a session in MongoDB.
  */
 export function add_user_to_session(client: Client, username: string, session_id: string) {
-  var body = {
+  const body = {
     task: 'add_user_to_session',
     args: {
       username: username,
@@ -109,7 +112,7 @@ export function add_user_to_session(client: Client, username: string, session_id
  * Saves the workspace UI state (window locations, bookmarks)
  */
 export function save_UI_state(client: Client, session_id: string, history_item) {
-  var body = {
+  const body = {
     task: 'save_UI_state',
     args: {
       session_id: session_id,
@@ -124,7 +127,7 @@ export function save_UI_state(client: Client, session_id: string, history_item) 
  * Requests to create a Teleoscope object in MongoDB.
  */
 export function initialize_teleoscope(client: Client, session_id: string) {
-  var body = {
+  const body = {
     task: 'initialize_teleoscope',
     args: {
       session_id: session_id
@@ -139,7 +142,7 @@ export function initialize_teleoscope(client: Client, session_id: string) {
  */
 export function save_teleoscope_state(client: Client, _id: string, history_item) {
   //const obj_id = ObjectId(_id);
-  var body = {
+  const body = {
     task: 'save_teleoscope_state',
     args: {
       _id: _id,
@@ -154,7 +157,7 @@ export function save_teleoscope_state(client: Client, _id: string, history_item)
  * Requests to create a new group object in MongoDB.
  */
 export function add_group(client: Client, label: string, color: string, session_id: string) {
-  var body = {
+  const body = {
     task: 'add_group',
     args: {
       session_id: session_id,
@@ -170,7 +173,7 @@ export function add_group(client: Client, label: string, color: string, session_
  * Add a post to a group.
  */
 export function add_post_to_group(client: Client, group_id: string, post_id: string) {
-  var body = {
+  const body = {
     task: 'add_post_to_group',
     args: {
       group_id: group_id,
@@ -185,7 +188,7 @@ export function add_post_to_group(client: Client, group_id: string, post_id: str
  * Remove a post from a group.
  */
 export function remove_post_from_group(client: Client, group_id: string, post_id: string) {
-  var body = {
+  const body = {
     task: 'remove_post_from_group',
     args: {
       group_id: group_id,
@@ -200,7 +203,7 @@ export function remove_post_from_group(client: Client, group_id: string, post_id
  * Update a group's label.
  */
 export function update_group_label(client: Client, group_id: string, label: string) {
-  var body = {
+  const body = {
     task: 'update_group_label',
     args: {
       group_id: group_id,
@@ -215,7 +218,7 @@ export function update_group_label(client: Client, group_id: string, label: stri
  * Request to add a note for a particular post.
  */
 export function add_note(client: Client, post_id: string) {
-  var body = {
+  const body = {
     task: 'add_note',
     args: {
       post_id: post_id,
@@ -229,7 +232,7 @@ export function add_note(client: Client, post_id: string) {
  * Updates a note's content.
  */
 export function update_note(client: Client, post_id: string, content) {
-  var body = {
+  const body = {
     task: 'update_note',
     args: {
       post_id: post_id,
@@ -244,7 +247,7 @@ export function update_note(client: Client, post_id: string, content) {
  * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
  */
 export function reorient(client: Client, teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>, weight?: number) {
-  var body = {
+  const body = {
     task: "reorient",
     args: {
       teleoscope_id: teleoscope_id, // TODO
@@ -263,7 +266,7 @@ export function reorient(client: Client, teleoscope_id: string, positive_docs: A
  * Create MLGroups using the UMAP and HBDSCAN with the given groups' posts as seeds.
  */
 export function cluster_by_groups(client: Client, group_id_strings: Array<string>, session_oid: string) {
-  var body = {
+  const body = {
     task: "cluster_by_groups",
     args: {
       group_id_strings: group_id_strings,
@@ -278,7 +281,7 @@ export function cluster_by_groups(client: Client, group_id_strings: Array<string
   Adds the users login credentials for verification
 */
 export function add_login(client, username, password) {
-  var body = {
+  const body = {
     task: "add_login",
     args: {
       username: username,
@@ -303,7 +306,7 @@ export function register_account(client, jsonData) {
   //const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync());
 
   const {firstName, lastName, username, password} = jsonData;
-  var body = {
+  const body = {
     task: "register_account",
     args: {
       firstName: firstName,

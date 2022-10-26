@@ -8,7 +8,7 @@ import TopBar from "./TopBar";
 import WindowManager from './WindowFolder/WindowManager';
 import ContextMenu from "./Context/ContextMenu";
 
-export default function Workspace(props) {
+export default function Workspace(props: any) {
   interface MouseCoords {
     mouseX: number,
     mouseY: number
@@ -36,6 +36,7 @@ export default function Workspace(props) {
 
 
   const handleClick = (e) => {
+    console.log('e', e.target.value);
   }
 
 

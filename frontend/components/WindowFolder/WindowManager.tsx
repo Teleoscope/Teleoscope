@@ -25,7 +25,7 @@ import { StompContext } from '../../context/StompContext'
 const ReactGridLayout = WidthProvider(RGL);
 
 const item = (id, type) => {
-  var t = getDefaultWindow()
+  const t = getDefaultWindow()
   t.i = id;
   t.type = type;
   return t;
@@ -70,7 +70,7 @@ export default function WindowManager(props) {
 
   const handleDragStop = (layout, newItem) => {
     dispatch(loadWindows(layout))
-    var checked = windows.find(w => w.isChecked && w.type == "Group");
+    const checked = windows.find(w => w.isChecked && w.type == "Group");
     if (checked && newItem.i.split("%")[1] == "post") {
       dispatch(removeWindow(newItem.i))
       add_post_to_group(client, checked.i.split("%")[0], newItem.i.split("%")[0])

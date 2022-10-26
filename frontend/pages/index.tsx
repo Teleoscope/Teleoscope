@@ -6,14 +6,14 @@ import { CookiesProvider } from "react-cookie";
 import { SWRConfig } from 'swr'
 
 // store
-import { store } from '../stores/store.ts';
+import store from "../stores/store";
 
 // custom components
-import Workspace from '../components/Workspace.tsx';
+import Workspace from '../components/Workspace';
 import clientPromise from '../util/mongodb';
 
 // API fetcher for SWR global config
-const fetcher = (...args) => fetch(...args).then((res) => res.json())
+const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
 
 
 export default function Home({ isConnected }) {

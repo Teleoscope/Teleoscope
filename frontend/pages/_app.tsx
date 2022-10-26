@@ -42,7 +42,7 @@ function App({ Component, pageProps }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    function authCheck(url) {
+    function authCheck(url: string) {
         // redirect to login page if accessing a private page and not logged in 
         setUser(userService.userValue);
         console.log('User', user)

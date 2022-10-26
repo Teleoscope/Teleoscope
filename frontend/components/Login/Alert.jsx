@@ -80,7 +80,7 @@ function Alert({ id, fade }) {
          // remove alert
          setAlerts(alerts => alerts.filter(x => x !== alert));
       }
-   };
+   }
 
    function cssClasses(alert) {
       if (!alert) return;

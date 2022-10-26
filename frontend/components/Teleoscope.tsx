@@ -29,7 +29,7 @@ export default function Teleoscope(props) {
   const { teleoscope, teleoscope_loading } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
 
 
-  var data = teleoscope?.history[0]["rank_slice"];
+  const data = teleoscope?.history[0]["rank_slice"];
   const DiscreteSlider = () => {
     return (
       <Box sx={{ width: 300 }}>
