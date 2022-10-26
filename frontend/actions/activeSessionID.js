@@ -1,5 +1,7 @@
 // actions.js
-import { createSlice } from '@reduxjs/toolkit'
+import * as toolkitRaw from '@reduxjs/toolkit';
+const { createSlice } = toolkitRaw.default ?? toolkitRaw;
+//import { createSlice } from '@reduxjs/toolkit'
 console.log("Reloading ActiveSessionID ");
 export const ActiveSessionID = createSlice({
   name: 'activeSessionID',

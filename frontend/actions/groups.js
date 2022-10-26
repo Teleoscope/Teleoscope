@@ -1,5 +1,7 @@
 // actions.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import * as toolkitRaw from '@reduxjs/toolkit';
+const { createSlice, createAsyncThunk } = toolkitRaw.default ?? toolkitRaw;
+//import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 const initialState = {
 		groups: {

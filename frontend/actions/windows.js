@@ -1,5 +1,8 @@
 // windows.js
-import { createSlice } from '@reduxjs/toolkit'
+
+import * as toolkitRaw from '@reduxjs/toolkit';
+const { createSlice } = toolkitRaw.default ?? toolkitRaw;
+//import { createSlice } from '@reduxjs/toolkit'
 import _ from 'lodash';
 import { getDefaultWindow } from '../components/WindowFolder/WindowDefault.ts';
 

@@ -1,4 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit';
+import * as toolkitRaw from '@reduxjs/toolkit';
+const { createSlice } = toolkitRaw.default ?? toolkitRaw;
+//import { createSlice } from '@reduxjs/toolkit';
 
 export const Registration = createSlice({
    name: 'registration',
