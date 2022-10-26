@@ -9,7 +9,7 @@ from bson.objectid import ObjectId
 import gc
 import tasks
 
-def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=100000):
+def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=100):
     """Cluster documents using user-provided group ids.
 
     teleoscope_oid: GridFS OID address for ranked posts. 
@@ -68,7 +68,10 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
 
     label = 1
     # add the correct labels to the label np.array
+    total_tagged = 0
+    tagged_with_label = []
     for group in groups:
+        label_count = 0
         # grab latest history item for each group
         group_post_ids = group["history"][0]["included_posts"]
         # save label just in case (not pushed to MongoDB, only local)
@@ -89,9 +92,21 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
         # add labels
         for i in indices:
             labels[i] = label
+
+        # stats for this particular label
+        label_count = np.count_nonzero(labels == i)
+        coverage = (label_count/ordered_posts)*100
+        total_tagged = total_tagged + label_count
+        tagged_with_label[i] = label_count
+        logging.info(f'There are {label_count} posts that have the label {label}. This is {coverage}% of the ordered posts.')
         # increment label for next loop iteration
         label = label + 1
     
+    total_coverage = (total_tagged/ordered_posts)*100
+    logging.info(f'Overall, there are {total_tagged} posts that have been given a human label. This is {total_coverage}% of the ordered posts.')
+    # update number of unlabelled posts
+    tagged_with_label[0] = np.count_nonzero(labels == -1)
+
     # for garbage collection
     del ordered_posts
     del cursor
@@ -127,6 +142,9 @@ def cluster_by_groups(group_id_strings, teleoscope_oid, session_oid, limit=10000
             posts.append(post_ids[i])
         
         logging.info(f'There are {len(posts)} posts for MLGroup {hdbscan_label}.')
+        cluster_label_count = len(posts)
+        added_count = cluster_label_count - tagged_with_label[i]
+        logging.info(f'There are now {cluster_label_count} documents in the MLGroup {hdbscan_label}, {added_count} documents have moved into this cluster.')
         tasks.add_group(
             human=False, 
             session_id=session_oid, 
