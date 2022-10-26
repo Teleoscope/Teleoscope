@@ -1,8 +1,6 @@
 # builtin modules
 from warnings import simplefilter
 import json
-import random
-import string
 import logging
 
 # installed modules
@@ -72,6 +70,15 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "label": args["label"],
                     "color": args["color"]
                 },
+            )
+
+        if task == "add_user_to_session":
+            res = tasks.add_user_to_session.signature(
+                args=(),
+                kwargs={
+                    "username": args["username"],
+                    "session_id": args["session_id"]
+                }
             )
 
         if task == "save_UI_state":
@@ -150,7 +157,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 args=(),
                 kwargs={
                     "group_id_strings": args["group_id_strings"],
-                    "teleoscope_oid": args["teleoscope_oid"],
                     "session_oid": args["session_oid"]
                 }
             )

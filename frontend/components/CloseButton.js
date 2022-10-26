@@ -6,7 +6,7 @@ import IconButton from "@mui/material/IconButton";
 
 // actions
 import { useDispatch } from "react-redux";
-import {removeWindow} from "../actions/windows";
+import { removeWindow } from "../actions/windows";
 
 export default function CloseButton(props) {
   const dispatch = useDispatch();

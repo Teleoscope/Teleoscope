@@ -1,4 +1,4 @@
-import { Client, Message } from "@stomp/stompjs";
+import { Client } from "@stomp/stompjs";
 // TODO: look at websocket example code here and replicate
 // anywhere that needs to route a request to the server
 // possibly best to move this into an action? I'm unsure
@@ -10,7 +10,7 @@ Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
 export function client_init() {
   console.log("Initializing Stomp client...")
   const client = new Client({
-    brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:3311/ws`,
+    brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:15674/ws`,
     connectHeaders: {
       login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME!,
       passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD!,
@@ -23,13 +23,13 @@ export function client_init() {
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000,
   });
-  
+
   /**
    * Called when the client connects to RabbitMQ.
    */
   client.onConnect = function (frame) {
-      // Do something, all subscribes must be done is this callback
-      // This is needed because this will be executed after a (re)connect
+    // Do something, all subscribes must be done is this callback
+    // This is needed because this will be executed after a (re)connect
     console.log("Connected to RabbitMQ webSTOMP server.");
   };
 
@@ -74,6 +74,7 @@ export function publish(client: Client, body: Body) {
 /**
  * Requests to create a new session object in MongoDB.
  */
+
 export function initialize_session(client: Client, username: string, label: string, color: string) {
   var body = {
     task: 'initialize_session',
@@ -88,9 +89,25 @@ export function initialize_session(client: Client, username: string, label: stri
 }
 
 /**
+ * adds user to userlist of a session in MongoDB.
+ */
+export function add_user_to_session(client: Client, username: string, session_id: string) {
+  var body = {
+    task: 'add_user_to_session',
+    args: {
+      username: username,
+      session_id: session_id,
+
+    }
+  }
+  publish(client, body);
+  return body;
+}
+
+/**
  * Saves the workspace UI state (window locations, bookmarks)
  */
- export function save_UI_state(client: Client, session_id: string, history_item) {
+export function save_UI_state(client: Client, session_id: string, history_item) {
   var body = {
     task: 'save_UI_state',
     args: {
@@ -225,7 +242,7 @@ export function update_note(client: Client, post_id: string, content) {
 /**
  * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
  */
- export function reorient(client: Client, teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>) {
+export function reorient(client: Client, teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>, weight?: number) {
   var body = {
     task: "reorient",
     args: {
@@ -234,6 +251,9 @@ export function update_note(client: Client, post_id: string, content) {
       negative_docs: negative_docs,
     }
   }
+  if (weight) {
+    body.args["weight"] = weight;
+  }
   publish(client, body);
   return body;
 }
@@ -241,12 +261,11 @@ export function update_note(client: Client, post_id: string, content) {
 /**
  * Create MLGroups using the UMAP and HBDSCAN with the given groups' posts as seeds.
  */
-export function cluster_by_groups(client: Client, group_id_strings: Array<string>, teleoscope_oid: string, session_oid: string) {
+export function cluster_by_groups(client: Client, group_id_strings: Array<string>, session_oid: string) {
   var body = {
     task: "cluster_by_groups",
     args: {
       group_id_strings: group_id_strings,
-      teleoscope_oid: teleoscope_oid,
       session_oid: session_oid,
     }
   }

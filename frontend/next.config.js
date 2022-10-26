@@ -2,6 +2,7 @@
 
 require('dotenv').config({ path: './.env' })
 module.exports = {
+  distDir: 'build',
   async headers() {
     return [
       {

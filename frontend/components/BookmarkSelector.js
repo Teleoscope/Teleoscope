@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 
-
 // MUI imports
-import StarOutline from "@mui/icons-material/Bookmark";
 import IconButton from "@mui/material/IconButton";
 import StarOutlineOutlinedIcon from '@mui/icons-material/StarOutlineOutlined';
 import StarOutlinedIcon from '@mui/icons-material/StarOutlined';

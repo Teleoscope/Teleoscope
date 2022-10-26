@@ -1,6 +1,6 @@
 import logging, pickle, utils, json, auth, numpy as np
 from warnings import simplefilter
-from celery import Celery, Task
+from celery import Celery, Task, chain
 from bson.objectid import ObjectId
 import datetime
 
@@ -41,12 +41,7 @@ def initialize_session(*args, **kwargs):
     logging.info(f'Initializing sesssion for user {username}.')
     # Check if user exists and throw error if not
     user = db.users.find_one({"username": username})
-
-    # grab all users for now (no 'team')
-    users = db.users.find({})
-    usernames = [u["username"] for u in users]
-    userlist = {u:"read" for u in usernames}
-    userlist[user["username"]] = "write"
+    userlist = {username:"owner"}
 
     if user is None:
         logging.info(f'User {username} does not exist.')
@@ -60,27 +55,69 @@ def initialize_session(*args, **kwargs):
                 "bookmarks": [],
                 "windows": [],
                 "groups": [],
-                "mlgroups": [],
+                "clusters": [],
                 "label": kwargs['label'],
                 "color": kwargs['color'],
+                "teleoscopes": []
             }
         ],
-        "teleoscopes": []
     }
     with transaction_session.start_transaction():
         result = db.sessions.insert_one(obj, session=transaction_session)
-        db.users.update_many(
-            {
-                "username": {
-                    "$in": usernames
-                }
-            },
+        db.users.update_one(
+            {"username": username},
             {
                 "$push": {
                     "sessions": result.inserted_id
                 }
             }, session=transaction_session)
         utils.commit_with_retry(transaction_session)
+    return 200 # success
+
+'''
+add_user_to_session
+input:
+    username (string, name of user to add to session) NOTE maybe do with objectID?
+    session_id (int, represents ObjectId in int)
+
+purpose: updates the userlist in a session to include input user
+'''
+@app.task
+def add_user_to_session(*args, **kwargs):
+
+    transaction_session, db = utils.create_transaction_session()
+
+    logging.info(f'adding user to {kwargs["session_id"]}.')
+
+    # session_id needs to be typecast to ObjectId
+    session_id = ObjectId(str(kwargs["session_id"]))
+    session = db.sessions.find_one({"_id": session_id})
+
+    username = kwargs["username"]
+    user = db.users.find_one({"username": username})
+
+    userlist = session["userlist"]
+    userlist[username] = "collaborator"
+
+    # update session with new userlist that includes collaborator
+    with transaction_session.start_transaction():
+        db.sessions.update_one({"_id": session_id},
+            {
+                '$set': {
+                    "userlist" : userlist,
+                }
+            }, session=transaction_session)
+
+        db.users.update_one(
+            {"username": username},
+            {
+                "$push": {
+                    "sessions": session_id
+                }
+            }, session=transaction_session)
+
+        utils.commit_with_retry(transaction_session)
+
     return 200 # success
 
 
@@ -146,20 +183,26 @@ def initialize_teleoscope(*args, **kwargs):
     
     kwargs:
         session_id: string
+        label: string (optional)
     """
-    session, db = utils.create_transaction_session()
+    transaction_session, db = utils.create_transaction_session()
 
     # handle kwargs
     session_id = kwargs["session_id"]
+    label = "default"
+    if "label" in kwargs:
+        label = kwargs["label"]
+
+    ret = None
 
     # create a new query document
-    with session.start_transaction():
-        teleoscope_id = db.teleoscopes.insert_one({
+    with transaction_session.start_transaction():
+        teleoscope_result = db.teleoscopes.insert_one({
                 "creation_time": datetime.datetime.utcnow(),
                 "history": [
                     {
                         "timestamp": datetime.datetime.utcnow(),
-                        "label": "default",
+                        "label": label,
                         "rank_slice": [],
                         "reddit_ids": [],
                         "positive_docs": [],
@@ -168,18 +211,27 @@ def initialize_teleoscope(*args, **kwargs):
                         "ranked_post_ids": None
                     }
                 ]
-            }, session=session)
-        logging.info(f"New teleoscope id: {teleoscope_id.inserted_id}.")
+            }, session=transaction_session)
+        logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
+        ret = teleoscope_result
+        ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))})
+        history_item = ui_session["history"][0]
+        history_item["timestamp"] = datetime.datetime.utcnow()
+        history_item["teleoscopes"].append(ObjectId(teleoscope_result.inserted_id))
 
         # associate the newly created teleoscope with correct session
-        db.sessions.update_one({'_id': ObjectId(str(session_id))},
+
+        db.sessions.update_one({"_id": ObjectId(str(session_id))},
             {
                 '$push': {
-                    "teleoscopes": ObjectId(teleoscope_id.inserted_id)
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
                 }
-            }, session=session)
-        utils.commit_with_retry(session)
-    return []
+            }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
+    return ret
 
 
 @app.task
@@ -193,9 +245,9 @@ def save_teleoscope_state(*args, **kwargs):
     """
     session, db = utils.create_transaction_session()
 
-    # handle kwargs
-    _id = str(kwargs["_id"])
-    history_item = kwargs["history_item"]
+    # handle args
+    history_item = args[0]["history_item"]
+    _id = str(args[0]["_id"])
 
     logging.info(f'Saving state for teleoscope {_id}.')
     obj_id = ObjectId(_id)
@@ -207,7 +259,7 @@ def save_teleoscope_state(*args, **kwargs):
 
     history_item["timestamp"] = datetime.datetime.utcnow()
     with session.start_transaction():
-        result = db.teleoscopes.update({"_id": obj_id},
+        result = db.teleoscopes.update_one({"_id": obj_id},
             {
                 '$push': {
                     "history": {
@@ -267,15 +319,19 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     label = kwargs["label"]
     _id = ObjectId(str(kwargs["session_id"]))
 
+    teleoscope_result = initialize_teleoscope(session_id=_id, label=label)    
+
     # Creating document to be inserted into mongoDB
     obj = {
         "creation_time": datetime.datetime.utcnow(),
+        "teleoscope": teleoscope_result.inserted_id,
         "history": [
             {
                 "timestamp": datetime.datetime.utcnow(),
                 "color": color,
                 "included_posts": included_posts,
-                "label": label
+                "label": label,
+                "action" : "initialize group"
             }]
     }
     
@@ -283,7 +339,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
 
     collection = db.groups
     if not human:
-        collection = db.mlgroups
+        collection = db.clusters
 
     with transaction_session.start_transaction():
         groups_res = collection.insert_one(obj, session=transaction_session)
@@ -293,13 +349,13 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
         if not session:
             logging.info(f"Warning: session with id {_id} not found.")
             raise Exception(f"session with id {_id} not found")
-        mlgroups = session["history"][0]["mlgroups"]
+        clusters = session["history"][0]["clusters"]
         groups = session["history"][0]["groups"]
 
         if human:
             groups.append(groups_res.inserted_id)
         else:
-            mlgroups.append(groups_res.inserted_id)
+            clusters.append(groups_res.inserted_id)
         sessions_res = db.sessions.update_one({'_id': _id},
             {
                 '$push': {
@@ -307,11 +363,12 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                                 '$each': [{
                                     "timestamp": datetime.datetime.utcnow(),
                                     "groups": groups,
-                                    "mlgroups": mlgroups,
+                                    "clusters": clusters,
                                     "bookmarks": session["history"][0]["bookmarks"],
                                     "windows": session["history"][0]["windows"],
                                     "label": session["history"][0]["label"],
-                                    "color": session["history"][0]["color"]
+                                    "color": session["history"][0]["color"],
+                                    "teleoscopes": session["history"][0]["teleoscopes"]
                                 }],
                                 '$position': 0
                             }
@@ -319,6 +376,17 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
             }, session=transaction_session)
         logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
+
+        if len(included_posts) > 0:
+            logging.info(f'Reorienting teleoscope {teleoscope_result.inserted_id} for group {label}.')
+            res = chain(
+                    robj.s(teleoscope_id=teleoscope_result.inserted_id,
+                        positive_docs=included_posts,
+                        negative_docs=[]),
+                    save_teleoscope_state.s()
+            )
+            res.apply_async()
+        
         return groups_res.inserted_id
 
 
@@ -345,8 +413,12 @@ def add_post_to_group(*args, **kwargs):
 
     history_item = group["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
+    if post_id in history_item["included_posts"]:
+        logging.info(f'Post {post_id} already in group {group["history"][0]["label"]}.')
+        return
     history_item["included_posts"].append(post_id)
     history_item["action"] = "Add post to group"
+
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
                 "$push":
@@ -358,7 +430,15 @@ def add_post_to_group(*args, **kwargs):
                     }
                 }, session=session)
         utils.commit_with_retry(session)
-
+    logging.info(f'Reorienting teleoscope {group["teleoscope"]} for group {group["history"][0]["label"]}.')
+    res = chain(
+                robj.s(teleoscope_id=str(group["teleoscope"]),
+                       positive_docs=[post_id],
+                       negative_docs=[]),
+                save_teleoscope_state.s()
+    )
+    res.apply_async()
+    return None
 
 @app.task
 def remove_post_from_group(*args, **kwargs):
@@ -507,11 +587,11 @@ def cluster_by_groups(*args, **kwargs):
 
         group_id_strings: list(string) where the strings are MongoDB ObjectID format
 
-        session_oid: string OID for session to add mlgroups to
+        session_oid: string OID for session to add clusters to
     """
     import clustering
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
-    clustering.cluster_by_groups(kwargs["group_id_strings"], kwargs["teleoscope_oid"], kwargs["session_oid"])
+    clustering.cluster_by_groups(kwargs["group_id_strings"], kwargs["session_oid"])
 
 
 class reorient(Task):
@@ -526,16 +606,31 @@ class reorient(Task):
         self.db = None
         self.model = None
 
-    def cachePostsData(self, path='/home/phb/embeddings/'):
+    def cachePostsData(self, path='~/embeddings/'):
         # cache embeddings
-        loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
-        self.allPostVectors = loadPosts['posts']
-        # cache posts ids
-        with open(path + '/ids.pkl', 'rb') as handle:
-            self.allPostIDs = pickle.load(handle)
+        from pathlib import Path
+        Path(path).mkdir(parents=True, exist_ok=True)
 
-        self.postsCached = True
+        try:
+            loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
+            with open(path + 'ids.pkl', 'rb') as handle:
+                self.allPostIDs = pickle.load(handle)
+            self.allPostVectors = loadPosts['posts']
+            self.postsCached = True
 
+        except:            
+            db = utils.connect()
+            allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1, '_id':0}, batching=True, batchSize=10000)
+            ids = [x['id'] for x in allPosts]
+            vecs = np.array([x['selftextVector'] for x in allPosts])
+
+            np.savez(path + 'embeddings.npz', posts=vecs)
+            with open(path + 'ids.pkl', 'wb') as handle:
+                pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+            self.allPostIDs = ids
+            self.allPostVectors = vecs
+            self.postsCached = True
         return
 
 
@@ -643,19 +738,19 @@ class reorient(Task):
         )
         scores = utils.calculateSimilarity(self.allPostVectors, qprime)
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
-        gridfsObj = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
+        gridfs_id = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
 
-        rank_slice = newRanks[0:500]
+        rank_slice = newRanks[0:100]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
 
         history_obj = {
             '_id': teleoscope_id,
             'history_item': {
-                'label': teleoscope['history'][-1]['label'],
+                'label': teleoscope['history'][0]['label'],
                 'positive_docs': positive_docs,
                 'negative_docs': negative_docs,
                 'stateVector': qprime.tolist(),
-                'ranked_post_ids': gridfsObj,
+                'ranked_post_ids': ObjectId(str(gridfs_id)),
                 'rank_slice': rank_slice
             }
         }
