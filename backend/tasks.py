@@ -612,12 +612,14 @@ class reorient(Task):
         dir.mkdir(parents=True, exist_ok=True)
         fch = Path(path + 'embeddings.npz').expanduser()
         if fch.exists():
+            logging.info("Posts have been cached, retrieving now.")
             loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
             with open(path + 'ids.pkl', 'rb') as handle:
                 self.allPostIDs = pickle.load(handle)
             self.allPostVectors = loadPosts['posts']
             self.postsCached = True
         else:
+            logging.info("Posts are not cahced, building cache now.")
             db = utils.connect()
             allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1, '_id':0}, batching=True, batchSize=10000)
             ids = [x['id'] for x in allPosts]
