@@ -726,7 +726,7 @@ class reorient(Task):
         else:
             docs = positive_docs + negative_docs
             first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
-            logging.info(f'Results of finding first_doc: {first_doc['_id']}.')
+            logging.info(f'Results of finding first_doc: {first_doc["_id"]}.')
             stateVector = first_doc['selftextVector']  # grab selftextVector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
