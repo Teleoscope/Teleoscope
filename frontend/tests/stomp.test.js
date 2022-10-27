@@ -1,4 +1,20 @@
-import { client_init, publish, initialize_session, save_UI_state, initialize_teleoscope, save_teleoscope_state, add_group, add_post_to_group, remove_post_from_group, update_group_label, add_note, update_note, reorient, cluster_by_groups } from "../components/Stomp.ts";
+import {
+	client_init,
+	publish,
+	initialize_session,
+	save_UI_state,
+	initialize_teleoscope,
+	save_teleoscope_state,
+	add_group,
+	add_post_to_group,
+	remove_post_from_group,
+	update_group_label,
+	add_note,
+	update_note,
+	reorient,
+	cluster_by_groups,
+	add_user_to_session
+} from "../components/Stomp.ts";
 
 class DummyClient {
 	publish(msg) {
@@ -29,6 +45,20 @@ test("Testing initialize_session return value.", () => {
 				"username": "paul",
 				"label": "test",
 				"color": "#ffffff"
+			}
+		}
+	);
+})
+
+// add_user_to_session() return value
+test("Testing add_post_to_group return value.", () => {
+	expect(add_user_to_session(new DummyClient(), "paul", "62a24ba3a43e59841cacad9d"
+	)).toStrictEqual(
+		{
+			"task": "add_user_to_session",
+			"args": {
+				"username": "paul",
+				"session_id": "62a24ba3a43e59841cacad9d",
 			}
 		}
 	);
