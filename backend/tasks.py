@@ -619,7 +619,7 @@ class reorient(Task):
             self.allPostVectors = loadPosts['posts']
             self.postsCached = True
         else:
-            logging.info("Posts are not cahced, building cache now.")
+            logging.info("Posts are not cached, building cache now.")
             db = utils.connect()
             allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1, '_id':0}, batching=True, batchSize=10000)
             ids = [x['id'] for x in allPosts]
@@ -726,7 +726,7 @@ class reorient(Task):
         else:
             docs = positive_docs + negative_docs
             first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
-            logging.info(f'Results of finding first_doc: {first_doc}.')
+            logging.info(f'Results of finding first_doc: {first_doc['_id']}.')
             stateVector = first_doc['selftextVector']  # grab selftextVector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
