@@ -609,10 +609,10 @@ def register_account(*arg, **kwargs):
     transaction_session, db = utils.create_transaction_session()
 
     #handle kwargs
-    first_name = kwargs['firstName']
-    last_name = kwargs['lastName']
-    password = kwargs['password']
-    username = kwargs['username']
+    first_name = kwargs["firstName"]
+    last_name = kwargs["lastName"]
+    password = kwargs["password"]
+    username = kwargs["username"]
 
     #creating document to be inserted into mongoDB
     obj = {

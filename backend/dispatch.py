@@ -162,7 +162,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
         if task == 'register_account':
-            print("got to dispatch with register account")
             res = tasks.register_account.signature(
                 args=(),
                 kwargs={
