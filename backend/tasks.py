@@ -628,7 +628,7 @@ class reorient(Task):
             vecs = np.array([x['selftextVector'] for x in allPosts])
 
             np.savez(npzpath.as_posix(), posts=vecs)
-            with open(pklpath.as_posix() + 'ids.pkl', 'wb') as handle:
+            with open(pklpath.as_posix(), 'wb') as handle:
                 pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
             self.allPostIDs = ids
             self.allPostVectors = vecs
