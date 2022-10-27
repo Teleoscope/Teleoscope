@@ -608,16 +608,16 @@ class reorient(Task):
     def cachePostsData(self, path='~/embeddings/'):
         # cache embeddings
         from pathlib import Path
-        Path(path).expanduser().mkdir(parents=True, exist_ok=True)
-
-        try:
+        dir = Path(path).expanduser()
+        dir.mkdir(parents=True, exist_ok=True)
+        fch = Path(path + 'embeddings.npz').expanduser()
+        if fch.exists():
             loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
             with open(path + 'ids.pkl', 'rb') as handle:
                 self.allPostIDs = pickle.load(handle)
             self.allPostVectors = loadPosts['posts']
             self.postsCached = True
-
-        except:            
+        else:
             db = utils.connect()
             allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1, '_id':0}, batching=True, batchSize=10000)
             ids = [x['id'] for x in allPosts]
@@ -626,7 +626,6 @@ class reorient(Task):
             np.savez(path + 'embeddings.npz', posts=vecs)
             with open(path + 'ids.pkl', 'wb') as handle:
                 pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
             self.allPostIDs = ids
             self.allPostVectors = vecs
             self.postsCached = True
