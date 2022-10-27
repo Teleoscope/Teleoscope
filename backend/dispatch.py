@@ -161,7 +161,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 }
             )
 
-        if task == 'register_account':
+        if task == "register_account":
             res = tasks.register_account.signature(
                 args=(),
                 kwargs={
@@ -169,7 +169,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "lastName": args["lastName"],
                     "password": args["password"],
                     "username": args["username"]
-                },
+                }
             )
 
         try:
