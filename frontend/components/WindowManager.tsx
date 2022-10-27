@@ -1,5 +1,5 @@
 // imports
-import React, { useState, useContext } from "react";
+import React, { useContext } from "react";
 import RGL, { WidthProvider } from "react-grid-layout";
 
 import { useAppSelector, useAppDispatch } from '../hooks'
@@ -14,7 +14,7 @@ import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
 
 // actions
-import { deselectAll, checkWindow, removeWindow, addWindow, loadWindows } from "../actions/windows";
+import { checkWindow, removeWindow, addWindow, loadWindows } from "../actions/windows";
 
 // utils
 import { add_post_to_group } from "../components/Stomp";
@@ -44,13 +44,11 @@ export default function WindowManager(props) {
   const client = useContext(StompContext)
 
   const windows = useAppSelector((state: RootState) => state.windows.windows);
-  const posts = windows.filter(w => w.type == "Post");
   const groups = windows.filter(w => w.type == "Group");
   const dragged_item = useAppSelector((state: RootState) => state.windows.dragged);
   const dispatch = useAppDispatch();
 
   const dropping = (layout, item, e) => {
-    // var item = getDefaultWindow();
     dispatch(addWindow({ i: dragged_item.id, type: dragged_item.type, ...item }));
   }
 
@@ -75,12 +73,9 @@ export default function WindowManager(props) {
     var checked = windows.find(w => w.isChecked && w.type == "Group");
     if (checked && newItem.i.split("%")[1] == "post") {
       dispatch(removeWindow(newItem.i))
-      // TODO
       add_post_to_group(client, checked.i.split("%")[0], newItem.i.split("%")[0])
       dispatch(checkWindow({ i: checked.i, check: false }));
     }
-
-
   }
 
   // type ItemCallback = 

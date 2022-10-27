@@ -10,7 +10,7 @@ Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
 export function client_init() {
   console.log("Initializing Stomp client...")
   const client = new Client({
-    brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:3311/ws`,
+    brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:15674/ws`,
     connectHeaders: {
       login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME!,
       passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD!,
@@ -241,7 +241,7 @@ export function update_note(client: Client, post_id: string, content) {
 /**
  * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
  */
-export function reorient(client: Client, teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>) {
+export function reorient(client: Client, teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>, weight?: number) {
   var body = {
     task: "reorient",
     args: {
@@ -250,6 +250,9 @@ export function reorient(client: Client, teleoscope_id: string, positive_docs: A
       negative_docs: negative_docs,
     }
   }
+  if (weight) {
+    body.args["weight"] = weight;
+  }
   publish(client, body);
   return body;
 }
@@ -257,12 +260,11 @@ export function reorient(client: Client, teleoscope_id: string, positive_docs: A
 /**
  * Create MLGroups using the UMAP and HBDSCAN with the given groups' posts as seeds.
  */
-export function cluster_by_groups(client: Client, group_id_strings: Array<string>, teleoscope_oid: string, session_oid: string) {
+export function cluster_by_groups(client: Client, group_id_strings: Array<string>, session_oid: string) {
   var body = {
     task: "cluster_by_groups",
     args: {
       group_id_strings: group_id_strings,
-      teleoscope_oid: teleoscope_oid,
       session_oid: session_oid,
     }
   }

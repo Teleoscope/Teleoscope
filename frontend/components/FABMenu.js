@@ -9,11 +9,22 @@ import MenuActions from "../components/ContextMenuActions"
 
 // actions
 import { addWindow } from "../actions/windows";
-import { useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import useSWRAbstract from "../util/swr"
 
 export default function FABMenu(props) {
   const dispatch = useDispatch();
+  const session_id = useSelector((state) => state.activeSessionID.value);
+  const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
   const actions = MenuActions();
+
+  const get_color = () => {
+    if (session) {
+      return session.history[0].color
+    }
+    return "#4E5CBC"
+  }
+  
 
   return (
     <SpeedDial
@@ -21,10 +32,19 @@ export default function FABMenu(props) {
       direction="down"
       icon={<SpeedDialIcon />}
       className="drag-handle"
+      FabProps={{
+        sx: {
+          bgcolor: get_color(),
+          '&:hover': {
+            bgcolor: get_color(),
+          }
+        }
+      }}
 
     >
       {Object.keys(actions).map((action) => (
         <SpeedDialAction
+          sx={{color: get_color()}}
           key={action}
           icon={actions[action].icon}
           tooltipTitle={action}

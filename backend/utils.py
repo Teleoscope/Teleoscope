@@ -11,7 +11,7 @@ import logging
 import auth
 
 def connect():
-    autht = "authSource=aita&authMechanism=SCRAM-SHA-256"
+    autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
         f'{auth.mongodb["username"]}:'
@@ -30,7 +30,7 @@ def connect():
     return client.aita
 
 def create_transaction_session():
-    autht = "authSource=aita&authMechanism=SCRAM-SHA-256"
+    autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
         f'{auth.mongodb["username"]}:'
@@ -61,6 +61,16 @@ def commit_with_retry(session):
                 raise
 
 
+def mergeCollections():
+    db = connect()
+    cursor = db.clean.posts.v2.find({})
+    for post in cursor:
+        findres = list(db.clean.posts.v3.find({"id": post["id"]}))
+        if len(findres) == 0:
+            print(post["id"], "not found")
+            db.clean.posts.v3.update_one({"id": post["id"]}, {"$set": post}, upsert=True)
+        else:
+            print(post["id"], "found")
 
 # def update_embedding(q_vector, feedback_vector, feedback):
 #     SENSITIVITY = 0.75
@@ -78,8 +88,7 @@ moveVector:
 '''
 # TODO: is this commutative? i.e. can we go from x -> y and then y -> x by the same reverse action?
 # TODO: 
-def moveVector(sourceVector, destinationVector, direction, magnitude = None):
-    magnitude = magnitude if magnitude is not None else 0.75
+def moveVector(sourceVector, destinationVector, direction, magnitude = 0.50):
     new_q = sourceVector + direction*magnitude*(destinationVector - sourceVector)
     new_q = new_q / np.linalg.norm(new_q)
     return new_q
@@ -153,7 +162,7 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
     import gridfs
     # convert to json
     dumps = json.dumps(data)
-    fs = gridfs.GridFS(db)
+    fs = gridfs.GridFS(db, namespace)
     obj = fs.put(dumps, encoding=encoding)
     return obj
 

@@ -149,3 +149,7 @@ experiments/auths/
 experiments/data/
 
 .idea/*
+
+*.out
+*.save
+*.npz

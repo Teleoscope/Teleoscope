@@ -67,7 +67,7 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 		<Card
 			variant="outlined"
 			style={{
-				borderColor: w.isChecked ? "#4e5cbc" : "#DDDDDD",
+				borderColor: w.isChecked ? props.color : "#DDDDDD",
 				borderWidth: w.isChecked ? 2 : 1,
 				backgroundColor: "white",
 				height: "100%",

@@ -15,6 +15,9 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import FolderIcon from '@mui/icons-material/Folder';
+import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
+import Diversity2Icon from '@mui/icons-material/Diversity2';
 
 // actions
 import useSWRAbstract from "../util/swr"
@@ -28,12 +31,12 @@ import { add_group } from "../components/Stomp.ts";
 // contexts
 import { StompContext } from '../context/StompContext'
 import randomColor from "randomcolor";
+import { IconButton } from "@mui/material";
+import { cluster_by_groups } from "./Stomp";
 
 // custom components
 
 export default function GroupPalette(props) {
-
-
    const client = useContext(StompContext);
    const filter = createFilterOptions();
    const dispatch = useDispatch();
@@ -73,8 +76,6 @@ export default function GroupPalette(props) {
    };
 
    const onChangeHandler = (event, newValue) => {
-      console.log("newValue", newValue)
-
       if (typeof newValue === 'string') {
          console.log("newValue === string", newValue)
          // timeout to avoid instant validation of the dialog's form.
@@ -122,12 +123,17 @@ export default function GroupPalette(props) {
       return filtered;
    }
 
-   return (
-      <div
-         style={{ overflow: "auto", height: "100%" }}
+   const runClusters = () => {
+      cluster_by_groups(client, groups.map(g => g._id), session_id)
+   }
 
-      >
-         <React.Fragment>
+   return (
+      <div style={{ overflow: "auto", height: "100%" }}>
+      <Stack direction="row" justifyContent="right" alignItems="center" style={{ margin: 0 }}>
+      <IconButton onClick={() => runClusters()}><Diversity2Icon></Diversity2Icon></IconButton>
+      </Stack>
+      <Divider />
+         <div>
             <Autocomplete
                value={value}
                onChange={(event, newValue) => {
@@ -186,8 +192,7 @@ export default function GroupPalette(props) {
                   </DialogActions>
                </form>
             </Dialog>
-
-         </React.Fragment>
+         </div>
          <List>
             {group_labels.map((gl) => {
                var the_group = groups.find(g => g.history[0].label == gl);
