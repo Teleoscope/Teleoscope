@@ -613,7 +613,7 @@ class reorient(Task):
         npzpath = Path(path + 'embeddings.npz').expanduser()
         pklpath = Path(path + 'ids.pkl').expanduser()
         
-        if npzpath.exists():
+        if npzpath.exists() and pklpath.exists():
             logging.info("Posts have been cached, retrieving now.")
             loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
             with open(path + 'ids.pkl', 'rb') as handle:
