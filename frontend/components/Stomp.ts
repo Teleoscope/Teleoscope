@@ -7,12 +7,14 @@ import {WebsocketBuilder} from 'websocket-ts';
 Object.assign(global, WebsocketBuilder);
 //const bcrypt = require('bcrypt');
 
+let client;
+
 /**
  * Initializes the client (there should only be one)
  */
 export function client_init() {
   console.log("Initializing Stomp client...")
-  const client = new Client({
+  client = new Client({
     brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:15674/ws`,
     connectHeaders: {
       login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME!,
@@ -301,10 +303,11 @@ export function add_login(client, username, password) {
   //verify password
   const doesPasswordMatch = bcrypt.compareSync(yourPasswordFromLoginForm, yourHashedPassword)
 */
-export function register_account(client, jsonData) {
+export function register_account(jsonData) {
   //hash(password) the function uses the bcrypt hashing algorithm for now
   //const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync());
 
+  console.log('json data', jsonData);
   const {firstName, lastName, username, password} = jsonData;
   const body = {
     task: "register_account",

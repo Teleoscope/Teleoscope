@@ -19,8 +19,6 @@ const fetcher = (...args) => fetch(...args).then((res) => res.json())
 export default function Home({ isConnected }) {
   return (
     <div>
-    {/*  <div className="w-100 p-3">
-       <div className="container"> */}
         <SWRConfig value={{
           fetcher: fetcher,
           errorRetryCount: 10,
@@ -28,7 +26,6 @@ export default function Home({ isConnected }) {
         }}>
           <CookiesProvider>
             <div>
-            {/* <div className="container-fluid"> */}
               <Head>
                 <title>Explore Documents</title>
                 <link rel="icon" href="/favicon.ico" />

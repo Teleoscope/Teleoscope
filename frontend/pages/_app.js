@@ -10,11 +10,17 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
+import { Provider } from "react-redux";
+import { CookiesProvider } from "react-cookie";
+import { SWRConfig } from 'swr'
+
+// store
+import store from '../stores/store';
+
 import '../styles/global.css';
 
 
 import { userService } from '../services/user.service';
-//import { userService } from 'services';
 
 export default App;
 
@@ -22,6 +28,8 @@ function App({ Component, pageProps }) {
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [authorized, setAuthorized] = useState(false);
+
+    const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
     useEffect(() => {
         // on initial load - run auth check 
@@ -42,13 +50,11 @@ function App({ Component, pageProps }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    function authCheck(url: string) {
+    function authCheck(url) {
         // redirect to login page if accessing a private page and not logged in 
         setUser(userService.userValue);
-        console.log('User', user)
         const publicPaths = ['/account/login', '/account/register'];
         const path = url.split('?')[0];
-        console.log('Path', path)
         if (!userService.userValue && !publicPaths.includes(path)) {
             setAuthorized(false);
             router.push({
@@ -62,14 +68,28 @@ function App({ Component, pageProps }) {
 
     return (
         <>
-            <Head>
-                <title>Teleoscope</title>
-                <link href="//netdna.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
-            </Head>
+            <SWRConfig value={{
+                fetcher: fetcher,
+                errorRetryCount: 10,
+                refreshInterval: 250
+            }}>
+                <CookiesProvider>
+                    <Head>
+                        <title>Teleoscope</title>
+                        <link href="//netdna.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+                    </Head>
+                    
+                    <main>
+                        <Provider store={store}>
+                            <div className={`app-container ${user ? 'bg-light' : ''}`}>
+                                {authorized && <Component {...pageProps} />}
+                            </div>
+                        </Provider>
+                    </main>
 
-            <div className={`app-container ${user ? 'bg-light' : ''}`}>
-                {authorized && <Component {...pageProps} />}
-            </div>
+                </CookiesProvider>
+            </SWRConfig>
         </>
+
     );
 }

@@ -161,6 +161,18 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 }
             )
 
+        if task == 'register_account':
+            print("got to dispatch with register account")
+            res = tasks.register_account.signature(
+                args=(),
+                kwargs={
+                    "firstName": args["firstName"],
+                    "lastName": args["lastName"],
+                    "password": args["password"],
+                    "username": args["username"]
+                },
+            )
+
         try:
             res.apply_async()
         except:

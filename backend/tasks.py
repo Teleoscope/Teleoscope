@@ -1,4 +1,5 @@
 import logging, pickle, utils, json, auth, numpy as np
+from asyncio import taskgroups
 from warnings import simplefilter
 from celery import Celery, Task, chain
 from bson.objectid import ObjectId
@@ -593,6 +594,41 @@ def cluster_by_groups(*args, **kwargs):
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
     clustering.cluster_by_groups(kwargs["group_id_strings"], kwargs["session_oid"])
 
+@app.task
+def register_account(*arg, **kwargs):
+    """
+    Adds a newly registered user to users collection
+
+    kwargs:
+        firstName: (string)
+        lastName: (string)
+        password: (hash)
+        username: (email)
+    """
+
+    transaction_session, db = utils.create_transaction_session()
+
+    #handle kwargs
+    first_name = kwargs['firstName']
+    last_name = kwargs['lastName']
+    password = kwargs['password']
+    username = kwargs['username']
+
+    #creating document to be inserted into mongoDB
+    obj = {
+        "creation_time": datetime.datetime.utcnow(),
+        "firstName": first_name,
+        "lastName": last_name,
+        "password": password,
+        "username": username,
+        "action": "initialize a user"
+    }
+
+    collection = db.registeredUsers
+    with transaction_session.start_transaction():
+        users_res = collection.insert_one(obj, session=transaction_session)
+        logging.info(f"Added user {username} with result {users_res}.")
+        utils.commit_with_retry(transaction_session)
 
 class reorient(Task):
     """
