@@ -24,15 +24,16 @@ app.conf.update(
 )
 
 
-'''
-read_post
 
-input: String (Path to json file)
-output: Dict
-purpose: This function is used to read a single post from a json file to a database
-'''
 @app.task
 def read_post(path_to_post):
+    '''
+    read_post
+
+    input: String (Path to json file)
+    output: Dict
+    purpose: This function is used to read a single post from a json file to a database
+    '''
     try:
         with open(path_to_post, 'r') as f:
             post = json.load(f)
@@ -41,16 +42,17 @@ def read_post(path_to_post):
 
     return post
 
-'''
-validate_post
 
-input: Dict (post)
-output: Dict
-purpose: This function is used to validate a single post.
-        If the file is missing required fields, a dictionary with an error key is returned
-'''
 @app.task
 def validate_post(data):
+    '''
+    validate_post
+
+    input: Dict (post)
+    output: Dict
+    purpose: This function is used to validate a single post.
+            If the file is missing required fields, a dictionary with an error key is returned
+    '''
     if data.get('selftext', "") == "" or data.get('title', "") == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
         logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
         return {'error': 'Post is missing required fields.'}
@@ -62,16 +64,17 @@ def validate_post(data):
 
     return post
 
-'''
-read_and_validate_post
 
-input: String (Path to json file)
-output: Dict
-purpose: This function is used to read and validate a single post from a json file to a database
-        If the file is missing required fields, a dictionary with an error key is returned
-'''
 @app.task
 def read_and_validate_post(path_to_post):
+    '''
+    read_and_validate_post
+
+    input: String (Path to json file)
+    output: Dict
+    purpose: This function is used to read and validate a single post from a json file to a database
+            If the file is missing required fields, a dictionary with an error key is returned
+    '''
     with open(path_to_post) as f:
             data = json.load(f)
     if data['selftext'] == "" or data['title'] == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
@@ -86,16 +89,17 @@ def read_and_validate_post(path_to_post):
 
     return post
 
-'''
-vectorize_post
 
-input: Dict
-output: Dict
-purpose: This function is used to update the dictionary with a vectorized version of the title and selftext
-        (Ignores dictionaries containing error keys)
-'''
 @app.task
 def vectorize_post(post):
+    '''
+    vectorize_post
+
+    input: Dict
+    output: Dict
+    purpose: This function is used to update the dictionary with a vectorized version of the title and selftext
+            (Ignores dictionaries containing error keys)
+    '''
     import tensorflow_hub as hub
     if 'error' not in post:
         embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
@@ -106,16 +110,17 @@ def vectorize_post(post):
         return post
 
 
-'''
-add_single_post_to_database
 
-input: Dict
-output: void
-purpose: This function adds a single post to the database
-        (Ignores dictionaries containing error keys)
-'''
 @app.task
 def add_single_post_to_database(post):
+    '''
+    add_single_post_to_database
+
+    input: Dict
+    output: void
+    purpose: This function adds a single post to the database
+            (Ignores dictionaries containing error keys)
+    '''
     if 'error' not in post:
          # Create session
         session, db = utils.create_transaction_session()
@@ -126,16 +131,17 @@ def add_single_post_to_database(post):
             # Commit the session with retry
             utils.commit_with_retry(session)
 
-'''
-add_single_post_to_database
 
-input: List[Dict]
-output: void
-purpose: This function adds multiple posts to the database
-        (Ignores dictionaries containing error keys)
-'''
 @app.task
 def add_multiple_posts_to_database(posts):
+    '''
+    add_single_post_to_database
+
+    input: List[Dict]
+    output: void
+    purpose: This function adds multiple posts to the database
+            (Ignores dictionaries containing error keys)
+    '''
     posts = (list (filter (lambda x: 'error' not in x, posts)))
     # Create session
     session, db = utils.create_transaction_session()
