@@ -81,7 +81,7 @@ export function initialize_session(client: Client, username: string, label: stri
     args: {
       username: username,
       label: label,
-      color: color
+      color: color,
     }
   }
   publish(client, body);
@@ -91,12 +91,12 @@ export function initialize_session(client: Client, username: string, label: stri
 /**
  * adds user to userlist of a session in MongoDB.
  */
-export function add_user_to_session(client: Client, username: string, to_add: string, session_id: string) {
+export function add_user_to_session(client: Client, current: string, username: string, session_id: string) {
   var body = {
     task: 'add_user_to_session',
     args: {
+      current: current,
       username: username,
-      to_add: to_add,
       session_id: session_id,
     }
   }
@@ -113,7 +113,7 @@ export function save_UI_state(client: Client, username: string, session_id: stri
     args: {
       username: username,
       session_id: session_id,
-      history_item: history_item
+      history_item: history_item,
     }
   }
   publish(client, body);

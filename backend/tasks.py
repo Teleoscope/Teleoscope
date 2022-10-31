@@ -92,10 +92,10 @@ def add_user_to_session(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     session = db.sessions.find_one({"_id": session_id})
 
-    username = kwargs["to_add"]
+    username = kwargs["username"]
     user = db.users.find_one({"username": username})
 
-    curr_username = kwargs["username"]
+    curr_username = kwargs["current"]
     curr_user = db.users.find_one({"username": curr_username})
 
     userlist = session["userlist"]
