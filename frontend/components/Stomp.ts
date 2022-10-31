@@ -5,9 +5,11 @@ import { Client } from "@stomp/stompjs";
 import {WebsocketBuilder} from 'websocket-ts';
 //Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
 Object.assign(global, WebsocketBuilder);
-import bcrypt from 'bcrypt';
 
-let client;
+// hashing imports
+const bcrypt = require('bcryptjs');
+let client; 
+
 
 /**
  * Initializes the client (there should only be one)
@@ -297,19 +299,13 @@ export function add_login(client, username, password) {
 
 /*
   Pushes the user account information to create their account
-  //hash password
-  const hashedPassword = bcrypt.hashSync(yourPasswordFromSignupForm, bcrypt.genSaltSync());
-
-  //verify password
-  const doesPasswordMatch = bcrypt.compareSync(yourPasswordFromLoginForm, yourHashedPassword)
 */
 export function register_account(jsonData) {
   const {firstName, lastName, username, password} = jsonData;
 
   //hash(password) the function uses the bcrypt hashing algorithm for now
-  const hashedPassword = bcrypt.hashSync(password, bcrypt.genSaltSync());
-
-  console.log(hashedPassword);
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync(password, salt);
 
 
   const body = {

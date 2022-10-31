@@ -27,7 +27,6 @@
     "@reduxjs/toolkit": "^1.8.6",
     "@stomp/stompjs": "^6.1.2",
     "@types/bson": "^4.2.0",
-    "bcrypt": "^5.1.0",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.0.3",
     "draft-js": "^0.11.7",
