@@ -245,7 +245,6 @@ export default function TopBar(props) {
                                   "windows": windows,
                                   "label": session.history[0].label,
                                   "color": get_color(),
-                                  "action": "Save UI state",
                               })
                       }
                       else {

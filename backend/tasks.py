@@ -57,7 +57,7 @@ def initialize_session(*args, **kwargs):
                 "clusters": [],
                 "label": kwargs['label'],
                 "color": kwargs['color'],
-                "teleoscopes": []
+                "teleoscopes": [],
                 "action": "Initialize new session",
                 "user": user,
             }
@@ -162,6 +162,9 @@ def save_UI_state(*args, **kwargs):
 
     # update history_item to have the correct clusters
     history_item["clusters"] = session["history"][0]["clusters"]
+
+    # action taken
+    history_item["action"] = "Save UI state"
 
     # user who called action
     history_item["user"] = user
