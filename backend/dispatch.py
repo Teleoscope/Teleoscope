@@ -77,6 +77,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 args=(),
                 kwargs={
                     "username": args["username"],
+                    "to_add": args["to_add"],
                     "session_id": args["session_id"]
                 }
             )

@@ -92,8 +92,11 @@ def add_user_to_session(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     session = db.sessions.find_one({"_id": session_id})
 
-    username = kwargs["username"]
+    username = kwargs["to_add"]
     user = db.users.find_one({"username": username})
+
+    curr_username = kwargs["username"]
+    curr_user = db.users.find_one({"username": curr_username})
 
     userlist = session["userlist"]
 
@@ -104,12 +107,26 @@ def add_user_to_session(*args, **kwargs):
 
     userlist[username] = "collaborator"
 
+    history_item = session["history_item"]
+
+    # action taken
+    history_item["action"] = f"Add {username} to userlist"
+
+    # user who called action
+    history_item["user"] = curr_user
+
     # update session with new userlist that includes collaborator
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
             {
                 '$set': {
                     "userlist" : userlist,
+                }
+                "$push": {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
                 }
             }, session=transaction_session)
 

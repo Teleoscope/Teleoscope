@@ -91,11 +91,12 @@ export function initialize_session(client: Client, username: string, label: stri
 /**
  * adds user to userlist of a session in MongoDB.
  */
-export function add_user_to_session(client: Client, username: string, session_id: string) {
+export function add_user_to_session(client: Client, username: string, to_add: string, session_id: string) {
   var body = {
     task: 'add_user_to_session',
     args: {
       username: username,
+      to_add: to_add,
       session_id: session_id,
     }
   }

@@ -225,7 +225,7 @@ export default function TopBar(props) {
                       <Button
                           type="submit"
                           onClick={() => {
-                              add_user_to_session(client, dialogValue.label, session_id)
+                              add_user_to_session(client, cookies.user, dialogValue.label, session_id)
                               handleClose()
                           }
                           }>Add</Button>
