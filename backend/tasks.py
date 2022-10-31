@@ -147,7 +147,10 @@ def save_UI_state(*args, **kwargs):
     if not session:
         logging.info(f"Session {session_id} not found.")
         raise Exception("Session not found")
-    
+
+    username = kwargs["username"]
+    user = db.users.find_one({"username": username})
+
     # timestamp API call
     history_item["timestamp"] = datetime.datetime.utcnow()
 
@@ -160,6 +163,8 @@ def save_UI_state(*args, **kwargs):
     # update history_item to have the correct clusters
     history_item["clusters"] = session["history"][0]["clusters"]
 
+    # user who called action
+    history_item["user"] = user
 
 #     # update history_item to have the correct label
 #     history_item["label"] = session["history"][0]["label"]

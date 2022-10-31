@@ -238,6 +238,7 @@ export default function TopBar(props) {
                       if (session) {
                           save_UI_state(
                               client,
+                              cookies.user,
                               session_id,
                               { // history_item in save_UI_state in Stomp.js
                                   "bookmarks": bookmarks,
@@ -245,7 +246,6 @@ export default function TopBar(props) {
                                   "label": session.history[0].label,
                                   "color": get_color(),
                                   "action": "Save UI state",
-                                  "user": cookies.user,
                               })
                       }
                       else {

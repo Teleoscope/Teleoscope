@@ -85,6 +85,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.save_UI_state.signature(
                 args=(),
                 kwargs={
+                    "username": args["username"],
                     "session_id": args["session_id"],
                     "history_item": args["history_item"]
                 },

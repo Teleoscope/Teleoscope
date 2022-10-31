@@ -106,10 +106,11 @@ export function add_user_to_session(client: Client, username: string, session_id
 /**
  * Saves the workspace UI state (window locations, bookmarks)
  */
-export function save_UI_state(client: Client, session_id: string, history_item) {
+export function save_UI_state(client: Client, username: string, session_id: string, history_item) {
   var body = {
     task: 'save_UI_state',
     args: {
+      username: username,
       session_id: session_id,
       history_item: history_item
     }
