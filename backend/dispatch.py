@@ -151,6 +151,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "content": args["content"],
                 }
             )
+
+        
         
         if task == "cluster_by_groups":
             res = tasks.cluster_by_groups.signature(

@@ -23,7 +23,6 @@ app.conf.update(
     result_serializer='pickle',
 )
 
-
 @app.task
 def initialize_session(*args, **kwargs):
     """
@@ -77,7 +76,7 @@ def initialize_session(*args, **kwargs):
 '''
 add_user_to_session
 input:
-    username (string, name of user to add to session) NOTE maybe do with objectID?
+    username (string, name of user to add to session)
     session_id (int, represents ObjectId in int)
 
 purpose: updates the userlist in a session to include input user
@@ -97,6 +96,12 @@ def add_user_to_session(*args, **kwargs):
     user = db.users.find_one({"username": username})
 
     userlist = session["userlist"]
+
+    # check if user has already been added
+    if username in userlist:
+        logging.info(f'User {username} is already on userlist')
+        raise Exception(f'User {username} is already on userlist')
+
     userlist[username] = "collaborator"
 
     # update session with new userlist that includes collaborator
@@ -411,6 +416,11 @@ def add_post_to_group(*args, **kwargs):
         logging.info(f"Warning: group with id {group_id} not found.")
         raise Exception(f"group with id {group_id} not found")
 
+    # check if post has already been added
+    if post_id in group:
+        logging.info(f'Post {post_id} is already in group')
+        raise Exception(f'Post {post_id} is already in group')
+
     history_item = group["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
     if post_id in history_item["included_posts"]:
@@ -643,27 +653,32 @@ class reorient(Task):
 
     def cachePostsData(self, path='~/embeddings/'):
         # cache embeddings
-        try:
+        from pathlib import Path
+        dir = Path(path).expanduser()
+        dir.mkdir(parents=True, exist_ok=True)
+        npzpath = Path(path + 'embeddings.npz').expanduser()
+        pklpath = Path(path + 'ids.pkl').expanduser()
+        
+        if npzpath.exists() and pklpath.exists():
+            logging.info("Posts have been cached, retrieving now.")
             loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
-        except:            
+            with open(path + 'ids.pkl', 'rb') as handle:
+                self.allPostIDs = pickle.load(handle)
+            self.allPostVectors = loadPosts['posts']
+            self.postsCached = True
+        else:
+            logging.info("Posts are not cached, building cache now.")
             db = utils.connect()
             allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1, '_id':0}, batching=True, batchSize=10000)
             ids = [x['id'] for x in allPosts]
             vecs = np.array([x['selftextVector'] for x in allPosts])
 
-            np.savez('~/embeddings/embeddings.npz', posts=vecs)
-
-            with open('~/embeddings/ids.pkl', 'wb') as handle:
-                pkl.dump(ids, handle, protocol=pkl.HIGHEST_PROTOCOL)
-                loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
-            
-        self.allPostVectors = loadPosts['posts']
-        # cache posts ids
-        with open(path + '/ids.pkl', 'rb') as handle:
-            self.allPostIDs = pickle.load(handle)
-
-        self.postsCached = True
-
+            np.savez(npzpath.as_posix(), posts=vecs)
+            with open(pklpath.as_posix(), 'wb') as handle:
+                pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            self.allPostIDs = ids
+            self.allPostVectors = vecs
+            self.postsCached = True
         return
 
 
@@ -759,7 +774,7 @@ class reorient(Task):
         else:
             docs = positive_docs + negative_docs
             first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
-            logging.info(f'Results of finding first_doc: {first_doc}.')
+            logging.info(f'Results of finding first_doc: {first_doc["_id"]}.')
             stateVector = first_doc['selftextVector']  # grab selftextVector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
@@ -789,5 +804,136 @@ class reorient(Task):
         }
 
         return history_obj
-
 robj = app.register_task(reorient())
+
+#################################################################
+# Post importing tasks
+#################################################################
+
+@app.task
+def read_post(path_to_post):
+    '''
+    read_post
+
+    input: String (Path to json file)
+    output: Dict
+    purpose: This function is used to read a single post from a json file to a database
+    '''
+    try:
+        with open(path_to_post, 'r') as f:
+            post = json.load(f)
+    except Exception as e:
+        return {'error': str(e)}
+
+    return post
+
+
+@app.task
+def validate_post(data):
+    '''
+    validate_post
+
+    input: Dict (post)
+    output: Dict
+    purpose: This function is used to validate a single post.
+            If the file is missing required fields, a dictionary with an error key is returned
+    '''
+    if data.get('selftext', "") == "" or data.get('title', "") == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
+        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
+        return {'error': 'Post is missing required fields.'}
+
+    post = {
+            'id': data['id'],
+            'title': data['title'],
+            'selftext': data['selftext']}
+
+    return post
+
+
+@app.task
+def read_and_validate_post(path_to_post):
+    '''
+    read_and_validate_post
+
+    input: String (Path to json file)
+    output: Dict
+    purpose: This function is used to read and validate a single post from a json file to a database
+            If the file is missing required fields, a dictionary with an error key is returned
+    '''
+    with open(path_to_post) as f:
+            data = json.load(f)
+    if data['selftext'] == "" or data['title'] == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
+        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
+        return {'error': 'Post is missing required fields.'}
+
+    post = {
+            'id': data['id'],
+            'title': data['title'],
+            'selftext': data['selftext']
+    }
+
+    return post
+
+
+@app.task
+def vectorize_post(post):
+    '''
+    vectorize_post
+
+    input: Dict
+    output: Dict
+    purpose: This function is used to update the dictionary with a vectorized version of the title and selftext
+            (Ignores dictionaries containing error keys)
+    '''
+    import tensorflow_hub as hub
+    if 'error' not in post:
+        embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+        post['vector'] = embed([post['title']]).numpy()[0].tolist()
+        post['selftextVector'] = embed([post['selftext']]).numpy()[0].tolist()
+        return post
+    else:
+        return post
+
+
+
+@app.task
+def add_single_post_to_database(post):
+    '''
+    add_single_post_to_database
+
+    input: Dict
+    output: void
+    purpose: This function adds a single post to the database
+            (Ignores dictionaries containing error keys)
+    '''
+    if 'error' not in post:
+         # Create session
+        session, db = utils.create_transaction_session()
+        target = db.clean.posts.v3 
+        with session.start_transaction():
+            # Insert post into database
+            target.insert_one(post, session=session)
+            # Commit the session with retry
+            utils.commit_with_retry(session)
+
+
+@app.task
+def add_multiple_posts_to_database(posts):
+    '''
+    add_single_post_to_database
+
+    input: List[Dict]
+    output: void
+    purpose: This function adds multiple posts to the database
+            (Ignores dictionaries containing error keys)
+    '''
+    posts = (list (filter (lambda x: 'error' not in x, posts)))
+    # Create session
+    session, db = utils.create_transaction_session()
+    if len(posts) > 0:
+        target = db.clean.posts.v3
+        with session.start_transaction():
+            # Insert posts into database
+            target.insert_many(posts, session=session)
+            # Commit the session with retry
+            utils.commit_with_retry(session)

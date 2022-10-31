@@ -18,6 +18,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import OutlinedInput from '@mui/material/OutlinedInput';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -90,14 +91,17 @@ export default function TopBar(props) {
       )
   }
 
-  const getUsers = (username) => {
+  // gets all users that are not in the cuurent session's userlist
+  const getUsers = () => {
+
       if (session) {
-          for (const i in users) {
-              var user = users[i];
-              if (user["username"] != username) {
-                  return (<MenuItem value={user}>{user["username"]}</MenuItem>)
+          var userlist = Object.keys(session.userlist)
+
+          return users.map((u) => {
+              if (!userlist.includes(u.username)){
+                  return (<MenuItem value={u}>{u.username}</MenuItem>)
               }
-          }
+          })
       }
       return (
           <MenuItem value={"No session selected..."}>No session selected...</MenuItem>
@@ -121,9 +125,6 @@ export default function TopBar(props) {
     }
     return "#4E5CBC"
   }
-  
-  
-
 
   const [dialogValue, setDialogValue] = React.useState({
       label: '',
@@ -243,16 +244,13 @@ export default function TopBar(props) {
                               <Select
                                   labelId="demo-simple-select-label"
                                   id="demo-simple-select"
-                                  // value={session_id}
-                                  // label="Session ID"
                                   onChange={(event) =>
                                       setDialogValue({
                                           label: event.target.value.username,
-
                                       })
                                   }
                               >
-                                  {getUsers(cookies.user)}
+                                  {getUsers()}
 
                               </Select>
                           </FormControl>
@@ -265,7 +263,7 @@ export default function TopBar(props) {
                           onClick={() => {
                               add_user_to_session(client, dialogValue.label, session_id)
                               handleClose()
-                          } // add user to userlist
+                          }
                           }>Add</Button>
                   </DialogActions>
               </Dialog>
