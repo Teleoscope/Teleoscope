@@ -63,6 +63,7 @@ def initialize_session(*args, **kwargs):
                 "windows": [],
                 "groups": [],
                 "clusters": [],
+                "teleoscopes" [],
                 "label": kwargs['label'],
                 "color": kwargs['color'],
                 "action": f"Initialize session",
