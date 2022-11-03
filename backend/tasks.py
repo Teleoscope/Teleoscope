@@ -94,7 +94,7 @@ def save_UI_state(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session()
     
     # handle kwargs
-    history_item = kwargs["history_item"]
+    temp = kwargs["history_item"]
     session_id = ObjectId(str(kwargs["session_id"]))
 
     logging.info(f'Saving state for {session_id}.')
@@ -109,9 +109,26 @@ def save_UI_state(*args, **kwargs):
     user = db.users.find_one({"username": username})
     user_id = user['_id']
 
+    history_item = session["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Save UI state"
     history_item["user"] = user_id
+
+    # TODO delete below if redundant
+#     # update history_item to have the correct groups
+#     history_item["groups"] = session["history"][0]["groups"]
+#
+#     # update history_item to have the correct teleoscopes
+#     history_item["teleoscopes"] = session["history"][0]["teleoscopes"]
+#
+#     # update history_item to have the correct clusters
+#     history_item["clusters"] = session["history"][0]["clusters"]
+
+#     # update history_item to have the correct label
+#     history_item["label"] = session["history"][0]["label"]
+#
+#     # update history_item to have the correct color
+#     history_item["color"] = session["history"][0]["color"]
 
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
@@ -148,6 +165,7 @@ def add_user_to_session(*args, **kwargs):
 
     curr_username = kwargs["current"]
     curr_user = db.users.find_one({"username": curr_username})
+    curr_user_id = curr_user['_id']
 
     userlist = session["userlist"]
 
@@ -161,7 +179,7 @@ def add_user_to_session(*args, **kwargs):
     history_item = session["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = f"Add {username} to userlist"
-    history_item["user"] = curr_user
+    history_item["user"] = curr_user_id
 
     # update session with new userlist that includes collaborator
     with transaction_session.start_transaction():
