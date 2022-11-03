@@ -47,6 +47,7 @@ def initialize_session(*args, **kwargs):
     logging.info(f'Initializing sesssion for user {username}.')
     # Check if user exists and throw error if not
     user = db.users.find_one({"username": username})
+    userID = user._id
     userlist = {username:"owner"}
 
     if user is None:
@@ -66,7 +67,7 @@ def initialize_session(*args, **kwargs):
                 "color": kwargs['color'],
                 "teleoscopes": [],
                 "action": f"Initialize new session: {label}",
-                "user": user,
+                "user": userID,
             }
         ],
     }
