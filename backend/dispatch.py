@@ -21,9 +21,9 @@ from tasks import robj, app
 simplefilter(action='ignore', category=FutureWarning)
 
 queue = Queue(
-    auth.rabbitmq["vhost"],
-    Exchange(auth.rabbitmq["vhost"]),
-    auth.rabbitmq["vhost"])
+    auth.rabbitmq["queue"],
+    Exchange(auth.rabbitmq["queue"]),
+    auth.rabbitmq["queue"])
 
 
 class WebTaskConsumer(bootsteps.ConsumerStep):
@@ -79,7 +79,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
-                    "session_id": args["session_id"]
+#                     "username": args["username"],
+                  "session_id": args["session_id"]
                 },
             )
 
@@ -104,6 +105,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.add_group.signature(
                 args=(),
                 kwargs={
+#                     "username": args["username"],
                     "label": args["label"],
                     "color": args["color"],
                     "session_id": args["session_id"]
