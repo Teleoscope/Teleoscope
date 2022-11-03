@@ -58,7 +58,7 @@ def initialize_session(*args, **kwargs):
                 "label": kwargs['label'],
                 "color": kwargs['color'],
                 "teleoscopes": [],
-                "action": "Initialize new session",
+                "action": f"Initialize new session: {label}",
                 "user": user,
             }
         ],
@@ -234,6 +234,8 @@ def initialize_teleoscope(*args, **kwargs):
                         "negative_docs": [],
                         "stateVector": [],
                         "ranked_post_ids": None
+                        "action": "Initialize Teleoscope",
+#                         "user": user;
                     }
                 ]
             }, session=transaction_session)
@@ -290,6 +292,13 @@ def save_teleoscope_state(*args, **kwargs):
         raise Exception("Teleoscope not found")
 
     history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["action"] = "Save Teleoscope state"
+
+    # TODO record user
+#         username = kwargs["username"]
+#         user = db.users.find_one({"username": username})
+#         history_item["user"] = user
+
     with session.start_transaction():
         result = db.teleoscopes.update_one({"_id": obj_id},
             {
@@ -332,6 +341,8 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                 "color": color,
                 "included_posts": included_posts,
                 "label": label,
+                "action": f"Initialize new group: {label}",
+#               "user": user;
             }]
     }
     
@@ -427,6 +438,11 @@ def add_post_to_group(*args, **kwargs):
     history_item["included_posts"].append(post_id)
     history_item["action"] = "Add post to group"
 
+    # TODO record user
+#         username = kwargs["username"]
+#         user = db.users.find_one({"username": username})
+#         history_item["user"] = user
+
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
                 "$push":
@@ -472,6 +488,12 @@ def remove_post_from_group(*args, **kwargs):
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["included_posts"].remove(post_id)
     history_item["action"] = "Remove post from group"
+
+        # TODO record user
+    #         username = kwargs["username"]
+    #         user = db.users.find_one({"username": username})
+    #         history_item["user"] = user
+
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
             "$push":
@@ -507,6 +529,12 @@ def update_group_label(*args, **kwargs):
     history_item = group["history_item"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Update group label"
+
+        # TODO record user
+    #         username = kwargs["username"]
+    #         user = db.users.find_one({"username": username})
+    #         history_item["user"] = user
+
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
                 "$push":
