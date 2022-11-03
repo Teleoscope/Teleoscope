@@ -339,7 +339,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                 "included_posts": included_posts,
                 "label": label,
                 "action": "Initialize group",
-                "user": user_id;
+                "user": user_id,
             }]
     }
     
