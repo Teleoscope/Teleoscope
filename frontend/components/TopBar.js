@@ -87,12 +87,9 @@ export default function TopBar(props) {
       )
   }
 
-  // gets all users that are not in the cuurent session's userlist
   const getUsers = () => {
-
       if (session) {
           var userlist = Object.keys(session.userlist)
-
           return users.map((u) => {
               if (!userlist.includes(u.username)){
                   return (<MenuItem value={u}>{u.username}</MenuItem>)
@@ -110,8 +107,17 @@ export default function TopBar(props) {
     dispatch(loadWindows(history_item["windows"]));
   }
 
+<<<<<<< HEAD
   const get_label = () => session.history[0].label;
   const get_color = () => session ? session.history[0].color : "#4E5CBC"
+=======
+  const get_color = () => {
+    if (session) {
+      return session.history[0].color
+    }
+    return "#4E5CBC"
+  }
+>>>>>>> main
 
   const [dialogValue, setDialogValue] = React.useState({
       label: '',
@@ -132,7 +138,11 @@ export default function TopBar(props) {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
+<<<<<<< HEAD
         style={{ height: 60, backgroundColor: get_color() }} 
+=======
+        style={{ height: 60, backgroundColor: get_color() }}
+>>>>>>> main
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
@@ -224,7 +234,7 @@ export default function TopBar(props) {
                       <Button
                           type="submit"
                           onClick={() => {
-                              add_user_to_session(client, dialogValue.label, session_id)
+                              add_user_to_session(client, cookies.user, dialogValue.label, session_id)
                               handleClose()
                           }
                           }>Add</Button>
@@ -233,6 +243,7 @@ export default function TopBar(props) {
               <Button
                   size="small"
                   variant="text"
+<<<<<<< HEAD
                   onClick={() => save_UI_state( // could maybe use a check that sees if a session is active
                       client,
                       session_id,
@@ -243,6 +254,22 @@ export default function TopBar(props) {
                           "color": get_color(),
                       })
                   }
+=======
+                  onClick={() => {
+                      if (session) {
+                          save_UI_state(
+                              client,
+                              cookies.user,
+                              session_id,
+                              bookmarks,
+                              windows,
+                              )
+                      }
+                      else {
+                          console.log(`No session selected. Do nothing`);
+                      }
+                  }}
+>>>>>>> main
                   style={{
                       backgroundColor: "#FFFFFF",
                       color: "black",

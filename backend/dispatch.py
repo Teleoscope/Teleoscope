@@ -21,9 +21,9 @@ from tasks import robj, app
 simplefilter(action='ignore', category=FutureWarning)
 
 queue = Queue(
-    auth.rabbitmq["vhost"],
-    Exchange(auth.rabbitmq["vhost"]),
-    auth.rabbitmq["vhost"])
+    auth.rabbitmq["queue"],
+    Exchange(auth.rabbitmq["queue"]),
+    auth.rabbitmq["queue"])
 
 
 class WebTaskConsumer(bootsteps.ConsumerStep):
@@ -45,23 +45,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # These should exactly implement the interface standard
         # Make sure they look like Stomp
 
-        if task == "initialize_teleoscope":
-            res = tasks.initialize_teleoscope.signature(
-                args=(),
-                kwargs={
-                    "session_id": args["session_id"]
-                },
-            )
-
-        if task == "save_teleoscope_state":
-            res = tasks.save_teleoscope_state.signature(
-                args=(),
-                kwargs={
-                    "_id": args["_id"],
-                    "history_item": args["history_item"]
-                },
-            )
-
         if task == 'initialize_session':
             res = tasks.initialize_session.signature(
                 args=(),
@@ -72,20 +55,41 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 },
             )
 
+        if task == "save_UI_state":
+            res = tasks.save_UI_state.signature(
+                args=(),
+                kwargs={
+                    "username": args["username"],
+                    "session_id": args["session_id"],
+                    "bookmarks": args["bookmarks"],
+                    "windows": args["windows"],
+                },
+            )
+
         if task == "add_user_to_session":
             res = tasks.add_user_to_session.signature(
                 args=(),
                 kwargs={
+                    "current": args["current"],
                     "username": args["username"],
                     "session_id": args["session_id"]
                 }
             )
 
-        if task == "save_UI_state":
-            res = tasks.save_UI_state.signature(
+        if task == "initialize_teleoscope":
+            res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
-                    "session_id": args["session_id"],
+                    "username": args["username"],
+                    "session_id": args["session_id"]
+                },
+            )
+
+        if task == "save_teleoscope_state":
+            res = tasks.save_teleoscope_state.signature(
+                args=(),
+                kwargs={
+                    "_id": args["_id"],
                     "history_item": args["history_item"]
                 },
             )
@@ -102,6 +106,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.add_group.signature(
                 args=(),
                 kwargs={
+                    "username": args["username"],
                     "label": args["label"],
                     "color": args["color"],
                     "session_id": args["session_id"]
@@ -151,8 +156,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "content": args["content"],
                 }
             )
-
-        
         
         if task == "cluster_by_groups":
             res = tasks.cluster_by_groups.signature(
@@ -164,7 +167,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
         try:
-            res.apply_async()
+            res.apply_async(queue=auth.rabbitmq["queue"])
         except:
             logging.warning(f'Task {task} for args {args} was not valid.')
 

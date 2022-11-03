@@ -63,7 +63,7 @@ interface Body {
 export function publish(client: Client, body: Body) {
   var headers = {};
   client.publish({
-    destination: "/queue/" + process.env.NEXT_PUBLIC_RABBITMQ_VHOST, // TODO: rename queue
+    destination: "/queue/" + process.env.NEXT_PUBLIC_RABBITMQ_QUEUE, // TODO: rename queue
     headers: headers,
     body: JSON.stringify(body),
   });
@@ -81,22 +81,7 @@ export function initialize_session(client: Client, username: string, label: stri
     args: {
       username: username,
       label: label,
-      color: color
-    }
-  }
-  publish(client, body);
-  return body;
-}
-
-/**
- * adds user to userlist of a session in MongoDB.
- */
-export function add_user_to_session(client: Client, username: string, session_id: string) {
-  var body = {
-    task: 'add_user_to_session',
-    args: {
-      username: username,
-      session_id: session_id,
+      color: color,
     }
   }
   publish(client, body);
@@ -106,12 +91,30 @@ export function add_user_to_session(client: Client, username: string, session_id
 /**
  * Saves the workspace UI state (window locations, bookmarks)
  */
-export function save_UI_state(client: Client, session_id: string, history_item) {
+export function save_UI_state(client: Client, username: string, session_id: string, bookmarks, windows) {
   var body = {
     task: 'save_UI_state',
     args: {
+      username: username,
       session_id: session_id,
-      history_item: history_item
+      bookmarks: bookmarks,
+      windows: windows,
+    }
+  }
+  publish(client, body);
+  return body;
+}
+
+/**
+ * adds user to userlist of a session in MongoDB.
+ */
+export function add_user_to_session(client: Client, current: string, username: string, session_id: string) {
+  var body = {
+    task: 'add_user_to_session',
+    args: {
+      current: current,
+      username: username,
+      session_id: session_id,
     }
   }
   publish(client, body);
@@ -121,10 +124,11 @@ export function save_UI_state(client: Client, session_id: string, history_item) 
 /**
  * Requests to create a Teleoscope object in MongoDB.
  */
-export function initialize_teleoscope(client: Client, session_id: string) {
+export function initialize_teleoscope(client: Client, username: string, session_id: string) {
   var body = {
     task: 'initialize_teleoscope',
     args: {
+      username: username,
       session_id: session_id
     }
   }
@@ -151,10 +155,11 @@ export function save_teleoscope_state(client: Client, _id: string, history_item)
 /**
  * Requests to create a new group object in MongoDB.
  */
-export function add_group(client: Client, label: string, color: string, session_id: string) {
+export function add_group(client: Client, username: string, label: string, color: string, session_id: string) {
   var body = {
     task: 'add_group',
     args: {
+      username: username,
       session_id: session_id,
       label: label,
       color: color
