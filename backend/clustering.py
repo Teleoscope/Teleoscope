@@ -9,7 +9,7 @@ from bson.objectid import ObjectId
 import gc
 import tasks
 
-def cluster_by_groups(group_id_strings, session_oid, limit=100000):
+def cluster_by_groups(group_id_strings, session_oid, limit=100):
     """Cluster documents using user-provided group ids.
 
     group_id_strings : list(string) where the strings are MongoDB ObjectID format
@@ -96,10 +96,10 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
             labels[i] = label
 
         # stats for this particular label
-        label_count = np.count_nonzero(labels == i)
+        label_count = np.count_nonzero(labels == label)
         coverage = (label_count/ordered_posts)*100
         total_tagged = total_tagged + label_count
-        tagged_with_label[i] = label_count
+        tagged_with_label[label] = label_count
         logging.info(f'There are {label_count} posts that have the label {label}. This is {coverage}% of the ordered posts.')
         # increment label for next loop iteration
         label = label + 1
@@ -145,7 +145,9 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
         
         logging.info(f'There are {len(posts)} posts for MLGroup {hdbscan_label}.')
         cluster_label_count = len(posts)
-        added_count = cluster_label_count - tagged_with_label[i]
+        #added_count = cluster_label_count - tagged_with_label[i]
+        # TODO: FIX THIS
+        added_count = 0
         logging.info(f'There are now {cluster_label_count} documents in the MLGroup {hdbscan_label}, {added_count} documents have moved into this cluster.')
         tasks.add_group(
             human=False, 
