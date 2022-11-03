@@ -323,11 +323,12 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     label = kwargs["label"]
     _id = ObjectId(str(kwargs["session_id"]))
 
-    teleoscope_result = initialize_teleoscope(session_id=_id, label=label)
 
     username = kwargs["username"]
     user = db.users.find_one({"username": username})
     user_id = user['_id']
+
+    teleoscope_result = initialize_teleoscope(username=username, session_id=_id, label=label)
 
     # Creating document to be inserted into mongoDB
     obj = {
