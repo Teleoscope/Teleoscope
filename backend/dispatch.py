@@ -61,7 +61,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 kwargs={
                     "username": args["username"],
                     "session_id": args["session_id"],
-                    "history_item": args["history_item"]
+                    "bookmarks": args["bookmarks"],
+                    "windows": args["windows"],
                 },
             )
 
