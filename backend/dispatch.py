@@ -166,7 +166,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
         try:
-            res.apply_async(queue = 'dev-leo')
+            res.apply_async(queue=auth.rabbitmq["queue"])
         except:
             logging.warning(f'Task {task} for args {args} was not valid.')
 
