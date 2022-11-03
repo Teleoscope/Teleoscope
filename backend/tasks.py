@@ -16,12 +16,17 @@ CELERY_BROKER_URL = (
     f'{auth.rabbitmq["vhost"]}'
 )
 
+queue = Queue(
+    auth.rabbitmq["queue"],
+    Exchange(auth.rabbitmq["queue"]),
+    auth.rabbitmq["queue"])
+
 app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
 app.conf.update(
     task_serializer='pickle',
     accept_content=['pickle'],  # Ignore other content
     result_serializer='pickle',
-    task_queues=[auth.rabbitmq["queue"]],
+    task_queues=[queue],
 )
 
 @app.task
