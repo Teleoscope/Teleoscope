@@ -2,6 +2,7 @@ import logging, pickle, utils, json, auth, numpy as np
 from warnings import simplefilter
 from celery import Celery, Task, chain
 from bson.objectid import ObjectId
+from kombu import Consumer, Exchange, Queue
 import datetime
 
 # ignore all future warnings
