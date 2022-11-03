@@ -87,12 +87,9 @@ export default function TopBar(props) {
       )
   }
 
-  // gets all users that are not in the cuurent session's userlist
   const getUsers = () => {
-
       if (session) {
           var userlist = Object.keys(session.userlist)
-
           return users.map((u) => {
               if (!userlist.includes(u.username)){
                   return (<MenuItem value={u}>{u.username}</MenuItem>)
@@ -105,14 +102,9 @@ export default function TopBar(props) {
   }
 
   const load_UI_state = () => {
-
     var history_item = session.history[0];
     dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
-  }
-
-  const get_label = () => {
-      return session.history[0].label;
   }
 
   const get_color = () => {
@@ -141,7 +133,7 @@ export default function TopBar(props) {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
-        style={{ height: 60, backgroundColor: get_color(cookies.user) }} 
+        style={{ height: 60, backgroundColor: get_color() }}
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
@@ -233,7 +225,7 @@ export default function TopBar(props) {
                       <Button
                           type="submit"
                           onClick={() => {
-                              add_user_to_session(client, dialogValue.label, session_id)
+                              add_user_to_session(client, cookies.user, dialogValue.label, session_id)
                               handleClose()
                           }
                           }>Add</Button>
@@ -242,16 +234,20 @@ export default function TopBar(props) {
               <Button
                   size="small"
                   variant="text"
-                  onClick={() => save_UI_state( // could maybe use a check that sees if a session is active
-                      client,
-                      session_id,
-                      { // history_item in save_UI_state in Stomp.js
-                          "bookmarks": bookmarks,
-                          "windows": windows,
-                          "label": get_label(cookies.user),
-                          "color": get_color(cookies.user),
-                      })
-                  }
+                  onClick={() => {
+                      if (session) {
+                          save_UI_state(
+                              client,
+                              cookies.user,
+                              session_id,
+                              bookmarks,
+                              windows,
+                              )
+                      }
+                      else {
+                          console.log(`No session selected. Do nothing`);
+                      }
+                  }}
                   style={{
                       backgroundColor: "#FFFFFF",
                       color: "black",
