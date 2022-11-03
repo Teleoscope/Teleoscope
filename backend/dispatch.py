@@ -166,7 +166,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
         try:
-            res.apply_async()
+            res.apply_async(queue = 'dev-leo')
         except:
             logging.warning(f'Task {task} for args {args} was not valid.')
 
