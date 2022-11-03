@@ -97,14 +97,14 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100):
 
         # stats for this particular label
         label_count = np.count_nonzero(labels == label)
-        coverage = (label_count/ordered_posts)*100
+        coverage = (label_count/len(ordered_posts))*100
         total_tagged = total_tagged + label_count
         tagged_with_label[label] = label_count
         logging.info(f'There are {label_count} posts that have the label {label}. This is {coverage}% of the ordered posts.')
         # increment label for next loop iteration
         label = label + 1
     
-    total_coverage = (total_tagged/ordered_posts)*100
+    total_coverage = (total_tagged/len(ordered_posts))*100
     logging.info(f'Overall, there are {total_tagged} posts that have been given a human label. This is {total_coverage}% of the ordered posts.')
     # update number of unlabelled posts
     tagged_with_label[0] = np.count_nonzero(labels == -1)
@@ -147,7 +147,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100):
         cluster_label_count = len(posts)
         #added_count = cluster_label_count - tagged_with_label[i]
         # TODO: FIX THIS
-        added_count = 0
+        added_count = 99999
         logging.info(f'There are now {cluster_label_count} documents in the MLGroup {hdbscan_label}, {added_count} documents have moved into this cluster.')
         tasks.add_group(
             human=False, 
