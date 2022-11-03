@@ -68,7 +68,7 @@ export const Windows = createSlice({
 			var ids = state.windows.map((w) => {return w.i});
 			var index = ids.indexOf(action.payload);
 			if (index > -1) {
-				temp[index].w = 1;
+				temp[index].w = 4;
 				temp[index].h = 1;
 				temp[index].isResizable = false;
 			}

@@ -105,22 +105,13 @@ export default function TopBar(props) {
   }
 
   const load_UI_state = () => {
-
     var history_item = session.history[0];
     dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
   }
 
-  const get_label = () => {
-      return session.history[0].label;
-  }
-
-  const get_color = () => {
-    if (session) {
-      return session.history[0].color
-    }
-    return "#4E5CBC"
-  }
+  const get_label = () => session.history[0].label;
+  const get_color = () => session ? session.history[0].color : "#4E5CBC"
 
   const [dialogValue, setDialogValue] = React.useState({
       label: '',
@@ -141,7 +132,7 @@ export default function TopBar(props) {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
-        style={{ height: 60, backgroundColor: get_color(cookies.user) }} 
+        style={{ height: 60, backgroundColor: get_color() }} 
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
@@ -249,7 +240,7 @@ export default function TopBar(props) {
                           "bookmarks": bookmarks,
                           "windows": windows,
                           "label": get_label(cookies.user),
-                          "color": get_color(cookies.user),
+                          "color": get_color(),
                       })
                   }
                   style={{

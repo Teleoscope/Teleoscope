@@ -18,13 +18,8 @@ export default function FABMenu(props) {
   const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
   const actions = MenuActions();
 
-  const get_color = () => {
-    if (session) {
-      return session.history[0].color
-    }
-    return "#4E5CBC"
-  }
-  
+  const get_color = () => session ? session.history[0].color : "#4E5CBC"
+
 
   return (
     <SpeedDial

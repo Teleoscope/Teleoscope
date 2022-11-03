@@ -1,4 +1,6 @@
 import React from 'react'
+import { useSelector } from "react-redux";
+import useSWRAbstract from "../util/swr"
 
 // mui
 import ShortTextIcon from '@mui/icons-material/ShortText';
@@ -25,81 +27,91 @@ import Cluster from './Cluster';
 import { PreprocessTitle, PreprocessText } from "../util/Preprocessers"
 
 export default function WindowDefinitions() {
+	const session_id = useSelector((state) => state.activeSessionID.value);
+	const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+	const get_color = () => session ? session.history[0].color : "#FF0000"
+
+	const style = [
+		{color: get_color()},
+		{'& .MuiChip-icon': {color: get_color()}}
+	]
+	
 	return {
 		"Note": {
 			icon: () => { return <CreateIcon fontSize="inherit" /> },
-			component: (w, id) => { return (<Notes id={id} windata={w} />) },
+			component: (w, id, color) => { return (<Notes id={id} windata={w} color={color} />) },
 			showWindow: true,
 			title: () => { return "Note" },
+			color: (d) => get_color(),
 			tag: "note",
 		},
 		"FABMenu": {
 			icon: () => { return <AddIcon fontSize="inherit" /> },
-			component: (w, id) => { return (<FABMenu id={id} windata={w} />) },
+			component: (w, id, color) => { return (<FABMenu id={id} windata={w} color={color} />) },
 			showWindow: false,
 			title: () => { return "FABMenu" },
-			color: () => { return "#4e5bc"},
+			color: (d) => get_color(),
 			tag: "fabmenu",
 		},
 		"Group": {
 			icon: (d) => { return (<TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />) },
-			component: (w, id) => { return (<Group id={id} windata={w} />) },
+			component: (w, id, color) => { return (<Group id={id} windata={w} color={color} />) },
 			showWindow: false,
-			title: (d) => { return d?.history[0].label },
+			title: (d) => { return `Group: ${d?.history[0].label}` },
 			color: (d) => { return d?.history[0].color },
 			tag: "group",
 		},
 		"Post": {
 			icon: () => { return <ShortTextIcon fontSize="inherit" /> },
-			component: (w, id) => { return (<Post id={id} windata={w} />) },
-			showWindow: true,
+			component: (w, id, color) => { return (<Post id={id} windata={w} color={color} />) },
+			showWindow: false,
 			title: (d) => { return PreprocessTitle(d?.title) },
-			color: () => { return "#4e5cbc"},
+			color: (d) => get_color(),
 			tag: "post",
 		},
 		"Teleoscope": {
-			icon: () => { return <FlareIcon fontSize="inherit" /> },
-			component: (w, id) => { return (<Teleoscope id={id} windata={w} />) },
+			icon: () => { return <FlareIcon fontSize="inherit" sx={style}/> },
+			component: (w, id, color) => { return (<Teleoscope id={id} windata={w} color={color} />) },
 			showWindow: false,
-			title: (d) => { return `${d?.history[0].label}` },
-			color: () => { return "#4e5cbc"},
+			title: (d) => { return `Teleoscope: ${d?.history[0].label}` },
+			color: (d) => get_color(),
 			tag: "teleoscope",
 		},
 		"Teleoscope Palette": {
-			icon: () => { return <FlareIcon fontSize="inherit" /> },
-			component: (w, id) => { return (<TeleoscopePalette id={id} windata={w} />) },
+			icon: () => { return <FlareIcon fontSize="inherit" sx={style}/> },
+			component: (w, id, color) => { return (<TeleoscopePalette id={id} windata={w} color={color} />) },
 			showWindow: false,
 			title: () => { return `Teleoscopes` },
-			color: () => { return "#4e5cbc"},
+			color: (d) => get_color(),
 			tag: "teleoscope",
 		},
 		"Search": {
-			icon: () => { return <SearchIcon fontSize="inherit" /> },
-			component: (w, id) => { return (<Search id={id} windata={w} />) },
+			icon: () => { return <SearchIcon fontSize="inherit" sx={style}/> },
+			component: (w, id, color) => { return (<Search id={id} windata={w} color={color} />) },
 			showWindow: true,
 			title: () => { return "Search" },
-			color: () => { return "#4e5cbc"},
+			color: (d) => get_color(),
 			tag: "search",
 		},
 		"Group Palette": {
-			icon: () => { return <FolderCopyIcon fontSize="inherit" /> },
-			component: (w, id) => { return (<GroupPalette id={id} windata={w} />) },
+			icon: () => { return <FolderCopyIcon fontSize="inherit" sx={style}/> },
+			component: (w, id, color) => { return (<GroupPalette id={id} windata={w} color={color}/>) },
 			showWindow: true,
 			title: () => { return "Group Palette" },
-			color: () => { return "#4e5cbc"},
+			color: (d) => get_color(),
 			tag: "grouppalette",
 		},
 		"Clusters": {
-			icon: () => { return <Diversity2Icon fontSize="inherit" /> },
-			component: (w, id) => { return (<Clusters id={id} windata={w} />) },
+			icon: () => { return <Diversity2Icon fontSize="inherit" sx={style}/> },
+			component: (w, id, color) => { return (<Clusters id={id} windata={w} color={color} />) },
 			showWindow: true,
 			title: () => { return "Clusters" },
-			color: () => { return "#4e5cbc"},
+			color: (d) => get_color(),
 			tag: "clusters",
 		},
 		"Cluster": {
 			icon: (d) => { return (<TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />) },
-			component: (w, id) => { return (<Cluster id={id} windata={w} />) },
+			component: (w, id, color) => { return (<Cluster id={id} windata={w} color={color} />) },
 			showWindow: false,
 			title: (d) => { return d?.history[0].label },
 			color: (d) => { return d?.history[0].color },

@@ -6,20 +6,20 @@ import WindowTopBar from "../components/WindowTopBar";
 
 // mui
 import IconButton from '@mui/material/IconButton';
-
+import Chip from '@mui/material/Chip';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
 
 // actions
-import { useDispatch } from "react-redux";
-import { minimizeWindow, maximizeWindow, checkWindow } from "../actions/windows";
+import { useSelector, useDispatch } from "react-redux";
+import { minimizeWindow, maximizeWindow, checkWindow, removeWindow } from "../actions/windows";
 
 export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onTouchEnd, ...props }, ref) => {
 	const [show, setShow] = useState(props.showWindow);
 	const [drag, setDrag] = useState(true);
 	const w = props.windata;
 	const dispatch = useDispatch();
-
+	
 	const handleMove = (e) => {
 		if (e.buttons == 1) {
 			setDrag(true);
@@ -45,9 +45,18 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 		}
 	}
 
+	const handleDelete = () => {
+		dispatch(removeWindow(props.id));
+	}
+
 	if (!show) {
 		return (
-			<IconButton
+			<Chip
+				label={props.title}
+				icon={props.icon}
+				clickable
+				// color="primary"
+				onDelete={handleDelete}
 				onClick={handleShow}
 				className="drag-handle"
 				onMouseMove={(e) => handleMove(e)}
@@ -56,10 +65,12 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 					cursor: "move",
 				}}
 				sx={{
-					border: w.isChecked ? "2px solid #4e5cbc" : "1px solid #DDDDDD",
+					border: w.isChecked ? `2px solid ${props.color}` : "1px solid #DDDDDD",
 					boxShadow: '1',
+					'& .MuiChip-icon': props.color
+
 				}}
-			>{props.icon}</IconButton>
+			/>
 		)
 	}
 
