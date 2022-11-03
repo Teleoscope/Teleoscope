@@ -97,7 +97,6 @@ export function add_user_to_session(client: Client, username: string, session_id
     args: {
       username: username,
       session_id: session_id,
-
     }
   }
   publish(client, body);
