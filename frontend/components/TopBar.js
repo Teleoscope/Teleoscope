@@ -240,12 +240,9 @@ export default function TopBar(props) {
                               client,
                               cookies.user,
                               session_id,
-                              { // history_item in save_UI_state in Stomp.js
-                                  "bookmarks": bookmarks,
-                                  "windows": windows,
-                                  "label": session.history[0].label,
-                                  "color": get_color(),
-                              })
+                              bookmarks,
+                              windows,
+                              )
                       }
                       else {
                           console.log(`No session selected. Do nothing`);

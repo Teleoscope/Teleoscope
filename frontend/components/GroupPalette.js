@@ -33,6 +33,7 @@ import { StompContext } from '../context/StompContext'
 import randomColor from "randomcolor";
 import { IconButton } from "@mui/material";
 import { cluster_by_groups } from "./Stomp";
+import {useCookies} from "react-cookie";
 
 // custom components
 
@@ -41,7 +42,7 @@ export default function GroupPalette(props) {
    const filter = createFilterOptions();
    const dispatch = useDispatch();
    const [value, setValue] = React.useState(null);
-   
+   const [cookies, setCookie] = useCookies(["user"]);
    const [open, toggleOpen] = React.useState(false);
    const session_id = useSelector((state) => state.activeSessionID.value);
 
@@ -187,7 +188,7 @@ export default function GroupPalette(props) {
                      <Button onClick={handleClose}>Cancel</Button>
                      <Button
                         type="submit"
-                        onClick={() => add_group(client, dialogValue.label, randomColor(), session_id)
+                        onClick={() => add_group(client, cookies.user, dialogValue.label, randomColor(), session_id)
                         }>Add</Button>
                   </DialogActions>
                </form>
