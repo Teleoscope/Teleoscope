@@ -106,7 +106,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.add_group.signature(
                 args=(),
                 kwargs={
-#                     "username": args["username"],
+                    "username": args["username"],
                     "label": args["label"],
                     "color": args["color"],
                     "session_id": args["session_id"]
