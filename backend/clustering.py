@@ -71,7 +71,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=1000):
     label = 1
     # add the correct labels to the label np.array
     total_tagged = 0
-    tagged_with_label = [None] * len(group_id_strings)+1
+    tagged_with_label = [None] * (len(group_id_strings)+1)
     for group in groups:
         label_count = 0
         # grab latest history item for each group
