@@ -9,7 +9,7 @@ from bson.objectid import ObjectId
 import gc
 import tasks
 
-def cluster_by_groups(group_id_strings, session_oid, limit=100):
+def cluster_by_groups(group_id_strings, session_oid, limit=1000):
     """Cluster documents using user-provided group ids.
 
     group_id_strings : list(string) where the strings are MongoDB ObjectID format
@@ -71,7 +71,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100):
     label = 1
     # add the correct labels to the label np.array
     total_tagged = 0
-    tagged_with_label = [None] * len(group_id_strings)
+    tagged_with_label = [None] * len(group_id_strings)+1
     for group in groups:
         label_count = 0
         # grab latest history item for each group
