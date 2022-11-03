@@ -47,7 +47,7 @@ def initialize_session(*args, **kwargs):
     logging.info(f'Initializing sesssion for user {username}.')
     # Check if user exists and throw error if not
     user = db.users.find_one({"username": username})
-    userID = user._id
+    user_id = user['_id']
     userlist = {username:"owner"}
 
     if user is None:
