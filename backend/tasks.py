@@ -66,7 +66,7 @@ def initialize_session(*args, **kwargs):
                 "label": kwargs['label'],
                 "color": kwargs['color'],
                 "teleoscopes": [],
-                "action": f"Initialize new session: {label}",
+                "action": f"Initialize session",
                 "user": user_id,
             }
         ],
@@ -107,26 +107,11 @@ def save_UI_state(*args, **kwargs):
 
     username = kwargs["username"]
     user = db.users.find_one({"username": username})
+    user_id = user['_id']
 
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Save UI state"
-    history_item["user"] = user
-
-    # TODO delete below if redundant
-#     # update history_item to have the correct groups
-#     history_item["groups"] = session["history"][0]["groups"]
-#
-#     # update history_item to have the correct teleoscopes
-#     history_item["teleoscopes"] = session["history"][0]["teleoscopes"]
-#
-#     # update history_item to have the correct clusters
-#     history_item["clusters"] = session["history"][0]["clusters"]
-
-#     # update history_item to have the correct label
-#     history_item["label"] = session["history"][0]["label"]
-#
-#     # update history_item to have the correct color
-#     history_item["color"] = session["history"][0]["color"]
+    history_item["user"] = user_id
 
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
