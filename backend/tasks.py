@@ -326,7 +326,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
 
     username = kwargs["username"]
     user = db.users.find_one({"username": username})
-    user_id = curr_user['_id']
+    user_id = user['_id']
 
     # Creating document to be inserted into mongoDB
     obj = {
