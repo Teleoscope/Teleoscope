@@ -1,7 +1,6 @@
 // imports
 import React, { useContext } from "react";
 import RGL, { WidthProvider } from "react-grid-layout";
-
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { RootState } from '../stores/store'
 
@@ -42,8 +41,9 @@ const collides = (l1, l2) => {
 
 export default function WindowManager(props) {
   const client = useContext(StompContext)
-
   const windows = useAppSelector((state: RootState) => state.windows.windows);
+  const collision = useAppSelector((state: RootState) => state.windows.collision);
+  
   const groups = windows.filter(w => w.type == "Group");
   const dragged_item = useAppSelector((state: RootState) => state.windows.dragged);
   const dispatch = useAppDispatch();
@@ -89,13 +89,13 @@ export default function WindowManager(props) {
       cols={24}
       containerPadding={[0, 0]}
       rowHeight={30}
-      compactType={null}
+      compactType={collision ? null : 'vertical'}
       onDrop={(layout, item, e) => { dropping(layout, item, e) }}
       isDroppable={true}
       droppingItem={item(dragged_item.id, dragged_item.type)}
       draggableHandle=".drag-handle"
-      allowOverlap={true}
-      preventCollision={true}
+      allowOverlap={collision}
+      preventCollision={collision}
       onDrag={(layout, oldItem, newItem, placeholder, e, element) => handleCollisions(layout, newItem, placeholder)}
       onDragStop={(layout, oldItem, newItem, placeholder, e, element) => handleDragStop(layout, newItem)}
       onResizeStop={(layout) => dispatch(loadWindows(layout))}

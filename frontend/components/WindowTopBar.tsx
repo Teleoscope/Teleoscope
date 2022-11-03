@@ -20,8 +20,7 @@ export default function WindowTopBar(props) {
 	const dispatch = useDispatch();
 	return (
 		<div className="drag-handle" style={{ cursor: "move" }}>
-			<Stack direction="row" alignItems="center" justifyContent="space-between">
-				<Stack direction="row" alignItems="center">
+			<Stack direction="row" alignItems="flex-start" justifyContent="space-between">
 					<IconButton size="small"
 						onClick={() => {
 							props.handleShow();
@@ -30,16 +29,13 @@ export default function WindowTopBar(props) {
 					>{props.icon}</IconButton>
 					<Tooltip title={props.title}>
 						<Typography
-							variant="subtitle1"
-							gutterBottom
+							variant="body"
 							component="div"
-							noWrap
 							sx={{ pt: 0.6 }}
 						// className="drag-handle"
 						>{props.title}
 						</Typography>
 					</Tooltip>
-				</Stack>
 				<CloseButton id={props.id} size="small" />
 			</Stack>
 			<Divider></Divider>

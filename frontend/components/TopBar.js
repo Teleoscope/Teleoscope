@@ -107,12 +107,17 @@ export default function TopBar(props) {
     dispatch(loadWindows(history_item["windows"]));
   }
 
+<<<<<<< HEAD
+  const get_label = () => session.history[0].label;
+  const get_color = () => session ? session.history[0].color : "#4E5CBC"
+=======
   const get_color = () => {
     if (session) {
       return session.history[0].color
     }
     return "#4E5CBC"
   }
+>>>>>>> main
 
   const [dialogValue, setDialogValue] = React.useState({
       label: '',
@@ -133,7 +138,11 @@ export default function TopBar(props) {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
+<<<<<<< HEAD
+        style={{ height: 60, backgroundColor: get_color() }} 
+=======
         style={{ height: 60, backgroundColor: get_color() }}
+>>>>>>> main
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
@@ -234,6 +243,18 @@ export default function TopBar(props) {
               <Button
                   size="small"
                   variant="text"
+<<<<<<< HEAD
+                  onClick={() => save_UI_state( // could maybe use a check that sees if a session is active
+                      client,
+                      session_id,
+                      { // history_item in save_UI_state in Stomp.js
+                          "bookmarks": bookmarks,
+                          "windows": windows,
+                          "label": get_label(cookies.user),
+                          "color": get_color(),
+                      })
+                  }
+=======
                   onClick={() => {
                       if (session) {
                           save_UI_state(
@@ -248,6 +269,7 @@ export default function TopBar(props) {
                           console.log(`No session selected. Do nothing`);
                       }
                   }}
+>>>>>>> main
                   style={{
                       backgroundColor: "#FFFFFF",
                       color: "black",

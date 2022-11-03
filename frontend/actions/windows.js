@@ -22,11 +22,15 @@ export const Windows = createSlice({
 				type: "FABMenu"
 			}
 		],
-		dragged: {id: "default", type: "Default"}
+		dragged: {id: "default", type: "Default"},
+		collision: true,
 	},
 	reducers: {
 		dragged: (state, action) => {
 			state.dragged = action.payload;
+		},
+		collision: (state, action) => {
+			state.collision = action.payload;
 		},
 		addWindow: (state, action) => {
 			var item = getDefaultWindow();
@@ -68,11 +72,12 @@ export const Windows = createSlice({
 			var ids = state.windows.map((w) => {return w.i});
 			var index = ids.indexOf(action.payload);
 			if (index > -1) {
-				temp[index].w = 1;
+				temp[index].w = 4;
 				temp[index].h = 1;
+				temp[index].x = 20;
 				temp[index].isResizable = false;
 			}
-			state.windows = temp;	
+			state.windows = temp;
 		},
 		maximizeWindow: (state, action) => {
 			var temp = [...state.windows];
