@@ -67,7 +67,7 @@ def initialize_session(*args, **kwargs):
                 "color": kwargs['color'],
                 "teleoscopes": [],
                 "action": f"Initialize new session: {label}",
-                "user": userID,
+                "user": user_id,
             }
         ],
     }
