@@ -45,23 +45,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # These should exactly implement the interface standard
         # Make sure they look like Stomp
 
-        if task == "initialize_teleoscope":
-            res = tasks.initialize_teleoscope.signature(
-                args=(),
-                kwargs={
-                    "session_id": args["session_id"]
-                },
-            )
-
-        if task == "save_teleoscope_state":
-            res = tasks.save_teleoscope_state.signature(
-                args=(),
-                kwargs={
-                    "_id": args["_id"],
-                    "history_item": args["history_item"]
-                },
-            )
-
         if task == 'initialize_session':
             res = tasks.initialize_session.signature(
                 args=(),
@@ -69,6 +52,16 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "username": args["username"],
                     "label": args["label"],
                     "color": args["color"]
+                },
+            )
+
+        if task == "save_UI_state":
+            res = tasks.save_UI_state.signature(
+                args=(),
+                kwargs={
+                    "username": args["username"],
+                    "session_id": args["session_id"],
+                    "history_item": args["history_item"]
                 },
             )
 
@@ -82,12 +75,19 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 }
             )
 
-        if task == "save_UI_state":
-            res = tasks.save_UI_state.signature(
+        if task == "initialize_teleoscope":
+            res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
-                    "username": args["username"],
-                    "session_id": args["session_id"],
+                    "session_id": args["session_id"]
+                },
+            )
+
+        if task == "save_teleoscope_state":
+            res = tasks.save_teleoscope_state.signature(
+                args=(),
+                kwargs={
+                    "_id": args["_id"],
                     "history_item": args["history_item"]
                 },
             )
@@ -153,8 +153,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "content": args["content"],
                 }
             )
-
-        
         
         if task == "cluster_by_groups":
             res = tasks.cluster_by_groups.signature(

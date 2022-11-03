@@ -75,6 +75,64 @@ def initialize_session(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
     return 200 # success
 
+@app.task
+def save_UI_state(*args, **kwargs):
+    """
+    Updates a session document in the sessions collection.
+    kwargs: 
+        session_id: (int, represents ObjectId in int)
+        history_item: (Dict)
+    """
+    transaction_session, db = utils.create_transaction_session()
+    
+    # handle kwargs
+    history_item = kwargs["history_item"]
+    session_id = ObjectId(str(kwargs["session_id"]))
+
+    logging.info(f'Saving state for {session_id}.')
+
+    # check if session id is valid, if not, raise exception
+    session = db.sessions.find_one({"_id": session_id})
+    if not session:
+        logging.info(f"Session {session_id} not found.")
+        raise Exception("Session not found")
+
+    username = kwargs["username"]
+    user = db.users.find_one({"username": username})
+
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["action"] = "Save UI state"
+    history_item["user"] = user
+
+    # TODO delete below if redundant
+#     # update history_item to have the correct groups
+#     history_item["groups"] = session["history"][0]["groups"]
+#
+#     # update history_item to have the correct teleoscopes
+#     history_item["teleoscopes"] = session["history"][0]["teleoscopes"]
+#
+#     # update history_item to have the correct clusters
+#     history_item["clusters"] = session["history"][0]["clusters"]
+
+#     # update history_item to have the correct label
+#     history_item["label"] = session["history"][0]["label"]
+#
+#     # update history_item to have the correct color
+#     history_item["color"] = session["history"][0]["color"]
+
+    with transaction_session.start_transaction():
+        db.sessions.update_one({"_id": session_id},
+            {
+                '$push': {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }
+            }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
+
+    return 200 # success
 
 @app.task
 def add_user_to_session(*args, **kwargs):
@@ -107,12 +165,9 @@ def add_user_to_session(*args, **kwargs):
 
     userlist[username] = "collaborator"
 
-    history_item = session["history_item"]
-
-    # action taken
+    history_item = session["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = f"Add {username} to userlist"
-
-    # user who called action
     history_item["user"] = curr_user
 
     # update session with new userlist that includes collaborator
@@ -141,71 +196,6 @@ def add_user_to_session(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
 
     return 200 # success
-
-
-@app.task
-def save_UI_state(*args, **kwargs):
-    """
-    Updates a session document in the sessions collection.
-    kwargs: 
-        session_id: (int, represents ObjectId in int)
-        history_item: (Dict)
-    """
-    transaction_session, db = utils.create_transaction_session()
-    
-    # handle kwargs
-    history_item = kwargs["history_item"]
-    session_id = ObjectId(str(kwargs["session_id"]))
-
-    logging.info(f'Saving state for {session_id}.')
-
-    # check if session id is valid, if not, raise exception
-    session = db.sessions.find_one({"_id": session_id})
-    if not session:
-        logging.info(f"Session {session_id} not found.")
-        raise Exception("Session not found")
-
-    username = kwargs["username"]
-    user = db.users.find_one({"username": username})
-
-    # timestamp API call
-    history_item["timestamp"] = datetime.datetime.utcnow()
-
-    # update history_item to have the correct groups
-    history_item["groups"] = session["history"][0]["groups"]
-
-    # update history_item to have the correct teleoscopes
-    history_item["teleoscopes"] = session["history"][0]["teleoscopes"]
-
-    # update history_item to have the correct clusters
-    history_item["clusters"] = session["history"][0]["clusters"]
-
-    # action taken
-    history_item["action"] = "Save UI state"
-
-    # user who called action
-    history_item["user"] = user
-
-#     # update history_item to have the correct label
-#     history_item["label"] = session["history"][0]["label"]
-#
-#     # update history_item to have the correct color
-#     history_item["color"] = session["history"][0]["color"]
-
-    with transaction_session.start_transaction():
-        db.sessions.update_one({"_id": session_id},
-            {
-                '$push': {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }
-            }, session=transaction_session)
-        utils.commit_with_retry(transaction_session)
-
-    return 200 # success
-
 
 @app.task
 def initialize_teleoscope(*args, **kwargs):
@@ -249,10 +239,17 @@ def initialize_teleoscope(*args, **kwargs):
             }, session=transaction_session)
         logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
         ret = teleoscope_result
+
         ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))})
         history_item = ui_session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
         history_item["teleoscopes"].append(ObjectId(teleoscope_result.inserted_id))
+        history_item["action"] = "Initialize Teleoscope"
+
+        # TODO record user
+#         username = kwargs["username"]
+#         user = db.users.find_one({"username": username})
+#         history_item["user"] = user
 
         # associate the newly created teleoscope with correct session
 
@@ -306,37 +303,6 @@ def save_teleoscope_state(*args, **kwargs):
         logging.info(f'Saving teleoscope state: {result}')
         utils.commit_with_retry(session)
 
-
-@app.task
-def save_group_state(*args, **kwargs):
-    """
-    This function saves the state of a group to the database.
-
-    kwargs: 
-       group_id: String
-       history_item: Dict
-    Effects: Throws exception
-    """
-    session, db = utils.create_transaction_session()
-
-    # handle kwargs
-    group_id = ObjectId(kwargs['group_id'])
-    history_item = kwargs['history_item']
-
-    # create a copy of the history item and update the timestamp
-    history_item["timestamp"] = datetime.datetime.utcnow()
-
-    # Find group with group_id
-    group = db.groups.find_one({'_id': group_id})
-    if group:
-        with session.start_transaction():
-            # Update group with history_item
-            db.groups.update_one({'_id': group_id}, {'$push': {'history': history_item}}, session=session)
-            utils.commit_with_retry(session)
-    else:
-        raise Exception(f"Group with id {group_id} not found.")
-
-
 @app.task 
 def add_group(*args, human=True, included_posts=[], **kwargs):
     """
@@ -366,7 +332,6 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                 "color": color,
                 "included_posts": included_posts,
                 "label": label,
-                "action" : "initialize group"
             }]
     }
     
@@ -391,20 +356,23 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
             groups.append(groups_res.inserted_id)
         else:
             clusters.append(groups_res.inserted_id)
+
+        history_item = session["history"][0]
+        history_item["timestamp"] = datetime.datetime.utcnow()
+        history_item["groups"] = groups
+        history_item["clusters"] = clusters
+        history_item["action"] = f"Initialize new group: {label}"
+
+        # TODO record user
+        #         username = kwargs["username"]
+        #         user = db.users.find_one({"username": username})
+        #         history_item["user"] = user
+
         sessions_res = db.sessions.update_one({'_id': _id},
             {
                 '$push': {
                             "history": {
-                                '$each': [{
-                                    "timestamp": datetime.datetime.utcnow(),
-                                    "groups": groups,
-                                    "clusters": clusters,
-                                    "bookmarks": session["history"][0]["bookmarks"],
-                                    "windows": session["history"][0]["windows"],
-                                    "label": session["history"][0]["label"],
-                                    "color": session["history"][0]["color"],
-                                    "teleoscopes": session["history"][0]["teleoscopes"]
-                                }],
+                                '$each': [history_item],
                                 '$position': 0
                             }
                 }

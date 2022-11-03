@@ -89,22 +89,6 @@ export function initialize_session(client: Client, username: string, label: stri
 }
 
 /**
- * adds user to userlist of a session in MongoDB.
- */
-export function add_user_to_session(client: Client, current: string, username: string, session_id: string) {
-  var body = {
-    task: 'add_user_to_session',
-    args: {
-      current: current,
-      username: username,
-      session_id: session_id,
-    }
-  }
-  publish(client, body);
-  return body;
-}
-
-/**
  * Saves the workspace UI state (window locations, bookmarks)
  */
 export function save_UI_state(client: Client, username: string, session_id: string, history_item) {
@@ -114,6 +98,22 @@ export function save_UI_state(client: Client, username: string, session_id: stri
       username: username,
       session_id: session_id,
       history_item: history_item,
+    }
+  }
+  publish(client, body);
+  return body;
+}
+
+/**
+ * adds user to userlist of a session in MongoDB.
+ */
+export function add_user_to_session(client: Client, current: string, username: string, session_id: string) {
+  var body = {
+    task: 'add_user_to_session',
+    args: {
+      current: current,
+      username: username,
+      session_id: session_id,
     }
   }
   publish(client, body);
