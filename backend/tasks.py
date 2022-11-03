@@ -21,6 +21,7 @@ app.conf.update(
     task_serializer='pickle',
     accept_content=['pickle'],  # Ignore other content
     result_serializer='pickle',
+    task_queues=[auth.rabbitmq["queue"]],
 )
 
 @app.task
