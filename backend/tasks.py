@@ -324,9 +324,9 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
 
     teleoscope_result = initialize_teleoscope(session_id=_id, label=label)
 
-#     username = kwargs["username"]
-#     user = db.users.find_one({"username": username})
-    # user_id = curr_user['_id']
+    username = kwargs["username"]
+    user = db.users.find_one({"username": username})
+    user_id = curr_user['_id']
 
     # Creating document to be inserted into mongoDB
     obj = {
@@ -339,7 +339,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                 "included_posts": included_posts,
                 "label": label,
                 "action": "Initialize group",
-#                 "user": user_id;
+                "user": user_id;
             }]
     }
     
@@ -372,7 +372,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
         history_item["action"] = f"Initialize new group: {label}"
 
         # TODO record user
-#         history_item["user"] = user_id
+        history_item["user"] = user_id
 
         sessions_res = db.sessions.update_one({'_id': _id},
             {
