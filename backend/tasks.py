@@ -176,7 +176,7 @@ def add_user_to_session(*args, **kwargs):
             {
                 '$set': {
                     "userlist" : userlist,
-                }
+                },
                 "$push": {
                     "history": {
                         "$each": [history_item],
@@ -220,6 +220,9 @@ def initialize_teleoscope(*args, **kwargs):
 
     ret = None
 
+    username = kwargs["username"]
+    user = db.users.find_one({"username": username})
+
     # create a new query document
     with transaction_session.start_transaction():
         teleoscope_result = db.teleoscopes.insert_one({
@@ -235,7 +238,7 @@ def initialize_teleoscope(*args, **kwargs):
                         "stateVector": [],
                         "ranked_post_ids": None
                         "action": "Initialize Teleoscope",
-#                         "user": user;
+                        "user": user,
                     }
                 ]
             }, session=transaction_session)
@@ -247,11 +250,7 @@ def initialize_teleoscope(*args, **kwargs):
         history_item["timestamp"] = datetime.datetime.utcnow()
         history_item["teleoscopes"].append(ObjectId(teleoscope_result.inserted_id))
         history_item["action"] = "Initialize Teleoscope"
-
-        # TODO record user
-#         username = kwargs["username"]
-#         user = db.users.find_one({"username": username})
-#         history_item["user"] = user
+        history_item["user"] = user
 
         # associate the newly created teleoscope with correct session
 
@@ -329,7 +328,10 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     label = kwargs["label"]
     _id = ObjectId(str(kwargs["session_id"]))
 
-    teleoscope_result = initialize_teleoscope(session_id=_id, label=label)    
+    teleoscope_result = initialize_teleoscope(session_id=_id, label=label)
+
+    username = kwargs["username"]
+    user = db.users.find_one({"username": username})
 
     # Creating document to be inserted into mongoDB
     obj = {
@@ -342,7 +344,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                 "included_posts": included_posts,
                 "label": label,
                 "action": f"Initialize new group: {label}",
-#               "user": user;
+                "user": user;
             }]
     }
     
@@ -375,9 +377,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
         history_item["action"] = f"Initialize new group: {label}"
 
         # TODO record user
-        #         username = kwargs["username"]
-        #         user = db.users.find_one({"username": username})
-        #         history_item["user"] = user
+        history_item["user"] = user
 
         sessions_res = db.sessions.update_one({'_id': _id},
             {
