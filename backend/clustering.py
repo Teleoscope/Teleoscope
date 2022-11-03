@@ -9,7 +9,7 @@ from bson.objectid import ObjectId
 import gc
 import tasks
 
-def cluster_by_groups(group_id_strings, session_oid, limit=1000):
+def cluster_by_groups(group_id_strings, session_oid, limit=10000):
     """Cluster documents using user-provided group ids.
 
     group_id_strings : list(string) where the strings are MongoDB ObjectID format
@@ -95,7 +95,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=1000):
         # add labels
         for i in indices:
             labels[i] = label
-            logging.info(f'label found')
+            #logging.info(f'label found')
 
         # stats for this particular label
         label_count = np.count_nonzero(labels == label)
@@ -111,6 +111,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=1000):
     logging.info(f'Overall, there are {total_tagged} posts that have been given a human label. This is {total_coverage}% of the ordered posts.')
     # update number of unlabelled posts
     cluster_stats_dict[-1] = np.count_nonzero(labels == -1)
+    logging.info(f'The dict now contains {cluster_stats_dict}.')
 
     # for garbage collection
     del ordered_posts
