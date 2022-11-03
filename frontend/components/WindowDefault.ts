@@ -1,7 +1,7 @@
 export function getDefaultWindow() {
 	var item = {
 		i: "default_window",
-		x: 0,
+		x: 20,
 		y: 0,
 		w: 4,
 		h: 1,
@@ -13,7 +13,7 @@ export function getDefaultWindow() {
 		isDraggable: true,
 		isResizable: true,
 		resizeHandles: ['se'], // <'s' | 'w' | 'e' | 'n' | 'sw' | 'nw' | 'se' | 'ne'> 
-		isBounded: false,
+		isBounded: true,
 		type: "Default",
 		isChecked: false
 	}

@@ -34,6 +34,14 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 		}
 	}
 
+	const handleChipClick = (e) => {
+		if (e.shiftKey) {
+			dispatch(checkWindow({ i: w.i, check: !w.isChecked }))
+		} else {
+			handleShow();
+		}
+	}
+
 	const handleShow = () => {
 		if (show) {
 			dispatch(minimizeWindow(props.id));
@@ -57,7 +65,7 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 				clickable
 				// color="primary"
 				onDelete={handleDelete}
-				onClick={handleShow}
+				onClick={(e) => handleChipClick(e)}
 				className="drag-handle"
 				onMouseMove={(e) => handleMove(e)}
 				style={{
