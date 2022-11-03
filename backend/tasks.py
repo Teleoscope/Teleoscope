@@ -214,8 +214,9 @@ def initialize_teleoscope(*args, **kwargs):
 
     ret = None
 
-#     username = kwargs["username"]
-#     user = db.users.find_one({"username": username})
+    username = kwargs["username"]
+    user = db.users.find_one({"username": username})
+    user_id = user['_id']
 
     # create a new query document
     with transaction_session.start_transaction():
@@ -232,7 +233,7 @@ def initialize_teleoscope(*args, **kwargs):
                         "stateVector": [],
                         "ranked_post_ids": None,
                         "action": "Initialize Teleoscope",
-#                         "user": user,
+                        "user": user_id,
                     }
                 ]
             }, session=transaction_session)
@@ -244,7 +245,7 @@ def initialize_teleoscope(*args, **kwargs):
         history_item["timestamp"] = datetime.datetime.utcnow()
         history_item["teleoscopes"].append(ObjectId(teleoscope_result.inserted_id))
         history_item["action"] = "Initialize Teleoscope"
-#         history_item["user"] = user
+        history_item["user"] = user_id
 
         # associate the newly created teleoscope with correct session
 
@@ -370,8 +371,6 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
         history_item["groups"] = groups
         history_item["clusters"] = clusters
         history_item["action"] = f"Initialize new group: {label}"
-
-        # TODO record user
         history_item["user"] = user_id
 
         sessions_res = db.sessions.update_one({'_id': _id},

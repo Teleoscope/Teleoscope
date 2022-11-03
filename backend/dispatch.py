@@ -80,8 +80,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
-#                     "username": args["username"],
-                  "session_id": args["session_id"]
+                    "username": args["username"],
+                    "session_id": args["session_id"]
                 },
             )
 
