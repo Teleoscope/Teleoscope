@@ -24,7 +24,7 @@ import PostList from "./PostList"
 import useSWRAbstract from "../util/swr"
 
 export default function Teleoscope(props) {
-  const [teleoscope_id, setTeleoscope_id] = useState(props.id.split("%")[0]);
+  const [teleoscope_id] = useState(props.id.split("%")[0]);
   const [weight, setWeight] = useState<number>(.3);
   const { teleoscope, teleoscope_loading } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
 

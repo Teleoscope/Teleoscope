@@ -272,6 +272,7 @@ def save_teleoscope_state(*args, **kwargs):
         history_item (Dict)
     """
     session, db = utils.create_transaction_session()
+    logging.info(f'Attempting to save Teleoscope state...')
 
     # handle args
     history_item = args[0]["history_item"]
@@ -292,7 +293,7 @@ def save_teleoscope_state(*args, **kwargs):
 #         username = kwargs["username"]
 #         user = db.users.find_one({"username": username})
 #         history_item["user"] = user
-
+ 
     with session.start_transaction():
         result = db.teleoscopes.update_one({"_id": obj_id},
             {
