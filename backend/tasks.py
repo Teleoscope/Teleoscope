@@ -272,7 +272,6 @@ def save_teleoscope_state(*args, **kwargs):
         history_item (Dict)
     """
     session, db = utils.create_transaction_session()
-    logging.info(f'Attempting to save Teleoscope state...')
 
     # handle args
     history_item = args[0]["history_item"]
@@ -658,6 +657,7 @@ class reorient(Task):
             db = utils.connect()
             allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1, '_id':0}, batching=True, batchSize=10000)
             ids = [x['id'] for x in allPosts]
+            logging.info(f'There are {len(ids)} ids in posts.')
             vecs = np.array([x['selftextVector'] for x in allPosts])
 
             np.savez(npzpath.as_posix(), posts=vecs)
