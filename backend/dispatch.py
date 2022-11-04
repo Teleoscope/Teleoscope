@@ -20,17 +20,21 @@ from tasks import robj, app
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
-queue = Queue(
-    auth.rabbitmq["queue"],
-    Exchange(auth.rabbitmq["queue"]),
-    auth.rabbitmq["queue"])
+dispatch_queue = Queue(
+    auth.rabbitmq["dispatch_queue"],
+    Exchange(auth.rabbitmq["dispatch_queue"]),
+    auth.rabbitmq["dispatch_queue"])
 
+task_queue = Queue(
+    auth.rabbitmq["task_queue"],
+    Exchange(auth.rabbitmq["task_queue"]),
+    auth.rabbitmq["task_queue"])
 
 class WebTaskConsumer(bootsteps.ConsumerStep):
 
     def get_consumers(self, channel):
         return [Consumer(channel,
-                         queues=[queue],
+                         queues=[dispatch_queue],
                          callbacks=[self.handle_message],
                          accept=['json', 'pickle'])]
 
@@ -98,8 +102,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = chain(
                 robj.s(teleoscope_id=args["teleoscope_id"],
                        positive_docs=args["positive_docs"],
-                       negative_docs=args["negative_docs"]).set(queue=auth.rabbitmq["queue"]),
-                tasks.save_teleoscope_state.s().set(queue=auth.rabbitmq["queue"])
+                       negative_docs=args["negative_docs"]).set(queue=auth.rabbitmq["task_queue"]),
+                tasks.save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
             )
             res.apply_async()
             return
@@ -169,7 +173,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
         try:
-            res.apply_async(queue=auth.rabbitmq["queue"])
+            res.apply_async(queue=auth.rabbitmq["task_queue"])
         except:
             logging.warning(f'Task {task} for args {args} was not valid.')
         return

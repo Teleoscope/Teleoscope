@@ -18,9 +18,9 @@ CELERY_BROKER_URL = (
 )
 
 queue = Queue(
-    auth.rabbitmq["queue"],
-    Exchange(auth.rabbitmq["queue"]),
-    auth.rabbitmq["queue"])
+    auth.rabbitmq["task_queue"],
+    Exchange(auth.rabbitmq["task_queue"]),
+    auth.rabbitmq["task_queue"])
 
 app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
 app.conf.update(
