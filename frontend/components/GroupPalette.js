@@ -82,7 +82,7 @@ export default function GroupPalette(props) {
          }}
       />
 
-      <IconButton onClick={() => runClusters()}><Diversity2Icon></Diversity2Icon></IconButton>
+      <IconButton onClick={() => runClusters()}><Diversity2Icon sx={{color: props.color}}/></IconButton>
 
       </Stack>
       <Divider />

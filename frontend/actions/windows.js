@@ -63,7 +63,7 @@ export const Windows = createSlice({
 			if (index > -1) {
 				var tempitem = {...temp[index]}
 				temp.splice(index, 1);
-				temp.splice(0, 0, tempitem);
+				temp.push(tempitem);
 			}
 			state.windows = temp;			
 		},
@@ -84,8 +84,8 @@ export const Windows = createSlice({
 			var ids = state.windows.map((w) => {return w.i});
 			var index = ids.indexOf(action.payload);
 			if (index > -1) {
-				temp[index].w = 8;
-				temp[index].h = 6;
+				temp[index].w = 5;
+				temp[index].h = 9;
 				temp[index].isResizable = true;
 			}
 			state.windows = temp;	
