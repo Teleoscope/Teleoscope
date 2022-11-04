@@ -49,80 +49,11 @@ export default function GroupPalette(props) {
    const { groups } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
    const group_labels = groups ? groups.map((g) => { return g.history[0].label }) : []
 
-   const handleClose = () => {
-      setDialogValue({
-         label: '',
-         color: '',
-      });
-      toggleOpen(false);
-   };
-
-   const handleSubmit = (event) => {
-      event.preventDefault();
-      setValue({
-         label: dialogValue.label,
-         color: parseInt(dialogValue.color, 10),
-      });
-      handleClose();
-   };
-
-   const [dialogValue, setDialogValue] = React.useState({
-      label: '',
-      color: '',
-   });
-
    const keyChange = (e) => {
       if (e.code == "Enter") {
+         add_group(client, cookies.user, e.target.value, randomColor(), session_id)
       }
    };
-
-   const onChangeHandler = (event, newValue) => {
-      if (typeof newValue === 'string') {
-         console.log("newValue === string", newValue)
-         // timeout to avoid instant validation of the dialog's form.
-         // TODO: seems like a bit of a hack, what behaviour is being suppressed here?
-         // is there another way to modify it?
-         setTimeout(() => {
-            if (group_labels.includes(newValue)) {
-               var g = groups.find(g => g.label == newValue)
-               var postids = g.history[0]["included_posts"];
-
-               postids.forEach((id) => {
-                  dispatch(addWindow({ i: id + "%post", x: 0, y: 0, w: 3, h: 3, type: "Post" }));
-               })
-            }
-
-            toggleOpen(false);
-            setDialogValue({
-               label: newValue,
-               color: '',
-            });
-         });
-      } else if (newValue && newValue.inputValue) {
-         console.log("newValue && newValue.inputValue", newValue)
-         toggleOpen(true);
-         setDialogValue({
-            label: newValue.inputValue,
-            color: '',
-         });
-      } else {
-         console.log("newValue setValue", newValue)
-         setValue(newValue);
-      }
-   };
-
-   const filteredOptionsHandler = (options, params) => {
-      const filtered = filter(options, params);
-
-      if (params.inputValue !== '') {
-         filtered.push({
-            inputValue: params.inputValue,
-            label: `Add "${params.inputValue}"`,
-         });
-      }
-
-      return filtered;
-   }
 
    const runClusters = () => {
       cluster_by_groups(client, groups.map(g => g._id), session_id)
@@ -130,70 +61,33 @@ export default function GroupPalette(props) {
 
    return (
       <div style={{ overflow: "auto", height: "100%" }}>
-      <Stack direction="row" justifyContent="right" alignItems="center" style={{ margin: 0 }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" style={{ margin: 0 }}>
+      <TextField 
+         label="Create new group..."
+         placeholder="Type label and press enter."
+         variant="standard"
+         onKeyDown={(e) => keyChange(e)}
+         onChange={(e) => setValue(e.target.value)}
+         InputLabelProps={{
+            style: { color:  props.color },
+          }}
+         sx={{ 
+            width: "75%", 
+            margin: 1,
+            '& .MuiInput-underline:before': { borderBottomColor: props.color },
+            '& .MuiInput-underline:after': { borderBottomColor: props.color },
+            '& .MuiInputLabel-root': { borderBottomColor: props.color },
+
+            
+         }}
+      />
+
       <IconButton onClick={() => runClusters()}><Diversity2Icon></Diversity2Icon></IconButton>
+
       </Stack>
       <Divider />
-         <div>
-            <Autocomplete
-               value={value}
-               onChange={(event, newValue) => {
-                  onChangeHandler(event, newValue)
-               }}
-               // creates the add button when the input doesn't match any of the existing groups
-               filterOptions={(options, params) => filteredOptionsHandler(options, params)}
-               id="Add Group"
-               options={group_labels}
-               style={{ width: "100%", borderRadius: "0 !important" }}
-               selectOnFocus
-               clearOnBlur
-               handleHomeEndKeys
-               //renderOption={(props, option) => <li {...props}>{option}</li>}
-               sx={{ width: 300 }}
-               freeSolo
-               renderInput={(params) =>
-                  <TextField {...params}
-                     label="Search and Create groups..."
-                     variant="filled"
-                     placeholder="type to create, click to filter..."
-                     onKeyDown={(e) => keyChange(e)}
-                     style={{ width: "100%", borderRadius: "0 !important" }} />}
-            />
-            <Dialog open={open} onClose={handleClose}>
-               <form onSubmit={handleSubmit}>
-                  <DialogTitle>Add a new group</DialogTitle>
-                  <DialogContent>
-                     <DialogContentText>
-                        Input your group name and a random color will be matched to the group!
-                     </DialogContentText>
-                     <TextField
-                        variant="filled"
-                        placeholder="Add group name"
-                        style={{ width: "100%", borderRadius: "0 !important" }}
-                        autoFocus
-                        margin="dense"
-                        id="name"
-                        value={dialogValue.label}
-                        onChange={(event) =>
-                           setDialogValue({
-                              ...dialogValue,
-                              tag: event.target.value,
-                           })
-                        }
-                        label="group name"
-                        type="text"
-                     />
-                  </DialogContent>
-                  <DialogActions>
-                     <Button onClick={handleClose}>Cancel</Button>
-                     <Button
-                        type="submit"
-                        onClick={() => add_group(client, cookies.user, dialogValue.label, randomColor(), session_id)
-                        }>Add</Button>
-                  </DialogActions>
-               </form>
-            </Dialog>
-         </div>
+      
+            
          <List>
             {group_labels.map((gl) => {
                var the_group = groups.find(g => g.history[0].label == gl);
