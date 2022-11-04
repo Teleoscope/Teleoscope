@@ -29,6 +29,7 @@ export default function Post(props) {
       <Divider />
       <PostText text={text} />
 
+      <Divider sx={{margin: 5}}/>
     </div>
   )
 }
