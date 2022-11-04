@@ -392,10 +392,10 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
             res = chain(
                     robj.s(teleoscope_id=teleoscope_result.inserted_id,
                         positive_docs=included_posts,
-                        negative_docs=[]),
-                    save_teleoscope_state.s()
+                        negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
+                    save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
             )
-            res.apply_async(queue=auth.rabbitmq["queue"])
+            res.apply_async()
         
         return groups_res.inserted_id
 
