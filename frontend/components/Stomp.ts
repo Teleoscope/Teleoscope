@@ -61,7 +61,7 @@ interface Body {
  * Publishes a message to RabbitMQ.
  */
 export function publish(client: Client, body: Body) {
-  var headers = {};
+  var headers = {content_type: "application/json", content_encoding: "utf-8"};
   client.publish({
     destination: "/queue/" + process.env.NEXT_PUBLIC_RABBITMQ_QUEUE, // TODO: rename queue
     headers: headers,

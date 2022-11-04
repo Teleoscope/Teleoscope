@@ -36,7 +36,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         return [Consumer(channel,
                          queues=[dispatch_queue],
                          callbacks=[self.handle_message],
-                         accept=['json', 'pickle'])]
+                         accept=['json'])]
 
     def handle_message(self, body, message):
         print('Received message: {0!r}'.format(body))
