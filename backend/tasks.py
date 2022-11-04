@@ -395,7 +395,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                         negative_docs=[]),
                     save_teleoscope_state.s()
             )
-            res.apply_async()
+            res.apply_async(queue=auth.rabbitmq["queue"])
         
         return groups_res.inserted_id
 

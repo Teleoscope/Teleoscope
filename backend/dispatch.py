@@ -98,8 +98,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = chain(
                 robj.s(teleoscope_id=args["teleoscope_id"],
                        positive_docs=args["positive_docs"],
-                       negative_docs=args["negative_docs"]).set(queue=auth.rabbitmq["queue"]),
-                tasks.save_teleoscope_state.s().set(queue=auth.rabbitmq["queue"])
+                       negative_docs=args["negative_docs"]),
+                tasks.save_teleoscope_state.s()
             )
 
         if task == "add_group":
