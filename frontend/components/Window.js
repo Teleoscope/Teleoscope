@@ -68,15 +68,14 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 				onClick={(e) => handleChipClick(e)}
 				className="drag-handle"
 				onMouseMove={(e) => handleMove(e)}
-				style={{
-					backgroundColor: "white",
-					cursor: "move",
-				}}
 				sx={{
 					border: w.isChecked ? `2px solid ${props.color}` : "1px solid #DDDDDD",
 					boxShadow: '1',
-					'& .MuiChip-icon': props.color
-
+					cursor: "move",
+					backgroundColor: "white",
+					[`& .MuiChip-icon`]: {
+						color: props.color
+					  }
 				}}
 			/>
 		)

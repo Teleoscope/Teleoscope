@@ -239,8 +239,7 @@ def initialize_teleoscope(*args, **kwargs):
                 ]
             }, session=transaction_session)
         logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
-        ret = teleoscope_result
-
+  
         ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))})
         history_item = ui_session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
@@ -260,7 +259,7 @@ def initialize_teleoscope(*args, **kwargs):
                 }
             }, session=transaction_session)
         utils.commit_with_retry(transaction_session)
-    return ret
+    return teleoscope_result
 
 
 @app.task
