@@ -647,8 +647,8 @@ class reorient(Task):
         
         if npzpath.exists() and pklpath.exists():
             logging.info("Posts have been cached, retrieving now.")
-            loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
-            with open(path + 'ids.pkl', 'rb') as handle:
+            loadPosts = np.load(npzpath.as_posix(), allow_pickle=False)
+            with open(pklpath.as_posix(), 'rb') as handle:
                 self.allPostIDs = pickle.load(handle)
             self.allPostVectors = loadPosts['posts']
             self.postsCached = True
