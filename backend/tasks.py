@@ -18,9 +18,9 @@ CELERY_BROKER_URL = (
 )
 
 queue = Queue(
-    auth.rabbitmq["queue"],
-    Exchange(auth.rabbitmq["queue"]),
-    auth.rabbitmq["queue"])
+    auth.rabbitmq["task_queue"],
+    Exchange(auth.rabbitmq["task_queue"]),
+    auth.rabbitmq["task_queue"])
 
 app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
 app.conf.update(
@@ -292,7 +292,7 @@ def save_teleoscope_state(*args, **kwargs):
 #         username = kwargs["username"]
 #         user = db.users.find_one({"username": username})
 #         history_item["user"] = user
-
+ 
     with session.start_transaction():
         result = db.teleoscopes.update_one({"_id": obj_id},
             {
@@ -391,8 +391,8 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
             res = chain(
                     robj.s(teleoscope_id=teleoscope_result.inserted_id,
                         positive_docs=included_posts,
-                        negative_docs=[]),
-                    save_teleoscope_state.s()
+                        negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
+                    save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
             )
             res.apply_async()
         
@@ -647,8 +647,8 @@ class reorient(Task):
         
         if npzpath.exists() and pklpath.exists():
             logging.info("Posts have been cached, retrieving now.")
-            loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
-            with open(path + 'ids.pkl', 'rb') as handle:
+            loadPosts = np.load(npzpath.as_posix(), allow_pickle=False)
+            with open(pklpath.as_posix(), 'rb') as handle:
                 self.allPostIDs = pickle.load(handle)
             self.allPostVectors = loadPosts['posts']
             self.postsCached = True
@@ -657,6 +657,7 @@ class reorient(Task):
             db = utils.connect()
             allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1, '_id':0}, batching=True, batchSize=10000)
             ids = [x['id'] for x in allPosts]
+            logging.info(f'There are {len(ids)} ids in posts.')
             vecs = np.array([x['selftextVector'] for x in allPosts])
 
             np.savez(npzpath.as_posix(), posts=vecs)
