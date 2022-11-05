@@ -89,9 +89,11 @@ def moveVector(sourceVector, destinationVector, direction, magnitude):
         returns: new query vector
         side effects: moves the query vector towards the feedback vector by a certain amount defined by sensitivity and then norms the vector to have unit length
     '''
-    new_q = sourceVector + direction*magnitude*(destinationVector - sourceVector)
+    diff_q = destinationVector - sourceVector
+    scaled_q = direction*magnitude*diff_q
+    new_q = sourceVector + scaled_q
     new_q = new_q / np.linalg.norm(new_q)
-    logging.info(f'Magnitude: {magnitude}, difference: {sourceVector - new_q}.')
+    logging.info(f'Magnitude: {magnitude}, difference: {sourceVector - new_q}, scaled_q: {scaled_q}.')
 
     return new_q
 
