@@ -99,10 +99,15 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
         if task == "reorient":
+            magnitude = 0.5
+            if "magnitude" in args:
+                magnitude = args["magnitude"]
             res = chain(
                 robj.s(teleoscope_id=args["teleoscope_id"],
                        positive_docs=args["positive_docs"],
-                       negative_docs=args["negative_docs"]).set(queue=auth.rabbitmq["task_queue"]),
+                       negative_docs=args["negative_docs"],
+                       magnitude=magnitude
+                ).set(queue=auth.rabbitmq["task_queue"]),
                 tasks.save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
             )
             res.apply_async()

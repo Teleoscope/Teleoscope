@@ -24,6 +24,7 @@ import { alpha } from "@mui/material";
 import { IconButton } from '@mui/material';
 
 import AccountCircle from '@mui/icons-material/AccountCircle';
+import Flare from '@mui/icons-material/Flare';
 
 
 // actions
@@ -263,7 +264,10 @@ export default function TopBar(props) {
       <AppBar position="static" style={{ backgroundColor: get_color(), width: "100%" }}>
         <Toolbar >
           <Stack spacing={10} sx={{width: "100%"}} direction="row" alignItems="center" justifyContent="space-between">
-            <Typography variant="h5">Teleoscope</Typography>
+            <Stack direction="row" alignItems="center">
+              <Flare></Flare>
+              <Typography variant="h5" sx={{fontWeight: 'fontWeightLight' , fontFamily: "monospace"}}>Teleoscope</Typography>
+            </Stack>
             <Stack spacing={1} direction="row-reverse">
               <IconButton
                 id="bIconasic-button"
