@@ -757,8 +757,8 @@ class reorient(Task):
 
         # check if stateVector exists
         stateVector = []
-        if len(teleoscope['history'][-1]['stateVector']) > 0:
-            stateVector = np.array(teleoscope['history'][-1]['stateVector'])
+        if len(teleoscope['history'][0]['stateVector']) > 0:
+            stateVector = np.array(teleoscope['history'][0]['stateVector'])
         else:
             docs = positive_docs + negative_docs
             first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
