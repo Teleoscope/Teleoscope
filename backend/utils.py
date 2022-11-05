@@ -77,18 +77,18 @@ def mergeCollections():
 #     new_q = (1 - feedback * SENSITIVITY) * q_vector + feedback * SENSITIVITY * feedback_vector
 #     return new_q
 
-'''
-moveVector:
-    q_vector: query vector
-    feedback_vector: feedback vector
-    feedback: feedback value - 1 for like, -1 for dislike
 
-    returns: new query vector
-    side effects: moves the query vector towards the feedback vector by a certain amount defined by sensitivity and then norms the vector to have unit length
-'''
-# TODO: is this commutative? i.e. can we go from x -> y and then y -> x by the same reverse action?
-# TODO: 
 def moveVector(sourceVector, destinationVector, direction, magnitude = 0.50):
+    '''
+    moveVector:
+        sourceVector: current teleoscope search vector
+        destinationVector: new documents vector
+        direction: towards = 1, away = -1
+        magnitude: weight of new vector
+
+        returns: new query vector
+        side effects: moves the query vector towards the feedback vector by a certain amount defined by sensitivity and then norms the vector to have unit length
+    '''
     new_q = sourceVector + direction*magnitude*(destinationVector - sourceVector)
     new_q = new_q / np.linalg.norm(new_q)
     return new_q
