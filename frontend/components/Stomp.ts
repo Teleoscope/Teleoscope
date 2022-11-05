@@ -246,17 +246,17 @@ export function update_note(client: Client, post_id: string, content) {
 /**
  * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
  */
-export function reorient(client: Client, teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>, weight?: number) {
+export function reorient(client: Client, teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>, magnitude?: number) {
   var body = {
     task: "reorient",
     args: {
-      teleoscope_id: teleoscope_id, // TODO
+      teleoscope_id: teleoscope_id,
       positive_docs: positive_docs,
       negative_docs: negative_docs,
     }
   }
-  if (weight) {
-    body.args["weight"] = weight;
+  if (magnitude) {
+    body.args["magnitude"] = magnitude;
   }
   publish(client, body);
   return body;
