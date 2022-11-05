@@ -78,7 +78,7 @@ def mergeCollections():
 #     return new_q
 
 
-def moveVector(sourceVector, destinationVector, direction, magnitude = 0.50):
+def moveVector(sourceVector, destinationVector, direction, magnitude):
     '''
     moveVector:
         sourceVector: current teleoscope search vector
