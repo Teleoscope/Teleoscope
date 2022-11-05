@@ -773,7 +773,7 @@ class reorient(Task):
             direction=direction,
             magnitude=magnitude
         )
-        logging.info(f'Reorient sourceVector: {sourceVector}, destinationVector: {destinationVector}, and new vector qprime: {qprime}.')
+        logging.info(f'Reorient sourceVector: {stateVector}, destinationVector: {resultantVec}, and new vector qprime: {qprime}.')
         scores = utils.calculateSimilarity(self.allPostVectors, qprime)
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
         gridfs_id = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
