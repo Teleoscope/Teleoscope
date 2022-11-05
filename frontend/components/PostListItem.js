@@ -9,7 +9,7 @@ import FlareIcon from '@mui/icons-material/Flare';
 import RemoveIcon from '@mui/icons-material/Remove';
 
 // actions
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { dragged } from "../actions/windows";
 
 // custom
@@ -32,14 +32,16 @@ export default function PostListItem(props) {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [hover, setHover] = useState(false);
+  const magnitude = useSelector((state) => state.teleoscopes.magnitude);
+
 
   const showGroupIcon = props.hasOwnProperty("showGroupIcon") ? props.showGroupIcon : true;
 
   const handleOrientTowards = () => {
-    reorient(client, props.group.teleoscope, [props.id], [])
+    reorient(client, props.group.teleoscope, [props.id], [], magnitude)
   }
   const handleOrientAway = () => {
-    reorient(client, props.group.teleoscope, [], [props.id])
+    reorient(client, props.group.teleoscope, [], [props.id], magnitude)
   }
   const handleRemove = () => {
     remove_post_from_group(client, props.group._id, props.id)
@@ -92,12 +94,6 @@ export default function PostListItem(props) {
         ) 
       
         : ""}
-
-        {/* <IconButton onClick={() => setOpen(!open)}>
-          {open ? <ExpandLess /> : <ExpandMore />}
-        </IconButton>
-
-        {open ? <Expander post={post ? post : {}} /> : ""} */}
 
       </Stack>
 

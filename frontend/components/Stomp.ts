@@ -255,7 +255,7 @@ export function reorient(client: Client, teleoscope_id: string, positive_docs: A
       negative_docs: negative_docs,
     }
   }
-  if (magnitude) {
+  if (magnitude != null) {
     body.args["magnitude"] = magnitude;
   }
   publish(client, body);
