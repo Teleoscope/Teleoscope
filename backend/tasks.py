@@ -326,7 +326,9 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
 
     username = kwargs["username"]
     user = db.users.find_one({"username": username})
-    user_id = user['_id']
+    user_id = "1"
+    if (user):
+        user_id = user['_id']
 
     teleoscope_result = initialize_teleoscope(username=username, session_id=_id, label=label)
 
