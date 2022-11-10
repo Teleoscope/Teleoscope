@@ -16,8 +16,13 @@ export default function FABMenu(props) {
   const dispatch = useDispatch();
   const session_id = useSelector((state) => state.activeSessionID.value);
   const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
-  const actions = MenuActions();
-
+  const actions = {
+    'Search': MenuActions()['Search'],
+    'Teleoscopes': MenuActions()['Teleoscopes'],
+    'Groups': MenuActions()['Groups'],
+    'Clusters': MenuActions()['Clusters']
+  }
+  
   const get_color = () => session ? session.history[0].color : "#4E5CBC"
 
 

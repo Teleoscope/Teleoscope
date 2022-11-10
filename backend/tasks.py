@@ -217,7 +217,9 @@ def initialize_teleoscope(*args, **kwargs):
 
     username = kwargs["username"]
     user = db.users.find_one({"username": username})
-    user_id = user['_id']
+    user_id = "1"
+    if user != None:
+        user_id = user['_id']
 
     # create a new query document
     with transaction_session.start_transaction():
@@ -326,7 +328,9 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
 
     username = kwargs["username"]
     user = db.users.find_one({"username": username})
-    user_id = user['_id']
+    user_id = "1"
+    if user != None:
+        user_id = user['_id']
 
     teleoscope_result = initialize_teleoscope(username=username, session_id=_id, label=label)
 

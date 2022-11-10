@@ -9,9 +9,13 @@ const actions = {
     icon: <SearchIcon />,
     default_window: { i: "%search", w: 5, h: 9, type: "Search", isResizable: true }
   },
-  Teleoscope: {
+  Teleoscopes: {
     icon: <FlareIcon />,
     default_window: { i: "%teleoscopepalette", w: 2, h: 1, type: "Teleoscope Palette", isResizable: true }
+  },
+  Teleoscope: {
+    icon: <FlareIcon />,
+    default_window: { i: "%teleoscope", w: 2, h: 1, type: "Teleoscope", isResizable: true }
   },
   Groups: {
     icon: <TopicIcon />,

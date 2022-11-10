@@ -49,7 +49,7 @@ export default function ContextMenu(props) {
 
     const handleExistingTeleoscope = (t) => {
         var w = { ...MenuActions()["Teleoscope"].default_window };
-        w.i = t + "_" + w.i;
+        w.i = t + w.i;
         dispatch(addWindow(w))
         props.handleCloseContextMenu();
     }
