@@ -5,7 +5,6 @@ import React, { useState } from "react";
 import WindowTopBar from "../components/WindowTopBar";
 
 // mui
-import IconButton from '@mui/material/IconButton';
 import Chip from '@mui/material/Chip';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
@@ -63,7 +62,6 @@ export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onT
 				label={props.title}
 				icon={props.icon}
 				clickable
-				// color="primary"
 				onDelete={handleDelete}
 				onClick={(e) => handleChipClick(e)}
 				className="drag-handle"
