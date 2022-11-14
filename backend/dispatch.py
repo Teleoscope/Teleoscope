@@ -152,14 +152,23 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 }
             )
 
-        
-        
         if task == "cluster_by_groups":
             res = tasks.cluster_by_groups.signature(
                 args=(),
                 kwargs={
                     "group_id_strings": args["group_id_strings"],
                     "session_oid": args["session_oid"]
+                }
+            )
+
+        if task == "register_account":
+            res = tasks.register_account.signature(
+                args=(),
+                kwargs={
+                    "firstName": args["firstName"],
+                    "lastName": args["lastName"],
+                    "password": args["password"],
+                    "username": args["username"]
                 }
             )
 
