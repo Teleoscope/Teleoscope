@@ -10,20 +10,20 @@ import RemoveIcon from '@mui/icons-material/Remove';
 
 // actions
 import { useDispatch } from "react-redux";
-import { dragged } from "../actions/windows";
+import { dragged } from "../../actions/windows";
 
 // custom
-import GroupSelector from "./GroupSelector";
-import BookmarkSelector from "./BookmarkSelector";
+import GroupSelector from "../GroupSelector";
+import BookmarkSelector from "../BookmarkSelector";
 import PostTitle from './PostTitle';
 
 //utils
-import useSWRAbstract from "../util/swr"
-import { PreprocessTitle } from "../util/Preprocessers"
-import { remove_post_from_group, reorient } from "./Stomp";
+import useSWRAbstract from "../../util/swr"
+import { PreprocessTitle } from "../../util/Preprocessers"
+import { remove_post_from_group, reorient } from "../Stomp";
 
 // contexts
-import { StompContext } from '../context/StompContext'
+import { StompContext } from '../../context/StompContext'
 
 export default function PostListItem(props) {
   const client = useContext(StompContext)

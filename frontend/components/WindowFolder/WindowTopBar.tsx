@@ -9,11 +9,11 @@ import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 
 // custom
-import CloseButton from "./CloseButton"
+import CloseButton from "../CloseButton"
 
 // actions
 import { useDispatch } from "react-redux";
-import { moveWindowToFront } from "../actions/windows";
+import { moveWindowToFront } from "../../actions/windows";
 
 
 export default function WindowTopBar(props) {

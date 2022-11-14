@@ -11,18 +11,18 @@ import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 import Diversity2Icon from '@mui/icons-material/Diversity2';
 
 // custom
-import Notes from "./Notes"
-import FABMenu from "./FABMenu"
-import Group from "./Group"
-import Post from "./Post"
-import TeleoscopePalette from "./TeleoscopePalette"
-import Teleoscope from "./Teleoscope"
-import Search from "./Search"
-import GroupPalette from "./GroupPalette"
-import Clusters from './Clusters';
-import Cluster from './Cluster';
+import Notes from "../WindowModules/Notes"
+import FABMenu from "../FABMenu"
+import Group from "../Group"
+import Post from "../Posts/Post"
+import TeleoscopePalette from "../TeleoscopePalette"
+import Teleoscope from "../Teleoscope"
+import Search from "../WindowModules/Search"
+import GroupPalette from "../WindowModules/GroupPalette"
+import Clusters from "../Cluster/Clusters"
+import Cluster from '../Cluster/Cluster';
 
-import { PreprocessTitle, PreprocessText } from "../util/Preprocessers"
+import { PreprocessTitle, PreprocessText } from "../../util/Preprocessers"
 
 export default function WindowDefinitions() {
 	return {

@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 
 // custom
-import WindowTopBar from "../components/WindowTopBar";
+import WindowTopBar from "../WindowTopBar";
 
 // mui
 import IconButton from '@mui/material/IconButton';
@@ -12,7 +12,7 @@ import CardActionArea from '@mui/material/CardActionArea';
 
 // actions
 import { useDispatch } from "react-redux";
-import { minimizeWindow, maximizeWindow, checkWindow } from "../actions/windows";
+import { minimizeWindow, maximizeWindow, checkWindow } from "../../actions/windows";
 
 export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onTouchEnd, ...props }, ref) => {
 	const [show, setShow] = useState(props.showWindow);

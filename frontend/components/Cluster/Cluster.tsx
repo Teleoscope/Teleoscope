@@ -1,7 +1,7 @@
 import React from "react"
-import PostList from "./PostList"
+import PostList from "../Posts/PostList"
 
-import useSWRAbstract from "../util/swr"
+import useSWRAbstract from "../../util/swr"
 
 export default function Cluster(props) {
     const id = props.id.split("%")[0];

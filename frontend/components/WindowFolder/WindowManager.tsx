@@ -2,8 +2,8 @@
 import React, { useContext } from "react";
 import RGL, { WidthProvider } from "react-grid-layout";
 
-import { useAppSelector, useAppDispatch } from '../hooks'
-import { RootState } from '../stores/store'
+import { useAppSelector, useAppDispatch } from '../../hooks'
+import { RootState } from '../../stores/store'
 
 // custom
 import WindowFactory from "./WindowFactory"
@@ -14,13 +14,13 @@ import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
 
 // actions
-import { checkWindow, removeWindow, addWindow, loadWindows } from "../actions/windows";
+import { checkWindow, removeWindow, addWindow, loadWindows } from "../../actions/windows";
 
 // utils
-import { add_post_to_group } from "../components/Stomp";
+import { add_post_to_group } from "../Stomp";
 
 // contexts
-import { StompContext } from '../context/StompContext'
+import { StompContext } from '../../context/StompContext'
 
 const ReactGridLayout = WidthProvider(RGL);
 

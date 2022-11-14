@@ -30,14 +30,14 @@ import Divider from '@mui/material/Divider';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { updateWindow } from "../actions/windows";
+import { updateWindow } from "../../actions/windows";
 
 // custom components
 import PostList from "./PostList"
-import CloseButton from "./CloseButton"
+import CloseButton from "../CloseButton"
 
 // util
-import useSWRAbstract from "../util/swr"
+import useSWRAbstract from "../../util/swr"
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
