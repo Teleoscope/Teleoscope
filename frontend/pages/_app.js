@@ -45,7 +45,7 @@ function App({ Component, pageProps }) {
     function authCheck(url) {
         // redirect to login page if accessing a private page and not logged in 
         setUser(userService.userValue);
-        const publicPaths = ['/account/login', '/account/register'];
+        const publicPaths = ['/account/login', '/account/register', '/'];
         const path = url.split('?')[0];
         if (!userService.userValue && !publicPaths.includes(path)) {
             setAuthorized(false);
@@ -60,27 +60,16 @@ function App({ Component, pageProps }) {
 
     return (
         <>
-            <SWRConfig value={{
-                fetcher: fetcher,
-                errorRetryCount: 10,
-                refreshInterval: 250
-            }}>
-                <CookiesProvider>
-                    <Head>
-                        <title>Teleoscope</title>
-                        <link href="//netdna.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
-                    </Head>
-                    
-                    <main>
-                        <Provider store={store}>
-                            <div className={`app-container ${user ? 'bg-light' : ''}`}>
-                                {authorized && <Component {...pageProps} />}
-                            </div>
-                        </Provider>
-                    </main>
+            <Head>
+                <title>Teleoscope</title>
+                <link href="//netdna.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+            </Head>
 
-                </CookiesProvider>
-            </SWRConfig>
+            <main>
+                <div className={`app-container ${user ? 'bg-light' : ''}`}>
+                    {authorized && <Component {...pageProps} />}
+                </div>
+            </main>
         </>
 
     );

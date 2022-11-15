@@ -1,5 +1,5 @@
 // GroupPalette.js
-import React, { useState, useContext } from "react";
+import React, { useContext } from "react";
 
 // MUI 
 import TextField from "@mui/material/TextField";

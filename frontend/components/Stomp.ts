@@ -2,7 +2,14 @@ import { Client } from "@stomp/stompjs";
 // TODO: look at websocket example code here and replicate
 // anywhere that needs to route a request to the server
 // possibly best to move this into an action? I'm unsure
-Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
+
+import {WebsocketBuilder} from 'websocket-ts';
+Object.assign(global, WebsocketBuilder);
+//Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
+
+
+// custom imports
+const bcrypt = require('bcryptjs');
 
 /**
  * Initializes the client (there should only be one)
@@ -268,6 +275,52 @@ export function cluster_by_groups(client: Client, group_id_strings: Array<string
       session_oid: session_oid,
     }
   }
+  publish(client, body);
+  return body;
+}
+
+/*
+  Adds the users login credentials for verification
+*/
+export async function add_login(client: Client, username: string, password: string) {
+  const body = {
+    task: "add_login",
+    args: {
+      username: username,
+      password: password
+    }
+  }
+
+  publish(client, body);
+  return body;
+}
+
+/*
+  Pushes the user account information to create their account
+*/
+export function register_account(client: Client, jsonData) {
+  const {firstName, lastName, username, password} = jsonData;
+
+  //hash(password) the function uses the bcrypt hashing algorithm for now
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync(password, salt);
+
+
+  const body = {
+    task: "register_account",
+    args: {
+      firstName: firstName,
+      lastName: lastName,
+      password: hashedPassword,
+      username: username,
+    }
+
+  //   firstName: "Kenneth"
+  //   lastName: "Averna"
+  //   password: "teleoscope"
+  //   username: "admin@teleoscope.com"
+  }
+
   publish(client, body);
   return body;
 }

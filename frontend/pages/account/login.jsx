@@ -26,11 +26,13 @@ function Login() {
    const { errors } = formState;
 
    function onSubmit({ username, password }) {
-      add_login(username, password).then(() => {
-         const returnURL = router.query.returnURL || '/';
-         router.push(returnURL);
-      })
-      .catch(alertService.error);
+      // add_login(username, password).then(() => {
+      //    const returnURL = router.query.returnURL || '/';
+      //    router.push(returnURL);
+      // })
+      // .catch(alertService.error);
+
+      router.push('/');
 
       // return userService.login(username, password).then(() => {
       //    // get return url from query parameters or default to '/'

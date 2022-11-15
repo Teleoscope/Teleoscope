@@ -29,13 +29,14 @@ import { getGroups } from "../actions/groups";
 
 // utilities
 import {
-    save_UI_state,
-    initialize_session,
-    add_user_to_session
+  save_UI_state,
+  initialize_session,
+  add_user_to_session
 } from "../components/Stomp.ts";
 
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../util/swr"
+import { userService } from "../services/user.service";
 
 // contexts
 import { StompContext } from '../context/StompContext'
@@ -64,44 +65,44 @@ export default function TopBar(props) {
   }
 
   const dispatch = useDispatch();
-  
+
   const handleSessionChange = (event) => {
     dispatch(sessionActivator(event.target.value))
     dispatch(getGroups(event.target.value))
   }
 
   const getSessions = (username) => {
-      if (sessions && users) {
-        for (const i in users) {
-          var user = users[i];
-          if (user["username"] == username && user["sessions"].length > 0) {
-            return user["sessions"].map((s) => {
-                var temp = sessions.find(ss => ss._id == s)
-                return (<MenuItem value={s}>{temp?.history[0].label}</MenuItem>)
-              })
-          }
+    if (sessions && users) {
+      for (const i in users) {
+        var user = users[i];
+        if (user["username"] == username && user["sessions"].length > 0) {
+          return user["sessions"].map((s) => {
+            var temp = sessions.find(ss => ss._id == s)
+            return (<MenuItem value={s}>{temp?.history[0].label}</MenuItem>)
+          })
         }
       }
-      return (
-          <MenuItem value={"No sessions for this user..."}>No sessions for this user...</MenuItem>
-      )
+    }
+    return (
+      <MenuItem value={"No sessions for this user..."}>No sessions for this user...</MenuItem>
+    )
   }
 
   // gets all users that are not in the cuurent session's userlist
   const getUsers = () => {
 
-      if (session) {
-          var userlist = Object.keys(session.userlist)
+    if (session) {
+      var userlist = Object.keys(session.userlist)
 
-          return users.map((u) => {
-              if (!userlist.includes(u.username)){
-                  return (<MenuItem value={u}>{u.username}</MenuItem>)
-              }
-          })
-      }
-      return (
-          <MenuItem value={"No session selected..."}>No session selected...</MenuItem>
-      )
+      return users.map((u) => {
+        if (!userlist.includes(u.username)) {
+          return (<MenuItem value={u}>{u.username}</MenuItem>)
+        }
+      })
+    }
+    return (
+      <MenuItem value={"No session selected..."}>No session selected...</MenuItem>
+    )
   }
 
   const load_UI_state = () => {
@@ -112,7 +113,7 @@ export default function TopBar(props) {
   }
 
   const get_label = () => {
-      return session.history[0].label;
+    return session.history[0].label;
   }
 
   const get_color = () => {
@@ -123,25 +124,25 @@ export default function TopBar(props) {
   }
 
   const [dialogValue, setDialogValue] = React.useState({
-      label: '',
+    label: '',
   });
 
   const handleClickOpen = () => {
-      toggleOpen(true);
+    toggleOpen(true);
   };
 
   const handleClose = () => {
-        setDialogValue({
-            label: '',
-        });
-        toggleOpen(false);
+    setDialogValue({
+      label: '',
+    });
+    toggleOpen(false);
   };
 
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
         position="static"
-        style={{ height: 60, backgroundColor: get_color(cookies.user) }} 
+        style={{ height: 60, backgroundColor: get_color(cookies.user) }}
       >
         <Toolbar sx={{}} >
           <Stack spacing={1} direction="row">
@@ -149,7 +150,7 @@ export default function TopBar(props) {
 
             <TextField
               id="input-with-icon-textfield"
-              sx={{width: 200, backgroundColor: 'white', }}
+              sx={{ width: 200, backgroundColor: 'white', }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -167,10 +168,10 @@ export default function TopBar(props) {
               }}
             />
             <FormControl
-              sx={{width: 200, backgroundColor: 'white', }}
+              sx={{ width: 200, backgroundColor: 'white', }}
               variant="filled"
-              >
-                <InputLabel id="demo-simple-select-label">Session</InputLabel>
+            >
+              <InputLabel id="demo-simple-select-label">Session</InputLabel>
               <Select
                 labelId="demo-simple-select-label"
                 id="demo-simple-select"
@@ -180,87 +181,100 @@ export default function TopBar(props) {
               >
                 {getSessions(cookies.user)}
                 <Button
-               size="small"
-               variant="text"
-               onClick={() => initialize_session(client, cookies.user, randomName, randomColor())}
-               style={{
-                 backgroundColor: "#FFFFFF",
-                 color: "black",
-                 fontSize: 12,
-                 fontWeight: 700,
-               }}
-             >
-               New session
-             </Button>
-            </Select>
-            </FormControl>
-              <Button
-                  onClick={handleClickOpen}
-                  style={{
-                  backgroundColor: "#FFFFFF",
-                  color: "black",
-                  fontSize: 12,
-                  fontWeight: 700,
-              }}>
-                  Add User to Session
-              </Button>
-              <Dialog disableEscapeKeyDown open={open} onClose={handleClose}>
-                  <DialogTitle>Collaborate with User</DialogTitle>
-                  <DialogContent>
-                      <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
-                          <FormControl
-                              sx={{width: 200, backgroundColor: 'white', }}
-                              variant="filled"
-                          >
-                              <InputLabel id="demo-simple-select-label">User</InputLabel>
-                              <Select
-                                  labelId="demo-simple-select-label"
-                                  id="demo-simple-select"
-                                  onChange={(event) =>
-                                      setDialogValue({
-                                          label: event.target.value.username,
-                                      })
-                                  }
-                              >
-                                  {getUsers()}
-
-                              </Select>
-                          </FormControl>
-                      </Box>
-                  </DialogContent>
-                  <DialogActions>
-                      <Button onClick={handleClose}>Cancel</Button>
-                      <Button
-                          type="submit"
-                          onClick={() => {
-                              add_user_to_session(client, dialogValue.label, session_id)
-                              handleClose()
-                          }
-                          }>Add</Button>
-                  </DialogActions>
-              </Dialog>
-              <Button
                   size="small"
                   variant="text"
-                  onClick={() => save_UI_state( // could maybe use a check that sees if a session is active
-                      client,
-                      session_id,
-                      { // history_item in save_UI_state in Stomp.js
-                          "bookmarks": bookmarks,
-                          "windows": windows,
-                          "label": get_label(cookies.user),
-                          "color": get_color(cookies.user),
-                      })
-                  }
+                  onClick={() => initialize_session(client, cookies.user, randomName, randomColor())}
                   style={{
-                      backgroundColor: "#FFFFFF",
-                      color: "black",
-                      fontSize: 12,
-                      fontWeight: 700,
+                    backgroundColor: "#FFFFFF",
+                    color: "black",
+                    fontSize: 12,
+                    fontWeight: 700,
                   }}
-              >
-                  Save Workspace
-              </Button>
+                >
+                  New session
+                </Button>
+              </Select>
+            </FormControl>
+            <Button
+              size="small"
+              variant="text"
+              onClick={() => userService.logout()}
+              style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              Logout
+            </Button>
+            <Button
+              onClick={handleClickOpen}
+              style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}>
+              Add User to Session
+            </Button>
+            <Dialog disableEscapeKeyDown open={open} onClose={handleClose}>
+              <DialogTitle>Collaborate with User</DialogTitle>
+              <DialogContent>
+                <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
+                  <FormControl
+                    sx={{ width: 200, backgroundColor: 'white', }}
+                    variant="filled"
+                  >
+                    <InputLabel id="demo-simple-select-label">User</InputLabel>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      onChange={(event) =>
+                        setDialogValue({
+                          label: event.target.value.username,
+                        })
+                      }
+                    >
+                      {getUsers()}
+
+                    </Select>
+                  </FormControl>
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleClose}>Cancel</Button>
+                <Button
+                  type="submit"
+                  onClick={() => {
+                    add_user_to_session(client, dialogValue.label, session_id)
+                    handleClose()
+                  }
+                  }>Add</Button>
+              </DialogActions>
+            </Dialog>
+            <Button
+              size="small"
+              variant="text"
+              onClick={() => save_UI_state( // could maybe use a check that sees if a session is active
+                client,
+                session_id,
+                { // history_item in save_UI_state in Stomp.js
+                  "bookmarks": bookmarks,
+                  "windows": windows,
+                  "label": get_label(cookies.user),
+                  "color": get_color(cookies.user),
+                })
+              }
+              style={{
+                backgroundColor: "#FFFFFF",
+                color: "black",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              Save Workspace
+            </Button>
           </Stack>
         </Toolbar>
       </AppBar>

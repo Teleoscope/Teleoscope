@@ -27,6 +27,7 @@
     "@reduxjs/toolkit": "^1.8.3",
     "@stomp/stompjs": "^6.1.2",
     "@types/bson": "^4.2.0",
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.0.3",
     "draft-js": "^0.11.7",
     "lodash": "^4.17.21",
@@ -51,6 +52,7 @@
     "ts-jest": "^29.0.3",
     "unique-names-generator": "^4.7.1",
     "websocket": "^1.0.34",
+    "websocket-ts": "^1.1.1",
     "yup": "^0.32.11"
   },
   "devDependencies": {
