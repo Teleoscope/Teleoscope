@@ -33,7 +33,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { updateWindow } from "../../actions/windows";
 
 // custom components
-import PostList from "./PostList"
+import PostList from "../Posts/PostList"
 import CloseButton from "../CloseButton"
 
 // util

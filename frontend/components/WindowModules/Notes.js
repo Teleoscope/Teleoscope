@@ -10,20 +10,20 @@ import Tooltip from '@mui/material/Tooltip';
 
 // actions
 import { useDispatch } from "react-redux"
-import { removeWindow } from "../actions/windows";
+import { removeWindow } from "../../actions/windows";
 
 // custom components
-import PostTitle from "./PostTitle"
+import PostTitle from "../Posts/PostTitle"
 
 // icons
 import CloseIcon from "@mui/icons-material/Close";
 
 //utils
-import useSWRAbstract from "../util/swr"
-import { update_note } from "../components/Stomp.ts";
+import useSWRAbstract from "../../util/swr"
+import { update_note } from "../Stomp.ts";
 
 // contexts
-import { StompContext } from '../context/StompContext'
+import { StompContext } from '../../context/StompContext'
 
 export default function Note(props) {
   const postid = props.id.split("%")[0]

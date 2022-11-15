@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 
 // custom
-import WindowTopBar from "../WindowTopBar";
+import WindowTopBar from "./WindowTopBar";
 
 // mui
 import IconButton from '@mui/material/IconButton';
