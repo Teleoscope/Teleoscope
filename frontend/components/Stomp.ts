@@ -10,13 +10,14 @@ Object.assign(global, WebsocketBuilder);
 
 // custom imports
 const bcrypt = require('bcryptjs');
+let client: Client;
 
 /**
  * Initializes the client (there should only be one)
  */
 export function client_init() {
   console.log("Initializing Stomp client...")
-  const client = new Client({
+  client = new Client({
     brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:15674/ws`,
     connectHeaders: {
       login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME!,
@@ -282,7 +283,7 @@ export function cluster_by_groups(client: Client, group_id_strings: Array<string
 /*
   Adds the users login credentials for verification
 */
-export async function add_login(client: Client, username: string, password: string) {
+export async function add_login(username: string, password: string) {
   const body = {
     task: "add_login",
     args: {
@@ -298,7 +299,7 @@ export async function add_login(client: Client, username: string, password: stri
 /*
   Pushes the user account information to create their account
 */
-export function register_account(client: Client, jsonData) {
+export function register_account(jsonData) {
   const {firstName, lastName, username, password} = jsonData;
 
   //hash(password) the function uses the bcrypt hashing algorithm for now

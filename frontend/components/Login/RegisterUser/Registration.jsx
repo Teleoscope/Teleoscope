@@ -37,8 +37,7 @@ function Registration() {
     const { errors } = formState;
 
     function onSubmit(user) {
-        console.log("Client", client);
-        register_account(client, user);
+        register_account(user);
         router.push('login');
     }
 
