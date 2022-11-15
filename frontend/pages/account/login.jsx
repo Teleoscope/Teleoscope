@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -6,12 +7,15 @@ import * as Yup from 'yup';
 import { Link } from '../../components/Login/Link';
 import { Layout } from '../../components/Login/Layout/Layout';
 import { add_login } from '../../components/Stomp';
-import { userService, alertService } from '../../services/index';
+import { alertService } from '../../services/index';
+import { authenticateService } from '../../services/authenticate.service';
+import { validateConfig } from 'next/dist/server/config-shared';
 
 export default Login;
 
 function Login() {
    const router = useRouter();
+   const [validUser, setValidUser] = useState("");
 
    // form validation rules
    const validationSchema = Yup.object().shape({
@@ -26,11 +30,14 @@ function Login() {
    const { errors } = formState;
 
    function onSubmit({ username, password }) {
-      // add_login(username, password).then(() => {
-      //    const returnURL = router.query.returnURL || '/';
-      //    router.push(returnURL);
-      // })
-      // .catch(alertService.error);
+      setValidUser(authenticateService.authenticateHash(username, password));
+      router.push(validUser);
+
+      add_login(username, password).then(() => {
+         const returnURL = router.query.returnURL || '/';
+         router.push(returnURL);
+      })
+      .catch(alertService.error);
 
       router.push('/');
 

@@ -17,11 +17,6 @@ export default async (req, res) => {
     let ret;
 
     ret = await db.collection("registeredUsers").findOne({firstName: user[0]});
-    // if(!user) {
-    //     ret = await db.collection("registeredUsers").find({}).toArray();
-    // } else if (user.length === 2) {
-    //     ret = await db.collection("registeredUsers").findOne({firstName: user[0]});
-    // }
 
     res.json(ret);
 
