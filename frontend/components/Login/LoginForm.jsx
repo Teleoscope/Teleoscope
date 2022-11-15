@@ -7,7 +7,6 @@ import { IconButton } from '@mui/material';
 
 // actions
 import { useDispatch } from "react-redux";
-import { login } from "../../actions/logins"
 
 // contexts
 import { StompContext } from '../../context/StompContext'
@@ -22,14 +21,10 @@ function LoginForm({ Login, setRegistration, error }) {
    const [passwordVisibility, setPasswordVisibility] = useState(false);
 
    const client = useContext(StompContext);
-   const dispatch = useDispatch();
 
    const submitHandler = e => {
       e.preventDefault()
-
-      // dispatches the login details to login store
-      dispatch(login(details))
-      
+   
       // sends the information to Stomp.js
       add_login(client, details.email, details.password)
 

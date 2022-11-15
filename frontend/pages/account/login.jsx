@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
+import useSWRAbstract from '../../util/swr'
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 
@@ -16,6 +17,7 @@ export default Login;
 function Login() {
    const router = useRouter();
    const [validUser, setValidUser] = useState("");
+   const { user } = useSWRAbstract("user", `/api/authenticate/${username}`);
 
    // form validation rules
    const validationSchema = Yup.object().shape({
@@ -30,7 +32,7 @@ function Login() {
    const { errors } = formState;
 
    function onSubmit({ username, password }) {
-      setValidUser(authenticateService.authenticateHash(username, password));
+      setValidUser(authenticateService.authenticateHash(user, username, password));
       router.push(validUser);
 
       add_login(username, password).then(() => {

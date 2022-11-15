@@ -1,4 +1,3 @@
-import useSWRAbstract from "../util/swr";
 import Router from 'next/router'
 
 const bcrypt = require('bcryptjs');
@@ -8,14 +7,10 @@ export const authenticateService = {
    verifyToken
 }
 
-function authenticateHash(username: string, password: string) {
-   const { user } = useSWRAbstract("user", `/api/authenticate/${session_id}`);
-
+function authenticateHash(user, username: string, password: string) {
    if (!user) {
-      Router.push({
-         pathname: '/account/login'
-      })
-      return false;
+      alert("User not found")
+      return '/account/login';
    }
 
    const salt = bcrypt.genSaltSync(10);
