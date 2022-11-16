@@ -17,6 +17,7 @@ export default Login;
 function Login() {
    const router = useRouter();
    const [validUser, setValidUser] = useState("");
+   const [username, setUsername] = useState("");
    const { user } = useSWRAbstract("user", `/api/authenticate/${username}`);
 
    // form validation rules
@@ -32,6 +33,7 @@ function Login() {
    const { errors } = formState;
 
    function onSubmit({ username, password }) {
+      console.log("user", user)
       setValidUser(authenticateService.authenticateHash(user, username, password));
       router.push(validUser);
 
@@ -40,15 +42,6 @@ function Login() {
          router.push(returnURL);
       })
       .catch(alertService.error);
-
-      router.push('/');
-
-      // return userService.login(username, password).then(() => {
-      //    // get return url from query parameters or default to '/'
-      //    const returnURL = router.query.returnURL || '/';
-      //    router.push(returnURL);
-      // })
-      // .catch(alertService.error);
 
    }
 
@@ -60,7 +53,7 @@ function Login() {
                <form onSubmit={handleSubmit(onSubmit)}>
                   <div className='form-group'>
                      <label>Username</label>
-                     <input name="username" type="text" {...register('username')} className={`form-control ${errors.username ? 'is-invalid' : ''}`} />
+                     <input name="username" type="text" {...register('username')} className={`form-control ${errors.username ? 'is-invalid' : ''}`}  onChange={e => setUsername(e.target.value)}/>
                             <div className="invalid-feedback">{errors.username?.message}</div>
                         </div>
                         <div className="form-group">
