@@ -1,20 +1,18 @@
 import Router from 'next/router'
 
+
 const bcrypt = require('bcryptjs');
 
-export const authenticateService = {
-   authenticateHash,
-   verifyToken
-}
-
-function authenticateHash(user, username: string, password: string) {
+const authenticateHash = (user, username, password) => {
    if (!user) {
       alert("User not found")
       return '/account/login';
    }
 
+   console.log(user)
+
    const salt = bcrypt.genSaltSync(10);
-   const hashedPassword = bcrypt.hashSync(password, salt);
+   //const hashedPassword = bcrypt.hashSync(password, salt);
 
    const passCompare = (password === user.password);
    const userCompare = (username === user.username);
@@ -29,11 +27,9 @@ function authenticateHash(user, username: string, password: string) {
          query: {error: true}
       })
       return false;
-   }
-
+   }  
 }
 
-function verifyToken() {
+export default authenticateHash;
 
-}
 
