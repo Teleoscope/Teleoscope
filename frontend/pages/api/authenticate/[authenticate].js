@@ -1,17 +1,11 @@
 import clientPromise from "../../../util/mongodb";
-import { ObjectId } from "bson";
-
-import getConfig from 'next/config';
-
-//import { apiHandler, usersRepo } from '../../../helpers/index';
 
 
 export default async (req, res) => {
     const client = await clientPromise;
     const db = await client.db('aita');
-    const { user } = req.query;
-    let ret;
-    ret = await db.collection("registeredUsers").findOne({firstName: user[0]});
+    const { authenticate } = req.query;
+    const ret = await db.collection("registeredUsers").findOne({ username: authenticate });
     res.json(ret);
 
     // // validate
