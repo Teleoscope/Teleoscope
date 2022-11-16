@@ -20,10 +20,6 @@ function Login() {
    const [username, setUsername] = useState("");
    const { user } = useSWRAbstract("user", `/api/authenticate/${username}`);
 
-   useEffect(() => {
-      console.log("useEffect User", user)
-   }, [username])
-
    // form validation rules
    const validationSchema = Yup.object().shape({
       username: Yup.string().required('Username is required'),
@@ -58,7 +54,7 @@ function Login() {
                <form onSubmit={handleSubmit(onSubmit)}>
                   <div className='form-group'>
                      <label>Username</label>
-                     <input name="username" type="text" {...register('username')} className={`form-control ${errors.username ? 'is-invalid' : ''}`}  onChange={e => setUsername(e.target.value)}/>
+                     <input name="username" type="text" {...register('username')} className={`form-control ${errors.username ? 'is-invalid' : ''}`}  onChange={(e) => setUsername(e.target.value)}/>
                             <div className="invalid-feedback">{errors.username?.message}</div>
                         </div>
                         <div className="form-group">
