@@ -4,7 +4,7 @@ import React from "react";
 // custom
 import PostText from "./PostText"
 import GroupSelector from "../GroupSelector"
-import NoteButton from "../NoteButton"
+import NoteButton from "../WindowModules/NoteButton"
 
 // mui
 import Stack from '@mui/material/Stack';
@@ -29,6 +29,7 @@ export default function Post(props) {
       <Divider />
       <PostText text={text} />
 
+      <Divider sx={{margin: 5}}/>
     </div>
   )
 }

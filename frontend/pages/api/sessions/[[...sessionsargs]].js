@@ -7,6 +7,13 @@ export default async (req, res) => {
   const { sessionsargs } = req.query;
   var ret;
 
+  // if(sessionsargs?.length >= 1) {
+  //   if(sessionsargs[0] == "-1") {
+  //     res.status(500).send({ error: 'failed to fetch data' });
+  //     return;
+  //   }
+  // }
+
   if(!sessionsargs) {
     ret = await db.collection("sessions").find({}).toArray();
   } 

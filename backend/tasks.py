@@ -2,6 +2,7 @@ import logging, pickle, utils, json, auth, numpy as np
 from warnings import simplefilter
 from celery import Celery, Task, chain
 from bson.objectid import ObjectId
+from kombu import Consumer, Exchange, Queue
 import datetime
 
 # ignore all future warnings
@@ -16,11 +17,17 @@ CELERY_BROKER_URL = (
     f'{auth.rabbitmq["vhost"]}'
 )
 
+queue = Queue(
+    auth.rabbitmq["task_queue"],
+    Exchange(auth.rabbitmq["task_queue"]),
+    auth.rabbitmq["task_queue"])
+
 app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
 app.conf.update(
     task_serializer='pickle',
     accept_content=['pickle'],  # Ignore other content
     result_serializer='pickle',
+    task_queues=[queue],
 )
 
 @app.task
@@ -29,22 +36,27 @@ def initialize_session(*args, **kwargs):
     Adds a session to the sessions collection.
     
     kwargs: 
-        username: (string, arbitrary)
+        userid: (string, Bson ObjectId format)
     """
     transaction_session, db = utils.create_transaction_session()
     
     # handle kwargs
-    username = kwargs["username"]
+    userid = kwargs["userid"]
     label = kwargs['label']
+    color = kwargs['color']
     
-    logging.info(f'Initializing sesssion for user {username}.')
+    logging.info(f'Initializing sesssion for user {userid}.')
     # Check if user exists and throw error if not
-    user = db.users.find_one({"username": username})
-    userlist = {username:"owner"}
-
+    user = db.users.find_one({"_id": ObjectId(str(userid))})
     if user is None:
-        logging.info(f'User {username} does not exist.')
-        raise Exception(f"User {username} does not exist.")
+        logging.info(f'User {userid} does not exist.')
+        raise Exception(f'User {userid} does not exist.')
+
+    # Object to write for userlist
+    userlist =  {
+        user["username"]: "owner"
+    }
+
     obj = {
         "creation_time": datetime.datetime.utcnow(),
         "userlist": userlist,
@@ -55,16 +67,18 @@ def initialize_session(*args, **kwargs):
                 "windows": [],
                 "groups": [],
                 "clusters": [],
-                "label": kwargs['label'],
-                "color": kwargs['color'],
-                "teleoscopes": []
+                "teleoscopes": [],
+                "label": label,
+                "color": color,
+                "action": f"Initialize session",
+                "user": userid,
             }
         ],
     }
     with transaction_session.start_transaction():
         result = db.sessions.insert_one(obj, session=transaction_session)
         db.users.update_one(
-            {"username": username},
+            {"_id": userid},
             {
                 "$push": {
                     "sessions": result.inserted_id
@@ -72,59 +86,6 @@ def initialize_session(*args, **kwargs):
             }, session=transaction_session)
         utils.commit_with_retry(transaction_session)
     return 200 # success
-
-'''
-add_user_to_session
-input:
-    username (string, name of user to add to session)
-    session_id (int, represents ObjectId in int)
-
-purpose: updates the userlist in a session to include input user
-'''
-@app.task
-def add_user_to_session(*args, **kwargs):
-
-    transaction_session, db = utils.create_transaction_session()
-
-    logging.info(f'adding user to {kwargs["session_id"]}.')
-
-    # session_id needs to be typecast to ObjectId
-    session_id = ObjectId(str(kwargs["session_id"]))
-    session = db.sessions.find_one({"_id": session_id})
-
-    username = kwargs["username"]
-    user = db.users.find_one({"username": username})
-
-    userlist = session["userlist"]
-
-    # check if user has already been added
-    if username in userlist:
-        logging.info(f'User {username} is already on userlist')
-        raise Exception(f'User {username} is already on userlist')
-
-    userlist[username] = "collaborator"
-
-    # update session with new userlist that includes collaborator
-    with transaction_session.start_transaction():
-        db.sessions.update_one({"_id": session_id},
-            {
-                '$set': {
-                    "userlist" : userlist,
-                }
-            }, session=transaction_session)
-
-        db.users.update_one(
-            {"username": username},
-            {
-                "$push": {
-                    "sessions": session_id
-                }
-            }, session=transaction_session)
-
-        utils.commit_with_retry(transaction_session)
-
-    return 200 # success
-
 
 @app.task
 def save_UI_state(*args, **kwargs):
@@ -136,8 +97,6 @@ def save_UI_state(*args, **kwargs):
     """
     transaction_session, db = utils.create_transaction_session()
     
-    # handle kwargs
-    history_item = kwargs["history_item"]
     session_id = ObjectId(str(kwargs["session_id"]))
 
     logging.info(f'Saving state for {session_id}.')
@@ -147,20 +106,17 @@ def save_UI_state(*args, **kwargs):
     if not session:
         logging.info(f"Session {session_id} not found.")
         raise Exception("Session not found")
-    
-    # timestamp API call
+
+    userid = kwargs["userid"]
+    user = db.users.find_one({"_id": userid})
+    user_id = user['_id']
+
+    history_item = session["history"][0]
+    history_item["bookmarks"] = kwargs["bookmarks"]
+    history_item["windows"] =  kwargs["windows"]
     history_item["timestamp"] = datetime.datetime.utcnow()
-    
-    # extract latest collection of groups in session history
-    groups = session["history"][0]["groups"]
-    
-    # update history_item to have the correct groups
-    history_item["groups"] = groups
-    
-    # update history_item to have the correct label
-    history_item["label"] = session["history"][0]["label"]
-    # update history_item to have the correct color
-    history_item["color"] = session["history"][0]["color"]
+    history_item["action"] = "Save UI state"
+    history_item["user"] = user_id
 
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
@@ -176,6 +132,70 @@ def save_UI_state(*args, **kwargs):
 
     return 200 # success
 
+@app.task
+def add_user_to_session(*args, **kwargs):
+    """
+    Add new user to session's userlist. Provide read/write access.
+    kwargs:
+        userid: (string, BSON ObjectId format)
+        session_id: (int, represents ObjectId in int)
+    """
+    transaction_session, db = utils.create_transaction_session()
+
+    logging.info(f'adding user to {kwargs["session_id"]}.')
+
+    # session_id needs to be typecast to ObjectId
+    session_id = ObjectId(str(kwargs["session_id"]))
+    session = db.sessions.find_one({"_id": session_id})
+
+    userid = kwargs["userid"]
+    user = db.users.find_one({"_id": userid})
+    username = user["username"]
+
+    curr_username = kwargs["current"]
+    curr_user = db.users.find_one({"username": curr_username})
+    curr_user_id = curr_user['_id']
+
+    userlist = session["userlist"]
+
+    # check if user has already been added
+    if username in userlist:
+        logging.info(f'User {username} is already on userlist')
+        raise Exception(f'User {username} is already on userlist')
+
+    userlist[username] = "collaborator"
+
+    history_item = session["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["action"] = f"Add {username} to userlist"
+    history_item["user"] = curr_user_id
+
+    # update session with new userlist that includes collaborator
+    with transaction_session.start_transaction():
+        db.sessions.update_one({"_id": session_id},
+            {
+                '$set': {
+                    "userlist" : userlist,
+                },
+                "$push": {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }
+            }, session=transaction_session)
+
+        db.users.update_one(
+            {"_id": userid},
+            {
+                "$push": {
+                    "sessions": session_id
+                }
+            }, session=transaction_session)
+
+        utils.commit_with_retry(transaction_session)
+
+    return 200 # success
 
 @app.task
 def initialize_teleoscope(*args, **kwargs):
@@ -200,6 +220,12 @@ def initialize_teleoscope(*args, **kwargs):
 
     ret = None
 
+    userid = kwargs["userid"]
+    user = db.users.find_one({"_id": userid})
+    user_id = "1"
+    if user != None:
+        user_id = user['_id']
+
     # create a new query document
     with transaction_session.start_transaction():
         teleoscope_result = db.teleoscopes.insert_one({
@@ -213,16 +239,20 @@ def initialize_teleoscope(*args, **kwargs):
                         "positive_docs": [],
                         "negative_docs": [],
                         "stateVector": [],
-                        "ranked_post_ids": None
+                        "ranked_post_ids": None,
+                        "action": "Initialize Teleoscope",
+                        "user": user_id,
                     }
                 ]
             }, session=transaction_session)
         logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
-        ret = teleoscope_result
+  
         ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))})
         history_item = ui_session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
         history_item["teleoscopes"].append(ObjectId(teleoscope_result.inserted_id))
+        history_item["action"] = "Initialize Teleoscope"
+        history_item["user"] = user_id
 
         # associate the newly created teleoscope with correct session
 
@@ -236,7 +266,7 @@ def initialize_teleoscope(*args, **kwargs):
                 }
             }, session=transaction_session)
         utils.commit_with_retry(transaction_session)
-    return ret
+    return teleoscope_result
 
 
 @app.task
@@ -263,6 +293,13 @@ def save_teleoscope_state(*args, **kwargs):
         raise Exception("Teleoscope not found")
 
     history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["action"] = "Save Teleoscope state"
+
+    # TODO record user
+#         userid = kwargs["userid"]
+#         user = db.users.find_one({"_id": userid})
+#         history_item["user"] = user
+ 
     with session.start_transaction():
         result = db.teleoscopes.update_one({"_id": obj_id},
             {
@@ -275,37 +312,6 @@ def save_teleoscope_state(*args, **kwargs):
             }, session=session)
         logging.info(f'Saving teleoscope state: {result}')
         utils.commit_with_retry(session)
-
-
-@app.task
-def save_group_state(*args, **kwargs):
-    """
-    This function saves the state of a group to the database.
-
-    kwargs: 
-       group_id: String
-       history_item: Dict
-    Effects: Throws exception
-    """
-    session, db = utils.create_transaction_session()
-
-    # handle kwargs
-    group_id = ObjectId(kwargs['group_id'])
-    history_item = kwargs['history_item']
-
-    # create a copy of the history item and update the timestamp
-    history_item["timestamp"] = datetime.datetime.utcnow()
-
-    # Find group with group_id
-    group = db.groups.find_one({'_id': group_id})
-    if group:
-        with session.start_transaction():
-            # Update group with history_item
-            db.groups.update_one({'_id': group_id}, {'$push': {'history': history_item}}, session=session)
-            utils.commit_with_retry(session)
-    else:
-        raise Exception(f"Group with id {group_id} not found.")
-
 
 @app.task 
 def add_group(*args, human=True, included_posts=[], **kwargs):
@@ -324,7 +330,14 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     label = kwargs["label"]
     _id = ObjectId(str(kwargs["session_id"]))
 
-    teleoscope_result = initialize_teleoscope(session_id=_id, label=label)    
+
+    userid = kwargs["userid"]
+    user = db.users.find_one({"_id": userid})
+    user_id = "1"
+    if user != None:
+        user_id = user['_id']
+
+    teleoscope_result = initialize_teleoscope(userid=userid, session_id=_id, label=label)
 
     # Creating document to be inserted into mongoDB
     obj = {
@@ -336,7 +349,8 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
                 "color": color,
                 "included_posts": included_posts,
                 "label": label,
-                "action" : "initialize group"
+                "action": "Initialize group",
+                "user": user_id,
             }]
     }
     
@@ -361,20 +375,19 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
             groups.append(groups_res.inserted_id)
         else:
             clusters.append(groups_res.inserted_id)
+
+        history_item = session["history"][0]
+        history_item["timestamp"] = datetime.datetime.utcnow()
+        history_item["groups"] = groups
+        history_item["clusters"] = clusters
+        history_item["action"] = f"Initialize new group: {label}"
+        history_item["user"] = user_id
+
         sessions_res = db.sessions.update_one({'_id': _id},
             {
                 '$push': {
                             "history": {
-                                '$each': [{
-                                    "timestamp": datetime.datetime.utcnow(),
-                                    "groups": groups,
-                                    "clusters": clusters,
-                                    "bookmarks": session["history"][0]["bookmarks"],
-                                    "windows": session["history"][0]["windows"],
-                                    "label": session["history"][0]["label"],
-                                    "color": session["history"][0]["color"],
-                                    "teleoscopes": session["history"][0]["teleoscopes"]
-                                }],
+                                '$each': [history_item],
                                 '$position': 0
                             }
                 }
@@ -387,8 +400,8 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
             res = chain(
                     robj.s(teleoscope_id=teleoscope_result.inserted_id,
                         positive_docs=included_posts,
-                        negative_docs=[]),
-                    save_teleoscope_state.s()
+                        negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
+                    save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
             )
             res.apply_async()
         
@@ -428,6 +441,11 @@ def add_post_to_group(*args, **kwargs):
         return
     history_item["included_posts"].append(post_id)
     history_item["action"] = "Add post to group"
+
+    # TODO record user
+#         userid = kwargs["userid"]
+#         user = db.users.find_one({"_id": userid})
+#         history_item["user"] = user
 
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
@@ -474,6 +492,12 @@ def remove_post_from_group(*args, **kwargs):
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["included_posts"].remove(post_id)
     history_item["action"] = "Remove post from group"
+
+        # TODO record user
+    #         userid = kwargs["userid"]
+    #         user = db.users.find_one({"_id": userid})
+    #         history_item["user"] = user
+
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
             "$push":
@@ -509,6 +533,12 @@ def update_group_label(*args, **kwargs):
     history_item = group["history_item"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Update group label"
+
+        # TODO record user
+    #         userid = kwargs["userid"]
+    #         user = db.users.find_one({"_id": userid})
+    #         history_item["user"] = user
+
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
                 "$push":
@@ -662,8 +692,8 @@ class reorient(Task):
         
         if npzpath.exists() and pklpath.exists():
             logging.info("Posts have been cached, retrieving now.")
-            loadPosts = np.load(path + 'embeddings.npz', allow_pickle=False)
-            with open(path + 'ids.pkl', 'rb') as handle:
+            loadPosts = np.load(npzpath.as_posix(), allow_pickle=False)
+            with open(pklpath.as_posix(), 'rb') as handle:
                 self.allPostIDs = pickle.load(handle)
             self.allPostVectors = loadPosts['posts']
             self.postsCached = True
@@ -672,6 +702,7 @@ class reorient(Task):
             db = utils.connect()
             allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1, '_id':0}, batching=True, batchSize=10000)
             ids = [x['id'] for x in allPosts]
+            logging.info(f'There are {len(ids)} ids in posts.')
             vecs = np.array([x['selftextVector'] for x in allPosts])
 
             np.savez(npzpath.as_posix(), posts=vecs)
@@ -736,7 +767,8 @@ class reorient(Task):
         resultantVec /= np.linalg.norm(resultantVec)
         return resultantVec, direction
 
-    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list):
+    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, magnitude=0.5):
+        logging.info(f'Received reorient for teleoscope id {teleoscope_id}, positive docs {positive_docs}, negative docs {negative_docs}, and magnitude {magnitude}.')
         # either positive or negative docs should have at least one entry
         if len(positive_docs) == 0 and len(negative_docs) == 0:
             # if both are empty, then cache stuff if not cached alreadt
@@ -770,8 +802,8 @@ class reorient(Task):
 
         # check if stateVector exists
         stateVector = []
-        if len(teleoscope['history'][-1]['stateVector']) > 0:
-            stateVector = np.array(teleoscope['history'][-1]['stateVector'])
+        if len(teleoscope['history'][0]['stateVector']) > 0:
+            stateVector = np.array(teleoscope['history'][0]['stateVector'])
         else:
             docs = positive_docs + negative_docs
             first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
@@ -783,7 +815,8 @@ class reorient(Task):
         qprime = utils.moveVector(
             sourceVector=stateVector,
             destinationVector=resultantVec,
-            direction=direction
+            direction=direction,
+            magnitude=magnitude
         )
         scores = utils.calculateSimilarity(self.allPostVectors, qprime)
         newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)

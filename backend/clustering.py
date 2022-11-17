@@ -134,7 +134,8 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
             session_id=session_oid, 
             color="#8c564b",
             included_posts=posts, 
-            label=int(hdbscan_label)
+            label=int(hdbscan_label),
+            username="clustering"
         )
 
     # drawing plots

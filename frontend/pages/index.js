@@ -19,28 +19,26 @@ console.log("Index Fetcher", fetcher)
 
 export default function Home({ isConnected }) {
   return (
-    <div>
-        <SWRConfig value={{
-          fetcher: fetcher,
-          errorRetryCount: 10,
-          refreshInterval: 250
-        }}>
-          <CookiesProvider>
-            <div>
-              <Head>
-                <title>Explore Documents</title>
-                <link rel="icon" href="/favicon.ico" />
-              </Head>
+    <SWRConfig value={{ 
+      fetcher: fetcher,
+      errorRetryCount: 10,
+      refreshInterval: 250
+    }}>
+    <CookiesProvider>
+        <div className="container">
+          <Head>
+            <title>Explore Documents</title>
+            <link rel="icon" href="/favicon.ico" />
+          </Head>
 
-              <main>
-                <Provider store={store}>
-                  <Workspace isConnected={isConnected} />
-                </Provider>
-              </main>
-            </div>
-          </CookiesProvider>
-        </SWRConfig>
-      </div>
+          <main>
+            <Provider store={store}>
+              <Workspace isConnected={isConnected} />
+            </Provider>
+          </main>
+        </div>
+    </CookiesProvider>
+    </SWRConfig>
   );
 }
 

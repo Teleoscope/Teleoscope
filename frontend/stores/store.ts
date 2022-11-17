@@ -5,6 +5,7 @@ import ActiveHistoryItem from "../actions/activeHistoryItem"
 import Bookmark from "../actions/bookmark"
 import Groups from '../actions/groups'
 import Windows from '../actions/windows'
+import Teleoscopes from '../actions/teleoscopes'
 
 const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ const store = configureStore({
     bookmarker: Bookmark,
     grouper: Groups,
     windows: Windows,
+    teleoscopes: Teleoscopes
   },
   middleware: (getDefaultMiddleware) => 
     getDefaultMiddleware({

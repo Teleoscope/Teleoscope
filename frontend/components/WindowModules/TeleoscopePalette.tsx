@@ -9,12 +9,12 @@ import Typography from '@mui/material/Typography';
 import FlareIcon from '@mui/icons-material/Flare';
 
 // actions
-import { useAppSelector, useAppDispatch } from '../hooks'
-import { RootState } from '../stores/store'
-import { dragged } from "../actions/windows";
+import { useAppSelector, useAppDispatch } from '../../hooks'
+import { RootState } from '../../stores/store'
+import { dragged } from "../../actions/windows";
 
 // utils
-import useSWRAbstract from "../util/swr"
+import useSWRAbstract from "../../util/swr"
 
 
 export default function TeleoscopePalette(props) {

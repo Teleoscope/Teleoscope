@@ -11,6 +11,8 @@ import Tooltip from '@mui/material/Tooltip';
 // actions
 import { useDispatch } from "react-redux"
 import { removeWindow } from "../../actions/windows";
+import { useAppSelector, useAppDispatch } from '../../hooks'
+import { RootState } from '../../stores/store'
 
 // custom components
 import PostTitle from "../Posts/PostTitle"
@@ -20,17 +22,19 @@ import CloseIcon from "@mui/icons-material/Close";
 
 //utils
 import useSWRAbstract from "../../util/swr"
-import { update_note } from "../Stomp.ts";
+//import { update_note } from "../Stomp";
 
 // contexts
-import { StompContext } from '../../context/StompContext'
+import { Stomp } from '../Stomp'
 
 export default function Note(props) {
   const postid = props.id.split("%")[0]
   const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${postid}`);
   const { note, note_loading, note_error } = useSWRAbstract("note", `/api/notes/${postid}`);
-  const dispatch = useDispatch();
-  const client = useContext(StompContext)
+  const dispatch = useAppDispatch();
+  const userid = useAppSelector((state: RootState) => state.activeSessionID.value); //value was userid
+  const client = Stomp.getInstance();
+  client.userId = userid;
   const editor = React.useRef(null);
 
   const handleLoad = () => {
@@ -49,7 +53,7 @@ export default function Note(props) {
   // Handlers
   const handleBlur = () => {
     var content = editorState.getCurrentContent();
-    update_note(client, postid, convertToRaw(content))
+    client.update_note(postid, convertToRaw(content))
   }
 
 
@@ -58,7 +62,7 @@ export default function Note(props) {
   }
 
   const handleClose = () => {
-    update_note(client, postid, convertToRaw(editorState.getCurrentContent()))
+    client.update_note(postid, convertToRaw(editorState.getCurrentContent()))
     dispatch(removeWindow(props.id))
   }
 

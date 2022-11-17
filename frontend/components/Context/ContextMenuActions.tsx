@@ -7,19 +7,23 @@ import Diversity2Icon from '@mui/icons-material/Diversity2';
 const actions = {
   Search: {
     icon: <SearchIcon />,
-    default_window: { i: "%search", w: 6, h: 10, type: "Search", isResizable: true }
+    default_window: { i: "%search", w: 5, h: 9, type: "Search", isResizable: true }
+  },
+  Teleoscopes: {
+    icon: <FlareIcon />,
+    default_window: { i: "%teleoscopepalette", w: 2, h: 1, type: "Teleoscope Palette", isResizable: true }
   },
   Teleoscope: {
     icon: <FlareIcon />,
-    default_window: { i: "%teleoscopepalette", w: 6, h: 10, type: "Teleoscope Palette", isResizable: true }
+    default_window: { i: "%teleoscope", w: 2, h: 1, type: "Teleoscope", isResizable: true }
   },
   Groups: {
     icon: <TopicIcon />,
-    default_window: { i: "%grouppalette", w: 4, h: 10, type: "Group Palette", isResizable: true }
+    default_window: { i: "%grouppalette", w: 5, h: 9, type: "Group Palette", isResizable: true }
   },
   Clusters: {
     icon: <Diversity2Icon />,
-    default_window: { i: "%clusters", w: 4, h: 10, type: "Clusters", isResizable: true }
+    default_window: { i: "%clusters", w: 5, h: 9, type: "Clusters", isResizable: true }
   },
   
 };

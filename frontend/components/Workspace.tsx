@@ -4,7 +4,7 @@ import React from "react";
 import Grid from '@mui/material/Grid';
 
 // custom components
-import TopBar from "./TopBar";
+import TopBar from "./WindowModules/TopBar";
 import WindowManager from "./WindowFolder/WindowManager";
 import ContextMenu from "./Context/ContextMenu";
 
