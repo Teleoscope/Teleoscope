@@ -35,13 +35,6 @@ function Login() {
    function onSubmit({ username, password }) {
       setValidUser(authenticateHash( user, username, password));
 
-
-      // add_login(username, password).then(() => {
-      //    const returnURL = router.query.returnURL || '/';
-      //    router.push(returnURL);
-      // })
-      // .catch(alertService.error);
-
    }
 
    return (
