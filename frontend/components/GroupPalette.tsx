@@ -27,7 +27,7 @@ import { addWindow } from "../actions/windows";
 import { dragged } from "../actions/windows";
 
 // contexts
-import { Stomp } from './Stomp2'
+import { Stomp } from './Stomp'
 import randomColor from "randomcolor";
 import { IconButton } from "@mui/material";
 import { useCookies } from "react-cookie";
@@ -36,8 +36,8 @@ import { useCookies } from "react-cookie";
 
 export default function GroupPalette(props) {
    const userid = useAppSelector((state) => state.activeSessionID.userid);
-   const client2 = Stomp.getInstance();
-   client2.userId = userid;
+   const client = Stomp.getInstance();
+   client.userId = userid;
    const filter = createFilterOptions();
    const dispatch = useAppDispatch();
    const [value, setValue] = React.useState(null);
@@ -50,12 +50,12 @@ export default function GroupPalette(props) {
 
    const keyChange = (e) => {
       if (e.code == "Enter") {
-         client2.add_group(e.target.value, randomColor(), session_id)
+         client.add_group(e.target.value, randomColor(), session_id)
       }
    };
 
    const runClusters = () => {
-      client2.cluster_by_groups(groups.map(g => g._id), session_id)
+      client.cluster_by_groups(groups.map(g => g._id), session_id)
    }
 
    return (

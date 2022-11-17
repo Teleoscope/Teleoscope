@@ -21,12 +21,12 @@ import useSWRAbstract from "../util/swr"
 import { PreprocessTitle } from "../util/Preprocessers"
 
 // contexts
-import { Stomp } from './Stomp2'
+import { Stomp } from './Stomp'
 
 export default function PostListItem(props) {
   const userid = useAppSelector((state) => state.activeSessionID.userid);
-  const client2 = Stomp.getInstance();
-  client2.userId = userid;
+  const client = Stomp.getInstance();
+  client.userId = userid;
   const { post } = useSWRAbstract("post", `/api/posts/${props.id}`);
   const title = post ? PreprocessTitle(post.title) : false;
   const dispatch = useAppDispatch();
@@ -38,13 +38,13 @@ export default function PostListItem(props) {
   const showGroupIcon = props.hasOwnProperty("showGroupIcon") ? props.showGroupIcon : true;
 
   const handleOrientTowards = () => {
-    client2.reorient(props.group.teleoscope, [props.id], [], magnitude)
+    client.reorient(props.group.teleoscope, [props.id], [], magnitude)
   }
   const handleOrientAway = () => {
-    client2.reorient(props.group.teleoscope, [], [props.id], magnitude)
+    client.reorient(props.group.teleoscope, [], [props.id], magnitude)
   }
   const handleRemove = () => {
-    client2.remove_post_from_group(props.group._id, props.id)
+    client.remove_post_from_group(props.group._id, props.id)
   }
 
   return (

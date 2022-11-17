@@ -15,7 +15,7 @@ import { useAppSelector, useAppDispatch } from '../hooks'
 import { RootState } from '../stores/store'
 
 // contexts
-import { Stomp } from './Stomp2';
+import { Stomp } from './Stomp';
 
 //utils
 import useSWRAbstract from "../util/swr"
@@ -23,8 +23,8 @@ import useSWRAbstract from "../util/swr"
 export default function groupSelector(props) {
 
    const userid = useAppSelector((state) => state.activeSessionID.userid);
-   const client2 = Stomp.getInstance();
-   client2.userId = userid;
+   const client = Stomp.getInstance();
+   client.userId = userid;
    const session_id = useAppSelector((state) => state.activeSessionID.value);
    const { groups } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
 
@@ -44,9 +44,9 @@ export default function groupSelector(props) {
 
    const handleSelect = (group_id) => {
       if (groups_this_post_belongs_to.find((item) => item.id == props.id)) {
-         client2.remove_post_from_group(group_id, props.id);
+         client.remove_post_from_group(group_id, props.id);
       } else {
-         client2.add_post_to_group(group_id, props.id);
+         client.add_post_to_group(group_id, props.id);
       }
       handleClose();
    }

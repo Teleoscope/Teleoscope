@@ -32,9 +32,7 @@ import { getGroups } from "../actions/groups";
 // utilities
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../util/swr"
-
-// contexts
-import { Stomp } from '../components/Stomp2'
+import { Stomp } from './Stomp'
 
 export default function TopBar(props) {
 
@@ -52,8 +50,8 @@ export default function TopBar(props) {
   const randomColor = require('randomcolor');
 
   const userid = useSelector((state) => state.activeSessionID.userid);
-  const client2 = Stomp.getInstance();
-  client2.userId = userid;
+  const client = Stomp.getInstance();
+  client.userId = userid;
 
   const dispatch = useDispatch();
 
@@ -97,7 +95,7 @@ export default function TopBar(props) {
 
   const handleSaveUIState = () => {
     if (session) {
-      client2.save_UI_state(
+      client.save_UI_state(
         session_id,
         bookmarks,
         windows,
@@ -185,7 +183,7 @@ export default function TopBar(props) {
           <Button
             size="small"
             variant="text"
-            onClick={() => client2.initialize_session(randomName, randomColor())}
+            onClick={() => client.initialize_session(randomName, randomColor())}
             style={{
               backgroundColor: "#FFFFFF",
               color: "black",
@@ -230,7 +228,7 @@ export default function TopBar(props) {
           <Button
             type="submit"
             onClick={() => {
-              client2.add_user_to_session(dialogValue.label, session_id)
+              client.add_user_to_session(dialogValue.label, session_id)
               handleClose()
             }}
           >Add

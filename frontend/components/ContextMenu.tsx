@@ -18,12 +18,12 @@ import { addWindow, selectAll, deselectAll } from "../actions/windows";
 import useSWRAbstract from "../util/swr"
 
 // contexts
-import { Stomp } from '../components/Stomp2'
+import { Stomp } from './Stomp'
 
 export default function ContextMenu(props) {
     const userid = useAppSelector((state: RootState) => state.activeSessionID.userid);
-    const client2 = Stomp.getInstance();
-    client2.userId = userid;
+    const client = Stomp.getInstance();
+    client.userId = userid;
 
     const dispatch = useAppDispatch();
 
@@ -54,7 +54,7 @@ export default function ContextMenu(props) {
     }
 
     const handleNewTeleoscope = (s_id) => {
-        client2.initialize_teleoscope(s_id);
+        client.initialize_teleoscope(s_id);
     }
 
     return (

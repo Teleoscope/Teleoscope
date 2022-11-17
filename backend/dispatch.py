@@ -53,7 +53,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.initialize_session.signature(
                 args=(),
                 kwargs={
-                    "username": args["username"],
+                    "userid": args["userid"],
                     "label": args["label"],
                     "color": args["color"]
                 },
@@ -63,7 +63,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.save_UI_state.signature(
                 args=(),
                 kwargs={
-                    "username": args["username"],
+                    "userid": args["userid"],
                     "session_id": args["session_id"],
                     "bookmarks": args["bookmarks"],
                     "windows": args["windows"],
@@ -75,7 +75,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 args=(),
                 kwargs={
                     "current": args["current"],
-                    "username": args["username"],
+                    "userid": args["userid"],
                     "session_id": args["session_id"]
                 }
             )
@@ -84,7 +84,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
-                    "username": args["username"],
+                    "userid": args["userid"],
                     "session_id": args["session_id"]
                 },
             )
@@ -117,7 +117,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.add_group.signature(
                 args=(),
                 kwargs={
-                    "username": args["username"],
+                    "userid": args["userid"],
                     "label": args["label"],
                     "color": args["color"],
                     "session_id": args["session_id"]

@@ -23,7 +23,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import useSWRAbstract from "../util/swr"
 
 // contexts
-import { Stomp } from './Stomp2'
+import { Stomp } from './Stomp'
 
 export default function Note(props) {
   const postid = props.id.split("%")[0]
@@ -31,8 +31,8 @@ export default function Note(props) {
   const { note, note_loading, note_error } = useSWRAbstract("note", `/api/notes/${postid}`);
   const dispatch = useAppDispatch();
   const userid = useAppSelector((state: RootState) => state.activeSessionID.userid);
-  const client2 = Stomp.getInstance();
-  client2.userId = userid;
+  const client = Stomp.getInstance();
+  client.userId = userid;
   const editor = React.useRef(null);
 
   const handleLoad = () => {
@@ -51,7 +51,7 @@ export default function Note(props) {
   // Handlers
   const handleBlur = () => {
     var content = editorState.getCurrentContent();
-    client2.update_note(postid, convertToRaw(content))
+    client.update_note(postid, convertToRaw(content))
   }
 
 
@@ -60,7 +60,7 @@ export default function Note(props) {
   }
 
   const handleClose = () => {
-    client2.update_note(postid, convertToRaw(editorState.getCurrentContent()))
+    client.update_note(postid, convertToRaw(editorState.getCurrentContent()))
     dispatch(removeWindow(props.id))
   }
 

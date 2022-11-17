@@ -16,7 +16,7 @@ import "react-resizable/css/styles.css"
 import { checkWindow, removeWindow, addWindow, loadWindows } from "../actions/windows";
 
 // contexts
-import { Stomp } from '../components/Stomp2'
+import { Stomp } from './Stomp'
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -38,8 +38,8 @@ const collides = (l1, l2) => {
 
 export default function WindowManager(props) {
   const userid = useAppSelector((state: RootState) => state.activeSessionID.userid);
-  const client2 = Stomp.getInstance();
-  client2.userId = userid;
+  const client = Stomp.getInstance();
+  client.userId = userid;
   const windows = useAppSelector((state: RootState) => state.windows.windows);
   const collision = useAppSelector((state: RootState) => state.windows.collision);
   
@@ -72,7 +72,7 @@ export default function WindowManager(props) {
     var checked = windows.find(w => w.isChecked && w.type == "Group");
     if (checked && newItem.i.split("%")[1] == "post") {
       dispatch(removeWindow(newItem.i))
-      client2.add_post_to_group(checked.i.split("%")[0], newItem.i.split("%")[0])
+      client.add_post_to_group(checked.i.split("%")[0], newItem.i.split("%")[0])
       dispatch(checkWindow({ i: checked.i, check: false }));
     }
   }
