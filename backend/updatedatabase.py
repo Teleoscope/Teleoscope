@@ -18,9 +18,11 @@ for session in sessions:
     history = session["history"]
     for h in history:
         if "user" in h:
+            print(type(h["user"]))
             if "user"[0:7] == "ObjectId":
                 pass
-            h["user"] = userids[h["user"]]
+            else:
+                h["user"] = userids[h["user"]]
         else:
             h["user"] = userids["paul"]
     print(history)
