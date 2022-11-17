@@ -35,7 +35,7 @@ import { useCookies } from "react-cookie";
 // custom components
 
 export default function GroupPalette(props) {
-   const userid = useAppSelector((state) => state.activeSessionID.userid);
+   const userid = useAppSelector((state) => state.activeSessionID.value);
    const client = Stomp.getInstance();
    client.userId = userid;
    const filter = createFilterOptions();

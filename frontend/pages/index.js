@@ -25,7 +25,7 @@ export default function Home({ isConnected }) {
       refreshInterval: 250
     }}>
     <CookiesProvider>
-        <div className="container">
+        <div>
           <Head>
             <title>Explore Documents</title>
             <link rel="icon" href="/favicon.ico" />
