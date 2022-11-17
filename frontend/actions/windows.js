@@ -3,6 +3,8 @@ import { createSlice } from '@reduxjs/toolkit'
 import _ from 'lodash';
 import { getDefaultWindow } from "../components/WindowDefault"
 
+console.log("Loading windows.js");
+
 export const Windows = createSlice({
 	name: 'windows',
 	initialState: {
