@@ -20,10 +20,6 @@ function Login() {
    const router = useRouter();
    const [validUser, setValidUser] = useState(false);
 
-   useEffect(() => {
-      setUsername(username)
-      console.log(username)
-   }, [username])
    // form validation rules
    const validationSchema = Yup.object().shape({
       username: Yup.string().required('Username is required'),
