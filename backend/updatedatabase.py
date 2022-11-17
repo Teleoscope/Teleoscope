@@ -23,6 +23,8 @@ for session in sessions:
             print(type(h["user"]))
             if type(h["user"]) == type(userids["paul"]):
                 pass
+            elif h["user"] not in userids.keys():
+                h["user"] = userids["paul"]
             else:
                 h["user"] = userids[h["user"]]
         else:
