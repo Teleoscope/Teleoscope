@@ -21,7 +21,7 @@ for session in sessions:
             new_ul["collaborators"].append(userids[user])
     
     print(new_ul)
-    db.session.update_one(
+    db.sessions.update_one(
         {
             "_id": session["_id"]
         }, 
