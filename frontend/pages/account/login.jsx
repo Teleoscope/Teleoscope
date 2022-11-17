@@ -16,7 +16,6 @@ export default Login;
 
 function Login() {
    const [username, setUsername] = useState("");
-   let { user } = useSWRAbstract("user", `/api/authenticate/${username}`);
    const router = useRouter();
    const [validUser, setValidUser] = useState(false);
 
@@ -32,8 +31,15 @@ function Login() {
    const { register, handleSubmit, formState } = useForm(formOptions);
    const { errors } = formState;
 
+   async function handleFetch(username, password) {
+      const data = await fetch(`/api/authenticate/${username}`);
+      const user = await data.json();
+
+      setValidUser(authenticateHash( user, username, password ));
+   }
+
    function onSubmit({ username, password }) {
-      setValidUser(authenticateHash( user, username, password));
+      handleFetch(username, password);
 
    }
 

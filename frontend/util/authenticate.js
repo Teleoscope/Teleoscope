@@ -9,24 +9,14 @@ const authenticateHash = (user, username, password) => {
       return '/account/login';
    }
 
-   console.log(user)
 
-   const salt = bcrypt.genSaltSync(10);
-   //const hashedPassword = bcrypt.hashSync(password, salt);
-
-   const passCompare = (password === user.password);
-   const userCompare = (username === user.username);
-
-
-   if (passCompare && userCompare) {
-      //Router.push('/')
-      return true;
+   if (bcrypt.compareSync(password, user.password)) {
+      Router.push('/')
    } else {
       Router.push({
          pathname: '/account/login',
          query: {error: true}
       })
-      return false;
    }  
 }
 
