@@ -17,7 +17,10 @@ sessions = db.sessions.find({})
 for session in sessions:
     history = session["history"]
     for h in history:
-        h["user"] = userids[h["user"]]
+        if "user" in h:
+            h["user"] = userids[h["user"]]
+        else:
+            h["user"] = userids["paul"]
     print(history)
     '''uncommment below to actually update
     db.sessions.update_one(
