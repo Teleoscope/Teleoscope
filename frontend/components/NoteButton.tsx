@@ -6,23 +6,22 @@ import IconButton from "@mui/material/IconButton";
 import CreateIcon from '@mui/icons-material/Create';
 
 // actions
-import { useDispatch } from "react-redux";
+import { useAppSelector, useAppDispatch } from '../hooks'
+import { RootState } from '../stores/store'
 import { addWindow } from "../actions/windows";
 
 // contexts
-import { StompContext } from '../context/StompContext'
-
-
-// utils
-import { add_note } from "../components/Stomp.ts";
+import { Stomp } from './Stomp2'
 
 export default function NoteButton(props) {
-	const client = useContext(StompContext)
-	const dispatch = useDispatch();
+	const userid = useAppSelector((state: RootState) => state.activeSessionID.userid);
+    const client2 = Stomp.getInstance();
+    client2.userId = userid;
+	const dispatch = useAppDispatch();
 
 	const handleAddNote = () => {
 		dispatch(addWindow({ i: props.id + "%note", x: 0, y: 0, w: 3, h: 3, type: "Note" }));
-		add_note(client, props.id);
+		client2.add_note(props.id);
 	}
 
 	return (

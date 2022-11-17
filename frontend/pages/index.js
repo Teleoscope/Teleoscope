@@ -14,7 +14,7 @@ import Workspace from "../components/Workspace";
 import clientPromise from '../util/mongodb';
 
 // contexts
-import { StompContext, client } from "../context/StompContext"
+// import { StompContext, client } from "../context/StompContext"
 
 // API fetcher for SWR global config
 const fetcher = (...args) => fetch(...args).then((res) => res.json())
@@ -28,7 +28,7 @@ export default function Home({ isConnected }) {
       errorRetryCount: 10,
       refreshInterval: 250
     }}>
-    <StompContext.Provider value={client}>
+    {/* <StompContext.Provider value={client}> */}
     <CookiesProvider>
         <div className="container">
           <Head>
@@ -43,7 +43,7 @@ export default function Home({ isConnected }) {
           </main>
         </div>
     </CookiesProvider>
-    </StompContext.Provider>
+    {/* </StompContext.Provider> */}
     </SWRConfig>
   );
 }

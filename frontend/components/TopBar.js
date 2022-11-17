@@ -30,17 +30,11 @@ import { loadBookmarkedPosts } from "../actions/bookmark";
 import { getGroups } from "../actions/groups";
 
 // utilities
-import {
-  save_UI_state,
-  initialize_session,
-  add_user_to_session
-} from "../components/Stomp.ts";
-
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../util/swr"
 
 // contexts
-import { StompContext } from '../context/StompContext'
+import { Stomp } from '../components/Stomp2'
 
 export default function TopBar(props) {
 
@@ -56,7 +50,11 @@ export default function TopBar(props) {
   const bookmarks = useSelector((state) => state.bookmarker.value);
   const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals], length: 1 });
   const randomColor = require('randomcolor');
-  const client = useContext(StompContext)
+
+  const userid = useSelector((state) => state.activeSessionID.userid);
+  const client2 = Stomp.getInstance();
+  client2.userId = userid;
+
   const dispatch = useDispatch();
 
   // Helper functions
@@ -99,9 +97,7 @@ export default function TopBar(props) {
 
   const handleSaveUIState = () => {
     if (session) {
-      save_UI_state(
-        client,
-        cookies.user,
+      client2.save_UI_state(
         session_id,
         bookmarks,
         windows,
@@ -189,7 +185,7 @@ export default function TopBar(props) {
           <Button
             size="small"
             variant="text"
-            onClick={() => initialize_session(client, cookies.user, randomName, randomColor())}
+            onClick={() => client2.initialize_session(randomName, randomColor())}
             style={{
               backgroundColor: "#FFFFFF",
               color: "black",
@@ -234,7 +230,7 @@ export default function TopBar(props) {
           <Button
             type="submit"
             onClick={() => {
-              add_user_to_session(client, cookies.user, dialogValue.label, session_id)
+              client2.add_user_to_session(dialogValue.label, session_id)
               handleClose()
             }}
           >Add

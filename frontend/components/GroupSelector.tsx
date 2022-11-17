@@ -11,19 +11,21 @@ import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 
 // actions 
-import { useSelector } from "react-redux";
+import { useAppSelector, useAppDispatch } from '../hooks'
+import { RootState } from '../stores/store'
 
 // contexts
-import { StompContext } from '../context/StompContext';
-import { add_post_to_group, remove_post_from_group } from '../components/Stomp.ts';
+import { Stomp } from './Stomp2';
 
 //utils
 import useSWRAbstract from "../util/swr"
 
 export default function groupSelector(props) {
 
-   const client = useContext(StompContext);
-   const session_id = useSelector((state) => state.activeSessionID.value);
+   const userid = useAppSelector((state) => state.activeSessionID.userid);
+   const client2 = Stomp.getInstance();
+   client2.userId = userid;
+   const session_id = useAppSelector((state) => state.activeSessionID.value);
    const { groups } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
 
    const groups_this_post_belongs_to = groups ? groups.filter((g) => {
@@ -42,21 +44,14 @@ export default function groupSelector(props) {
 
    const handleSelect = (group_id) => {
       if (groups_this_post_belongs_to.find((item) => item.id == props.id)) {
-         remove_post_from_group(client, group_id, props.id);
+         client2.remove_post_from_group(group_id, props.id);
       } else {
-         add_post_to_group(client, group_id, props.id);
+         client2.add_post_to_group(group_id, props.id);
       }
       handleClose();
    }
 
    const GroupIconHandler = (props) => {
-      if (props.groups.length == 0) {
-         return (
-            <FolderOutlinedIcon
-               sx={{ color: "#BBBBBB" }}
-               style={{ fontSize: 15 }} />
-         )
-      }
       if (props.groups.length == 1) {
          var g = props.groups[0].history[0];
          return (
@@ -73,6 +68,11 @@ export default function groupSelector(props) {
             </Tooltip>
          )
       }
+      return (
+         <FolderOutlinedIcon
+            sx={{ color: "#BBBBBB" }}
+            style={{ fontSize: 15 }} />
+      )
    }
 
    return (

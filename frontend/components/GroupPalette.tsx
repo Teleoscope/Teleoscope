@@ -21,42 +21,41 @@ import Diversity2Icon from '@mui/icons-material/Diversity2';
 
 // actions
 import useSWRAbstract from "../util/swr"
-import { useSelector, useDispatch } from "react-redux";
+import { useAppSelector, useAppDispatch } from '../hooks'
+import { RootState } from '../stores/store'
 import { addWindow } from "../actions/windows";
 import { dragged } from "../actions/windows";
 
-// utils
-import { add_group } from "../components/Stomp.ts";
-
 // contexts
-import { StompContext } from '../context/StompContext'
+import { Stomp } from './Stomp2'
 import randomColor from "randomcolor";
 import { IconButton } from "@mui/material";
-import { cluster_by_groups } from "./Stomp";
-import {useCookies} from "react-cookie";
+import { useCookies } from "react-cookie";
 
 // custom components
 
 export default function GroupPalette(props) {
-   const client = useContext(StompContext);
+   const userid = useAppSelector((state) => state.activeSessionID.userid);
+   const client2 = Stomp.getInstance();
+   client2.userId = userid;
    const filter = createFilterOptions();
-   const dispatch = useDispatch();
+   const dispatch = useAppDispatch();
    const [value, setValue] = React.useState(null);
    const [cookies, setCookie] = useCookies(["user"]);
    const [open, toggleOpen] = React.useState(false);
-   const session_id = useSelector((state) => state.activeSessionID.value);
+   const session_id = useAppSelector((state) => state.activeSessionID.value);
 
    const { groups } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
    const group_labels = groups ? groups.map((g) => { return g.history[0].label }) : []
 
    const keyChange = (e) => {
       if (e.code == "Enter") {
-         add_group(client, cookies.user, e.target.value, randomColor(), session_id)
+         client2.add_group(e.target.value, randomColor(), session_id)
       }
    };
 
    const runClusters = () => {
-      cluster_by_groups(client, groups.map(g => g._id), session_id)
+      client2.cluster_by_groups(groups.map(g => g._id), session_id)
    }
 
    return (
@@ -76,9 +75,7 @@ export default function GroupPalette(props) {
             margin: 1,
             '& .MuiInput-underline:before': { borderBottomColor: props.color },
             '& .MuiInput-underline:after': { borderBottomColor: props.color },
-            '& .MuiInputLabel-root': { borderBottomColor: props.color },
-
-            
+            '& .MuiInputLabel-root': { borderBottomColor: props.color }, 
          }}
       />
 
