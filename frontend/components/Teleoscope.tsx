@@ -19,7 +19,7 @@ import { RootState } from '../stores/store'
 import { setMagnitude } from "../actions/teleoscopes";
 
 // custom components
-import PostList from "./PostList"
+import PostList from "./Posts/PostList"
 
 // util
 import useSWRAbstract from "../util/swr"

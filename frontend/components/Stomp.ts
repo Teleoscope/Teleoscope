@@ -3,7 +3,15 @@ import { Client } from "@stomp/stompjs";
 // TODO: look at websocket example code here and replicate
 // anywhere that needs to route a request to the server
 // possibly best to move this into an action? I'm unsure
-Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
+
+import { WebsocketBuilder } from 'websocket-ts';
+Object.assign(global, WebsocketBuilder);
+//Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
+
+
+// custom imports
+const bcrypt = require('bcryptjs');
+let client: Client;
 
 /**
  * Type definition for Body
@@ -86,12 +94,12 @@ export class Stomp {
     this.client.activate();
   }
 
- 
+
   /**
    * Publishes a message to RabbitMQ.
    */
   publish(body: Body) {
-    var headers = {content_type: "application/json", content_encoding: "utf-8"};
+    var headers = { content_type: "application/json", content_encoding: "utf-8" };
     body['userid'] = this.userId;
     this.client.publish({
       destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,
@@ -163,144 +171,188 @@ export class Stomp {
     return body;
   }
 
-  /**
-   * Saves a Teleoscope history item.
-   */
-  save_teleoscope_state(_id: string, history_item) {
-    //const obj_id = ObjectId(_id);
-    var body = {
-      task: 'save_teleoscope_state',
-      args: {
-        _id: _id,
-        history_item: history_item
-      }
+/*
+  Adds the users login credentials for verification
+*/
+add_login(username: string, password: string) {
+  const body = {
+    task: "add_login",
+    args: {
+      username: username,
+      password: password
     }
-    this.publish(body);
-    return body;
   }
+  this.publish(body);
+  return body;
+}
 
-  /**
-   * Requests to create a new group object in MongoDB.
-   */
-  add_group(label: string, color: string, session_id: string) {
-    var body = {
-      task: 'add_group',
-      args: {
-        session_id: session_id,
-        label: label,
-        color: color
-      }
-    }
-    this.publish(body);
-    return body;
-  }
+/*
+  Pushes the user account information to create their account
+*/
+register_account(jsonData) {
+  const { firstName, lastName, username, password } = jsonData;
 
-  /**
-   * Add a post to a group.
-   */
-  add_post_to_group(group_id: string, post_id: string) {
-    var body = {
-      task: 'add_post_to_group',
-      args: {
-        group_id: group_id,
-        post_id: post_id
-      }
-    }
-    this.publish(body);
-    return body;
-  }
+  //hash(password) the function uses the bcrypt hashing algorithm for now
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync(password, salt);
 
-  /**
-   * Remove a post from a group.
-   */
-  remove_post_from_group(group_id: string, post_id: string) {
-    var body = {
-      task: 'remove_post_from_group',
-      args: {
-        group_id: group_id,
-        post_id: post_id
-      }
-    }
-    this.publish(body);
-    return body;
-  }
 
-  /**
-   * Update a group's label.
-   */
-  update_group_label(group_id: string, label: string) {
-    var body = {
-      task: 'update_group_label',
-      args: {
-        group_id: group_id,
-        label: label
-      }
+  const body = {
+    task: "register_account",
+    args: {
+      firstName: firstName,
+      lastName: lastName,
+      password: hashedPassword,
+      username: username,
     }
-    this.publish(body);
-    return body;
-  }
 
-  /**
-   * Request to add a note for a particular post.
-   */
-  add_note(post_id: string) {
-    var body = {
-      task: 'add_note',
-      args: {
-        post_id: post_id,
-      }
-    }
-    this.publish(body);
-    return body;
+    //   firstName: "Kenneth"
+    //   lastName: "Averna"
+    //   password: "teleoscope"
+    //   username: "admin@teleoscope.com"
   }
+  this.publish(body);
+  return body;
+}
 
-  /**
-   * Updates a note's content.
-   */
-  update_note(post_id: string, content) {
-    var body = {
-      task: 'update_note',
-      args: {
-        post_id: post_id,
-        content: content
-      }
+/**
+ * Saves a Teleoscope history item.
+ */
+save_teleoscope_state(_id: string, history_item) {
+  //const obj_id = ObjectId(_id);
+  var body = {
+    task: 'save_teleoscope_state',
+    args: {
+      _id: _id,
+      history_item: history_item
     }
-    this.publish(body);
-    return body;
   }
+  this.publish(body);
+  return body;
+}
 
-  /**
-   * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
-   */
-  reorient(teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>, magnitude?: number) {
-    var body = {
-      task: "reorient",
-      args: {
-        teleoscope_id: teleoscope_id,
-        positive_docs: positive_docs,
-        negative_docs: negative_docs,
-      }
+/**
+ * Requests to create a new group object in MongoDB.
+ */
+add_group(label: string, color: string, session_id: string) {
+  var body = {
+    task: 'add_group',
+    args: {
+      session_id: session_id,
+      label: label,
+      color: color
     }
-    if (magnitude != null) {
-      body.args["magnitude"] = magnitude;
-    }
-    this.publish(body);
-    return body;
   }
+  this.publish(body);
+  return body;
+}
 
-  /**
-   * Create MLGroups using the UMAP and HBDSCAN with the given groups' posts as seeds.
-   */
-  cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {
-    var body = {
-      task: "cluster_by_groups",
-      args: {
-        group_id_strings: group_id_strings,
-        session_oid: session_oid,
-      }
+/**
+ * Add a post to a group.
+ */
+add_post_to_group(group_id: string, post_id: string) {
+  var body = {
+    task: 'add_post_to_group',
+    args: {
+      group_id: group_id,
+      post_id: post_id
     }
-    this.publish(body);
-    return body;
   }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Remove a post from a group.
+ */
+remove_post_from_group(group_id: string, post_id: string) {
+  var body = {
+    task: 'remove_post_from_group',
+    args: {
+      group_id: group_id,
+      post_id: post_id
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Update a group's label.
+ */
+update_group_label(group_id: string, label: string) {
+  var body = {
+    task: 'update_group_label',
+    args: {
+      group_id: group_id,
+      label: label
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Request to add a note for a particular post.
+ */
+add_note(post_id: string) {
+  var body = {
+    task: 'add_note',
+    args: {
+      post_id: post_id,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Updates a note's content.
+ */
+update_note(post_id: string, content) {
+  var body = {
+    task: 'update_note',
+    args: {
+      post_id: post_id,
+      content: content
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
+ */
+reorient(teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>, magnitude ?: number) {
+  var body = {
+    task: "reorient",
+    args: {
+      teleoscope_id: teleoscope_id,
+      positive_docs: positive_docs,
+      negative_docs: negative_docs,
+    }
+  }
+  if (magnitude != null) {
+    body.args["magnitude"] = magnitude;
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Create MLGroups using the UMAP and HBDSCAN with the given groups' posts as seeds.
+ */
+cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {
+  var body = {
+    task: "cluster_by_groups",
+    args: {
+      group_id_strings: group_id_strings,
+      session_oid: session_oid,
+    }
+  }
+  this.publish(body);
+  return body;
+}
   
 }
