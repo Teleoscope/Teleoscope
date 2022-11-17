@@ -36,23 +36,27 @@ def initialize_session(*args, **kwargs):
     Adds a session to the sessions collection.
     
     kwargs: 
-        username: (string, arbitrary)
+        userid: (string, Bson ObjectId format)
     """
     transaction_session, db = utils.create_transaction_session()
     
     # handle kwargs
-    username = kwargs["username"]
+    userid = kwargs["userid"]
     label = kwargs['label']
+    color = kwargs['color']
     
-    logging.info(f'Initializing sesssion for user {username}.')
+    logging.info(f'Initializing sesssion for user {userid}.')
     # Check if user exists and throw error if not
-    user = db.users.find_one({"username": username})
-    user_id = user['_id']
-    userlist = {username:"owner"}
-
+    user = db.users.find_one({"_id": ObjectId(str(userid))})
     if user is None:
-        logging.info(f'User {username} does not exist.')
-        raise Exception(f"User {username} does not exist.")
+        logging.info(f'User {userid} does not exist.')
+        raise Exception(f'User {userid} does not exist.')
+
+    # Object to write for userlist
+    userlist =  {
+        user["username"]: "owner"
+    }
+
     obj = {
         "creation_time": datetime.datetime.utcnow(),
         "userlist": userlist,
@@ -64,17 +68,17 @@ def initialize_session(*args, **kwargs):
                 "groups": [],
                 "clusters": [],
                 "teleoscopes": [],
-                "label": kwargs['label'],
-                "color": kwargs['color'],
+                "label": label,
+                "color": color,
                 "action": f"Initialize session",
-                "user": user_id,
+                "user": userid,
             }
         ],
     }
     with transaction_session.start_transaction():
         result = db.sessions.insert_one(obj, session=transaction_session)
         db.users.update_one(
-            {"username": username},
+            {"_id": userid},
             {
                 "$push": {
                     "sessions": result.inserted_id
@@ -103,8 +107,8 @@ def save_UI_state(*args, **kwargs):
         logging.info(f"Session {session_id} not found.")
         raise Exception("Session not found")
 
-    username = kwargs["username"]
-    user = db.users.find_one({"username": username})
+    userid = kwargs["userid"]
+    user = db.users.find_one({"_id": userid})
     user_id = user['_id']
 
     history_item = session["history"][0]
@@ -133,7 +137,7 @@ def add_user_to_session(*args, **kwargs):
     """
     Add new user to session's userlist. Provide read/write access.
     kwargs:
-        username: (string, arbitrary)
+        userid: (string, BSON ObjectId format)
         session_id: (int, represents ObjectId in int)
     """
     transaction_session, db = utils.create_transaction_session()
@@ -144,8 +148,9 @@ def add_user_to_session(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     session = db.sessions.find_one({"_id": session_id})
 
-    username = kwargs["username"]
-    user = db.users.find_one({"username": username})
+    userid = kwargs["userid"]
+    user = db.users.find_one({"_id": userid})
+    username = user["username"]
 
     curr_username = kwargs["current"]
     curr_user = db.users.find_one({"username": curr_username})
@@ -181,7 +186,7 @@ def add_user_to_session(*args, **kwargs):
             }, session=transaction_session)
 
         db.users.update_one(
-            {"username": username},
+            {"_id": userid},
             {
                 "$push": {
                     "sessions": session_id
@@ -215,8 +220,8 @@ def initialize_teleoscope(*args, **kwargs):
 
     ret = None
 
-    username = kwargs["username"]
-    user = db.users.find_one({"username": username})
+    userid = kwargs["userid"]
+    user = db.users.find_one({"_id": userid})
     user_id = "1"
     if user != None:
         user_id = user['_id']
@@ -291,8 +296,8 @@ def save_teleoscope_state(*args, **kwargs):
     history_item["action"] = "Save Teleoscope state"
 
     # TODO record user
-#         username = kwargs["username"]
-#         user = db.users.find_one({"username": username})
+#         userid = kwargs["userid"]
+#         user = db.users.find_one({"_id": userid})
 #         history_item["user"] = user
  
     with session.start_transaction():
@@ -326,13 +331,13 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     _id = ObjectId(str(kwargs["session_id"]))
 
 
-    username = kwargs["username"]
-    user = db.users.find_one({"username": username})
+    userid = kwargs["userid"]
+    user = db.users.find_one({"_id": userid})
     user_id = "1"
     if user != None:
         user_id = user['_id']
 
-    teleoscope_result = initialize_teleoscope(username=username, session_id=_id, label=label)
+    teleoscope_result = initialize_teleoscope(userid=userid, session_id=_id, label=label)
 
     # Creating document to be inserted into mongoDB
     obj = {
@@ -438,8 +443,8 @@ def add_post_to_group(*args, **kwargs):
     history_item["action"] = "Add post to group"
 
     # TODO record user
-#         username = kwargs["username"]
-#         user = db.users.find_one({"username": username})
+#         userid = kwargs["userid"]
+#         user = db.users.find_one({"_id": userid})
 #         history_item["user"] = user
 
     with session.start_transaction():
@@ -489,8 +494,8 @@ def remove_post_from_group(*args, **kwargs):
     history_item["action"] = "Remove post from group"
 
         # TODO record user
-    #         username = kwargs["username"]
-    #         user = db.users.find_one({"username": username})
+    #         userid = kwargs["userid"]
+    #         user = db.users.find_one({"_id": userid})
     #         history_item["user"] = user
 
     with session.start_transaction():
@@ -530,8 +535,8 @@ def update_group_label(*args, **kwargs):
     history_item["action"] = "Update group label"
 
         # TODO record user
-    #         username = kwargs["username"]
-    #         user = db.users.find_one({"username": username})
+    #         userid = kwargs["userid"]
+    #         user = db.users.find_one({"_id": userid})
     #         history_item["user"] = user
 
     with session.start_transaction():

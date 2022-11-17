@@ -3,13 +3,12 @@ import React, { useContext, useState } from "react";
 // material ui
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
-import ExpandLess from "@mui/icons-material/ExpandLess";
-import ExpandMore from "@mui/icons-material/ExpandMore";
 import FlareIcon from '@mui/icons-material/Flare';
 import RemoveIcon from '@mui/icons-material/Remove';
 
 // actions
-import { useDispatch, useSelector } from "react-redux";
+import { useAppSelector, useAppDispatch } from '../hooks'
+import { RootState } from '../stores/store'
 import { dragged } from "../actions/windows";
 
 // custom
@@ -20,31 +19,32 @@ import PostTitle from './PostTitle';
 //utils
 import useSWRAbstract from "../util/swr"
 import { PreprocessTitle } from "../util/Preprocessers"
-import { remove_post_from_group, reorient } from "./Stomp";
 
 // contexts
-import { StompContext } from '../context/StompContext'
+import { Stomp } from './Stomp'
 
 export default function PostListItem(props) {
-  const client = useContext(StompContext)
+  const userid = useAppSelector((state) => state.activeSessionID.userid);
+  const client = Stomp.getInstance();
+  client.userId = userid;
   const { post } = useSWRAbstract("post", `/api/posts/${props.id}`);
   const title = post ? PreprocessTitle(post.title) : false;
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
   const [hover, setHover] = useState(false);
-  const magnitude = useSelector((state) => state.teleoscopes.magnitude);
+  const magnitude = useAppSelector((state) => state.teleoscopes.magnitude);
 
 
   const showGroupIcon = props.hasOwnProperty("showGroupIcon") ? props.showGroupIcon : true;
 
   const handleOrientTowards = () => {
-    reorient(client, props.group.teleoscope, [props.id], [], magnitude)
+    client.reorient(props.group.teleoscope, [props.id], [], magnitude)
   }
   const handleOrientAway = () => {
-    reorient(client, props.group.teleoscope, [], [props.id], magnitude)
+    client.reorient(props.group.teleoscope, [], [props.id], magnitude)
   }
   const handleRemove = () => {
-    remove_post_from_group(client, props.group._id, props.id)
+    client.remove_post_from_group(props.group._id, props.id)
   }
 
   return (

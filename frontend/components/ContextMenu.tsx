@@ -16,17 +16,16 @@ import { addWindow, selectAll, deselectAll } from "../actions/windows";
 
 // util
 import useSWRAbstract from "../util/swr"
-import { cluster_by_groups, initialize_teleoscope } from "./Stomp";
 
 // contexts
-import { StompContext } from '../context/StompContext'
-import { useCookies } from "react-cookie";
+import { Stomp } from './Stomp'
 
 export default function ContextMenu(props) {
-    const client = useContext(StompContext)
+    const userid = useAppSelector((state: RootState) => state.activeSessionID.userid);
+    const client = Stomp.getInstance();
+    client.userId = userid;
 
     const dispatch = useAppDispatch();
-    const [cookies, setCookie] = useCookies(["user"]);
 
     const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
     const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
@@ -55,7 +54,7 @@ export default function ContextMenu(props) {
     }
 
     const handleNewTeleoscope = (s_id) => {
-        initialize_teleoscope(client, cookies.user, s_id);
+        client.initialize_teleoscope(s_id);
     }
 
     return (
