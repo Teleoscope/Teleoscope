@@ -30,7 +30,7 @@ for session in sessions:
         else:
             h["user"] = userids["paul"]
     print(history)
-    '''uncommment below to actually update
+    '''uncommment below to actually update'''
     db.sessions.update_one(
         {
             "_id": session["_id"]
@@ -41,7 +41,7 @@ for session in sessions:
             }
         }
     )
-    '''
+    
 
 
 
