@@ -16,9 +16,9 @@ for session in sessions:
     }
     for user in curr_ul.keys():
         if curr_ul[user] == "owner":
-            new_ul["owner"] = users[user]
+            new_ul["owner"] = userids[user]
         if curr_ul[user] == "collaborator":
-            new_ul["collaborators"].append(users[user])
+            new_ul["collaborators"].append(userids[user])
     
     print(new_ul)
     '''
