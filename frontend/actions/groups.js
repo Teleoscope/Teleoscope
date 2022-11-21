@@ -1,6 +1,6 @@
 // actions.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-
+console.log("Loading groups.js");
 const initialState = {
 		groups: {
 			// _id: {

@@ -1,6 +1,7 @@
 // actions.js
 import { createSlice } from '@reduxjs/toolkit'
-console.log("Reloading ActiveSessionID ");
+console.log("Loading activeSessionID.js");
+
 export const ActiveSessionID = createSlice({
   name: 'activeSessionID',
   initialState: {
