@@ -54,7 +54,8 @@ def initialize_session(*args, **kwargs):
 
     # Object to write for userlist
     userlist =  {
-        user["username"]: "owner"
+        "owner": ObjectId(str(user["_id"])),
+        "contributors": []
     }
 
     obj = {
