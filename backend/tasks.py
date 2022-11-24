@@ -660,10 +660,11 @@ def register_account(*arg, **kwargs):
         "lastName": last_name,
         "password": password,
         "username": username,
+        "sessions":[],
         "action": "initialize a user"
     }
 
-    collection = db.registeredUsers
+    collection = db.users
     with transaction_session.start_transaction():
         users_res = collection.insert_one(obj, session=transaction_session)
         logging.info(f"Added user {username} with result {users_res}.")
