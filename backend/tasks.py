@@ -329,10 +329,9 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
     color = kwargs["color"]
     label = kwargs["label"]
     _id = ObjectId(str(kwargs["session_id"]))
-
-
     userid = kwargs["userid"]
-    user = db.users.find_one({"_id": userid})
+    
+    user = db.users.find_one({"_id": ObjectId(str(userid))})
     user_id = "1"
     if user != None:
         user_id = user['_id']
