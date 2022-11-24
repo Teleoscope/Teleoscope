@@ -79,7 +79,7 @@ def initialize_session(*args, **kwargs):
     with transaction_session.start_transaction():
         result = db.sessions.insert_one(obj, session=transaction_session)
         db.users.update_one(
-            {"_id": userid},
+            {"_id": ObjectId(str(user["_id"]))},
             {
                 "$push": {
                     "sessions": result.inserted_id
