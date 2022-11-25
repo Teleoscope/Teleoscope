@@ -104,7 +104,7 @@ def vectorize_post(post):
     if 'error' not in post:
         embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
         post['vector'] = embed([post['title']]).numpy()[0].tolist()
-        post['selftextVector'] = embed([post['selftext']]).numpy()[0].tolist()
+        post['textVector'] = embed([post['selftext']]).numpy()[0].tolist()
         return post
     else:
         return post

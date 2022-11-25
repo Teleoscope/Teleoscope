@@ -701,10 +701,10 @@ class reorient(Task):
         else:
             logging.info("Posts are not cached, building cache now.")
             db = utils.connect()
-            allPosts = utils.getAllPosts(db, projection={'id':1, 'selftextVector':1, '_id':0}, batching=True, batchSize=10000)
+            allPosts = utils.getAllPosts(db, projection={'id':1, 'textVector':1, '_id':0}, batching=True, batchSize=10000)
             ids = [x['id'] for x in allPosts]
             logging.info(f'There are {len(ids)} ids in posts.')
-            vecs = np.array([x['selftextVector'] for x in allPosts])
+            vecs = np.array([x['textVector'] for x in allPosts])
 
             np.savez(npzpath.as_posix(), posts=vecs)
             with open(pklpath.as_posix(), 'wb') as handle:
@@ -809,7 +809,7 @@ class reorient(Task):
             docs = positive_docs + negative_docs
             first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
             logging.info(f'Results of finding first_doc: {first_doc["_id"]}.')
-            stateVector = first_doc['selftextVector']  # grab selftextVector
+            stateVector = first_doc['textVector']  # grab textVector
 
         resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
         # move qvector towards/away from feedbackVector
@@ -924,7 +924,7 @@ def vectorize_post(post):
     if 'error' not in post:
         embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
         post['vector'] = embed([post['title']]).numpy()[0].tolist()
-        post['selftextVector'] = embed([post['selftext']]).numpy()[0].tolist()
+        post['textVector'] = embed([post['selftext']]).numpy()[0].tolist()
         return post
     else:
         return post

@@ -40,7 +40,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
     limit = min(limit, len(ordered_posts))
     
     # projection includes only fields we want
-    projection = {'id': 1, 'selftextVector': 1}
+    projection = {'id': 1, 'textVector': 1}
 
     # cursor is a generator which means that it yields a new doc one at a time
     logging.info("Getting posts cursor and building post vector and id list...")
@@ -59,7 +59,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
     # can accept generators for lazy calculation 
     for post in tqdm.tqdm(cursor, total=limit):
         post_ids.append(post["id"])
-        post_vectors.append(post["selftextVector"])
+        post_vectors.append(post["textVector"])
         
     logging.info("Creating data np.array...")
     
@@ -84,7 +84,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
                 logging.info(f'{id} not in current slice. Attempting to retreive from database...')
                 post = db.clean.posts.v3.find_one({"id": id}, projection=projection)
                 post_ids.append(id)
-                vector = np.array(post["selftextVector"]).reshape((1, 512))
+                vector = np.array(post["textVector"]).reshape((1, 512))
                 data = np.append(data, vector, axis=0)
                 labels = np.append(labels, -1)
                 
