@@ -65,10 +65,10 @@ def mergeCollections():
     db = connect()
     cursor = db.clean.posts.v2.find({})
     for post in cursor:
-        findres = list(db.clean.posts.v3.find({"id": post["id"]}))
+        findres = list(db.documents.find({"id": post["id"]}))
         if len(findres) == 0:
             print(post["id"], "not found")
-            db.clean.posts.v3.update_one({"id": post["id"]}, {"$set": post}, upsert=True)
+            db.documents.update_one({"id": post["id"]}, {"$set": post}, upsert=True)
         else:
             print(post["id"], "found")
 
@@ -98,7 +98,7 @@ def moveVector(sourceVector, destinationVector, direction, magnitude):
     return new_q
 
 def getPostVector(db, post_id):
-    post = db.clean.posts.v3.find_one({"id": post_id}, projection={'textVector':1}) # get post which was liked/disliked
+    post = db.documents.find_one({"id": post_id}, projection={'textVector':1}) # get post which was liked/disliked
     postVector = np.array(post['textVector']) # extract vector of post which was liked/disliked
     return postVector
 
@@ -109,7 +109,7 @@ def loadModel():
 
 def getAllPosts(db, projection, batching=True, batchSize=10000):
     if not batching:
-        allPosts = db.clean.posts.v3.find({}, projection=projection)
+        allPosts = db.documents.find({}, projection=projection)
         allPosts = list(allPosts)
         return allPosts
     
@@ -118,7 +118,7 @@ def getAllPosts(db, projection, batching=True, batchSize=10000):
     dataProcessed = 0
     allPosts = []
     while True:
-        batch = db.clean.posts.v3.find(projection=projection).skip(numSkip).limit(batchSize)
+        batch = db.documents.find(projection=projection).skip(numSkip).limit(batchSize)
         batch = list(batch)
         # break if no more posts
         if len(batch) == 0:

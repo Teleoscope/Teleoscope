@@ -124,7 +124,7 @@ def add_single_post_to_database(post):
     if 'error' not in post:
          # Create session
         session, db = utils.create_transaction_session()
-        target = db.clean.posts.v3 
+        target = db.documents 
         with session.start_transaction():
             # Insert post into database
             target.insert_one(post, session=session)
@@ -146,7 +146,7 @@ def add_multiple_posts_to_database(posts):
     # Create session
     session, db = utils.create_transaction_session()
     if len(posts) > 0:
-        target = db.clean.posts.v3
+        target = db.documents
         with session.start_transaction():
             # Insert posts into database
             target.insert_many(posts, session=session)

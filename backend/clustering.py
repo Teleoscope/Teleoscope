@@ -44,7 +44,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
 
     # cursor is a generator which means that it yields a new doc one at a time
     logging.info("Getting posts cursor and building post vector and id list...")
-    cursor = db.clean.posts.v3.find(
+    cursor = db.documents.find(
         # query
         {"id":{"$in": [post[0] for post in ordered_posts]}},
         projection=projection,
@@ -82,7 +82,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
                 post_ids.index(id)
             except:
                 logging.info(f'{id} not in current slice. Attempting to retreive from database...')
-                post = db.clean.posts.v3.find_one({"id": id}, projection=projection)
+                post = db.documents.find_one({"id": id}, projection=projection)
                 post_ids.append(id)
                 vector = np.array(post["textVector"]).reshape((1, 512))
                 data = np.append(data, vector, axis=0)

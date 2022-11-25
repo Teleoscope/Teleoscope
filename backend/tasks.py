@@ -202,7 +202,7 @@ def add_user_to_session(*args, **kwargs):
 def initialize_teleoscope(*args, **kwargs):
     """
     initialize_teleoscope:
-    Performs a text query on aita.clean.posts.v3 text index.
+    Performs a text query on aita.documents text index.
     If the query string already exists in the teleoscopes collection, returns existing reddit_ids.
     Otherwise, adds the query to the teleoscopes collection and performs a text query the results of which are added to the
     teleoscopes collection and returned.
@@ -807,7 +807,7 @@ class reorient(Task):
             stateVector = np.array(teleoscope['history'][0]['stateVector'])
         else:
             docs = positive_docs + negative_docs
-            first_doc = self.db.clean.posts.v3.find_one({"id": docs[0]})
+            first_doc = self.db.documents.find_one({"id": docs[0]})
             logging.info(f'Results of finding first_doc: {first_doc["_id"]}.')
             stateVector = first_doc['textVector']  # grab textVector
 
@@ -944,7 +944,7 @@ def add_single_post_to_database(post):
     if 'error' not in post:
          # Create session
         session, db = utils.create_transaction_session()
-        target = db.clean.posts.v3 
+        target = db.documents 
         with session.start_transaction():
             # Insert post into database
             target.insert_one(post, session=session)
@@ -966,7 +966,7 @@ def add_multiple_posts_to_database(posts):
     # Create session
     session, db = utils.create_transaction_session()
     if len(posts) > 0:
-        target = db.clean.posts.v3
+        target = db.documents
         with session.start_transaction():
             # Insert posts into database
             target.insert_many(posts, session=session)

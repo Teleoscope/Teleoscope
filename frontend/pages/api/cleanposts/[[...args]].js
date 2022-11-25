@@ -8,14 +8,14 @@ export default async (req, res) => {
   console.log("cleanpost args", args)
   var queries = [];
   if (!args) {
-    queries = await db.collection("clean.posts.v3").find({}).limit(500).toArray();
+    queries = await db.collection("documents").find({}).limit(500).toArray();
   } else if (args.length == 1) {
     queries = await db
-    .collection("clean.posts.v3")
+    .collection("documents")
     .find({ $text: { $search: args[0] } }).limit(500).toArray();
   } else if (args.length == 2) {
     queries = await db
-    .collection("clean.posts.v3")
+    .collection("documents")
     .find({ $text: { $search: args[0] } }).limit(parseInt(args[1])).toArray();
   }
   res.json(queries);
