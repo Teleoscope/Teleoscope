@@ -17,7 +17,7 @@ import { PreprocessText } from "../../util/Preprocessers"
 export default function Post(props) {
   const id = props.id.split("%")[0];
   const { post } = useSWRAbstract("post", `/api/posts/${id}`);
-  const text = post ? PreprocessText(post.selftext) : false;
+  const text = post ? PreprocessText(post.text) : false;
 
   return (
     <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
