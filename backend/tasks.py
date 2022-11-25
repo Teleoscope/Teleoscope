@@ -873,14 +873,14 @@ def validate_post(data):
     purpose: This function is used to validate a single post.
             If the file is missing required fields, a dictionary with an error key is returned
     '''
-    if data.get('selftext', "") == "" or data.get('title', "") == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
+    if data.get('text', "") == "" or data.get('title', "") == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
         logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
         return {'error': 'Post is missing required fields.'}
 
     post = {
             'id': data['id'],
             'title': data['title'],
-            'selftext': data['selftext']}
+            'text': data['text']}
 
     return post
 
@@ -897,14 +897,14 @@ def read_and_validate_post(path_to_post):
     '''
     with open(path_to_post) as f:
             data = json.load(f)
-    if data['selftext'] == "" or data['title'] == "" or data['selftext'] == '[deleted]' or data['selftext'] == '[removed]':
+    if data['text'] == "" or data['title'] == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
         logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
         return {'error': 'Post is missing required fields.'}
 
     post = {
             'id': data['id'],
             'title': data['title'],
-            'selftext': data['selftext']
+            'text': data['text']
     }
 
     return post
@@ -917,14 +917,14 @@ def vectorize_post(post):
 
     input: Dict
     output: Dict
-    purpose: This function is used to update the dictionary with a vectorized version of the title and selftext
+    purpose: This function is used to update the dictionary with a vectorized version of the title and text
             (Ignores dictionaries containing error keys)
     '''
     import tensorflow_hub as hub
     if 'error' not in post:
         embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
         post['vector'] = embed([post['title']]).numpy()[0].tolist()
-        post['textVector'] = embed([post['selftext']]).numpy()[0].tolist()
+        post['textVector'] = embed([post['text']]).numpy()[0].tolist()
         return post
     else:
         return post
