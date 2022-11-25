@@ -31,7 +31,7 @@ def import_multiple_posts(path_to_folder):
 		# Vectorize posts
 		for post in posts:
 			post['vector'] =  embed([post['title']]).numpy()[0].tolist()
-			post['selftextVector'] = embed([post['selftext']]).numpy()[0].tolist()
+			post['textVector'] = embed([post['text']]).numpy()[0].tolist()
 		print(f'Sucessfully vectorized {curr_page}')
 		# Insert
 		add_multiple_posts_to_database.delay(posts=posts)
