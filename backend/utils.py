@@ -97,7 +97,7 @@ def moveVector(sourceVector, destinationVector, direction, magnitude):
 
     return new_q
 
-def getPostVector(db, document_id):
+def getDocumentVector(db, document_id):
     document = db.documents.find_one({"id": document_id}, projection={'textVector':1}) # get document which was liked/disliked
     documentVector = np.array(document['textVector']) # extract vector of document which was liked/disliked
     return documentVector
@@ -107,29 +107,29 @@ def loadModel():
     model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
     return model
 
-def getAllPosts(db, projection, batching=True, batchSize=10000):
+def getAllDocuments(db, projection, batching=True, batchSize=10000):
     if not batching:
-        allPosts = db.documents.find({}, projection=projection)
-        allPosts = list(allPosts)
-        return allPosts
+        allDocuments = db.documents.find({}, projection=projection)
+        allDocuments = list(allDocuments)
+        return allDocuments
     
     # fetch all documents from mongodb in batches
     numSkip = 0 
     dataProcessed = 0
-    allPosts = []
+    allDocuments = []
     while True:
         batch = db.documents.find(projection=projection).skip(numSkip).limit(batchSize)
         batch = list(batch)
         # break if no more documents
         if len(batch) == 0:
             break
-        allPosts += batch
+        allDocuments += batch
         dataProcessed += len(batch)
         logging.info(dataProcessed)
         print(dataProcessed)
         numSkip += batchSize
     
-    return allPosts
+    return allDocuments
 
 def calculateSimilarity(documentVectors, queryVector):
     '''Calculate similarity
@@ -138,7 +138,7 @@ def calculateSimilarity(documentVectors, queryVector):
     scores = queryVector.dot(documentVectors.T).flatten() 
     return scores
 
-def rankPostsBySimilarity(documents_ids, scores):
+def rankDocumentsBySimilarity(documents_ids, scores):
     '''Create and return a list a tuples of (document_id, similarity_score) sorted by similarity score, high to low
     '''
     return sorted([(document_id, score) for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
@@ -154,7 +154,7 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
         i.e., namespace.chunks and namespace.files
         
         data: ordred list of tuples which are short string documentid and 
-        float score [(string, float)] returned from rankPostsBySimilarity
+        float score [(string, float)] returned from rankDocumentsBySimilarity
 
     kwargs:    
         encoding: string representing text encoding
@@ -185,7 +185,7 @@ def gridfsDownload(db, namespace, oid):
 
     returns:
         data: ordred list of tuples which are short string documentid and 
-        float score [(string, float)] as returned from rankPostsBySimilarity
+        float score [(string, float)] as returned from rankDocumentsBySimilarity
     
     E.g.,:
         args:

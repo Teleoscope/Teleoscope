@@ -431,13 +431,13 @@ def add_document_to_group(*args, **kwargs):
 
     # check if document has already been added
     if document_id in group:
-        logging.info(f'Post {document_id} is already in group')
-        raise Exception(f'Post {document_id} is already in group')
+        logging.info(f'Document {document_id} is already in group')
+        raise Exception(f'Document {document_id} is already in group')
 
     history_item = group["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
     if document_id in history_item["included_documents"]:
-        logging.info(f'Post {document_id} already in group {group["history"][0]["label"]}.')
+        logging.info(f'Document {document_id} already in group {group["history"][0]["label"]}.')
         return
     history_item["included_documents"].append(document_id)
     history_item["action"] = "Add document to group"
@@ -678,12 +678,12 @@ class reorient(Task):
 
     def __init__(self):
         self.documentsCached = False
-        self.allPostIDs = None
-        self.allPostVectors = None
+        self.allDocumentIDs = None
+        self.allDocumentVectors = None
         self.db = None
         self.model = None
 
-    def cachePostsData(self, path='~/embeddings/'):
+    def cacheDocumentsData(self, path='~/embeddings/'):
         # cache embeddings
         from pathlib import Path
         dir = Path(path).expanduser()
@@ -692,25 +692,25 @@ class reorient(Task):
         pklpath = Path(path + 'ids.pkl').expanduser()
         
         if npzpath.exists() and pklpath.exists():
-            logging.info("Posts have been cached, retrieving now.")
-            loadPosts = np.load(npzpath.as_posix(), allow_pickle=False)
+            logging.info("Documents have been cached, retrieving now.")
+            loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
             with open(pklpath.as_posix(), 'rb') as handle:
-                self.allPostIDs = pickle.load(handle)
-            self.allPostVectors = loadPosts['documents']
+                self.allDocumentIDs = pickle.load(handle)
+            self.allDocumentVectors = loadDocuments['documents']
             self.documentsCached = True
         else:
-            logging.info("Posts are not cached, building cache now.")
+            logging.info("Documents are not cached, building cache now.")
             db = utils.connect()
-            allPosts = utils.getAllPosts(db, projection={'id':1, 'textVector':1, '_id':0}, batching=True, batchSize=10000)
-            ids = [x['id'] for x in allPosts]
+            allDocuments = utils.getAllDocuments(db, projection={'id':1, 'textVector':1, '_id':0}, batching=True, batchSize=10000)
+            ids = [x['id'] for x in allDocuments]
             logging.info(f'There are {len(ids)} ids in documents.')
-            vecs = np.array([x['textVector'] for x in allPosts])
+            vecs = np.array([x['textVector'] for x in allDocuments])
 
             np.savez(npzpath.as_posix(), documents=vecs)
             with open(pklpath.as_posix(), 'wb') as handle:
                 pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            self.allPostIDs = ids
-            self.allPostVectors = vecs
+            self.allDocumentIDs = ids
+            self.allDocumentVectors = vecs
             self.documentsCached = True
         return
 
@@ -730,17 +730,17 @@ class reorient(Task):
             direction: direction to move (int: 1, -1)
         """        
         # get vectors for positive and negative doc ids
-        # using utils.getPostVector function
+        # using utils.getDocumentVector function
         # TODO: OPTIMIZE
 
         posVecs = []  # vectors we want to move towards
         for pos_id in positive_docs:
-            v = utils.getPostVector(self.db, pos_id)
+            v = utils.getDocumentVector(self.db, pos_id)
             posVecs.append(v)
 
         negVecs = []  # vectors we want to move away from
         for neg_id in negative_docs:
-            v = utils.getPostVector(self.db, neg_id)
+            v = utils.getDocumentVector(self.db, neg_id)
             negVecs.append(v)
 
         avgPosVec = None  # avg positive vector
@@ -775,7 +775,7 @@ class reorient(Task):
             # if both are empty, then cache stuff if not cached alreadt
             # Check if document ids and vectors are cached
             if self.documentsCached == False:
-                self.cachePostsData()
+                self.cacheDocumentsData()
 
             # Check if db connection is cached
             if self.db is None:
@@ -787,7 +787,7 @@ class reorient(Task):
 
         # Check if document ids and vectors are cached
         if self.documentsCached == False:
-            self.cachePostsData()
+            self.cacheDocumentsData()
 
         # Check if db connection is cached
         if self.db is None:
@@ -819,8 +819,8 @@ class reorient(Task):
             direction=direction,
             magnitude=magnitude
         )
-        scores = utils.calculateSimilarity(self.allPostVectors, qprime)
-        newRanks = utils.rankPostsBySimilarity(self.allPostIDs, scores)
+        scores = utils.calculateSimilarity(self.allDocumentVectors, qprime)
+        newRanks = utils.rankDocumentsBySimilarity(self.allDocumentIDs, scores)
         gridfs_id = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
 
         rank_slice = newRanks[0:100]
@@ -842,7 +842,7 @@ class reorient(Task):
 robj = app.register_task(reorient())
 
 #################################################################
-# Post importing tasks
+# Document importing tasks
 #################################################################
 
 @app.task
@@ -874,8 +874,8 @@ def validate_document(data):
             If the file is missing required fields, a dictionary with an error key is returned
     '''
     if data.get('text', "") == "" or data.get('title', "") == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
-        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
-        return {'error': 'Post is missing required fields.'}
+        logging.info(f"Document {data['id']} is missing required fields. Document not imported.")
+        return {'error': 'Document is missing required fields.'}
 
     document = {
             'id': data['id'],
@@ -898,8 +898,8 @@ def read_and_validate_document(path_to_document):
     with open(path_to_document) as f:
             data = json.load(f)
     if data['text'] == "" or data['title'] == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
-        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
-        return {'error': 'Post is missing required fields.'}
+        logging.info(f"Document {data['id']} is missing required fields. Document not imported.")
+        return {'error': 'Document is missing required fields.'}
 
     document = {
             'id': data['id'],

@@ -36,7 +36,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
     logging.info("Getting ordered documents...")
     all_ordered_documents = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope["history"][0]["ranked_document_ids"])))
     ordered_documents = all_ordered_documents[0:limit]
-    logging.info(f'Posts downloaded. Top document is {ordered_documents[0]} and length is {len(ordered_documents)}')
+    logging.info(f'Documents downloaded. Top document is {ordered_documents[0]} and length is {len(ordered_documents)}')
     limit = min(limit, len(ordered_documents))
     
     # projection includes only fields we want
@@ -99,7 +99,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
     del cursor
     gc.collect()
 
-    logging.info(f'Post data np.array has shape {data.shape}.') # e.g., (600000, 512)
+    logging.info(f'Document data np.array has shape {data.shape}.') # e.g., (600000, 512)
 
     logging.info("Running UMAP embedding.")
     fitter = umap.UMAP(verbose=True,
@@ -122,7 +122,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
 
     for hdbscan_label in set(hdbscan_labels):
         document_indices_scalar = np.where(label_array == hdbscan_label)[0]
-        logging.info(f'Post indices is {document_indices_scalar[0]}.')
+        logging.info(f'Document indices is {document_indices_scalar[0]}.')
         document_indices = [int(i) for i in document_indices_scalar]
         documents = []
         for i in document_indices:

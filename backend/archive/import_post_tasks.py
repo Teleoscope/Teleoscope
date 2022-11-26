@@ -54,8 +54,8 @@ def validate_document(data):
             If the file is missing required fields, a dictionary with an error key is returned
     '''
     if data.get('text', "") == "" or data.get('title', "") == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
-        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
-        return {'error': 'Post is missing required fields.'}
+        logging.info(f"Document {data['id']} is missing required fields. Document not imported.")
+        return {'error': 'Document is missing required fields.'}
 
     document = {
             'id': data['id'],
@@ -78,8 +78,8 @@ def read_and_validate_document(path_to_document):
     with open(path_to_document) as f:
             data = json.load(f)
     if data['text'] == "" or data['title'] == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
-        logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
-        return {'error': 'Post is missing required fields.'}
+        logging.info(f"Document {data['id']} is missing required fields. Document not imported.")
+        return {'error': 'Document is missing required fields.'}
 
     document = {
             'id': data['id'],
