@@ -6,9 +6,9 @@ import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 
 // custom components
-import PostListItem from "./PostListItem";
+import DocumentListItem from "./DocumentListItem";
 
-export default function PostList(props) {
+export default function DocumentList(props) {
   const data = props.data;
 
   // pagination
@@ -27,11 +27,11 @@ export default function PostList(props) {
     );
   }
 
-  const BuildPostListItem = (pair) => {
+  const BuildDocumentListItem = (pair) => {
     return (
-      <PostListItem id={pair[0]} key={pair[0] + "PostListItem"} {...props}>
+      <DocumentListItem id={pair[0]} key={pair[0] + "DocumentListItem"} {...props}>
         {" "}
-      </PostListItem>
+      </DocumentListItem>
     );
   }
 
@@ -41,8 +41,8 @@ export default function PostList(props) {
   return (
     <List dense={true}>
       {displayPagination
-        ? paginatedItems.map(pair => BuildPostListItem(pair))
-        : data.map(pair => BuildPostListItem(pair))
+        ? paginatedItems.map(pair => BuildDocumentListItem(pair))
+        : data.map(pair => BuildDocumentListItem(pair))
       }
 
       {displayPagination ? (

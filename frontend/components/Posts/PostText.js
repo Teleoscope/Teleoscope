@@ -4,7 +4,7 @@ import React from "react";
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
-export default function PostText(props) {
+export default function DocumentText(props) {
    const text = props.text ? props.text : "Content not available.";
    return (
       <Box>

@@ -15,7 +15,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks'
 import { RootState } from '../../stores/store'
 
 // custom components
-import PostTitle from "../Posts/PostTitle"
+import DocumentTitle from "../Documents/DocumentTitle"
 
 // icons
 import CloseIcon from "@mui/icons-material/Close";
@@ -28,9 +28,9 @@ import useSWRAbstract from "../../util/swr"
 import { Stomp } from '../Stomp'
 
 export default function Note(props) {
-  const postid = props.id.split("%")[0]
-  const { post, post_loading, post_error } = useSWRAbstract("post", `/api/posts/${postid}`);
-  const { note, note_loading, note_error } = useSWRAbstract("note", `/api/notes/${postid}`);
+  const documentid = props.id.split("%")[0]
+  const { document, document_loading, document_error } = useSWRAbstract("document", `/api/documents/${documentid}`);
+  const { note, note_loading, note_error } = useSWRAbstract("note", `/api/notes/${documentid}`);
   const dispatch = useAppDispatch();
   const userid = useAppSelector((state: RootState) => state.activeSessionID.value); //value was userid
   const client = Stomp.getInstance();
@@ -53,7 +53,7 @@ export default function Note(props) {
   // Handlers
   const handleBlur = () => {
     var content = editorState.getCurrentContent();
-    client.update_note(postid, convertToRaw(content))
+    client.update_note(documentid, convertToRaw(content))
   }
 
 
@@ -62,7 +62,7 @@ export default function Note(props) {
   }
 
   const handleClose = () => {
-    client.update_note(postid, convertToRaw(editorState.getCurrentContent()))
+    client.update_note(documentid, convertToRaw(editorState.getCurrentContent()))
     dispatch(removeWindow(props.id))
   }
 
@@ -92,7 +92,7 @@ export default function Note(props) {
             <IconButton size="small" onClick={handleClose}>
               <CloseIcon fontSize="small" />
             </IconButton>
-            <PostTitle title={post ? post.title : ""} size="sm" color="#AAAAAA" noWrap={true} />
+            <DocumentTitle title={document ? document.title : ""} size="sm" color="#AAAAAA" noWrap={true} />
           </Stack>
           <Editor
             ref={editor}
@@ -100,7 +100,7 @@ export default function Note(props) {
             onBlur={handleBlur}
             onFocus={handleFocus}
             onChange={setEditorState}
-          // placeholder={post ? post["title"] : props.id}
+          // placeholder={document ? document["title"] : props.id}
           />
         </Stack>
       </div>

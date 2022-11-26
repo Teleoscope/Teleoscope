@@ -28,8 +28,8 @@ export default function groupSelector(props) {
    const session_id = useAppSelector((state) => state.activeSessionID.value);
    const { groups } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
 
-   const groups_this_post_belongs_to = groups ? groups.filter((g) => {
-      return g.history[0].included_posts.includes(props.id)
+   const groups_this_document_belongs_to = groups ? groups.filter((g) => {
+      return g.history[0].included_documents.includes(props.id)
    }) : [];
 
    const [anchorEl, setAnchorEl] = useState(null);
@@ -43,10 +43,10 @@ export default function groupSelector(props) {
    };
 
    const handleSelect = (group_id) => {
-      if (groups_this_post_belongs_to.find((item) => item.id == props.id)) {
-         client.remove_post_from_group(group_id, props.id);
+      if (groups_this_document_belongs_to.find((item) => item.id == props.id)) {
+         client.remove_document_from_group(group_id, props.id);
       } else {
-         client.add_post_to_group(group_id, props.id);
+         client.add_document_to_group(group_id, props.id);
       }
       handleClose();
    }
@@ -78,7 +78,7 @@ export default function groupSelector(props) {
    return (
       <div>
          <IconButton onClick={handleClick}>
-            <GroupIconHandler groups={groups_this_post_belongs_to} />
+            <GroupIconHandler groups={groups_this_document_belongs_to} />
          </IconButton>
          <Menu
             anchorEl={anchorEl}

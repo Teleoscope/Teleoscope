@@ -62,7 +62,7 @@ export default function WindowManager(props) {
   }
 
   const handleCollisions = (layout, newItem, placeholder) => {
-    if (newItem.i.split("%")[1] == "post") {
+    if (newItem.i.split("%")[1] == "document") {
       checkCollisions(newItem, placeholder);
     }
   }
@@ -70,9 +70,9 @@ export default function WindowManager(props) {
   const handleDragStop = (layout, newItem) => {
     dispatch(loadWindows(layout))
     var checked = windows.find(w => w.isChecked && w.type == "Group");
-    if (checked && newItem.i.split("%")[1] == "post") {
+    if (checked && newItem.i.split("%")[1] == "document") {
       dispatch(removeWindow(newItem.i))
-      client.add_post_to_group(checked.i.split("%")[0], newItem.i.split("%")[0])
+      client.add_document_to_group(checked.i.split("%")[0], newItem.i.split("%")[0])
       dispatch(checkWindow({ i: checked.i, check: false }));
     }
   }

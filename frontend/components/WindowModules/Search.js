@@ -15,7 +15,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { updateWindow } from "../../actions/windows";
 
 // custom components
-import PostList from "../Posts/PostList"
+import DocumentList from "../Documents/DocumentList"
 import CloseButton from "../CloseButton"
 
 // util
@@ -24,11 +24,11 @@ import useSWRAbstract from "../../util/swr"
 
 export default function SearchWindow(props) {
   const [query, setQuery] = useState(" ");
-  const { posts, posts_loading } = useSWRAbstract("posts", `/api/cleanposts/${query}`);
+  const { documents, documents_loading } = useSWRAbstract("documents", `/api/cleandocuments/${query}`);
   const dispatch = useDispatch();
 
-  // this is a hard-coded hack for ranking of post_id
-  const data = posts ? posts.map((post) => { return [post.id, 1.0]; }) : [];
+  // this is a hard-coded hack for ranking of document_id
+  const data = documents ? documents.map((document) => { return [document.id, 1.0]; }) : [];
 
   const handleSetQuery = (e) => {
     setQuery(e.target.value);
@@ -49,7 +49,7 @@ export default function SearchWindow(props) {
         />
       </Stack>
 
-      {posts_loading ? <LoadingButton loading={true} /> : <PostList pagination={true} data={data}></PostList>}
+      {documents_loading ? <LoadingButton loading={true} /> : <DocumentList pagination={true} data={data}></DocumentList>}
     </div>
 
   );

@@ -117,7 +117,7 @@ export const Windows = createSlice({
 		selectAll: (state, action) => {
 			var temp = [...state.windows];
 			temp.forEach((w) => {
-				if (w.type == "Post") {
+				if (w.type == "Document") {
 					w.isChecked = true;		
 				}
 			})
