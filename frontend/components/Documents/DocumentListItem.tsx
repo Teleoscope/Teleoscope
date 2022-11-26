@@ -27,7 +27,7 @@ export default function DocumentListItem(props) {
   const userid = useAppSelector((state) => state.activeSessionID.value);
   const client = Stomp.getInstance();
   client.userId = userid;
-  const { document } = useSWRAbstract("document", `/api/documents/${props.id}`);
+  const { document } = useSWRAbstract("document", `/api/document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;
   const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);

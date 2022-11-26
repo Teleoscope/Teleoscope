@@ -29,7 +29,7 @@ import { Stomp } from '../Stomp'
 
 export default function Note(props) {
   const documentid = props.id.split("%")[0]
-  const { document, document_loading, document_error } = useSWRAbstract("document", `/api/documents/${documentid}`);
+  const { document, document_loading, document_error } = useSWRAbstract("document", `/api/document/${documentid}`);
   const { note, note_loading, note_error } = useSWRAbstract("note", `/api/notes/${documentid}`);
   const dispatch = useAppDispatch();
   const userid = useAppSelector((state: RootState) => state.activeSessionID.value); //value was userid

@@ -16,7 +16,7 @@ import { PreprocessText } from "../../util/Preprocessers"
 
 export default function Document(props) {
   const id = props.id.split("%")[0];
-  const { document } = useSWRAbstract("document", `/api/documents/${id}`);
+  const { document } = useSWRAbstract("document", `/api/document/${id}`);
   const text = document ? PreprocessText(document.text) : false;
 
   return (
