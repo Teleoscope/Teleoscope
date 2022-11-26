@@ -113,27 +113,27 @@ def test_add_group_missing_session_id():
 	with pytest.raises(Exception):
 		tasks.add_group((), label = "test", color = "test")
 
-# ! Test cases for add_post_to_group
+# ! Test cases for add_document_to_group
 # Case 1: Missing group id
-def test_add_post_to_group_missing_group_id():
+def test_add_document_to_group_missing_group_id():
 	with pytest.raises(Exception):
-		tasks.add_post_to_group(post_id = str(ObjectId()))
+		tasks.add_document_to_group(document_id = str(ObjectId()))
 
-# Case 2: Missing post id
-def test_add_post_to_group_missing_post_id():
+# Case 2: Missing document id
+def test_add_document_to_group_missing_document_id():
 	with pytest.raises(Exception):
-		tasks.add_post_to_group(group_id = str(ObjectId()))
+		tasks.add_document_to_group(group_id = str(ObjectId()))
 
-# ! Test cases for remove_post_from_group
+# ! Test cases for remove_document_from_group
 # Case 1: Missing group id
-def test_remove_post_from_group_missing_group_id():
+def test_remove_document_from_group_missing_group_id():
 	with pytest.raises(Exception):
-		tasks.remove_post_from_group(post_id = str(ObjectId()))
+		tasks.remove_document_from_group(document_id = str(ObjectId()))
 
-# Case 2: Missing post id
-def test_remove_post_from_group_missing_post_id():
+# Case 2: Missing document id
+def test_remove_document_from_group_missing_document_id():
 	with pytest.raises(Exception):
-		tasks.remove_post_from_group(group_id = str(ObjectId()))
+		tasks.remove_document_from_group(group_id = str(ObjectId()))
 
 # ! Test cases for update_group_label
 # Case 1: Missing group id
@@ -147,18 +147,18 @@ def test_update_group_label_missing_label():
 		tasks.update_group_label(group_id = str(ObjectId()))
 
 # ! Test cases for add_note
-# Case 1: Missing post_id
-def test_add_note_missing_post_id():
+# Case 1: Missing document_id
+def test_add_note_missing_document_id():
 	with pytest.raises(Exception):
 		tasks.add_note()
 
 # ! Test cases for update_note
-# Case 1: missing post_id
-def test_update_note_missing_post_id():
+# Case 1: missing document_id
+def test_update_note_missing_document_id():
 	with pytest.raises(Exception):
 		tasks.update_note((), content={})
 
 # Case 2: missing content
 def test_update_note_missing_content():
 	with pytest.raises(Exception):
-		tasks.update_note(post_id = '123')
+		tasks.update_note(document_id = '123')

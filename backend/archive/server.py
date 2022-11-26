@@ -77,10 +77,10 @@ async def handle(req):
 async def user_interaction(req):
     qs = req.query_string
     [q, _id, status] = [s.split("=")[1] for s in qs.split("&")]
-    logging.info(f"Running NLP model with query {q}, post id {_id}")
+    logging.info(f"Running NLP model with query {q}, document id {_id}")
     task = tasks.nlp.signature(
         args=(), 
-        kwargs={"query_string": q, "post_id":_id, "status": -1}
+        kwargs={"query_string": q, "document_id":_id, "status": -1}
     )
     print(task)
     res = task.apply_async()
@@ -98,9 +98,9 @@ async def use_model(text):
     return web.json_response(data)
 
 
-async def post_handler(request):
-    post = await request.post()
-    print("beep", post)
+async def document_handler(request):
+    document = await request.document()
+    print("beep", document)
 
 app = web.Application(
     middlewares=[
@@ -113,7 +113,7 @@ app = web.Application(
 app.add_routes([
     web.get('/', handle),
     web.get('/user-interaction/', user_interaction),
-    web.post('/post', post_handler),
+    web.document('/document', document_handler),
 
     # web.get('/query/{query}', handle_query),
     # web.get('/sims/{sims}', handle_sims)

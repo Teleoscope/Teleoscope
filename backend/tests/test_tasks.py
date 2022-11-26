@@ -81,17 +81,17 @@ def test_add_group_invalid_session_id():
 	with pytest.raises(Exception):
 		tasks.add_group((), label = "test label", color = "test color", session_id = '42')
 
-# ! Test cases for add_post_to_group
+# ! Test cases for add_document_to_group
 # Case 1: Invalid group id
-def test_add_post_to_group_invalid_group_id():
+def test_add_document_to_group_invalid_group_id():
 	with pytest.raises(Exception):
-		tasks.add_post_to_group((), post_id = '42', group_id = '42')
+		tasks.add_document_to_group((), document_id = '42', group_id = '42')
 
-# ! Test cases for remove_post_from_group
+# ! Test cases for remove_document_from_group
 # Case 2: Invalid group id
-def test_remove_post_from_group_invalid_group_id():
+def test_remove_document_from_group_invalid_group_id():
 	with pytest.raises(Exception):
-		tasks.remove_post_from_group((), post_id = '42', group_id = '42')
+		tasks.remove_document_from_group((), document_id = '42', group_id = '42')
 
 # ! Test cases for update group_label
 # Case 2: Invalid group id
@@ -100,14 +100,14 @@ def test_update_group_label_invalid_group_id():
 		tasks.update_group_label((), group_id = '42', label = 'test label')
 
 # ! Test cases for add_note
-# Case 1: Invalid post_id
-def test_add_note_invalid_post_id():
+# Case 1: Invalid document_id
+def test_add_note_invalid_document_id():
 	with pytest.raises(Exception):
-		tasks.add_note((), post_id = '42')
+		tasks.add_note((), document_id = '42')
 
 # ! Test cases for update_note
-# Case 1: Invalid post_id
-def test_update_note_invalid_post_id():
+# Case 1: Invalid document_id
+def test_update_note_invalid_document_id():
 	with pytest.raises(Exception):
-		tasks.update_note((), post_id = '42', content={})
+		tasks.update_note((), document_id = '42', content={})
 

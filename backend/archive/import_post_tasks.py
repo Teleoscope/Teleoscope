@@ -26,74 +26,74 @@ app.conf.update(
 
 
 @app.task
-def read_post(path_to_post):
+def read_document(path_to_document):
     '''
-    read_post
+    read_document
 
     input: String (Path to json file)
     output: Dict
-    purpose: This function is used to read a single post from a json file to a database
+    purpose: This function is used to read a single document from a json file to a database
     '''
     try:
-        with open(path_to_post, 'r') as f:
-            post = json.load(f)
+        with open(path_to_document, 'r') as f:
+            document = json.load(f)
     except Exception as e:
         return {'error': str(e)}
 
-    return post
+    return document
 
 
 @app.task
-def validate_post(data):
+def validate_document(data):
     '''
-    validate_post
+    validate_document
 
-    input: Dict (post)
+    input: Dict (document)
     output: Dict
-    purpose: This function is used to validate a single post.
+    purpose: This function is used to validate a single document.
             If the file is missing required fields, a dictionary with an error key is returned
     '''
     if data.get('text', "") == "" or data.get('title', "") == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
         logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
         return {'error': 'Post is missing required fields.'}
 
-    post = {
+    document = {
             'id': data['id'],
             'title': data['title'],
             'text': data['text']}
 
-    return post
+    return document
 
 
 @app.task
-def read_and_validate_post(path_to_post):
+def read_and_validate_document(path_to_document):
     '''
-    read_and_validate_post
+    read_and_validate_document
 
     input: String (Path to json file)
     output: Dict
-    purpose: This function is used to read and validate a single post from a json file to a database
+    purpose: This function is used to read and validate a single document from a json file to a database
             If the file is missing required fields, a dictionary with an error key is returned
     '''
-    with open(path_to_post) as f:
+    with open(path_to_document) as f:
             data = json.load(f)
     if data['text'] == "" or data['title'] == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
         logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
         return {'error': 'Post is missing required fields.'}
 
-    post = {
+    document = {
             'id': data['id'],
             'title': data['title'],
             'text': data['text']
     }
 
-    return post
+    return document
 
 
 @app.task
-def vectorize_post(post):
+def vectorize_document(document):
     '''
-    vectorize_post
+    vectorize_document
 
     input: Dict
     output: Dict
@@ -101,54 +101,54 @@ def vectorize_post(post):
             (Ignores dictionaries containing error keys)
     '''
     import tensorflow_hub as hub
-    if 'error' not in post:
+    if 'error' not in document:
         embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        post['vector'] = embed([post['title']]).numpy()[0].tolist()
-        post['textVector'] = embed([post['text']]).numpy()[0].tolist()
-        return post
+        document['vector'] = embed([document['title']]).numpy()[0].tolist()
+        document['textVector'] = embed([document['text']]).numpy()[0].tolist()
+        return document
     else:
-        return post
+        return document
 
 
 
 @app.task
-def add_single_post_to_database(post):
+def add_single_document_to_database(document):
     '''
-    add_single_post_to_database
+    add_single_document_to_database
 
     input: Dict
     output: void
-    purpose: This function adds a single post to the database
+    purpose: This function adds a single document to the database
             (Ignores dictionaries containing error keys)
     '''
-    if 'error' not in post:
+    if 'error' not in document:
          # Create session
         session, db = utils.create_transaction_session()
         target = db.documents 
         with session.start_transaction():
-            # Insert post into database
-            target.insert_one(post, session=session)
+            # Insert document into database
+            target.insert_one(document, session=session)
             # Commit the session with retry
             utils.commit_with_retry(session)
 
 
 @app.task
-def add_multiple_posts_to_database(posts):
+def add_multiple_documents_to_database(documents):
     '''
-    add_single_post_to_database
+    add_single_document_to_database
 
     input: List[Dict]
     output: void
-    purpose: This function adds multiple posts to the database
+    purpose: This function adds multiple documents to the database
             (Ignores dictionaries containing error keys)
     '''
-    posts = (list (filter (lambda x: 'error' not in x, posts)))
+    documents = (list (filter (lambda x: 'error' not in x, documents)))
     # Create session
     session, db = utils.create_transaction_session()
-    if len(posts) > 0:
+    if len(documents) > 0:
         target = db.documents
         with session.start_transaction():
-            # Insert posts into database
-            target.insert_many(posts, session=session)
+            # Insert documents into database
+            target.insert_many(documents, session=session)
             # Commit the session with retry
             utils.commit_with_retry(session)

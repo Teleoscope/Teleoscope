@@ -1,4 +1,4 @@
-import tasks, requests, time, json, os, import_posts
+import tasks, requests, time, json, os, import_documents
 
 url = "https://api.pushshift.io/reddit/search/submission"
 
@@ -30,7 +30,7 @@ def save_page_as_separate_files(page):
 	:param page: The page to save.
 	"""
 	for submission in page:
-		with open(os.path.join("../posts", "{}.json".format(submission["id"])), "w") as f:
+		with open(os.path.join("../documents", "{}.json".format(submission["id"])), "w") as f:
 			json.dump(submission, f)
 
 def save_page(page, curr):
@@ -38,7 +38,7 @@ def save_page(page, curr):
 
   :param page: The page to save.
   """
-  with open(f"../posts/page{curr}.json", "w") as f:
+  with open(f"../documents/page{curr}.json", "w") as f:
     json.dump(page, f)
 
 def crawl_subreddit(subreddit):
@@ -51,11 +51,11 @@ def crawl_subreddit(subreddit):
   :return: A list of submissions.
   """
   curr = 8754
-  with open(f"../posts/page8753.json", "r") as f:
+  with open(f"../documents/page8753.json", "r") as f:
     prev_page = json.load(f)
   while prev_page != []:
     prev_page = crawl_page(subreddit, prev_page)
-    #import_posts.import_multiple_posts_from_list(prev_page)
+    #import_documents.import_multiple_documents_from_list(prev_page)
     save_page(prev_page, curr)
     curr += 1
     time.sleep(3)
@@ -69,7 +69,7 @@ def page_to_database(path_to_page):
   # read page from file
   with open(path_to_page, "r") as f:
     page = json.load(f)
-  import_posts.import_multiple_posts_from_list(page)
+  import_documents.import_multiple_documents_from_list(page)
 
 crawl_subreddit('AmItheAsshole')
 

@@ -63,14 +63,14 @@ def commit_with_retry(session):
 
 def mergeCollections():
     db = connect()
-    cursor = db.clean.posts.v2.find({})
-    for post in cursor:
-        findres = list(db.documents.find({"id": post["id"]}))
+    cursor = db.clean.documents.v2.find({})
+    for document in cursor:
+        findres = list(db.documents.find({"id": document["id"]}))
         if len(findres) == 0:
-            print(post["id"], "not found")
-            db.documents.update_one({"id": post["id"]}, {"$set": post}, upsert=True)
+            print(document["id"], "not found")
+            db.documents.update_one({"id": document["id"]}, {"$set": document}, upsert=True)
         else:
-            print(post["id"], "found")
+            print(document["id"], "found")
 
 # def update_embedding(q_vector, feedback_vector, feedback):
 #     SENSITIVITY = 0.75
@@ -97,10 +97,10 @@ def moveVector(sourceVector, destinationVector, direction, magnitude):
 
     return new_q
 
-def getPostVector(db, post_id):
-    post = db.documents.find_one({"id": post_id}, projection={'textVector':1}) # get post which was liked/disliked
-    postVector = np.array(post['textVector']) # extract vector of post which was liked/disliked
-    return postVector
+def getPostVector(db, document_id):
+    document = db.documents.find_one({"id": document_id}, projection={'textVector':1}) # get document which was liked/disliked
+    documentVector = np.array(document['textVector']) # extract vector of document which was liked/disliked
+    return documentVector
 
 def loadModel():
     import tensorflow_hub as hub
@@ -113,14 +113,14 @@ def getAllPosts(db, projection, batching=True, batchSize=10000):
         allPosts = list(allPosts)
         return allPosts
     
-    # fetch all posts from mongodb in batches
+    # fetch all documents from mongodb in batches
     numSkip = 0 
     dataProcessed = 0
     allPosts = []
     while True:
         batch = db.documents.find(projection=projection).skip(numSkip).limit(batchSize)
         batch = list(batch)
-        # break if no more posts
+        # break if no more documents
         if len(batch) == 0:
             break
         allPosts += batch
@@ -131,15 +131,19 @@ def getAllPosts(db, projection, batching=True, batchSize=10000):
     
     return allPosts
 
-def calculateSimilarity(postVectors, queryVector):
-    scores = queryVector.dot(postVectors.T).flatten() # cosine similarity scores. (assumes vectors are normalized to unit length)
+def calculateSimilarity(documentVectors, queryVector):
+    '''Calculate similarity
+    '''
+    # cosine similarity scores. (assumes vectors are normalized to unit length)
+    scores = queryVector.dot(documentVectors.T).flatten() 
     return scores
 
-# create and return a list a tuples of (post_id, similarity_score) sorted by similarity score, high to low
-def rankPostsBySimilarity(posts_ids, scores):
-    return sorted([(post_id, score) for (post_id, score) in zip(posts_ids, scores)], key=lambda x:x[1], reverse=True)
+def rankPostsBySimilarity(documents_ids, scores):
+    '''Create and return a list a tuples of (document_id, similarity_score) sorted by similarity score, high to low
+    '''
+    return sorted([(document_id, score) for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
 
-# upload to GridFS
+
 def gridfsUpload(db, namespace, data, encoding='utf-8'):
     '''Uploads data to GridFS under a particular namespace.
 
@@ -149,7 +153,7 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
         namespace: string that is used to identify GridFS, 
         i.e., namespace.chunks and namespace.files
         
-        data: ordred list of tuples which are short string postid and 
+        data: ordred list of tuples which are short string documentid and 
         float score [(string, float)] returned from rankPostsBySimilarity
 
     kwargs:    
@@ -172,7 +176,7 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
 
 # Download from GridFS
 def gridfsDownload(db, namespace, oid):
-    '''Gets posts and scores from GridFS
+    '''Gets documents and scores from GridFS
 
     args:
         db: database connection object
@@ -180,7 +184,7 @@ def gridfsDownload(db, namespace, oid):
         namespace: string used to identify GridFS, i.e., namespace.chunks and namespace.files
 
     returns:
-        data: ordred list of tuples which are short string postid and 
+        data: ordred list of tuples which are short string documentid and 
         float score [(string, float)] as returned from rankPostsBySimilarity
     
     E.g.,:

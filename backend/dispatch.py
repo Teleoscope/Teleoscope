@@ -124,21 +124,21 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 }
             )
 
-        if task == "add_post_to_group":
-            res = tasks.add_post_to_group.signature(
+        if task == "add_document_to_group":
+            res = tasks.add_document_to_group.signature(
                 args=(),
                 kwargs={
                     "group_id": args["group_id"],
-                    "post_id": args["post_id"]
+                    "document_id": args["document_id"]
                 }
             )
 
-        if task == "remove_post_from_group":
-            res = tasks.remove_post_from_group.signature(
+        if task == "remove_document_from_group":
+            res = tasks.remove_document_from_group.signature(
                 args=(),
                 kwargs={
                     "group_id": args["group_id"],
-                    "post_id": args["post_id"]
+                    "document_id": args["document_id"]
                 }
             )
 
@@ -155,7 +155,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.add_note.signature(
                 args=(),
                 kwargs={
-                    "post_id": args["post_id"],
+                    "document_id": args["document_id"],
                 }
             )
 
@@ -163,7 +163,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.update_note.signature(
                 args=(),
                 kwargs={
-                    "post_id": args["post_id"],
+                    "document_id": args["document_id"],
                     "content": args["content"],
                 }
             )

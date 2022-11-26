@@ -7,7 +7,7 @@ allPosts = utils.getAllPosts(db, projection={'id':1, 'textVector':1, '_id':0}, b
 ids = [x['id'] for x in allPosts]
 vecs = np.array([x['textVector'] for x in allPosts])
 
-np.savez('~/embeddings/embeddings.npz', posts=vecs)
+np.savez('~/embeddings/embeddings.npz', documents=vecs)
 
 with open('~/embeddings/ids.pkl', 'wb') as handle:
     pkl.dump(ids, handle, protocol=pkl.HIGHEST_PROTOCOL)

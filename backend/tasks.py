@@ -240,7 +240,7 @@ def initialize_teleoscope(*args, **kwargs):
                         "positive_docs": [],
                         "negative_docs": [],
                         "stateVector": [],
-                        "ranked_post_ids": None,
+                        "ranked_document_ids": None,
                         "action": "Initialize Teleoscope",
                         "user": user_id,
                     }
@@ -315,7 +315,7 @@ def save_teleoscope_state(*args, **kwargs):
         utils.commit_with_retry(session)
 
 @app.task 
-def add_group(*args, human=True, included_posts=[], **kwargs):
+def add_group(*args, human=True, included_documents=[], **kwargs):
     """
     Adds a group to the group collection and links newly created group to corresponding session.
     
@@ -347,7 +347,7 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
             {
                 "timestamp": datetime.datetime.utcnow(),
                 "color": color,
-                "included_posts": included_posts,
+                "included_documents": included_documents,
                 "label": label,
                 "action": "Initialize group",
                 "user": user_id,
@@ -395,11 +395,11 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
         logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
 
-        if len(included_posts) > 0:
+        if len(included_documents) > 0:
             logging.info(f'Reorienting teleoscope {teleoscope_result.inserted_id} for group {label}.')
             res = chain(
                     robj.s(teleoscope_id=teleoscope_result.inserted_id,
-                        positive_docs=included_posts,
+                        positive_docs=included_documents,
                         negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
                     save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
             )
@@ -409,19 +409,19 @@ def add_group(*args, human=True, included_posts=[], **kwargs):
 
 
 @app.task
-def add_post_to_group(*args, **kwargs):
+def add_document_to_group(*args, **kwargs):
     """
-    Adds a post_id to a group.
+    Adds a document_id to a group.
 
     kwargs:
         group_id: (int, represents ObjectId for a group)
-        post_id: (string, arbitrary)
+        document_id: (string, arbitrary)
     """
     session, db = utils.create_transaction_session()
 
     # handle kwargs
     group_id = ObjectId(kwargs["group_id"])
-    post_id = kwargs["post_id"]
+    document_id = kwargs["document_id"]
 
     group = db.groups.find_one({'_id': group_id})
     # Check if group exists
@@ -429,18 +429,18 @@ def add_post_to_group(*args, **kwargs):
         logging.info(f"Warning: group with id {group_id} not found.")
         raise Exception(f"group with id {group_id} not found")
 
-    # check if post has already been added
-    if post_id in group:
-        logging.info(f'Post {post_id} is already in group')
-        raise Exception(f'Post {post_id} is already in group')
+    # check if document has already been added
+    if document_id in group:
+        logging.info(f'Post {document_id} is already in group')
+        raise Exception(f'Post {document_id} is already in group')
 
     history_item = group["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
-    if post_id in history_item["included_posts"]:
-        logging.info(f'Post {post_id} already in group {group["history"][0]["label"]}.')
+    if document_id in history_item["included_documents"]:
+        logging.info(f'Post {document_id} already in group {group["history"][0]["label"]}.')
         return
-    history_item["included_posts"].append(post_id)
-    history_item["action"] = "Add post to group"
+    history_item["included_documents"].append(document_id)
+    history_item["action"] = "Add document to group"
 
     # TODO record user
 #         userid = kwargs["userid"]
@@ -461,7 +461,7 @@ def add_post_to_group(*args, **kwargs):
     logging.info(f'Reorienting teleoscope {group["teleoscope"]} for group {group["history"][0]["label"]}.')
     res = chain(
                 robj.s(teleoscope_id=str(group["teleoscope"]),
-                       positive_docs=[post_id],
+                       positive_docs=[document_id],
                        negative_docs=[]),
                 save_teleoscope_state.s()
     )
@@ -469,19 +469,19 @@ def add_post_to_group(*args, **kwargs):
     return None
 
 @app.task
-def remove_post_from_group(*args, **kwargs):
+def remove_document_from_group(*args, **kwargs):
     """
-    Remove the post_id from the included_posts of the specified group_id.
+    Remove the document_id from the included_documents of the specified group_id.
 
     kwargs:
         group_id (int, represents ObjectId for a group)
-        post_id (string, arbitrary)
+        document_id (string, arbitrary)
     """
     session, db = utils.create_transaction_session()
 
     # handle kwargs
     group_id = ObjectId(kwargs["group_id"])
-    post_id = kwargs["post_id"]
+    document_id = kwargs["document_id"]
 
     group = db.groups.find_one({'_id': group_id})
     if not group:
@@ -490,8 +490,8 @@ def remove_post_from_group(*args, **kwargs):
 
     history_item = group["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
-    history_item["included_posts"].remove(post_id)
-    history_item["action"] = "Remove post from group"
+    history_item["included_documents"].remove(document_id)
+    history_item["action"] = "Remove document from group"
 
         # TODO record user
     #         userid = kwargs["userid"]
@@ -558,18 +558,18 @@ def add_note(*args, **kwargs):
     Adds a note to the notes collection.
 
     kwargs:
-        id: post_id (string) 
+        id: document_id (string) 
     """    
-    # Try finding post
+    # Try finding document
     session, db = utils.create_transaction_session()
-    post_id = kwargs["post_id"]
+    document_id = kwargs["document_id"]
 
-    if not db.posts.find_one({'id': post_id}):
-        logging.info(f"Warning: post with id {post_id} not found.")
-        raise Exception(f"post with id {post_id} not found")
+    if not db.documents.find_one({'id': document_id}):
+        logging.info(f"Warning: document with id {document_id} not found.")
+        raise Exception(f"document with id {document_id} not found")
 
     obj = {
-        "post_id": post_id,
+        "document_id": document_id,
         "creation_time": datetime.datetime.utcnow(),
         "history": [{
             "content": {},
@@ -578,7 +578,7 @@ def add_note(*args, **kwargs):
     }
     with session.start_transaction():
         res = db.notes.insert_one(obj, session=session)
-        logging.info(f"Added note for post {post_id} with result {res}.")
+        logging.info(f"Added note for document {document_id} with result {res}.")
         utils.commit_with_retry(session)
 
 
@@ -588,19 +588,19 @@ def update_note(*args, **kwargs):
     Updates a note.
 
     kwargs:
-        post_id: string
+        document_id: string
         content: string
     """
     session, db = utils.commit_with_retry()
-    post_id = kwargs["post_id"]
+    document_id = kwargs["document_id"]
     content = kwargs["content"]
 
-    if not db.notes.find_one({'post_id': post_id}):
-        logging.info(f"Warning: note with id {post_id} not found.")
-        raise Exception(f"note with id {post_id} not found")
+    if not db.notes.find_one({'document_id': document_id}):
+        logging.info(f"Warning: note with id {document_id} not found.")
+        raise Exception(f"note with id {document_id} not found")
 
     with session.start_transaction():
-        res = db.notes.update_one({"post_id": post_id}, {"$push":
+        res = db.notes.update_one({"document_id": document_id}, {"$push":
                 {
                     "history": {
                         "$each": [{
@@ -612,7 +612,7 @@ def update_note(*args, **kwargs):
                 }
             }, session=session)
         utils.commit_with_retry(session)
-        logging.info(f"Updated note for post {post_id} with result {res}.")
+        logging.info(f"Updated note for document {document_id} with result {res}.")
 
 
 @app.task
@@ -622,7 +622,7 @@ def cluster_by_groups(*args, **kwargs):
 
     kwargs:
 
-        teleoscope_oid: GridFS OID address for ranked posts. 
+        teleoscope_oid: GridFS OID address for ranked documents. 
         Note this assumes that a teleoscope has already been created for this group.
 
         group_id_strings: list(string) where the strings are MongoDB ObjectID format
@@ -677,7 +677,7 @@ class reorient(Task):
     """
 
     def __init__(self):
-        self.postsCached = False
+        self.documentsCached = False
         self.allPostIDs = None
         self.allPostVectors = None
         self.db = None
@@ -696,22 +696,22 @@ class reorient(Task):
             loadPosts = np.load(npzpath.as_posix(), allow_pickle=False)
             with open(pklpath.as_posix(), 'rb') as handle:
                 self.allPostIDs = pickle.load(handle)
-            self.allPostVectors = loadPosts['posts']
-            self.postsCached = True
+            self.allPostVectors = loadPosts['documents']
+            self.documentsCached = True
         else:
             logging.info("Posts are not cached, building cache now.")
             db = utils.connect()
             allPosts = utils.getAllPosts(db, projection={'id':1, 'textVector':1, '_id':0}, batching=True, batchSize=10000)
             ids = [x['id'] for x in allPosts]
-            logging.info(f'There are {len(ids)} ids in posts.')
+            logging.info(f'There are {len(ids)} ids in documents.')
             vecs = np.array([x['textVector'] for x in allPosts])
 
-            np.savez(npzpath.as_posix(), posts=vecs)
+            np.savez(npzpath.as_posix(), documents=vecs)
             with open(pklpath.as_posix(), 'wb') as handle:
                 pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
             self.allPostIDs = ids
             self.allPostVectors = vecs
-            self.postsCached = True
+            self.documentsCached = True
         return
 
 
@@ -773,8 +773,8 @@ class reorient(Task):
         # either positive or negative docs should have at least one entry
         if len(positive_docs) == 0 and len(negative_docs) == 0:
             # if both are empty, then cache stuff if not cached alreadt
-            # Check if post ids and vectors are cached
-            if self.postsCached == False:
+            # Check if document ids and vectors are cached
+            if self.documentsCached == False:
                 self.cachePostsData()
 
             # Check if db connection is cached
@@ -785,8 +785,8 @@ class reorient(Task):
             logging.info(f'No positive or negative docs specified for teleoscope {teleoscope_id}.')
             return 200 # trival pass
 
-        # Check if post ids and vectors are cached
-        if self.postsCached == False:
+        # Check if document ids and vectors are cached
+        if self.documentsCached == False:
             self.cachePostsData()
 
         # Check if db connection is cached
@@ -833,7 +833,7 @@ class reorient(Task):
                 'positive_docs': positive_docs,
                 'negative_docs': negative_docs,
                 'stateVector': qprime.tolist(),
-                'ranked_post_ids': ObjectId(str(gridfs_id)),
+                'ranked_document_ids': ObjectId(str(gridfs_id)),
                 'rank_slice': rank_slice
             }
         }
@@ -846,74 +846,74 @@ robj = app.register_task(reorient())
 #################################################################
 
 @app.task
-def read_post(path_to_post):
+def read_document(path_to_document):
     '''
-    read_post
+    read_document
 
     input: String (Path to json file)
     output: Dict
-    purpose: This function is used to read a single post from a json file to a database
+    purpose: This function is used to read a single document from a json file to a database
     '''
     try:
-        with open(path_to_post, 'r') as f:
-            post = json.load(f)
+        with open(path_to_document, 'r') as f:
+            document = json.load(f)
     except Exception as e:
         return {'error': str(e)}
 
-    return post
+    return document
 
 
 @app.task
-def validate_post(data):
+def validate_document(data):
     '''
-    validate_post
+    validate_document
 
-    input: Dict (post)
+    input: Dict (document)
     output: Dict
-    purpose: This function is used to validate a single post.
+    purpose: This function is used to validate a single document.
             If the file is missing required fields, a dictionary with an error key is returned
     '''
     if data.get('text', "") == "" or data.get('title', "") == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
         logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
         return {'error': 'Post is missing required fields.'}
 
-    post = {
+    document = {
             'id': data['id'],
             'title': data['title'],
             'text': data['text']}
 
-    return post
+    return document
 
 
 @app.task
-def read_and_validate_post(path_to_post):
+def read_and_validate_document(path_to_document):
     '''
-    read_and_validate_post
+    read_and_validate_document
 
     input: String (Path to json file)
     output: Dict
-    purpose: This function is used to read and validate a single post from a json file to a database
+    purpose: This function is used to read and validate a single document from a json file to a database
             If the file is missing required fields, a dictionary with an error key is returned
     '''
-    with open(path_to_post) as f:
+    with open(path_to_document) as f:
             data = json.load(f)
     if data['text'] == "" or data['title'] == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
         logging.info(f"Post {data['id']} is missing required fields. Post not imported.")
         return {'error': 'Post is missing required fields.'}
 
-    post = {
+    document = {
             'id': data['id'],
             'title': data['title'],
             'text': data['text']
     }
 
-    return post
+    return document
 
 
 @app.task
-def vectorize_post(post):
+def vectorize_document(document):
     '''
-    vectorize_post
+    vectorize_document
 
     input: Dict
     output: Dict
@@ -921,54 +921,54 @@ def vectorize_post(post):
             (Ignores dictionaries containing error keys)
     '''
     import tensorflow_hub as hub
-    if 'error' not in post:
+    if 'error' not in document:
         embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        post['vector'] = embed([post['title']]).numpy()[0].tolist()
-        post['textVector'] = embed([post['text']]).numpy()[0].tolist()
-        return post
+        document['vector'] = embed([document['title']]).numpy()[0].tolist()
+        document['textVector'] = embed([document['text']]).numpy()[0].tolist()
+        return document
     else:
-        return post
+        return document
 
 
 
 @app.task
-def add_single_post_to_database(post):
+def add_single_document_to_database(document):
     '''
-    add_single_post_to_database
+    add_single_document_to_database
 
     input: Dict
     output: void
-    purpose: This function adds a single post to the database
+    purpose: This function adds a single document to the database
             (Ignores dictionaries containing error keys)
     '''
-    if 'error' not in post:
+    if 'error' not in document:
          # Create session
         session, db = utils.create_transaction_session()
         target = db.documents 
         with session.start_transaction():
-            # Insert post into database
-            target.insert_one(post, session=session)
+            # Insert document into database
+            target.insert_one(document, session=session)
             # Commit the session with retry
             utils.commit_with_retry(session)
 
 
 @app.task
-def add_multiple_posts_to_database(posts):
+def add_multiple_documents_to_database(documents):
     '''
-    add_single_post_to_database
+    add_single_document_to_database
 
     input: List[Dict]
     output: void
-    purpose: This function adds multiple posts to the database
+    purpose: This function adds multiple documents to the database
             (Ignores dictionaries containing error keys)
     '''
-    posts = (list (filter (lambda x: 'error' not in x, posts)))
+    documents = (list (filter (lambda x: 'error' not in x, documents)))
     # Create session
     session, db = utils.create_transaction_session()
-    if len(posts) > 0:
+    if len(documents) > 0:
         target = db.documents
         with session.start_transaction():
-            # Insert posts into database
-            target.insert_many(posts, session=session)
+            # Insert documents into database
+            target.insert_many(documents, session=session)
             # Commit the session with retry
             utils.commit_with_retry(session)
