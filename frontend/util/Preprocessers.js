@@ -19,7 +19,7 @@ export function PreprocessTitle(title) {
 
       return ret;
    } else {
-      return "Post Loading..."; 
+      return "Document Loading..."; 
    }
 };
 

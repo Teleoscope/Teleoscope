@@ -27,45 +27,45 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
     logging.info(f'Getting all groups in {group_ids}.')
     groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
 
-    # default to ordering posts relative to first group's teleoscope
+    # default to ordering documents relative to first group's teleoscope
     teleoscope_oid = groups[0]["teleoscope"]
     teleoscope = db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
 
 
     # get Teleoscope from GridFS
-    logging.info("Getting ordered posts...")
-    all_ordered_posts = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope["history"][0]["ranked_post_ids"])))
-    ordered_posts = all_ordered_posts[0:limit]
-    logging.info(f'Posts downloaded. Top post is {ordered_posts[0]} and length is {len(ordered_posts)}')
-    limit = min(limit, len(ordered_posts))
+    logging.info("Getting ordered documents...")
+    all_ordered_documents = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope["history"][0]["ranked_document_ids"])))
+    ordered_documents = all_ordered_documents[0:limit]
+    logging.info(f'Documents downloaded. Top document is {ordered_documents[0]} and length is {len(ordered_documents)}')
+    limit = min(limit, len(ordered_documents))
     
     # projection includes only fields we want
-    projection = {'id': 1, 'selftextVector': 1}
+    projection = {'id': 1, 'textVector': 1}
 
     # cursor is a generator which means that it yields a new doc one at a time
-    logging.info("Getting posts cursor and building post vector and id list...")
-    cursor = db.clean.posts.v3.find(
+    logging.info("Getting documents cursor and building document vector and id list...")
+    cursor = db.documents.find(
         # query
-        {"id":{"$in": [post[0] for post in ordered_posts]}},
+        {"id":{"$in": [document[0] for document in ordered_documents]}},
         projection=projection,
-        # batch size means number of posts at a time taken from MDB, no impact on iteration 
+        # batch size means number of documents at a time taken from MDB, no impact on iteration 
         batch_size=500
     )
 
-    post_ids = []
-    post_vectors = []
+    document_ids = []
+    document_vectors = []
 
     # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
     # can accept generators for lazy calculation 
-    for post in tqdm.tqdm(cursor, total=limit):
-        post_ids.append(post["id"])
-        post_vectors.append(post["selftextVector"])
+    for document in tqdm.tqdm(cursor, total=limit):
+        document_ids.append(document["id"])
+        document_vectors.append(document["textVector"])
         
     logging.info("Creating data np.array...")
     
-    # initialize labels to array of -1 for each post # e.g., (600000,)
+    # initialize labels to array of -1 for each document # e.g., (600000,)
     # assuming a sparse labeling scheme
-    data = np.array(post_vectors)
+    data = np.array(document_vectors)
     labels = np.full(data.shape[0], -1)
 
     label = 1
@@ -76,19 +76,19 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
     for group in groups:
         label_count = 0
         # grab latest history item for each group
-        group_post_ids = group["history"][0]["included_posts"]
+        group_document_ids = group["history"][0]["included_documents"]
         # save label just in case (not pushed to MongoDB, only local)
         group["label"] = label
-        # get the index of each post_id so that it's aligned with the label np.array
+        # get the index of each document_id so that it's aligned with the label np.array
         indices = []
-        for id in group_post_ids:
+        for id in group_document_ids:
             try:
-                post_ids.index(id)
+                document_ids.index(id)
             except:
                 logging.info(f'{id} not in current slice. Attempting to retreive from database...')
-                post = db.clean.posts.v3.find_one({"id": id}, projection=projection)
-                post_ids.append(id)
-                vector = np.array(post["selftextVector"]).reshape((1, 512))
+                document = db.documents.find_one({"id": id}, projection=projection)
+                document_ids.append(id)
+                vector = np.array(document["textVector"]).reshape((1, 512))
                 data = np.append(data, vector, axis=0)
                 labels = np.append(labels, -1)
                 
@@ -114,11 +114,11 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
     logging.info(f'The dict now contains {cluster_stats_dict}.')
 
     # for garbage collection
-    del ordered_posts
+    del ordered_documents
     del cursor
     gc.collect()
 
-    logging.info(f'Post data np.array has shape {data.shape}.') # e.g., (600000, 512)
+    logging.info(f'Document data np.array has shape {data.shape}.') # e.g., (600000, 512)
 
     logging.info("Running UMAP embedding.")
     fitter = umap.UMAP(verbose=True,
@@ -140,25 +140,21 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
     label_array = np.array(hdbscan_labels)
 
     for hdbscan_label in set(hdbscan_labels):
-        post_indices_scalar = np.where(label_array == hdbscan_label)[0]
-        logging.info(f'Post indices is {post_indices_scalar[0]}.')
-        post_indices = [int(i) for i in post_indices_scalar]
-        posts = []
-        for i in post_indices:
-            posts.append(post_ids[i])
+        document_indices_scalar = np.where(label_array == hdbscan_label)[0]
+        logging.info(f'Document indices is {document_indices_scalar[0]}.')
+        document_indices = [int(i) for i in document_indices_scalar]
+        documents = []
+        for i in document_indices:
+            documents.append(document_ids[i])
         
-        logging.info(f'There are {len(posts)} posts for MLGroup {hdbscan_label}.')
-        cluster_label_count = len(posts)
-        #added_count = cluster_label_count - tagged_with_label[]
-        # TODO: FIX THIS
-        added_count = 99999
-        logging.info(f'There are now {cluster_label_count} documents in the MLGroup {hdbscan_label}, {added_count} documents have moved into this cluster.')
+        logging.info(f'There are {len(documents)} documents for MLGroup {hdbscan_label}.')
         tasks.add_group(
             human=False, 
             session_id=session_oid, 
             color="#8c564b",
-            included_posts=posts, 
-            label=int(hdbscan_label)
+            included_documents=documents, 
+            label=int(hdbscan_label),
+            username="clustering"
         )
 
     # drawing plots

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Head from "next/head";
 
 import { Provider } from "react-redux";
@@ -9,28 +9,23 @@ import { SWRConfig } from 'swr'
 import store from "../stores/store";
 
 // custom components
-import Workspace from "../components/Workspace";
-
+import Workspace from '../components/Workspace';
 import clientPromise from '../util/mongodb';
 
-// contexts
-import { StompContext, client } from "../context/StompContext"
-
 // API fetcher for SWR global config
-const fetcher = (...args) => fetch(...args).then((res) => res.json())
+//const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
+const fetcher = (...args) => fetch(...args).then((res) => res.json());
+console.log("Index Fetcher", fetcher)
 
 export default function Home({ isConnected }) {
-
-
   return (
     <SWRConfig value={{ 
       fetcher: fetcher,
       errorRetryCount: 10,
       refreshInterval: 250
     }}>
-    <StompContext.Provider value={client}>
     <CookiesProvider>
-        <div className="container">
+        <div>
           <Head>
             <title>Explore Documents</title>
             <link rel="icon" href="/favicon.ico" />
@@ -43,7 +38,6 @@ export default function Home({ isConnected }) {
           </main>
         </div>
     </CookiesProvider>
-    </StompContext.Provider>
     </SWRConfig>
   );
 }
@@ -60,7 +54,7 @@ export async function getServerSideProps(context) {
     // `const db = client.db("myDatabase")`
     //
     // Then you can execute queries against your database like so:
-    // db.find({}) or any of the MongoDB Node Driver commands
+    // db.find({ }) or any of the MongoDB Node Driver commands
 
     return {
       props: { isConnected: true },
@@ -72,7 +66,7 @@ export async function getServerSideProps(context) {
     }
   }
 }
-// 
+//
 // 
 // Connect to MongoDB
 // export async function getServerSideProps(context) {

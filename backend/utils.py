@@ -63,79 +63,87 @@ def commit_with_retry(session):
 
 def mergeCollections():
     db = connect()
-    cursor = db.clean.posts.v2.find({})
-    for post in cursor:
-        findres = list(db.clean.posts.v3.find({"id": post["id"]}))
+    cursor = db.clean.documents.v2.find({})
+    for document in cursor:
+        findres = list(db.documents.find({"id": document["id"]}))
         if len(findres) == 0:
-            print(post["id"], "not found")
-            db.clean.posts.v3.update_one({"id": post["id"]}, {"$set": post}, upsert=True)
+            print(document["id"], "not found")
+            db.documents.update_one({"id": document["id"]}, {"$set": document}, upsert=True)
         else:
-            print(post["id"], "found")
+            print(document["id"], "found")
 
 # def update_embedding(q_vector, feedback_vector, feedback):
 #     SENSITIVITY = 0.75
 #     new_q = (1 - feedback * SENSITIVITY) * q_vector + feedback * SENSITIVITY * feedback_vector
 #     return new_q
 
-'''
-moveVector:
-    q_vector: query vector
-    feedback_vector: feedback vector
-    feedback: feedback value - 1 for like, -1 for dislike
 
-    returns: new query vector
-    side effects: moves the query vector towards the feedback vector by a certain amount defined by sensitivity and then norms the vector to have unit length
-'''
-# TODO: is this commutative? i.e. can we go from x -> y and then y -> x by the same reverse action?
-# TODO: 
-def moveVector(sourceVector, destinationVector, direction, magnitude = 0.50):
-    new_q = sourceVector + direction*magnitude*(destinationVector - sourceVector)
+def moveVector(sourceVector, destinationVector, direction, magnitude):
+    '''
+    moveVector:
+        sourceVector: current teleoscope search vector
+        destinationVector: new documents vector
+        direction: towards = 1, away = -1
+        magnitude: weight of new vector
+
+        returns: new query vector
+        side effects: moves the query vector towards the feedback vector by a certain amount defined by sensitivity and then norms the vector to have unit length
+    '''
+    diff_q = destinationVector - sourceVector
+    scaled_q = direction*magnitude*diff_q
+    new_q = sourceVector + scaled_q
     new_q = new_q / np.linalg.norm(new_q)
+    logging.info(f'Magnitude: {magnitude}, difference: {sourceVector - new_q}, scaled_q: {scaled_q}.')
+
     return new_q
 
-def getPostVector(db, post_id):
-    post = db.clean.posts.v3.find_one({"id": post_id}, projection={'selftextVector':1}) # get post which was liked/disliked
-    postVector = np.array(post['selftextVector']) # extract vector of post which was liked/disliked
-    return postVector
+def getDocumentVector(db, document_id):
+    document = db.documents.find_one({"id": document_id}, projection={'textVector':1}) # get document which was liked/disliked
+    documentVector = np.array(document['textVector']) # extract vector of document which was liked/disliked
+    return documentVector
 
 def loadModel():
     import tensorflow_hub as hub
     model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
     return model
 
-def getAllPosts(db, projection, batching=True, batchSize=10000):
+def getAllDocuments(db, projection, batching=True, batchSize=10000):
     if not batching:
-        allPosts = db.clean.posts.v3.find({}, projection=projection)
-        allPosts = list(allPosts)
-        return allPosts
+        allDocuments = db.documents.find({}, projection=projection)
+        allDocuments = list(allDocuments)
+        return allDocuments
     
-    # fetch all posts from mongodb in batches
+    # fetch all documents from mongodb in batches
     numSkip = 0 
     dataProcessed = 0
-    allPosts = []
+    allDocuments = []
     while True:
-        batch = db.clean.posts.v3.find(projection=projection).skip(numSkip).limit(batchSize)
+        batch = db.documents.find(projection=projection).skip(numSkip).limit(batchSize)
         batch = list(batch)
-        # break if no more posts
+        # break if no more documents
         if len(batch) == 0:
             break
-        allPosts += batch
+        allDocuments += batch
         dataProcessed += len(batch)
         logging.info(dataProcessed)
         print(dataProcessed)
         numSkip += batchSize
     
-    return allPosts
+    return allDocuments
 
-def calculateSimilarity(postVectors, queryVector):
-    scores = queryVector.dot(postVectors.T).flatten() # cosine similarity scores. (assumes vectors are normalized to unit length)
+def calculateSimilarity(documentVectors, queryVector):
+    '''Calculate similarity
+    '''
+    # cosine similarity scores. (assumes vectors are normalized to unit length)
+    scores = queryVector.dot(documentVectors.T).flatten() 
     return scores
 
-# create and return a list a tuples of (post_id, similarity_score) sorted by similarity score, high to low
-def rankPostsBySimilarity(posts_ids, scores):
-    return sorted([(post_id, score) for (post_id, score) in zip(posts_ids, scores)], key=lambda x:x[1], reverse=True)
+def rankDocumentsBySimilarity(documents_ids, scores):
+    '''Create and return a list a tuples of (document_id, similarity_score) sorted by similarity score, high to low
+    '''
+    return sorted([(document_id, score) for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
 
-# upload to GridFS
+
 def gridfsUpload(db, namespace, data, encoding='utf-8'):
     '''Uploads data to GridFS under a particular namespace.
 
@@ -145,8 +153,8 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
         namespace: string that is used to identify GridFS, 
         i.e., namespace.chunks and namespace.files
         
-        data: ordred list of tuples which are short string postid and 
-        float score [(string, float)] returned from rankPostsBySimilarity
+        data: ordred list of tuples which are short string documentid and 
+        float score [(string, float)] returned from rankDocumentsBySimilarity
 
     kwargs:    
         encoding: string representing text encoding
@@ -168,7 +176,7 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
 
 # Download from GridFS
 def gridfsDownload(db, namespace, oid):
-    '''Gets posts and scores from GridFS
+    '''Gets documents and scores from GridFS
 
     args:
         db: database connection object
@@ -176,8 +184,8 @@ def gridfsDownload(db, namespace, oid):
         namespace: string used to identify GridFS, i.e., namespace.chunks and namespace.files
 
     returns:
-        data: ordred list of tuples which are short string postid and 
-        float score [(string, float)] as returned from rankPostsBySimilarity
+        data: ordred list of tuples which are short string documentid and 
+        float score [(string, float)] as returned from rankDocumentsBySimilarity
     
     E.g.,:
         args:

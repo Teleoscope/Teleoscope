@@ -5,6 +5,7 @@ import ActiveHistoryItem from "../actions/activeHistoryItem"
 import Bookmark from "../actions/bookmark"
 import Groups from '../actions/groups'
 import Windows from '../actions/windows'
+import Teleoscopes from '../actions/teleoscopes'
 
 const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ const store = configureStore({
     bookmarker: Bookmark,
     grouper: Groups,
     windows: Windows,
+    teleoscopes: Teleoscopes
   },
   middleware: (getDefaultMiddleware) => 
     getDefaultMiddleware({
@@ -30,7 +32,7 @@ const store = configureStore({
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>
-// Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
+// Inferred type: {documents: DocumentsState, comments: CommentsState, users: UsersState}
 export type AppDispatch = typeof store.dispatch
 
 export default store;

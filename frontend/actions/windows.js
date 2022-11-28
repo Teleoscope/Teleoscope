@@ -1,7 +1,9 @@
 // windows.js
 import { createSlice } from '@reduxjs/toolkit'
 import _ from 'lodash';
-import { getDefaultWindow } from "../components/WindowDefault"
+import { getDefaultWindow } from "../components/WindowFolder/WindowDefault"
+
+console.log("Loading windows.js");
 
 export const Windows = createSlice({
 	name: 'windows',
@@ -22,11 +24,15 @@ export const Windows = createSlice({
 				type: "FABMenu"
 			}
 		],
-		dragged: {id: "default", type: "Default"}
+		dragged: {id: "default", type: "Default"},
+		collision: true,
 	},
 	reducers: {
 		dragged: (state, action) => {
 			state.dragged = action.payload;
+		},
+		collision: (state, action) => {
+			state.collision = action.payload;
 		},
 		addWindow: (state, action) => {
 			var item = getDefaultWindow();
@@ -59,7 +65,7 @@ export const Windows = createSlice({
 			if (index > -1) {
 				var tempitem = {...temp[index]}
 				temp.splice(index, 1);
-				temp.splice(0, 0, tempitem);
+				temp.push(tempitem);
 			}
 			state.windows = temp;			
 		},
@@ -68,19 +74,20 @@ export const Windows = createSlice({
 			var ids = state.windows.map((w) => {return w.i});
 			var index = ids.indexOf(action.payload);
 			if (index > -1) {
-				temp[index].w = 1;
+				temp[index].w = 4;
 				temp[index].h = 1;
+				temp[index].x = 20;
 				temp[index].isResizable = false;
 			}
-			state.windows = temp;	
+			state.windows = temp;
 		},
 		maximizeWindow: (state, action) => {
 			var temp = [...state.windows];
 			var ids = state.windows.map((w) => {return w.i});
 			var index = ids.indexOf(action.payload);
 			if (index > -1) {
-				temp[index].w = 8;
-				temp[index].h = 6;
+				temp[index].w = 5;
+				temp[index].h = 9;
 				temp[index].isResizable = true;
 			}
 			state.windows = temp;	
@@ -110,7 +117,7 @@ export const Windows = createSlice({
 		selectAll: (state, action) => {
 			var temp = [...state.windows];
 			temp.forEach((w) => {
-				if (w.type == "Post") {
+				if (w.type == "Document") {
 					w.isChecked = true;		
 				}
 			})

@@ -9,10 +9,19 @@ console.log("User info:", userInfo);
 module.exports = {
   apps: [
     {
+      name: "dispatch",
+      cwd: "./backend",
+      script: "/usr/bin/python3",
+      args: `-m celery -A dispatch worker --loglevel=INFO -n dispatch.${userInfo.username}@%h`,
+      watch: false,
+      interpreter: "",
+      max_memory_restart: "1G"
+    },
+    {
       name: "worker",
       cwd: "./backend",
       script: "/usr/bin/python3",
-      args: `-m celery -A dispatch worker --loglevel=INFO -n worker.${userInfo.username}@%h`,
+      args: `-m celery -A tasks worker --loglevel=INFO -n worker.${userInfo.username}@%h --queues=dev-paul-task`,
       watch: false,
       interpreter: "",
       max_memory_restart: "1G"

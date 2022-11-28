@@ -6,23 +6,31 @@ export default async (req, res) => {
   const db = await client.db('aita');
   const { sessionsargs } = req.query;
   var ret;
+  var objid;
+  if (sessionsargs?.length > 0) {
+    if (sessionsargs[0] != "-1") {
+      objid = ObjectId(sessionsargs[0])
+    } else {
+      objid = -1
+    }
+  }
 
   if(!sessionsargs) {
     ret = await db.collection("sessions").find({}).toArray();
   } 
   else if (sessionsargs.length === 1) {
-    ret = await db.collection("sessions").findOne({_id: ObjectId(sessionsargs[0])});
+    ret = await db.collection("sessions").findOne({_id: objid});
   } 
   else if (sessionsargs.length === 2 && sessionsargs[1] === "groups") {
     // returns groups
     var groups = await db.collection("groups").find({}).toArray();
-    var session = await db.collection("sessions").findOne({_id: ObjectId(sessionsargs[0])});
-    var sessionGroups = session.history[0].groups.map((group) => {
+    var session = await db.collection("sessions").findOne({_id: objid});
+    var sessionGroups = session?.history[0].groups.map((group) => {
       return group.toString();
     });
     var filteredGroups = groups.filter((group) => {
       var g = group._id.toString();
-      if (sessionGroups.includes(g)) {
+      if (sessionGroups?.includes(g)) {
         return true;
       } else {
         return false;
@@ -32,13 +40,13 @@ export default async (req, res) => {
   } 
   else if (sessionsargs.length === 2 && sessionsargs[1] === "clusters") {
     var clusters = await db.collection("clusters").find({}).toArray();
-    var session = await db.collection("sessions").findOne({_id: ObjectId(sessionsargs[0])});
-    var sessionClusters = session.history[0].clusters.map((cluster) => {
+    var session = await db.collection("sessions").findOne({_id: objid});
+    var sessionClusters = session?.history[0].clusters.map((cluster) => {
       return cluster.toString();
     });
     var filteredClusters = clusters.filter((cluster) => {
       var c = cluster._id.toString();
-      if (sessionClusters.includes(c)) {
+      if (sessionClusters?.includes(c)) {
         return true;
       } else {
         return false;
@@ -49,13 +57,13 @@ export default async (req, res) => {
   else if (sessionsargs.length === 2 && sessionsargs[1] === "teleoscopes") {
     // returns teleoscopes
     var teleoscopes = await db.collection("teleoscopes").find({}).toArray();
-    var session = await db.collection("sessions").findOne({_id: ObjectId(sessionsargs[0])});
-    var session_teleoscopes = session.history[0].teleoscopes.map((t_id) => {
+    var session = await db.collection("sessions").findOne({_id: objid});
+    var session_teleoscopes = session?.history[0].teleoscopes.map((t_id) => {
       return t_id.toString();
     });
     var filtered_teleoscopes = teleoscopes.filter((teleoscope) => {
       var t = teleoscope._id.toString();
-      if (session_teleoscopes.includes(t)) {
+      if (session_teleoscopes?.includes(t)) {
         return true;
       } else {
         return false;

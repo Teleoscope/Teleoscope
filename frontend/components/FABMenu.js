@@ -5,7 +5,7 @@ import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 import SpeedDialAction from '@mui/material/SpeedDialAction';
 
 // custom
-import MenuActions from "../components/ContextMenuActions"
+import MenuActions from "./Context/ContextMenuActions"
 
 // actions
 import { addWindow } from "../actions/windows";
@@ -16,15 +16,15 @@ export default function FABMenu(props) {
   const dispatch = useDispatch();
   const session_id = useSelector((state) => state.activeSessionID.value);
   const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
-  const actions = MenuActions();
-
-  const get_color = () => {
-    if (session) {
-      return session.history[0].color
-    }
-    return "#4E5CBC"
+  const actions = {
+    'Search': MenuActions()['Search'],
+    'Teleoscopes': MenuActions()['Teleoscopes'],
+    'Groups': MenuActions()['Groups'],
+    'Clusters': MenuActions()['Clusters']
   }
   
+  const get_color = () => session ? session.history[0].color : "#4E5CBC"
+
 
   return (
     <SpeedDial
