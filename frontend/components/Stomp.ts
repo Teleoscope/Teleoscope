@@ -100,7 +100,7 @@ export class Stomp {
    */
   publish(body: Body) {
     var headers = { content_type: "application/json", content_encoding: "utf-8" };
-    body['userid'] = this.userId;
+    body['args']['userid'] = this.userId;
     this.client.publish({
       destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,
       headers: headers,
