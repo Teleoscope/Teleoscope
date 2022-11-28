@@ -10,7 +10,7 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
-export default function PostTitle(props) {
+export default function DocumentTitle(props) {
    return (
       <Tooltip title={props.title} placement="top">
          <Typography

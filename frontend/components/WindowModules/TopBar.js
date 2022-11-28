@@ -26,7 +26,7 @@ import { Flare } from '@mui/icons-material';
 import { useSelector, useDispatch } from "react-redux";
 import { sessionActivator } from "../../actions/activeSessionID";
 import { loadWindows } from "../../actions/windows";
-import { loadBookmarkedPosts } from "../../actions/bookmark";
+import { loadBookmarkedDocuments } from "../../actions/bookmark";
 import { getGroups } from "../../actions/groups";
 
 // utilities
@@ -97,7 +97,7 @@ export default function TopBar(props) {
 
   const load_UI_state = () => {
     var history_item = session.history[0];
-    dispatch(loadBookmarkedPosts(history_item["bookmarks"]));
+    dispatch(loadBookmarkedDocuments(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
   }
 

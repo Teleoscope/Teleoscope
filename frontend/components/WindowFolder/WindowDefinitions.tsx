@@ -19,7 +19,7 @@ import { RootState } from '../../stores/store'
 import Notes from "../WindowModules/Notes"
 import FABMenu from "../FABMenu"
 import Group from "../Group"
-import Post from "../Posts/Post"
+import Document from "../Documents/Document"
 import TeleoscopePalette from "../WindowModules/TeleoscopePalette"
 import Teleoscope from "../Teleoscope"
 import Search from "../WindowModules/Search"
@@ -64,13 +64,13 @@ export default function WindowDefinitions() {
 			color: (d) => { return d?.history[0].color },
 			tag: "group",
 		},
-		"Post": {
+		"Document": {
 			icon: () => { return <ShortTextIcon fontSize="inherit" /> },
-			component: (w, id, color) => { return (<Post id={id} windata={w} color={color} />) },
+			component: (w, id, color) => { return (<Document id={id} windata={w} color={color} />) },
 			showWindow: false,
 			title: (d) => { return PreprocessTitle(d?.title) },
 			color: (d) => get_color(),
-			tag: "post",
+			tag: "document",
 		},
 		"Teleoscope": {
 			icon: () => { return <FlareIcon fontSize="inherit" sx={style}/> },

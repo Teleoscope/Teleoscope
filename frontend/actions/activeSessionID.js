@@ -10,7 +10,7 @@ export const ActiveSessionID = createSlice({
   },
   reducers: {
     sessionActivator: (state, action) => {
-    	var id = action.payload // value of postid
+    	var id = action.payload // value of documentid
 			state.value = id;
       console.log("Session ID updated to: ", id)
     },

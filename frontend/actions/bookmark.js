@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit'
 export const Bookmark = createSlice({
   name: 'bookmark',
   initialState: {
-    value: [], // list of string: postids 
+    value: [], // list of string: documentids 
   },
   reducers: {
     mark: (state, action) => {
@@ -11,7 +11,7 @@ export const Bookmark = createSlice({
 		// doesn't actually mutate the state because it uses the Immer library,
 			// which detects changes to a "draft state" and produces a brand new
 			// immutable state based off those changes
-	    var id = action.payload // value of postid
+	    var id = action.payload // value of documentid
 			var temp = [...state.value]
 			// add to workspace
 		var i = temp.indexOf(id)
@@ -22,13 +22,13 @@ export const Bookmark = createSlice({
 		}
 		state.value = temp
     },
-	loadBookmarkedPosts: (state, action) => {
+	loadBookmarkedDocuments: (state, action) => {
 		state.value = action.payload;
 	}
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { mark, loadBookmarkedPosts } = Bookmark.actions
+export const { mark, loadBookmarkedDocuments } = Bookmark.actions
 
 export default Bookmark.reducer

@@ -5,7 +5,6 @@ export default async (req, res) => {
   const db = await client.db('aita');
   
   const { args } = req.query;
-  console.log("cleanpost args", args)
   var queries = [];
   if (!args) {
     queries = await db.collection("documents").find({}).limit(500).toArray();

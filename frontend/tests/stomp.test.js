@@ -6,8 +6,8 @@ import {
 	initialize_teleoscope,
 	save_teleoscope_state,
 	add_group,
-	add_post_to_group,
-	remove_post_from_group,
+	add_document_to_group,
+	remove_document_from_group,
 	update_group_label,
 	add_note,
 	update_note,
@@ -51,7 +51,7 @@ test("Testing initialize_session return value.", () => {
 })
 
 // add_user_to_session() return value
-test("Testing add_post_to_group return value.", () => {
+test("Testing add_document_to_group return value.", () => {
 	expect(add_user_to_session(new DummyClient(), "paul", "62a24ba3a43e59841cacad9d"
 	)).toStrictEqual(
 		{
@@ -110,7 +110,7 @@ test("Testing save_teleoscope_state return value.", () => {
 			"positive_docs": [],
 			"negative_docs": [],
 			"stateVector": [],
-			"ranked_post_ids": "62a96ba3a43e59841cacad9d",
+			"ranked_document_ids": "62a96ba3a43e59841cacad9d",
 			"rank_slice": []}
 		 )).toStrictEqual(
 			 {
@@ -122,7 +122,7 @@ test("Testing save_teleoscope_state return value.", () => {
 						"positive_docs": [],
 						"negative_docs": [],
 						"stateVector": [],
-						"ranked_post_ids": "62a96ba3a43e59841cacad9d",
+						"ranked_document_ids": "62a96ba3a43e59841cacad9d",
 						"rank_slice": []
 					 } 
 				 }
@@ -149,35 +149,35 @@ test("Testing add_group return value.", () => {
 	);
 })
 
-// add_post_to_group() return value
-test("Testing add_post_to_group return value.", () => {
-	expect(add_post_to_group(
+// add_document_to_group() return value
+test("Testing add_document_to_group return value.", () => {
+	expect(add_document_to_group(
 		new DummyClient(),
 		"62a24ba3a43e59841cacad9d",
 		"v20r7t"
 	)).toStrictEqual(
 		{
-			"task": "add_post_to_group",
+			"task": "add_document_to_group",
 			"args": {
 				"group_id": "62a24ba3a43e59841cacad9d",
-				"post_id": "v20r7t"
+				"document_id": "v20r7t"
 			}
 		}
 	);
 })
 
-// remove_post_from_group() return value
-test("Testing remove_post_from_group return value.", () => {
-	expect(remove_post_from_group(
+// remove_document_from_group() return value
+test("Testing remove_document_from_group return value.", () => {
+	expect(remove_document_from_group(
 		new DummyClient(),
 		"62a24ba3a43e59841cacad9d",
 		"v20r7t"
 	)).toStrictEqual(
 		{
-			"task": "remove_post_from_group",
+			"task": "remove_document_from_group",
 			"args": {
 				"group_id": "62a24ba3a43e59841cacad9d",
-				"post_id": "v20r7t"
+				"document_id": "v20r7t"
 			}
 		}
 	);
@@ -209,7 +209,7 @@ test("Testing add_note return value.", () => {
 		{
 			"task": "add_note",
 			"args": {
-				"post_id": "v20r7t"
+				"document_id": "v20r7t"
 			}
 		}
 	);
@@ -225,7 +225,7 @@ test("Testing update_note return value.", () => {
 		{
 			"task": "update_note",
 			"args": {
-				"post_id": "v20r7t",
+				"document_id": "v20r7t",
 				"content": "lorem ipsum dolor"
 			}
 		}

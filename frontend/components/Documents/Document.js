@@ -2,7 +2,7 @@
 import React from "react";
 
 // custom
-import PostText from "./PostText"
+import DocumentText from "./DocumentText"
 import GroupSelector from "../GroupSelector"
 import NoteButton from "../WindowModules/NoteButton"
 
@@ -14,10 +14,10 @@ import Divider from '@mui/material/Divider';
 import useSWRAbstract from "../../util/swr"
 import { PreprocessText } from "../../util/Preprocessers"
 
-export default function Post(props) {
+export default function Document(props) {
   const id = props.id.split("%")[0];
-  const { post } = useSWRAbstract("post", `/api/posts/${id}`);
-  const text = post ? PreprocessText(post.text) : false;
+  const { document } = useSWRAbstract("document", `/api/document/${id}`);
+  const text = document ? PreprocessText(document.text) : false;
 
   return (
     <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
@@ -27,7 +27,7 @@ export default function Post(props) {
         <GroupSelector id={id} />
       </Stack>
       <Divider />
-      <PostText text={text} />
+      <DocumentText text={text} />
 
       <Divider sx={{margin: 5}}/>
     </div>

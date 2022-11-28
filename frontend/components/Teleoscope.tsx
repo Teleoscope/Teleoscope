@@ -19,7 +19,7 @@ import { RootState } from '../stores/store'
 import { setMagnitude } from "../actions/teleoscopes";
 
 // custom components
-import PostList from "./Posts/PostList"
+import DocumentList from "./Documents/DocumentList"
 
 // util
 import useSWRAbstract from "../util/swr"
@@ -52,7 +52,7 @@ export default function Teleoscope(props) {
           <DiscreteSlider />
         </Stack>
         <Divider />
-        {teleoscope ? <PostList pagination={true} data={data}></PostList> : <LoadingButton loading={true} />}
+        {teleoscope ? <DocumentList pagination={true} data={data}></DocumentList> : <LoadingButton loading={true} />}
       </div>
     )
 

@@ -18,11 +18,11 @@ export default function BookmarkSelector(props) {
    const bookmarked = useSelector((state) => state.bookmarker.value);
    const marked = bookmarked.includes(props.id);
 
-   const postID = props.id;
+   const documentID = props.id;
 
    return (
       <IconButton
-         onClick={() => dispatch(mark(postID))}
+         onClick={() => dispatch(mark(documentID))}
       >
          {marked ?
             <StarOutlinedIcon color="secondary" style={{ fontSize: 15 }} />

@@ -248,14 +248,14 @@ add_group(label: string, color: string, session_id: string) {
 }
 
 /**
- * Add a post to a group.
+ * Add a document to a group.
  */
-add_post_to_group(group_id: string, post_id: string) {
+add_document_to_group(group_id: string, document_id: string) {
   var body = {
-    task: 'add_post_to_group',
+    task: 'add_document_to_group',
     args: {
       group_id: group_id,
-      post_id: post_id
+      document_id: document_id
     }
   }
   this.publish(body);
@@ -263,14 +263,14 @@ add_post_to_group(group_id: string, post_id: string) {
 }
 
 /**
- * Remove a post from a group.
+ * Remove a document from a group.
  */
-remove_post_from_group(group_id: string, post_id: string) {
+remove_document_from_group(group_id: string, document_id: string) {
   var body = {
-    task: 'remove_post_from_group',
+    task: 'remove_document_from_group',
     args: {
       group_id: group_id,
-      post_id: post_id
+      document_id: document_id
     }
   }
   this.publish(body);
@@ -293,13 +293,13 @@ update_group_label(group_id: string, label: string) {
 }
 
 /**
- * Request to add a note for a particular post.
+ * Request to add a note for a particular document.
  */
-add_note(post_id: string) {
+add_note(document_id: string) {
   var body = {
     task: 'add_note',
     args: {
-      post_id: post_id,
+      document_id: document_id,
     }
   }
   this.publish(body);
@@ -309,11 +309,11 @@ add_note(post_id: string) {
 /**
  * Updates a note's content.
  */
-update_note(post_id: string, content) {
+update_note(document_id: string, content) {
   var body = {
     task: 'update_note',
     args: {
-      post_id: post_id,
+      document_id: document_id,
       content: content
     }
   }
@@ -341,7 +341,7 @@ reorient(teleoscope_id: string, positive_docs: Array<string>, negative_docs: Arr
 }
 
 /**
- * Create MLGroups using the UMAP and HBDSCAN with the given groups' posts as seeds.
+ * Create MLGroups using the UMAP and HBDSCAN with the given groups' documents as seeds.
  */
 cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {
   var body = {
