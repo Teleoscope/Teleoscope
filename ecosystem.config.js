@@ -12,7 +12,7 @@ module.exports = {
       name: "dispatch",
       cwd: "./backend",
       script: "/usr/bin/python3",
-      args: `-m celery -A dispatch worker --loglevel=INFO -n dispatch.${userInfo.username}@%h --queues=dev-paul-dispatch`,
+      args: `-m celery -A dispatch worker --loglevel=INFO -n dispatch.${userInfo.username}@%h`,
       watch: false,
       interpreter: "",
       max_memory_restart: "1G"
