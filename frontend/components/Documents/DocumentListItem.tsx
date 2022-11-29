@@ -24,7 +24,7 @@ import { PreprocessTitle } from "../../util/Preprocessers"
 import { Stomp } from '../Stomp'
 
 export default function DocumentListItem(props) {
-  const userid = useAppSelector((state) => state.activeSessionID.value);
+  const userid = useAppSelector((state) => state.activeSessionID.userid);
   const client = Stomp.getInstance();
   client.userId = userid;
   const { document } = useSWRAbstract("document", `/api/document/${props.id}`);
