@@ -22,7 +22,7 @@ import useSWRAbstract from "../../util/swr"
 import { Stomp } from '../Stomp'
 
 export default function ContextMenu(props) {
-    const userid = useAppSelector((state: RootState) => state.activeSessionID.value);
+    const userid = useAppSelector((state: RootState) => state.activeSessionID.userid);
     const client = Stomp.getInstance();
     client.userId = userid;
 
