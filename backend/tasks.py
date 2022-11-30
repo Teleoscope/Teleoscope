@@ -407,6 +407,68 @@ def add_group(*args, human=True, included_documents=[], **kwargs):
         
         return groups_res.inserted_id
 
+@app.task
+def copy_group(*args, **kwargs):
+    """
+    copies a group
+
+    kwargs:
+        userid: (int, represents ObjectId for a group)
+        label: (string, arbitrary)
+        session_id:  (int, represent ObjectId for current session)
+        group_id: (int, represent ObjectId for a group to be copies(
+    """
+    session, db = utils.create_transaction_session()
+
+    # handle kwargs
+    user = kwargs["userid"]
+
+    label = kwargs["label"]
+
+    session_id_str = kwargs["session_id"]
+    session_id = ObjectId(str(session_id_str))
+    session = db.sessions.find_one({"_id": session_id})
+
+    group_id = ObjectId(kwargs["group_id"])
+    group_to_copy = db.groups.find_one({'_id': group_id})
+    group_copy_history = group_to_copy["history"][0]
+    color = group_copy_history["color"]
+    include_posts = group_copy_history["included_posts"]
+
+    # create a new group for the session
+    group_new_id = add_group(userid=user, label=label, color=color, session_id=session_id_str)
+    group_new = db.groups.find_one({'_id': group_new_id})
+
+    # copy over appropriate data from group to be copied
+    group_new_history = group_new["history"][0]
+    group_new_history["timestamp"] = datetime.datetime.utcnow()
+    group_new_history["included_posts"] = include_posts
+    group_new_history["action"] = f"Copying {group_id} data"
+    group_new_history["user"] = user
+
+    with session.start_transaction():
+        db.groups.update_one({'_id': group_new_id}, {
+                "$push":
+                    {
+                        "history": {
+                            "$each": [group_new_history],
+                            "$position": 0
+                        }
+                    }
+                }, session=session)
+        utils.commit_with_retry(session)
+
+    # TODO update teleoscope (?)
+    res = chain(
+                robj.s(teleoscope_id=str(group_new["teleoscope"]),
+                       positive_docs=[],
+                       negative_docs=[]),
+                save_teleoscope_state.s()
+    )
+    res.apply_async()
+
+    return None
+
 
 @app.task
 def add_document_to_group(*args, **kwargs):
