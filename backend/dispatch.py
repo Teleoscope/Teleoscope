@@ -124,6 +124,17 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 }
             )
 
+        if task == "copy_group":
+            res = tasks.copy_group.signature(
+                args=(),
+                kwargs={
+                    "userid": args["userid"],
+                    "label": args["label"],
+                    "session_id": args["session_id"],
+                    "group_id": args["group_id"],
+                }
+            )
+
         if task == "add_document_to_group":
             res = tasks.add_document_to_group.signature(
                 args=(),
