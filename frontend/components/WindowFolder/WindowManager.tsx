@@ -37,7 +37,7 @@ const collides = (l1, l2) => {
 }
 
 export default function WindowManager(props) {
-  const userid = useAppSelector((state: RootState) => state.activeSessionID.value); // value was userid
+  const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); // value was userid
   const client = Stomp.getInstance();
   client.userId = userid;
   const windows = useAppSelector((state: RootState) => state.windows.windows);

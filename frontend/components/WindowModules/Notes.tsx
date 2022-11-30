@@ -32,7 +32,7 @@ export default function Note(props) {
   const { document, document_loading, document_error } = useSWRAbstract("document", `/api/document/${documentid}`);
   const { note, note_loading, note_error } = useSWRAbstract("note", `/api/notes/${documentid}`);
   const dispatch = useAppDispatch();
-  const userid = useAppSelector((state: RootState) => state.activeSessionID.value); //value was userid
+  const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); //value was userid
   const client = Stomp.getInstance();
   client.userId = userid;
   const editor = React.useRef(null);
