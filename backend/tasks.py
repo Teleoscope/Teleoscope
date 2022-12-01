@@ -442,7 +442,9 @@ def copy_group(*args, **kwargs):
     print(f'Copying ({group_id}) as new group named: {label}')
 
     # create a new group for the session
-    group_new_id = add_group(userid=user, label=label, color=color, session_id=session_id_str)
+    group_new_id = add_group(userid=userid, label=label, color=color, session_id=session_id_str)
+    print(f'Add new group ({group_new_id})')
+
     group_new = db.groups.find_one({'_id': group_new_id})
 
     # copy over appropriate data from group to be copied
@@ -472,6 +474,8 @@ def copy_group(*args, **kwargs):
                 save_teleoscope_state.s()
     )
     res.apply_async()
+
+    print(f'Update new group data')
 
     return None
 
