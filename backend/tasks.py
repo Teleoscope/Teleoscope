@@ -435,6 +435,8 @@ def copy_group(*args, **kwargs):
     color = group_copy_history["color"]
     include_posts = group_copy_history["included_posts"]
 
+    print(f'copying {group_id} as new group {label}')
+
     # create a new group for the session
     group_new_id = add_group(userid=user, label=label, color=color, session_id=session_id_str)
     group_new = db.groups.find_one({'_id': group_new_id})

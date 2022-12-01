@@ -82,7 +82,7 @@ export default function GroupPalette(props) {
             console.log('session id: ', sessionValue.label)
             console.log('group id (old): ', groupValue.label._id)
             console.log('group name (new): ', groupName.label)
-            // client.copy_group(sessionValue.label, groupValue.label._id, groupName.label)
+            client.copy_group(sessionValue.label, groupValue.label._id, groupName.label)
             handleClose()
         } else {
             console.log('ERROR - NO GROUP SELECTED')
@@ -195,7 +195,6 @@ export default function GroupPalette(props) {
                        <FormHelperText>Select Group</FormHelperText>
 
                    </FormControl>
-                        {/*<Stack direction="row" alignItems="center" style={{ margin: 1 }}>*/}
 
                     <FormControl
                            sx={{ width: 200, backgroundColor: 'white', }}
@@ -205,7 +204,6 @@ export default function GroupPalette(props) {
                           id="filled-helperText"
                           label="Group Name"
                           defaultValue={defaultGroupName()}
-                          // helperText="rename group"
                           variant="filled"
                           onChange={(event) =>
                               setGroupName({label: event.target.value})
