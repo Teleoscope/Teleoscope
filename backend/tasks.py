@@ -443,7 +443,7 @@ def copy_group(*args, **kwargs):
 
     # create a new group for the session
     group_new_id = add_group(userid=userid, label=label, color=color, session_id=session_id_str)
-    print(f'Add new group ({group_new_id})')
+    logging.info(f'Add new group ({group_new_id})')
 
     group_new = db.groups.find_one({'_id': group_new_id})
 
@@ -466,7 +466,6 @@ def copy_group(*args, **kwargs):
                 }, session=transaction_session)
         utils.commit_with_retry(transaction_session)
 
-    # TODO update teleoscope (?)
     res = chain(
                 robj.s(teleoscope_id=str(group_new["teleoscope"]),
                        positive_docs=included_documents,
@@ -475,7 +474,7 @@ def copy_group(*args, **kwargs):
     )
     res.apply_async()
 
-    print(f'Update new group data')
+    logging.info(f'Update new group data')
 
     return None
 
