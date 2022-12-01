@@ -504,11 +504,6 @@ def add_document_to_group(*args, **kwargs):
     history_item["included_documents"].append(document_id)
     history_item["action"] = "Add document to group"
 
-    # TODO record user
-#         userid = kwargs["userid"]
-#         user = db.users.find_one({"_id": userid})
-#         history_item["user"] = user
-
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
                 "$push":
@@ -555,11 +550,6 @@ def remove_document_from_group(*args, **kwargs):
     history_item["included_documents"].remove(document_id)
     history_item["action"] = "Remove document from group"
 
-        # TODO record user
-    #         userid = kwargs["userid"]
-    #         user = db.users.find_one({"_id": userid})
-    #         history_item["user"] = user
-
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
             "$push":
@@ -595,11 +585,6 @@ def update_group_label(*args, **kwargs):
     history_item = group["history_item"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Update group label"
-
-        # TODO record user
-    #         userid = kwargs["userid"]
-    #         user = db.users.find_one({"_id": userid})
-    #         history_item["user"] = user
 
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {

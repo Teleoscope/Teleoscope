@@ -18,6 +18,8 @@ import FolderIcon from '@mui/icons-material/Folder';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import Diversity2Icon from '@mui/icons-material/Diversity2';
+import {Box, FormControl, FormHelperText, IconButton, InputLabel, MenuItem, Select, Typography} from "@mui/material";
+import CheckIcon from '@mui/icons-material/Check';
 
 // actions
 import useSWRAbstract from "../../util/swr"
@@ -29,7 +31,6 @@ import { dragged } from "../../actions/windows";
 // contexts
 import { Stomp } from '../Stomp'
 import randomColor from "randomcolor";
-import {Box, FormControl, FormHelperText, IconButton, InputLabel, MenuItem, Select} from "@mui/material";
 import { useCookies } from "react-cookie";
 import ConnectingAirportsIcon from "@mui/icons-material/ConnectingAirports";
 
@@ -61,23 +62,45 @@ export default function GroupPalette(props) {
       }
    };
 
+    const resetGroupInfo = () => {
+        setGroupValue({label: null});
+        setGroupName({label: null});
+    };
+
    const handleClickOpen = () => {
       toggleOpen(true);
    };
 
    const handleClose = () => {
       setSessionValue({label: ''});
-      setGroupValue({label: null});
-      setGroupName({label: null});
+      resetGroupInfo()
       toggleOpen(false);
+   };
+
+    const submitCopyGroup = () => {
+        if (groupValue.label && groupName.label) {
+            console.log('session id: ', sessionValue.label)
+            console.log('group id (old): ', groupValue.label._id)
+            console.log('group name (new): ', groupName.label)
+            // client.copy_group(sessionValue.label, groupValue.label._id, groupName.label)
+            handleClose()
+        } else {
+            console.log('ERROR - NO GROUP SELECTED')
+        }
+    };
+
+   const groupChange = (e) => {
+       if (e.target.value == "This session has no groups...") {
+           resetGroupInfo()
+       } else {
+           setGroupValue({label: e.target.value})
+           setGroupName({label: `${e.target.value.history[0].label} copy`})
+       }
+
    };
 
    const defaultGroupName = () => {
        if (groupName.label) {return `${groupName.label}`}
-       else if (groupValue.label) {
-           groupName.label = `${groupValue.label.history[0].label} copy`
-           return groupName.label
-       }
        else {return null}
     }
 
@@ -94,7 +117,7 @@ export default function GroupPalette(props) {
          }
       }
       return (
-          <MenuItem value={"No sessions for this user..."}>No sessions for this user...</MenuItem>
+          <MenuItem value={null}>No sessions for this user...</MenuItem>
       )
    }
 
@@ -117,47 +140,46 @@ export default function GroupPalette(props) {
          }
       }
       return (
-          <MenuItem value={"No session selected..."}>No session selected...</MenuItem>
+          <MenuItem value={null}>No session selected...</MenuItem>
       )
    }
 
    const CopyGroup = () => {
       return (
           <Dialog open={open} onClose={handleClose}>
-             <DialogTitle>Copy Group</DialogTitle>
+             <DialogTitle>
+                 <Typography align="center">Copy Group</Typography>
+                 </DialogTitle>
              <DialogContent>
                 <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
+                    <Stack direction="column" spacing={1} justifyContent="space-between" alignItems="center" style={{ margin: 0 }}>
+
 
                     {/* maybe start using autocomplete combo boxes?*/}
                    <FormControl
                        sx={{ width: 200, backgroundColor: 'white', }}
                        variant="filled"
                    >
-                      <InputLabel id="demo-simple-select-helper-label">Select Session</InputLabel>
+                      <InputLabel id="demo-simple-select-helper-label">Session</InputLabel>
                       <Select
                           labelId="demo-simple-select-helper-label"
                           id="demo-simple-select-helper"
                           value={sessionValue.label}
                           label="Session"
                           size="small"
-                          onChange={(event) =>
-                              setSessionValue({
-                                 label: event.target.value,
-                              })
-                          }
+                          onChange={(event) => setSessionValue({label: event.target.value})}
                       >
                          {getSessions(cookies.user)}
                       </Select>
+                       <FormHelperText>Select Session</FormHelperText>
+
                    </FormControl>
-
-
-
 
                    <FormControl
                        sx={{ width: 200, backgroundColor: 'white', }}
                        variant="filled"
                    >
-                      <InputLabel id="demo-simple-select-helper-label">Select Group</InputLabel>
+                      <InputLabel id="demo-simple-select-helper-label">Group</InputLabel>
 
                       {/* maybe start using autocomplete combo boxes?*/}
                       <Select
@@ -166,50 +188,40 @@ export default function GroupPalette(props) {
                           value={groupValue.label}
                           label="Group"
                           size="small"
-                          onChange={(event) =>
-                              setGroupValue({label: event.target.value})
-                          }
+                          onChange={(event) => groupChange(event)}
                       >
                          {getGroups(sessionValue.label)}
                       </Select>
+                       <FormHelperText>Select Group</FormHelperText>
+
                    </FormControl>
-
-
+                        {/*<Stack direction="row" alignItems="center" style={{ margin: 1 }}>*/}
 
                     <FormControl
                            sx={{ width: 200, backgroundColor: 'white', }}
                            variant="filled"
-                       >
+                    >
                       <TextField
-                          id="standard-helperText"
+                          id="filled-helperText"
                           label="Group Name"
                           defaultValue={defaultGroupName()}
-                          helperText="name the group you are copying..."
-                          variant="standard"
+                          // helperText="rename group"
+                          variant="filled"
                           onChange={(event) =>
-                              setGroupName({
-                                 label: event.target.value,
-                              })
+                              setGroupName({label: event.target.value})
                           }
                       />
-                   </FormControl>
+                        <FormHelperText>Rename Group</FormHelperText>
 
+                    </FormControl>
+                            <IconButton
+                                onClick={() => {submitCopyGroup()}}
+                            >
+                                <CheckIcon />
+                            </IconButton>
+                    </Stack>
                 </Box>
              </DialogContent>
-             <DialogActions>
-                <Button
-                    type="submit"
-                    onClick={() => {
-                        console.log('sv', sessionValue.label)
-                        console.log('gv', groupValue.label._id)
-                        console.log('gn', groupName.label)
-
-                       // client.copy_group(sessionValue.label, groupValue.label._id, groupName.label)
-                       handleClose()
-                    }}
-                >Add
-                </Button>
-             </DialogActions>
           </Dialog>
       )
    }
