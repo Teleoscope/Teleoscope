@@ -84,6 +84,8 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
         for id in group_document_ids:
             try:
                 document_ids.index(id)
+                # is the below line needed??
+                # indices.append(index)
             except:
                 logging.info(f'{id} not in current slice. Attempting to retreive from database...')
                 document = db.documents.find_one({"id": id}, projection=projection)
@@ -139,7 +141,9 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
 
     label_array = np.array(hdbscan_labels)
 
+    cluster_label_dict = {}
     for hdbscan_label in set(hdbscan_labels):
+        cluster_label_dict[cluster_label] = np.count_nonzero(label_array == cluster_label)
         document_indices_scalar = np.where(label_array == hdbscan_label)[0]
         logging.info(f'Document indices is {document_indices_scalar[0]}.')
         document_indices = [int(i) for i in document_indices_scalar]
