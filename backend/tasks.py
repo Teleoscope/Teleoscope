@@ -421,7 +421,11 @@ def copy_group(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session()
 
     # handle kwargs
-    user = kwargs["userid"]
+    userid = kwargs["userid"]
+    user = db.users.find_one({"_id": ObjectId(str(userid))})
+    user_id = "1"
+    if user != None:
+        user_id = user['_id']
 
     label = kwargs["label"]
 
@@ -445,8 +449,8 @@ def copy_group(*args, **kwargs):
     group_new_history = group_new["history"][0]
     group_new_history["timestamp"] = datetime.datetime.utcnow()
     group_new_history["included_documents"] = included_documents
-    group_new_history["action"] = f"Copying {group_id} data"
-    group_new_history["user"] = user
+    group_new_history["action"] = f"Copying group ({group_id}) data"
+    group_new_history["user"] = user_id
 
     with transaction_session.start_transaction():
         db.groups.update_one({'_id': group_new_id}, {
