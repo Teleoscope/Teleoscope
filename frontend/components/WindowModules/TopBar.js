@@ -24,7 +24,7 @@ import { Flare } from '@mui/icons-material';
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { sessionActivator } from "../../actions/activeSessionID";
+import { sessionActivator, setUserId } from "../../actions/activeSessionID";
 import { loadWindows } from "../../actions/windows";
 import { loadBookmarkedDocuments } from "../../actions/bookmark";
 import { getGroups } from "../../actions/groups";
@@ -66,6 +66,11 @@ export default function TopBar(props) {
 
   // Helper functions
   const handleCookie = (username) => {
+
+    fetch(`http://localhost:3000/api/user/${username}`)
+    .then((response) => response.json())
+    .then((data) => dispatch(setUserId(data._id)));
+
     setCookie("user", username, {
       path: "/"
     });
