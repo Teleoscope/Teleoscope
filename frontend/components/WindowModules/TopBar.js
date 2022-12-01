@@ -61,7 +61,7 @@ export default function TopBar(props) {
   const userid = useSelector((state) => state.activeSessionID.userid);
   const client = Stomp.getInstance();
   client.userId = userid;
-
+  const [dialogValue, setDialogValue] = React.useState({label: '',});
   const dispatch = useDispatch();
 
   // Helper functions
@@ -83,7 +83,7 @@ export default function TopBar(props) {
     dispatch(getGroups(value))
   }
 
-  // gets all users that are not in the cuurent session's userlist
+  // gets all users that are not in the current session's userlist
   const getUsers = () => {
 
     if (session) {
@@ -109,9 +109,7 @@ export default function TopBar(props) {
   const get_label = () => session.history[0].label;
   const get_color = () => session ? session.history[0].color : "#4E5CBC"
 
-  const [dialogValue, setDialogValue] = React.useState({
-    label: '',
-  });
+
 
   const handleClickOpen = () => {
     toggleOpen(true);
