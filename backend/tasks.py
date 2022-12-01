@@ -433,7 +433,7 @@ def copy_group(*args, **kwargs):
     group_to_copy = db.groups.find_one({'_id': group_id})
     group_copy_history = group_to_copy["history"][0]
     color = group_copy_history["color"]
-    include_posts = group_copy_history["included_posts"]
+    included_documents = group_copy_history["included_documents"]
 
     print(f'copying {group_id} as new group {label}')
 
@@ -444,7 +444,7 @@ def copy_group(*args, **kwargs):
     # copy over appropriate data from group to be copied
     group_new_history = group_new["history"][0]
     group_new_history["timestamp"] = datetime.datetime.utcnow()
-    group_new_history["included_posts"] = include_posts
+    group_new_history["included_documents"] = included_documents
     group_new_history["action"] = f"Copying {group_id} data"
     group_new_history["user"] = user
 
