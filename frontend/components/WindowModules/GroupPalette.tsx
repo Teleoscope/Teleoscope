@@ -126,7 +126,7 @@ export default function GroupPalette(props) {
       let obj = sessions.find(ss => ss._id == selectedSession)
 
       if (obj) {
-         let groups = obj.history[0].groups
+         let groups = obj.history[0]?.groups
          let grps = useSWRAbstract("groups", `/api/sessions/${selectedSession}/groups`)
 
          if (groups.length == 0) {
@@ -134,7 +134,7 @@ export default function GroupPalette(props) {
          }
 
          else {
-            return grps.groups.map((g) => {
+            return grps.groups?.map((g) => {
                return (<MenuItem value={g}>{g?.history[0].label}</MenuItem>)
             })
          }

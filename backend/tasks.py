@@ -469,7 +469,7 @@ def copy_group(*args, **kwargs):
     # TODO update teleoscope (?)
     res = chain(
                 robj.s(teleoscope_id=str(group_new["teleoscope"]),
-                       positive_docs=[],
+                       positive_docs=included_documents,
                        negative_docs=[]),
                 save_teleoscope_state.s()
     )
