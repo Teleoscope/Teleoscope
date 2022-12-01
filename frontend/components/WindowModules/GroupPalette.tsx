@@ -6,9 +6,6 @@ import TextField from "@mui/material/TextField";
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
 import Autocomplete, {createFilterOptions} from '@mui/material/Autocomplete';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -35,7 +32,6 @@ import {useCookies} from "react-cookie";
 import ConnectingAirportsIcon from "@mui/icons-material/ConnectingAirports";
 
 // custom components
-
 export default function GroupPalette(props) {
     const {sessions} = useSWRAbstract("sessions", `/api/sessions/`);
     const {users} = useSWRAbstract("users", `/api/users/`);
@@ -171,7 +167,6 @@ export default function GroupPalette(props) {
                 variant="filled"
             >
                 <InputLabel id="demo-simple-select-helper-label">Group</InputLabel>
-
                 <Select
                     labelId="demo-simple-select-helper-label"
                     id="demo-simple-select-helper"
