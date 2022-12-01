@@ -470,8 +470,8 @@ def copy_group(*args, **kwargs):
     res = chain(
                 robj.s(teleoscope_id=str(group_new["teleoscope"]),
                        positive_docs=included_documents,
-                       negative_docs=[]),
-                save_teleoscope_state.s()
+                       negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
+                save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
     )
     res.apply_async()
 
@@ -529,8 +529,8 @@ def add_document_to_group(*args, **kwargs):
     res = chain(
                 robj.s(teleoscope_id=group["teleoscope"],
                        positive_docs=[document_id],
-                       negative_docs=[]),
-                save_teleoscope_state.s()
+                       negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
+                save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
     )
     res.apply_async()
     return None
