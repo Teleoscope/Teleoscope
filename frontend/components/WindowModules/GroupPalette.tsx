@@ -82,7 +82,7 @@ export default function GroupPalette(props) {
             console.log('session id: ', sessionValue.label)
             console.log('group id (old): ', groupValue.label._id)
             console.log('group name (new): ', groupName.label)
-            client.copy_group(sessionValue.label, groupValue.label._id, groupName.label)
+            client.copy_group(groupName.label, groupValue.label._id, sessionValue.label)
             handleClose()
         } else {
             console.log('ERROR - NO GROUP SELECTED')

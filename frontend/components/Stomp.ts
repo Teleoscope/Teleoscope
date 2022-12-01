@@ -254,9 +254,9 @@ copy_group(label: string, group_id: string, session_id: string) {
   var body = {
     task: 'copy_group',
     args: {
-      session_id: session_id,
       label: label,
       group_id: group_id,
+      session_id: session_id,
     }
   }
   this.publish(body);
