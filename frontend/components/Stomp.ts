@@ -248,6 +248,22 @@ add_group(label: string, color: string, session_id: string) {
 }
 
 /**
+ * Requests to copy group object in MongoDB.
+ */
+copy_group(label: string, group_id: string, session_id: string) {
+  var body = {
+    task: 'copy_group',
+    args: {
+      session_id: session_id,
+      label: label,
+      group_id: group_id,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
  * Add a document to a group.
  */
 add_document_to_group(group_id: string, document_id: string) {

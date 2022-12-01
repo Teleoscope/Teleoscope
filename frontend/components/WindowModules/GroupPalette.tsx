@@ -29,18 +29,25 @@ import { dragged } from "../../actions/windows";
 // contexts
 import { Stomp } from '../Stomp'
 import randomColor from "randomcolor";
-import { IconButton } from "@mui/material";
+import {Box, FormControl, FormHelperText, IconButton, InputLabel, MenuItem, Select} from "@mui/material";
 import { useCookies } from "react-cookie";
+import ConnectingAirportsIcon from "@mui/icons-material/ConnectingAirports";
 
 // custom components
 
 export default function GroupPalette(props) {
+   const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
+   const { users } = useSWRAbstract("users", `/api/users/`);
    const userid = useAppSelector((state) => state.activeSessionID.userid);
    const client = Stomp.getInstance();
    client.userId = userid;
    const filter = createFilterOptions();
    const dispatch = useAppDispatch();
    const [value, setValue] = React.useState(null);
+   const [sessionValue, setSessionValue] = React.useState({label: ''});
+   const [groupValue, setGroupValue] = React.useState({label: null});
+   const [groupName, setGroupName] = React.useState({label: null});
+
    const [cookies, setCookie] = useCookies(["user"]);
    const [open, toggleOpen] = React.useState(false);
    const session_id = useAppSelector((state) => state.activeSessionID.value);
@@ -53,6 +60,159 @@ export default function GroupPalette(props) {
          client.add_group(e.target.value, randomColor(), session_id)
       }
    };
+
+   const handleClickOpen = () => {
+      toggleOpen(true);
+   };
+
+   const handleClose = () => {
+      setSessionValue({label: ''});
+      setGroupValue({label: null});
+      setGroupName({label: null});
+      toggleOpen(false);
+   };
+
+   const defaultGroupName = () => {
+       if (groupName.label) {return `${groupName.label}`}
+       else if (groupValue.label) {
+           groupName.label = `${groupValue.label.history[0].label} copy`
+           return groupName.label
+       }
+       else {return null}
+    }
+
+   const getSessions = (username) => {
+      if (sessions && users) {
+         for (const i in users) {
+            let user = users[i];
+            if (user["username"] == username && user["sessions"].length > 0) {
+               return user["sessions"].map((s) => {
+                  var temp = sessions.find(ss => ss._id == s)
+                  return (<MenuItem value={s}>{temp?.history[0].label}</MenuItem>)
+               })
+            }
+         }
+      }
+      return (
+          <MenuItem value={"No sessions for this user..."}>No sessions for this user...</MenuItem>
+      )
+   }
+
+   const getGroups = (selectedSession) => {
+
+      let obj = sessions.find(ss => ss._id == selectedSession)
+
+      if (obj) {
+         let groups = obj.history[0].groups
+         let grps = useSWRAbstract("groups", `/api/sessions/${selectedSession}/groups`)
+
+         if (groups.length == 0) {
+            return <MenuItem value={"This session has no groups..."}>This session has no groups...</MenuItem>
+         }
+
+         else {
+            return grps.groups.map((g) => {
+               return (<MenuItem value={g}>{g?.history[0].label}</MenuItem>)
+            })
+         }
+      }
+      return (
+          <MenuItem value={"No session selected..."}>No session selected...</MenuItem>
+      )
+   }
+
+   const CopyGroup = () => {
+      return (
+          <Dialog open={open} onClose={handleClose}>
+             <DialogTitle>Copy Group</DialogTitle>
+             <DialogContent>
+                <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
+
+                    {/* maybe start using autocomplete combo boxes?*/}
+                   <FormControl
+                       sx={{ width: 200, backgroundColor: 'white', }}
+                       variant="filled"
+                   >
+                      <InputLabel id="demo-simple-select-helper-label">Select Session</InputLabel>
+                      <Select
+                          labelId="demo-simple-select-helper-label"
+                          id="demo-simple-select-helper"
+                          value={sessionValue.label}
+                          label="Session"
+                          size="small"
+                          onChange={(event) =>
+                              setSessionValue({
+                                 label: event.target.value,
+                              })
+                          }
+                      >
+                         {getSessions(cookies.user)}
+                      </Select>
+                   </FormControl>
+
+
+
+
+                   <FormControl
+                       sx={{ width: 200, backgroundColor: 'white', }}
+                       variant="filled"
+                   >
+                      <InputLabel id="demo-simple-select-helper-label">Select Group</InputLabel>
+
+                      {/* maybe start using autocomplete combo boxes?*/}
+                      <Select
+                          labelId="demo-simple-select-helper-label"
+                          id="demo-simple-select-helper"
+                          value={groupValue.label}
+                          label="Group"
+                          size="small"
+                          onChange={(event) =>
+                              setGroupValue({label: event.target.value})
+                          }
+                      >
+                         {getGroups(sessionValue.label)}
+                      </Select>
+                   </FormControl>
+
+
+
+                    <FormControl
+                           sx={{ width: 200, backgroundColor: 'white', }}
+                           variant="filled"
+                       >
+                      <TextField
+                          id="standard-helperText"
+                          label="Group Name"
+                          defaultValue={defaultGroupName()}
+                          helperText="name the group you are copying..."
+                          variant="standard"
+                          onChange={(event) =>
+                              setGroupName({
+                                 label: event.target.value,
+                              })
+                          }
+                      />
+                   </FormControl>
+
+                </Box>
+             </DialogContent>
+             <DialogActions>
+                <Button
+                    type="submit"
+                    onClick={() => {
+                        console.log('sv', sessionValue.label)
+                        console.log('gv', groupValue.label._id)
+                        console.log('gn', groupName.label)
+
+                       // client.copy_group(sessionValue.label, groupValue.label._id, groupName.label)
+                       handleClose()
+                    }}
+                >Add
+                </Button>
+             </DialogActions>
+          </Dialog>
+      )
+   }
 
    const runClusters = () => {
       client.cluster_by_groups(groups.map(g => g._id), session_id)
@@ -80,6 +240,8 @@ export default function GroupPalette(props) {
       />
 
       <IconButton onClick={() => runClusters()}><Diversity2Icon sx={{color: props.color}}/></IconButton>
+         <IconButton onClick={handleClickOpen}><ConnectingAirportsIcon sx={{color: props.color}}/></IconButton>
+         <CopyGroup />
 
       </Stack>
       <Divider />
