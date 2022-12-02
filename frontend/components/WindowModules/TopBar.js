@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 
 // material ui
-import { Menu, MenuItem } from "@mui/material";
+import {FormHelperText, Menu, MenuItem} from "@mui/material";
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { AppBar } from "@mui/material";
 import { Box } from "@mui/material";
@@ -61,7 +61,7 @@ export default function TopBar(props) {
   const userid = useSelector((state) => state.activeSessionID.userid);
   const client = Stomp.getInstance();
   client.userId = userid;
-  const [dialogValue, setDialogValue] = React.useState({label: '',});
+  const [dialogValue, setDialogValue] = React.useState({label: ''});
   const dispatch = useDispatch();
 
   // Helper functions
@@ -81,23 +81,6 @@ export default function TopBar(props) {
     console.log("value", value)
     dispatch(sessionActivator(value))
     dispatch(getGroups(value))
-  }
-
-  // gets all users that are not in the current session's userlist
-  const getUsers = () => {
-
-    if (session) {
-      var userlist = Object.keys(session.userlist)
-
-      return users.map((u) => {
-        if (!userlist.includes(u.username)) {
-          return (<MenuItem value={u}>{u.username}</MenuItem>)
-        }
-      })
-    }
-    return (
-      <MenuItem value={"No session selected..."}>No session selected...</MenuItem>
-    )
   }
 
   const load_UI_state = () => {
@@ -141,7 +124,7 @@ export default function TopBar(props) {
   const getSessions = (username) => {
     if (sessions && users) {
       for (const i in users) {
-        var user = users[i];
+        let user = users[i];
         if (user["username"] == username && user["sessions"].length > 0) {
           return user["sessions"].map((s) => {
             var temp = sessions.find(ss => ss._id == s)
@@ -155,17 +138,17 @@ export default function TopBar(props) {
     )
   }
 
-  const Users = () => {
+  const getUsers = () => {
     if (session) {
       var userlist = Object.keys(session.userlist)
       return users.map((u) => {
-        if (!userlist.includes(u.username)) {
-          return (<MenuItem value={u}>{u.username}</MenuItem>)
+        if (!userlist.includes(u.username) && u._id != userid) {
+          return (<MenuItem value={u.username}>{u.username}</MenuItem>)
         }
       })
     }
     return (
-      <MenuItem value={"No session selected..."}>No session selected...</MenuItem>
+      <MenuItem value={null}>No session selected...</MenuItem>
     )
   }
 
@@ -264,19 +247,19 @@ export default function TopBar(props) {
               sx={{ width: 200, backgroundColor: 'white', }}
               variant="filled"
             >
-              <InputLabel id="demo-simple-select-label">Session</InputLabel>
-              <InputLabel id="demo-simple-select-label">User</InputLabel>
+              <InputLabel id="demo-simple-select-helper-label">User</InputLabel>
               <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                onChange={(event) =>
-                  setDialogValue({
-                    label: event.target.value.username,
-                  })
-                }
+                  labelId="demo-simple-select-helper-label"
+                  id="demo-simple-select-helper"
+                  value={dialogValue.label}
+                  label="User"
+                  onChange={(event) => {
+                    setDialogValue({label: event.target.value})
+                  }}
               >
-                <Users />
+                {getUsers()}
               </Select>
+              <FormHelperText>Select User</FormHelperText>
             </FormControl>
           </Box>
         </DialogContent>
@@ -285,6 +268,7 @@ export default function TopBar(props) {
           <Button
             type="submit"
             onClick={() => {
+              console.log(`Add session contributor ${dialogValue.label}.`)
               client.add_user_to_session(dialogValue.label, session_id)
               handleClose()
             }}
