@@ -89,10 +89,7 @@ export default function TopBar(props) {
     dispatch(loadWindows(history_item["windows"]));
   }
 
-  const get_label = () => session.history[0].label;
   const get_color = () => session ? session.history[0].color : "#4E5CBC"
-
-
 
   const handleClickOpen = () => {
     toggleOpen(true);
@@ -125,30 +122,38 @@ export default function TopBar(props) {
     if (sessions && users) {
       for (const i in users) {
         let user = users[i];
-        if (user["username"] == username && user["sessions"].length > 0) {
+        if (user["username"] === username && user["sessions"].length > 0) {
           return user["sessions"].map((s) => {
-            var temp = sessions.find(ss => ss._id == s)
+            let temp = sessions.find(ss => ss._id === s)
             return (<MenuItem value={s}>{temp?.history[0].label}</MenuItem>)
           })
         }
       }
     }
     return (
-      <MenuItem value={"No sessions for this user..."}>No sessions for this user...</MenuItem>
+      <MenuItem value={null}>No sessions for this user...</MenuItem>
     )
   }
 
   const getUsers = () => {
     if (session) {
-      var userlist = Object.keys(session.userlist)
+      let owner = session.userlist.owner
+      let contributors = session.userlist.contributors
+
+      // check if all users have already been added to session
+      if (contributors.length + 1 === users.length) {
+        return <MenuItem value={'No users to be added...'}>No users to be added...</MenuItem>
+      }
+
+      // show all users that are not already in userlist
       return users.map((u) => {
-        if (!userlist.includes(u._id) && u._id != userid) {
+        if (!owner.includes(u._id) && !contributors.includes(u._id)) {
           return (<MenuItem value={u}>{u.username}</MenuItem>)
         }
       })
     }
     return (
-      <MenuItem value={null}>No session selected...</MenuItem>
+      <MenuItem value={''}>No session selected...</MenuItem>
     )
   }
 
@@ -250,7 +255,7 @@ export default function TopBar(props) {
               <Select
                   labelId="demo-simple-select-helper-label"
                   id="demo-simple-select-helper"
-                  value={dialogValue.label} // PRINT PLEASE
+                  value={dialogValue.label}
                   label="User"
                   onChange={(event) => setDialogValue({label: event.target.value})}
               >
