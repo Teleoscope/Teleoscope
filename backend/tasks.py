@@ -144,28 +144,20 @@ def add_user_to_session(*args, **kwargs):
     """
     transaction_session, db = utils.create_transaction_session()
 
-    logging.info(f'adding user to {kwargs["session_id"]}.')
+    logging.info(f'Adding {kwargs["contributor"]} to {kwargs["session_id"]}.')
 
-    # session_id needs to be typecast to ObjectId
+    # handle session id kwarg
     session_id = ObjectId(str(kwargs["session_id"]))
     session = db.sessions.find_one({"_id": session_id})
 
-    # userid = kwargs["contributor"]
-    # user = db.users.find_one({"_id": userid})
-    # username = user["username"]
-
-    # curr_uid = kwargs["userid"]
-    # curr_user = db.users.find_one({"_id": ObjectId(str(curr_uid))})
-    # curr_user_id = "1"
-    # if curr_user != None:
-    #     curr_user_id = curr_user['_id']
-
+    # handle user kwarg
     uid = kwargs["userid"]
     user = db.users.find_one({"_id": ObjectId(str(uid))})
     user_id = "1"
     if user is not None:
         user_id = user['_id']
 
+    # handle contributor kwarg
     contributor_uid = kwargs["contributor"]
     contributor = db.users.find_one({"_id": ObjectId(str(contributor_uid))})
     contributor_id = "1"
@@ -179,6 +171,7 @@ def add_user_to_session(*args, **kwargs):
         logging.info(f'User {contributor_id} is already on userlist')
         raise Exception(f'User {contributor_id} is already on userlist')
 
+    # add contributor to session's userlist
     userlist["contributors"].append(contributor_id)
 
     history_item = session["history"][0]
@@ -186,7 +179,7 @@ def add_user_to_session(*args, **kwargs):
     history_item["action"] = f"Add {contributor_id} to userlist"
     history_item["user"] = user_id
 
-    # update session with new userlist that includes collaborator
+    # update session with new userlist that includes contributor
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
             {
@@ -202,7 +195,7 @@ def add_user_to_session(*args, **kwargs):
             }, session=transaction_session)
 
         db.users.update_one(
-            {"_id": user_id},
+            {"_id": contributor_id},
             {
                 "$push": {
                     "sessions": session_id
