@@ -139,6 +139,7 @@ def add_user_to_session(*args, **kwargs):
     Add new user to session's userlist. Provide read/write access.
     kwargs:
         userid: (string, BSON ObjectId format)
+        contributor: (string, represent username of contributor to be added)
         session_id: (int, represents ObjectId in int)
     """
     transaction_session, db = utils.create_transaction_session()
@@ -149,34 +150,48 @@ def add_user_to_session(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     session = db.sessions.find_one({"_id": session_id})
 
-    userid = kwargs["userid"]
-    user = db.users.find_one({"_id": userid})
-    username = user["username"]
+    # userid = kwargs["contributor"]
+    # user = db.users.find_one({"_id": userid})
+    # username = user["username"]
 
-    curr_username = kwargs["current"]
-    curr_user = db.users.find_one({"username": curr_username})
-    curr_user_id = curr_user['_id']
+    # curr_uid = kwargs["userid"]
+    # curr_user = db.users.find_one({"_id": ObjectId(str(curr_uid))})
+    # curr_user_id = "1"
+    # if curr_user != None:
+    #     curr_user_id = curr_user['_id']
+
+    uid = kwargs["userid"]
+    user = db.users.find_one({"_id": ObjectId(str(uid))})
+    user_id = "1"
+    if user is not None:
+        user_id = user['_id']
+
+    contributor_uid = kwargs["contributor"]
+    contributor = db.users.find_one({"_id": ObjectId(str(contributor_uid))})
+    contributor_id = "1"
+    if contributor is not None:
+        contributor_id = contributor['_id']
 
     userlist = session["userlist"]
 
     # check if user has already been added
-    if username in userlist:
-        logging.info(f'User {username} is already on userlist')
-        raise Exception(f'User {username} is already on userlist')
+    if contributor_id in userlist:
+        logging.info(f'User {contributor_id} is already on userlist')
+        raise Exception(f'User {contributor_id} is already on userlist')
 
-    userlist[username] = "collaborator"
+    userlist["contributors"].append(contributor_id)
 
     history_item = session["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
-    history_item["action"] = f"Add {username} to userlist"
-    history_item["user"] = curr_user_id
+    history_item["action"] = f"Add {contributor_id} to userlist"
+    history_item["user"] = user_id
 
     # update session with new userlist that includes collaborator
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
             {
                 '$set': {
-                    "userlist" : userlist,
+                    "userlist": userlist,
                 },
                 "$push": {
                     "history": {
@@ -187,7 +202,7 @@ def add_user_to_session(*args, **kwargs):
             }, session=transaction_session)
 
         db.users.update_one(
-            {"_id": userid},
+            {"_id": user_id},
             {
                 "$push": {
                     "sessions": session_id
@@ -296,11 +311,6 @@ def save_teleoscope_state(*args, **kwargs):
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Save Teleoscope state"
 
-    # TODO record user
-#         userid = kwargs["userid"]
-#         user = db.users.find_one({"_id": userid})
-#         history_item["user"] = user
- 
     with session.start_transaction():
         result = db.teleoscopes.update_one({"_id": obj_id},
             {

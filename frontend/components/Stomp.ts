@@ -145,11 +145,11 @@ export class Stomp {
   /**
    * adds user to userlist of a session in MongoDB.
    */
-  add_user_to_session(current: string, session_id: string) {
+  add_user_to_session(contributor: string, session_id: string) {
     var body = {
       task: 'add_user_to_session',
       args: {
-        current: current,
+        contributor: contributor,
         session_id: session_id,
       }
     }

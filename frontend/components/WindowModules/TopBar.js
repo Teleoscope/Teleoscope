@@ -142,8 +142,8 @@ export default function TopBar(props) {
     if (session) {
       var userlist = Object.keys(session.userlist)
       return users.map((u) => {
-        if (!userlist.includes(u.username) && u._id != userid) {
-          return (<MenuItem value={u.username}>{u.username}</MenuItem>)
+        if (!userlist.includes(u._id) && u._id != userid) {
+          return (<MenuItem value={u}>{u.username}</MenuItem>)
         }
       })
     }
@@ -181,7 +181,6 @@ export default function TopBar(props) {
       <FormControl
         sx={{ width: 200, backgroundColor: alpha('#FFFFFF', 0.0) }}
         variant="filled"
-      
       >
         <InputLabel id="demo-simple-select-label">Session</InputLabel>
         <Select
@@ -251,11 +250,9 @@ export default function TopBar(props) {
               <Select
                   labelId="demo-simple-select-helper-label"
                   id="demo-simple-select-helper"
-                  value={dialogValue.label}
+                  value={dialogValue.label} // PRINT PLEASE
                   label="User"
-                  onChange={(event) => {
-                    setDialogValue({label: event.target.value})
-                  }}
+                  onChange={(event) => setDialogValue({label: event.target.value})}
               >
                 {getUsers()}
               </Select>
@@ -268,8 +265,8 @@ export default function TopBar(props) {
           <Button
             type="submit"
             onClick={() => {
-              console.log(`Add session contributor ${dialogValue.label}.`)
-              client.add_user_to_session(dialogValue.label, session_id)
+              console.log(`Add session contributor ${dialogValue.label.username} (${dialogValue.label._id}).`)
+              client.add_user_to_session(dialogValue.label._id, session_id)
               handleClose()
             }}
           >Add
