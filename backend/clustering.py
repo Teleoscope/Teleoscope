@@ -9,7 +9,7 @@ from bson.objectid import ObjectId
 import gc
 import tasks
 
-def cluster_by_groups(group_id_strings, session_oid, limit=100000):
+def cluster_by_groups(group_id_strings, session_oid, limit=10000):
     """Cluster documents using user-provided group ids.
 
     group_id_strings : list(string) where the strings are MongoDB ObjectID format
@@ -70,7 +70,11 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
 
     label = 1
     # add the correct labels to the label np.array
+    total_tagged = 0
+    #tagged_with_label = [None] * (len(group_id_strings)+1)
+    cluster_stats_dict = {}
     for group in groups:
+        label_count = 0
         # grab latest history item for each group
         group_document_ids = group["history"][0]["included_documents"]
         # save label just in case (not pushed to MongoDB, only local)
@@ -80,6 +84,8 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
         for id in group_document_ids:
             try:
                 document_ids.index(id)
+                # is the below line needed??
+                # indices.append(index)
             except:
                 logging.info(f'{id} not in current slice. Attempting to retreive from database...')
                 document = db.documents.find_one({"id": id}, projection=projection)
@@ -91,9 +97,24 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
         # add labels
         for i in indices:
             labels[i] = label
+            #logging.info(f'label found')
+
+        # stats for this particular label
+        label_count = np.count_nonzero(labels == label)
+        coverage = (label_count/len(ordered_posts))*100
+        total_tagged = total_tagged + label_count
+        cluster_stats_dict[label] = label_count
+        #tagged_with_label[label] = label_count
+        logging.info(f'There are {label_count} posts that have the label {label}. This is {coverage}% of the ordered posts.')
         # increment label for next loop iteration
         label = label + 1
     
+    total_coverage = (total_tagged/len(ordered_posts))*100
+    logging.info(f'Overall, there are {total_tagged} posts that have been given a human label. This is {total_coverage}% of the ordered posts.')
+    # update number of unlabelled posts
+    cluster_stats_dict[-1] = np.count_nonzero(labels == -1)
+    logging.info(f'The dict now contains {cluster_stats_dict}.')
+
     # for garbage collection
     del ordered_documents
     del cursor
@@ -120,7 +141,9 @@ def cluster_by_groups(group_id_strings, session_oid, limit=100000):
 
     label_array = np.array(hdbscan_labels)
 
+    cluster_label_dict = {}
     for hdbscan_label in set(hdbscan_labels):
+        cluster_label_dict[cluster_label] = np.count_nonzero(label_array == cluster_label)
         document_indices_scalar = np.where(label_array == hdbscan_label)[0]
         logging.info(f'Document indices is {document_indices_scalar[0]}.')
         document_indices = [int(i) for i in document_indices_scalar]
