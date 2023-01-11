@@ -17,13 +17,13 @@ import { dragged } from "../../actions/windows";
 import useSWRAbstract from "../../util/swr"
 
 
-export default function TeleoscopePalette(props) {
+export default function TeleoscopePalette() {
     const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
     const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
     const dispatch = useAppDispatch();
 
     const teleoscopes = teleoscopes_raw?.map((t) => {
-      var ret = {
+      const ret = {
         _id: t._id,
         label: t.history[0].label
       }
