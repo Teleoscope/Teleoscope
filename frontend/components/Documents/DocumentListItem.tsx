@@ -34,8 +34,7 @@ export default function DocumentListItem(props) {
   const [hover, setHover] = useState(false);
   const magnitude = useAppSelector((state: RootState) => state.teleoscopes.magnitude);
 
-
-  const showGroupIcon = props.hasOwnProperty("showGroupIcon") ? props.showGroupIcon : true;
+  const showGroupIcon = Object.prototype.hasOwnProperty.call(props, "showGroupIcon") ? props.showGroupIcon : true;
 
   const handleOrientTowards = () => {
     client.reorient(props.group.teleoscope, [props.id], [], magnitude)
@@ -79,7 +78,7 @@ export default function DocumentListItem(props) {
           <DocumentTitle title={title} noWrap={false} />
         </Stack>
 
-        {props.hasOwnProperty("group") ? (
+        {Object.prototype.hasOwnProperty.call(props, "group") ? (
         <div>
           <IconButton sx={{ width: 20, height: 20 }} onClick={() => handleOrientTowards()}>
             {<FlareIcon sx={{ '&:hover': {color: 'blue'}, width: 20, height: 20 }}></FlareIcon>}

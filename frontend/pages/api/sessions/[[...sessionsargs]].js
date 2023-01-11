@@ -7,6 +7,8 @@ export default async (req, res) => {
   const { sessionsargs } = req.query;
   var ret;
   var objid;
+  var session;
+
   if (sessionsargs?.length > 0) {
     if (sessionsargs[0] != "-1") {
       objid = ObjectId(sessionsargs[0])
@@ -24,7 +26,7 @@ export default async (req, res) => {
   else if (sessionsargs.length === 2 && sessionsargs[1] === "groups") {
     // returns groups
     var groups = await db.collection("groups").find({}).toArray();
-    var session = await db.collection("sessions").findOne({_id: objid});
+    session = await db.collection("sessions").findOne({_id: objid});
     var sessionGroups = session?.history[0].groups.map((group) => {
       return group.toString();
     });
@@ -40,7 +42,7 @@ export default async (req, res) => {
   } 
   else if (sessionsargs.length === 2 && sessionsargs[1] === "clusters") {
     var clusters = await db.collection("clusters").find({}).toArray();
-    var session = await db.collection("sessions").findOne({_id: objid});
+    session = await db.collection("sessions").findOne({_id: objid});
     var sessionClusters = session?.history[0].clusters.map((cluster) => {
       return cluster.toString();
     });
@@ -57,7 +59,7 @@ export default async (req, res) => {
   else if (sessionsargs.length === 2 && sessionsargs[1] === "teleoscopes") {
     // returns teleoscopes
     var teleoscopes = await db.collection("teleoscopes").find({}).toArray();
-    var session = await db.collection("sessions").findOne({_id: objid});
+    session = await db.collection("sessions").findOne({_id: objid});
     var session_teleoscopes = session?.history[0].teleoscopes.map((t_id) => {
       return t_id.toString();
     });

@@ -2,13 +2,6 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
-import { Provider } from "react-redux";
-import { CookiesProvider } from "react-cookie";
-import { SWRConfig } from 'swr'
-
-// store
-import store from '../stores/store';
-
 import '../styles/global.css';
 
 
@@ -20,8 +13,6 @@ function App({ Component, pageProps }) {
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [authorized, setAuthorized] = useState(false);
-
-    const fetcher = (...args) => fetch(...args).then((res) => res.json())
 
     useEffect(() => {
         // on initial load - run auth check 
