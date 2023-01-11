@@ -72,7 +72,7 @@ def initialize_session(*args, **kwargs):
                 "label": label,
                 "color": color,
                 "action": f"Initialize session",
-                "user": userid,
+                "user": ObjectId(str(userid)),
             }
         ],
     }
