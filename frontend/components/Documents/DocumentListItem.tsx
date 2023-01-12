@@ -62,7 +62,7 @@ export default function DocumentListItem(props) {
         height: "100%",
       }}
       id={props.id}
-      onDragStart={(e, data) => { dispatch(dragged({ id: props.id + "%document", type: "Document" })) }}
+      onDragStart={(e:React.DragEvent<HTMLDivElement>):void => { dispatch(dragged({ id: props.id + "%document", type: "Document" })) }}
     >
       <Stack
         direction="row"
