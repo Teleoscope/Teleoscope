@@ -17,7 +17,7 @@ import { dragged } from "../../actions/windows";
 import useSWRAbstract from "../../util/swr"
 
 
-export default function TeleoscopePalette() {
+export default function TeleoscopePalette(props) {
     const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
     const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
     const dispatch = useAppDispatch();
@@ -38,7 +38,7 @@ export default function TeleoscopePalette() {
           {teleoscopes?.map((t) => {
             return (
                 <div draggable={true}
-                    onDragStart={(e, data) => dispatch(dragged({ id: t?._id + "%teleoscope", type: "Teleoscope" }))}
+                    onDragStart={(e:React.DragEvent<HTMLDivElement>):void => {dispatch(dragged({ id: t?._id + "%teleoscope", type: "Teleoscope" }))}}
                 >
                     <ListItem>
                         <ListItemIcon><FlareIcon /></ListItemIcon>
