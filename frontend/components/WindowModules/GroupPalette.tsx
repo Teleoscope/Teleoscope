@@ -269,7 +269,7 @@ export default function GroupPalette(props) {
                     return (
                         <div
                             draggable={true}
-                            onDragStart={(e, data) => {
+                            onDragStart={(e:React.DragEvent<HTMLDivElement>):void => {
                                 dispatch(dragged({id: the_group?._id + "%group", type: "Group"}))
                             }}
                         >
