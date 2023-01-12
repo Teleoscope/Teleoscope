@@ -21,7 +21,7 @@ export default function Clusters(props) {
            return (
               <div
                  draggable={true}
-                 onDragStart={(e, data) => dispatch(dragged({ id: cluster?._id + "%clusters", type: "Cluster" }))}
+                 onDragStart={(e, data) => {dispatch(dragged({ id: cluster?._id + "%clusters", type: "Cluster" }))}}
               >
                  <ListItem>
                     <ListItemIcon>
