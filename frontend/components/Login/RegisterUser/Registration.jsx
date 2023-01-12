@@ -7,8 +7,7 @@ import * as Yup from 'yup';
 // custom components
 import { Link } from '../Link'
 import { Layout } from '../Layout/Layout'
-import { register_account } from '../../Stomp';
-import { Stomp } from './Stomp';
+import { Stomp } from '../../Stomp';
 export default Registration;
 
 function Registration() {
@@ -34,7 +33,7 @@ function Registration() {
     const { errors } = formState;
 
     function onSubmit(user) {
-        register_account(user);
+        client.register_account(user);
         router.push('login');
     }
 
