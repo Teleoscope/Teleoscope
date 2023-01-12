@@ -29,7 +29,7 @@ export default function WindowTopBar(props) {
 					>{props.icon}</IconButton>
 					<Tooltip title={props.title}>
 						<Typography
-							variant="body"
+							variant="body1"
 							component="div"
 							sx={{ pt: 0.6 }}
 						// className="drag-handle"
