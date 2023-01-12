@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -8,14 +8,11 @@ import * as Yup from 'yup';
 import { Link } from '../Link'
 import { Layout } from '../Layout/Layout'
 import { register_account } from '../../Stomp';
-
-// contexts
-import { StompContext } from '../../../context/StompContext';
-
+import { Stomp } from './Stomp';
 export default Registration;
 
 function Registration() {
-    const client = useContext(StompContext);
+    const client = Stomp.getInstance();
     const router = useRouter();
 
     // form validation rules 
