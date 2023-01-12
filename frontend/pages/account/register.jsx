@@ -12,7 +12,6 @@ import store from "../../stores/store";
 import Registration from "../../components/Login/RegisterUser/Registration";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
-console.log("Fetcher", fetcher)
 export default function Register() {
 
     return (

@@ -23,7 +23,7 @@ export default function TeleoscopePalette(props) {
     const dispatch = useAppDispatch();
 
     const teleoscopes = teleoscopes_raw?.map((t) => {
-      var ret = {
+      const ret = {
         _id: t._id,
         label: t.history[0].label
       }
@@ -38,7 +38,7 @@ export default function TeleoscopePalette(props) {
           {teleoscopes?.map((t) => {
             return (
                 <div draggable={true}
-                    onDragStart={(e, data) => dispatch(dragged({ id: t?._id + "%teleoscope", type: "Teleoscope" }))}
+                    onDragStart={(e:React.DragEvent<HTMLDivElement>):void => {dispatch(dragged({ id: t?._id + "%teleoscope", type: "Teleoscope" }))}}
                 >
                     <ListItem>
                         <ListItemIcon><FlareIcon /></ListItemIcon>

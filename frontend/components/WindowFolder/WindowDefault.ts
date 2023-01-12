@@ -1,5 +1,5 @@
 export function getDefaultWindow() {
-	var item = {
+	const item = {
 		i: "default_window",
 		x: 20,
 		y: 0,

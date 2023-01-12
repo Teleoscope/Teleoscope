@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 
 // material ui
@@ -30,20 +30,14 @@ import { loadBookmarkedDocuments } from "../../actions/bookmark";
 import { getGroups } from "../../actions/groups";
 
 // utilities
-import {
-  save_UI_state,
-  initialize_session,
-  add_user_to_session
-} from "../Stomp";
-
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../../util/swr"
-import { userService } from "../../services/user.service";
+import randomColor from 'randomcolor';
 
 // contexts
 import { Stomp } from '../Stomp'
 
-export default function TopBar(props) {
+export default function TopBar() {
 
   // constants and variables local to this functional component
   const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
@@ -56,7 +50,6 @@ export default function TopBar(props) {
   const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
   const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals], length: 1 });
-  const randomColor = require('randomcolor');
 
   const userid = useSelector((state) => state.activeSessionID.userid);
   const client = Stomp.getInstance();
