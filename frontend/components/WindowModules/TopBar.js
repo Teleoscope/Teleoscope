@@ -60,7 +60,7 @@ export default function TopBar() {
   // Helper functions
   const handleCookie = (username) => {
 
-    fetch(`http://localhost:3000/api/user/${username}`)
+    fetch(`http://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}/api/user/${username}`)
     .then((response) => response.json())
     .then((data) => dispatch(setUserId(data._id)));
 
