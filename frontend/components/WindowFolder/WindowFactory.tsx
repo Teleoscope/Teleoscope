@@ -7,10 +7,24 @@ export default function WindowFactory(props) {
 	const w = props.windata;
 	const wdefs = WindowDefinitions();
 
+	const keymap = {
+		"note": "note",
+		"fabmenu": "fabmenu",
+		"group": "group",
+		"document": "document",
+		"teleoscope": "teleoscope",
+		"teleoscopepalette": "teleoscopepalette",
+		"search": "search",
+		"grouppalette": "grouppalette",
+		"clusters": "clusters",
+		"cluster": "cluster",
+	}
 	const type = w.i.split("%")[1];
 	const id = w.i.split("%")[0];
 
-	const { data } = useSWRAbstract("data", `/api/${type}s/${id}`);
+	const key = keymap[type];
+
+	const { data } = useSWRAbstract("data", `/api/${key}/${id}`);
 
 	if (w.type == "FABMenu") {
 		return (
