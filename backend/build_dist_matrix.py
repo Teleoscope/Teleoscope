@@ -11,6 +11,7 @@ import tasks
 from sklearn.preprocessing import StandardScaler
 import numba
 from scipy.spatial import distance
+
 from sklearn.metrics.pairwise import cosine_similarity
 
 # connect to database
@@ -98,16 +99,18 @@ dist_mat = np.zeros((size,size))
 print("Building Distance Matrix of Size: ", size)
 
 for diag in range(size):
-    for row in range(size-diag):  
+    for i in range(size-diag):  
         
-        col = row + diag
+        j = i + diag
         
-        if col != row:
+        if j != i:
             
-            vec_i = document_vectors[row]
-            vec_j = document_vectors[col]
+            vec_i = document_vectors[i]
+            vec_j = document_vectors[j]
             dist = cosine_similarity([vec_i],[vec_j])[0][0]
+            dist_mat[i,j] = dist
+            dist_mat[j,i] = dist
 
-dist_mat
+print("Done")
 
 np.savez_compressed('distance_matrix', mat=dist_mat)
