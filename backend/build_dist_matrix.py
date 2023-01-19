@@ -66,8 +66,6 @@ loaded = np.load('teleo_order_docs.npz')
 document_ids = loaded['doc_ids'].tolist()
 document_vectors = loaded['doc_vecs']
 
-data = document_vectors
-
 for group in groups:
 
     # grab latest history item for each group
@@ -85,13 +83,13 @@ for group in groups:
             document = db.documents.find_one({"id": id}, projection=projection)
             document_ids.append(id)
             vector = np.array(document["textVector"]).reshape((1, 512))
-            data = np.append(data, vector, axis=0)
+            document_vectors = np.append(document_vectors, vector, axis=0)
             
             index = document_ids.index(id)
             indices.append(index)
             
     print("Document ids has the shape: ", len(document_ids))
-    print("The data has shape: ", data.shape)
+    print("The data (doc vecs) has shape: ", document_vectors.shape)
 
 size = len(document_vectors)
 dist_mat = np.zeros((size,size))
