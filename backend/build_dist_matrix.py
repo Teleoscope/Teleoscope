@@ -97,6 +97,9 @@ dist_mat = np.zeros((size,size))
 print("Building Distance Matrix of Size: ", size)
 
 for diag in range(size):
+
+    if diag % 100 == 0: print("Diag is: ", diag)
+
     for i in range(size-diag):  
         
         j = i + diag
