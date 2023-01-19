@@ -11,7 +11,6 @@ import tasks
 from sklearn.preprocessing import StandardScaler
 import numba
 from scipy.spatial import distance
-import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
 # connect to database
