@@ -11,7 +11,7 @@ import tasks
 from sklearn.preprocessing import StandardScaler
 import numba
 from scipy.spatial import distance
-
+import datetime
 from sklearn.metrics.pairwise import cosine_similarity
 
 # connect to database
@@ -95,7 +95,7 @@ size = len(document_vectors)
 dist_mat = np.zeros((size,size))
 
 print("Building Distance Matrix of Size: ", size)
-
+print("Start Time: ", datetime.datetime.utcnow())
 for diag in range(size):
 
     if diag % 100 == 0: print("Diag is: ", diag)
@@ -113,5 +113,5 @@ for diag in range(size):
             dist_mat[j,i] = dist
 
 print("Done")
-
+print("Finish Time: ", datetime.datetime.utcnow())
 np.savez_compressed('distance_matrix', mat=dist_mat)
