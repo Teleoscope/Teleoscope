@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 
 // Mui imports
 import ListItemText from "@mui/material/ListItemText";
@@ -11,8 +11,7 @@ import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 
 // actions 
-import { useAppSelector, useAppDispatch } from '../hooks'
-import { RootState } from '../stores/store'
+import { useAppSelector } from '../hooks'
 
 // contexts
 import { Stomp } from './Stomp';
@@ -53,7 +52,7 @@ export default function groupSelector(props) {
 
    const GroupIconHandler = (props) => {
       if (props.groups.length == 1) {
-         var g = props.groups[0].history[0];
+         const g = props.groups[0].history[0];
          return (
             <Tooltip title={g.label} placement="top">
                <FolderIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
@@ -61,7 +60,7 @@ export default function groupSelector(props) {
          )
       }
       if (props.groups.length > 1) {
-         var g = props.groups[0].history[0];
+         const g = props.groups[0].history[0];
          return (
             <Tooltip title={g.label} placement="top">
                <FolderCopyIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
@@ -86,7 +85,7 @@ export default function groupSelector(props) {
             open={open}
          >
             {groups ? groups.map((g) => {
-               var _id = g._id
+               const _id = g._id
 
                return (
 

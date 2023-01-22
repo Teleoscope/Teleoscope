@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Head from "next/head";
 
 import { Provider } from "react-redux";
@@ -15,7 +15,6 @@ import clientPromise from '../util/mongodb';
 // API fetcher for SWR global config
 //const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
-console.log("Index Fetcher", fetcher)
 
 export default function Home({ isConnected }) {
   return (

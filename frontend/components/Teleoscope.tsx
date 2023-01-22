@@ -1,12 +1,8 @@
 // Teleoscope.js
 import React, { useState } from 'react';
-import { useCookies } from "react-cookie";
 
 // mui
-import { styled, alpha } from '@mui/material/styles';
-import InputBase from '@mui/material/InputBase';
 import Typography from '@mui/material/Typography';
-
 import LoadingButton from '@mui/lab/LoadingButton';
 import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
@@ -29,8 +25,7 @@ export default function Teleoscope(props) {
   const { teleoscope, teleoscope_loading } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
   const magnitude = useAppSelector((state: RootState) => state.teleoscopes.magnitude);
   const dispatch = useAppDispatch();
-
-  var data = teleoscope?.history[0]["rank_slice"];
+  const data = teleoscope?.history[0]["rank_slice"];
   const DiscreteSlider = () => {
     return (
       <Box sx={{ width: "50%"}}>

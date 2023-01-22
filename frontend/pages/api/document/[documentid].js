@@ -4,6 +4,6 @@ export default async (req, res) => {
   const client = await clientPromise;
   const db = await client.db('aita');
   const { documentid } = req.query;
-  const query_meta = await db.collection("documents").findOne({ id: documentid });
-  res.json(query_meta);
+  const query = await db.collection("documents").find({ id: documentid }).project({ _id: 1, id: 1, text: 1, title: 1}).toArray();
+  res.json(query[0]);
 };

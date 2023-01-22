@@ -1,4 +1,4 @@
-import React, { useRef, useContext } from "react";
+import React from "react";
 
 import { useAppSelector, useAppDispatch } from '../../hooks'
 import { RootState } from '../../stores/store'
@@ -31,7 +31,7 @@ export default function ContextMenu(props) {
     const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
     const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
     const teleoscopes = teleoscopes_raw?.map((t) => {
-        var ret = {
+        const ret = {
             _id: t._id,
             label: t.history[0].label
         }
@@ -48,7 +48,7 @@ export default function ContextMenu(props) {
     }
 
     const handleExistingTeleoscope = (t) => {
-        var w = { ...MenuActions()["Teleoscope"].default_window };
+        const w = { ...MenuActions()["Teleoscope"].default_window };
         w.i = t + w.i;
         dispatch(addWindow(w))
         props.handleCloseContextMenu();

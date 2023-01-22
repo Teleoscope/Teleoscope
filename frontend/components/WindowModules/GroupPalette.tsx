@@ -1,12 +1,12 @@
 // GroupPalette.js
-import React, {useState, useContext} from "react";
+import React from "react";
 
 // MUI 
 import TextField from "@mui/material/TextField";
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
-import Autocomplete, {createFilterOptions} from '@mui/material/Autocomplete';
+import {createFilterOptions} from '@mui/material/Autocomplete';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
@@ -21,8 +21,6 @@ import CheckIcon from '@mui/icons-material/Check';
 // actions
 import useSWRAbstract from "../../util/swr"
 import {useAppSelector, useAppDispatch} from '../../hooks'
-import {RootState} from '../../stores/store'
-import {addWindow} from "../../actions/windows";
 import {dragged} from "../../actions/windows";
 
 // contexts
@@ -82,10 +80,10 @@ export default function GroupPalette(props) {
     const getSessions = (username) => {
         if (sessions && users) {
             for (const i in users) {
-                let user = users[i];
+                const user = users[i];
                 if (user["username"] == username && user["sessions"].length > 0) {
                     return user["sessions"].map((s) => {
-                        let temp = sessions.find(ss => ss._id == s)
+                        const temp = sessions.find(ss => ss._id == s)
                         return (<MenuItem value={s}>{temp?.history[0].label}</MenuItem>)
                     })
                 }
@@ -95,10 +93,10 @@ export default function GroupPalette(props) {
     };
 
     const getGroups = (selectedSession) => {
-        let currSession = sessions.find(ss => ss._id == selectedSession)
+        const currSession = sessions.find(ss => ss._id == selectedSession)
         if (currSession) {
-            let groups = currSession.history[0]?.groups
-            let groups_obj = useSWRAbstract("groups", `/api/sessions/${selectedSession}/groups`)
+            const groups = currSession.history[0]?.groups
+            const groups_obj = useSWRAbstract("groups", `/api/sessions/${selectedSession}/groups`)
 
             if (groups.length == 0) {
                 return <MenuItem value={null}>This session has no groups...</MenuItem>
@@ -266,12 +264,12 @@ export default function GroupPalette(props) {
 
             <List>
                 {group_labels.map((gl) => {
-                    var the_group = groups.find(g => g.history[0].label == gl);
+                    const the_group = groups.find(g => g.history[0].label == gl);
 
                     return (
                         <div
                             draggable={true}
-                            onDragStart={(e, data) => {
+                            onDragStart={(e:React.DragEvent<HTMLDivElement>):void => {
                                 dispatch(dragged({id: the_group?._id + "%group", type: "Group"}))
                             }}
                         >

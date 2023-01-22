@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Editor, EditorState, convertFromRaw, convertToRaw } from "draft-js";
 import "draft-js/dist/Draft.css";
 
@@ -6,10 +6,8 @@ import "draft-js/dist/Draft.css";
 import Stack from '@mui/material/Stack';
 import Card from '@mui/material/Card';
 import IconButton from "@mui/material/IconButton";
-import Tooltip from '@mui/material/Tooltip';
 
 // actions
-import { useDispatch } from "react-redux"
 import { removeWindow } from "../../actions/windows";
 import { useAppSelector, useAppDispatch } from '../../hooks'
 import { RootState } from '../../stores/store'
@@ -29,8 +27,8 @@ import { Stomp } from '../Stomp'
 
 export default function Note(props) {
   const documentid = props.id.split("%")[0]
-  const { document, document_loading, document_error } = useSWRAbstract("document", `/api/document/${documentid}`);
-  const { note, note_loading, note_error } = useSWRAbstract("note", `/api/notes/${documentid}`);
+  const { document } = useSWRAbstract("document", `/api/document/${documentid}`);
+  const { note } = useSWRAbstract("note", `/api/notes/${documentid}`);
   const dispatch = useAppDispatch();
   const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); //value was userid
   const client = Stomp.getInstance();
@@ -40,7 +38,7 @@ export default function Note(props) {
   const handleLoad = () => {
     if (note) {
       console.log("editor", note)
-      var item = note["history"][note["history"].length - 1];
+      const item = note["history"][note["history"].length - 1];
       if (item) {
         console.log("editor", item)
         return EditorState.createWithContent(convertFromRaw(item["content"]));
@@ -52,13 +50,13 @@ export default function Note(props) {
 
   // Handlers
   const handleBlur = () => {
-    var content = editorState.getCurrentContent();
+    const content = editorState.getCurrentContent();
     client.update_note(documentid, convertToRaw(content))
   }
 
 
   const handleFocus = () => {
-
+    console.log("focus")
   }
 
   const handleClose = () => {

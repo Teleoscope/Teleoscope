@@ -32,6 +32,7 @@ import { PreprocessTitle, PreprocessText } from "../../util/Preprocessers"
 export default function WindowDefinitions() {
 	const session_id = useSelector((state: RootState) => state.activeSessionID.value);
 	const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+	
 	const get_color = () => session ? session.history[0].color : "#FF0000"
 
 	const style = [
@@ -68,7 +69,7 @@ export default function WindowDefinitions() {
 			icon: () => { return <ShortTextIcon fontSize="inherit" /> },
 			component: (w, id, color) => { return (<Document id={id} windata={w} color={color} />) },
 			showWindow: false,
-			title: (d) => { return PreprocessTitle(d?.title) },
+			title: (d) => { console.log("title", d); return PreprocessTitle(d?.title) },
 			color: (d) => get_color(),
 			tag: "document",
 		},
@@ -86,7 +87,7 @@ export default function WindowDefinitions() {
 			showWindow: false,
 			title: () => { return `Teleoscopes` },
 			color: (d) => get_color(),
-			tag: "teleoscope",
+			tag: "teleoscopepalette",
 		},
 		"Search": {
 			icon: () => { return <SearchIcon fontSize="inherit" sx={style}/> },

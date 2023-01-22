@@ -51,7 +51,7 @@ function AddEdit(props) {
    // useForm() hook returns an object with methods for working
    // with a form including registering inputs, handling form submit,
    // resetting the form, accesing form state, and displaying errors
-   const { register, handleSubmit, rest, formState } = useForm(formOptions);
+   const { register, handleSubmit, reset, formState } = useForm(formOptions);
    const { errors } = formState;
 
    // Either creates or updates a user depending on which mode they're in

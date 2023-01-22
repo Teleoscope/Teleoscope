@@ -21,7 +21,7 @@ import { Stomp } from '../Stomp'
 const ReactGridLayout = WidthProvider(RGL);
 
 const item = (id, type) => {
-  var t = getDefaultWindow()
+  const t = getDefaultWindow()
   t.i = id;
   t.type = type;
   return t;
@@ -69,7 +69,7 @@ export default function WindowManager(props) {
 
   const handleDragStop = (layout, newItem) => {
     dispatch(loadWindows(layout))
-    var checked = windows.find(w => w.isChecked && w.type == "Group");
+    const checked = windows.find(w => w.isChecked && w.type == "Group");
     if (checked && newItem.i.split("%")[1] == "document") {
       dispatch(removeWindow(newItem.i))
       client.add_document_to_group(checked.i.split("%")[0], newItem.i.split("%")[0])
