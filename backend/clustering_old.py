@@ -8,7 +8,6 @@ import logging
 from bson.objectid import ObjectId
 import gc
 import tasks
-from sklearn.metrics.pairwise import euclidean_distances
 
 def cluster_by_groups(group_id_strings, session_oid, limit=10000):
     """Cluster documents using user-provided group ids.
@@ -31,6 +30,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
     # default to ordering documents relative to first group's teleoscope
     teleoscope_oid = groups[0]["teleoscope"]
     teleoscope = db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
+
 
     # get Teleoscope from GridFS
     logging.info("Getting ordered documents...")
@@ -61,85 +61,97 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
         document_ids.append(document["id"])
         document_vectors.append(document["textVector"])
         
-    logging.info("Appending documents from groups to document vector and id list...")
+    logging.info("Creating data np.array...")
     
-    for group in groups:
+    # initialize labels to array of -1 for each document # e.g., (600000,)
+    # assuming a sparse labeling scheme
+    data = np.array(document_vectors)
+    labels = np.full(data.shape[0], -1)
 
+    label = 1
+    # add the correct labels to the label np.array
+    total_tagged = 0
+    #tagged_with_label = [None] * (len(group_id_strings)+1)
+    cluster_stats_dict = {}
+    for group in groups:
+        label_count = 0
         # grab latest history item for each group
         group_document_ids = group["history"][0]["included_documents"]
-
-        # check to see if a document in a group has been added, if not add it
+        # save label just in case (not pushed to MongoDB, only local)
+        group["label"] = label
+        # get the index of each document_id so that it's aligned with the label np.array
+        indices = []
         for id in group_document_ids:
             try:
                 document_ids.index(id)
-
+                # is the below line needed??
+                # indices.append(index)
             except:
+                logging.info(f'{id} not in current slice. Attempting to retreive from database...')
                 document = db.documents.find_one({"id": id}, projection=projection)
                 document_ids.append(id)
                 vector = np.array(document["textVector"]).reshape((1, 512))
-                document_vectors = np.append(document_vectors, vector, axis=0)
+                data = np.append(data, vector, axis=0)
+                labels = np.append(labels, -1)
+                
+        # add labels
+        for i in indices:
+            labels[i] = label
+            #logging.info(f'label found')
 
+        # stats for this particular label
+        label_count = np.count_nonzero(labels == label)
+        coverage = (label_count/len(ordered_posts))*100
+        total_tagged = total_tagged + label_count
+        cluster_stats_dict[label] = label_count
+        #tagged_with_label[label] = label_count
+        logging.info(f'There are {label_count} posts that have the label {label}. This is {coverage}% of the ordered posts.')
+        # increment label for next loop iteration
+        label = label + 1
+    
+    total_coverage = (total_tagged/len(ordered_posts))*100
+    logging.info(f'Overall, there are {total_tagged} posts that have been given a human label. This is {total_coverage}% of the ordered posts.')
+    # update number of unlabelled posts
+    cluster_stats_dict[-1] = np.count_nonzero(labels == -1)
+    logging.info(f'The dict now contains {cluster_stats_dict}.')
 
     # for garbage collection
     del ordered_documents
     del cursor
     gc.collect()
 
-    logging.info(f'Document vectors np.array has shape {data.shape}.') # e.g., (600000, 512)
+    logging.info(f'Document data np.array has shape {data.shape}.') # e.g., (600000, 512)
 
-    logging.info("Building distance matrix from document vectors array")
-    dm = euclidean_distances(document_vectors)
-
-    logging.info(f"Distance matrix has shape {dm.shape}.") # e.g., (10000, 10000) square matrix
-
-    # update distance matrix such that documents in the same group have distance 0
-    for group in range(len(groups)):
-        docs = groups[group]['history'][0]['included_documents']
-
-        for i in range(len(docs)):
-            index_i = document_ids.index(docs[i])
-
-            for j in range(len(docs)):
-                index_j = document_ids.index(docs[j])
-                dm[index_i, index_j] = 0 
-
-
-    logging.info("Running UMAP Reduction...")
-
+    logging.info("Running UMAP embedding.")
     fitter = umap.UMAP(verbose=True,
-                       low_memory=True,
-                       metric="precomputed", # use distance matrix
-                       n_components=5, # reduce to 5 dimensions
-    ).fit(dm)
+                       low_memory=True).fit(data, y=labels)
     
     embedding = fitter.embedding_
 
-    umap_embeddings = fitter.transform(dm)
+    umap_embeddings = fitter.transform(data)
     
-    logging.info("Clustering with HDBSCAN...")
+    logging.info("Clustering with HDBSCAN.")
 
     hdbscan_labels = hdbscan.HDBSCAN(
-        min_cluster_size=10,
+                        min_samples=10,
+                        min_cluster_size=500,
     ).fit_predict(umap_embeddings)
 
     logging.info(f'HDBScan labels are in set {set(hdbscan_labels)}.')
 
     label_array = np.array(hdbscan_labels)
-    clusters = {}
-    
+
+    cluster_label_dict = {}
     for hdbscan_label in set(hdbscan_labels):
-     
+        cluster_label_dict[cluster_label] = np.count_nonzero(label_array == cluster_label)
         document_indices_scalar = np.where(label_array == hdbscan_label)[0]
+        logging.info(f'Document indices is {document_indices_scalar[0]}.')
         document_indices = [int(i) for i in document_indices_scalar]
-        
         documents = []
         for i in document_indices:
             documents.append(document_ids[i])
         
-        clusters[hdbscan_label] = documents
-
-        logging.info(f'There are {len(documents)} documents for Machine Cluster {hdbscan_label}.')
-
+        logging.info(f'There are {len(documents)} documents for MLGroup {hdbscan_label}.')
         tasks.add_group(
             human=False, 
             session_id=session_oid, 
@@ -149,6 +161,34 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
             username="clustering"
         )
 
+    # drawing plots
+    logging.info("Drawing plots...")
+    clustered = (hdbscan_labels >= 0)
+    plt.scatter(umap_embeddings[~clustered, 0],
+                umap_embeddings[~clustered, 1],
+                color=(0.5, 0.5, 0.5),
+                s=0.1,
+                alpha=0.5)
+    plt.scatter(umap_embeddings[clustered, 0],
+                umap_embeddings[clustered, 1],
+                c=hdbscan_labels[clustered],
+                s=0.1,
+                cmap='Spectral');
+
+    plt.savefig("hdbscan.png")
+    plt.clf()
+
+    labelnames = [group["history"][0] for group in groups]
+
+    fig, ax = plt.subplots(1, figsize=(14, 10))
+    plt.scatter(*embedding.T, s=0.1, c=labels, cmap='Spectral', alpha=1.0)
+    plt.setp(ax, xticks=[], yticks=[])
+    cbar = plt.colorbar(boundaries=np.arange(len(labelnames) + 1)-0.5)
+    cbar.set_ticks(np.arange(len(labelnames)))
+    cbar.set_ticklabels(labelnames)
+    plt.title('Clusters');
+    fig.savefig('clusters.png', dpi=fig.dpi)
+    logging.info("Plots saved.")
 
 if __name__ == "__main__":
     cluster_by_groups(["62db047aaee56b83f2871510"], "62a7ca02d033034450035a91", "632ccbbdde62ba69239f6682")
