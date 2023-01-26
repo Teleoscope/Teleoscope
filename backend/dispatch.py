@@ -124,6 +124,16 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 }
             )
 
+        if task == "remove_group":
+            res = tasks.add_group.signature(
+                args=(),
+                kwargs={
+                    "session_id": args["session_id"],
+                    "group_id": args["group_id"],
+                    "userid": args["userid"]
+                }
+            )
+
         if task == "copy_group":
             res = tasks.copy_group.signature(
                 args=(),
