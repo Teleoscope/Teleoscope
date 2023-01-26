@@ -10,9 +10,9 @@ export default function WindowFactory(props) {
 	const keymap = {
 		"note": "note",
 		"fabmenu": "fabmenu",
-		"group": "group",
+		"group": "groups",
 		"document": "document",
-		"teleoscope": "teleoscope",
+		"teleoscope": "teleoscopes",
 		"teleoscopepalette": "teleoscopepalette",
 		"search": "search",
 		"grouppalette": "grouppalette",

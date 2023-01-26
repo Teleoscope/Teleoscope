@@ -38,43 +38,45 @@ import randomColor from 'randomcolor';
 import { Stomp } from '../Stomp'
 
 export default function TopBar() {
+  const dispatch = useDispatch();
+  const [cookies, setCookie] = useCookies(["userid"]);
+  const userid = useSelector((state) => state.activeSessionID.userid);  
+  if (cookies.userid && cookies?.userid != -1) {
+    dispatch(setUserId(cookies.userid))
+  }
+  const client = Stomp.getInstance();
+  client.userId = userid;
+  const { user } = useSWRAbstract("user", `/api/users/${userid}`);
 
-  // constants and variables local to this functional component
-  const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
-  const { users } = useSWRAbstract("users", `/api/users/`);
   const session_id = useSelector((state) => state.activeSessionID.value);
+
+  if (session_id == -1 && user) {
+    dispatch(sessionActivator(user.sessions[0]))
+  }
   const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+
+  const { users } = useSWRAbstract("users", `/api/users/`);
+  const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
+  
   const [open, toggleOpen] = React.useState(false);
-  const [cookies, setCookie] = useCookies(["user"]);
 
   const windows = useSelector((state) => state.windows.windows); // TODO rename
   const bookmarks = useSelector((state) => state.bookmarker.value);
   const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals], length: 1 });
 
-  const userid = useSelector((state) => state.activeSessionID.userid);
-  const client = Stomp.getInstance();
-  client.userId = userid;
   const [dialogValue, setDialogValue] = React.useState({label: ''});
-  const dispatch = useDispatch();
 
-  if (cookies.userid) {
-    dispatch(setUserId(cookies.userid));
-  }
 
   // Helper functions
   const handleCookie = (username) => {
-
     fetch(`http://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}/api/user/${username}`)
     .then((response) => response.json())
-    .then((data) => dispatch(setUserId(data._id)));
-
-    setCookie("user", username, {
-      path: "/"
+    .then((data) => {
+      dispatch(setUserId(data._id))
+      setCookie("userid", data._id, {
+        path: "/"
+      });
     });
-    setCookie("userid", userid, {
-      path: "/"
-    });
-    console.log(`Set username to ${username}.`);
   }
 
   const handleSessionChange = (value) => {

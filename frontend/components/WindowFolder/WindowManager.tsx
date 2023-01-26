@@ -79,6 +79,15 @@ export default function WindowManager(props) {
     }
   }
 
+  const handleLayoutChange = (layout) => {
+    console.log("client",client)
+
+    if (client.loaded) {
+      console.log("Loading UI state")
+      client.save_UI_state(session_id, bookmarks, layout)
+    }
+  } 
+
   // type ItemCallback = 
   // (layout: Layout, oldItem: LayoutItem, newItem: LayoutItem,
   //  placeholder: LayoutItem, e: MouseEvent, element: HTMLElement)
@@ -100,7 +109,7 @@ export default function WindowManager(props) {
       onDrag={(layout, oldItem, newItem, placeholder, e, element) => handleCollisions(layout, newItem, placeholder)}
       onDragStop={(layout, oldItem, newItem, placeholder, e, element) => handleDragStop(layout, newItem)}
       onResizeStop={(layout) => dispatch(loadWindows(layout))}
-      onLayoutChange={(layout) => {client.save_UI_state(session_id, bookmarks, layout)}}
+      onLayoutChange={(layout) => {handleLayoutChange(layout)}}
       style={{
         backgroundColor: "#EEEEEE",
         minHeight: "100vh",

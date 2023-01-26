@@ -11,7 +11,7 @@ Object.assign(global, WebsocketBuilder);
 
 // custom imports
 import bcrypt from 'bcryptjs';
-let client: Client;
+// let client: Client;
 
 /**
  * Type definition for Body
@@ -27,9 +27,11 @@ export class Stomp {
   private client: Client;
   private static stomp: Stomp;
   private creationTime: Date;
+  private _loaded: Boolean;
 
   private constructor() {
     this.creationTime = new Date();
+    this.loaded = false;
   }
 
   /**
@@ -50,6 +52,14 @@ export class Stomp {
 
   public get userId() {
     return this._userid;
+  }
+
+  private set loaded(l: Boolean) {
+    this._loaded = l;
+  }
+
+  public get loaded() {
+    return this._loaded;
   }
 
   /**
@@ -76,6 +86,7 @@ export class Stomp {
      * Called when the client connects to RabbitMQ.
      */
     this.client.onConnect = function (frame) {
+      Stomp.stomp.loaded = true;
       // Do something, all subscribes must be done is this callback
       // This is needed because this will be executed after a (re)connect
       console.log("Connected to RabbitMQ webSTOMP server.");
