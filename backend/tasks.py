@@ -1,4 +1,5 @@
 import logging, pickle, utils, json, auth, numpy as np
+import schemas
 from warnings import simplefilter
 from celery import Celery, Task, chain
 from bson.objectid import ObjectId
@@ -30,6 +31,8 @@ app.conf.update(
     task_queues=[queue],
 )
 
+
+
 @app.task
 def initialize_session(*args, **kwargs):
     """
@@ -41,41 +44,18 @@ def initialize_session(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session()
     
     # handle kwargs
-    userid = kwargs["userid"]
+    userid = ObjectId(str(kwargs["userid"]))
     label = kwargs['label']
     color = kwargs['color']
     
     logging.info(f'Initializing sesssion for user {userid}.')
     # Check if user exists and throw error if not
-    user = db.users.find_one({"_id": ObjectId(str(userid))})
+    user = db.users.find_one({"_id": userid})
     if user is None:
         logging.info(f'User {userid} does not exist.')
         raise Exception(f'User {userid} does not exist.')
 
-    # Object to write for userlist
-    userlist =  {
-        "owner": ObjectId(str(user["_id"])),
-        "contributors": []
-    }
-
-    obj = {
-        "creation_time": datetime.datetime.utcnow(),
-        "userlist": userlist,
-        "history": [
-            {
-                "timestamp": datetime.datetime.utcnow(),
-                "bookmarks": [],
-                "windows": [],
-                "groups": [],
-                "clusters": [],
-                "teleoscopes": [],
-                "label": label,
-                "color": color,
-                "action": f"Initialize session",
-                "user": userid,
-            }
-        ],
-    }
+    obj = schemas.create_session_object(userid, label, color)
     with transaction_session.start_transaction():
         result = db.sessions.insert_one(obj, session=transaction_session)
         db.users.update_one(
@@ -386,7 +366,8 @@ def add_group(*args, human=True, included_documents=[], **kwargs):
         history_item["action"] = f"Initialize new group: {label}"
         history_item["user"] = user_id
 
-        sessions_res = db.sessions.update_one({'_id': _id},
+        sessions_res = db.sessions.update_one(
+            {'_id': _id},
             {
                 '$push': {
                             "history": {
@@ -394,7 +375,9 @@ def add_group(*args, human=True, included_documents=[], **kwargs):
                                 '$position': 0
                             }
                 }
-            }, session=transaction_session)
+            }, 
+            session=transaction_session
+        )
         logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
 
@@ -536,6 +519,47 @@ def add_document_to_group(*args, **kwargs):
     )
     res.apply_async()
     return None
+
+@app.task
+def remove_group(*args, **kwargs):
+    """
+    Delete a group (not the documents within) from the session. Group is not deleted from the whole system, just the session.
+
+    kwargs:
+        group_id: ObjectId
+        session_id: ObjectId
+        user_id: ObjectId
+
+    """
+    group_id = ObjectId(str(kwargs["group_id"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+    user_id = ObjectId(str(kwargs["user_id"]))
+
+    transaction_session, db = utils.create_transaction_session()
+
+    with transaction_session.start_transaction():
+        session = db.sessions.find_one({'_id': session_id}, session=transaction_session)
+        history_item["timestamp"] = datetime.datetime.utcnow()        
+        history_item = session["history"][0]
+        history_item["groups"].remove(group_id)
+        history_item["action"] = f"Remove group from session"
+        history_item["user"] = user_id
+
+        db.sessions.update_one(
+            {'_id': session_id},
+            {
+                "$push" : {
+                    "history": {
+                        "$each" : [history_item],
+                        "$position" : 0
+                    }
+                }
+            },
+            session=transaction_session
+        )
+        logging.info(f"Removed group {group_id} from session {session_id}.")
+        utils.commit_with_retry(transaction_session)
+    return session_id
 
 @app.task
 def remove_document_from_group(*args, **kwargs):
@@ -706,27 +730,29 @@ def register_account(*arg, **kwargs):
 
     transaction_session, db = utils.create_transaction_session()
 
-    #handle kwargs
+    # handle kwargs
     first_name = kwargs["firstName"]
     last_name = kwargs["lastName"]
     password = kwargs["password"]
     username = kwargs["username"]
 
-    #creating document to be inserted into mongoDB
-    obj = {
-        "creation_time": datetime.datetime.utcnow(),
-        "firstName": first_name,
-        "lastName": last_name,
-        "password": password,
-        "username": username,
-        "sessions":[],
-        "action": "initialize a user"
-    }
+    # creating document to be inserted into mongoDB
+    user_obj = schemas.create_user_object(first_name, last_name, password, username)
 
-    collection = db.users
     with transaction_session.start_transaction():
-        users_res = collection.insert_one(obj, session=transaction_session)
-        logging.info(f"Added user {username} with result {users_res}.")
+        users_res = db.users.insert_one(user_obj, session=transaction_session)
+        session_obj = schemas.create_session_object(users_res.inserted_id, "default", "#063970")
+        default_session = db.sessions.insert_one(session_obj, session=transaction_session)
+        user_default_session_res = db.users.update_one(
+            {"_id": users_res.inserted_id}, 
+            {
+                "$push" : {
+                    "sessions": default_session.inserted_id
+                }
+            },
+            session=transaction_session)
+        logging.info(f"Added user {username} with result {users_res} and default session {user_default_session_res}.")
+
         utils.commit_with_retry(transaction_session)
 
 

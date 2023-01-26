@@ -14,13 +14,13 @@ import { InputLabel } from '@mui/material';
 import { Stack } from '@mui/material';
 import { TextField } from '@mui/material';
 import { InputAdornment } from '@mui/material';
-import { Typography } from '@mui/material';
 import { Divider } from '@mui/material';
 import { alpha } from "@mui/material";
 import { IconButton } from '@mui/material';
-
 import { AccountCircle } from '@mui/icons-material';
-import { Flare } from '@mui/icons-material';
+
+// components
+import TeleoscopeLogo from "./TeleoscopeLogo";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -306,10 +306,10 @@ export default function TopBar() {
             'aria-labelledby': 'basic-button',
           }}
         >
-          <MenuItem><Account /></MenuItem>
-          <MenuItem><Session /></MenuItem>
+          <MenuItem children={<Account />}></MenuItem>
+          <MenuItem children={<Session />}></MenuItem>
           <Divider></Divider>
-          <MenuItem onClick={handleClickOpen}>Add User to Session</MenuItem>
+          <MenuItem onClick={handleClickOpen}>Add a different user to this session</MenuItem>
           <MenuItem onClick={handleSaveUIState}>Save UI State</MenuItem>
         </Menu>
         <AddUserDialogue />
@@ -318,21 +318,7 @@ export default function TopBar() {
     )
   }
 
-  const TeleoscopeLogo = () => {
-    return (
-      <Stack direction="row" alignItems="center">
-        <Flare />
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 'fontWeightLight',
-            fontFamily: "monospace"
-          }}>
-          Teleoscope
-        </Typography>
-      </Stack>
-    )
-  }
+
 
   // Main return for this component
   return (

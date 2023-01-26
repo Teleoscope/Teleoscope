@@ -266,6 +266,25 @@ copy_group(label: string, group_id: string, session_id: string) {
 }
 
 /**
+ * Removes a group from a session in MongoDB. Does not delete the group.
+ * 
+ * @param group_id 
+ * @param session_id 
+ * @returns 
+ */
+remove_group(group_id: string, session_id: string) {
+  const body = {
+    task: 'remove_group',
+    args: {
+      group_id: group_id,
+      session_id: session_id,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
  * Add a document to a group.
  */
 add_document_to_group(group_id: string, document_id: string) {

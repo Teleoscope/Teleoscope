@@ -12,6 +12,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import FolderIcon from '@mui/icons-material/Folder';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import Diversity2Icon from '@mui/icons-material/Diversity2';
@@ -281,6 +282,7 @@ export default function GroupPalette(props) {
                                     primary={gl}
                                     secondary={gl ? 'Description' : null}
                                 />
+                                <IconButton onClick={() => client.remove_group(the_group, session_id)}><DeleteIcon></DeleteIcon></IconButton>
                             </ListItem>
                         </div>
                     )
