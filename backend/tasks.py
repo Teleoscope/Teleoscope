@@ -533,7 +533,7 @@ def remove_group(*args, **kwargs):
     """
     group_id = ObjectId(str(kwargs["group_id"]))
     session_id = ObjectId(str(kwargs["session_id"]))
-    user_id = ObjectId(str(kwargs["user_id"]))
+    user_id = ObjectId(str(kwargs["userid"]))
 
     transaction_session, db = utils.create_transaction_session()
 

@@ -282,7 +282,7 @@ export default function GroupPalette(props) {
                                     primary={gl}
                                     secondary={gl ? 'Description' : null}
                                 />
-                                <IconButton onClick={() => client.remove_group(the_group, session_id)}><DeleteIcon></DeleteIcon></IconButton>
+                                <IconButton onClick={() => client.remove_group(the_group._id, session_id)}><DeleteIcon></DeleteIcon></IconButton>
                             </ListItem>
                         </div>
                     )
