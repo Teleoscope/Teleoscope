@@ -125,7 +125,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
         if task == "remove_group":
-            res = tasks.add_group.signature(
+            res = tasks.remove_group.signature(
                 args=(),
                 kwargs={
                     "session_id": args["session_id"],
