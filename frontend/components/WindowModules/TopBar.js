@@ -57,6 +57,10 @@ export default function TopBar() {
   const [dialogValue, setDialogValue] = React.useState({label: ''});
   const dispatch = useDispatch();
 
+  if (cookies.userid) {
+    dispatch(setUserId(cookies.userid));
+  }
+
   // Helper functions
   const handleCookie = (username) => {
 
@@ -65,6 +69,9 @@ export default function TopBar() {
     .then((data) => dispatch(setUserId(data._id)));
 
     setCookie("user", username, {
+      path: "/"
+    });
+    setCookie("userid", userid, {
       path: "/"
     });
     console.log(`Set username to ${username}.`);

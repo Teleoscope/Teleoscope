@@ -79,6 +79,7 @@ def save_UI_state(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session()
     
     session_id = ObjectId(str(kwargs["session_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
 
     logging.info(f'Saving state for {session_id}.')
 
@@ -87,17 +88,19 @@ def save_UI_state(*args, **kwargs):
     if not session:
         logging.info(f"Session {session_id} not found.")
         raise Exception("Session not found")
-
-    userid = kwargs["userid"]
+    
+    # check if user id is valid, if not, raise exception    
     user = db.users.find_one({"_id": userid})
-    user_id = user['_id']
-
+    if not session:
+        logging.info(f"User {userid} not found.")
+        raise Exception("User not found.")
+    
     history_item = session["history"][0]
     history_item["bookmarks"] = kwargs["bookmarks"]
     history_item["windows"] =  kwargs["windows"]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Save UI state"
-    history_item["user"] = user_id
+    history_item["user"] = userid
 
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},

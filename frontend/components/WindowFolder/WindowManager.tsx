@@ -37,7 +37,9 @@ const collides = (l1, l2) => {
 }
 
 export default function WindowManager(props) {
-  const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); // value was userid
+  const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); 
+  const session_id = useAppSelector((state: RootState) => state.activeSessionID.value); 
+  const bookmarks = useAppSelector((state: RootState) => state.bookmarker.value); 
   const client = Stomp.getInstance();
   client.userId = userid;
   const windows = useAppSelector((state: RootState) => state.windows.windows);
@@ -98,9 +100,7 @@ export default function WindowManager(props) {
       onDrag={(layout, oldItem, newItem, placeholder, e, element) => handleCollisions(layout, newItem, placeholder)}
       onDragStop={(layout, oldItem, newItem, placeholder, e, element) => handleDragStop(layout, newItem)}
       onResizeStop={(layout) => dispatch(loadWindows(layout))}
-      onLayoutChange={(layout) => {
-        // dispatch(loadWindows(layout))
-      }}
+      onLayoutChange={(layout) => {client.save_UI_state(session_id, bookmarks, layout)}}
       style={{
         backgroundColor: "#EEEEEE",
         minHeight: "100vh",
