@@ -38,6 +38,8 @@ import randomColor from 'randomcolor';
 import { Stomp } from '../Stomp'
 
 export default function TopBar() {
+  const [loaded, setLoaded] = React.useState(false); 
+
   const dispatch = useDispatch();
   const [cookies, setCookie] = useCookies(["userid"]);
   const userid = useSelector((state) => state.activeSessionID.userid);  
@@ -58,6 +60,15 @@ export default function TopBar() {
   const { users } = useSWRAbstract("users", `/api/users/`);
   const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
   
+
+  if (session?.history?.length > 0 && !loaded) {
+    setLoaded(true);
+    var history_item = session.history[0];
+    console.log("loaded session history", history_item)
+    dispatch(loadBookmarkedDocuments(history_item["bookmarks"]));
+    dispatch(loadWindows(history_item["windows"]));
+  }
+
   const [open, toggleOpen] = React.useState(false);
 
   const windows = useSelector((state) => state.windows.windows); // TODO rename
@@ -85,11 +96,6 @@ export default function TopBar() {
     dispatch(getGroups(value))
   }
 
-  const load_UI_state = () => {
-    var history_item = session.history[0];
-    dispatch(loadBookmarkedDocuments(history_item["bookmarks"]));
-    dispatch(loadWindows(history_item["windows"]));
-  }
 
   const get_color = () => session ? session.history[0].color : "#4E5CBC"
 
@@ -138,7 +144,7 @@ export default function TopBar() {
   }
 
   const getUsers = () => {
-    if (session) {
+    if (session && users) {
       let owner = session.userlist.owner
       let contributors = session.userlist.contributors
 
@@ -173,7 +179,7 @@ export default function TopBar() {
         }}
         label="Username"
         variant="standard"
-        defaultValue={cookies.user}
+        defaultValue={user?.username}
         onKeyPress={(e) => {
           if (e.key === "Enter") {
             handleCookie(e.target.value)
@@ -198,7 +204,7 @@ export default function TopBar() {
           size="small"
           onChange={(event) => handleSessionChange(event.target.value)}
         >
-          {getSessions(cookies.user)}
+          {getSessions(user?.username)}
           <Button
             size="small"
             variant="text"
