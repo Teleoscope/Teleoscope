@@ -13,7 +13,7 @@ import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
 
 // actions
-import { checkWindow, removeWindow, addWindow, loadWindows } from "../../actions/windows";
+import { checkWindow, removeWindow, addWindow, loadWindows, updateWindows } from "../../actions/windows";
 
 // contexts
 import { Stomp } from '../Stomp'
@@ -70,21 +70,22 @@ export default function WindowManager(props) {
   }
 
   const handleDragStop = (layout, newItem) => {
-    dispatch(loadWindows(layout))
+    console.log("layout", layout, windows)
+    dispatch(updateWindows(layout))
+
     const checked = windows.find(w => w.isChecked && w.type == "Group");
     if (checked && newItem.i.split("%")[1] == "document") {
       dispatch(removeWindow(newItem.i))
       client.add_document_to_group(checked.i.split("%")[0], newItem.i.split("%")[0])
       dispatch(checkWindow({ i: checked.i, check: false }));
     }
+    handleLayoutChange(layout)
   }
 
   const handleLayoutChange = (layout) => {
-    console.log("client",client)
-
     if (client.loaded) {
       console.log("Loading UI state")
-      client.save_UI_state(session_id, bookmarks, layout)
+      client.save_UI_state(session_id, bookmarks, windows)
     }
   } 
 

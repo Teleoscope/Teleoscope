@@ -101,6 +101,9 @@ export default function ContextMenu(props) {
                 Deselect All
             </MenuItem>
             <Divider />
+            <MenuItem onClick={() => handleOpenNewWindow("FABMenu")}>
+                FABMenu
+            </MenuItem>
         </Menu>
     )
 }

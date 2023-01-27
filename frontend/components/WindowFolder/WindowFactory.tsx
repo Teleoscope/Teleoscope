@@ -31,6 +31,8 @@ export default function WindowFactory(props) {
 			<div>{wdefs[w.type].component(w, props.id)}</div>
 		)
 	}
+
+	console.log("window", w)
 	return (
 		<Window {...props}
 			icon={wdefs[w.type].icon(data)}

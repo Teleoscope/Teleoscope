@@ -100,6 +100,21 @@ export const Windows = createSlice({
 			}
 			state.windows = temp;
 		},
+		updateWindows: (state, action) => {
+			var temp = [...state.windows]
+			action.payload.forEach((w) => {
+				var index = state.windows.findIndex(item => w.i === item.i)
+				console.log("layout i", w, index)
+				temp[index].x = w.x;
+				temp[index].y = w.y;
+				temp[index].h = w.h;
+				temp[index].w = w.w; 
+			})
+			console.log("layout temp", temp)
+			state.windows = temp;
+			console.log("layout temp", temp, state.windows)
+
+		},
 		// checkWindow({i: str, check: bool})
 		checkWindow: (state, action) => {
 			var index = state.windows.findIndex((w) => w.i == action.payload.i);
@@ -124,19 +139,7 @@ export const Windows = createSlice({
 			state.windows = temp;			
 		},			
 		loadWindows: (state, action) => {
-			// var temp = [...state.windows];
-			for (var index in action.payload) {
-				var update = action.payload[index];
-				var item = state.windows.find(item => item.i === update.i)
-				if (item) {
-					Object.keys(update).forEach((key, ind) => {
-						if (item.hasOwnProperty(key)) {
-							item[key] = update[key];
-						}
-					});
-				}
-			}
-			
+			state.windows = action.payload;	
 		}
 	}
 })
@@ -146,7 +149,8 @@ export const {
 	removeWindow, 
 	loadWindows, 
 	dragged, 
-	updateWindow, 
+	updateWindow,
+	updateWindows,
 	minimizeWindow, 
 	maximizeWindow, 
 	checkWindow, 
