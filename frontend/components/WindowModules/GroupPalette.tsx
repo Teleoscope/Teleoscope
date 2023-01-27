@@ -121,9 +121,6 @@ export default function GroupPalette(props) {
 
     const submitCopyGroup = () => {
         if (groupValue.label && groupName.label) {
-            console.log('session id: ', session_id)
-            console.log('group id (old): ', groupValue.label._id)
-            console.log('group name (new): ', groupName.label)
             client.copy_group(groupName.label, groupValue.label._id, session_id)
             handleClose()
         } else {

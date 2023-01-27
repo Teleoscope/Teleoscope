@@ -70,7 +70,6 @@ export default function WindowManager(props) {
   }
 
   const handleDragStop = (layout, newItem) => {
-    console.log("layout", layout, windows)
     dispatch(updateWindows(layout))
 
     const checked = windows.find(w => w.isChecked && w.type == "Group");
@@ -84,7 +83,6 @@ export default function WindowManager(props) {
 
   const handleLayoutChange = (layout) => {
     if (client.loaded) {
-      console.log("Loading UI state")
       client.save_UI_state(session_id, bookmarks, windows)
     }
   } 

@@ -48,6 +48,7 @@ export default function TopBar() {
   }
   const client = Stomp.getInstance();
   client.userId = userid;
+  
   const { user } = useSWRAbstract("user", `/api/users/${userid}`);
 
   const session_id = useSelector((state) => state.activeSessionID.value);
@@ -64,29 +65,25 @@ export default function TopBar() {
   if (session?.history?.length > 0 && !loaded) {
     setLoaded(true);
     var history_item = session.history[0];
-    console.log("loaded session history", history_item)
     dispatch(loadBookmarkedDocuments(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
   }
 
   const [open, toggleOpen] = React.useState(false);
-
-  const windows = useSelector((state) => state.windows.windows); // TODO rename
-  const bookmarks = useSelector((state) => state.bookmarker.value);
   const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals], length: 1 });
-
   const [dialogValue, setDialogValue] = React.useState({label: ''});
-
 
   // Helper functions
   const handleCookie = (username) => {
     fetch(`http://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}/api/user/${username}`)
     .then((response) => response.json())
     .then((data) => {
-      dispatch(setUserId(data._id))
-      setCookie("userid", data._id, {
-        path: "/"
-      });
+      if (data) {
+        dispatch(setUserId(data._id))
+        setCookie("userid", data._id, {
+          path: "/"
+        });          
+      }
     });
   }
 
@@ -109,19 +106,6 @@ export default function TopBar() {
     });
     toggleOpen(false);
   };
-
-  const handleSaveUIState = () => {
-    if (session) {
-      client.save_UI_state(
-        session_id,
-        bookmarks,
-        windows,
-      )
-    }
-    else {
-      console.log(`No session selected. Do nothing`);
-    }
-  }
 
   /////////////////////////////////////////////////////////////////////////
   // Functional components
@@ -223,32 +207,6 @@ export default function TopBar() {
     )
   }
 
-  // return (
-  //   <Box sx={{ flexGrow: 1 }}>
-  //     <AppBar
-  //       position="static"
-  //       style={{ height: 60, backgroundColor: get_color(cookies.user) }}
-
-  //       <TextField
-  //             id="input-with-icon-textfield"
-  //             sx={{ width: 200, backgroundColor: 'white', }}
-  //             InputProps={{
-  //               startAdornment: (
-  //                 <InputAdornment position="start">
-  //                   <AccountCircle />
-  //                 </InputAdornment>
-  //               ),
-  //             }}
-  //             label="Username"
-  //             variant="standard"
-  //             defaultValue={cookies.user}
-  //             onKeyPress={(e) => {
-  //               if (e.key === "Enter") {
-  //                 handleCookie(e.target.value)
-  //               }
-  //             }}
-  //           />
-
   const AddUserDialogue = () => {
     return (
       <Dialog disableEscapeKeyDown open={open} onClose={handleClose}>
@@ -278,7 +236,6 @@ export default function TopBar() {
           <Button
             type="submit"
             onClick={() => {
-              console.log(`Add session contributor ${dialogValue.label.username} (${dialogValue.label._id}).`)
               client.add_user_to_session(dialogValue.label._id, session_id)
               handleClose()
             }}
@@ -305,9 +262,9 @@ export default function TopBar() {
       <Stack spacing={1} direction="row-reverse">
         <IconButton
           id="bIconasic-button"
-          aria-controls={open ? 'basic-menu' : undefined}
+          aria-controls={openMenu ? 'basic-menu' : undefined}
           aria-haspopup="true"
-          aria-expanded={open ? 'true' : undefined}
+          aria-expanded={openMenu ? 'true' : undefined}
           onClick={handleMenuClick}
         >
           <AccountCircle></AccountCircle>
@@ -325,7 +282,6 @@ export default function TopBar() {
           <MenuItem children={<Session />}></MenuItem>
           <Divider></Divider>
           <MenuItem onClick={handleClickOpen}>Add a different user to this session</MenuItem>
-          <MenuItem onClick={handleSaveUIState}>Save UI State</MenuItem>
         </Menu>
         <AddUserDialogue />
       </Stack>
