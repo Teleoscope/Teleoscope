@@ -109,7 +109,7 @@ export default function WindowManager(props) {
       preventCollision={collision}
       onDrag={(layout, oldItem, newItem, placeholder, e, element) => handleCollisions(layout, newItem, placeholder)}
       onDragStop={(layout, oldItem, newItem, placeholder, e, element) => handleDragStop(layout, newItem)}
-      onResizeStop={(layout) => dispatch(loadWindows(layout))}
+      onResizeStop={(layout) => dispatch(updateWindows(layout))}
       onLayoutChange={(layout) => {handleLayoutChange(layout)}}
       style={{
         backgroundColor: "#EEEEEE",

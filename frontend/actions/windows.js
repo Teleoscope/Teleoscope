@@ -76,7 +76,6 @@ export const Windows = createSlice({
 			if (index > -1) {
 				temp[index].w = 4;
 				temp[index].h = 1;
-				temp[index].x = 20;
 				temp[index].isResizable = false;
 			}
 			state.windows = temp;
@@ -105,10 +104,12 @@ export const Windows = createSlice({
 			action.payload.forEach((w) => {
 				var index = state.windows.findIndex(item => w.i === item.i)
 				console.log("layout i", w, index)
-				temp[index].x = w.x;
-				temp[index].y = w.y;
-				temp[index].h = w.h;
-				temp[index].w = w.w; 
+				if (index > -1) {
+					temp[index].x = w.x;
+					temp[index].y = w.y;
+					temp[index].h = w.h;
+					temp[index].w = w.w; 	
+				}
 			})
 			console.log("layout temp", temp)
 			state.windows = temp;
