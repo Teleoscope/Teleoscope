@@ -24,7 +24,7 @@ export default function Account(props) {
         defaultValue={props.user?.username}
         onKeyPress={(e) => {
           if (e.key === "Enter") {
-            props.handleCookie(e.target.value)
+            props.handleCookie((e.target as HTMLTextAreaElement).value)
           }
         }}
       />
