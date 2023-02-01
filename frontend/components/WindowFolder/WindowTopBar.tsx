@@ -19,12 +19,11 @@ import { moveWindowToFront } from "../../actions/windows";
 export default function WindowTopBar(props) {
 	const dispatch = useDispatch();
 	return (
-		<div className="drag-handle" style={{ cursor: "move" }}>
+		<div onClick={()=>dispatch(moveWindowToFront(props.id))} className="drag-handle" style={{ cursor: "move" }}>
 			<Stack direction="row" alignItems="flex-start" justifyContent="space-between">
 					<IconButton size="small"
 						onClick={() => {
 							props.handleShow();
-							dispatch(moveWindowToFront(props.id))
 						}}
 					>{props.icon}</IconButton>
 					<Tooltip title={props.title}>

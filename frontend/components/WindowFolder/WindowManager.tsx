@@ -50,6 +50,8 @@ export default function WindowManager(props) {
   const dispatch = useAppDispatch();
 
   const dropping = (layout, item, e) => {
+    item.resizeHandles = [];
+    item.w = 4;
     dispatch(addWindow({ i: dragged_item.id, type: dragged_item.type, ...item }));
   }
 

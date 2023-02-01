@@ -18,9 +18,9 @@ export const Windows = createSlice({
 				x:1, 
 				y:1,
 				w:1,
-				h:1,
+				h:2,
 				isDraggable: true, 
-				isResizable: true, 
+				isResizable: false,
 				type: "FABMenu"
 			}
 		],
