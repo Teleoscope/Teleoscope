@@ -55,8 +55,8 @@ export default function TopBar() {
   if (session_id == -1 && Object.prototype.hasOwnProperty(user, "sessions")) {
     dispatch(sessionActivator(user.sessions[0]))
   }
-  const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
 
+  const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
   const { users } = useSWRAbstract("users", `/api/users/`);
   const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
   
@@ -87,7 +87,7 @@ export default function TopBar() {
   }
 
   const handleSessionChange = (value) => {
-    console.log("value", value)
+    setLoaded(false);
     dispatch(sessionActivator(value))
     dispatch(getGroups(value))
   }
@@ -147,8 +147,6 @@ export default function TopBar() {
       <MenuItem value={''}>No session selected...</MenuItem>
     )
   }
-
-  
 
   const Session = () => {
     return (
