@@ -1043,19 +1043,16 @@ def vectorize_text(text): #(text) -> Vector
 
     input: string
     output: numpy
-    purpose: This function is used to update the dictionary with a vectorized version of the title and text
-            (Ignores dictionaries containing error keys)
+    purpose: This function is used to return a vectorized version of the text
+            (Assumes the text is error free)
     '''
     import tensorflow_hub as hub
-    if 'error' not in text: # Dont need this (Assuming it's error free-text -> include that in assumption)
-        embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        # document['vector'] = embed([document['title']]).numpy()[0].tolist() 
-        vector = embed(text).numpy()[0].tolist() # This is required -> don't need document['text'] -> make it text 
-        return vector
-    else:
-        # Not sure if requires another return type (Throw in an exc)
-        raise Exception(f'There is an error in the text.')
-
+    # if 'error' not in text: 
+    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    # document['vector'] = embed([document['title']]).numpy()[0].tolist() 
+    vector = embed(text).numpy()[0].tolist() # This is required -> don't need document['text'] -> make it text 
+    return vector
+    
 @app.task
 def add_single_document_to_database(document):
     '''
