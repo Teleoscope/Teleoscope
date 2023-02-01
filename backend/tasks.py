@@ -1041,6 +1041,55 @@ def add_single_document_to_database(document):
 
 
 @app.task
+def delete_session(*args, **kwargs):
+    """
+    Remove a session from a user AND database.
+    """
+    userid = ObjectId(str(kwargs["userid"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+
+    session, db = utils.create_transaction_session()
+    with session.start_transaction():
+        user_res = db.users.update_one(
+            {"_id":userid},
+            {
+                "$pull": {
+                    "sessions" : session_id
+                }
+            },
+            session=session
+        )
+        db.sessions.delete_one({"_id": session_id}, session=session)
+        utils.commit_with_retry(session)
+
+    return userid, session_id
+
+@app.task
+def delete_sessions(*args, **kwargs):
+    """
+    Remove all sessions from a user AND database.
+    """
+    userid = ObjectId(str(kwargs["userid"]))
+    session, db = utils.create_transaction_session()
+    with session.start_transaction():
+        user = db.users.find_one({"_id": userid}, session=session)
+        db.users.update_one(
+            {"_id":userid},
+            {
+                "$pullAll": {
+                    "sessions" : user["sessions"]
+                }
+            },
+            session=session
+        )
+        utils.commit_with_retry(session)
+
+    return userid
+
+
+
+
+@app.task
 def add_multiple_documents_to_database(documents):
     '''
     add_single_document_to_database

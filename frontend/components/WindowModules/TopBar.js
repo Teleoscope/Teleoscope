@@ -36,6 +36,7 @@ import randomColor from 'randomcolor';
 
 // contexts
 import { Stomp } from '../Stomp'
+import { random } from "lodash";
 
 export default function TopBar() {
   const [loaded, setLoaded] = React.useState(false); 
@@ -192,7 +193,13 @@ export default function TopBar() {
           <Button
             size="small"
             variant="text"
-            onClick={() => client.initialize_session(randomName, randomColor())}
+            onClick={() => client.initialize_session(randomName, randomColor(
+              {
+                luminosity: 'dark',
+                hue: 'random',
+
+              }
+            ))}
             style={{
               backgroundColor: "#FFFFFF",
               color: "black",

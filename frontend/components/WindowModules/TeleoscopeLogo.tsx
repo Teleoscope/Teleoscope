@@ -13,7 +13,7 @@ export default function TeleoscopeLogo () {
           variant="h5"
           sx={{
             fontWeight: 'fontWeightLight',
-            fontFamily: "monospace"
+            fontFamily: "monospace",
           }}>
           Teleoscope
         </Typography>
