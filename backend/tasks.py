@@ -119,7 +119,7 @@ def save_UI_state(*args, **kwargs):
     history_item["action"] = "Save UI state"
     history_item["user"] = user_id
 
-    with transaction_session.start_transaction():
+    with transaction_session.start_transaction(): # When you do transaction, you want to do it inside this transaction session
         db.sessions.update_one({"_id": session_id},
             {
                 '$push': {
@@ -132,6 +132,50 @@ def save_UI_state(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
 
     return 200 # success
+# Create_child   
+# transaction_session, db = utils.create_transaction_session() [DONE]
+# document = db.documents.find_one({"_id": document_id}) [DONE]
+# document["text"][s:e]
+# Declare any fields that are necessary
+# Need the vectorize function # Can write a test for this one -> check if it's actually working
+# inserted_document = db.documents.insert_one( ... )
+# inserted_document.insertedID
+# id = insertedid
+# update_one(…)
+# Write a test to check if it's actually working (can insert a dummy document and delete it once it's done)
+@app.task
+def create_child(start_index, end_index, *args, **kwargs):
+    transaction_session, db = utils.create_transaction_session()
+    document_id = kwargs["document_id"]
+    document = db.documents.find_one({"_id": document_id})
+    session_id =  ObjectId(str(kwargs["session_id"]))
+    child_text = document["text"][start_index:end_index] # Not sure how I should go about doing the parameter - need to use kwargs?
+    child_title = document["title"] + " child"
+    child_id = document["id"] + "#child"
+    child_vector = vectorize_text(child_text)
+    child_parent = db.sessions.find_one({"_id": session_id})
+    inserted_document = db.documents.insert_one({
+        'title': child_title, 
+        'id': child_id, 
+        'text_vector': child_vector, 
+        'text': child_text,
+        'parent': child_parent
+    })
+    new_id = inserted_document.inserted_id
+    with transaction_session.start_transaction(): # When you do transaction, you want to do it inside this transaction session
+        db.sessions.update_one({"_id": new_id},
+        {
+            '$push': {
+                "history": {
+                    "$each": [inserted_document],
+                    "$position": 0
+                    }
+                }
+        }, session=transaction_session)
+
+
+
+
 
 @app.task
 def add_user_to_session(*args, **kwargs):
@@ -968,9 +1012,9 @@ def read_and_validate_document(path_to_document):
 
     return document
 
-
+# Write a new function - vectorize_text -> to check that it's actually working
 @app.task
-def vectorize_document(document):
+def vectorize_document(document): #(text) -> Vector
     '''
     vectorize_document
 
@@ -982,13 +1026,31 @@ def vectorize_document(document):
     import tensorflow_hub as hub
     if 'error' not in document:
         embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        document['vector'] = embed([document['title']]).numpy()[0].tolist()
-        document['textVector'] = embed([document['text']]).numpy()[0].tolist()
+        document['vector'] = embed([document['title']]).numpy()[0].tolist() # Don't need this
+        document['textVector'] = embed([document['text']]).numpy()[0].tolist() # This is required -> don't need document['text'] -> make it text 
         return document
     else:
         return document
 
+@app.task
+def vectorize_text(text): #(text) -> Vector
+    '''
+    vectorize_text
 
+    input: Dict
+    output: Dict
+    purpose: This function is used to update the dictionary with a vectorized version of the title and text
+            (Ignores dictionaries containing error keys)
+    '''
+    import tensorflow_hub as hub
+    if 'error' not in text:
+        embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+        # document['vector'] = embed([document['title']]).numpy()[0].tolist() 
+        vector = embed(text).numpy()[0].tolist() # This is required -> don't need document['text'] -> make it text 
+        return vector
+    else:
+        # Not sure if requires another return type
+        return text 
 
 @app.task
 def add_single_document_to_database(document):

@@ -111,3 +111,14 @@ def test_update_note_invalid_document_id():
 	with pytest.raises(Exception):
 		tasks.update_note((), document_id = '42', content={})
 
+
+# ! Test cases for vectorize_text
+# Case 1: Empty string
+def test_vectorize_text_empty_string():
+	with pytest.raises(Exception):
+		tasks.vectorize_text((), text = "")
+
+# ! Test cases for create_child
+# Case1: invalid document_id
+
+
