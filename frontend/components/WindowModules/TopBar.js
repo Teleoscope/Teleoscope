@@ -2,18 +2,15 @@ import React from "react";
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 
 // material ui
-import {FormHelperText, Menu, MenuItem} from "@mui/material";
-import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Menu, MenuItem} from "@mui/material";
 import { AppBar } from "@mui/material";
-import { Box } from "@mui/material";
 import { Toolbar } from "@mui/material";
 import { Button } from "@mui/material";
 import { FormControl } from '@mui/material';
 import { Select } from '@mui/material';
 import { InputLabel } from '@mui/material';
 import { Stack } from '@mui/material';
-import { TextField } from '@mui/material';
-import { InputAdornment } from '@mui/material';
+
 import { Divider } from '@mui/material';
 import { alpha } from "@mui/material";
 import { IconButton } from '@mui/material';
@@ -21,6 +18,8 @@ import { AccountCircle } from '@mui/icons-material';
 
 // components
 import TeleoscopeLogo from "./TeleoscopeLogo";
+import AddUserDialogue from "./AddUserDialog";
+import Account from "./Account";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -36,7 +35,6 @@ import randomColor from 'randomcolor';
 
 // contexts
 import { Stomp } from '../Stomp'
-import { random } from "lodash";
 
 export default function TopBar() {
   const [loaded, setLoaded] = React.useState(false); 
@@ -54,7 +52,7 @@ export default function TopBar() {
 
   const session_id = useSelector((state) => state.activeSessionID.value);
 
-  if (session_id == -1 && user) {
+  if (session_id == -1 && Object.prototype.hasOwnProperty(user, "sessions")) {
     dispatch(sessionActivator(user.sessions[0]))
   }
   const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
@@ -150,34 +148,12 @@ export default function TopBar() {
     )
   }
 
-  const Account = () => {
-    return (
-      <TextField
-        id="input-with-icon-textfield"
-        sx={{ width: 200, backgroundColor: alpha('#FFFFFF', 0.0), }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <AccountCircle />
-            </InputAdornment>
-          ),
-        }}
-        label="Username"
-        variant="standard"
-        defaultValue={user?.username}
-        onKeyPress={(e) => {
-          if (e.key === "Enter") {
-            handleCookie(e.target.value)
-          }
-        }}
-      />
-    )
-  }
+  
 
   const Session = () => {
     return (
       <FormControl
-        sx={{ width: 200, backgroundColor: alpha('#FFFFFF', 0.0) }}
+        sx={{ width: "100%", backgroundColor: alpha('#FFFFFF', 0.0) }}
         variant="filled"
       >
         <InputLabel id="demo-simple-select-label">Session</InputLabel>
@@ -214,45 +190,6 @@ export default function TopBar() {
     )
   }
 
-  const AddUserDialogue = () => {
-    return (
-      <Dialog disableEscapeKeyDown open={open} onClose={handleClose}>
-        <DialogTitle>Collaborate with User</DialogTitle>
-        <DialogContent>
-          <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
-            <FormControl
-              sx={{ width: 200, backgroundColor: 'white', }}
-              variant="filled"
-            >
-              <InputLabel id="demo-simple-select-helper-label">User</InputLabel>
-              <Select
-                  labelId="demo-simple-select-helper-label"
-                  id="demo-simple-select-helper"
-                  value={dialogValue.label}
-                  label="User"
-                  onChange={(event) => setDialogValue({label: event.target.value})}
-              >
-                {getUsers()}
-              </Select>
-              <FormHelperText>Select User</FormHelperText>
-            </FormControl>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button
-            type="submit"
-            onClick={() => {
-              client.add_user_to_session(dialogValue.label._id, session_id)
-              handleClose()
-            }}
-          >Add
-          </Button>
-        </DialogActions>
-      </Dialog>
-    )
-  }
-
   const AccountMenu = () => {
     
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -265,13 +202,11 @@ export default function TopBar() {
     const handleMenuClose = () => {
       setAnchorEl(null);
     };
+
     return (
       <Stack spacing={1} direction="row-reverse">
         <IconButton
           id="bIconasic-button"
-          aria-controls={openMenu ? 'basic-menu' : undefined}
-          aria-haspopup="true"
-          aria-expanded={openMenu ? 'true' : undefined}
           onClick={handleMenuClick}
         >
           <AccountCircle></AccountCircle>
@@ -281,16 +216,24 @@ export default function TopBar() {
           anchorEl={anchorEl}
           open={openMenu}
           onClose={handleMenuClose}
-          MenuListProps={{
-            'aria-labelledby': 'basic-button',
-          }}
         >
-          <MenuItem children={<Account />}></MenuItem>
+          <MenuItem 
+            onKeyDown={(e) => e.stopPropagation()} 
+            children={<Account user={user} handleCookie={handleCookie} />}>  
+          </MenuItem>
           <MenuItem children={<Session />}></MenuItem>
           <Divider></Divider>
           <MenuItem onClick={handleClickOpen}>Add a different user to this session</MenuItem>
         </Menu>
-        <AddUserDialogue />
+        <AddUserDialogue 
+            open={open}
+            onClose={handleClose}
+            users={getUsers()}
+            dialogValue={dialogValue}
+            setDialogValue={setDialogValue}
+            session_id={session_id}
+            client={client}
+        />
       </Stack>
 
     )
