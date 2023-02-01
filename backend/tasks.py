@@ -146,32 +146,35 @@ def save_UI_state(*args, **kwargs):
 @app.task
 def create_child(start_index, end_index, *args, **kwargs):
     transaction_session, db = utils.create_transaction_session()
-    document_id = kwargs["document_id"]
-    document = db.documents.find_one({"_id": document_id})
-    session_id =  ObjectId(str(kwargs["session_id"]))
-    child_text = document["text"][start_index:end_index] # Not sure how I should go about doing the parameter - need to use kwargs?
-    child_title = document["title"] + " child"
-    child_id = document["id"] + "#child"
-    child_vector = vectorize_text(child_text)
-    child_parent = db.sessions.find_one({"_id": session_id})
-    inserted_document = db.documents.insert_one({
-        'title': child_title, 
-        'id': child_id, 
-        'text_vector': child_vector, 
-        'text': child_text,
-        'parent': child_parent
-    })
-    new_id = inserted_document.inserted_id
-    with transaction_session.start_transaction(): # When you do transaction, you want to do it inside this transaction session
-        db.sessions.update_one({"_id": new_id},
-        {
-            '$push': {
-                "history": {
-                    "$each": [inserted_document],
-                    "$position": 0
-                    }
-                }
+    with transaction_session.start_transaction(): 
+        document_id = kwargs["document_id"]
+        document = db.documents.find_one({"_id": document_id})
+        # session_id =  ObjectId(str(kwargs["session_id"]))
+        child_text = document["text"][start_index:end_index] # Not sure how I should go about doing the parameter - need to use kwargs?
+        child_title = document["title"] + " child"
+        child_id = document["id"] + "#child" #TODO: Ask Paul about making this unique id
+        child_vector = vectorize_text(child_text)
+        # child_parent = db.sessions.find_one({"_id": session_id})
+        inserted_document = db.documents.insert_one({
+            'title': child_title, 
+            'id': child_id, 
+            'text_vector': child_vector, 
+            'text': child_text,
+            'parent': document
         }, session=transaction_session)
+        #TODO: Create schema of create_document_object and call that instead
+        new_id = inserted_document.inserted_id
+   
+        # db.documents.update_one({"_id": new_id},
+        # # Don't need the push, look at mongoDB for update_one
+        # {
+        #     '$push': {
+        #         "history": {
+        #             "$each": [inserted_document],
+        #             "$position": 0
+        #             }
+        #         }
+        # }, session=transaction_session)
 
 
 
@@ -1023,6 +1026,7 @@ def vectorize_document(document): #(text) -> Vector
     purpose: This function is used to update the dictionary with a vectorized version of the title and text
             (Ignores dictionaries containing error keys)
     '''
+    ## Call vectorize_text in this function - based on the text that you're getting from the document - second step after vectorize_text works
     import tensorflow_hub as hub
     if 'error' not in document:
         embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
@@ -1037,20 +1041,20 @@ def vectorize_text(text): #(text) -> Vector
     '''
     vectorize_text
 
-    input: Dict
-    output: Dict
+    input: string
+    output: numpy
     purpose: This function is used to update the dictionary with a vectorized version of the title and text
             (Ignores dictionaries containing error keys)
     '''
     import tensorflow_hub as hub
-    if 'error' not in text:
+    if 'error' not in text: # Dont need this (Assuming it's error free-text -> include that in assumption)
         embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
         # document['vector'] = embed([document['title']]).numpy()[0].tolist() 
         vector = embed(text).numpy()[0].tolist() # This is required -> don't need document['text'] -> make it text 
         return vector
     else:
-        # Not sure if requires another return type
-        return text 
+        # Not sure if requires another return type (Throw in an exc)
+        raise Exception(f'There is an error in the text.')
 
 @app.task
 def add_single_document_to_database(document):

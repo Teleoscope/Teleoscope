@@ -116,8 +116,9 @@ def test_update_note_invalid_document_id():
 # Case 1: Empty string
 def test_vectorize_text_empty_string():
 	with pytest.raises(Exception):
-		tasks.vectorize_text((), text = "")
-
+		tasks.vectorize_text((), text = "") # Won't throw an exception here
+#Test cases - boundary cases and equivalence partitions
+# empty string -"", nonempty string, string with multiple words -> just 3 cases
 # ! Test cases for create_child
 # Case1: invalid document_id
 
