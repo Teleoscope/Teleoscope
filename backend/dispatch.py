@@ -97,6 +97,16 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "history_item": args["history_item"]
                 },
             )
+        
+        if task == "recolor_session":
+            res = tasks.recolor_session.signature(
+                args=(),
+                kwargs={
+                    "color": args["color"],
+                    "userid": args["userid"],
+                    "session_id": args["session_id"],
+                },
+            )
 
         if task == "reorient":
             magnitude = 0.5
