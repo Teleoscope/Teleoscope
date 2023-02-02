@@ -397,7 +397,7 @@ recolor_session(color: string, session_oid: string) {
     task: "recolor_session",
     args: {
       color: color,
-      session_oid: session_oid,
+      session_id: session_oid,
     }
   }
   this.publish(body);

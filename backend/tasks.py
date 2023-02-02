@@ -127,7 +127,7 @@ def recolor_session(*args, **kwargs):
     
     session_id = ObjectId(str(kwargs["session_id"]))
     userid = ObjectId(str(kwargs["userid"]))
-    color = ObjectId(str(kwargs["color"]))
+    color = kwargs["color"]
 
     with transaction_session.start_transaction():
         session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
