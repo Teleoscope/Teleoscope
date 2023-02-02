@@ -206,7 +206,7 @@ def relabel_group(*args, **kwargs):
         teleoscope_history_item = teleoscope["history"][0]
         teleoscope_history_item["label"] = label
         teleoscope_history_item["user"] = userid
-        db.teleoscopes.update_one({"_id": group_id},
+        db.teleoscopes.update_one({"_id": group["teleoscope"]},
             {"$push": {
                     "history": {
                         "$each": [teleoscope_history_item],
