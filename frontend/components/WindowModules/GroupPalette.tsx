@@ -31,6 +31,7 @@ import {useCookies} from "react-cookie";
 import ConnectingAirportsIcon from "@mui/icons-material/ConnectingAirports";
 import ColorPicker from "../ColorPicker";
 import EditableText from "../EditableText";
+import { width } from "@mui/system";
 
 // custom components
 export default function GroupPalette(props) {
@@ -275,18 +276,23 @@ export default function GroupPalette(props) {
                             onDragStart={(e:React.DragEvent<HTMLDivElement>):void => {
                                 dispatch(dragged({id: the_group?._id + "%group", type: "Group"}))
                             }}
+                            
                         >
-                            <ListItem>
-                                <ListItemIcon>
-                                    <IconButton onClick={() => setShowColorPicker(!showColorPicker)}
-                                    ><FolderIcon sx={{color: the_group?.history[0].color}}/></IconButton>
-                                </ListItemIcon>
-                                
-                                <EditableText 
-                                   initialValue={the_group.history[0].label}
-                                   callback={(label) => client.relabel_group(label, the_group._id)}
-                                />
-                                <IconButton onClick={() => client.remove_group(the_group._id, session_id)}><DeleteIcon></DeleteIcon></IconButton>
+                            <ListItem >
+                                <Stack sx={{width: "100%"}} direction="row" alignItems="center" justifyContent="space-between">
+                                    <Stack direction="row" alignItems="center" >
+                                    <ListItemIcon>
+                                        <IconButton onClick={() => setShowColorPicker(!showColorPicker)}
+                                        ><FolderIcon sx={{color: the_group?.history[0].color}}/></IconButton>
+                                    </ListItemIcon>
+                                    
+                                    <EditableText 
+                                    initialValue={the_group.history[0].label}
+                                    callback={(label) => client.relabel_group(label, the_group._id)}
+                                    />
+                                    </Stack>
+                                    <IconButton onClick={() => client.remove_group(the_group._id, session_id)}><DeleteIcon></DeleteIcon></IconButton>
+                                </Stack>
                             </ListItem>
                             {showColorPicker ? 
                                         <ColorPicker 

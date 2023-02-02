@@ -9,7 +9,7 @@ function EditableText(props) {
   
   const handleChange = (e) => {
     setValue(e.target.value)
-    props.callback(e)
+    props.callback(e.target.value)
   }
 
   return (
@@ -28,11 +28,6 @@ function EditableText(props) {
         ) : (
           <span 
             onDoubleClick={() => setShowInputElement(true)}
-            style={{ 
-              display: "inline-block", 
-              height: "25px", 
-              minWidth: "300px", 
-            }}
           >
             {value}
           </span>
