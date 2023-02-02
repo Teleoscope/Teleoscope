@@ -30,6 +30,7 @@ import randomColor from "randomcolor";
 import {useCookies} from "react-cookie";
 import ConnectingAirportsIcon from "@mui/icons-material/ConnectingAirports";
 import ColorPicker from "../ColorPicker";
+import EditableText from "../EditableText";
 
 // custom components
 export default function GroupPalette(props) {
@@ -280,9 +281,10 @@ export default function GroupPalette(props) {
                                     <IconButton onClick={() => setShowColorPicker(!showColorPicker)}
                                     ><FolderIcon sx={{color: the_group?.history[0].color}}/></IconButton>
                                 </ListItemIcon>
-                                <ListItemText
-                                    primary={gl}
-                                    secondary={gl ? 'Description' : null}
+                                
+                                <EditableText 
+                                   initialValue={the_group.history[0].label}
+                                   callback={(label) => client.relabel_group(label, the_group._id)}
                                 />
                                 <IconButton onClick={() => client.remove_group(the_group._id, session_id)}><DeleteIcon></DeleteIcon></IconButton>
                             </ListItem>
@@ -291,6 +293,7 @@ export default function GroupPalette(props) {
                                             defaultColor={the_group?.history[0].color}
                                             onChange={(color) => {
                                                 client.recolor_group(color, the_group._id)
+                                                setShowColorPicker(false)
                                             }}
                                         ></ColorPicker> : <span></span>}
                         </div>

@@ -118,6 +118,17 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 },
             )
 
+        if task == "relabel_group":
+            res = tasks.relabel_group.signature(
+                args=(),
+                kwargs={
+                    "label": args["label"],
+                    "userid": args["userid"],
+                    "group_id": args["group_id"],
+                },
+            )
+
+
         if task == "reorient":
             magnitude = 0.5
             if "magnitude" in args:

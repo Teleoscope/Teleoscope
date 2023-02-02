@@ -421,6 +421,22 @@ recolor_group(color: string, group_id: string) {
 }
 
 /**
+ * Relabel the group.
+ */
+
+relabel_group(label: string, group_id: string) {
+  const body = {
+    task: "relabel_group",
+    args: {
+      label: label,
+      group_id: group_id,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
  * Create MLGroups using the UMAP and HBDSCAN with the given groups' documents as seeds.
  */
 cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {
