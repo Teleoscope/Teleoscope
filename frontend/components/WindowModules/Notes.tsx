@@ -54,6 +54,7 @@ export default function Note(props) {
 
 
   const handleFocus = () => {
+    console.log("focused on Note")
   }
 
   const handleClose = () => {

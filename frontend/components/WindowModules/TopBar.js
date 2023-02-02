@@ -36,7 +36,6 @@ import randomColor from 'randomcolor';
 
 // contexts
 import { Stomp } from '../Stomp'
-import ColorPicker from "../ColorPicker";
 
 export default function TopBar() {
   const [loaded, setLoaded] = React.useState(false); 

@@ -27,7 +27,7 @@ export class Stomp {
   private client: Client;
   private static stomp: Stomp;
   private creationTime: Date;
-  private _loaded: Boolean;
+  private _loaded: boolean;
 
   private constructor() {
     this.creationTime = new Date();
@@ -54,7 +54,7 @@ export class Stomp {
     return this._userid;
   }
 
-  private set loaded(l: Boolean) {
+  private set loaded(l: boolean) {
     this._loaded = l;
   }
 
