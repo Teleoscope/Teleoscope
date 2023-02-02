@@ -10,6 +10,7 @@ import { FormControl } from '@mui/material';
 import { Select } from '@mui/material';
 import { InputLabel } from '@mui/material';
 import { Stack } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { Divider } from '@mui/material';
 import { alpha } from "@mui/material";
@@ -35,6 +36,7 @@ import randomColor from 'randomcolor';
 
 // contexts
 import { Stomp } from '../Stomp'
+import ColorPicker from "../ColorPicker";
 
 export default function TopBar() {
   const [loaded, setLoaded] = React.useState(false); 
@@ -215,6 +217,7 @@ export default function TopBar() {
           open={openMenu}
           onClose={handleMenuClose}
         >
+          
           <MenuItem 
             onKeyDown={(e) => e.stopPropagation()} 
             children={<Account user={user} handleCookie={handleCookie} />}>  
@@ -241,13 +244,15 @@ export default function TopBar() {
 
   // Main return for this component
   return (
-    <AppBar position="static" style={{ backgroundColor: get_color(), width: "100%" }}>
+    <AppBar position="static" sx={{ backgroundColor: get_color(), width: "100%" }}>
       <Toolbar >
         <Stack spacing={10} sx={{ width: "100%" }} direction="row" alignItems="center" justifyContent="space-between">
           <TeleoscopeLogo />
           <AccountMenu />
         </Stack>
       </Toolbar>
+      <Box sx={{backgroundColor: get_color(), height: "1px", boxShadow: 3}}></Box>
+      <ColorPicker defaultColor={get_color()}></ColorPicker>
     </AppBar>
   );
 }

@@ -77,6 +77,9 @@ export const Windows = createSlice({
 				temp[index].w = 4;
 				temp[index].h = 1;
 				temp[index].isResizable = false;
+				temp[index].resizeHandles = [];
+				temp[index].showWindow = false;
+				
 			}
 			state.windows = temp;
 		},
@@ -88,6 +91,9 @@ export const Windows = createSlice({
 				temp[index].w = 5;
 				temp[index].h = 9;
 				temp[index].isResizable = true;
+				temp[index].resizeHandles = ["se"];
+				temp[index].showWindow = true;
+
 			}
 			state.windows = temp;	
 		},

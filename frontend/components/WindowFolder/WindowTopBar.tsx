@@ -3,7 +3,6 @@ import React from "react";
 
 // MUI
 import Stack from "@mui/material/Stack";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
@@ -15,7 +14,6 @@ import CloseButton from "../CloseButton"
 import { useDispatch } from "react-redux";
 import { moveWindowToFront } from "../../actions/windows";
 
-
 export default function WindowTopBar(props) {
 	const dispatch = useDispatch();
 	return (
@@ -26,7 +24,6 @@ export default function WindowTopBar(props) {
 							props.handleShow();
 						}}
 					>{props.icon}</IconButton>
-					<Tooltip title={props.title}>
 						<Typography
 							variant="body1"
 							component="div"
@@ -34,7 +31,6 @@ export default function WindowTopBar(props) {
 						// className="drag-handle"
 						>{props.title}
 						</Typography>
-					</Tooltip>
 				<CloseButton id={props.id} size="small" />
 			</Stack>
 			<Divider></Divider>

@@ -389,6 +389,22 @@ reorient(teleoscope_id: string, positive_docs: Array<string>, negative_docs: Arr
 }
 
 /**
+ * Recolor the session.
+ */
+
+recolor_session(color: string, session_oid: string) {
+  const body = {
+    task: "recolor_session",
+    args: {
+      color: color,
+      session_oid: session_oid,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
  * Create MLGroups using the UMAP and HBDSCAN with the given groups' documents as seeds.
  */
 cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {

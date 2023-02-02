@@ -36,7 +36,7 @@ export default function WindowFactory(props) {
 		<Window {...props}
 			icon={wdefs[w.type].icon(data)}
 			inner={wdefs[w.type].component(w, props.id, wdefs[w.type].color(data))}
-			showWindow={wdefs[w.type].showWindow}
+			showWindow={wdefs[w.type].showWindow || w.showWindow}
 			data={data}
 			title={wdefs[w.type].title(data)}
 			color={wdefs[w.type].color(data)}
