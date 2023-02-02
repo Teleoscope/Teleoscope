@@ -475,7 +475,9 @@ def add_group(*args, human=True, included_documents=[], **kwargs):
             res = chain(
                     robj.s(teleoscope_id=teleoscope_result.inserted_id,
                         positive_docs=included_documents,
-                        negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
+                        negative_docs=[],
+                        userid=ObjectId(str(userid))
+                    ).set(queue=auth.rabbitmq["task_queue"]),
                     save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
             )
             res.apply_async()
@@ -942,8 +944,8 @@ class reorient(Task):
         resultantVec /= np.linalg.norm(resultantVec)
         return resultantVec, direction
 
-    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, magnitude=0.5):
-        logging.info(f'Received reorient for teleoscope id {teleoscope_id}, positive docs {positive_docs}, negative docs {negative_docs}, and magnitude {magnitude}.')
+    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, userid: str, magnitude=0.5):
+        logging.info(f'Received reorient for teleoscope id {teleoscope_id}, positive docs {positive_docs}, negative docs {negative_docs}, userid {userid} and magnitude {magnitude}.')
         # either positive or negative docs should have at least one entry
         if len(positive_docs) == 0 and len(negative_docs) == 0:
             # if both are empty, then cache stuff if not cached alreadt
@@ -1008,7 +1010,8 @@ class reorient(Task):
                 'negative_docs': negative_docs,
                 'stateVector': qprime.tolist(),
                 'ranked_document_ids': ObjectId(str(gridfs_id)),
-                'rank_slice': rank_slice
+                'rank_slice': rank_slice,
+                'userid': ObjectId(str(userid))
             }
         }
 

@@ -229,22 +229,6 @@ register_account(jsonData) {
 }
 
 /**
- * Saves a Teleoscope history item.
- */
-save_teleoscope_state(_id: string, history_item) {
-  //const obj_id = ObjectId(_id);
-  const body = {
-    task: 'save_teleoscope_state',
-    args: {
-      _id: _id,
-      history_item: history_item
-    }
-  }
-  this.publish(body);
-  return body;
-}
-
-/**
  * Requests to create a new group object in MongoDB.
  */
 add_group(label: string, color: string, session_id: string) {
@@ -429,7 +413,7 @@ relabel_group(label: string, group_id: string) {
     task: "relabel_group",
     args: {
       label: label,
-      group_id: group_id,
+      group_id: group_id
     }
   }
   this.publish(body);
