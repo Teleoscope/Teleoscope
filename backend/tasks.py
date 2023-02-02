@@ -568,8 +568,9 @@ def add_document_to_group(*args, **kwargs):
     session, db = utils.create_transaction_session()
 
     # handle kwargs
-    group_id = ObjectId(kwargs["group_id"])
+    group_id = ObjectId(str(kwargs["group_id"]))
     document_id = kwargs["document_id"]
+    userid = ObjectId(str(kwargs["userid"]))
 
     group = db.groups.find_one({'_id': group_id})
     # Check if group exists
@@ -589,6 +590,7 @@ def add_document_to_group(*args, **kwargs):
         return
     history_item["included_documents"].append(document_id)
     history_item["action"] = "Add document to group"
+    history_item["userid"] = userid
 
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
@@ -605,7 +607,8 @@ def add_document_to_group(*args, **kwargs):
     res = chain(
                 robj.s(teleoscope_id=group["teleoscope"],
                        positive_docs=[document_id],
-                       negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
+                       negative_docs=[],
+                       userid=userid).set(queue=auth.rabbitmq["task_queue"]),
                 save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
     )
     res.apply_async()
