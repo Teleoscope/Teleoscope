@@ -252,7 +252,7 @@ export default function TopBar() {
         </Stack>
       </Toolbar>
       <Box sx={{backgroundColor: get_color(), height: "1px", boxShadow: 3}}></Box>
-      <ColorPicker defaultColor={get_color()}></ColorPicker>
+      {/* <ColorPicker defaultColor={get_color()}></ColorPicker> */}
     </AppBar>
   );
 }

@@ -7,6 +7,8 @@ import { RootState } from '../../stores/store'
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
+import MenuUnstyled from '@mui/base/MenuUnstyled';
+
 
 // custom components
 import MenuActions from "./ContextMenuActions"
@@ -20,16 +22,22 @@ import useSWRAbstract from "../../util/swr"
 
 // contexts
 import { Stomp } from '../Stomp'
+import { color } from "@mui/system";
+import ColorPicker from "../ColorPicker";
 
 export default function ContextMenu(props) {
     const userid = useAppSelector((state: RootState) => state.activeSessionID.userid);
     const client = Stomp.getInstance();
     client.userId = userid;
 
+    const [colorPicker, setColorPicker] = React.useState(false);
+
     const dispatch = useAppDispatch();
 
     const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
     const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
+    const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+
     const teleoscopes = teleoscopes_raw?.map((t) => {
         const ret = {
             _id: t._id,
@@ -56,6 +64,28 @@ export default function ContextMenu(props) {
 
     const handleNewTeleoscope = (s_id) => {
         client.initialize_teleoscope(s_id);
+    }
+
+    const handleOpenColorPicker = () => {
+        setColorPicker(true);
+    }
+
+
+    if (colorPicker) {
+        return (
+            <Menu
+                sx={{ displayPrint: 'none' }}
+                open={props.contextMenu !== null}
+                onClose={() => setColorPicker(false)}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                    props.contextMenu !== null
+                        ? { top: props.contextMenu.mouseY, left: props.contextMenu.mouseX }
+                        : undefined
+                }
+            ><ColorPicker defaultColor={session?.history[0].color} ></ColorPicker></Menu>
+        ) 
+        
     }
 
     return (
@@ -104,6 +134,8 @@ export default function ContextMenu(props) {
             <MenuItem onClick={() => handleOpenNewWindow("FABMenu")}>
                 FABMenu
             </MenuItem>
+            <Divider />
+            <MenuItem onClick={() => handleOpenColorPicker()}>Change session color</MenuItem>
         </Menu>
     )
 }
