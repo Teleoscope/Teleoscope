@@ -29,7 +29,6 @@ export default function ColorPicker(props) {
     return (
         <div style={{padding:"1em"}}>
       <CompactPicker
-        style={{border: "none"}}
         color={ state.background }
         onChangeComplete={ handleChangeComplete }
       />
