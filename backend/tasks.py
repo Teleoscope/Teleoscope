@@ -187,14 +187,29 @@ def relabel_group(*args, **kwargs):
     label = kwargs["label"]
 
     with transaction_session.start_transaction():
-        session = db.groups.find_one({"_id": group_id}, session=transaction_session)
-        history_item = session["history"][0]
-        history_item["label"] = label
-        history_item["user"] = userid
+        group = db.groups.find_one({"_id": group_id}, session=transaction_session)
+
+        group_history_item = group["history"][0]
+        group_history_item["label"] = label
+        group_history_item["user"] = userid
         db.groups.update_one({"_id": group_id},
             {"$push": {
                     "history": {
-                        "$each": [history_item],
+                        "$each": [group_history_item],
+                        "$position": 0
+                    }
+                }}, session=transaction_session 
+        )
+
+        teleoscope = db.teleoscopes.find_one({"_id": group["teleoscope"]}, session=transaction_session)
+
+        teleoscope_history_item = teleoscope["history"][0]
+        teleoscope_history_item["label"] = label
+        teleoscope_history_item["user"] = userid
+        db.teleoscopes.update_one({"_id": group_id},
+            {"$push": {
+                    "history": {
+                        "$each": [teleoscope_history_item],
                         "$position": 0
                     }
                 }}, session=transaction_session 
