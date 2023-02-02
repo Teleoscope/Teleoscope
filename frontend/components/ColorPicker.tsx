@@ -20,7 +20,7 @@ export default function ColorPicker(props) {
 
   const handleChangeComplete = (color) => {
     setState({ background: color.hex });
-    props.onChange(color);
+    props.onChange(color.hex);
   };
 
   

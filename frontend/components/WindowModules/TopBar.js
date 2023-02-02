@@ -37,7 +37,7 @@ import randomColor from 'randomcolor';
 // contexts
 import { Stomp } from '../Stomp'
 
-export default function TopBar() {
+export default function TopBar(props) {
   const [loaded, setLoaded] = React.useState(false); 
 
   const dispatch = useDispatch();
@@ -246,7 +246,7 @@ export default function TopBar() {
     <AppBar position="static" sx={{ backgroundColor: get_color(), width: "100%" }}>
       <Toolbar >
         <Stack spacing={10} sx={{ width: "100%" }} direction="row" alignItems="center" justifyContent="space-between">
-          <TeleoscopeLogo />
+          <TeleoscopeLogo isConnected={props.isConnected}/>
           <AccountMenu />
         </Stack>
       </Toolbar>

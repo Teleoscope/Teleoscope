@@ -405,7 +405,7 @@ recolor_session(color: string, session_oid: string) {
 }
 
 /**
- * Recolor the session.
+ * Recolor the group.
  */
 
 recolor_group(color: string, group_id: string) {
