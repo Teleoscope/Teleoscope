@@ -590,7 +590,7 @@ def add_document_to_group(*args, **kwargs):
         return
     history_item["included_documents"].append(document_id)
     history_item["action"] = "Add document to group"
-    history_item["userid"] = userid
+    history_item["user"] = userid
 
     with session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
@@ -1014,7 +1014,7 @@ class reorient(Task):
                 'stateVector': qprime.tolist(),
                 'ranked_document_ids': ObjectId(str(gridfs_id)),
                 'rank_slice': rank_slice,
-                'userid': ObjectId(str(userid))
+                'user': ObjectId(str(userid))
             }
         }
 
