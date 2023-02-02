@@ -42,7 +42,7 @@ export default function TopBar() {
   const dispatch = useDispatch();
   const [cookies, setCookie] = useCookies(["userid"]);
   const userid = useSelector((state) => state.activeSessionID.userid);  
-  if (cookies.userid && cookies?.userid != -1) {
+  if (cookies.userid && cookies?.userid != "-1") {
     dispatch(setUserId(cookies.userid))
   }
   const client = Stomp.getInstance();
@@ -52,7 +52,7 @@ export default function TopBar() {
 
   const session_id = useSelector((state) => state.activeSessionID.value);
 
-  if (session_id == -1 && Object.prototype.hasOwnProperty(user, "sessions")) {
+  if (session_id == "-1" && user?.sessions) {
     dispatch(sessionActivator(user.sessions[0]))
   }
 

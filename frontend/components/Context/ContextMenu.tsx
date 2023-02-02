@@ -77,7 +77,7 @@ export default function ContextMenu(props) {
             <Divider />
             {teleoscopes?.map((t) => {
                 return (
-                    <MenuItem onClick={() => handleExistingTeleoscope(t._id)}>
+                    <MenuItem key={t._id} onClick={() => handleExistingTeleoscope(t._id)}>
                         {t.label}
                     </MenuItem>
                 )
