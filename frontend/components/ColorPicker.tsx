@@ -20,9 +20,7 @@ export default function ColorPicker(props) {
 
   const handleChangeComplete = (color) => {
     setState({ background: color.hex });
-    console.log("recoloring to", color)
-    client.recolor_session(color.hex, session_id)
-
+    props.onChange(color);
   };
 
   

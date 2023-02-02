@@ -29,6 +29,7 @@ import {Stomp} from '../Stomp'
 import randomColor from "randomcolor";
 import {useCookies} from "react-cookie";
 import ConnectingAirportsIcon from "@mui/icons-material/ConnectingAirports";
+import ColorPicker from "../ColorPicker";
 
 // custom components
 export default function GroupPalette(props) {
@@ -52,6 +53,7 @@ export default function GroupPalette(props) {
     const group_labels = groups ? groups.map((g) => {return g.history[0].label}) : []
     const [showGroupsBool, setShowGroupsBool] = React.useState(false);
     const [showSubmitBool, setShowSubmitBool] = React.useState(false);
+    const [showColorPicker, setShowColorPicker] = React.useState(false);
 
     const runClusters = () => {client.cluster_by_groups(groups.map(g => g._id), session_id)};
 
@@ -232,6 +234,8 @@ export default function GroupPalette(props) {
         )
     }
 
+
+
     return (
         <div style={{overflow: "auto", height: "100%"}}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" style={{margin: 0}}>
@@ -273,7 +277,8 @@ export default function GroupPalette(props) {
                         >
                             <ListItem>
                                 <ListItemIcon>
-                                    <FolderIcon sx={{color: the_group?.history[0].color}}/>
+                                    <IconButton onClick={() => setShowColorPicker(!showColorPicker)}
+                                    ><FolderIcon sx={{color: the_group?.history[0].color}}/></IconButton>
                                 </ListItemIcon>
                                 <ListItemText
                                     primary={gl}
@@ -281,6 +286,13 @@ export default function GroupPalette(props) {
                                 />
                                 <IconButton onClick={() => client.remove_group(the_group._id, session_id)}><DeleteIcon></DeleteIcon></IconButton>
                             </ListItem>
+                            {showColorPicker ? 
+                                        <ColorPicker 
+                                            defaultColor={the_group?.history[0].color}
+                                            onChange={(color) => {
+                                                client.recolor_group(color, the_group._id)
+                                            }}
+                                        ></ColorPicker> : <span></span>}
                         </div>
                     )
                 })}

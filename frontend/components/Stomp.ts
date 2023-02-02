@@ -405,6 +405,22 @@ recolor_session(color: string, session_oid: string) {
 }
 
 /**
+ * Recolor the session.
+ */
+
+recolor_group(color: string, group_id: string) {
+  const body = {
+    task: "recolor_group",
+    args: {
+      color: color,
+      group_id: group_id,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
  * Create MLGroups using the UMAP and HBDSCAN with the given groups' documents as seeds.
  */
 cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {

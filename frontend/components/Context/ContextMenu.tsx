@@ -70,6 +70,14 @@ export default function ContextMenu(props) {
         setColorPicker(true);
     }
 
+    const handleClose = () => {
+        props.handleCloseContextMenu()
+        setColorPicker(false)
+    }
+
+    const handleColorChange = (color) => {
+        client.recolor_session(color, session_id)
+    }
 
     if (colorPicker) {
         return (
@@ -83,15 +91,22 @@ export default function ContextMenu(props) {
                         ? { top: props.contextMenu.mouseY, left: props.contextMenu.mouseX }
                         : undefined
                 }
-            ><ColorPicker defaultColor={session?.history[0].color} ></ColorPicker></Menu>
+            >
+                <ColorPicker 
+                    defaultColor={session?.history[0].color} 
+                    onChange={handleColorChange}>
+                </ColorPicker>
+            </Menu>
         ) 
         
     }
 
+
+
     return (
         <Menu
             open={props.contextMenu !== null}
-            onClose={props.handleCloseContextMenu}
+            onClose={() => handleClose()}
             anchorReference="anchorPosition"
             anchorPosition={
                 props.contextMenu !== null
