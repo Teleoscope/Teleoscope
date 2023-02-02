@@ -435,6 +435,12 @@ def add_group(*args, human=True, included_documents=[], **kwargs):
     with transaction_session.start_transaction():
         groups_res = collection.insert_one(obj, session=transaction_session)
         logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
+
+        db.teleoscopes.update_one(
+            {"_id" : teleoscope_result.inserted_id},
+            {"group": groups_res.inserted_id}
+        )
+
         # add created groups document to the correct session
         session = db.sessions.find_one({'_id': _id}, session=transaction_session)
         if not session:
