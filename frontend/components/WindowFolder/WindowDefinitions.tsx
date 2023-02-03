@@ -44,7 +44,6 @@ export default function WindowDefinitions() {
 
     // Helper functions
     const getReferencedDocument = (oid) => {
-        console.log("note title oid", oid)
         fetch(`http://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}/api/document/${oid}`)
             .then((response) => response.json())
             .then((data) => setDoc(data))
@@ -57,15 +56,14 @@ export default function WindowDefinitions() {
 
     return {
         "Note": {
-            icon: () => { return <CreateIcon fontSize="inherit" /> },
+            icon: () => { return <CommentIcon fontSize="inherit" /> },
             component: (w, id, color) => { return (<Notes id={id} windata={w} color={color} />) },
-            showWindow: true,
+            showWindow: false,
             title: (d) => {
-                console.log("note title", d)
                 if (d) {
                     getReferencedDocument(d.oid);
                 }
-                if (Object.keys(doc).length > 0) {
+                if (doc) {
                     return doc?.title;
                 } else {
                     return "Notez";
@@ -111,7 +109,7 @@ export default function WindowDefinitions() {
             component: (w, id, color) => { return (<Teleoscope id={id} windata={w} color={color} />) },
             showWindow: false,
             title: (d) => { return `Teleoscope: ${d?.history[0].label}` },
-            color: (d) => { console.log("teleoscope", d); return d?.history[0].color },
+            color: (d) => { return d?.history[0].color },
             tag: "teleoscope",
         },
         "Teleoscope Palette": {

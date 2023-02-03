@@ -123,8 +123,6 @@ export default function GroupPalette(props) {
         if (groupValue.label && groupName.label) {
             client.copy_group(groupName.label, groupValue.label._id, session_id)
             handleClose()
-        } else {
-            console.log('ERROR - NO GROUP SELECTED')
         }
     };
 

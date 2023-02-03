@@ -17,7 +17,8 @@ import useSWRAbstract from "../../util/swr"
 import { Stomp } from '../Stomp'
 
 export default function Note(props) {
-  const { note } = useSWRAbstract("note", `/api/note/${props._id}`);
+  const id = props.id.split("%")[0]
+  const { note } = useSWRAbstract("note", `/api/note/${id}`);
   const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); //value was userid
   const client = Stomp.getInstance();
   client.userId = userid;
@@ -39,13 +40,13 @@ export default function Note(props) {
   // Handlers
   const handleBlur = () => {
     const content = editorState.getCurrentContent();
-    client.update_note(props._id, convertToRaw(content))
+    client.update_note(id, convertToRaw(content))
   }
 
   const handleOnChange = (e) => {
     setEditorState(e);
     const content = editorState.getCurrentContent();
-    client.update_note(props._id, convertToRaw(content))
+    client.update_note(id, convertToRaw(content))
   }
 
 

@@ -33,7 +33,6 @@ export default function WindowFactory(props) {
 		)
 	}
 
-	console.log("window", w, wdefs, data, key, id)
 
 	return (
 		<Window {...props}

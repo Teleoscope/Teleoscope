@@ -32,7 +32,7 @@ const actions = {
   },
   Notes: {
     icon: <CommentIcon />,
-    default_window: { i: "%notepalette", w: 5, h: 9, type: "Note Palette", isResizable: true }
+    default_window: { i: "%notepalette", w: 5, h: 9, type: "Note Palette", isResizable: true, showWindow: true }
   }
   
 };
