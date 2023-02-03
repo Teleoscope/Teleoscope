@@ -782,6 +782,9 @@ def add_note(*args, **kwargs):
         logging.info(f"Warning: document with id {document_id} not found.")
         raise Exception(f"document with id {document_id} not found")
 
+    if db.notes.find_one({'document_id': document_id}):
+        return 200
+
     obj = {
         "document_id": document_id,
         "creation_time": datetime.datetime.utcnow(),
