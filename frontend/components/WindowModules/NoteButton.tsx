@@ -1,5 +1,5 @@
 // NoteButton.js
-import React, { useContext } from 'react';
+import React from 'react';
 
 // mui
 import IconButton from "@mui/material/IconButton";

@@ -7,7 +7,7 @@ import Stack from '@mui/material/Stack';
 import Card from '@mui/material/Card';
 
 // actions
-import { useAppSelector, useAppDispatch } from '../../hooks'
+import { useAppSelector } from '../../hooks'
 import { RootState } from '../../stores/store'
 
 // custom components

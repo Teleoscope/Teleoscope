@@ -44,7 +44,6 @@ export default function ContextMenu(props) {
         }
         return ret;
     });
-    const { groups_raw } = useSWRAbstract("groups_raw", `/api/sessions/${session_id}/groups`);
 
     const handleOpenNewWindow = (menu_action) => {
         dispatch(addWindow(MenuActions()[menu_action].default_window));

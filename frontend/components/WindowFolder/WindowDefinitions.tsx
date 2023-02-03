@@ -46,7 +46,7 @@ export default function WindowDefinitions() {
 			component: (w, id, color) => { return (<Notes id={id} windata={w} color={color} />) },
 			showWindow: true,
 			title: () => { return "Note" },
-			color: (d) => get_color(),
+			color: () => get_color(),
 			tag: "note",
 		},
 		"FABMenu": {
@@ -54,7 +54,7 @@ export default function WindowDefinitions() {
 			component: (w, id, color) => { return (<FABMenu id={id} windata={w} color={color} />) },
 			showWindow: false,
 			title: () => { return "FABMenu" },
-			color: (d) => get_color(),
+			color: () => get_color(),
 			tag: "fabmenu",
 		},
 		"Group": {
@@ -70,7 +70,7 @@ export default function WindowDefinitions() {
 			component: (w, id, color) => { return (<Document id={id} windata={w} color={color} />) },
 			showWindow: false,
 			title: (d) => { return PreprocessTitle(d?.title) },
-			color: (d) => get_color(),
+			color: () => get_color(),
 			tag: "document",
 		},
 		"Teleoscope": {
@@ -86,7 +86,7 @@ export default function WindowDefinitions() {
 			component: (w, id, color) => { return (<TeleoscopePalette id={id} windata={w} color={color} />) },
 			showWindow: false,
 			title: () => { return `Teleoscopes` },
-			color: (d) => get_color(),
+			color: () => get_color(),
 			tag: "teleoscopepalette",
 		},
 		"Search": {
@@ -102,7 +102,7 @@ export default function WindowDefinitions() {
 			component: (w, id, color) => { return (<GroupPalette id={id} windata={w} color={color}/>) },
 			showWindow: true,
 			title: () => { return "Group Palette" },
-			color: (d) => get_color(),
+			color: () => get_color(),
 			tag: "grouppalette",
 		},
 		"Clusters": {
@@ -110,7 +110,7 @@ export default function WindowDefinitions() {
 			component: (w, id, color) => { return (<Clusters id={id} windata={w} color={color} />) },
 			showWindow: true,
 			title: () => { return "Clusters" },
-			color: (d) => get_color(),
+			color: () => get_color(),
 			tag: "clusters",
 		},
 		"Cluster": {
