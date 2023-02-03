@@ -1050,7 +1050,7 @@ class reorient(Task):
                 'stateVector': qprime.tolist(),
                 'ranked_document_ids': ObjectId(str(gridfs_id)),
                 'rank_slice': rank_slice,
-                'color': teleoscope['history'][0]['color']
+                'color': teleoscope['history'][0]['color'],
                 'user': ObjectId(str(userid))
             }
         }
