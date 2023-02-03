@@ -704,7 +704,7 @@ def remove_document_from_group(*args, **kwargs):
     # handle kwargs
     group_id = ObjectId(str(kwargs["group_id"]))
     document_id = kwargs["document_id"]
-    userid = ObjectId(str(kwargs["userid"])
+    userid = ObjectId(str(kwargs["userid"]))
 
     group = db.groups.find_one({'_id': group_id})
     if not group:
