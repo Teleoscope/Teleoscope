@@ -74,11 +74,11 @@ export default function WindowDefinitions() {
 			tag: "document",
 		},
 		"Teleoscope": {
-			icon: () => { return <FlareIcon fontSize="inherit" sx={style}/> },
+			icon: (d) => { return <FlareIcon fontSize="inherit" sx={{ color: d?.history[0].color }}/> },
 			component: (w, id, color) => { return (<Teleoscope id={id} windata={w} color={color} />) },
 			showWindow: false,
 			title: (d) => { return `Teleoscope: ${d?.history[0].label}` },
-			color: (d) => get_color(),
+			color: (d) => { console.log("teleoscope", d); return d?.history[0].color },
 			tag: "teleoscope",
 		},
 		"Teleoscope Palette": {

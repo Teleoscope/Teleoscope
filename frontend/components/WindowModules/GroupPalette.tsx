@@ -248,19 +248,43 @@ export default function GroupPalette(props) {
                     onKeyDown={(e) => keyChange(e)}
                     onChange={(e) => setValue(e.target.value)}
                     InputLabelProps={{
-                        style: {color: props.color},
+                        sx: [{
+                            '&:hover': {
+                                color: props.color
+                            },
+                          },
+                          {
+                            '& label.Mui-focused': {
+                                color: props.color
+                            }
+                          }
+                        
+                            
+                        ],
                     }}
                     sx={{
                         width: "75%",
                         margin: 1,
-                        '& .MuiInput-underline:before': {borderBottomColor: props.color},
+                        // '& .MuiInput-underline:before': {borderBottomColor: props.color},
                         '& .MuiInput-underline:after': {borderBottomColor: props.color},
-                        '& .MuiInputLabel-root': {borderBottomColor: props.color},
+                        // '& .MuiInputLabel-root': {borderBottomColor: props.color},
                     }}
                 />
 
-                <IconButton onClick={() => runClusters()}><Diversity2Icon sx={{color: props.color}}/></IconButton>
-                <IconButton onClick={handleClickOpen}><ConnectingAirportsIcon sx={{color: props.color}}/></IconButton>
+                <IconButton onClick={() => runClusters()}><Diversity2Icon sx={[
+                    {
+                        '&:hover': {
+                            color: props.color
+                        },
+                      },
+                ]}/></IconButton>
+                <IconButton onClick={handleClickOpen}><ConnectingAirportsIcon sx={[
+                    {
+                        '&:hover': {
+                            color: props.color
+                        },
+                      },
+                ]}/></IconButton>
                 <CopyGroup/>
 
             </Stack>

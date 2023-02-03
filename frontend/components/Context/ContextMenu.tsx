@@ -24,6 +24,7 @@ import useSWRAbstract from "../../util/swr"
 import { Stomp } from '../Stomp'
 import { color } from "@mui/system";
 import ColorPicker from "../ColorPicker";
+import Typography from "@mui/material/Typography";
 
 export default function ContextMenu(props) {
     const userid = useAppSelector((state: RootState) => state.activeSessionID.userid);
@@ -62,9 +63,6 @@ export default function ContextMenu(props) {
         props.handleCloseContextMenu();
     }
 
-    const handleNewTeleoscope = (s_id) => {
-        client.initialize_teleoscope(s_id);
-    }
 
     const handleOpenColorPicker = () => {
         setColorPicker(true);
@@ -114,12 +112,11 @@ export default function ContextMenu(props) {
                     : undefined
             }
         >
-            <MenuItem onClick={() => {
-                handleOpenNewWindow("Teleoscope");
-                handleNewTeleoscope(session_id);
-            }
-                }>New Teleoscope</MenuItem>
-            <Divider />
+            <MenuItem >
+                <Typography variant="overline" onClick={() => handleOpenNewWindow("Teleoscopes")}>
+                    All Teleoscopes
+                </Typography>
+            </MenuItem>
             {teleoscopes?.map((t) => {
                 return (
                     <MenuItem key={t._id} onClick={() => handleExistingTeleoscope(t._id)}>
@@ -130,12 +127,13 @@ export default function ContextMenu(props) {
             <Divider />
 
             <MenuItem onClick={() => handleOpenNewWindow("Search")}>
-                New Search
+                Open Search
             </MenuItem>
-            <Divider />
-
             <MenuItem onClick={() => handleOpenNewWindow("Groups")}>
-                New Group Palette
+                Open Group Palette
+            </MenuItem>
+            <MenuItem onClick={() => handleOpenNewWindow("FABMenu")}>
+                Open Floating Menu
             </MenuItem>
             <Divider />
 
@@ -144,10 +142,6 @@ export default function ContextMenu(props) {
             </MenuItem>
             <MenuItem onClick={() => dispatch(deselectAll(null))}>
                 Deselect All
-            </MenuItem>
-            <Divider />
-            <MenuItem onClick={() => handleOpenNewWindow("FABMenu")}>
-                FABMenu
             </MenuItem>
             <Divider />
             <MenuItem onClick={() => handleOpenColorPicker()}>Change session color</MenuItem>

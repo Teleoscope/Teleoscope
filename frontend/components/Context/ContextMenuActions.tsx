@@ -15,7 +15,7 @@ const actions = {
   },
   Teleoscopes: {
     icon: <FlareIcon />,
-    default_window: { i: "%teleoscopepalette", w: 2, h: 1, type: "Teleoscope Palette", isResizable: true }
+    default_window: { i: "%teleoscopepalette", w: 2, h: 1, type: "Teleoscope Palette", isResizable: true, showWindow: true }
   },
   Teleoscope: {
     icon: <FlareIcon />,
