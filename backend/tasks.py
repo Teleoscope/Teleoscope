@@ -776,6 +776,7 @@ def add_note(*args, **kwargs):
     # Try finding document
     session, db = utils.create_transaction_session()
     document_id = kwargs["document_id"]
+    userid = ObjectId(str(kwargs["userid"]))
 
     if not db.documents.find_one({'id': document_id}):
         logging.info(f"Warning: document with id {document_id} not found.")
@@ -786,6 +787,7 @@ def add_note(*args, **kwargs):
         "creation_time": datetime.datetime.utcnow(),
         "history": [{
             "content": {},
+            "userid": userid,
             "timestamp": datetime.datetime.utcnow()
         }]
     }
@@ -804,9 +806,10 @@ def update_note(*args, **kwargs):
         document_id: string
         content: string
     """
-    session, db = utils.commit_with_retry()
+    session, db = utils.create_transaction_session()
     document_id = kwargs["document_id"]
     content = kwargs["content"]
+    userid = ObjectId(str(kwargs["userid"]))
 
     if not db.notes.find_one({'document_id': document_id}):
         logging.info(f"Warning: note with id {document_id} not found.")
@@ -817,8 +820,9 @@ def update_note(*args, **kwargs):
                 {
                     "history": {
                         "$each": [{
-                        "content": content,
-                        "timestamp": datetime.datetime.utcnow()
+                            "content": content,
+                            "timestamp": datetime.datetime.utcnow(),
+                            "userid": userid
                         }],
                         "$position": 0
                     }

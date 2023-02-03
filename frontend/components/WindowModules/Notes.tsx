@@ -57,11 +57,6 @@ export default function Note(props) {
     console.log("focused on Note")
   }
 
-  const handleClose = () => {
-    client.update_note(documentid, convertToRaw(editorState.getCurrentContent()))
-    dispatch(removeWindow(props.id))
-  }
-
   const focusEditor = () => {
     editor.current.focus();
   }
@@ -85,9 +80,7 @@ export default function Note(props) {
             justifyContent="space-between"
             className="drag-handle"
           >
-            <IconButton size="small" onClick={handleClose}>
-              <CloseIcon fontSize="small" />
-            </IconButton>
+            
             <DocumentTitle title={document ? document.title : ""} size="sm" color="#AAAAAA" noWrap={true} />
           </Stack>
           <Editor
