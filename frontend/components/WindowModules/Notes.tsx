@@ -5,22 +5,16 @@ import "draft-js/dist/Draft.css";
 // mui
 import Stack from '@mui/material/Stack';
 import Card from '@mui/material/Card';
-import IconButton from "@mui/material/IconButton";
 
 // actions
-import { removeWindow } from "../../actions/windows";
-import { useAppSelector, useAppDispatch } from '../../hooks'
+import { useAppSelector } from '../../hooks'
 import { RootState } from '../../stores/store'
 
 // custom components
 import DocumentTitle from "../Documents/DocumentTitle"
 
-// icons
-import CloseIcon from "@mui/icons-material/Close";
-
 //utils
 import useSWRAbstract from "../../util/swr"
-//import { update_note } from "../Stomp";
 
 // contexts
 import { Stomp } from '../Stomp'
@@ -29,23 +23,23 @@ export default function Note(props) {
   const documentid = props.id.split("%")[0]
   const { document } = useSWRAbstract("document", `/api/document/${documentid}`);
   const { note } = useSWRAbstract("note", `/api/notes/${documentid}`);
-  const dispatch = useAppDispatch();
   const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); //value was userid
   const client = Stomp.getInstance();
   client.userId = userid;
   const editor = React.useRef(null);
 
+  console.log("note", documentid, document, note)
+
   const handleLoad = () => {
     if (note) {
-      console.log("editor", note)
-      const item = note["history"][note["history"].length - 1];
+      const item = note["history"][0];
       if (item) {
-        console.log("editor", item)
         return EditorState.createWithContent(convertFromRaw(item["content"]));
       }
     }
     return EditorState.createEmpty()
   }
+
   const [editorState, setEditorState] = React.useState(() => handleLoad());
 
   // Handlers
@@ -54,14 +48,15 @@ export default function Note(props) {
     client.update_note(documentid, convertToRaw(content))
   }
 
-
-  const handleFocus = () => {
-    console.log("focus")
+  const handleOnChange = (e) => {
+    setEditorState(e);
+    const content = editorState.getCurrentContent();
+    client.update_note(documentid, convertToRaw(content))
   }
 
-  const handleClose = () => {
-    client.update_note(documentid, convertToRaw(editorState.getCurrentContent()))
-    dispatch(removeWindow(props.id))
+
+  const handleFocus = () => {
+    console.log("focused on Note")
   }
 
   const focusEditor = () => {
@@ -87,9 +82,7 @@ export default function Note(props) {
             justifyContent="space-between"
             className="drag-handle"
           >
-            <IconButton size="small" onClick={handleClose}>
-              <CloseIcon fontSize="small" />
-            </IconButton>
+            
             <DocumentTitle title={document ? document.title : ""} size="sm" color="#AAAAAA" noWrap={true} />
           </Stack>
           <Editor
@@ -97,7 +90,7 @@ export default function Note(props) {
             editorState={editorState}
             onBlur={handleBlur}
             onFocus={handleFocus}
-            onChange={setEditorState}
+            onChange={handleOnChange}
           // placeholder={document ? document["title"] : props.id}
           />
         </Stack>

@@ -1,5 +1,5 @@
 // NoteButton.js
-import React, { useContext } from 'react';
+import React from 'react';
 
 // mui
 import IconButton from "@mui/material/IconButton";
@@ -21,7 +21,7 @@ export default function NoteButton(props) {
 
 	const handleAddNote = () => {
 		dispatch(addWindow({ i: props.id + "%note", x: 0, y: 0, w: 3, h: 3, type: "Note" }));
-		client.add_note(props.id);
+		client.add_note(props.id, props.type);
 	}
 
 	return (
