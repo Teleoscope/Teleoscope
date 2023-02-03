@@ -89,7 +89,7 @@ export class Stomp {
       Stomp.stomp.loaded = true;
       // Do something, all subscribes must be done is this callback
       // This is needed because this will be executed after a (re)connect
-      console.log("Connected to RabbitMQ webSTOMP server.");
+      console.log("Connected to RabbitMQ webSTOMP server.", frame);
     };
 
     /**

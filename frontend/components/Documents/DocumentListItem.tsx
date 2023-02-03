@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 
 // material ui
 import Stack from "@mui/material/Stack";
@@ -30,7 +30,6 @@ export default function DocumentListItem(props) {
   const { document } = useSWRAbstract("document", `/api/document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;
   const dispatch = useAppDispatch();
-  const [open, setOpen] = useState(false);
   const [hover, setHover] = useState(false);
   const magnitude = useAppSelector((state: RootState) => state.teleoscopes.magnitude);
 
@@ -39,9 +38,7 @@ export default function DocumentListItem(props) {
   const handleOrientTowards = () => {
     client.reorient(props.group.teleoscope, [props.id], [], magnitude)
   }
-  const handleOrientAway = () => {
-    client.reorient(props.group.teleoscope, [], [props.id], magnitude)
-  }
+  
   const handleRemove = () => {
     client.remove_document_from_group(props.group._id, props.id)
   }
@@ -62,7 +59,7 @@ export default function DocumentListItem(props) {
         height: "100%",
       }}
       id={props.id}
-      onDragStart={(e:React.DragEvent<HTMLDivElement>):void => { dispatch(dragged({ id: props.id + "%document", type: "Document" })) }}
+      onDragStart={() => { dispatch(dragged({ id: props.id + "%document", type: "Document" })) }}
     >
       <Stack
         direction="row"

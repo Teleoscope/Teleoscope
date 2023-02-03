@@ -1,5 +1,5 @@
 // imports
-import React, { useContext } from "react";
+import React from "react";
 import RGL, { WidthProvider } from "react-grid-layout";
 import { useAppSelector, useAppDispatch } from '../../hooks'
 import { RootState } from '../../stores/store'
@@ -13,7 +13,7 @@ import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
 
 // actions
-import { checkWindow, removeWindow, addWindow, loadWindows, updateWindows } from "../../actions/windows";
+import { checkWindow, removeWindow, addWindow, updateWindows } from "../../actions/windows";
 
 // contexts
 import { Stomp } from '../Stomp'

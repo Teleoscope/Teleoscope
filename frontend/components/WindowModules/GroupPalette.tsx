@@ -9,7 +9,6 @@ import DialogContent from '@mui/material/DialogContent';
 import {createFilterOptions} from '@mui/material/Autocomplete';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import FolderIcon from '@mui/icons-material/Folder';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -31,7 +30,6 @@ import {useCookies} from "react-cookie";
 import ConnectingAirportsIcon from "@mui/icons-material/ConnectingAirports";
 import ColorPicker from "../ColorPicker";
 import EditableText from "../EditableText";
-import { width } from "@mui/system";
 
 // custom components
 export default function GroupPalette(props) {
@@ -40,7 +38,6 @@ export default function GroupPalette(props) {
     const userid = useAppSelector((state) => state.activeSessionID.userid);
     const client = Stomp.getInstance();
     client.userId = userid;
-    const filter = createFilterOptions();
     const dispatch = useAppDispatch();
     const [value, setValue] = React.useState(null);
     const [sessionValue, setSessionValue] = React.useState({label: ''});

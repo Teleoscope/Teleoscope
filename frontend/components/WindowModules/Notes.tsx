@@ -15,7 +15,6 @@ import DocumentTitle from "../Documents/DocumentTitle"
 
 //utils
 import useSWRAbstract from "../../util/swr"
-//import { update_note } from "../Stomp";
 
 // contexts
 import { Stomp } from '../Stomp'
@@ -28,6 +27,8 @@ export default function Note(props) {
   const client = Stomp.getInstance();
   client.userId = userid;
   const editor = React.useRef(null);
+
+  console.log("note", documentid, document, note)
 
   const handleLoad = () => {
     if (note) {

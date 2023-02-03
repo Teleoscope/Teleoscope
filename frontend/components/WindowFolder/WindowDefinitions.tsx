@@ -27,7 +27,7 @@ import GroupPalette from "../WindowModules/GroupPalette"
 import Clusters from "../Cluster/Clusters"
 import Cluster from '../Cluster/Cluster';
 
-import { PreprocessTitle, PreprocessText } from "../../util/Preprocessers"
+import { PreprocessTitle } from "../../util/Preprocessers"
 
 export default function WindowDefinitions() {
 	const session_id = useSelector((state: RootState) => state.activeSessionID.value);

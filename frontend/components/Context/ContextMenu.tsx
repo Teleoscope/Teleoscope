@@ -7,7 +7,6 @@ import { RootState } from '../../stores/store'
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
-import MenuUnstyled from '@mui/base/MenuUnstyled';
 
 
 // custom components
@@ -22,7 +21,6 @@ import useSWRAbstract from "../../util/swr"
 
 // contexts
 import { Stomp } from '../Stomp'
-import { color } from "@mui/system";
 import ColorPicker from "../ColorPicker";
 import Typography from "@mui/material/Typography";
 
@@ -47,9 +45,6 @@ export default function ContextMenu(props) {
         return ret;
     });
     const { groups_raw } = useSWRAbstract("groups_raw", `/api/sessions/${session_id}/groups`);
-    const group_ids = groups_raw?.map((g) => {
-        return g._id;
-    })
 
     const handleOpenNewWindow = (menu_action) => {
         dispatch(addWindow(MenuActions()[menu_action].default_window));
