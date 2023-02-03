@@ -35,23 +35,26 @@ export default function WindowDefinitions() {
 	const session_id = useSelector((state: RootState) => state.activeSessionID.value);
 	const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
 
-	const [doc, setDoc] = React.useState({});
-	
+	interface Document {
+		title: string;
+	  }
+	const [doc, setDoc] = React.useState<Document | undefined>();
+
 	const get_color = () => session ? session.history[0].color : "#FF0000"
 
-	 // Helper functions
-	 const getReferencedDocument = (oid) => {
+	// Helper functions
+	const getReferencedDocument = (oid) => {
 		console.log("note title oid", oid)
 		fetch(`http://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}/api/document/${oid}`)
-		.then((response) =>  response.json())
-		.then((data) => setDoc(data))
-	  }
+			.then((response) => response.json())
+			.then((data) => setDoc(data))
+	}
 
 	const style = [
-		{color: get_color()},
-		{'& .MuiChip-icon': {color: get_color()}}
+		{ color: get_color() },
+		{ '& .MuiChip-icon': { color: get_color() } }
 	]
-	
+
 	return {
 		"Note": {
 			icon: () => { return <CreateIcon fontSize="inherit" /> },
@@ -63,7 +66,7 @@ export default function WindowDefinitions() {
 					getReferencedDocument(d.oid);
 				}
 				if (Object.keys(doc).length > 0) {
-				 return doc?.title;
+					return doc?.title;
 				} else {
 					return "Notez";
 				}
@@ -72,7 +75,7 @@ export default function WindowDefinitions() {
 			tag: "note",
 		},
 		"Note Palette": {
-			icon: () => { return <CommentIcon fontSize="inherit" sx={style}/> },
+			icon: () => { return <CommentIcon fontSize="inherit" sx={style} /> },
 			component: (w, id, color) => { return (<NotePalette id={id} windata={w} color={color} />) },
 			showWindow: false,
 			title: () => { return `Notes` },
@@ -104,7 +107,7 @@ export default function WindowDefinitions() {
 			tag: "document",
 		},
 		"Teleoscope": {
-			icon: (d) => { return <FlareIcon fontSize="inherit" sx={{ color: d?.history[0].color }}/> },
+			icon: (d) => { return <FlareIcon fontSize="inherit" sx={{ color: d?.history[0].color }} /> },
 			component: (w, id, color) => { return (<Teleoscope id={id} windata={w} color={color} />) },
 			showWindow: false,
 			title: (d) => { return `Teleoscope: ${d?.history[0].label}` },
@@ -112,7 +115,7 @@ export default function WindowDefinitions() {
 			tag: "teleoscope",
 		},
 		"Teleoscope Palette": {
-			icon: () => { return <FlareIcon fontSize="inherit" sx={style}/> },
+			icon: () => { return <FlareIcon fontSize="inherit" sx={style} /> },
 			component: (w, id, color) => { return (<TeleoscopePalette id={id} windata={w} color={color} />) },
 			showWindow: false,
 			title: () => { return `Teleoscopes` },
@@ -120,7 +123,7 @@ export default function WindowDefinitions() {
 			tag: "teleoscopepalette",
 		},
 		"Search": {
-			icon: () => { return <SearchIcon fontSize="inherit" sx={style}/> },
+			icon: () => { return <SearchIcon fontSize="inherit" sx={style} /> },
 			component: (w, id, color) => { return (<Search id={id} windata={w} color={color} />) },
 			showWindow: true,
 			title: () => { return "Search" },
@@ -128,15 +131,15 @@ export default function WindowDefinitions() {
 			tag: "search",
 		},
 		"Group Palette": {
-			icon: () => { return <FolderCopyIcon fontSize="inherit" sx={style}/> },
-			component: (w, id, color) => { return (<GroupPalette id={id} windata={w} color={color}/>) },
+			icon: () => { return <FolderCopyIcon fontSize="inherit" sx={style} /> },
+			component: (w, id, color) => { return (<GroupPalette id={id} windata={w} color={color} />) },
 			showWindow: true,
 			title: () => { return "Group Palette" },
 			color: () => get_color(),
 			tag: "grouppalette",
 		},
 		"Clusters": {
-			icon: () => { return <Diversity2Icon fontSize="inherit" sx={style}/> },
+			icon: () => { return <Diversity2Icon fontSize="inherit" sx={style} /> },
 			component: (w, id, color) => { return (<Clusters id={id} windata={w} color={color} />) },
 			showWindow: true,
 			title: () => { return "Clusters" },
