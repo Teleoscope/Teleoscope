@@ -248,19 +248,11 @@ export default function GroupPalette(props) {
                     onKeyDown={(e) => keyChange(e)}
                     onChange={(e) => setValue(e.target.value)}
                     InputLabelProps={{
-                        sx: [{
-                            '&:hover': {
-                                color: props.color
-                            },
-                          },
-                          {
-                            '& label.Mui-focused': {
-                                color: props.color
+                        sx: {
+                            "&.Mui-focused": {
+                              color: props.color
                             }
                           }
-                        
-                            
-                        ],
                     }}
                     sx={{
                         width: "75%",
@@ -315,7 +307,13 @@ export default function GroupPalette(props) {
                                     callback={(label) => client.relabel_group(label, the_group._id)}
                                     />
                                     </Stack>
-                                    <IconButton onClick={() => client.remove_group(the_group._id, session_id)}><DeleteIcon></DeleteIcon></IconButton>
+                                    <IconButton onClick={() => client.remove_group(the_group._id, session_id)}><DeleteIcon sx={[
+                    {
+                        '&:hover': {
+                            color: props.color
+                        },
+                      },
+                ]}></DeleteIcon></IconButton>
                                 </Stack>
                             </ListItem>
                             {showColorPicker ? 

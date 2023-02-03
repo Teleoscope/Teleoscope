@@ -581,7 +581,7 @@ def copy_group(*args, **kwargs):
     res = chain(
                 robj.s(teleoscope_id=str(group_new["teleoscope"]),
                        positive_docs=included_documents,
-                       negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
+                       negative_docs=[], userid=userid).set(queue=auth.rabbitmq["task_queue"]),
                 save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
     )
     res.apply_async()
@@ -702,8 +702,9 @@ def remove_document_from_group(*args, **kwargs):
     session, db = utils.create_transaction_session()
 
     # handle kwargs
-    group_id = ObjectId(kwargs["group_id"])
+    group_id = ObjectId(str(kwargs["group_id"]))
     document_id = kwargs["document_id"]
+    userid = ObjectId(str(kwargs["userid"])
 
     group = db.groups.find_one({'_id': group_id})
     if not group:
@@ -1049,6 +1050,7 @@ class reorient(Task):
                 'stateVector': qprime.tolist(),
                 'ranked_document_ids': ObjectId(str(gridfs_id)),
                 'rank_slice': rank_slice,
+                'color': teleoscope['history'][0]['color']
                 'user': ObjectId(str(userid))
             }
         }

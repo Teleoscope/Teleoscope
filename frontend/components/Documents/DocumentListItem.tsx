@@ -4,7 +4,7 @@ import React, { useContext, useState } from "react";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
 import FlareIcon from '@mui/icons-material/Flare';
-import RemoveIcon from '@mui/icons-material/Remove';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 // actions
 import { useAppSelector, useAppDispatch } from '../../hooks'
@@ -72,25 +72,22 @@ export default function DocumentListItem(props) {
         <Stack
           direction="row"
           alignItems="center"
+          spacing={1}
+          sx={{marginRight:  "0.5em"}}
         >
           <BookmarkSelector id={props.id} />
           {showGroupIcon ? <GroupSelector id={props.id} /> : null}
+          {Object.prototype.hasOwnProperty.call(props, "group") ? <IconButton sx={{ width: 20, height: 20 }} onClick={() => handleOrientTowards()}>
+            {<FlareIcon sx={{ '&:hover': {color: 'blue'}, width: 20, height: 20 }}></FlareIcon>}
+          </IconButton> : ""}
           <DocumentTitle title={title} noWrap={false} />
         </Stack>
 
         {Object.prototype.hasOwnProperty.call(props, "group") ? (
-        <div>
-          <IconButton sx={{ width: 20, height: 20 }} onClick={() => handleOrientTowards()}>
-            {<FlareIcon sx={{ '&:hover': {color: 'blue'}, width: 20, height: 20 }}></FlareIcon>}
-          </IconButton> 
-          {/* <IconButton onClick={() => handleOrientAway()}>
-            {<FlareIcon sx={{ color: "red" }}></FlareIcon>}
-          </IconButton> */}
           <IconButton sx={{ width: 20, height: 20 }} onClick={() => handleRemove()}>
-            <RemoveIcon sx={{ '&:hover': {color: 'red'}, width: 20, height: 20 }}></RemoveIcon>
+            <DeleteIcon sx={{ '&:hover': {color: 'red'}, width: 20, height: 20 }}></DeleteIcon>
           </IconButton>
-        </div>
-        ) 
+         ) 
       
         : ""}
 
