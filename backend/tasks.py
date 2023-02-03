@@ -775,18 +775,16 @@ def add_note(*args, **kwargs):
     """    
     # Try finding document
     session, db = utils.create_transaction_session()
-    document_id = kwargs["document_id"]
+    oid = ObjectId(str(kwargs["oid"]))
     userid = ObjectId(str(kwargs["userid"]))
+    oid_type = kwargs["type"]
 
-    if not db.documents.find_one({'id': document_id}):
-        logging.info(f"Warning: document with id {document_id} not found.")
-        raise Exception(f"document with id {document_id} not found")
-
-    if db.notes.find_one({'document_id': document_id}):
+    if db.notes.find_one({'oid': oid}):
         return 200
 
     obj = {
-        "document_id": document_id,
+        "oid": oid,
+        "type": oid_type,
         "creation_time": datetime.datetime.utcnow(),
         "history": [{
             "content": {},
@@ -796,7 +794,7 @@ def add_note(*args, **kwargs):
     }
     with session.start_transaction():
         res = db.notes.insert_one(obj, session=session)
-        logging.info(f"Added note for document {document_id} with result {res}.")
+        logging.info(f"Added note for document {oid} with result {res}.")
         utils.commit_with_retry(session)
 
 
@@ -806,20 +804,21 @@ def update_note(*args, **kwargs):
     Updates a note.
 
     kwargs:
-        document_id: string
+        oid: string
         content: string
+        userid: string
     """
     session, db = utils.create_transaction_session()
-    document_id = kwargs["document_id"]
+    oid = ObjectId(str(kwargs["oid"]))
     content = kwargs["content"]
     userid = ObjectId(str(kwargs["userid"]))
 
-    if not db.notes.find_one({'document_id': document_id}):
-        logging.info(f"Warning: note with id {document_id} not found.")
-        raise Exception(f"note with id {document_id} not found")
+    if not db.notes.find_one({'oid': oid}):
+        logging.info(f"Warning: note with id {oid} not found.")
+        raise Exception(f"note with id {oid} not found")
 
     with session.start_transaction():
-        res = db.notes.update_one({"document_id": document_id}, {"$push":
+        res = db.notes.update_one({"oid": oid}, {"$push":
                 {
                     "history": {
                         "$each": [{
@@ -832,7 +831,7 @@ def update_note(*args, **kwargs):
                 }
             }, session=session)
         utils.commit_with_retry(session)
-        logging.info(f"Updated note for document {document_id} with result {res}.")
+        logging.info(f"Updated note for object {oid} with result {res}.")
 
 
 @app.task

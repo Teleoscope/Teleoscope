@@ -327,11 +327,12 @@ update_group_label(group_id: string, label: string) {
 /**
  * Request to add a note for a particular document.
  */
-add_note(document_id: string) {
+add_note(oid: string, type:string) {
   const body = {
     task: 'add_note',
     args: {
-      document_id: document_id,
+      oid: oid,
+      type: type
     }
   }
   this.publish(body);
