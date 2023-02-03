@@ -10,9 +10,6 @@ import Card from '@mui/material/Card';
 import { useAppSelector } from '../../hooks'
 import { RootState } from '../../stores/store'
 
-// custom components
-import DocumentTitle from "../Documents/DocumentTitle"
-
 //utils
 import useSWRAbstract from "../../util/swr"
 
@@ -21,7 +18,6 @@ import { Stomp } from '../Stomp'
 
 export default function Note(props) {
   const { note } = useSWRAbstract("note", `/api/note/${props._id}`);
-  const { obj } = useSWRAbstract(note?.key, `/api/${note?.key}/${props._id}`)
   const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); //value was userid
   const client = Stomp.getInstance();
   client.userId = userid;
@@ -75,14 +71,6 @@ export default function Note(props) {
     >
       <div style={{ overflow: "auto", height: "100%" }}>
         <Stack direction="column" onClick={focusEditor} style={{ marginLeft: "10px", cursor: "text" }}>
-          <Stack
-            direction="row-reverse"
-            justifyContent="space-between"
-            className="drag-handle"
-          >
-            
-            <DocumentTitle title={document ? document.title : ""} size="sm" color="#AAAAAA" noWrap={true} />
-          </Stack>
           <Editor
             ref={editor}
             editorState={editorState}

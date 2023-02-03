@@ -34,8 +34,18 @@ import NotePalette from '../WindowModules/NotePalette';
 export default function WindowDefinitions() {
 	const session_id = useSelector((state: RootState) => state.activeSessionID.value);
 	const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+
+	const [doc, setDoc] = React.useState({});
 	
 	const get_color = () => session ? session.history[0].color : "#FF0000"
+
+	 // Helper functions
+	 const getReferencedDocument = (oid) => {
+		console.log("note title oid", oid)
+		fetch(`http://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}/api/document/${oid}`)
+		.then((response) =>  response.json())
+		.then((data) => setDoc(data))
+	  }
 
 	const style = [
 		{color: get_color()},
@@ -47,7 +57,17 @@ export default function WindowDefinitions() {
 			icon: () => { return <CreateIcon fontSize="inherit" /> },
 			component: (w, id, color) => { return (<Notes id={id} windata={w} color={color} />) },
 			showWindow: true,
-			title: () => { return "Note" },
+			title: (d) => {
+				console.log("note title", d)
+				if (d) {
+					getReferencedDocument(d.oid);
+				}
+				if (Object.keys(doc).length > 0) {
+				 return doc?.title;
+				} else {
+					return "Notez";
+				}
+			},
 			color: () => get_color(),
 			tag: "note",
 		},
