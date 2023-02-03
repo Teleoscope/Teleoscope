@@ -342,11 +342,11 @@ add_note(oid: string, type:string) {
 /**
  * Updates a note's content.
  */
-update_note(document_id: string, content) {
+update_note(oid: string, content) {
   const body = {
     task: 'update_note',
     args: {
-      document_id: document_id,
+      oid: oid,
       content: content
     }
   }
