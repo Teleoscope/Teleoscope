@@ -26,7 +26,7 @@ function LoginForm({ Login, setRegistration, error }) {
       e.preventDefault()
    
       // sends the information to Stomp.js
-      add_login(client, details.email, details.password)
+      client.add_login(details.email, details.password)
 
       Login(details)
    }
