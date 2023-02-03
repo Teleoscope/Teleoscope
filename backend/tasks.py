@@ -777,14 +777,14 @@ def add_note(*args, **kwargs):
     session, db = utils.create_transaction_session()
     oid = ObjectId(str(kwargs["oid"]))
     userid = ObjectId(str(kwargs["userid"]))
-    oid_type = kwargs["type"]
+    oid_key = kwargs["key"]
 
     if db.notes.find_one({'oid': oid}):
         return 200
 
     obj = {
         "oid": oid,
-        "type": oid_type,
+        "type": oid_key,
         "creation_time": datetime.datetime.utcnow(),
         "history": [{
             "content": {},
@@ -804,21 +804,21 @@ def update_note(*args, **kwargs):
     Updates a note.
 
     kwargs:
-        oid: string
+        note_id: string
         content: string
         userid: string
     """
     session, db = utils.create_transaction_session()
-    oid = ObjectId(str(kwargs["oid"]))
+    note_id = ObjectId(str(kwargs["note_id"]))
     content = kwargs["content"]
     userid = ObjectId(str(kwargs["userid"]))
 
-    if not db.notes.find_one({'oid': oid}):
-        logging.info(f"Warning: note with id {oid} not found.")
-        raise Exception(f"note with id {oid} not found")
+    if not db.notes.find_one({'_id': note_id}):
+        logging.info(f"Warning: note with id {note_id} not found.")
+        raise Exception(f"note with id {note_id} not found")
 
     with session.start_transaction():
-        res = db.notes.update_one({"oid": oid}, {"$push":
+        res = db.notes.update_one({"_id": note_id}, {"$push":
                 {
                     "history": {
                         "$each": [{
@@ -831,7 +831,7 @@ def update_note(*args, **kwargs):
                 }
             }, session=session)
         utils.commit_with_retry(session)
-        logging.info(f"Updated note for object {oid} with result {res}.")
+        logging.info(f"Updated note for object {note_id} with result {res}.")
 
 
 @app.task

@@ -20,15 +20,13 @@ import useSWRAbstract from "../../util/swr"
 import { Stomp } from '../Stomp'
 
 export default function Note(props) {
-  const documentid = props.id.split("%")[0]
-  const { document } = useSWRAbstract("document", `/api/document/${documentid}`);
-  const { note } = useSWRAbstract("note", `/api/notes/${documentid}`);
+  const { note } = useSWRAbstract("note", `/api/note/${props._id}`);
+  const { obj } = useSWRAbstract(note?.key, `/api/${note?.key}/${props._id}`)
   const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); //value was userid
   const client = Stomp.getInstance();
   client.userId = userid;
   const editor = React.useRef(null);
 
-  console.log("note", documentid, document, note)
 
   const handleLoad = () => {
     if (note) {
@@ -45,13 +43,13 @@ export default function Note(props) {
   // Handlers
   const handleBlur = () => {
     const content = editorState.getCurrentContent();
-    client.update_note(documentid, convertToRaw(content))
+    client.update_note(props._id, convertToRaw(content))
   }
 
   const handleOnChange = (e) => {
     setEditorState(e);
     const content = editorState.getCurrentContent();
-    client.update_note(documentid, convertToRaw(content))
+    client.update_note(props._id, convertToRaw(content))
   }
 
 

@@ -215,7 +215,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 kwargs={
                     "userid": args["userid"],
                     "oid": args["oid"],
-                    "type": args["type"]
+                    "key": args["key"]
                 }
             )
 
@@ -224,7 +224,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 args=(),
                 kwargs={
                     "userid": args["userid"],
-                    "oid": args["oid"],
+                    "note_id": args["note_id"],
                     "content": args["content"],
                 }
             )

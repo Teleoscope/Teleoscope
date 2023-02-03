@@ -11,6 +11,7 @@ import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 import Diversity2Icon from '@mui/icons-material/Diversity2';
+import CommentIcon from '@mui/icons-material/Comment';
 
 // actions
 import { RootState } from '../../stores/store'
@@ -28,6 +29,7 @@ import Clusters from "../Cluster/Clusters"
 import Cluster from '../Cluster/Cluster';
 
 import { PreprocessTitle } from "../../util/Preprocessers"
+import NotePalette from '../WindowModules/NotePalette';
 
 export default function WindowDefinitions() {
 	const session_id = useSelector((state: RootState) => state.activeSessionID.value);
@@ -48,6 +50,14 @@ export default function WindowDefinitions() {
 			title: () => { return "Note" },
 			color: () => get_color(),
 			tag: "note",
+		},
+		"Note Palette": {
+			icon: () => { return <CommentIcon fontSize="inherit" sx={style}/> },
+			component: (w, id, color) => { return (<NotePalette id={id} windata={w} color={color} />) },
+			showWindow: false,
+			title: () => { return `Notes` },
+			color: () => get_color(),
+			tag: "notepalette",
 		},
 		"FABMenu": {
 			icon: () => { return <AddIcon fontSize="inherit" /> },
@@ -94,7 +104,7 @@ export default function WindowDefinitions() {
 			component: (w, id, color) => { return (<Search id={id} windata={w} color={color} />) },
 			showWindow: true,
 			title: () => { return "Search" },
-			color: (d) => get_color(),
+			color: () => get_color(),
 			tag: "search",
 		},
 		"Group Palette": {

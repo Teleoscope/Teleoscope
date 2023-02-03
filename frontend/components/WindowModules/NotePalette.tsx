@@ -6,8 +6,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Typography from '@mui/material/Typography';
-import FlareIcon from '@mui/icons-material/Flare';
-
+import CommentIcon from '@mui/icons-material/Comment';
 // actions
 import { useAppSelector, useAppDispatch } from '../../hooks'
 import { RootState } from '../../stores/store'
@@ -17,29 +16,22 @@ import { dragged } from "../../actions/windows";
 import useSWRAbstract from "../../util/swr"
 
 
-export default function TeleoscopePalette(props) {
-    const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
-    const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
+export default function NotePalette(props) {
+    const { notes } = useSWRAbstract("notes", `/api/notes/`);
     const dispatch = useAppDispatch();
 
-    const teleoscopes = teleoscopes_raw?.map((t) => {
-      const ret = {
-        _id: t._id,
-        label: t.history[0].label
-      }
-      return ret;
-    });
+
     return (
       <div style={{ overflow: "auto", height: "100%" }}>
         <List>
-          {teleoscopes?.map((t) => {
+          {notes?.map((n) => {
             return (
                 <div draggable={true}
-                    onDragStart={(e:React.DragEvent<HTMLDivElement>):void => {dispatch(dragged({ id: t?._id + "%teleoscope", type: "Teleoscope" }))}}
+                    onDragStart={(e:React.DragEvent<HTMLDivElement>):void => {dispatch(dragged({ id: n?._id + "%note", type: "Note" }))}}
                 >
                     <ListItem>
-                        <ListItemIcon><FlareIcon /></ListItemIcon>
-                        <ListItemText primary={t.label} secondary={t._id} />
+                        <ListItemIcon><CommentIcon /></ListItemIcon>
+                        <ListItemText primary={n._id} secondary={n._id} />
                     </ListItem>
 
                 </div>
