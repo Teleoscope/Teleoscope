@@ -467,7 +467,7 @@ def add_group(*args, human=True, included_documents=[], **kwargs):
 
         db.teleoscopes.update_one(
             {"_id" : teleoscope_result.inserted_id},
-            {"group": groups_res.inserted_id}
+            {"$set" : {"group": groups_res.inserted_id}}
         )
 
         # add created groups document to the correct session
