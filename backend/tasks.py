@@ -349,6 +349,7 @@ def initialize_teleoscope(*args, **kwargs):
                         "ranked_document_ids": None,
                         "action": "Initialize Teleoscope",
                         "user": user_id,
+                        "color": "#AAAAAA"
                     }
                 ]
             }, session=transaction_session)
