@@ -23,7 +23,7 @@ export default function Document(props) {
     <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
 
       <Stack direction="row" justifyContent="right" alignItems="center" style={{ margin: 0 }}>
-        <NoteButton id={id} />
+        <NoteButton id={document?._id} type="document" />
         <GroupSelector id={id} />
       </Stack>
       <Divider />

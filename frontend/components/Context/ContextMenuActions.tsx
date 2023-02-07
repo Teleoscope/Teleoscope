@@ -5,13 +5,17 @@ import TopicIcon from '@mui/icons-material/Topic';
 import Diversity2Icon from '@mui/icons-material/Diversity2';
 
 const actions = {
+  FABMenu: {
+    icon: <SearchIcon />,
+    default_window: { i: "default_FABMenu", w: 1, h: 1, type: "FABMenu", isResizable: false }
+  },
   Search: {
     icon: <SearchIcon />,
     default_window: { i: "%search", w: 5, h: 9, type: "Search", isResizable: true }
   },
   Teleoscopes: {
     icon: <FlareIcon />,
-    default_window: { i: "%teleoscopepalette", w: 2, h: 1, type: "Teleoscope Palette", isResizable: true }
+    default_window: { i: "%teleoscopepalette", w: 2, h: 1, type: "Teleoscope Palette", isResizable: true, showWindow: true }
   },
   Teleoscope: {
     icon: <FlareIcon />,

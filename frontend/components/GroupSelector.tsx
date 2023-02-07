@@ -51,26 +51,18 @@ export default function groupSelector(props) {
    }
 
    const GroupIconHandler = (props) => {
-      if (props.groups.length == 1) {
+      if (props.groups.length >= 1) {
          const g = props.groups[0].history[0];
          return (
-            <Tooltip title={g.label} placement="top">
-               <FolderIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
-            </Tooltip>
-         )
-      }
-      if (props.groups.length > 1) {
-         const g = props.groups[0].history[0];
-         return (
-            <Tooltip title={g.label} placement="top">
+            <Tooltip title={g.label}>
                <FolderCopyIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
             </Tooltip>
          )
       }
       return (
-         <FolderOutlinedIcon
-            sx={{ color: "#BBBBBB" }}
-            style={{ fontSize: 15 }} />
+         <Tooltip title="No group assigned...">
+            <FolderOutlinedIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} />
+         </Tooltip>
       )
    }
 

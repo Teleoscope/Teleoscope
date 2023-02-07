@@ -35,12 +35,12 @@ export default function SearchWindow(props) {
   return (
     <div style={{ overflow: "auto", height: "100%", width: "100%"}}>
       <Stack direction="row" alignItems="center" sx={{margin:1}}>
-        <SearchIcon sx={{ color: props.color }}/>
+        <SearchIcon sx={{ '&:hover': {color: props.color}, color: "#AAAAAA" }}/>
         <TextField 
           fullWidth
           placeholder="Search..."
           sx={{
-            '& .MuiInput-underline:before': { borderBottomColor: props.color },
+            // '& .MuiInput-underline:before': { borderBottomColor: props.color },
             '& .MuiInput-underline:after': { borderBottomColor: props.color },
           }} variant="standard" onChange={(e) => handleSetQuery(e)}
         />

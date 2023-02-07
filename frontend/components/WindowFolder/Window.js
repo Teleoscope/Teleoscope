@@ -13,7 +13,7 @@ import CardActionArea from '@mui/material/CardActionArea';
 import { useDispatch } from "react-redux";
 import { minimizeWindow, maximizeWindow, checkWindow, removeWindow } from "../../actions/windows";
 
-export default React.forwardRef(({ style, className, onMouseDown, onMouseUp, onTouchEnd, ...props }, ref) => {
+export default React.forwardRef(({ ...props }) => {
     const [show, setShow] = useState(props.showWindow);
     const [drag, setDrag] = useState(true);
     const w = props.windata;

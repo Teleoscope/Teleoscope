@@ -22,7 +22,7 @@ import useSWRAbstract from "../util/swr"
 
 export default function Teleoscope(props) {
   const [teleoscope_id] = useState(props.id.split("%")[0]);
-  const { teleoscope, teleoscope_loading } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
+  const { teleoscope } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
   const magnitude = useAppSelector((state: RootState) => state.teleoscopes.magnitude);
   const dispatch = useAppDispatch();
   const data = teleoscope?.history[0]["rank_slice"];

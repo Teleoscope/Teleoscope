@@ -11,7 +11,7 @@ Object.assign(global, WebsocketBuilder);
 
 // custom imports
 import bcrypt from 'bcryptjs';
-let client: Client;
+// let client: Client;
 
 /**
  * Type definition for Body
@@ -27,9 +27,11 @@ export class Stomp {
   private client: Client;
   private static stomp: Stomp;
   private creationTime: Date;
+  private _loaded: boolean;
 
   private constructor() {
     this.creationTime = new Date();
+    this.loaded = false;
   }
 
   /**
@@ -50,6 +52,14 @@ export class Stomp {
 
   public get userId() {
     return this._userid;
+  }
+
+  private set loaded(l: boolean) {
+    this._loaded = l;
+  }
+
+  public get loaded() {
+    return this._loaded;
   }
 
   /**
@@ -76,9 +86,10 @@ export class Stomp {
      * Called when the client connects to RabbitMQ.
      */
     this.client.onConnect = function (frame) {
+      Stomp.stomp.loaded = true;
       // Do something, all subscribes must be done is this callback
       // This is needed because this will be executed after a (re)connect
-      console.log("Connected to RabbitMQ webSTOMP server.");
+      console.log("Connected to RabbitMQ webSTOMP server.", frame);
     };
 
     /**
@@ -218,22 +229,6 @@ register_account(jsonData) {
 }
 
 /**
- * Saves a Teleoscope history item.
- */
-save_teleoscope_state(_id: string, history_item) {
-  //const obj_id = ObjectId(_id);
-  const body = {
-    task: 'save_teleoscope_state',
-    args: {
-      _id: _id,
-      history_item: history_item
-    }
-  }
-  this.publish(body);
-  return body;
-}
-
-/**
  * Requests to create a new group object in MongoDB.
  */
 add_group(label: string, color: string, session_id: string) {
@@ -257,6 +252,25 @@ copy_group(label: string, group_id: string, session_id: string) {
     task: 'copy_group',
     args: {
       label: label,
+      group_id: group_id,
+      session_id: session_id,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Removes a group from a session in MongoDB. Does not delete the group.
+ * 
+ * @param group_id 
+ * @param session_id 
+ * @returns 
+ */
+remove_group(group_id: string, session_id: string) {
+  const body = {
+    task: 'remove_group',
+    args: {
       group_id: group_id,
       session_id: session_id,
     }
@@ -313,11 +327,12 @@ update_group_label(group_id: string, label: string) {
 /**
  * Request to add a note for a particular document.
  */
-add_note(document_id: string) {
+add_note(oid: string, type:string) {
   const body = {
     task: 'add_note',
     args: {
-      document_id: document_id,
+      oid: oid,
+      type: type
     }
   }
   this.publish(body);
@@ -327,11 +342,11 @@ add_note(document_id: string) {
 /**
  * Updates a note's content.
  */
-update_note(document_id: string, content) {
+update_note(oid: string, content) {
   const body = {
     task: 'update_note',
     args: {
-      document_id: document_id,
+      oid: oid,
       content: content
     }
   }
@@ -353,6 +368,54 @@ reorient(teleoscope_id: string, positive_docs: Array<string>, negative_docs: Arr
   }
   if (magnitude != null) {
     body.args["magnitude"] = magnitude;
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Recolor the session.
+ */
+
+recolor_session(color: string, session_oid: string) {
+  const body = {
+    task: "recolor_session",
+    args: {
+      color: color,
+      session_id: session_oid,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Recolor the group.
+ */
+
+recolor_group(color: string, group_id: string) {
+  const body = {
+    task: "recolor_group",
+    args: {
+      color: color,
+      group_id: group_id,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Relabel the group.
+ */
+
+relabel_group(label: string, group_id: string) {
+  const body = {
+    task: "relabel_group",
+    args: {
+      label: label,
+      group_id: group_id
+    }
   }
   this.publish(body);
   return body;

@@ -10,9 +10,9 @@ export default function WindowFactory(props) {
 	const keymap = {
 		"note": "note",
 		"fabmenu": "fabmenu",
-		"group": "group",
+		"group": "groups",
 		"document": "document",
-		"teleoscope": "teleoscope",
+		"teleoscope": "teleoscopes",
 		"teleoscopepalette": "teleoscopepalette",
 		"search": "search",
 		"grouppalette": "grouppalette",
@@ -31,11 +31,12 @@ export default function WindowFactory(props) {
 			<div>{wdefs[w.type].component(w, props.id)}</div>
 		)
 	}
+
 	return (
 		<Window {...props}
 			icon={wdefs[w.type].icon(data)}
 			inner={wdefs[w.type].component(w, props.id, wdefs[w.type].color(data))}
-			showWindow={wdefs[w.type].showWindow}
+			showWindow={wdefs[w.type].showWindow || w.showWindow}
 			data={data}
 			title={wdefs[w.type].title(data)}
 			color={wdefs[w.type].color(data)}

@@ -59,7 +59,7 @@ export async function getServerSideProps(context) {
       props: { isConnected: true },
     }
   } catch (e) {
-    console.error(e)
+    console.error(e, context)
     return {
       props: { isConnected: false },
     }

@@ -9,9 +9,9 @@ import DialogContent from '@mui/material/DialogContent';
 import {createFilterOptions} from '@mui/material/Autocomplete';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import FolderIcon from '@mui/icons-material/Folder';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import Diversity2Icon from '@mui/icons-material/Diversity2';
@@ -28,6 +28,8 @@ import {Stomp} from '../Stomp'
 import randomColor from "randomcolor";
 import {useCookies} from "react-cookie";
 import ConnectingAirportsIcon from "@mui/icons-material/ConnectingAirports";
+import ColorPicker from "../ColorPicker";
+import EditableText from "../EditableText";
 
 // custom components
 export default function GroupPalette(props) {
@@ -36,7 +38,6 @@ export default function GroupPalette(props) {
     const userid = useAppSelector((state) => state.activeSessionID.userid);
     const client = Stomp.getInstance();
     client.userId = userid;
-    const filter = createFilterOptions();
     const dispatch = useAppDispatch();
     const [value, setValue] = React.useState(null);
     const [sessionValue, setSessionValue] = React.useState({label: ''});
@@ -51,6 +52,7 @@ export default function GroupPalette(props) {
     const group_labels = groups ? groups.map((g) => {return g.history[0].label}) : []
     const [showGroupsBool, setShowGroupsBool] = React.useState(false);
     const [showSubmitBool, setShowSubmitBool] = React.useState(false);
+    const [showColorPicker, setShowColorPicker] = React.useState(false);
 
     const runClusters = () => {client.cluster_by_groups(groups.map(g => g._id), session_id)};
 
@@ -120,9 +122,6 @@ export default function GroupPalette(props) {
 
     const submitCopyGroup = () => {
         if (groupValue.label && groupName.label) {
-            console.log('session id: ', session_id)
-            console.log('group id (old): ', groupValue.label._id)
-            console.log('group name (new): ', groupName.label)
             client.copy_group(groupName.label, groupValue.label._id, session_id)
             handleClose()
         } else {
@@ -234,6 +233,8 @@ export default function GroupPalette(props) {
         )
     }
 
+
+
     return (
         <div style={{overflow: "auto", height: "100%"}}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" style={{margin: 0}}>
@@ -244,19 +245,35 @@ export default function GroupPalette(props) {
                     onKeyDown={(e) => keyChange(e)}
                     onChange={(e) => setValue(e.target.value)}
                     InputLabelProps={{
-                        style: {color: props.color},
+                        sx: {
+                            "&.Mui-focused": {
+                              color: props.color
+                            }
+                          }
                     }}
                     sx={{
                         width: "75%",
                         margin: 1,
-                        '& .MuiInput-underline:before': {borderBottomColor: props.color},
+                        // '& .MuiInput-underline:before': {borderBottomColor: props.color},
                         '& .MuiInput-underline:after': {borderBottomColor: props.color},
-                        '& .MuiInputLabel-root': {borderBottomColor: props.color},
+                        // '& .MuiInputLabel-root': {borderBottomColor: props.color},
                     }}
                 />
 
-                <IconButton onClick={() => runClusters()}><Diversity2Icon sx={{color: props.color}}/></IconButton>
-                <IconButton onClick={handleClickOpen}><ConnectingAirportsIcon sx={{color: props.color}}/></IconButton>
+                <IconButton onClick={() => runClusters()}><Diversity2Icon sx={[
+                    {
+                        '&:hover': {
+                            color: props.color
+                        },
+                      },
+                ]}/></IconButton>
+                <IconButton onClick={handleClickOpen}><ConnectingAirportsIcon sx={[
+                    {
+                        '&:hover': {
+                            color: props.color
+                        },
+                      },
+                ]}/></IconButton>
                 <CopyGroup/>
 
             </Stack>
@@ -272,16 +289,38 @@ export default function GroupPalette(props) {
                             onDragStart={(e:React.DragEvent<HTMLDivElement>):void => {
                                 dispatch(dragged({id: the_group?._id + "%group", type: "Group"}))
                             }}
+                            
                         >
-                            <ListItem>
-                                <ListItemIcon>
-                                    <FolderIcon sx={{color: the_group?.history[0].color}}/>
-                                </ListItemIcon>
-                                <ListItemText
-                                    primary={gl}
-                                    secondary={gl ? 'Description' : null}
-                                />
+                            <ListItem >
+                                <Stack sx={{width: "100%"}} direction="row" alignItems="center" justifyContent="space-between">
+                                    <Stack direction="row" alignItems="center" >
+                                    <ListItemIcon>
+                                        <IconButton onClick={() => setShowColorPicker(!showColorPicker)}
+                                        ><FolderIcon sx={{color: the_group?.history[0].color}}/></IconButton>
+                                    </ListItemIcon>
+                                    
+                                    <EditableText 
+                                    initialValue={the_group.history[0].label}
+                                    callback={(label) => client.relabel_group(label, the_group._id)}
+                                    />
+                                    </Stack>
+                                    <IconButton onClick={() => client.remove_group(the_group._id, session_id)}><DeleteIcon sx={[
+                    {
+                        '&:hover': {
+                            color: props.color
+                        },
+                      },
+                ]}></DeleteIcon></IconButton>
+                                </Stack>
                             </ListItem>
+                            {showColorPicker ? 
+                                        <ColorPicker 
+                                            defaultColor={the_group?.history[0].color}
+                                            onChange={(color) => {
+                                                client.recolor_group(color, the_group._id)
+                                                setShowColorPicker(false)
+                                            }}
+                                        ></ColorPicker> : <span></span>}
                         </div>
                     )
                 })}
