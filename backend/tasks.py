@@ -669,9 +669,12 @@ def remove_group(*args, **kwargs):
 
     with transaction_session.start_transaction():
         session = db.sessions.find_one({'_id': session_id}, session=transaction_session)
+        group = db.groups.find_one({'_id': group_id}, session=transaction_session)
+        
         history_item = session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()        
         history_item["groups"].remove(group_id)
+        history_item["teleoscopes"].remove(ObjectId(str(group["teleoscope"])))
         history_item["action"] = f"Remove group from session"
         history_item["user"] = user_id
 
@@ -687,6 +690,11 @@ def remove_group(*args, **kwargs):
             },
             session=transaction_session
         )
+
+
+
+
+
         logging.info(f"Removed group {group_id} from session {session_id}.")
         utils.commit_with_retry(transaction_session)
     return session_id
