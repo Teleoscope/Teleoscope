@@ -1030,8 +1030,10 @@ def vectorize_document(document): #(text) -> Vector
     import tensorflow_hub as hub
     if 'error' not in document:
         embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        document['vector'] = embed([document['title']]).numpy()[0].tolist() # Don't need this
-        document['textVector'] = embed([document['text']]).numpy()[0].tolist() # This is required -> don't need document['text'] -> make it text 
+        document['vector'] = vectorize_text(document['title'])
+        document['textVector'] = vectorize_text(document['text'])
+        # document['vector'] = embed([document['title']]).numpy()[0].tolist() 
+        # document['textVector'] = embed([document['text']]).numpy()[0].tolist() 
         return document
     else:
         return document
