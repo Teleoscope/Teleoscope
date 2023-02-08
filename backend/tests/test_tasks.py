@@ -124,3 +124,15 @@ def test_vectorize_text_empty_string():
 # empty string -"", nonempty string, string with multiple words -> just 3 cases
 # ! Test cases for create_child
 # Case1: invalid document_id
+
+# ! Test cases for vectorize_text
+# Case 2: single string
+def test_vectorize_text_single_string():
+	lengthVector = len(tasks.vectorize_text(["hello"]))
+	assert lengthVector == 512
+
+# ! Test cases for vectorize_text
+# Case 3: multiple string
+def test_vectorize_text_multiple_string():
+	lengthVector = len(tasks.vectorize_text(["hello this is my first time"]))
+	assert lengthVector == 512
