@@ -6,6 +6,7 @@ import * as Yup from 'yup';
 import { Link } from '../../components/Login/Link';
 import { Layout } from '../../components/Login/Layout/Layout';
 import authenticateHash from '../../util/authenticate';
+import { Stomp } from '../../components/Stomp';
 
 export default Login;
 
@@ -27,6 +28,7 @@ function Login() {
    const { errors } = formState;
 
    async function handleFetch(username, password) {
+      Stomp.getInstance();
       const data = await fetch(`/api/authenticate/${username}`);
       const user = await data.json();
 

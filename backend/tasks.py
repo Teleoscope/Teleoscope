@@ -5,6 +5,7 @@ from celery import Celery, Task, chain
 from bson.objectid import ObjectId
 from kombu import Consumer, Exchange, Queue
 import datetime
+import jwt
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
@@ -888,6 +889,40 @@ def register_account(*arg, **kwargs):
             },
             session=transaction_session)
         logging.info(f"Added user {username} with result {users_res} and default session {user_default_session_res}.")
+
+        utils.commit_with_retry(transaction_session)
+
+
+@app.task
+def request_tokens(*arg, **kwargs):
+    transaction_session, db = utils.create_transaction_session()
+
+    # get username from arguments
+    username = kwargs["username"]
+
+    # read secret key from config.ini
+    key_obj = db.configs.find_one({'name': "secret"})
+    secret = key_obj.get("key")
+
+    # create the payload of the jwt
+    payload = {
+        "username": username,
+        "iat": datetime.datetime.utcnow # the time when the token is issued
+        # "eat": 
+    }
+
+    # jwt generation
+    token = jwt.encode(payload, "secret", algorithm="HS256")
+
+    # store the token into database
+    with transaction_session.start_transaction():
+        token_obj = {
+            "username": username,
+            "token": "token1"
+        }
+        token_res = db.tokens.insert_one(token_obj, session=transaction_session)
+        
+        logging.info(f"Added token {token_res} of user {username}.")
 
         utils.commit_with_retry(transaction_session)
 

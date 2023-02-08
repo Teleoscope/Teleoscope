@@ -251,6 +251,14 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 }
             )
 
+        if task == "request_tokens":
+            res = tasks.request_tokens.signature(
+                args = (),
+                kwargs = {
+                    "username": args["username"]
+                }
+            )
+
         try:
             res.apply_async(queue=auth.rabbitmq["task_queue"])
         except:

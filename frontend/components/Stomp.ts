@@ -229,6 +229,20 @@ register_account(jsonData) {
 }
 
 /**
+ * Request tokens from server for the user
+ */
+request_tokens(username: string) {
+  const body = {
+    task: "request_tokens",
+    args: {
+      username: username
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
  * Requests to create a new group object in MongoDB.
  */
 add_group(label: string, color: string, session_id: string) {
