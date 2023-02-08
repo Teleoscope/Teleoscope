@@ -115,7 +115,7 @@ def db():
 # ! Test cases for vectorize_text
 # Case 1: Empty string
 def test_vectorize_text_empty_string():
-	assert tasks.vectorize_text((), text = "") == []
+	assert tasks.vectorize_text("") == []
 #Test cases - boundary cases and equivalence partitions
 # empty string -"", nonempty string, string with multiple words -> just 3 cases
 # ! Test cases for create_child
