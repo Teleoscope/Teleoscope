@@ -146,3 +146,16 @@ def test_vectorize_text_multiple_string():
 
 	
 #Test cases for vectorize_document
+# Case 1: invalid document id
+def test_vectorize_invalid_document_id():
+	document = db.documents.find_one({"_id": "42"})
+	tasks.vectorize_document(document)
+	assert document['vector'] == []
+
+# Case 2: Valid document id in mongodb
+def test_vectorize_document_id_in_database():
+	document = db.documents.find_one({"id":"637eabe7f0a9482a337a11d5"})
+	old_vector = document['textVector']
+	new_vector = tasks.vectorize_document(document)
+	for o in range(len(new_vector)):
+		assert new_vector[o] == old_vector[o]
