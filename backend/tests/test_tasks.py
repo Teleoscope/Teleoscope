@@ -3,15 +3,15 @@ import os, sys
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-
+from bson.objectid import ObjectId
 import utils, pytest, tasks
 
 
 # ! Setup
-@pytest.fixture
-def db():
-	db = utils.connect()
-	yield db
+# @pytest.fixture
+# def db():
+# 	db = utils.connect()
+# 	yield db
 
 # @pytest.fixture
 # def session(db):
@@ -128,17 +128,18 @@ def test_vectorize_text_empty_string():
 	
 # Case 2: single string
 def test_vectorize_text_single_string():
-	# db = utils.create_transaction_session()
-	document = db.documents.find_one({"_id": "637eabe7f0a9482a337a11d5"})
+	# db = db()
+	session, db = utils.create_transaction_session()
+	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
 	old_vector = document["textVector"]
-	new_vector = tasks.vectorize_text(document["text"])
+	new_vector = tasks.vectorize_text([document["text"]])
 	for o in range(len(new_vector)):
 		assert new_vector[o] == old_vector[o]
 
 # Case 3: multiple string
 def test_vectorize_text_multiple_string():
-	# db = utils.create_transaction_session()
-	document = db.documents.find_one({"_id": "637eae8c0381748b89ae518c"})
+	session, db = utils.create_transaction_session()
+	document = db.documents.find_one({"_id": ObjectId("637eae8c0381748b89ae518c")})
 	old_vector = document["textVector"]
 	new_vector = tasks.vectorize_text(document["text"])
 	for o in range(len(new_vector)):
@@ -148,13 +149,15 @@ def test_vectorize_text_multiple_string():
 #Test cases for vectorize_document
 # Case 1: invalid document id
 def test_vectorize_invalid_document_id():
-	document = db.documents.find_one({"_id": "42"})
+	session, db = utils.create_transaction_session()
+	document = db.documents.find_one({"_id": ObjectId("42")})
 	tasks.vectorize_document(document)
 	assert document['vector'] == []
 
 # Case 2: Valid document id in mongodb
 def test_vectorize_document_id_in_database():
-	document = db.documents.find_one({"id":"637eabe7f0a9482a337a11d5"})
+	session, db = utils.create_transaction_session()
+	document = db.documents.find_one({"id": ObjectId("637eabe7f0a9482a337a11d5")})
 	old_vector = document['textVector']
 	new_vector = tasks.vectorize_document(document)
 	for o in range(len(new_vector)):
