@@ -128,6 +128,7 @@ def test_vectorize_text_empty_string():
 	
 # Case 2: single string
 def test_vectorize_text_single_string():
+	db = utils.create_transaction_session()
 	document = db.documents.find_one({"_id": "637eabe7f0a9482a337a11d5"})
 	old_vector = document["textVector"]
 	new_vector = tasks.vectorize_text(document["text"])
@@ -136,6 +137,7 @@ def test_vectorize_text_single_string():
 
 # Case 3: multiple string
 def test_vectorize_text_multiple_string():
+	db = utils.create_transaction_session()
 	document = db.documents.find_one({"_id": "637eae8c0381748b89ae518c"})
 	old_vector = document["textVector"]
 	new_vector = tasks.vectorize_text(document["text"])
