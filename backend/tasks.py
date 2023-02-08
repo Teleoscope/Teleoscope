@@ -1018,7 +1018,7 @@ def vectorize_document(document): #(text) -> Vector
     ## Call vectorize_text in this function - based on the text that you're getting from the document - second step after vectorize_text works
     import tensorflow_hub as hub
     if 'error' not in document:
-        embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+        # embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
         document['vector'] = vectorize_text(document['title'])
         document['textVector'] = vectorize_text(document['text'])
         # document['vector'] = embed([document['title']]).numpy()[0].tolist() 
