@@ -114,7 +114,7 @@ def db():
 #Test cases - boundary cases and equivalence partitions
 # empty string -"", nonempty string, string with multiple words -> just 3 cases
 # TODO: Check equality in a for-loop (new == old or n-o = div -> how bog is div); 
-# np.equal(or something like that) -> if not, use soemthing like np.dist(v_a,v_b) -> to check how equal they are
+# np.equal(or something like that) -> if not, use something like np.dist(v_a,v_b) -> to check how equal they are
 # np.cosinedist -> maybe a better way of looking at it 
 # ! Test cases for vectorize_text
 # Case 1: Empty string
@@ -128,14 +128,19 @@ def test_vectorize_text_empty_string():
 	
 # Case 2: single string
 def test_vectorize_text_single_string():
-	old_vector = 0.0618655160069465640
-	new_vector = tasks.vectorize_text(["I work in an office that requires me to wear a suit all the time.  I work more hours than everyone.  Show up first, leave late, etc.  The office has an air conditioning system which I turn on and set to 72º every morning.  We don't run it at night.  It's in New England and humid as fuck, so when you come in early, the place is dripping wet making it easy to feel uncomfortable at 70º when you always have to wear a coat and long pants.  But after an hour of dehumidifying, 72º is fine.  A co-worker of mine who only comes in once a week (and usually late) comes in dressed in designer clothes fit for going to the beach on a hot day and announces that it's too cold in here.  I can't wear less and be dressed appropriately, and management isn't going to take the risk of criticizing a woman's fashion choices.   I told her to wear a freaking sweater and left the AC on.  *Am I the Asshole?***TL;DR: I adjust the AC to make it comfortable in work-appropriate clothes.  My co-worker wants the whole office hotter so she can dress like she's outside in the summer.**"])
-	assert new_vector[0] == old_vector
+	document = db.documents.find_one({"_id": "637eabe7f0a9482a337a11d5"})
+	old_vector = document["textVector"]
+	new_vector = tasks.vectorize_text(document["text"])
+	for o in range(len(new_vector)):
+		assert new_vector[o] == old_vector[o]
 
 # Case 3: multiple string
 def test_vectorize_text_multiple_string():
-	old_vector = 0.027721967548131943
-	new_vector = tasks.vectorize_text(["I work in an office that requires me to wear a suit all the time.  I work more hours than everyone.  Show up first, leave late, etc.  The office has an air conditioning system which I turn on and set to 72º every morning.  We don't run it at night.  It's in New England and humid as fuck, so when you come in early, the place is dripping wet making it easy to feel uncomfortable at 70º when you always have to wear a coat and long pants.  But after an hour of dehumidifying, 72º is fine.  A co-worker of mine who only comes in once a week (and usually late) comes in dressed in designer clothes fit for going to the beach on a hot day and announces that it's too cold in here.  I can't wear less and be dressed appropriately, and management isn't going to take the risk of criticizing a woman's fashion choices.   I told her to wear a freaking sweater and left the AC on.  *Am I the Asshole?***TL;DR: I adjust the AC to make it comfortable in work-appropriate clothes.  My co-worker wants the whole office hotter so she can dress like she's outside in the summer.**"])
-	assert new_vector[511] == old_vector
+	document = db.documents.find_one({"_id": "637eae8c0381748b89ae518c"})
+	old_vector = document["textVector"]
+	new_vector = tasks.vectorize_text(document["text"])
+	for o in range(len(new_vector)):
+		assert new_vector[o] == old_vector[o]
 
+	
 #Test cases for vectorize_document
