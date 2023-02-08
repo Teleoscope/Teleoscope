@@ -349,6 +349,7 @@ def initialize_teleoscope(*args, **kwargs):
                         "ranked_document_ids": None,
                         "action": "Initialize Teleoscope",
                         "user": user_id,
+                        "color": "#AAAAAA"
                     }
                 ]
             }, session=transaction_session)
@@ -467,7 +468,7 @@ def add_group(*args, human=True, included_documents=[], **kwargs):
 
         db.teleoscopes.update_one(
             {"_id" : teleoscope_result.inserted_id},
-            {"group": groups_res.inserted_id}
+            {"$set" : {"group": groups_res.inserted_id}}
         )
 
         # add created groups document to the correct session
@@ -668,9 +669,12 @@ def remove_group(*args, **kwargs):
 
     with transaction_session.start_transaction():
         session = db.sessions.find_one({'_id': session_id}, session=transaction_session)
+        group = db.groups.find_one({'_id': group_id}, session=transaction_session)
+        
         history_item = session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()        
         history_item["groups"].remove(group_id)
+        history_item["teleoscopes"].remove(ObjectId(str(group["teleoscope"])))
         history_item["action"] = f"Remove group from session"
         history_item["user"] = user_id
 
@@ -686,6 +690,11 @@ def remove_group(*args, **kwargs):
             },
             session=transaction_session
         )
+
+
+
+
+
         logging.info(f"Removed group {group_id} from session {session_id}.")
         utils.commit_with_retry(transaction_session)
     return session_id
@@ -777,14 +786,14 @@ def add_note(*args, **kwargs):
     session, db = utils.create_transaction_session()
     oid = ObjectId(str(kwargs["oid"]))
     userid = ObjectId(str(kwargs["userid"]))
-    oid_type = kwargs["type"]
+    oid_key = kwargs["key"]
 
     if db.notes.find_one({'oid': oid}):
         return 200
 
     obj = {
         "oid": oid,
-        "type": oid_type,
+        "type": oid_key,
         "creation_time": datetime.datetime.utcnow(),
         "history": [{
             "content": {},
@@ -804,21 +813,21 @@ def update_note(*args, **kwargs):
     Updates a note.
 
     kwargs:
-        oid: string
+        note_id: string
         content: string
         userid: string
     """
     session, db = utils.create_transaction_session()
-    oid = ObjectId(str(kwargs["oid"]))
+    note_id = ObjectId(str(kwargs["note_id"]))
     content = kwargs["content"]
     userid = ObjectId(str(kwargs["userid"]))
 
-    if not db.notes.find_one({'oid': oid}):
-        logging.info(f"Warning: note with id {oid} not found.")
-        raise Exception(f"note with id {oid} not found")
+    if not db.notes.find_one({'_id': note_id}):
+        logging.info(f"Warning: note with id {note_id} not found.")
+        raise Exception(f"note with id {note_id} not found")
 
     with session.start_transaction():
-        res = db.notes.update_one({"oid": oid}, {"$push":
+        res = db.notes.update_one({"_id": note_id}, {"$push":
                 {
                     "history": {
                         "$each": [{
@@ -831,7 +840,7 @@ def update_note(*args, **kwargs):
                 }
             }, session=session)
         utils.commit_with_retry(session)
-        logging.info(f"Updated note for object {oid} with result {res}.")
+        logging.info(f"Updated note for object {note_id} with result {res}.")
 
 
 @app.task

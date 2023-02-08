@@ -6,7 +6,6 @@ import TextField from "@mui/material/TextField";
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
-import {createFilterOptions} from '@mui/material/Autocomplete';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -124,8 +123,6 @@ export default function GroupPalette(props) {
         if (groupValue.label && groupName.label) {
             client.copy_group(groupName.label, groupValue.label._id, session_id)
             handleClose()
-        } else {
-            console.log('ERROR - NO GROUP SELECTED')
         }
     };
 

@@ -325,7 +325,7 @@ update_group_label(group_id: string, label: string) {
 }
 
 /**
- * Request to add a note for a particular document.
+ * Request to add a note for a particular interface object.
  */
 add_note(oid: string, type:string) {
   const body = {
@@ -342,11 +342,11 @@ add_note(oid: string, type:string) {
 /**
  * Updates a note's content.
  */
-update_note(oid: string, content) {
+update_note(note_id: string, content) {
   const body = {
     task: 'update_note',
     args: {
-      oid: oid,
+      note_id: note_id,
       content: content
     }
   }

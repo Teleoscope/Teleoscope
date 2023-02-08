@@ -20,7 +20,8 @@ export default function FABMenu(props) {
     'Search': MenuActions()['Search'],
     'Teleoscopes': MenuActions()['Teleoscopes'],
     'Groups': MenuActions()['Groups'],
-    'Clusters': MenuActions()['Clusters']
+    'Clusters': MenuActions()['Clusters'],
+    'Notes': MenuActions()['Notes']
   }
   
   const get_color = () => session ? session.history[0].color : "#4E5CBC"
