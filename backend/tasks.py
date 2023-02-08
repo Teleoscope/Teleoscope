@@ -4,7 +4,7 @@ from celery import Celery, Task, chain
 from bson.objectid import ObjectId
 from kombu import Consumer, Exchange, Queue
 import datetime
-
+import schemas
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -155,29 +155,18 @@ def create_child(start_index, end_index, *args, **kwargs):
         child_id = document["id"] + "#child" #TODO: Ask Paul about making this unique id
         child_vector = vectorize_text(child_text)
         # child_parent = db.sessions.find_one({"_id": session_id})
-        inserted_document = db.documents.insert_one({
-            'title': child_title, 
-            'id': child_id, 
-            'text_vector': child_vector, 
-            'text': child_text,
-            'parent': document
-        }, session=transaction_session)
+        child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document)
+        # inserted_document = db.documents.insert_one({
+        #     'title': child_title, 
+        #     'id': child_id, 
+        #     'text_vector': child_vector, 
+        #     'text': child_text,
+        #     'parent': document
+        # }, session=transaction_session)
+        inserted_document = db.documents.insert_one({child_document}, session=transaction_session)
         #TODO: Create schema of create_document_object and call that instead
         new_id = inserted_document.inserted_id
-   
-        # db.documents.update_one({"_id": new_id},
-        # # Don't need the push, look at mongoDB for update_one
-        # {
-        #     '$push': {
-        #         "history": {
-        #             "$each": [inserted_document],
-        #             "$position": 0
-        #             }
-        #         }
-        # }, session=transaction_session)
-
-
-
+        #TODO: What do we have to return for this function
 
 
 @app.task
