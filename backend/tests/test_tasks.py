@@ -127,7 +127,7 @@ def test_vectorize_text_empty_string():
 		assert new_vector[o] == old_vector[o]
 	
 # Case 2: single string
-def test_vectorize_text_single_string():
+def test_vectorize_text_first_item():
 	# db = db()
 	session, db = utils.create_transaction_session()
 	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
@@ -137,9 +137,9 @@ def test_vectorize_text_single_string():
 		assert new_vector[o] == old_vector[o]
 
 # Case 3: multiple string
-def test_vectorize_text_multiple_string():
+def test_vectorize_text_second_item():
 	session, db = utils.create_transaction_session()
-	document = db.documents.find_one({"_id": ObjectId("637eae8c0381748b89ae518c")})
+	document = db.documents.find_one({"_id": ObjectId("637eae8a0381748b89ae518a")})
 	old_vector = document["textVector"]
 	new_vector = tasks.vectorize_text(document["text"])
 	for o in range(len(new_vector)):
