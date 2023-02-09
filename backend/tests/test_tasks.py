@@ -128,7 +128,6 @@ def test_vectorize_text_empty_string():
 	
 # Case 2: single string
 def test_vectorize_text_first_item():
-	# db = db()
 	session, db = utils.create_transaction_session()
 	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
 	old_vector = document["textVector"]
@@ -146,19 +145,19 @@ def test_vectorize_text_second_item():
 		assert new_vector[o] == old_vector[o]
 
 	
-#Test cases for vectorize_document
+# Test cases for vectorize_document
 # Case 1: invalid document id
-# def test_vectorize_invalid_document_id():
-# 	session, db = utils.create_transaction_session()
-# 	document = db.documents.find_one({"_id": ObjectId("42")})
-# 	tasks.vectorize_document(document)
-# 	assert document['vector'] == []
+def test_vectorize_invalid_document_id():
+	with pytest.raises(Exception):
+		tasks.vectorize_document((), document_id = '42')
+	
 
 # Case 2: Valid document id in mongodb
-# def test_vectorize_document_id_in_database():
-# 	session, db = utils.create_transaction_session()
-# 	document = db.documents.find_one({"id": ObjectId("637eabe7f0a9482a337a11d5")})
-# 	old_vector = document['textVector']
-# 	new_vector = tasks.vectorize_document(document)
-# 	for o in range(len(new_vector)):
-# 		assert new_vector[o] == old_vector[o]
+def test_vectorize_document_id_in_database():
+	session, db = utils.create_transaction_session()
+	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
+	old_vector = document['textVector']
+	new_vectorized_document = tasks.vectorize_document(document)
+	new_vector = new_vectorized_document['textVector']
+	for o in range(len(new_vector)):
+		assert new_vector[o] == old_vector[o]

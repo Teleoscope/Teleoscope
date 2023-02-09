@@ -168,6 +168,9 @@ def create_child(start_index, end_index, *args, **kwargs):
         new_id = inserted_document.inserted_id
         #TODO: What do we have to return for this function
 
+        utils.commit_with_retry(transaction_session)
+
+
 
 @app.task
 def add_user_to_session(*args, **kwargs):
@@ -1019,8 +1022,8 @@ def vectorize_document(document): #(text) -> Vector
     import tensorflow_hub as hub
     if 'error' not in document:
         # embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        document['vector'] = vectorize_text(document['title'])
-        document['textVector'] = vectorize_text(document['text'])
+        document['vector'] = vectorize_text([document['title']])
+        document['textVector'] = vectorize_text([document['text']])
         # document['vector'] = embed([document['title']]).numpy()[0].tolist() 
         # document['textVector'] = embed([document['text']]).numpy()[0].tolist() 
         return document
