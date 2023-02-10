@@ -1,5 +1,5 @@
 virtualmachines:
   hosts:
     explorer4:
-      ansible_host: 20.220.61.195
-      ansible_user: explorer
+      ansible_host: "{{ host_address }}"
+      ansible_user: "{{ remote_username }}"
