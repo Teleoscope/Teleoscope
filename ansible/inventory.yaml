@@ -1,5 +1,0 @@
-virtualmachines:
-  hosts:
-    explorer4:
-      ansible_host: "{{ host_address }}"
-      ansible_user: "{{ remote_username }}"
