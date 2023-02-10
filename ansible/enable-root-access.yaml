@@ -1,0 +1,7 @@
+- hosts: virtualmachines
+  vars_files: 
+    - ./vars/vars.yaml
+  remote_user: "{{ remote_username }}"
+  tasks:
+    - name: Enable root login
+      shell: sudo cp ~/.ssh/authorized_keys /root/.ssh/

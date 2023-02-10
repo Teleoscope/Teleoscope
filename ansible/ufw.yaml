@@ -1,0 +1,13 @@
+- hosts: virtualmachines
+  remote_user: "{{ remote_username }}"
+  vars_files: 
+    - ./vars/vars.yaml
+  become: yes
+
+  tasks:
+    - name: UFW Allow
+      ansible.builtin.shell: ufw allow 22,6379,27017,15672,15674,80,2222,5672/tcp
+    - name: UFW Enable
+      ansible.builtin.shell: ufw --force enable
+    - name: UFW Reload
+      ansible.builtin.shell: ufw reload 

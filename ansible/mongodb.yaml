@@ -1,0 +1,63 @@
+- hosts: virtualmachines
+  remote_user: "{{ remote_username }}"
+  vars_files: 
+    - ./vars/vars.yaml
+  become: yes
+
+  tasks:
+    - name: Install PyMongo
+      ansible.builtin.pip:
+        name: pymongo
+    - name: Import the public key for MongoDB Install
+      ansible.builtin.apt_key:
+        url: https://www.mongodb.org/static/pgp/server-6.0.asc
+    - name: Add MongoDB repository
+      ansible.builtin.apt_repository:
+        repo: 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse'
+    - name: Install MongoDB
+      ansible.builtin.apt:
+        name: mongodb-org
+        update_cache: yes
+    - name: Start MongoDB
+      ansible.builtin.systemd:
+        name: mongod
+        state: started
+        enabled: yes
+    - name: Initialize MongoDB Admin User
+      community.mongodb.mongodb_user:
+        database: admin
+        name: "{{ mongodb_admin_name }}"
+        password: "{{ mongodb_admin_password }}"
+        roles: root
+        state: present
+    - name: Initialize MongoDB Dev User
+      community.mongodb.mongodb_user:
+        database: aita
+        name: "{{ mongodb_dev_name }}"
+        password: "{{ mongodb_dev_password }}"
+        roles: readWrite
+        state: present
+    - name: Copy mongod.conf
+      ansible.builtin.copy:
+        src: ./mongod.conf
+        dest: /etc/mongod.conf
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+    - name: Restart MongoDB
+      ansible.builtin.systemd:
+        name: mongod
+        state: restarted
+        enabled: yes
+    - name: Initialize Replica Set
+      community.mongodb.mongodb_replicaset:
+        login_host: localhost
+        login_port: 27017
+        login_user: "{{ mongodb_admin_name }}"
+        login_password: "{{ mongodb_admin_password }}"
+        login_database: admin
+        replica_set: rs0
+        members: localhost:27017
+        validate: no
+

@@ -1,0 +1,36 @@
+- hosts: virtualmachines
+  remote_user: "{{ remote_username }}"
+  vars_files: 
+    - ./vars/vars.yaml
+  become: yes
+  roles:
+    - role: evandam.conda
+  tasks:
+    - name: Update conda
+      conda:
+        name: conda
+        state: latest
+        executable: "{{ conda_prefix }}/condabin/conda"
+    - name: install UMAP
+      conda:
+        name: umap-learn
+        environment: "{{ conda_environment }}"
+        channels:
+          - conda-forge
+        executable: "{{ conda_prefix }}/condabin/conda"
+    - name: Conda install pip
+      conda:
+        name: pip
+        environment: "{{ conda_environment }}"
+        executable: "{{ conda_prefix }}/condabin/conda"
+    - name: Install pip packages WITHIN a designated conda environment
+      ansible.builtin.pip:
+        name: 
+          - celery 
+          - pymongo 
+          - hdbscan 
+          - tensorflow 
+          - tensorflow_hub 
+          - matplotlib
+          - zstandard
+        executable: "{{ conda_prefix }}/envs/{{ conda_environment }}/bin/pip"

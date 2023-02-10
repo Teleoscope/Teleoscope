@@ -1,0 +1,55 @@
+- hosts: virtualmachines
+  remote_user: "{{ remote_username }}"
+  vars_files: 
+    - ./vars/vars.yaml
+
+  tasks:
+    - name: Download latest Miniconda
+      ansible.builtin.get_url:
+        url: 'https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh'
+        dest: ~/
+        mode: '0744'
+    - name: Run Install Miniconda
+      ansible.builtin.shell: ~/Miniconda3-latest-Linux-x86_64.sh -b -p "{{ conda_prefix }}" 
+      args:
+        chdir: ~/
+    - name: Ensure virtualenv is sourced from the .bashrc
+      blockinfile:
+        path: "{{ remote_prefix }}/{{ remote_username }}/.bashrc"
+        block: |
+          # >>> conda initialize >>>
+          # !! Contents within this block are managed by 'conda init' !!
+          __conda_setup="$('{{ conda_prefix }}/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+          if [ $? -eq 0 ]; then
+              eval "$__conda_setup"
+          else
+              if [ -f "{{ conda_prefix }}/etc/profile.d/conda.sh" ]; then
+                  . "{{ conda_prefix }}/etc/profile.d/conda.sh"
+              else
+                  export PATH="{{ conda_prefix }}/bin:$PATH"
+              fi
+          fi
+          unset __conda_setup
+          # <<< conda initialize <<<
+
+        marker: '# ANSIBLE MANAGED BLOCK - virtualenv'
+        insertafter: EOF
+        create: yes
+
+    - name: Add conda prefix
+      ansible.builtin.shell: "{{ conda_prefix }}/condabin/conda create --prefix {{ conda_prefix }}/envs/{{ conda_environment }} -y"
+    # - name: activate conda prefix
+    #   ansible.builtin.shell: "conda activate {{ conda_environment }}"
+    #   args:
+    #     executable: /bin/bash
+    - name: Add group anaconda
+      ansible.builtin.shell: sudo groupadd anaconda
+    - name: Add "{{ remote_username }}" user to group
+      ansible.builtin.shell: sudo usermod -a -G anaconda "{{ remote_username }}"
+    - name: Change ownership of miniconda install to "{{ remote_username }}"
+      ansible.builtin.shell: sudo chown -R "{{ remote_username }}":anaconda "{{ conda_prefix }}"
+    - name: Add everything in the miniconda install to the new anaconda group
+      ansible.builtin.shell: sudo chgrp anaconda -R "{{ conda_prefix }}"
+
+
+
