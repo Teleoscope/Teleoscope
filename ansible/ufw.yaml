@@ -1,5 +1,5 @@
-- hosts: virtualmachines
-  remote_user: "{{ remote_username }}"
+- hosts: "{{ groups['newmachines'] }}"
+  remote_user: "{{ ansible_user }}"
   vars_files: 
     - ./vars/vars.yaml
   become: yes

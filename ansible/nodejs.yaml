@@ -1,5 +1,5 @@
-- hosts: virtualmachines
-  remote_user: "{{ remote_username }}"
+- hosts: "{{ groups['newmachines'] }}"
+  remote_user: "{{ ansible_user }}"
   vars_files: 
     - ./vars/vars.yaml
   become: yes
@@ -29,3 +29,6 @@
 
     - name: Setcap for Node
       ansible.builtin.shell: setcap cap_net_bind_service=+ep /usr/bin/node
+
+    - name: Install PM2
+      ansible.builtin.shell: npm i -g pm2

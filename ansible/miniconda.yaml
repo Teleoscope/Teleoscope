@@ -1,5 +1,5 @@
-- hosts: virtualmachines
-  remote_user: "{{ remote_username }}"
+- hosts: "{{ groups['newmachines'] }}"
+  remote_user: "{{ ansible_user }}"
   vars_files: 
     - ./vars/vars.yaml
 
@@ -15,7 +15,7 @@
         chdir: ~/
     - name: Ensure virtualenv is sourced from the .bashrc
       blockinfile:
-        path: "{{ remote_prefix }}/{{ remote_username }}/.bashrc"
+        path: "{{ remote_prefix }}/{{ ansible_user }}/.bashrc"
         block: |
           # >>> conda initialize >>>
           # !! Contents within this block are managed by 'conda init' !!
@@ -44,10 +44,10 @@
     #     executable: /bin/bash
     - name: Add group anaconda
       ansible.builtin.shell: sudo groupadd anaconda
-    - name: Add "{{ remote_username }}" user to group
-      ansible.builtin.shell: sudo usermod -a -G anaconda "{{ remote_username }}"
-    - name: Change ownership of miniconda install to "{{ remote_username }}"
-      ansible.builtin.shell: sudo chown -R "{{ remote_username }}":anaconda "{{ conda_prefix }}"
+    - name: Add "{{ ansible_user }}" user to group
+      ansible.builtin.shell: sudo usermod -a -G anaconda "{{ ansible_user }}"
+    - name: Change ownership of miniconda install to "{{ ansible_user }}"
+      ansible.builtin.shell: sudo chown -R "{{ ansible_user }}":anaconda "{{ conda_prefix }}"
     - name: Add everything in the miniconda install to the new anaconda group
       ansible.builtin.shell: sudo chgrp anaconda -R "{{ conda_prefix }}"
 
