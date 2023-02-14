@@ -152,8 +152,8 @@ def create_child(start_index, end_index, *args, **kwargs):
         # session_id =  ObjectId(str(kwargs["session_id"]))
         child_text = document["text"][start_index:end_index] # Not sure how I should go about doing the parameter - need to use kwargs?
         child_title = document["title"] + " child"
-        child_id = document["id"] + "#start_index" + "#end_index" #TODO: Ask Paul about making this unique id
-        child_vector = vectorize_text(child_text)
+        child_id = document["id"] + "#start_index" + "#end_index" 
+        child_vector = vectorize_text([child_text])
         # child_parent = db.sessions.find_one({"_id": session_id})
         child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document)
         # inserted_document = db.documents.insert_one({
