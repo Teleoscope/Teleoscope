@@ -169,6 +169,7 @@ def create_child(start_index, end_index, *args, **kwargs):
         #TODO: What do we have to return for this function
 
         utils.commit_with_retry(transaction_session)
+    return child_id
 
 
 
