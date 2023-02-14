@@ -144,15 +144,17 @@ def save_UI_state(*args, **kwargs):
 # update_one(…)
 # Write a test to check if it's actually working (can insert a dummy document and delete it once it's done)
 @app.task
-def create_child(start_index, end_index, *args, **kwargs):
+def create_child(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session()
     with transaction_session.start_transaction(): 
         document_id = kwargs["document_id"]
+        start_index = kwargs['start_index']
+        end_index = kwargs['end_index']
         document = db.documents.find_one({"_id": document_id})
         # session_id =  ObjectId(str(kwargs["session_id"]))
         child_text = document["text"][start_index:end_index] # Not sure how I should go about doing the parameter - need to use kwargs?
         child_title = document["title"] + " child"
-        child_id = document["id"] + "#start_index" + "#end_index" 
+        child_id = document["id"] + "#" + start_index + "#" +end_index
         child_vector = vectorize_text([child_text])
         # child_parent = db.sessions.find_one({"_id": session_id})
         child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document)
