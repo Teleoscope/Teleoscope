@@ -151,24 +151,13 @@ def create_child(*args, **kwargs):
         start_index = kwargs['start_index']
         end_index = kwargs['end_index']
         document = db.documents.find_one({"_id": document_id})
-        # session_id =  ObjectId(str(kwargs["session_id"]))
         child_text = document["text"][start_index:end_index] # Not sure how I should go about doing the parameter - need to use kwargs?
         child_title = document["title"] + " child"
         child_id = document["id"] + "#" + str(start_index) + "#" + str(end_index)
         child_vector = vectorize_text([child_text])
-        # child_parent = db.sessions.find_one({"_id": session_id})
         child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document)
-        # inserted_document = db.documents.insert_one({
-        #     'title': child_title, 
-        #     'id': child_id, 
-        #     'text_vector': child_vector, 
-        #     'text': child_text,
-        #     'parent': document
-        # }, session=transaction_session)
         inserted_document = db.documents.insert_one(child_document, session=transaction_session)
-        #TODO: Create schema of create_document_object and call that instead
         new_id = inserted_document.inserted_id
-        #TODO: What do we have to return for this function
 
         utils.commit_with_retry(transaction_session)
     return child_id

@@ -170,4 +170,7 @@ def test_create_child_invalid_document_id():
 #Case 2: valid document id
 def test_create_child_valid_document():
 	id = tasks.create_child(start_index = 2, end_index = 100, document_id = ObjectId("637eabe7f0a9482a337a11d5"))
-	assert id == "637eabe7f0a9482a337a11d5" +"#2" + "#100"
+	session, db = utils.create_transaction_session()
+	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
+	reddit_id = document["id"]
+	assert id == reddit_id +"#2" + "#100"
