@@ -163,7 +163,7 @@ def create_child(start_index, end_index, *args, **kwargs):
         #     'text': child_text,
         #     'parent': document
         # }, session=transaction_session)
-        inserted_document = db.documents.insert_one({child_document}, session=transaction_session)
+        inserted_document = db.documents.insert_one(child_document, session=transaction_session)
         #TODO: Create schema of create_document_object and call that instead
         new_id = inserted_document.inserted_id
         #TODO: What do we have to return for this function
