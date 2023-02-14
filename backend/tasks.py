@@ -918,7 +918,7 @@ def request_tokens(*arg, **kwargs):
     with transaction_session.start_transaction():
         token_obj = {
             "username": username,
-            "token": "token1"
+            "token": token
         }
         token_res = db.tokens.insert_one(token_obj, session=transaction_session)
         

@@ -12,6 +12,7 @@ const authenticateHash = (user, username, password) => {
 
 
    if (bcrypt.compareSync(password, user.password)) {
+      // TODO: sends the username and password to the backend, and let backend verify it.
       const client = Stomp.getInstance();
       client.request_tokens(username);
       Router.push('/');

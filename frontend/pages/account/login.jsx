@@ -28,7 +28,7 @@ function Login() {
    const { errors } = formState;
 
    async function handleFetch(username, password) {
-      Stomp.getInstance();
+      Stomp.getInstance(); //TODO: delete this, use loaded
       const data = await fetch(`/api/authenticate/${username}`);
       const user = await data.json();
 
