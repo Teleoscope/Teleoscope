@@ -173,4 +173,4 @@ def test_create_child_valid_document():
 	session, db = utils.create_transaction_session()
 	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
 	reddit_id = document["id"]
-	assert id == reddit_id +"#2" + "#100"
+	assert id == reddit_id +'#2' + '#100'
