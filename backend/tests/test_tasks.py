@@ -169,8 +169,10 @@ def test_create_child_invalid_document_id():
 		tasks.create_child((), start_index = 2, end_index = 40, document_id = '30')
 #Case 2: valid document id
 def test_create_child_valid_document():
-	id = tasks.create_child(start_index = 2, end_index = 100, document_id = ObjectId("637eabe7f0a9482a337a11d5"))
+	start = 10
+	end = 1000
+	id = tasks.create_child(start_index = start, end_index = end, document_id = ObjectId("637eabe7f0a9482a337a11d5"))
 	session, db = utils.create_transaction_session()
 	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
 	reddit_id = document["id"]
-	assert id == reddit_id +'#2' + '#100'
+	assert id == reddit_id +'#' + str(start) + '#' + str(1000)
