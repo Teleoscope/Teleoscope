@@ -9,6 +9,7 @@ export default function WindowFactory(props) {
 
 	const keymap = {
 		"note": "note",
+		"notepalette": "notes",
 		"fabmenu": "fabmenu",
 		"group": "groups",
 		"document": "document",
@@ -31,6 +32,7 @@ export default function WindowFactory(props) {
 			<div>{wdefs[w.type].component(w, props.id)}</div>
 		)
 	}
+
 
 	return (
 		<Window {...props}

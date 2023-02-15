@@ -35,7 +35,7 @@ export default function Workspace(props) {
 
 
   const handleClick = (e) => {
-    // console.log(e)
+    console.log(e)
   }
 
 

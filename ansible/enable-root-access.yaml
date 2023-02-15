@@ -1,0 +1,7 @@
+- hosts: "{{ groups['newmachines'] }}"
+  vars_files: 
+    - ./vars/vars.yaml
+  remote_user: "{{ ansible_user }}"
+  tasks:
+    - name: Enable root login
+      shell: sudo cp ~/.ssh/authorized_keys /root/.ssh/

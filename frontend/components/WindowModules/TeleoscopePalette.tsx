@@ -31,9 +31,6 @@ export default function TeleoscopePalette(props) {
     });
     return (
       <div style={{ overflow: "auto", height: "100%" }}>
-        <Typography variant="h5" gutterBottom component="div" sx={{ p: 2, pb: 0 }}>
-          All Teleoscopes
-        </Typography>
         <List>
           {teleoscopes?.map((t) => {
             return (
