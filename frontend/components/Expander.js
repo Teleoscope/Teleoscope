@@ -16,7 +16,6 @@ export default function Expander(props) {
 
 
    const document = props.document;
-   console.log("document", document)
 
    return (
       <Collapse timeout="auto" unmountOnExit in={open}>

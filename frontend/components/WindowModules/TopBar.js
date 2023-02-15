@@ -1,26 +1,26 @@
-import React, { useContext } from "react";
+import React from "react";
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 
 // material ui
-import {FormHelperText, Menu, MenuItem} from "@mui/material";
-import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Menu, MenuItem} from "@mui/material";
 import { AppBar } from "@mui/material";
-import { Box } from "@mui/material";
 import { Toolbar } from "@mui/material";
 import { Button } from "@mui/material";
 import { FormControl } from '@mui/material';
 import { Select } from '@mui/material';
 import { InputLabel } from '@mui/material';
 import { Stack } from '@mui/material';
-import { TextField } from '@mui/material';
-import { InputAdornment } from '@mui/material';
-import { Typography } from '@mui/material';
+import { Box } from '@mui/material';
+
 import { Divider } from '@mui/material';
 import { alpha } from "@mui/material";
 import { IconButton } from '@mui/material';
-
 import { AccountCircle } from '@mui/icons-material';
-import { Flare } from '@mui/icons-material';
+
+// components
+import TeleoscopeLogo from "./TeleoscopeLogo";
+import AddUserDialogue from "./AddUserDialog";
+import Account from "./Account";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
@@ -30,64 +30,69 @@ import { loadBookmarkedDocuments } from "../../actions/bookmark";
 import { getGroups } from "../../actions/groups";
 
 // utilities
-import {
-  save_UI_state,
-  initialize_session,
-  add_user_to_session
-} from "../Stomp";
-
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../../util/swr"
-import { userService } from "../../services/user.service";
+import randomColor from 'randomcolor';
 
 // contexts
 import { Stomp } from '../Stomp'
 
 export default function TopBar(props) {
+  const [loaded, setLoaded] = React.useState(false); 
 
-  // constants and variables local to this functional component
-  const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
-  const { users } = useSWRAbstract("users", `/api/users/`);
-  const session_id = useSelector((state) => state.activeSessionID.value);
-  const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
-  const [open, toggleOpen] = React.useState(false);
-  const [cookies, setCookie] = useCookies(["user"]);
-
-  const windows = useSelector((state) => state.windows.windows); // TODO rename
-  const bookmarks = useSelector((state) => state.bookmarker.value);
-  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals], length: 1 });
-  const randomColor = require('randomcolor');
-
-  const userid = useSelector((state) => state.activeSessionID.userid);
+  const dispatch = useDispatch();
+  const [cookies, setCookie] = useCookies(["userid"]);
+  const userid = useSelector((state) => state.activeSessionID.userid);  
+  if (cookies.userid && cookies?.userid != "-1") {
+    dispatch(setUserId(cookies.userid))
+  }
   const client = Stomp.getInstance();
   client.userId = userid;
-  const [dialogValue, setDialogValue] = React.useState({label: ''});
-  const dispatch = useDispatch();
+  
+  const { user } = useSWRAbstract("user", `/api/users/${userid}`);
 
-  // Helper functions
-  const handleCookie = (username) => {
+  const session_id = useSelector((state) => state.activeSessionID.value);
 
-    fetch(`http://localhost:3000/api/user/${username}`)
-    .then((response) => response.json())
-    .then((data) => dispatch(setUserId(data._id)));
-
-    setCookie("user", username, {
-      path: "/"
-    });
-    console.log(`Set username to ${username}.`);
+  if (session_id == "-1" && user?.sessions) {
+    dispatch(sessionActivator(user.sessions[0]))
   }
 
-  const handleSessionChange = (value) => {
-    console.log("value", value)
-    dispatch(sessionActivator(value))
-    dispatch(getGroups(value))
-  }
+  const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+  const { users } = useSWRAbstract("users", `/api/users/`);
+  const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
+  
 
-  const load_UI_state = () => {
+  if (session?.history?.length > 0 && !loaded) {
+    setLoaded(true);
     var history_item = session.history[0];
     dispatch(loadBookmarkedDocuments(history_item["bookmarks"]));
     dispatch(loadWindows(history_item["windows"]));
   }
+
+  const [open, toggleOpen] = React.useState(false);
+  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals], length: 1 });
+  const [dialogValue, setDialogValue] = React.useState({label: ''});
+
+  // Helper functions
+  const handleCookie = (username) => {
+    fetch(`http://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}/api/user/${username}`)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data) {
+        dispatch(setUserId(data._id))
+        setCookie("userid", data._id, {
+          path: "/"
+        });          
+      }
+    });
+  }
+
+  const handleSessionChange = (value) => {
+    setLoaded(false);
+    dispatch(sessionActivator(value))
+    dispatch(getGroups(value))
+  }
+
 
   const get_color = () => session ? session.history[0].color : "#4E5CBC"
 
@@ -101,19 +106,6 @@ export default function TopBar(props) {
     });
     toggleOpen(false);
   };
-
-  const handleSaveUIState = () => {
-    if (session) {
-      client.save_UI_state(
-        session_id,
-        bookmarks,
-        windows,
-      )
-    }
-    else {
-      console.log(`No session selected. Do nothing`);
-    }
-  }
 
   /////////////////////////////////////////////////////////////////////////
   // Functional components
@@ -136,7 +128,7 @@ export default function TopBar(props) {
   }
 
   const getUsers = () => {
-    if (session) {
+    if (session && users) {
       let owner = session.userlist.owner
       let contributors = session.userlist.contributors
 
@@ -157,34 +149,10 @@ export default function TopBar(props) {
     )
   }
 
-  const Account = () => {
-    return (
-      <TextField
-        id="input-with-icon-textfield"
-        sx={{ width: 200, backgroundColor: alpha('#FFFFFF', 0.0), }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <AccountCircle />
-            </InputAdornment>
-          ),
-        }}
-        label="Username"
-        variant="standard"
-        defaultValue={cookies.user}
-        onKeyPress={(e) => {
-          if (e.key === "Enter") {
-            handleCookie(e.target.value)
-          }
-        }}
-      />
-    )
-  }
-
   const Session = () => {
     return (
       <FormControl
-        sx={{ width: 200, backgroundColor: alpha('#FFFFFF', 0.0) }}
+        sx={{ width: "100%", backgroundColor: alpha('#FFFFFF', 0.0) }}
         variant="filled"
       >
         <InputLabel id="demo-simple-select-label">Session</InputLabel>
@@ -196,11 +164,17 @@ export default function TopBar(props) {
           size="small"
           onChange={(event) => handleSessionChange(event.target.value)}
         >
-          {getSessions(cookies.user)}
+          {getSessions(user?.username)}
           <Button
             size="small"
             variant="text"
-            onClick={() => client.initialize_session(randomName, randomColor())}
+            onClick={() => client.initialize_session(randomName, randomColor(
+              {
+                luminosity: 'dark',
+                hue: 'random',
+
+              }
+            ))}
             style={{
               backgroundColor: "#FFFFFF",
               color: "black",
@@ -212,72 +186,6 @@ export default function TopBar(props) {
           </Button>
         </Select>
       </FormControl>
-    )
-  }
-
-  // return (
-  //   <Box sx={{ flexGrow: 1 }}>
-  //     <AppBar
-  //       position="static"
-  //       style={{ height: 60, backgroundColor: get_color(cookies.user) }}
-
-  //       <TextField
-  //             id="input-with-icon-textfield"
-  //             sx={{ width: 200, backgroundColor: 'white', }}
-  //             InputProps={{
-  //               startAdornment: (
-  //                 <InputAdornment position="start">
-  //                   <AccountCircle />
-  //                 </InputAdornment>
-  //               ),
-  //             }}
-  //             label="Username"
-  //             variant="standard"
-  //             defaultValue={cookies.user}
-  //             onKeyPress={(e) => {
-  //               if (e.key === "Enter") {
-  //                 handleCookie(e.target.value)
-  //               }
-  //             }}
-  //           />
-
-  const AddUserDialogue = () => {
-    return (
-      <Dialog disableEscapeKeyDown open={open} onClose={handleClose}>
-        <DialogTitle>Collaborate with User</DialogTitle>
-        <DialogContent>
-          <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
-            <FormControl
-              sx={{ width: 200, backgroundColor: 'white', }}
-              variant="filled"
-            >
-              <InputLabel id="demo-simple-select-helper-label">User</InputLabel>
-              <Select
-                  labelId="demo-simple-select-helper-label"
-                  id="demo-simple-select-helper"
-                  value={dialogValue.label}
-                  label="User"
-                  onChange={(event) => setDialogValue({label: event.target.value})}
-              >
-                {getUsers()}
-              </Select>
-              <FormHelperText>Select User</FormHelperText>
-            </FormControl>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button
-            type="submit"
-            onClick={() => {
-              console.log(`Add session contributor ${dialogValue.label.username} (${dialogValue.label._id}).`)
-              client.add_user_to_session(dialogValue.label._id, session_id)
-              handleClose()
-            }}
-          >Add
-          </Button>
-        </DialogActions>
-      </Dialog>
     )
   }
 
@@ -293,13 +201,11 @@ export default function TopBar(props) {
     const handleMenuClose = () => {
       setAnchorEl(null);
     };
+
     return (
       <Stack spacing={1} direction="row-reverse">
         <IconButton
           id="bIconasic-button"
-          aria-controls={open ? 'basic-menu' : undefined}
-          aria-haspopup="true"
-          aria-expanded={open ? 'true' : undefined}
           onClick={handleMenuClick}
         >
           <AccountCircle></AccountCircle>
@@ -309,47 +215,43 @@ export default function TopBar(props) {
           anchorEl={anchorEl}
           open={openMenu}
           onClose={handleMenuClose}
-          MenuListProps={{
-            'aria-labelledby': 'basic-button',
-          }}
         >
-          <MenuItem><Account /></MenuItem>
-          <MenuItem><Session /></MenuItem>
+          
+          <MenuItem 
+            onKeyDown={(e) => e.stopPropagation()} 
+            children={<Account user={user} handleCookie={handleCookie} />}>  
+          </MenuItem>
+          <MenuItem children={<Session />}></MenuItem>
           <Divider></Divider>
-          <MenuItem onClick={handleClickOpen}>Add User to Session</MenuItem>
-          <MenuItem onClick={handleSaveUIState}>Save UI State</MenuItem>
+          <MenuItem onClick={handleClickOpen}>Add a different user to this session</MenuItem>
         </Menu>
-        <AddUserDialogue />
+        <AddUserDialogue 
+            open={open}
+            onClose={handleClose}
+            users={getUsers()}
+            dialogValue={dialogValue}
+            setDialogValue={setDialogValue}
+            session_id={session_id}
+            client={client}
+        />
       </Stack>
 
     )
   }
 
-  const TeleoscopeLogo = () => {
-    return (
-      <Stack direction="row" alignItems="center">
-        <Flare />
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 'fontWeightLight',
-            fontFamily: "monospace"
-          }}>
-          Teleoscope
-        </Typography>
-      </Stack>
-    )
-  }
+
 
   // Main return for this component
   return (
-    <AppBar position="static" style={{ backgroundColor: get_color(), width: "100%" }}>
+    <AppBar position="static" sx={{ backgroundColor: get_color(), width: "100%" }}>
       <Toolbar >
         <Stack spacing={10} sx={{ width: "100%" }} direction="row" alignItems="center" justifyContent="space-between">
-          <TeleoscopeLogo />
+          <TeleoscopeLogo isConnected={props.isConnected}/>
           <AccountMenu />
         </Stack>
       </Toolbar>
+      <Box sx={{backgroundColor: get_color(), height: "1px", boxShadow: 3}}></Box>
+      {/* <ColorPicker defaultColor={get_color()}></ColorPicker> */}
     </AppBar>
   );
 }

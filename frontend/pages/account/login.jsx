@@ -1,16 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
-import useSWRAbstract from '../../util/swr'
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
-
 import { Link } from '../../components/Login/Link';
 import { Layout } from '../../components/Login/Layout/Layout';
-import { add_login } from '../../components/Stomp';
-import { alertService } from '../../services/index';
 import authenticateHash from '../../util/authenticate';
-import { validateConfig } from 'next/dist/server/config-shared';
 
 export default Login;
 

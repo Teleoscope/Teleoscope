@@ -1,9 +1,9 @@
 // NoteButton.js
-import React, { useContext } from 'react';
+import React from 'react';
 
 // mui
 import IconButton from "@mui/material/IconButton";
-import CreateIcon from '@mui/icons-material/Create';
+import CommentIcon from '@mui/icons-material/Comment';
 
 // actions
 import { useAppSelector, useAppDispatch } from '../../hooks'
@@ -20,13 +20,12 @@ export default function NoteButton(props) {
 	const dispatch = useAppDispatch();
 
 	const handleAddNote = () => {
-		dispatch(addWindow({ i: props.id + "%note", x: 0, y: 0, w: 3, h: 3, type: "Note" }));
-		client.add_note(props.id);
+		client.add_note(props.id, props.type);
 	}
 
 	return (
 		<IconButton onClick={() => handleAddNote()}>
-			<CreateIcon fontSize="small" />
+			<CommentIcon fontSize="small" />
 		</IconButton>
 	)
 }

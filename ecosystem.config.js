@@ -26,5 +26,14 @@ module.exports = {
       interpreter: "",
       max_memory_restart: "1G"
     },
+    {
+      name: "frontend",
+      cwd: "./frontend",
+      script: "npm run start",
+      args: "",
+      watch: false,
+      interpreter: "",
+      max_memory_restart: "1G"
+    }
   ]
 };

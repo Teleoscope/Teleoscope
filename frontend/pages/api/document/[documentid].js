@@ -1,9 +1,15 @@
 import clientPromise from '../../../util/mongodb';
+import { ObjectId } from 'bson';
 
 export default async (req, res) => {
   const client = await clientPromise;
   const db = await client.db('aita');
   const { documentid } = req.query;
-  const query_meta = await db.collection("documents").findOne({ id: documentid });
-  res.json(query_meta);
+  let query;
+  if (documentid.length > 6) {
+    query = await db.collection("documents").findOne({ _id: ObjectId(documentid) }, { projection: { _id: 1, id: 1, text: 1, title: 1}});
+  } else {
+    query = await db.collection("documents").findOne({ id: documentid }, { projection: { _id: 1, id: 1, text: 1, title: 1}});
+  }
+  res.json(query);
 };

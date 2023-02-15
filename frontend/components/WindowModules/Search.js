@@ -1,22 +1,19 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 
 // mui
 import TextField from '@mui/material/TextField';
 
-import Input from '@mui/material/Input';
 import SearchIcon from '@mui/icons-material/Search';
 import LoadingButton from '@mui/lab/LoadingButton';
 import Stack from '@mui/material/Stack';
 
 
 // actions
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { updateWindow } from "../../actions/windows";
 
 // custom components
 import DocumentList from "../Documents/DocumentList"
-import CloseButton from "../CloseButton"
 
 // util
 import useSWRAbstract from "../../util/swr"
@@ -38,12 +35,12 @@ export default function SearchWindow(props) {
   return (
     <div style={{ overflow: "auto", height: "100%", width: "100%"}}>
       <Stack direction="row" alignItems="center" sx={{margin:1}}>
-        <SearchIcon sx={{ color: props.color }}/>
+        <SearchIcon sx={{ '&:hover': {color: props.color}, color: "#AAAAAA" }}/>
         <TextField 
           fullWidth
           placeholder="Search..."
           sx={{
-            '& .MuiInput-underline:before': { borderBottomColor: props.color },
+            // '& .MuiInput-underline:before': { borderBottomColor: props.color },
             '& .MuiInput-underline:after': { borderBottomColor: props.color },
           }} variant="standard" onChange={(e) => handleSetQuery(e)}
         />

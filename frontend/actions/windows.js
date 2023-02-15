@@ -18,9 +18,9 @@ export const Windows = createSlice({
 				x:1, 
 				y:1,
 				w:1,
-				h:1,
+				h:2,
 				isDraggable: true, 
-				isResizable: true, 
+				isResizable: false,
 				type: "FABMenu"
 			}
 		],
@@ -76,8 +76,10 @@ export const Windows = createSlice({
 			if (index > -1) {
 				temp[index].w = 4;
 				temp[index].h = 1;
-				temp[index].x = 20;
 				temp[index].isResizable = false;
+				temp[index].resizeHandles = [];
+				temp[index].showWindow = false;
+				
 			}
 			state.windows = temp;
 		},
@@ -89,6 +91,9 @@ export const Windows = createSlice({
 				temp[index].w = 5;
 				temp[index].h = 9;
 				temp[index].isResizable = true;
+				temp[index].resizeHandles = ["se"];
+				temp[index].showWindow = true;
+
 			}
 			state.windows = temp;	
 		},
@@ -99,6 +104,23 @@ export const Windows = createSlice({
 				temp[index].i = action.payload.term + "%search";
 			}
 			state.windows = temp;
+		},
+		updateWindows: (state, action) => {
+			var temp = [...state.windows]
+			action.payload.forEach((w) => {
+				var index = state.windows.findIndex(item => w.i === item.i)
+				console.log("layout i", w, index)
+				if (index > -1) {
+					temp[index].x = w.x;
+					temp[index].y = w.y;
+					temp[index].h = w.h;
+					temp[index].w = w.w; 	
+				}
+			})
+			console.log("layout temp", temp)
+			state.windows = temp;
+			console.log("layout temp", temp, state.windows)
+
 		},
 		// checkWindow({i: str, check: bool})
 		checkWindow: (state, action) => {
@@ -124,19 +146,7 @@ export const Windows = createSlice({
 			state.windows = temp;			
 		},			
 		loadWindows: (state, action) => {
-			// var temp = [...state.windows];
-			for (var index in action.payload) {
-				var update = action.payload[index];
-				var item = state.windows.find(item => item.i === update.i)
-				if (item) {
-					Object.keys(update).forEach((key, ind) => {
-						if (item.hasOwnProperty(key)) {
-							item[key] = update[key];
-						}
-					});
-				}
-			}
-			
+			state.windows = action.payload;	
 		}
 	}
 })
@@ -146,7 +156,8 @@ export const {
 	removeWindow, 
 	loadWindows, 
 	dragged, 
-	updateWindow, 
+	updateWindow,
+	updateWindows,
 	minimizeWindow, 
 	maximizeWindow, 
 	checkWindow, 

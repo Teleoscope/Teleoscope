@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 
-import { NavLink } from './NavLink';
 //import { userService } from 'services';
 import { userService } from '../../services/user.service';
 

@@ -10,15 +10,15 @@ Object.assign(global, WebsocketBuilder);
 
 
 // custom imports
-const bcrypt = require('bcryptjs');
-let client: Client;
+import bcrypt from 'bcryptjs';
+// let client: Client;
 
 /**
  * Type definition for Body
  */
 interface Body {
   task: string,
-  args: Object
+  args: any
 }
 
 export class Stomp {
@@ -26,8 +26,12 @@ export class Stomp {
   private _userid: string;
   private client: Client;
   private static stomp: Stomp;
+  private creationTime: Date;
+  private _loaded: boolean;
 
   private constructor() {
+    this.creationTime = new Date();
+    this.loaded = false;
   }
 
   /**
@@ -48,6 +52,14 @@ export class Stomp {
 
   public get userId() {
     return this._userid;
+  }
+
+  private set loaded(l: boolean) {
+    this._loaded = l;
+  }
+
+  public get loaded() {
+    return this._loaded;
   }
 
   /**
@@ -74,9 +86,10 @@ export class Stomp {
      * Called when the client connects to RabbitMQ.
      */
     this.client.onConnect = function (frame) {
+      Stomp.stomp.loaded = true;
       // Do something, all subscribes must be done is this callback
       // This is needed because this will be executed after a (re)connect
-      console.log("Connected to RabbitMQ webSTOMP server.");
+      console.log("Connected to RabbitMQ webSTOMP server.", frame);
     };
 
     /**
@@ -99,7 +112,7 @@ export class Stomp {
    * Publishes a message to RabbitMQ.
    */
   publish(body: Body) {
-    var headers = { content_type: "application/json", content_encoding: "utf-8" };
+    const headers = { content_type: "application/json", content_encoding: "utf-8" };
     body['args']['userid'] = this.userId;
     this.client.publish({
       destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,
@@ -115,7 +128,7 @@ export class Stomp {
    */
 
   initialize_session(label: string, color: string) {
-    var body = {
+    const body = {
       task: 'initialize_session',
       args: {
         label: label,
@@ -130,7 +143,7 @@ export class Stomp {
    * Saves the workspace UI state (window locations, bookmarks)
    */
   save_UI_state(session_id: string, bookmarks, windows) {
-    var body = {
+    const body = {
       task: 'save_UI_state',
       args: {
         session_id: session_id,
@@ -146,7 +159,7 @@ export class Stomp {
    * adds user to userlist of a session in MongoDB.
    */
   add_user_to_session(contributor: string, session_id: string) {
-    var body = {
+    const body = {
       task: 'add_user_to_session',
       args: {
         contributor: contributor,
@@ -161,7 +174,7 @@ export class Stomp {
    * Requests to create a Teleoscope object in MongoDB.
    */
   initialize_teleoscope(session_id: string) {
-    var body = {
+    const body = {
       task: 'initialize_teleoscope',
       args: {
         session_id: session_id
@@ -216,26 +229,10 @@ register_account(jsonData) {
 }
 
 /**
- * Saves a Teleoscope history item.
- */
-save_teleoscope_state(_id: string, history_item) {
-  //const obj_id = ObjectId(_id);
-  var body = {
-    task: 'save_teleoscope_state',
-    args: {
-      _id: _id,
-      history_item: history_item
-    }
-  }
-  this.publish(body);
-  return body;
-}
-
-/**
  * Requests to create a new group object in MongoDB.
  */
 add_group(label: string, color: string, session_id: string) {
-  var body = {
+  const body = {
     task: 'add_group',
     args: {
       session_id: session_id,
@@ -251,7 +248,7 @@ add_group(label: string, color: string, session_id: string) {
  * Requests to copy group object in MongoDB.
  */
 copy_group(label: string, group_id: string, session_id: string) {
-  var body = {
+  const body = {
     task: 'copy_group',
     args: {
       label: label,
@@ -264,10 +261,29 @@ copy_group(label: string, group_id: string, session_id: string) {
 }
 
 /**
+ * Removes a group from a session in MongoDB. Does not delete the group.
+ * 
+ * @param group_id 
+ * @param session_id 
+ * @returns 
+ */
+remove_group(group_id: string, session_id: string) {
+  const body = {
+    task: 'remove_group',
+    args: {
+      group_id: group_id,
+      session_id: session_id,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
  * Add a document to a group.
  */
 add_document_to_group(group_id: string, document_id: string) {
-  var body = {
+  const body = {
     task: 'add_document_to_group',
     args: {
       group_id: group_id,
@@ -282,7 +298,7 @@ add_document_to_group(group_id: string, document_id: string) {
  * Remove a document from a group.
  */
 remove_document_from_group(group_id: string, document_id: string) {
-  var body = {
+  const body = {
     task: 'remove_document_from_group',
     args: {
       group_id: group_id,
@@ -297,7 +313,7 @@ remove_document_from_group(group_id: string, document_id: string) {
  * Update a group's label.
  */
 update_group_label(group_id: string, label: string) {
-  var body = {
+  const body = {
     task: 'update_group_label',
     args: {
       group_id: group_id,
@@ -309,13 +325,14 @@ update_group_label(group_id: string, label: string) {
 }
 
 /**
- * Request to add a note for a particular document.
+ * Request to add a note for a particular interface object.
  */
-add_note(document_id: string) {
-  var body = {
+add_note(oid: string, type:string) {
+  const body = {
     task: 'add_note',
     args: {
-      document_id: document_id,
+      oid: oid,
+      type: type
     }
   }
   this.publish(body);
@@ -325,11 +342,11 @@ add_note(document_id: string) {
 /**
  * Updates a note's content.
  */
-update_note(document_id: string, content) {
-  var body = {
+update_note(note_id: string, content) {
+  const body = {
     task: 'update_note',
     args: {
-      document_id: document_id,
+      note_id: note_id,
       content: content
     }
   }
@@ -341,7 +358,7 @@ update_note(document_id: string, content) {
  * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
  */
 reorient(teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>, magnitude ?: number) {
-  var body = {
+  const body = {
     task: "reorient",
     args: {
       teleoscope_id: teleoscope_id,
@@ -357,10 +374,58 @@ reorient(teleoscope_id: string, positive_docs: Array<string>, negative_docs: Arr
 }
 
 /**
+ * Recolor the session.
+ */
+
+recolor_session(color: string, session_oid: string) {
+  const body = {
+    task: "recolor_session",
+    args: {
+      color: color,
+      session_id: session_oid,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Recolor the group.
+ */
+
+recolor_group(color: string, group_id: string) {
+  const body = {
+    task: "recolor_group",
+    args: {
+      color: color,
+      group_id: group_id,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
+ * Relabel the group.
+ */
+
+relabel_group(label: string, group_id: string) {
+  const body = {
+    task: "relabel_group",
+    args: {
+      label: label,
+      group_id: group_id
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+/**
  * Create MLGroups using the UMAP and HBDSCAN with the given groups' documents as seeds.
  */
 cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {
-  var body = {
+  const body = {
     task: "cluster_by_groups",
     args: {
       group_id_strings: group_id_strings,

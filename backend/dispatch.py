@@ -94,9 +94,41 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 args=(),
                 kwargs={
                     "_id": args["_id"],
+                    "userid": args["userid"],
                     "history_item": args["history_item"]
                 },
             )
+        
+        if task == "recolor_session":
+            res = tasks.recolor_session.signature(
+                args=(),
+                kwargs={
+                    "color": args["color"],
+                    "userid": args["userid"],
+                    "session_id": args["session_id"],
+                },
+            )
+
+        if task == "recolor_group":
+            res = tasks.recolor_group.signature(
+                args=(),
+                kwargs={
+                    "color": args["color"],
+                    "userid": args["userid"],
+                    "group_id": args["group_id"],
+                },
+            )
+
+        if task == "relabel_group":
+            res = tasks.relabel_group.signature(
+                args=(),
+                kwargs={
+                    "label": args["label"],
+                    "userid": args["userid"],
+                    "group_id": args["group_id"],
+                },
+            )
+
 
         if task == "reorient":
             magnitude = 0.5
@@ -106,10 +138,12 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 robj.s(teleoscope_id=args["teleoscope_id"],
                        positive_docs=args["positive_docs"],
                        negative_docs=args["negative_docs"],
-                       magnitude=magnitude
+                       magnitude=magnitude,
+                       userid=args["userid"]
                 ).set(queue=auth.rabbitmq["task_queue"]),
                 tasks.save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
             )
+            
             res.apply_async()
             return
 
@@ -121,6 +155,16 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "label": args["label"],
                     "color": args["color"],
                     "session_id": args["session_id"]
+                }
+            )
+
+        if task == "remove_group":
+            res = tasks.remove_group.signature(
+                args=(),
+                kwargs={
+                    "session_id": args["session_id"],
+                    "group_id": args["group_id"],
+                    "userid": args["userid"]
                 }
             )
 
@@ -139,6 +183,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.add_document_to_group.signature(
                 args=(),
                 kwargs={
+                    "userid": args["userid"],
                     "group_id": args["group_id"],
                     "document_id": args["document_id"]
                 }
@@ -148,6 +193,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.remove_document_from_group.signature(
                 args=(),
                 kwargs={
+                    "userid": args["userid"],
                     "group_id": args["group_id"],
                     "document_id": args["document_id"]
                 }
@@ -157,6 +203,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.update_group_label.signature(
                 args=(),
                 kwargs={
+                    "userid": args["userid"],
                     "group_id": args["group_id"],
                     "label": args["label"]
                 }
@@ -166,7 +213,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.add_note.signature(
                 args=(),
                 kwargs={
-                    "document_id": args["document_id"],
+                    "userid": args["userid"],
+                    "oid": args["oid"],
+                    "key": args["key"]
                 }
             )
 
@@ -174,7 +223,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.update_note.signature(
                 args=(),
                 kwargs={
-                    "document_id": args["document_id"],
+                    "userid": args["userid"],
+                    "note_id": args["note_id"],
                     "content": args["content"],
                 }
             )
@@ -184,6 +234,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.cluster_by_groups.signature(
                 args=(),
                 kwargs={
+                    "userid": args["userid"],
                     "group_id_strings": args["group_id_strings"],
                     "session_oid": args["session_oid"]
                 }
