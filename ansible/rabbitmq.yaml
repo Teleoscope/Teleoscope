@@ -8,15 +8,10 @@
     - name: Copy Install RabbitMQ
       ansible.builtin.copy:
         src: ./installrabbitmq.sh
-        dest: ~/installrabbitmq.sh
-        owner: root
-        group: root
+        dest: "/home/{{ ansible_user }}/installrabbitmq.sh"
         mode: '0744'
-        backup: yes
     - name: Run Install RabbitMQ
-      ansible.builtin.shell: ~/installrabbitmq.sh
-      args:
-        chdir: ~/
+      ansible.builtin.shell: bash "/home/{{ ansible_user }}/installrabbitmq.sh"
     - name: Start RabbitMQ
       ansible.builtin.systemd:
         name: rabbitmq-server
