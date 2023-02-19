@@ -1047,14 +1047,9 @@ def vectorize_text(text): #(text) -> Vector
             (Ignores dictionaries containing error keys)
     '''
     import tensorflow_hub as hub
-    if 'error' not in text: # Dont need this (Assuming it's error free-text -> include that in assumption)
-        embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        # document['vector'] = embed([document['title']]).numpy()[0].tolist() 
-        vector = embed(text).numpy()[0].tolist() # This is required -> don't need document['text'] -> make it text 
-        return vector
-    else:
-        # Not sure if requires another return type (Throw in an exc)
-        raise Exception(f'There is an error in the text.')
+    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    vector = embed(text).numpy()[0].tolist()
+    return vector
 
 @app.task
 def add_single_document_to_database(document):
@@ -1066,16 +1061,12 @@ def add_single_document_to_database(document):
     purpose: This function adds a single document to the database
             (Ignores dictionaries containing error keys)
     '''
-    if 'error' not in document:
-         # Create session
-        session, db = utils.create_transaction_session()
-        target = db.documents 
-        with session.start_transaction():
-            # Insert document into database
-            target.insert_one(document, session=session)
-            # Commit the session with retry
-            utils.commit_with_retry(session)
-
+    transaction_session, db = utils.create_transaction_session() 
+    with transaction_session.start_transaction():
+        # Insert document into database
+        db.documents.insert_one(document, session=transaction_session)
+        # Commit the session with retry
+        utils.commit_with_retry(transaction_session)
 
 @app.task
 def add_multiple_documents_to_database(documents):
