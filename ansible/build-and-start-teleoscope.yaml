@@ -1,0 +1,15 @@
+- hosts: "{{ groups['newmachines'] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files: 
+    - ./vars/vars.yaml
+
+  tasks:
+    - name: Build Teleoscope
+      ansible.builtin.shell: npm run build
+      args:
+        chdir: "/home/{{ ansible_user }}/Teleoscope/frontend/"
+    - name: Run Teleoscope
+      ansible.builtin.shell: pm2 restart ecosystem.config.js
+      args:
+        chdir: "/home/{{ ansible_user }}/Teleoscope/"
+    

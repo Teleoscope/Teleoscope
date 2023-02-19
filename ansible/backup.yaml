@@ -1,3 +1,4 @@
+# ansible-playbook -v -i vars/inventory.yaml backup.yaml
 - name: MongoDB Backup from Source
   hosts: "{{ groups['sources'][0] }}"
   remote_user: "{{ ansible_user }}"
@@ -19,7 +20,7 @@
       delegate_to: "{{ groups['targets'][0] }}"
       register: syncfile
       run_once: true
-    - name: Delete MongoDump Test
+    - name: Delete MongoDump Test on Source
       ansible.builtin.shell: rm -f "{{ remote_prefix }}/{{ ansible_user }}/{{ ansible_hostname }}.{{ ansible_date_time.iso8601 }}.test"
     - name: Delete MongoDump Test on Target
       ansible.builtin.shell: rm -f "{{ remote_prefix }}/{{ ansible_user }}/{{ ansible_hostname }}.{{ ansible_date_time.iso8601 }}.test"
