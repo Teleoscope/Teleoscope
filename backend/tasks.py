@@ -1048,7 +1048,7 @@ def vectorize_text(text): #(text) -> Vector
     '''
     import tensorflow_hub as hub
     embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-    vector = embed(text).numpy()[0].tolist()
+    vector = embed([text]).numpy()[0].tolist()
     return vector
 
 @app.task
