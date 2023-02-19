@@ -1,0 +1,15 @@
+rabbitmq = {
+    "username": "{{ rabbitmq_dev_username }}",
+    "password": "{{ rabbitmq_dev_password }}",
+    "host": "localhost:5672",
+    "vhost": "{{ rabbitmq_vhost }}",
+    "dispatch_queue": "dev-{{ ansible_user }}-dispatch",
+    "task_queue": "dev-{{ ansible_user }}-task"
+}
+
+mongodb = {
+ "username": "{{ mongodb_dev_name }}",
+ "password": "{{ mongodb_dev_password }}",
+ "host": "localhost:27017",
+ "replicaSet": "rs0",
+}
