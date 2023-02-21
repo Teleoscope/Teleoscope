@@ -1,5 +1,7 @@
 # Mac
 .DS_Store
+*.icloud
+
 
 # Byte-compiled / optimized / DLL files
 *__pycache__/
@@ -153,3 +155,7 @@ experiments/data/
 *.out
 *.save
 *.npz
+
+
+# ansible
+ansible/vars/*

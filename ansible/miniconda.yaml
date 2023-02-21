@@ -1,0 +1,9 @@
+- hosts: "{{ groups['newmachines'] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files: 
+    - ./vars/vars.yaml
+
+- name: Install Miniconda with Root
+  ansible.builtin.import_playbook: miniconda_install.yaml
+- name: Setup Miniconda without Root
+  ansible.builtin.import_playbook: miniconda_setup.yaml

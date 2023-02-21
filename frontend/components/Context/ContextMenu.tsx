@@ -8,6 +8,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
 
+
 // custom components
 import MenuActions from "./ContextMenuActions"
 
@@ -20,16 +21,22 @@ import useSWRAbstract from "../../util/swr"
 
 // contexts
 import { Stomp } from '../Stomp'
+import ColorPicker from "../ColorPicker";
+import Typography from "@mui/material/Typography";
 
 export default function ContextMenu(props) {
     const userid = useAppSelector((state: RootState) => state.activeSessionID.userid);
     const client = Stomp.getInstance();
     client.userId = userid;
 
+    const [colorPicker, setColorPicker] = React.useState(false);
+
     const dispatch = useAppDispatch();
 
     const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
     const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
+    const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+
     const teleoscopes = teleoscopes_raw?.map((t) => {
         const ret = {
             _id: t._id,
@@ -37,10 +44,6 @@ export default function ContextMenu(props) {
         }
         return ret;
     });
-    const { groups_raw } = useSWRAbstract("groups_raw", `/api/sessions/${session_id}/groups`);
-    const group_ids = groups_raw?.map((g) => {
-        return g._id;
-    })
 
     const handleOpenNewWindow = (menu_action) => {
         dispatch(addWindow(MenuActions()[menu_action].default_window));
@@ -54,14 +57,48 @@ export default function ContextMenu(props) {
         props.handleCloseContextMenu();
     }
 
-    const handleNewTeleoscope = (s_id) => {
-        client.initialize_teleoscope(s_id);
+
+    const handleOpenColorPicker = () => {
+        setColorPicker(true);
     }
+
+    const handleClose = () => {
+        props.handleCloseContextMenu()
+        setColorPicker(false)
+    }
+
+    const handleColorChange = (color) => {
+        client.recolor_session(color, session_id)
+    }
+
+    if (colorPicker) {
+        return (
+            <Menu
+                sx={{ displayPrint: 'none' }}
+                open={props.contextMenu !== null}
+                onClose={() => setColorPicker(false)}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                    props.contextMenu !== null
+                        ? { top: props.contextMenu.mouseY, left: props.contextMenu.mouseX }
+                        : undefined
+                }
+            >
+                <ColorPicker 
+                    defaultColor={session?.history[0].color} 
+                    onChange={handleColorChange}>
+                </ColorPicker>
+            </Menu>
+        ) 
+        
+    }
+
+
 
     return (
         <Menu
             open={props.contextMenu !== null}
-            onClose={props.handleCloseContextMenu}
+            onClose={() => handleClose()}
             anchorReference="anchorPosition"
             anchorPosition={
                 props.contextMenu !== null
@@ -69,15 +106,14 @@ export default function ContextMenu(props) {
                     : undefined
             }
         >
-            <MenuItem onClick={() => {
-                handleOpenNewWindow("Teleoscope");
-                handleNewTeleoscope(session_id);
-            }
-                }>New Teleoscope</MenuItem>
-            <Divider />
+            <MenuItem >
+                <Typography variant="overline" onClick={() => handleOpenNewWindow("Teleoscopes")}>
+                    All Teleoscopes
+                </Typography>
+            </MenuItem>
             {teleoscopes?.map((t) => {
                 return (
-                    <MenuItem onClick={() => handleExistingTeleoscope(t._id)}>
+                    <MenuItem key={t._id} onClick={() => handleExistingTeleoscope(t._id)}>
                         {t.label}
                     </MenuItem>
                 )
@@ -85,12 +121,13 @@ export default function ContextMenu(props) {
             <Divider />
 
             <MenuItem onClick={() => handleOpenNewWindow("Search")}>
-                New Search
+                Open Search
             </MenuItem>
-            <Divider />
-
             <MenuItem onClick={() => handleOpenNewWindow("Groups")}>
-                New Group Palette
+                Open Group Palette
+            </MenuItem>
+            <MenuItem onClick={() => handleOpenNewWindow("FABMenu")}>
+                Open Floating Menu
             </MenuItem>
             <Divider />
 
@@ -101,6 +138,7 @@ export default function ContextMenu(props) {
                 Deselect All
             </MenuItem>
             <Divider />
+            <MenuItem onClick={() => handleOpenColorPicker()}>Change session color</MenuItem>
         </Menu>
     )
 }

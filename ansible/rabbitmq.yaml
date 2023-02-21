@@ -1,0 +1,57 @@
+- hosts: "{{ groups['newmachines'] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files: 
+    - ./vars/vars.yaml
+  become: yes
+
+  tasks:
+    - name: Copy Install RabbitMQ
+      ansible.builtin.copy:
+        src: ./installrabbitmq.sh
+        dest: "/home/{{ ansible_user }}/installrabbitmq.sh"
+        mode: '0744'
+    - name: Run Install RabbitMQ
+      ansible.builtin.shell: bash "/home/{{ ansible_user }}/installrabbitmq.sh"
+    - name: Start RabbitMQ
+      ansible.builtin.systemd:
+        name: rabbitmq-server
+        state: started
+        enabled: yes
+    - name: Ensure that the vhost "{{ rabbitmq_vhost }}" exists.
+      community.rabbitmq.rabbitmq_vhost:
+        name: "{{ rabbitmq_vhost }}"
+        state: present
+    - name: Add Admin user to server and assign full access control on / vhost.
+      community.rabbitmq.rabbitmq_user:
+        user: "{{ rabbitmq_admin_username }}"
+        password: "{{ rabbitmq_admin_password }}"
+        vhost: /
+        tags: administrator
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
+        state: present
+    - name: Add Admin user to server and assign full access control on "{{ rabbitmq_vhost }}" vhost.
+      community.rabbitmq.rabbitmq_user:
+        user: "{{ rabbitmq_admin_username }}"
+        password: "{{ rabbitmq_admin_password }}"
+        vhost: "{{ rabbitmq_vhost }}"
+        tags: administrator
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
+        state: present
+    - name: Add Dev user to server and assign monitoring on "{{ rabbitmq_vhost }}" vhost.
+      community.rabbitmq.rabbitmq_user:
+        user: "{{ rabbitmq_dev_username }}"
+        password: "{{ rabbitmq_dev_password }}"
+        vhost: "{{ rabbitmq_vhost }}"
+        tags: monitoring
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
+        state: present
+    - name: Enable RabbitMQ Management and Web Stomp plugins 
+      community.rabbitmq.rabbitmq_plugin:
+        names: rabbitmq_management,rabbitmq_web_stomp
+        state: enabled

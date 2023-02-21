@@ -8,7 +8,7 @@ import TopBar from "./WindowModules/TopBar";
 import WindowManager from "./WindowFolder/WindowManager";
 import ContextMenu from "./Context/ContextMenu";
 
-export default function Workspace() {
+export default function Workspace(props) {
   interface MouseCoords {
     mouseX: number,
     mouseY: number
@@ -46,9 +46,9 @@ export default function Workspace() {
       onClick={(e) => handleClick(e)}
     >
 
-      <Grid container spacing={2}>
+      <Grid container spacing={0}>
         <Grid item xs={12}>
-          <TopBar />
+          <TopBar isConnected={props.isConnected} />
         </Grid>
         <Grid item xs={12}>
 
