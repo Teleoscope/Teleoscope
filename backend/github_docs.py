@@ -3,19 +3,33 @@ import tasks
 import schemas
 import json
 import os
+import utils
 # assign directory
 directory = 'testdata'
 
 # iterate over files in
 # that directory
 for filename in os.listdir(directory):
+    db = utils.connect()
     file = os.path.join(directory, filename)
     # checking if it is a file
     if os.path.isfile(file):
-        print(f'')
+        print(f'Processing {file}...')
         o = open(file, "rb")
         data = pickle.load(o)
+        acc = 0
+        next = 0
         for d in data:
+            acc = acc + 1
+            if acc >= next:
+                i = input()
+                if i == "":
+                    next = acc + 1
+                next == acc + str(i)
+            check = db.documents.find({"meta.id", d.id})
+            if check:
+                print("Already in DB...")
+                pass
             title = str(d.title)
             text = str(d.body)
             textVector = tasks.vectorize_text(text)
