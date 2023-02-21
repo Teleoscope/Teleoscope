@@ -26,8 +26,8 @@ for filename in os.listdir(directory):
                 i = input()
                 if i == "":
                     next = acc + 1
-                    pass
-                next == acc + int(i)
+                else:
+                    next == acc + int(i)
             check = db.documents.find({"meta.id", d.id})
             if check:
                 print("Already in DB...")
