@@ -170,6 +170,9 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
     '''
     import gridfs
     # convert to json
+    def toJSON(self):
+        return str(self)
+    ObjectId.toJSON = toJSON
     dumps = json.dumps(data)
     fs = gridfs.GridFS(db, namespace)
     obj = fs.put(dumps, encoding=encoding)
