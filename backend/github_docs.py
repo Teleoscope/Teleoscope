@@ -21,7 +21,7 @@ for filename in os.listdir(directory):
         next = 0
         dontskip = True
         for d in data:
-            print(f'Processing Issue {d.id}...')
+            print(f'Processing Issue {d.id} from {file}...')
             acc = acc + 1
             #####################################################
             if acc >= next and dontskip:
