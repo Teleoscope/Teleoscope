@@ -807,8 +807,8 @@ class reorient(Task):
         else:
             logging.info("Documents are not cached, building cache now.")
             db = utils.connect()
-            allDocuments = utils.getAllDocuments(db, projection={'id':1, 'textVector':1, '_id':0}, batching=True, batchSize=10000)
-            ids = [x['id'] for x in allDocuments]
+            allDocuments = utils.getAllDocuments(db, projection={'textVector':1, '_id':1}, batching=True, batchSize=10000)
+            ids = [x['_id'] for x in allDocuments]
             logging.info(f'There are {len(ids)} ids in documents.')
             vecs = np.array([x['textVector'] for x in allDocuments])
 
