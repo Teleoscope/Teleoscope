@@ -28,17 +28,17 @@ for filename in os.listdir(directory):
                 "active_lock_reason": d.active_lock_reason,
                 "user": d.user.login
             }
-            if "created_at" in d:
+            if "created_at" in vars(d) and d.created_at != None:
                 meta["created_at"] = d.created_at.isoformat()
-            if "updated_at" in d:
+            if "updated_at" in vars(d) and d.updated_at != None:
                 meta["updated_at"] = d.updated_at.isoformat()
-            if "closed_at" in d:
+            if "closed_at" in vars(d) and d.closed_at != None:
                 meta["closed_at"] = d.closed_at.isoformat()
-            if "assignee" in d:
+            if "assignee" in vars(d) and d.assignee != None:
                 meta["assignee"] = d.assignee.login
-            if "closed_by" in d:
+            if "closed_by" in vars(d) and d.closed_by != None:
                 meta["closed_by"] = d.closed_by.login
-            if "assignees" in d:
+            if "assignees" in vars(d) and d.assignees != None:
                 meta["assignees"] = [a.login for a in d.assignees]
          
 
