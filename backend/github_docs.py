@@ -20,14 +20,14 @@ for filename in os.listdir(directory):
         acc = 0
         next = 0
         for d in data:
+            print(f'Processing Issue {d.id}...')
             acc = acc + 1
             if acc >= next:
                 i = input()
                 if i == "":
                     next = acc + 1
-                if i == "more":
-                    print(d.id)
-                next == acc + str(i)
+                    pass
+                next == acc + int(i)
             check = db.documents.find({"meta.id", d.id})
             if check:
                 print("Already in DB...")
