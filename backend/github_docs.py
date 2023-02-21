@@ -28,10 +28,10 @@ for filename in os.listdir(directory):
                     next = acc + 1
                 else:
                     next == acc + int(i)
-            check = db.documents.find({"meta.id", d.id})
+            check = db.documents.find({"meta.id": d.id})
             if check:
                 print("Already in DB...")
-                pass
+                continue
             title = str(d.title)
             text = str(d.body)
             textVector = tasks.vectorize_text(text)
