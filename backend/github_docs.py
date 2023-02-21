@@ -25,6 +25,8 @@ for filename in os.listdir(directory):
                 i = input()
                 if i == "":
                     next = acc + 1
+                if i == "more":
+                    print(d.id)
                 next == acc + str(i)
             check = db.documents.find({"meta.id", d.id})
             if check:
