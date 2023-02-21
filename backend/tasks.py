@@ -913,7 +913,7 @@ class reorient(Task):
             stateVector = np.array(teleoscope['history'][0]['stateVector'])
         else:
             docs = positive_docs + negative_docs
-            first_doc = self.db.documents.find_one({"id": docs[0]})
+            first_doc = self.db.documents.find_one({"_id": docs[0]})
             logging.info(f'Results of finding first_doc: {first_doc["_id"]}.')
             stateVector = first_doc['textVector']  # grab textVector
 
