@@ -173,10 +173,13 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
     
     # subclass JSONEncoder
     class ObjectIdEncoder(JSONEncoder):
-            def default(self, o):
-                return str(o)
+            def default(self, obj):
+                if isinstance(obj, ObjectId):
+                    return str(obj)
+                return json.JSONEncoder.default(self, obj)
+
     dumps = json.dumps(data, cls=ObjectIdEncoder)
-    
+
     fs = gridfs.GridFS(db, namespace)
     obj = fs.put(dumps, encoding=encoding)
     return obj
