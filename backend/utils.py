@@ -6,6 +6,7 @@ import numpy as np
 from pymongo import MongoClient
 import pymongo.errors
 import logging 
+from bson.objectid import ObjectId
 
 # local files
 import auth
@@ -65,12 +66,12 @@ def mergeCollections():
     db = connect()
     cursor = db.clean.documents.v2.find({})
     for document in cursor:
-        findres = list(db.documents.find({"id": document["id"]}))
+        findres = list(db.documents.find({"_id": ObjectId(str(document["_id"]))}))
         if len(findres) == 0:
-            print(document["id"], "not found")
-            db.documents.update_one({"id": document["id"]}, {"$set": document}, upsert=True)
+            print(document["_id"], "not found")
+            db.documents.update_one({"_id": ObjectId(str(document["_id"]))}, {"$set": document}, upsert=True)
         else:
-            print(document["id"], "found")
+            print(document["_id"], "found")
 
 # def update_embedding(q_vector, feedback_vector, feedback):
 #     SENSITIVITY = 0.75
@@ -98,7 +99,7 @@ def moveVector(sourceVector, destinationVector, direction, magnitude):
     return new_q
 
 def getDocumentVector(db, document_id):
-    document = db.documents.find_one({"id": document_id}, projection={'textVector':1}) # get document which was liked/disliked
+    document = db.documents.find_one({"_id": ObjectId(str(document_id))}, projection={'textVector':1}) # get document which was liked/disliked
     documentVector = np.array(document['textVector']) # extract vector of document which was liked/disliked
     return documentVector
 
