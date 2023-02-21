@@ -7,6 +7,7 @@ from pymongo import MongoClient
 import pymongo.errors
 import logging 
 from bson.objectid import ObjectId
+from json import JSONEncoder
 
 # local files
 import auth
@@ -169,11 +170,13 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
         obj: ObjectId('62ce71d36fee6e2ed60d1fb5')
     '''
     import gridfs
-    # convert to json
-    def toJSON(self):
-        return str(self)
-    ObjectId.toJSON = toJSON
-    dumps = json.dumps(data)
+    
+    # subclass JSONEncoder
+    class ObjectIdEncoder(JSONEncoder):
+            def default(self, o):
+                return str(o)
+    dumps = json.dumps(data, cls=ObjectIdEncoder)
+    
     fs = gridfs.GridFS(db, namespace)
     obj = fs.put(dumps, encoding=encoding)
     return obj
