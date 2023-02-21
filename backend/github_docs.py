@@ -28,6 +28,7 @@ for filename in os.listdir(directory):
                     next = acc + 1
                 else:
                     next == acc + int(i)
+                    print(f"current: {acc}; next: {next}")
             check = list(db.documents.find({"meta.id": d.id}))
             if len(check) > 0:
                 print("Already in DB...")
