@@ -28,8 +28,8 @@ for filename in os.listdir(directory):
                     next = acc + 1
                 else:
                     next == acc + int(i)
-            check = db.documents.find({"meta.id": d.id})
-            if check:
+            check = list(db.documents.find({"meta.id": d.id}))
+            if len(check) > 0:
                 print("Already in DB...")
                 continue
             title = str(d.title)
