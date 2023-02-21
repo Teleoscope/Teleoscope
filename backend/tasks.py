@@ -108,16 +108,15 @@ def save_UI_state(*args, **kwargs):
         logging.info(f"Session {session_id} not found.")
         raise Exception("Session not found")
 
-    userid = kwargs["userid"]
+    userid = ObjectId(str(kwargs["userid"]))
     user = db.users.find_one({"_id": userid})
-    user_id = user['_id']
 
     history_item = session["history"][0]
     history_item["bookmarks"] = kwargs["bookmarks"]
     history_item["windows"] =  kwargs["windows"]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Save UI state"
-    history_item["user"] = user_id
+    history_item["user"] = userid
 
     with transaction_session.start_transaction(): # When you do transaction, you want to do it inside this transaction session
         db.sessions.update_one({"_id": session_id},
