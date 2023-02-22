@@ -63,21 +63,31 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
         
     logging.info("Appending documents from groups to document vector and id list...")
     
-    for group in groups:
+    group_doc_indices = {}
 
+    for group in groups:
+        
         # grab latest history item for each group
         group_document_ids = group["history"][0]["included_documents"]
-
-        # check to see if a document in a group has been added, if not add it
+        
+        indices = []
+        
         for id in group_document_ids:
+            
             try:
                 document_ids.index(id)
-
+            
             except:
                 document = db.documents.find_one({"id": id}, projection=projection)
                 document_ids.append(id)
                 vector = np.array(document["textVector"]).reshape((1, 512))
                 document_vectors = np.append(document_vectors, vector, axis=0)
+                
+            finally:
+                indices.append(document_ids.index(id))
+        
+        # dict where keys are group names and values are indices of documents
+        group_doc_indices[group["history"][0]["label"]] = indices
 
 
     # for garbage collection
@@ -85,7 +95,7 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
     del cursor
     gc.collect()
 
-    logging.info(f'Document vectors np.array has shape {data.shape}.') # e.g., (600000, 512)
+    logging.info(f'Document vectors has the shape:  {document_vectors.shape}.') # e.g., (600000, 512)
 
     logging.info("Building distance matrix from document vectors array")
     dm = euclidean_distances(document_vectors)
@@ -93,62 +103,110 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
     logging.info(f"Distance matrix has shape {dm.shape}.") # e.g., (10000, 10000) square matrix
 
     # update distance matrix such that documents in the same group have distance 0
-    for group in range(len(groups)):
-        docs = groups[group]['history'][0]['included_documents']
-
-        for i in range(len(docs)):
-            index_i = document_ids.index(docs[i])
-
-            for j in range(len(docs)):
-                index_j = document_ids.index(docs[j])
-                dm[index_i, index_j] = 0 
+    for group in group_doc_indices:
+    
+        indices = group_doc_indices[group]
+    
+        for curr in range(len(indices) - 1):
+            i = indices[curr]
+            j = indices[curr+1]
+            dm[i, j] = dm[j, i] = 0    
 
 
     logging.info("Running UMAP Reduction...")
 
-    fitter = umap.UMAP(verbose=True,
-                       low_memory=True,
-                       metric="precomputed", # use distance matrix
-                       n_components=5, # reduce to 5 dimensions
-    ).fit(dm)
-    
-    embedding = fitter.embedding_
+    umap_embeddings = umap.UMAP(
+        verbose = True,         # for logging
+        metric = "precomputed", # use distance matrix
+        n_components = 30,      # reduce to n_components dimensions (2:100)
+        # n_neighbors = 10,     # local (small n ~2) vs. global (large n ~100) structure 
+        min_dist = 0.0,         # minimum distance apart that points are allowed (0.0:0.99)
+    ).fit_transform(dm)
 
-    umap_embeddings = fitter.transform(dm)
+    logging.info(f"Shape after reduction: {umap_embeddings.shape}")
     
     logging.info("Clustering with HDBSCAN...")
 
     hdbscan_labels = hdbscan.HDBSCAN(
-        min_cluster_size=10,
+        min_cluster_size = 10,              # n-neighbors needed to be considered a cluster (0:50 df=5)
+        # min_samples = 5,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
+        cluster_selection_epsilon = 0.2,    # have large clusters in dense regions while leaving smaller clusters small
+                                            # merge clusters if inter cluster distance is less than thres (df=0)
     ).fit_predict(umap_embeddings)
 
-    logging.info(f'HDBScan labels are in set {set(hdbscan_labels)}.')
+    logging.info(f'Num Clusters = {max(hdbscan_labels)+1} + outliers')
 
-    label_array = np.array(hdbscan_labels)
-    clusters = {}
+    given_labels = {}
+    for group in group_doc_indices:
+
+        for index in group_doc_indices[group]:
+            if hdbscan_labels[index] != -1:
+                given_labels[group] = hdbscan_labels[index]
+                break
     
     for hdbscan_label in set(hdbscan_labels):
+
+        check, name = is_human_cluster(hdbscan_label, given_labels)
+
+        if hdbscan_label == -1:
+            _label = f"{int(hdbscan_label)} (outliers)"
+        elif check: 
+            _label = f"{int(hdbscan_label)} ({name})"
+        else:
+            _label = int(hdbscan_label)
      
-        document_indices_scalar = np.where(label_array == hdbscan_label)[0]
+        document_indices_scalar = np.where(hdbscan_labels == hdbscan_label)[0]
         document_indices = [int(i) for i in document_indices_scalar]
         
         documents = []
         for i in document_indices:
             documents.append(document_ids[i])
-        
-        clusters[hdbscan_label] = documents
 
-        logging.info(f'There are {len(documents)} documents for Machine Cluster {hdbscan_label}.')
+        logging.info(f'There are {len(documents)} documents for Machine Cluster {_label}.')
 
         tasks.add_group(
             human=False, 
             session_id=session_oid, 
             color="#8c564b",
             included_documents=documents, 
-            label=int(hdbscan_label),
+            label=_label,
             username="clustering"
         )
 
+
+def is_human_cluster(hdbscan_label, given_labels):
+    """
+    Check to see if current hdbscan label is a label given to a human cluster
+    
+    input:
+        hdbscan_label (int): current label
+        given_labels (dict): machine labels given to human clusters
+    output:
+        check (bool): if current label is a label given to human clusters
+        name (string): label for human cluster(s)
+
+    """
+    name = None
+    check = more = False
+
+    for _name in given_labels:
+
+        # label of human cluster
+        label = given_labels[_name]
+        
+        # check if machine label matches label given to human cluster
+        if (hdbscan_label == label):
+
+            # append name of human cluster if machine label is shared
+            if more:
+                name += " & " + _name
+
+            # labels match so update outputs 
+            else:
+                name = _name
+                check = more = True
+            
+    return check, name
 
 if __name__ == "__main__":
     cluster_by_groups(["62db047aaee56b83f2871510"], "62a7ca02d033034450035a91", "632ccbbdde62ba69239f6682")
