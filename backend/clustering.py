@@ -65,7 +65,6 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     logging.info("Appending documents from groups to document vector and id list...")
     
     group_doc_indices = {}
-
     for group in groups:
         
         # grab latest history item for each group
@@ -104,14 +103,18 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     logging.info(f"Distance matrix has shape {dm.shape}.") # e.g., (10000, 10000) square matrix
 
     # update distance matrix such that documents in the same group have distance 0
+    # TODO - improve hacky code below (map function?)
     for group in group_doc_indices:
     
         indices = group_doc_indices[group]
-    
-        for curr in range(len(indices) - 1):
-            i = indices[curr]
-            j = indices[curr+1]
-            dm[i, j] = dm[j, i] = 0    
+        size = range(len(indices))
+
+        for _i in size:
+            i = indices[_i]
+
+            for _j in size:
+                j = indices[_j]
+                dm[i, j] = 0 
 
 
     logging.info("Running UMAP Reduction...")
@@ -137,6 +140,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
 
     logging.info(f'Num Clusters = {max(hdbscan_labels)+1} + outliers')
 
+    # build dict where key is group name and value is label given by clustering
     given_labels = {}
     for group in group_doc_indices:
 
@@ -145,17 +149,20 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
                 given_labels[group] = hdbscan_labels[index]
                 break
     
+    # create a new mongoDB group for each machine cluster
     for hdbscan_label in set(hdbscan_labels):
 
+        # identify if current hdbscan label is one associate with a human cluster
         check, name = is_human_cluster(hdbscan_label, given_labels)
 
         if hdbscan_label == -1:
-            _label = f"{int(hdbscan_label)} (outliers)"
+            _label = f"{hdbscan_label} (outliers)"
         elif check: 
-            _label = f"{int(hdbscan_label)} ({name})"
+            _label = f"{hdbscan_label} ({name})" # label machine cluster based on human cluster accordingly
         else:
-            _label = int(hdbscan_label)
+            _label = str(hdbscan_label)
      
+        # get indices for documents with current hdbscan label
         document_indices_scalar = np.where(hdbscan_labels == hdbscan_label)[0]
         document_indices = [int(i) for i in document_indices_scalar]
         
