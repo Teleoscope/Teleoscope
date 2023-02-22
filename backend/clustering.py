@@ -10,7 +10,8 @@ import gc
 import tasks
 from sklearn.metrics.pairwise import euclidean_distances
 
-def cluster_by_groups(group_id_strings, session_oid, limit=10000):
+
+def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     """Cluster documents using user-provided group ids.
 
     group_id_strings : list(string) where the strings are MongoDB ObjectID format
@@ -165,12 +166,12 @@ def cluster_by_groups(group_id_strings, session_oid, limit=10000):
         logging.info(f'There are {len(documents)} documents for Machine Cluster {_label}.')
 
         tasks.add_group(
-            human=False, 
-            session_id=session_oid, 
-            color="#8c564b",
-            included_documents=documents, 
+            userid=userid,
             label=_label,
-            username="clustering"
+            color="#8c564b",
+            session_id=session_oid, 
+            human=False, 
+            included_documents=documents, 
         )
 
 
