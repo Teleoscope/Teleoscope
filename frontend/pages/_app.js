@@ -9,7 +9,7 @@ export default App;
 function App({ Component, pageProps }) {
     const router = useRouter();
     const [user, setUser] = useState(null);
-    const [authorized, setAuthorized] = useState(false);
+    const [authorized, setAuthorized] = useState(true);
 
     return (
         <>
