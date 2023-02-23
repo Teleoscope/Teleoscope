@@ -33,4 +33,5 @@
           - tensorflow_hub 
           - matplotlib
           - zstandard
+          - pygithub
         executable: "{{ conda_prefix }}/envs/{{ conda_environment }}/bin/pip"
