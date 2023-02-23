@@ -12,14 +12,14 @@ export default App;
 function App({ Component, pageProps }) {
     const router = useRouter();
     const [user, setUser] = useState(null);
-    const [authorized, setAuthorized] = useState(true);
+    const [authorized, setAuthorized] = useState(false);
 
     useEffect(() => {
         // on initial load - run auth check 
         authCheck(router.asPath);
 
         // on route change start - hide page content by setting authorized to false  
-        const hideContent = () => setAuthorized(true);
+        const hideContent = () => setAuthorized(false);
         router.events.on('routeChangeStart', hideContent);
 
         // on route change complete - run auth check 
