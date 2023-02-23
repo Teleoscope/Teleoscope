@@ -43,14 +43,15 @@ for filename in os.listdir(directory):
             text = str(d.body)
             textVector = tasks.vectorize_text(text)
             meta = {
-                "comments": d.comments,
                 "id": d.id,
-                "number": d.number,
-                "state": d.state,
-                "locked": d.locked,
-                "active_lock_reason": d.active_lock_reason,
                 "user": d.user.login
             }
+            if "url" in vars(d) and d.url != None:
+                meta["url"] = d.url
+            if "issue_url" in vars(d) and d.issue_url != None:
+                meta["issue_url"] = d.issue_url
+            if "html_url" in vars(d) and d.html_url != None:
+                meta["html_url"] = d.html_url            
             if "created_at" in vars(d) and d.created_at != None:
                 meta["created_at"] = d.created_at.isoformat()
             if "updated_at" in vars(d) and d.updated_at != None:

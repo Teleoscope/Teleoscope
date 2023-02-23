@@ -38,7 +38,7 @@
       run_once: true
     - name: Delete MongoDump on Source
       ansible.builtin.shell: rm -f "{{ remote_prefix }}/{{ ansible_user }}/{{ ansible_hostname }}.{{ ansible_date_time.iso8601 }}.archive"
-    - name: Import into Target MongoDB - only NEW OIDs need to DROP if totally replacing
-      ansible.builtin.shell: mongorestore --archive="{{ remote_prefix }}/{{ ansible_user }}/{{ ansible_hostname }}.{{ ansible_date_time.iso8601 }}.archive"
-      delegate_to: "{{ groups['targets'][0] }}"
+    # - name: Import into Target MongoDB - only NEW OIDs need to DROP if totally replacing
+    #   ansible.builtin.shell: mongorestore --archive="{{ remote_prefix }}/{{ ansible_user }}/{{ ansible_hostname }}.{{ ansible_date_time.iso8601 }}.archive"
+    #   delegate_to: "{{ groups['targets'][0] }}"
     

@@ -1,5 +1,5 @@
 import React from "react";
-
+/*
 // client imports
 import { Provider } from "react-redux";
 import { CookiesProvider } from "react-cookie";
@@ -30,4 +30,4 @@ export default function Register() {
         </div>
     );
 }
-
+*/

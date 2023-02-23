@@ -3,7 +3,7 @@
   vars_files: 
     - ./vars/vars.yaml
   become: yes
-
+# echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
   tasks:
     - name: Install PyMongo
       ansible.builtin.pip:
@@ -13,7 +13,10 @@
         url: https://www.mongodb.org/static/pgp/server-6.0.asc
     - name: Add MongoDB repository
       ansible.builtin.apt_repository:
-        repo: 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse'
+        repo: "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse"
+    - name: Run the equivalent of "apt-get update" as a separate step
+      ansible.builtin.apt:
+        update_cache: yes
     - name: Install MongoDB
       ansible.builtin.apt:
         name: mongodb-org
