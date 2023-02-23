@@ -1,5 +1,6 @@
 import clustering
 from bson.objectid import ObjectId
+import logging
 
 user_id = ObjectId(str('63868b5fb3cde877de34c27d')) # user: leo	
 group_id_str = ['63901a89e189962b660959cf', '63901a92931eeac91c9924a1', '63901a96e189962b660959d3']
