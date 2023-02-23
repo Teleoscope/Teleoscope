@@ -9,6 +9,8 @@ from bson.objectid import ObjectId
 import gc
 import tasks
 from sklearn.metrics.pairwise import euclidean_distances
+from pathlib import Path
+
 
 
 def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
@@ -28,6 +30,9 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     # start by getting the groups
     logging.info(f'Getting all groups in {group_ids}.')
     groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
+
+    # pull distance matrix from ~/embeddings
+    # dm, document_ids = cacheClusteringData(db)
 
     # default to ordering documents relative to first group's teleoscope
     teleoscope_oid = groups[0]["teleoscope"]
@@ -192,7 +197,6 @@ def is_human_cluster(hdbscan_label, given_labels):
     output:
         check (bool): if current label is a label given to human clusters
         name (string): label for human cluster(s)
-
     """
     name = None
     check = more = False
@@ -216,5 +220,38 @@ def is_human_cluster(hdbscan_label, given_labels):
             
     return check, name
 
-if __name__ == "__main__":
-    cluster_by_groups(["62db047aaee56b83f2871510"], "62a7ca02d033034450035a91", "632ccbbdde62ba69239f6682")
+def cacheClusteringData(db):
+    """
+    Check to see if distance matrix and list of document ids is cached in ~/embeddings
+    
+    input:
+        db: mongoDB connection
+    output:
+        dm: distance matrix
+        ids: list of document ids
+    """
+    path='~/embeddings/'
+    dir = Path(path).expanduser()
+    dir.mkdir(parents=True, exist_ok=True)
+    npzpath = Path(path + 'clustering.npz').expanduser()
+    
+    if npzpath.exists():
+        logging.info("Documents have been cached, retrieving now.")
+        loaded = np.load(npzpath.as_posix(), allow_pickle=False)
+        dm = loaded['dist_matrix']
+        ids = loaded['doc_ids'].tolist()
+    
+    else:
+        logging.info("Documents are not cached, building cache now.")
+        # db = utils.connect()
+        allDocuments = utils.getAllDocuments(db, projection={'id':1, 'textVector':1, '_id':0}, batching=True, batchSize=10000)
+        ids = [x['id'] for x in allDocuments]
+        logging.info(f'There are {len(ids)} ids in documents.')
+
+        vecs = np.array([x['textVector'] for x in allDocuments])
+        dm = euclidean_distances(vecs)
+        logging.info(f'The distance matrix has shape: {dm.shape}')
+
+        np.savez(npzpath.as_posix(), dist_matrix=dm, doc_ids=ids)
+    
+    return dm, ids
