@@ -3,7 +3,7 @@ import { ObjectId } from 'bson';
 
 export default async (req, res) => {
   const client = await clientPromise;
-  const db = await client.db('aita');
+  const db = await client.db('teleoscope');
   const { user } = req.query;
   if (user == "-1") {
     return res.json("userid is -1");
