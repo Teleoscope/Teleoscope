@@ -14,12 +14,13 @@ from pathlib import Path
 
 
 def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
-    """Cluster documents using user-provided group ids.
+    """
+    Cluster documents using user-provided group ids.
 
-    group_id_strings : list(string) where the strings are MongoDB ObjectID format
-
-    session_oid: string OID for session to add clusters to
-
+    input:
+        userid: ObjectID
+        group_id_strings: list(string) where the strings are group ids
+        session_oid: ObjectID
     """
     # connect to the database
     db = utils.connect()
@@ -32,6 +33,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
 
     # pull distance matrix from ~/embeddings
+    # TODO - if we chose to use this some modifications will need to be made below
     # dm, document_ids = cacheClusteringData(db)
 
     # default to ordering documents relative to first group's teleoscope
