@@ -146,12 +146,9 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
 
     logging.info(f'Num Clusters = {max(hdbscan_labels)+1} + outliers')
 
-    # build dict where key is group name and value is label given by clustering
+    # given_labels[{group name}]: {hdbscan label}
     given_labels = {}
 
-# TODO - check to see if user already has clusters, if yes, delete them to accomodate new
-
-# TODO ADD COMMENTS
     for group in group_doc_indices:
         
         labels = hdbscan_labels[group_doc_indices[group]] 
@@ -159,6 +156,8 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         
         if -1 in labels:
             for i in range(len(labels)):
+
+                # update outlier label to correct label 
                 if labels[i] == -1:
                     index = group_doc_indices[group][i]
                     hdbscan_labels[index] = correct_label
@@ -166,7 +165,12 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         given_labels[group] = correct_label
 
     # spaCy preprocessing object for machine labels
-    nlp = spacy.load("en_core_web_md", disable=["parser", "ner"])
+    nlp = spacy.load("en_core_web_sm")
+
+    # if user already has clusters, delete them to prepare for new clusters
+    if db.clusters.countDocuments({"history.user": userid}, { limit: 1 }):
+        logging.info(f'Clusters for user exists. Delete all.')
+        db.clusters.deleteMany({"history.user": userid})
     
     # create a new mongoDB group for each machine cluster
     for hdbscan_label in set(hdbscan_labels):
@@ -219,19 +223,21 @@ def get_label(hdbscan_label, given_labels):
     (string) label
     (string) hex color value
     """
-# TODO ADD COMMENTS / LOGGING
     check = more = False
     
+    # outlier label
     if hdbscan_label == -1:
         return 'outliers', '#700c1d'
 
+    # check for human clusters
     for _name in given_labels:
 
         label = given_labels[_name]
         
         if (hdbscan_label == label):
+            # append group labels if multiple groups are given the same hdbscan label
             if more:
-                name += " & " + _name
+                name += " & " + _name 
             else:
                 name = _name
                 more = check = True
@@ -248,7 +254,7 @@ def get_topic(label_ids, db, nlp):
     Parameters
     -------------
     label_ids : 
-        the first 20 documents ids for a given machine cluster
+        array if documents ids for a machine cluster
     db : 
         mongoDB connection
     nlp : 
@@ -258,31 +264,33 @@ def get_topic(label_ids, db, nlp):
     -------------
     (string) label
     """
-# TODO ADD COMMENTS / LOGGING
+
     docs = [] 
     
+    # create a small corpus of documents that represent a machine cluster
     label_ids = label_ids.tolist()
     cursor = db.documents.find({"id":{"$in": label_ids}})
-
     for document in tqdm.tqdm(cursor):
         docs.append(document["text"])
     
+    # use spaCy to preprocess text
     docs_pp = [preprocess(text) for text in nlp.pipe(docs)]
 
+    # transform corpus to bag of words
     from sklearn.feature_extraction.text import CountVectorizer
-
     vec = CountVectorizer(stop_words='english')
     X = vec.fit_transform(docs_pp)
 
+    # apply LDA topic modelling reduction
     from sklearn.decomposition import LatentDirichletAllocation
-
     lda = LatentDirichletAllocation(
         n_components=1, 
         learning_method="batch", 
         max_iter=10
     )
-    
     lda.fit_transform(X)
+
+    # grab two most similar topic labels for machine cluster
     sorting = np.argsort(lda.components_, axis=1)[:, ::-1]
     feature_names = np.array(vec.get_feature_names_out())
     topic = feature_names[sorting[0][0]] + " " + feature_names[sorting[0][1]]
@@ -317,7 +325,6 @@ def cacheClusteringData(db):
     
     else:
         logging.info("Documents are not cached, building cache now.")
-        # db = utils.connect()
         allDocuments = utils.getAllDocuments(db, projection={'id':1, 'textVector':1, '_id':0}, batching=True, batchSize=10000)
         ids = [x['id'] for x in allDocuments]
         logging.info(f'There are {len(ids)} ids in documents.')
