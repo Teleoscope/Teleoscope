@@ -1,16 +1,20 @@
-import tqdm, numpy as np
-import matplotlib.pyplot as plt
-import utils
-import umap
-import hdbscan
+# boilerplate
+import tqdm, numpy as np, pickle
 import matplotlib.pyplot as plt
 import logging
 from bson.objectid import ObjectId
 import gc
-import tasks
-from sklearn.metrics.pairwise import euclidean_distances
 from pathlib import Path
+
+# ml dependencies
+import umap
+import hdbscan
+from sklearn.metrics.pairwise import euclidean_distances
 import spacy
+
+# local files
+import utils
+import tasks
 
 def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     """
@@ -21,6 +25,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         group_id_strings: list(string) where the strings are group ids
         session_oid: ObjectID
     """
+
     # connect to the database
     db = utils.connect()
     
@@ -33,7 +38,10 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
 
     # pull distance matrix from ~/embeddings
     # TODO - if we chose to use this some modifications will need to be made below
-    # dm, document_ids = cacheClusteringData(db)
+    # dm, document_ids = cache_distance_matrix()
+
+    # TODO- pull dist max and doc ids from average of teleo vecs
+    # dm, document_ids = average_teleoscop_ordering(db, groups)
 
     # default to ordering documents relative to first group's teleoscope
     teleoscope_oid = groups[0]["teleoscope"]
@@ -168,9 +176,14 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     nlp = spacy.load("en_core_web_sm")
 
     # if user already has clusters, delete them to prepare for new clusters
-    if db.clusters.countDocuments({"history.user": userid}, { limit: 1 }):
-        logging.info(f'Clusters for user exists. Delete all.')
-        db.clusters.deleteMany({"history.user": userid})
+    
+    # TODO-TypeError: 'Collection' object is not callable. 
+    # If you meant to call the 'countDocuments' method on a 'Collection' object it is failing 
+    # because no such method exists. 
+
+    # if db.clusters.countDocuments({"history.user": userid}, { limit: 1 }):
+    #     logging.info(f'Clusters for user exists. Delete all.')
+    #     db.clusters.deleteMany({"history.user": userid})
     
     # create a new mongoDB group for each machine cluster
     for hdbscan_label in set(hdbscan_labels):
@@ -209,7 +222,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
 
 def get_label(hdbscan_label, given_labels):
     """
-    Provides a two-word topic label for a machine cluster
+    Identify and produce label & colour for given hdbscan label
 
     Parameters
     -------------
@@ -297,9 +310,60 @@ def get_topic(label_ids, db, nlp):
     
     return topic
 
-def cacheClusteringData(db):
+def average_teleoscop_ordering(db, groups, limit=10000):
     """
-    Check to see if distance matrix and list of document ids is cached in ~/embeddings
+    Compute distance matrix and list of document ids based on average of groups' teleoscopes
+
+    Parameters
+    -------------
+    db :
+        mongoDB connection
+    group : 
+        list of user defined groups
+
+    Returns
+    -------------
+    (ndarray) distance matrix
+    (list(string)) list of document ids
+    """
+
+    # get teleoscope vecs of all groups
+    teleo_vecs = []
+    for group in groups:
+
+        teleoscope_oid = group["teleoscope"]
+        teleoscope = db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
+        teleo_vecs.append(teleoscope["history"][0]["stateVector"])
+
+    teleo_vecs = np.array(teleo_vecs)
+
+    # compute average teleoscope vec
+    avg_vec = np.average(teleo_vecs, axis=0)
+
+    # get document ids / vecs from embedding
+    path = '~/embeddings/'
+    dir = Path(path).expanduser()
+    dir.mkdir(parents=True, exist_ok=True)
+    npzpath = Path(path + 'embeddings.npz').expanduser()
+    pklpath = Path(path + 'ids.pkl').expanduser()
+    
+    logging.info("Documents have been cached, retrieving now.")
+    loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
+    with open(pklpath.as_posix(), 'rb') as handle:
+        doc_ids = pickle.load(handle)
+    doc_vecs = loadDocuments['documents']
+
+    # gather ordering based on average vector
+    vecs = utils.calculateSimilarity(doc_vecs, avg_vec)[:limit] # TODO-SOMETHING WRONG HERE
+    ids = utils.rankDocumentsBySimilarity(doc_ids, vecs)
+    dm = euclidean_distances(vecs)
+    logging.info(f'The distance matrix has shape: {dm.shape}')
+
+    return dm, ids
+
+def cache_distance_matrix():
+    """
+    Cache a distance matrix built off all documents in database
 
     Parameters
     -------------
@@ -315,25 +379,30 @@ def cacheClusteringData(db):
     path='~/embeddings/'
     dir = Path(path).expanduser()
     dir.mkdir(parents=True, exist_ok=True)
-    npzpath = Path(path + 'clustering.npz').expanduser()
+    cluspath = Path(path + 'clustering.npz').expanduser()
+    npzpath = Path(path + 'embeddings.npz').expanduser()
+    pklpath = Path(path + 'ids.pkl').expanduser()
     
-    if npzpath.exists():
-        logging.info("Documents have been cached, retrieving now.")
-        loaded = np.load(npzpath.as_posix(), allow_pickle=False)
+    logging.info("Retrieving all document ids from embeddings.")
+    with open(pklpath.as_posix(), 'rb') as handle:
+        ids = pickle.load(handle)
+    
+    if cluspath.exists():
+        logging.info("Distance matrix is cached, retrieving now.")
+        loaded = np.load(cluspath.as_posix(), allow_pickle=False)
         dm = loaded['dist_matrix']
-        ids = loaded['doc_ids'].tolist()
+        with open(pklpath.as_posix(), 'rb') as handle:
+            ids = pickle.load(handle)
     
     else:
-        logging.info("Documents are not cached, building cache now.")
-        allDocuments = utils.getAllDocuments(db, projection={'id':1, 'textVector':1, '_id':0}, batching=True, batchSize=10000)
-        ids = [x['id'] for x in allDocuments]
-        logging.info(f'There are {len(ids)} ids in documents.')
+        logging.info("Distance matrix are not cached, building matrix now.")
+        loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
+        vecs = loadDocuments['documents']
 
-        vecs = np.array([x['textVector'] for x in allDocuments])
         dm = euclidean_distances(vecs)
         logging.info(f'The distance matrix has shape: {dm.shape}')
 
-        np.savez(npzpath.as_posix(), dist_matrix=dm, doc_ids=ids)
+        np.savez(cluspath.as_posix(), dist_matrix=dm)
     
     return dm, ids
 
