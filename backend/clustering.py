@@ -206,7 +206,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         # learn a topic label for machine clusters
         if _label == 'machine':
             limit = min(20, len(label_ids))
-            _label = get_topic(label_ids[:limit], limit, db, nlp)
+            _label = get_topic(label_ids[:limit], db, nlp)
 
         logging.info(f'There are {len(documents)} documents for Machine Cluster "{_label}".')
 
