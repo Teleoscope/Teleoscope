@@ -25,6 +25,7 @@ else:
             print(f'Processing {file}...')
             o = open(file, "rb")
             data = pickle.load(o)
+            o.close()
             print(f'{file} has {len(data)} issues.')
             acc = 0
             next = 0
