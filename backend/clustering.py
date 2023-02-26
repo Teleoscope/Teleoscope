@@ -176,13 +176,10 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     nlp = spacy.load("en_core_web_sm")
 
     # if user already has clusters, delete them to prepare for new clusters
-    
-    # TODO-TypeError: 'Collection' object is not callable. 
-    # If you meant to call the 'countDocuments' method on a 'Collection' object it is failing 
-    # because no such method exists. 
     if db.clusters.count_documents({"history.user": userid}, limit=1):
         logging.info(f'Clusters for user exists. Delete all.')
         db.clusters.delete_many({"history.user": userid})
+    logging.info(f'No clusters for user. Ready to populate.')
     
     # create a new mongoDB group for each machine cluster
     for hdbscan_label in set(hdbscan_labels):
