@@ -180,10 +180,9 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     # TODO-TypeError: 'Collection' object is not callable. 
     # If you meant to call the 'countDocuments' method on a 'Collection' object it is failing 
     # because no such method exists. 
-
-    # if db.clusters.countDocuments({"history.user": userid}, { limit: 1 }):
-    #     logging.info(f'Clusters for user exists. Delete all.')
-    #     db.clusters.deleteMany({"history.user": userid})
+    if db.clusters.count_documents({"history.user": userid}, limit=1):
+        logging.info(f'Clusters for user exists. Delete all.')
+        db.clusters.delete_many({"history.user": userid})
     
     # create a new mongoDB group for each machine cluster
     for hdbscan_label in set(hdbscan_labels):
