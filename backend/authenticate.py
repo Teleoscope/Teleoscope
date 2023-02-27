@@ -7,7 +7,7 @@ import utils
 # returns 0 if user's password is incorrect
 # returns 1 if user is authenticated
 def authUser(username, password):
-    db = utils.connect()
+    db = utils.connect() # ASK: will this make multiple connections to db and cause problem
     user_obj = db.users.find_one({'username': username})
     if user_obj is None:
         return -1

@@ -7,6 +7,7 @@ import { Link } from '../../components/Login/Link';
 import { Layout } from '../../components/Login/Layout/Layout';
 import authenticateHash from '../../util/authenticate';
 import { Stomp } from '../../components/Stomp';
+import { useCookies } from "react-cookie";
 
 export default Login;
 
@@ -14,6 +15,7 @@ function Login() {
    const [username, setUsername] = useState("");
    const router = useRouter();
    const [validUser, setValidUser] = useState(false);
+   const [cookies, setCookie] = useCookies(['token']);
 
    // form validation rules
    const validationSchema = Yup.object().shape({
@@ -28,11 +30,39 @@ function Login() {
    const { errors } = formState;
 
    async function handleFetch(username, password) {
-      Stomp.getInstance(); //TODO: delete this, use loaded
-      const data = await fetch(`/api/authenticate/${username}`);
-      const user = await data.json();
+      fetch('http://127.0.0.1:5000/login', {
+         method: 'POST',
+         headers: {
+            'Content-Type': 'application/json'
+         },
+         body: JSON.stringify({
+            username: username,
+            password: password
+         })
+      })
+      .then(response => {
+         if (response.ok) {
+            response.json().then(token => {
+               setCookie('token', token, {path: '/'});
+               router.push('/');
+               alert('Logged in')
+            })
+         } else {
+            router.push('/account/login');
+            response.json().then(msg => {
+               alert(msg);
+            })
+         }
+      })
+      .catch(error => {
+         router.push('/account/login');
+         alert(error);
+      });
+      // Stomp.getInstance(); //TODO: delete this, use loaded
+      // const data = await fetch(`/api/authenticate/${username}`);
+      // const user = await data.json();
 
-      setValidUser(authenticateHash( user, username, password ));
+      // setValidUser(authenticateHash( user, username, password ));
    }
 
    function onSubmit({ username, password }) {

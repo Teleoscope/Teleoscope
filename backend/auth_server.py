@@ -1,19 +1,28 @@
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, jsonify
+from flask_cors import CORS
 
 from authenticate import *
 
 app = Flask(__name__)
+CORS(app)
 
-@app.route("/login", methods=['GET'])
+@app.route("/login", methods=['POST'])
 def hello_world():
-    if request.method == 'GET':
-        username = request.form['username']
-        password = request.form['password']
+    if request.method == 'POST':
+        request_body = request.get_json()
+        username = request_body['username']
+        password = request_body['password']
+        # username = request.form['username']
+        # password = request.form['password']
         auth_value = authUser(username, password)
         if auth_value == -1:
-            return make_response('Incorrect username', 401)
+            return make_response(jsonify('Username not found'), 401)
         elif auth_value == 0:
-            return make_response('Incorrect password', 403)
+            return make_response(jsonify('Incorrect password'), 403)
         else:
             token = issue_token(username)
-            return make_response('User authenticated', 200, {'token': token})
+            return make_response(jsonify(token), 200)
+
+if __name__ == "__main__":
+    # app.run(ssl_context=('cert.pem', 'key.pem'))
+    app.run()

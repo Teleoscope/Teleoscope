@@ -159,3 +159,6 @@ experiments/data/
 
 # ansible
 ansible/vars/*
+
+# certificate-related stuff
+*.pem
