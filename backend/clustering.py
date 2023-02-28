@@ -5,6 +5,7 @@ import logging
 from bson.objectid import ObjectId
 import gc
 from pathlib import Path
+import time
 
 # ml dependencies
 import umap
@@ -25,6 +26,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         group_id_strings: list(string) where the strings are group ids
         session_oid: ObjectID
     """
+    start = time.time()
 
     # connect to the database
     db = utils.connect()
@@ -220,6 +222,9 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
             included_documents=documents, 
         )
 
+    end = time.time()
+    diff = end - start
+    logging.info(f'Built {max(hdbscan_labels)+2} clusters in {diff} seconds')
 
 def get_label(hdbscan_label, given_labels):
     """
