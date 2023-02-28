@@ -180,6 +180,11 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         logging.info(f'Clusters for user exists. Delete all.')
         db.clusters.delete_many({"history.user": userid})
     logging.info(f'No clusters for user. Ready to populate.')
+
+    # for garbage collection
+    del dm
+    del document_vectors
+    gc.collect()
     
     # create a new mongoDB group for each machine cluster
     for hdbscan_label in set(hdbscan_labels):
