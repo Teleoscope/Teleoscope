@@ -178,9 +178,9 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     nlp = spacy.load("en_core_web_sm")
 
     # if user already has clusters, delete them to prepare for new clusters
-    if db.clusters.count_documents({"history.user": userid}, limit=1):
+    if db.clusters.count_documents({"history.user": ObjectId(str(userid))}, limit=1):
         logging.info(f'Clusters for user exists. Delete all.')
-        db.clusters.delete_many({"history.user": userid})
+        db.clusters.delete_many({"history.user": ObjectId(str(userid))})
     logging.info(f'No clusters for user. Ready to populate.')
 
     # for garbage collection
