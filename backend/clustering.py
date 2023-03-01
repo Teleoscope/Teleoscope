@@ -298,16 +298,8 @@ def average_teleoscope_ordering(db, groups, limit):
     avg_vec = np.average(teleo_vecs, axis=0)
 
     logging.info("Gathering all document vectors from embeddings...")
-    # grab all document vectors from embeddings
-    npzpath = Path('~/embeddings/embeddings.npz').expanduser()
-    loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
-    all_doc_vecs = loadDocuments['documents']
-
-    logging.info("Gathering all document ids from embeddings...")
-    # grab all document ids from embeddings
-    pklpath = Path('~/embeddings/ids.pkl').expanduser()
-    with open(pklpath.as_posix(), 'rb') as handle:
-            all_doc_ids = pickle.load(handle)
+    # grab all document data from embeddings
+    all_doc_ids, all_doc_vecs = cache_documents()
 
     logging.info("Gather similarly scores based on new average vector...")
     # gather similarly scores based on average vector
@@ -570,3 +562,32 @@ def cache_distance_matrix(db):
         np.savez(cluspath.as_posix(), dist_matrix=dm)
     
     return dm, ids
+
+def cache_documents(path='~/embeddings/'):
+
+    dir = Path(path).expanduser()
+    dir.mkdir(parents=True, exist_ok=True)
+    npzpath = Path(path + 'embeddings.npz').expanduser()
+    pklpath = Path(path + 'ids.pkl').expanduser()
+    
+    if npzpath.exists() and pklpath.exists():
+        logging.info("Documents have been cached, retrieving now.")
+        loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
+        with open(pklpath.as_posix(), 'rb') as handle:
+            allDocumentIDs = pickle.load(handle)
+        allDocumentVectors = loadDocuments['documents']
+    else:
+        logging.info("Documents are not cached, building cache now.")
+        db = utils.connect()
+        allDocuments = utils.getAllDocuments(db, projection={'textVector':1, '_id':1}, batching=True, batchSize=10000)
+        ids = [str(x['_id']) for x in allDocuments]
+        logging.info(f'There are {len(ids)} ids in documents.')
+        vecs = np.array([x['textVector'] for x in allDocuments])
+
+        np.savez(npzpath.as_posix(), documents=vecs)
+        with open(pklpath.as_posix(), 'wb') as handle:
+            pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        allDocumentIDs = ids
+        allDocumentVectors = vecs
+
+    return allDocumentIDs, allDocumentVectors
