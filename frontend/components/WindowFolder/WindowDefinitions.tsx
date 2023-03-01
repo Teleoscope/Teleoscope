@@ -44,7 +44,7 @@ export default function WindowDefinitions() {
 
     // Helper functions
     const getReferencedDocument = (oid) => {
-        fetch(`http://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}/api/document/${oid}`)
+        fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/document/${oid}`)
             .then((response) => response.json())
             .then((data) => setDoc(data))
     }

@@ -6,6 +6,8 @@ import numpy as np
 from pymongo import MongoClient
 import pymongo.errors
 import logging 
+from bson.objectid import ObjectId
+from json import JSONEncoder
 
 # local files
 import auth
@@ -71,12 +73,12 @@ def mergeCollections():
     db = connect()
     cursor = db.clean.documents.v2.find({})
     for document in cursor:
-        findres = list(db.documents.find({"id": document["id"]}))
+        findres = list(db.documents.find({"_id": ObjectId(str(document["_id"]))}))
         if len(findres) == 0:
-            print(document["id"], "not found")
-            db.documents.update_one({"id": document["id"]}, {"$set": document}, upsert=True)
+            print(document["_id"], "not found")
+            db.documents.update_one({"_id": ObjectId(str(document["_id"]))}, {"$set": document}, upsert=True)
         else:
-            print(document["id"], "found")
+            print(document["_id"], "found")
 
 # def update_embedding(q_vector, feedback_vector, feedback):
 #     SENSITIVITY = 0.75
@@ -104,7 +106,7 @@ def moveVector(sourceVector, destinationVector, direction, magnitude):
     return new_q
 
 def getDocumentVector(db, document_id):
-    document = db.documents.find_one({"id": document_id}, projection={'textVector':1}) # get document which was liked/disliked
+    document = db.documents.find_one({"_id": ObjectId(str(document_id))}, projection={'textVector':1}) # get document which was liked/disliked
     documentVector = np.array(document['textVector']) # extract vector of document which was liked/disliked
     return documentVector
 
@@ -178,8 +180,16 @@ def gridfsUpload(db, namespace, data, encoding='utf-8'):
         obj: ObjectId('62ce71d36fee6e2ed60d1fb5')
     '''
     import gridfs
-    # convert to json
-    dumps = json.dumps(data)
+    
+    # subclass JSONEncoder
+    class ObjectIdEncoder(JSONEncoder):
+            def default(self, obj):
+                if isinstance(obj, ObjectId):
+                    return str(obj)
+                return json.JSONEncoder.default(self, obj)
+
+    dumps = json.dumps(data, cls=ObjectIdEncoder)
+
     fs = gridfs.GridFS(db, namespace)
     obj = fs.put(dumps, encoding=encoding)
     return obj
@@ -208,3 +218,49 @@ def gridfsDownload(db, namespace, oid):
     obj = fs.get(oid).read()
     data = json.loads(obj)
     return data
+
+
+def update_ids():
+    db = connect()
+    groups = db.groups.find({})
+    for group in groups:
+        for history_item in group['history']:
+            oid_arr = []
+            for id in history_item['included_documents']:
+                doc = db.documents.find_one({"id":id})
+                oid = doc["_id"]
+                oid_arr.append(oid)
+            history_item['included_documents'] = oid_arr
+        db.groups.update_one({"_id": group["_id"]}, { "$set": { "history": group["history"] } })
+
+
+    sessions = db.sessions.find({})
+    for session in sessions:
+        for history_item in session['history']:
+            oid_arr = []
+            for id in history_item['bookmarks']:
+                doc = db.documents.find_one({"id":id})
+                oid = doc["_id"]
+                oid_arr.append(oid)
+            history_item['bookmarks'] = oid_arr
+        db.sessions.update_one({"_id": session["_id"]}, { "$set": { "history": session["history"] } })
+
+    teleoscopes = db.teleoscopes.find({})
+    for teleoscope in teleoscopes:
+        for history_item in teleoscope['history']:
+            oid_arr = []
+            for id in history_item['positive_docs']:
+                doc = db.documents.find_one({"id":id})
+                if doc == None:
+                    doc = db.documents.find_one({"_id": ObjectId(str(id))})
+                oid = doc["_id"]
+                oid_arr.append(oid)
+            history_item['positive_docs'] = oid_arr
+            for id in history_item['negative_docs']:
+                doc = db.documents.find_one({"id":id})
+                if doc == None:
+                    doc = db.documents.find_one({"_id": ObjectId(str(id))})
+                oid = doc["_id"]
+                oid_arr.append(oid)
+            history_item['negative_docs'] = oid_arr
+        db.teleoscopes.update_one({"_id": teleoscope["_id"]}, { "$set": { "history": teleoscope["history"] } })

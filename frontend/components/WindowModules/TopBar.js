@@ -75,7 +75,7 @@ export default function TopBar(props) {
 
   // Helper functions
   const handleCookie = (username) => {
-    fetch(`http://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}/api/user/${username}`)
+    fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/user/${username}`)
     .then((response) => response.json())
     .then((data) => {
       if (data) {
