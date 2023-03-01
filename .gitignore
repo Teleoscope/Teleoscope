@@ -159,3 +159,5 @@ experiments/data/
 
 # ansible
 ansible/vars/*
+backend/explorer2.auth.py
+frontend/explorer2.env.local
