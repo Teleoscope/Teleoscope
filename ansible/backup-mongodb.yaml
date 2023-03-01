@@ -1,0 +1,53 @@
+# ansible-playbook -v -i vars/inventory.yaml backup.yaml
+- name: MongoDB Backup from Source
+  hosts: "{{ groups['sources'][0] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files: 
+    - ./vars/vars.yaml
+  vars:
+    - source: "{{ groups['sources'][0] }}"
+    - target: "{{ groups['targets'][0] }}"
+    - source_path: "{{ remote_prefix }}/{{ ansible_user }}"
+    - target_path: "{{ remote_prefix }}/{{ hostvars[target].ansible_user }}"
+    - source_prefix: "{{ source_path }}/{{ ansible_hostname }}.{{ ansible_date_time.iso8601 }}"
+    - target_prefix: "{{ target_path }}/{{ ansible_hostname }}.{{ ansible_date_time.iso8601 }}"
+
+  tasks:
+    - name: Ansible fact - ansible_date_time
+      debug:
+        var: ansible_date_time
+    - name: Test MongoDump
+      ansible.builtin.shell: echo "test" >> "{{ source_prefix }}.test"
+    - name: Pull Test from Source to Target
+      tags: sync-pull
+      synchronize:
+        src: "{{ source_prefix }}.test"
+        dest: "{{ target_prefix }}.test"
+        mode: pull
+        private_key: "{{ target_path }}/.ssh/key-for-{{ source }}"
+      delegate_to: "{{ target }}"
+      register: syncfile
+      run_once: true
+    - name: Delete MongoDump Test on Source
+      ansible.builtin.shell: rm -f "{{ source_prefix }}.test"
+    - name: Delete MongoDump Test on Target
+      ansible.builtin.shell: rm -f "{{ target_prefix }}.test"
+      delegate_to: "{{ target }}"
+    - name: Create MongoDump
+      ansible.builtin.shell: mongodump --db=aita --excludeCollection=documents --archive="{{ source_prefix }}.archive"
+    - name: Pull Dump from Source to Target
+      tags: sync-pull
+      synchronize:
+        src: "{{ source_prefix }}.archive"
+        dest: "{{ target_prefix }}.archive"
+        mode: pull
+        private_key: "{{ target_path }}/.ssh/key-for-{{ source }}"
+      delegate_to: "{{ target }}"
+      register: syncfile
+      run_once: true
+    - name: Delete MongoDump on Source
+      ansible.builtin.shell: rm -f "{{ source_prefix }}.archive"
+    - name: Import into Target MongoDB - only NEW OIDs need to DROP if totally replacing
+      ansible.builtin.shell: mongorestore --archive="{{ target_prefix }}.archive"
+      delegate_to: "{{ target }}"
+    
