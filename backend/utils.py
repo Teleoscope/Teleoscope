@@ -149,6 +149,10 @@ def rankDocumentsBySimilarity(documents_ids, scores):
     '''
     return sorted([(document_id, score) for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
 
+def rank_document_ids_by_similarity(documents_ids, scores):
+    '''Create and return a list a document ids sorted by similarity score, high to low
+    '''
+    return sorted([document_id for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
 
 def gridfsUpload(db, namespace, data, encoding='utf-8'):
     '''Uploads data to GridFS under a particular namespace.

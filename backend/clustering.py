@@ -19,14 +19,22 @@ import utils
 import tasks
 
 def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
-    """
-    Cluster documents using user-provided group ids.
+    """Cluster documents using user-defined groups.
 
-    input:
-        userid: ObjectID
-        group_id_strings: list(string) where the strings are group ids
-        session_oid: ObjectID
-        limit: (int) number of documents to build feature space
+    Clusters 'limit' documents with respect to the documents already 
+    grouped in group_id_strings. User-defined groups are to be maintained, and 
+    clusters are given topic model labels. 
+
+    Args:
+        userid:
+            An ObjectID representing the user who made the API call
+        group_id_strings:
+            A list of strings representing the ObjectID of each group
+            to be clustered
+        session_oid:
+            An int that represents the ObjectID of the current session
+        limit:
+            The number of documents to cluster. Default 10000
     """
 
     start = time.time()
@@ -43,10 +51,10 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
 
     # get training data based on ordering
     logging.info('Using average ordering...')
-    document_vectors, document_ids = average_teleoscope_ordering(db, groups)
+    document_vectors, document_ids = average_teleoscope_ordering(db, groups, limit)
 
     # logging.info('Using first group's teleoscope ordering...')
-    # document_vectors, document_ids = first_teleoscop_ordering(db, groups)
+    # document_vectors, document_ids = first_teleoscop_ordering(db, groups, limit)
 
     # logging.info('Using all documents...')
     # dm, document_ids = cache_distance_matrix()
@@ -102,7 +110,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
 
             for _j in size:
                 j = indices[_j]
-                dm[i, j] = 0 
+                dm[i, j] = 0
 
 
     logging.info("Running UMAP Reduction...")
@@ -146,6 +154,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         labels = hdbscan_labels[group_doc_indices[group]] 
         correct_label = max(labels)
         
+        # TODO - BETTER COMMENTS / DOCUMENTS (SMALLER HELPERS)
         if -1 in labels:
             for i in range(len(labels)):
                 # update outlier label to correct label 
@@ -182,7 +191,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         # learn a topic label for machine clusters
         if _label == 'machine':
             limit = min(20, len(label_ids))
-            _label = get_topic(label_ids[:limit], db, nlp)
+            _label = get_topic(db, label_ids[:limit], nlp)
 
         logging.info(f'There are {len(documents)} documents for Machine Cluster "{_label}".')
 
@@ -202,113 +211,25 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
 
     session_action(session_oid, num_clusters)
 
+def first_teleoscope_ordering(db, groups, limit):
+    """ Build a training set besed on the first group's teleoscope
 
-def get_label(hdbscan_label, given_labels):
+    Args:
+        db:
+            A connection to the MongoDB database.
+        groups: 
+            A list of ObjectIds representing each group to be clustered
+        limit:
+            The number of documents to cluster.  
+
+    Returns:
+        document_vectors:
+            An limit by 512 array of sorted document vectors
+        document_ids:
+            An limit length list of sorted document ids
     """
-    Identify and produce label & colour for given hdbscan label
 
-    Parameters
-    -------------
-    hdbscan_label : (int)
-        machine label for current document
-    given_labels : (dict[string]: (int))
-        labels associated with human clusters
-
-    Returns
-    -------------
-    (string) label
-    (string) hex color value
-    """
-    check = more = False
     
-    # outlier label
-    if hdbscan_label == -1:
-        return 'outliers', '#700c1d'
-
-    # check for human clusters
-    for _name in given_labels:
-
-        label = given_labels[_name]
-        
-        if (hdbscan_label == label):
-            # append group labels if multiple groups are given the same hdbscan label
-            if more:
-                name += " & " + _name 
-            else:
-                name = _name
-                more = check = True
-    
-    if check:
-        return name, '#15540d'
-
-    return 'machine', '#737373'
-
-def get_topic(label_ids, db, nlp):
-    """
-    Provides a two-word topic label for a machine cluster
-
-    Parameters
-    -------------
-    label_ids : 
-        array if documents ids for a machine cluster
-    db : 
-        mongoDB connection
-    nlp : 
-        spaCy preprocessing helper
-
-    Returns
-    -------------
-    (string) label
-    """
-
-    docs = [] 
-    
-    # create a small corpus of documents that represent a machine cluster
-    label_ids = label_ids.tolist()
-    cursor = db.documents.find({"id":{"$in": label_ids}})
-    for document in tqdm.tqdm(cursor):
-        docs.append(document["text"])
-    
-    # use spaCy to preprocess text
-    docs_pp = [preprocess(text) for text in nlp.pipe(docs)]
-
-    # transform corpus to bag of words
-    from sklearn.feature_extraction.text import CountVectorizer
-    vec = CountVectorizer(stop_words='english')
-    X = vec.fit_transform(docs_pp)
-
-    # apply LDA topic modelling reduction
-    from sklearn.decomposition import LatentDirichletAllocation
-    lda = LatentDirichletAllocation(
-        n_components=1, 
-        learning_method="batch", 
-        max_iter=10
-    )
-    lda.fit_transform(X)
-
-    # grab two most similar topic labels for machine cluster
-    sorting = np.argsort(lda.components_, axis=1)[:, ::-1]
-    feature_names = np.array(vec.get_feature_names_out())
-    topic = feature_names[sorting[0][0]] + " " + feature_names[sorting[0][1]]
-    
-    return topic
-
-def first_teleoscope_ordering(db, groups, limit=10000):
-    """
-    Build array of document vectors and list of document ids based on first groups' teleoscope ordering
-
-    Parameters
-    -------------
-    db :
-        mongoDB connection
-    group : 
-        list of user defined groups
-
-    Returns
-    -------------
-    (ndarray) document vectors
-    (list(string)) list of document ids
-    """
 
     # default to ordering documents relative to first group's teleoscope
     teleoscope_oid = groups[0]["teleoscope"]
@@ -345,21 +266,22 @@ def first_teleoscope_ordering(db, groups, limit=10000):
 
     return document_vectors, document_ids
      
-def average_teleoscope_ordering(db, groups, limit=10000):
-    """
-    Build array of document vectors and list of document ids based on average of groups' teleoscope orderings
+def average_teleoscope_ordering(db, groups, limit):
+    """ Build a training set besed on the average of groups' teleoscopes
 
-    Parameters
-    -------------
-    db :
-        mongoDB connection
-    group : 
-        list of user defined groups
+    Args:
+        db:
+            A connection to the MongoDB database.
+        groups: 
+            A list of ObjectIds representing each group to be clustered
+        limit:
+            The number of documents to cluster.  
 
-    Returns
-    -------------
-    (ndarray) document vectors
-    (list(string)) list of document ids
+    Returns:
+        document_vectors:
+            An limit by 512 array of sorted document vectors
+        document_ids:
+            An limit length list of sorted document ids
     """
 
     # get teleoscope vecs of all groups
@@ -393,8 +315,7 @@ def average_teleoscope_ordering(db, groups, limit=10000):
 
     logging.info("Sorting document ids based on scores...")
     # sort document ids based on scores and take subset
-    ids = utils.rankDocumentsBySimilarity(all_doc_ids, scores)[:limit]
-    document_ids = [i for i, j in ids] # ids returns a zip(document id, similarity score)
+    document_ids = utils.rank_document_ids_by_similarity(all_doc_ids, scores)[:limit]
 
     # indices of ranked ids
     indices = [all_doc_ids.index(i) for i in document_ids]
@@ -404,6 +325,205 @@ def average_teleoscope_ordering(db, groups, limit=10000):
     document_vectors = np.array([all_doc_vecs[i] for i in indices])
 
     return document_vectors, document_ids
+
+def get_label(hdbscan_label, given_labels):
+    """Identify and produce label & colour for given hdbscan label
+
+    Args:
+        hdbscan_label:
+            An int that represents the given machine label 
+        given_labels: 
+            A dictionary with keys that represent group names 
+            and values that represent given machine labels
+
+    Returns:
+        label:
+            A string that is the topic label for the machine cluster
+        colour:
+            A string of hex representing a colour
+    """
+    
+    check = more = False
+    
+    # outlier label
+    if hdbscan_label == -1:
+        return 'outliers', '#ff1919'
+
+    # check for human clusters
+    for _name in given_labels:
+
+        label = given_labels[_name]
+        
+        if (hdbscan_label == label):
+            # append group labels if multiple groups are given the same hdbscan label
+            if more:
+                name += " & " + _name 
+            else:
+                name = _name
+                more = check = True
+    
+    if check:
+        return name, '#ff70e2'
+
+    return 'machine', '#737373'
+
+def get_topic(db, label_ids, nlp):
+    """Provides a topic label for a machine cluster
+
+    Args:
+        db:
+            A connection to the MongoDB database.
+        label_ids: 
+            An array if documents ids for a machine cluster
+        nlp:
+            spaCy prepocessing helper
+
+    Returns:
+        topic:
+            A string that is the topic label for the machine cluster
+    """
+
+    docs = [] 
+    
+    # create a small corpus of documents that represent a machine cluster
+    label_ids = label_ids.tolist()
+    cursor = db.documents.find({"id":{"$in": label_ids}})
+    for document in tqdm.tqdm(cursor):
+        docs.append(document["text"])
+    
+    # use spaCy to preprocess text
+    docs_pp = [preprocess(text) for text in nlp.pipe(docs)]
+
+    # transform corpus to bag of words
+    from sklearn.feature_extraction.text import CountVectorizer
+    vec = CountVectorizer(stop_words='english')
+    X = vec.fit_transform(docs_pp)
+
+    # apply LDA topic modelling reduction
+    from sklearn.decomposition import LatentDirichletAllocation
+    lda = LatentDirichletAllocation(
+        n_components=1, 
+        learning_method="batch", 
+        max_iter=10
+    )
+    lda.fit_transform(X)
+
+    # TODO - FIND A WAY TO CHECK FOR COLLISIONS
+    # grab two most similar topic labels for machine cluster
+    sorting = np.argsort(lda.components_, axis=1)[:, ::-1]
+    feature_names = np.array(vec.get_feature_names_out())
+    topic = feature_names[sorting[0][0]] + " " + feature_names[sorting[0][1]] 
+    
+    return topic
+
+def preprocess(
+    doc,
+    min_token_len=2,
+    irrelevant_pos=["ADV", "PRON", "CCONJ", "PUNCT", "PART", "DET", "ADP", "SPACE"],
+):
+    """Preprocess text
+
+    Code by Dr. Varada Kolhatkar adapted from UBC CPSC 330
+
+    Given text, min_token_len, and irrelevant_pos carry out preprocessing of the text
+    and return a preprocessed string.
+
+    Args:
+        doc:
+            The spacy doc object of the text
+        min_token_len: 
+            An int that represents min_token_length required
+        irrelevant_pos: 
+            A list of irrelevant pos tags
+
+    Returns:
+        preprocessed_text:
+            Preprocessed text as a String
+    """
+
+    clean_text = []
+
+    for token in doc:
+        if (
+            token.is_stop == False  # Check if it's not a stopword
+            and len(token) > min_token_len  # Check if the word meets minimum threshold
+            and token.pos_ not in irrelevant_pos
+        ):  # Check if the POS is in the acceptable POS tags
+            lemma = token.lemma_  # Take the lemma of the word
+            clean_text.append(lemma.lower())
+    return " ".join(clean_text)
+
+def clean_mongodb(db, userid):
+    """Cleans up MongoDB objects
+
+    Check to see if user has already built clusters.
+    If so, need to delete clusters and associated teleoscope items
+
+    Args:
+        db : 
+            A connection to the MongoDB database.
+        userid:
+            An ObjectID representing the user who made the API call
+    """
+
+    namespace = "teleoscopes" # teleoscopes.chunks, teleoscopes.files
+    fs = gridfs.GridFS(db, namespace)
+
+    if db.clusters.count_documents(
+        { "history.user": ObjectId(str(userid))}, 
+        limit=1,
+    ):
+        
+        logging.info(f'Clusters for user exists. Delete all.')
+
+        # cursor to find all existing clusters
+        cursor = db.clusters.find(
+            { "history.user" : ObjectId(str(userid))},
+            projection = {'_id': 1, 'teleoscope': 1},
+        )    
+
+        # tidy up all existing clusters
+        for cluster in tqdm.tqdm(cursor):
+
+            # cluster teleoscope
+            teleo_oid = cluster["teleoscope"]
+            teleo = db.teleoscopes.find_one({"_id": teleo_oid})
+
+            # associated teleoscope.files
+            teleo_file = teleo["history"][0]["ranked_document_ids"]
+
+            # delete telescopes.chunks and teleoscopes.files
+            fs.delete(teleo_file)
+
+            # delete teleoscope 
+            db.teleoscopes.delete_one({"_id": teleo_oid})
+
+            # delete cluster
+            db.clusters.delete_one({"_id": cluster["_id"]})
+    
+    logging.info(f'No clusters for user. Ready to populate.')
+
+    pass
+
+def session_action(session_oid, num_clusters):
+    """
+    Push an update to the session object to document the state of clustering 
+
+    Parameters
+    -------------
+    session_oid : 
+        represents ObjectId as int
+    num_clusters:
+        number of clusters produced by HDBSCAN
+    """
+    
+    # TODO
+    # transaction session that pushes to session.history[0]
+    # all the same as 
+    # update action : built {num_clusters} clusters
+    # add history_item["group_history_indices"] = {group oid : len(group.history) - 1}
+
+    pass
 
 def cache_distance_matrix():
     """
@@ -449,110 +569,3 @@ def cache_distance_matrix():
         np.savez(cluspath.as_posix(), dist_matrix=dm)
     
     return dm, ids
-
-# Code by Dr. Varada Kolhatkar adapted from UBC CPSC 330
-def preprocess(
-    doc,
-    min_token_len=2,
-    irrelevant_pos=["ADV", "PRON", "CCONJ", "PUNCT", "PART", "DET", "ADP", "SPACE"],
-):
-    """
-    Given text, min_token_len, and irrelevant_pos carry out preprocessing of the text
-    and return a preprocessed string.
-
-    Parameters
-    -------------
-    doc : (spaCy doc object)
-        the spacy doc object of the text
-    min_token_len : (int)
-        min_token_length required
-    irrelevant_pos : (list)
-        a list of irrelevant pos tags
-
-    Returns
-    -------------
-    (str) the preprocessed text
-    """
-
-    clean_text = []
-
-    for token in doc:
-        if (
-            token.is_stop == False  # Check if it's not a stopword
-            and len(token) > min_token_len  # Check if the word meets minimum threshold
-            and token.pos_ not in irrelevant_pos
-        ):  # Check if the POS is in the acceptable POS tags
-            lemma = token.lemma_  # Take the lemma of the word
-            clean_text.append(lemma.lower())
-    return " ".join(clean_text)
-
-def session_action(session_oid, num_clusters):
-    """
-    Push an update to the session object to document the state of clustering 
-
-    Parameters
-    -------------
-    session_oid : 
-        represents ObjectId as int
-    num_clusters:
-        number of clusters produced by HDBSCAN
-    """
-    
-    # TODO
-    # transaction session that pushes to session.history[0]
-    # all the same as 
-    # update action : built {num_clusters} clusters
-    # add history_item["group_history_indices"] = {group oid : len(group.history) - 1}
-
-    pass
-
-def clean_mongodb(db, userid):
-    """
-    Check to see if user has already built clusters.
-    If so, need to delete clusters and associated teleoscope items
-
-    Parameters
-    -------------
-    db : 
-        mongoDB connection
-    userid:
-        represents ObjectId as str
-    """
-    namespace = "teleoscopes" # teleoscopes.chunks, teleoscopes.files
-    fs = gridfs.GridFS(db, namespace)
-
-    if db.clusters.count_documents(
-        { "history.user": ObjectId(str(userid))}, 
-        limit=1,
-    ):
-        
-        logging.info(f'Clusters for user exists. Delete all.')
-
-        # cursor to find all existing clusters
-        cursor = db.clusters.find(
-            { "history.user" : ObjectId(str(userid))},
-            projection = {'_id': 1, 'teleoscope': 1},
-        )    
-
-        # tidy up all existing clusters
-        for cluster in tqdm.tqdm(cursor):
-
-            # cluster teleoscope
-            teleo_oid = cluster["teleoscope"]
-            teleo = db.teleoscopes.find_one({"_id": teleo_oid})
-
-            # associated teleoscope.files
-            teleo_file = teleo["history"][0]["ranked_document_ids"]
-
-            # delete telescopes.chunks and teleoscopes.files
-            fs.delete(teleo_file)
-
-            # delete teleoscope 
-            db.teleoscopes.delete_one({"_id": teleo_oid})
-
-            # delete cluster
-            db.clusters.delete_one({"_id": cluster["_id"]})
-    
-    logging.info(f'No clusters for user. Ready to populate.')
-
-    pass
