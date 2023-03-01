@@ -23,7 +23,6 @@ def create_session_object(userid, label, color):
         ],
     }
 
-
 def create_user_object(first_name, last_name, password, username):
     return {
         "creation_time": datetime.datetime.utcnow(),
@@ -33,4 +32,13 @@ def create_user_object(first_name, last_name, password, username):
         "username": username,
         "sessions":[],
         "action": "initialize a user"
+    }
+
+def create_document_object(title, text, textVector, relations={}, meta={}):
+    return {
+        "title": title,
+        "text": text,
+        "textVector" : textVector,
+        "relations": relations,
+        "meta": meta,
     }
