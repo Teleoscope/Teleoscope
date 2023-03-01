@@ -30,7 +30,7 @@ function Login() {
    const { errors } = formState;
 
    async function handleFetch(username, password) {
-      fetch('http://127.0.0.1:5000/login', {
+      fetch('https://127.0.0.1:5000/login', {
          method: 'POST',
          headers: {
             'Content-Type': 'application/json'
