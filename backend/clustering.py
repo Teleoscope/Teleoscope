@@ -26,7 +26,9 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         userid: ObjectID
         group_id_strings: list(string) where the strings are group ids
         session_oid: ObjectID
+        limit: (int) number of documents to build feature space
     """
+
     start = time.time()
 
     # connect to the database
@@ -39,19 +41,17 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     logging.info(f'Getting all groups in {group_ids}.')
     groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
 
-    # pull distance matrix from ~/embeddings
-    # TODO - if we chose to use this some modifications will need to be made below
-    # dm, document_ids = cache_distance_matrix()
+    # get training data based on ordering
+    logging.info('Using average ordering...')
+    document_vectors, document_ids = average_teleoscope_ordering(db, groups)
 
-    # Build array of document vectors and list of document ids 
-    # based on an average of each group's teleoscope vector
-    document_vectors, document_ids = average_teleoscope_ordering(db, groups, limit=20000)
-
-    # based on first group's teleoscope ordering
+    # logging.info('Using first group's teleoscope ordering...')
     # document_vectors, document_ids = first_teleoscop_ordering(db, groups)
 
+    # logging.info('Using all documents...')
+    # dm, document_ids = cache_distance_matrix()
+
     logging.info("Appending documents from groups to document vector and id list...")
-    
     group_doc_indices = {}
     for group in groups:
         
@@ -136,6 +136,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     # for garbage collection
     del umap_embeddings
     gc.collect()
+    logging.info("Bye UMAP embedding!!")
 
     # identify what machine label was given to each group
     # given_labels[{group name}]: {hdbscan label}
