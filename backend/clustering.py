@@ -1,7 +1,7 @@
 # boilerplate
 import tqdm, numpy as np, pickle
 import matplotlib.pyplot as plt
-import logging
+import logging, pickle
 from bson.objectid import ObjectId
 import gc
 from pathlib import Path
@@ -43,42 +43,13 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     # TODO - if we chose to use this some modifications will need to be made below
     # dm, document_ids = cache_distance_matrix()
 
-    # TODO- pull dist max and doc ids from average of teleo vecs
-    # dm, document_ids = average_teleoscop_ordering(db, groups)
+    # Build array of document vectors and list of document ids 
+    # based on an average of each group's teleoscope vector
+    document_vectors, document_ids = average_teleoscope_ordering(db, groups, limit=20000)
 
-    # default to ordering documents relative to first group's teleoscope
-    teleoscope_oid = groups[0]["teleoscope"]
-    teleoscope = db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
+    # based on first group's teleoscope ordering
+    # document_vectors, document_ids = first_teleoscop_ordering(db, groups)
 
-    # get Teleoscope from GridFS
-    logging.info("Getting ordered documents...")
-    all_ordered_documents = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope["history"][0]["ranked_document_ids"])))
-    ordered_documents = all_ordered_documents[0:limit]
-    logging.info(f'Documents downloaded. Top document is {ordered_documents[0]} and length is {len(ordered_documents)}')
-    limit = min(limit, len(ordered_documents))
-    
-    # projection includes only fields we want
-    projection = {'id': 1, 'textVector': 1}
-
-    # cursor is a generator which means that it yields a new doc one at a time
-    logging.info("Getting documents cursor and building document vector and id list...")
-    cursor = db.documents.find(
-        # query
-        {"id":{"$in": [document[0] for document in ordered_documents]}},
-        projection=projection,
-        # batch size means number of documents at a time taken from MDB, no impact on iteration 
-        batch_size=500
-    )
-
-    document_ids = []
-    document_vectors = []
-
-    # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
-    # can accept generators for lazy calculation 
-    for document in tqdm.tqdm(cursor, total=limit):
-        document_ids.append(document["id"])
-        document_vectors.append(document["textVector"])
-        
     logging.info("Appending documents from groups to document vector and id list...")
     
     group_doc_indices = {}
@@ -95,7 +66,10 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
                 document_ids.index(id)
             
             except:
-                document = db.documents.find_one({"id": id}, projection=projection)
+                document = db.documents.find_one(
+                    {"id": id}, 
+                    projection={'id': 1, 'textVector': 1},
+                )
                 document_ids.append(id)
                 vector = np.array(document["textVector"]).reshape((1, 512))
                 document_vectors = np.append(document_vectors, vector, axis=0)
@@ -106,16 +80,12 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         # dict where keys are group names and values are indices of documents
         group_doc_indices[group["history"][0]["label"]] = indices
 
-
-    # for garbage collection
-    del ordered_documents
-    del cursor
-    gc.collect()
-
-    logging.info(f'Document vectors has the shape:  {document_vectors.shape}.') # e.g., (600000, 512)
-
-    logging.info("Building distance matrix from document vectors array")
+    # build distance matrix
     dm = euclidean_distances(document_vectors)
+
+    # garbage collection
+    del document_vectors
+    gc.collect()
 
     logging.info(f"Distance matrix has shape {dm.shape}.") # e.g., (10000, 10000) square matrix
 
@@ -145,6 +115,10 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     ).fit_transform(dm)
 
     logging.info(f"Shape after reduction: {umap_embeddings.shape}")
+
+    # for garbage collection
+    del dm
+    gc.collect()
     
     logging.info("Clustering with HDBSCAN...")
 
@@ -157,9 +131,13 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
 
     logging.info(f'Num Clusters = {max(hdbscan_labels)+1} + outliers')
 
+    # for garbage collection
+    del umap_embeddings
+    gc.collect()
+
+    # identify what machine label was given to each group
     # given_labels[{group name}]: {hdbscan label}
     given_labels = {}
-
     for group in group_doc_indices:
         
         labels = hdbscan_labels[group_doc_indices[group]] 
@@ -167,7 +145,6 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         
         if -1 in labels:
             for i in range(len(labels)):
-
                 # update outlier label to correct label 
                 if labels[i] == -1:
                     index = group_doc_indices[group][i]
@@ -181,11 +158,6 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     # if user already has clusters, delete them to prepare for new clusters
     clean_mongodb(db, userid)
 
-    # for garbage collection
-    del dm
-    del document_vectors
-    gc.collect()
-    
     # create a new mongoDB group for each machine cluster
     for hdbscan_label in set(hdbscan_labels):
         
@@ -224,6 +196,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     diff = end - start
     num_clusters = max(hdbscan_labels) + 2
     logging.info(f'Built {num_clusters} clusters in {diff} seconds')
+
     session_action(session_oid, num_clusters)
 
 
@@ -317,9 +290,9 @@ def get_topic(label_ids, db, nlp):
     
     return topic
 
-def average_teleoscop_ordering(db, groups, limit=10000):
+def first_teleoscope_ordering(db, groups, limit=10000):
     """
-    Compute distance matrix and list of document ids based on average of groups' teleoscopes
+    Build array of document vectors and list of document ids based on first groups' teleoscope ordering
 
     Parameters
     -------------
@@ -330,7 +303,59 @@ def average_teleoscop_ordering(db, groups, limit=10000):
 
     Returns
     -------------
-    (ndarray) distance matrix
+    (ndarray) document vectors
+    (list(string)) list of document ids
+    """
+
+    # default to ordering documents relative to first group's teleoscope
+    teleoscope_oid = groups[0]["teleoscope"]
+    teleoscope = db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
+
+    # get Teleoscope from GridFS
+    logging.info("Getting ordered documents...")
+    all_ordered_documents = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope["history"][0]["ranked_document_ids"])))
+    ordered_documents = all_ordered_documents[0:limit]
+    logging.info(f'Documents downloaded. Top document is {ordered_documents[0]} and length is {len(ordered_documents)}')
+    limit = min(limit, len(ordered_documents))
+    
+    # projection includes only fields we want
+    projection = {'id': 1, 'textVector': 1}
+
+    # cursor is a generator which means that it yields a new doc one at a time
+    logging.info("Getting documents cursor and building document vector and id list...")
+    cursor = db.documents.find(
+        # query
+        {"id":{"$in": [document[0] for document in ordered_documents]}},
+        projection=projection,
+        # batch size means number of documents at a time taken from MDB, no impact on iteration 
+        batch_size=500
+    )
+
+    document_ids = []
+    document_vectors = []
+
+    # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
+    # can accept generators for lazy calculation 
+    for document in tqdm.tqdm(cursor, total=limit):
+        document_ids.append(document["id"])
+        document_vectors.append(document["textVector"])
+
+    return document_vectors, document_ids
+     
+def average_teleoscope_ordering(db, groups, limit=10000):
+    """
+    Build array of document vectors and list of document ids based on average of groups' teleoscope orderings
+
+    Parameters
+    -------------
+    db :
+        mongoDB connection
+    group : 
+        list of user defined groups
+
+    Returns
+    -------------
+    (ndarray) document vectors
     (list(string)) list of document ids
     """
 
@@ -347,26 +372,30 @@ def average_teleoscop_ordering(db, groups, limit=10000):
     # compute average teleoscope vec
     avg_vec = np.average(teleo_vecs, axis=0)
 
-    # get document ids / vecs from embedding
-    path = '~/embeddings/'
-    dir = Path(path).expanduser()
-    dir.mkdir(parents=True, exist_ok=True)
-    npzpath = Path(path + 'embeddings.npz').expanduser()
-    pklpath = Path(path + 'ids.pkl').expanduser()
-    
-    logging.info("Documents have been cached, retrieving now.")
+    # grab all document vectors from embeddings
+    npzpath = Path('~/embeddings/embeddings.npz').expanduser()
     loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
+    all_doc_vecs = loadDocuments['documents']
+
+    # grab all document ids from embeddings
+    pklpath = Path('~/embeddings/ids.pkl').expanduser()
     with open(pklpath.as_posix(), 'rb') as handle:
-        doc_ids = pickle.load(handle)
-    doc_vecs = loadDocuments['documents']
+            all_doc_ids = pickle.load(handle)
 
-    # gather ordering based on average vector
-    vecs = utils.calculateSimilarity(doc_vecs, avg_vec)[:limit] # TODO-SOMETHING WRONG HERE
-    ids = utils.rankDocumentsBySimilarity(doc_ids, vecs)
-    dm = euclidean_distances(vecs)
-    logging.info(f'The distance matrix has shape: {dm.shape}')
+    # gather similarly scores based on average vector
+    scores = utils.calculateSimilarity(all_doc_vecs, avg_vec)
 
-    return dm, ids
+    # sort document ids based on scores and take subset
+    ids = utils.rankDocumentsBySimilarity(all_doc_ids, scores)[:limit]
+    document_ids = [i for i, j in ids] # ids returns a zip(document id, similarity score)
+
+    # indices of ranked ids
+    indices = [all_doc_ids.index(i) for i in document_ids]
+
+    # sorted array of document vectors
+    document_vectors = np.array([all_doc_vecs[i] for i in indices])
+
+    return document_vectors, document_ids
 
 def cache_distance_matrix():
     """
@@ -491,11 +520,13 @@ def clean_mongodb(db, userid):
         
         logging.info(f'Clusters for user exists. Delete all.')
 
+        # cursor to find all existing clusters
         cursor = db.clusters.find(
             { "history.user" : ObjectId(str(userid))},
             projection = {'_id': 1, 'teleoscope': 1},
         )    
 
+        # tidy up all existing clusters
         for cluster in tqdm.tqdm(cursor):
 
             # cluster teleoscope
@@ -505,7 +536,7 @@ def clean_mongodb(db, userid):
             # associated teleoscope.files
             teleo_file = teleo["history"][0]['ranked_document_ids']
 
-            # delete telescopes.chuncks and teleoscopes.files
+            # delete telescopes.chunks and teleoscopes.files
             fs.delete(teleo_file)
 
             # delete teleoscope 
