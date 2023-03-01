@@ -86,6 +86,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     # garbage collection
     del document_vectors
     gc.collect()
+    logging.info("Bye vectors!!")
 
     logging.info(f"Distance matrix has shape {dm.shape}.") # e.g., (10000, 10000) square matrix
 
@@ -119,6 +120,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     # for garbage collection
     del dm
     gc.collect()
+    logging.info("Bye distance matrix!!")
     
     logging.info("Clustering with HDBSCAN...")
 
@@ -372,19 +374,23 @@ def average_teleoscope_ordering(db, groups, limit=10000):
     # compute average teleoscope vec
     avg_vec = np.average(teleo_vecs, axis=0)
 
+    logging.info("Gathering all document vectors from embeddings...")
     # grab all document vectors from embeddings
     npzpath = Path('~/embeddings/embeddings.npz').expanduser()
     loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
     all_doc_vecs = loadDocuments['documents']
 
+    logging.info("Gathering all document ids from embeddings...")
     # grab all document ids from embeddings
     pklpath = Path('~/embeddings/ids.pkl').expanduser()
     with open(pklpath.as_posix(), 'rb') as handle:
             all_doc_ids = pickle.load(handle)
 
+    logging.info("Gather similarly scores based on new average vector...")
     # gather similarly scores based on average vector
     scores = utils.calculateSimilarity(all_doc_vecs, avg_vec)
 
+    logging.info("Sorting document ids based on scores...")
     # sort document ids based on scores and take subset
     ids = utils.rankDocumentsBySimilarity(all_doc_ids, scores)[:limit]
     document_ids = [i for i, j in ids] # ids returns a zip(document id, similarity score)
@@ -392,6 +398,7 @@ def average_teleoscope_ordering(db, groups, limit=10000):
     # indices of ranked ids
     indices = [all_doc_ids.index(i) for i in document_ids]
 
+    logging.info("Building sorted array of document vectors...")
     # sorted array of document vectors
     document_vectors = np.array([all_doc_vecs[i] for i in indices])
 
@@ -534,7 +541,7 @@ def clean_mongodb(db, userid):
             teleo = db.teleoscopes.find_one({"_id": teleo_oid})
 
             # associated teleoscope.files
-            teleo_file = teleo["history"][0]['ranked_document_ids']
+            teleo_file = teleo["history"][0]["ranked_document_ids"]
 
             # delete telescopes.chunks and teleoscopes.files
             fs.delete(teleo_file)
