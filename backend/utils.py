@@ -214,3 +214,49 @@ def gridfsDownload(db, namespace, oid):
     obj = fs.get(oid).read()
     data = json.loads(obj)
     return data
+
+
+def update_ids():
+    db = connect()
+    groups = db.groups.find({})
+    for group in groups:
+        for history_item in group['history']:
+            oid_arr = []
+            for id in history_item['included_documents']:
+                doc = db.documents.find_one({"id":id})
+                oid = doc["_id"]
+                oid_arr.append(oid)
+            history_item['included_documents'] = oid_arr
+        db.groups.update_one({"_id": group["_id"]}, { "$set": { "history": group["history"] } })
+
+
+    sessions = db.sessions.find({})
+    for session in sessions:
+        for history_item in session['history']:
+            oid_arr = []
+            for id in history_item['bookmarks']:
+                doc = db.documents.find_one({"id":id})
+                oid = doc["_id"]
+                oid_arr.append(oid)
+            history_item['bookmarks'] = oid_arr
+        db.sessions.update_one({"_id": session["_id"]}, { "$set": { "history": session["history"] } })
+
+    teleoscopes = db.teleoscopes.find({})
+    for teleoscope in teleoscopes:
+        for history_item in teleoscope['history']:
+            oid_arr = []
+            for id in history_item['positive_docs']:
+                doc = db.documents.find_one({"id":id})
+                if doc == None:
+                    doc = db.documents.find_one({"_id": ObjectId(str(id))})
+                oid = doc["_id"]
+                oid_arr.append(oid)
+            history_item['positive_docs'] = oid_arr
+            for id in history_item['negative_docs']:
+                doc = db.documents.find_one({"id":id})
+                if doc == None:
+                    doc = db.documents.find_one({"_id": ObjectId(str(id))})
+                oid = doc["_id"]
+                oid_arr.append(oid)
+            history_item['negative_docs'] = oid_arr
+        db.teleoscopes.update_one({"_id": teleoscope["_id"]}, { "$set": { "history": teleoscope["history"] } })
