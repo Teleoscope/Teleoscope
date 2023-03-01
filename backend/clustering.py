@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 import gc
 from pathlib import Path
 import time
+import gridfs
 
 # ml dependencies
 import umap
@@ -178,10 +179,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     nlp = spacy.load("en_core_web_sm")
 
     # if user already has clusters, delete them to prepare for new clusters
-    if db.clusters.count_documents({"history.user": ObjectId(str(userid))}, limit=1):
-        logging.info(f'Clusters for user exists. Delete all.')
-        db.clusters.delete_many({"history.user": ObjectId(str(userid))})
-    logging.info(f'No clusters for user. Ready to populate.')
+    clean_mongodb(db, userid)
 
     # for garbage collection
     del dm
@@ -224,7 +222,10 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
 
     end = time.time()
     diff = end - start
-    logging.info(f'Built {max(hdbscan_labels)+2} clusters in {diff} seconds')
+    num_clusters = max(hdbscan_labels) + 2
+    logging.info(f'Built {num_clusters} clusters in {diff} seconds')
+    session_action(session_oid, num_clusters)
+
 
 def get_label(hdbscan_label, given_labels):
     """
@@ -412,7 +413,7 @@ def cache_distance_matrix():
     
     return dm, ids
 
-# code by Dr. Varada Kolhatkar adapted from cpsc330
+# Code by Dr. Varada Kolhatkar adapted from UBC CPSC 330
 def preprocess(
     doc,
     min_token_len=2,
@@ -447,3 +448,72 @@ def preprocess(
             lemma = token.lemma_  # Take the lemma of the word
             clean_text.append(lemma.lower())
     return " ".join(clean_text)
+
+def session_action(session_oid, num_clusters):
+    """
+    Push an update to the session object to document the state of clustering 
+
+    Parameters
+    -------------
+    session_oid : 
+        represents ObjectId as int
+    num_clusters:
+        number of clusters produced by HDBSCAN
+    """
+    
+    # TODO
+    # transaction session that pushes to session.history[0]
+    # all the same as 
+    # update action : built {num_clusters} clusters
+    # add history_item["group_history_indices"] = {group oid : len(group.history) - 1}
+
+    pass
+
+def clean_mongodb(db, userid):
+    """
+    Check to see if user has already built clusters.
+    If so, need to delete clusters and associated teleoscope items
+
+    Parameters
+    -------------
+    db : 
+        mongoDB connection
+    userid:
+        represents ObjectId as str
+    """
+    namespace = "teleoscopes" # teleoscopes.chunks, teleoscopes.files
+    fs = gridfs.GridFS(db, namespace)
+
+    if db.clusters.count_documents(
+        { "history.user": ObjectId(str(userid))}, 
+        limit=1,
+    ):
+        
+        logging.info(f'Clusters for user exists. Delete all.')
+
+        cursor = db.clusters.find(
+            { "history.user" : ObjectId(str(userid))},
+            projection = {'_id': 1, 'teleoscope': 1},
+        )    
+
+        for cluster in tqdm.tqdm(cursor):
+
+            # cluster teleoscope
+            teleo_oid = cluster["teleoscope"]
+            teleo = db.teleoscopes.find_one({"_id": teleo_oid})
+
+            # associated teleoscope.files
+            teleo_file = teleo["history"][0]['ranked_document_ids']
+
+            # delete telescopes.chuncks and teleoscopes.files
+            fs.delete(teleo_file)
+
+            # delete teleoscope 
+            db.teleoscopes.delete_one({"_id": teleo_oid})
+
+            # delete cluster
+            db.clusters.delete_one({"_id": cluster["_id"]})
+    
+    logging.info(f'No clusters for user. Ready to populate.')
+
+    pass
