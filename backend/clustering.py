@@ -506,15 +506,15 @@ def clean_mongodb(db, userid):
     pass
 
 def session_action(session_oid, num_clusters):
-    """
+    """Clustering action history update
+
     Push an update to the session object to document the state of clustering 
 
-    Parameters
-    -------------
-    session_oid : 
-        represents ObjectId as int
-    num_clusters:
-        number of clusters produced by HDBSCAN
+    Args:
+        session_oid : 
+            An int that represents the ObjectID of the current session
+        num_clusters:
+            An int that represents the number of clusters produced by HDBSCAN
     """
     
     # TODO
@@ -525,19 +525,20 @@ def session_action(session_oid, num_clusters):
 
     pass
 
-def cache_distance_matrix():
-    """
-    Cache a distance matrix built off all documents in database
+def cache_distance_matrix(db):
+    """ Build a training set besed on the all documents in database
 
-    Parameters
-    -------------
-    db : 
-        mongoDB connection
+    TODO - DECIDE IF THIS SHOULD EVEN EXIST
 
-    Returns
-    -------------
-    (ndarray) distance matrix
-    (list(string)) list of document ids
+    Args:
+        db:
+            A connection to the MongoDB database.
+
+    Returns:
+        document_vectors:
+            An array of sorted document vectors
+        document_ids:
+            A lift of sorted document ids
     """
 
     path='~/embeddings/'
