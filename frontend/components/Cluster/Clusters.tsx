@@ -15,11 +15,12 @@ export default function Clusters(props) {
     const { clusters } = useSWRAbstract("clusters", `/api/sessions/${session_id}/clusters`);
     const dispatch = useAppDispatch();
     return (
-
+      <div style={{ overflow: "auto", height: "100%" }}>
         <List>
         {clusters?.map((cluster) => {
            return (
               <div
+                 style={{ overflow: "auto", height: "100%" }}
                  draggable={true}
                  onDragStart={() => {dispatch(dragged({ id: cluster?._id + "%clusters", type: "Cluster" }))}}
               >
@@ -36,6 +37,7 @@ export default function Clusters(props) {
            )
         })}
      </List>
+     </div>
     )
 }
         

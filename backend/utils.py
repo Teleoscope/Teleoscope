@@ -39,8 +39,14 @@ def create_transaction_session():
         f'{auth.mongodb["password"]}@'
         f'{auth.mongodb["host"]}/?{autht}'
     )
-    client = MongoClient(connect_str, connectTimeoutMS=50000, serverSelectionTimeoutMS = 50000)
-
+    client = MongoClient(
+        connect_str, 
+        connectTimeoutMS = 50000, 
+        serverSelectionTimeoutMS = 50000,
+        directConnection=True,
+        replicaSet = "rs0"
+        # read_preference = ReadPreference.PRIMARY_PREFERRED
+    )
     session = client.start_session()
     db = client.aita
     return session, db

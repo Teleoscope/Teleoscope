@@ -726,17 +726,13 @@ def cluster_by_groups(*args, **kwargs):
     Cluster documents using user-provided group ids.
 
     kwargs:
-
-        teleoscope_oid: GridFS OID address for ranked documents. 
-        Note this assumes that a teleoscope has already been created for this group.
-
+        user_id: ObjectId
         group_id_strings: list(string) where the strings are MongoDB ObjectID format
-
         session_oid: string OID for session to add clusters to
     """
     import clustering
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
-    clustering.cluster_by_groups(kwargs["group_id_strings"], kwargs["session_oid"])
+    clustering.cluster_by_groups(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"])
 
 
 @app.task
