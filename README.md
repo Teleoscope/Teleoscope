@@ -42,3 +42,24 @@ Our database is [MongoDB](https://www.mongodb.com/). After installing MongoDB, y
 Our machine learning pipeline starts by encoding document text with [Universal Sentence Encoder](https://www.tensorflow.org/hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder). This allows us to create similarity scores for words/sentences that may have low or no representation in user datasets. When users have created groups, we then perform dimensionality reduction with [UMAP](https://umap-learn.readthedocs.io/en/latest/supervised.html). 
 
 You can think of it like this: when the user creates a group, they are saying that they believe that the documents are similar, whether or not the USE model would consider them to be very close. Rather than recalculating a whole new model, we simply decide to reduce dimensions with a custom distance metric that says "documents in the same group should end up close when dimensions are cut." The space is then transformed without having to retrain a neural network, which could take a very long time. Then, we perform clustering using [HDBSCAN](https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html) and present the machine-created clusters to users. If they like the clusters, they can add them as groups and re-run the clustering.
+
+## Cloud-first design
+Teleoscope is easily deployable to new VMs using the [Ansible](https://www.ansible.com/) framework. You'll need your own AWS or Azure account and VMs to run public instances of Teleoscope, but you can create a test environment by creating an [inventory](https://docs.ansible.com/ansible/latest/inventory_guide/index.html) that includes, say, `localhost` for your own machine, or any other host you may have access to. You'll need to create a 
+
+```
+remote_prefix: /home                              # example for linux 
+conda_environment: teleoscope                     # any label will do
+conda_prefix: /usr/share/miniconda3               # you can change this to ~/miniconda3 if you don't have access to /usr/share
+mongodb_admin_name: example_admin                 # replace "example_admin" with your administrator name
+mongodb_admin_password: admin_password            # replace "admin_password" with your administrator's password
+mongodb_dev_name: example_dev                     # replace "example_dev" with your name
+mongodb_dev_password: dev_password                # replace "dev_password" with your password
+mongodb_database: teleoscope                      # any label will do
+rabbitmq_vhost: teleoscope                        # any label will do
+rabbitmq_admin_username: example_admin            # replace "example_admin" with your administrator name (can be different than above)
+rabbitmq_admin_password: admin_password           # replace "admin_password" with your administrator's password (can be different than above)
+rabbitmq_dev_username:  example_dev               # replace "example_dev" with your name (can be different than above)
+rabbitmq_dev_password: dev_password               # replace "dev_password" with your password (can be different than above)
+nodejs_version: 19                                # tested for 19
+ubuntu_version: jammy                             # tested for focal and jammy, may need to change some configs for focal
+```
