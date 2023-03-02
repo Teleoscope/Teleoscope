@@ -119,7 +119,7 @@ def save_UI_state(*args, **kwargs):
     history_item["action"] = "Save UI state"
     history_item["user"] = user_id
 
-    with transaction_session.start_transaction(): # When you do transaction, you want to do it inside this transaction session
+    with transaction_session.start_transaction(): 
         db.sessions.update_one({"_id": session_id},
             {
                 '$push': {
@@ -132,28 +132,26 @@ def save_UI_state(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
 
     return 200 # success
-# Create_child   
-# transaction_session, db = utils.create_transaction_session() [DONE]
-# document = db.documents.find_one({"_id": document_id}) [DONE]
-# document["text"][s:e]
-# Declare any fields that are necessary
-# Need the vectorize function # Can write a test for this one -> check if it's actually working
-# inserted_document = db.documents.insert_one( ... )
-# inserted_document.insertedID
-# id = insertedid
-# update_one(…)
-# Write a test to check if it's actually working (can insert a dummy document and delete it once it's done)
+
 @app.task
 def create_child(*args, **kwargs):
+    """
+    Add new child document to session.
+    kwargs:
+        start_index: (int, represents index from which you start slicing the parent document)
+        end_index: (int, represents index from which you end slicing of the parent document)
+        document_id: (int, represents ObjectId in int)
+    """
     transaction_session, db = utils.create_transaction_session()
+    # When you do transaction, you want to do it inside this transaction session
     with transaction_session.start_transaction(): 
-        document_id = kwargs["document_id"]
+        document_id = ObjectId(str(kwargs["document_id"]))
         start_index = kwargs['start_index']
         end_index = kwargs['end_index']
         document = db.documents.find_one({"_id": document_id})
-        child_text = document["text"][start_index:end_index] # Not sure how I should go about doing the parameter - need to use kwargs?
+        child_text = document["text"][start_index:end_index] 
         child_title = document["title"] + " child"
-        child_id = document["id"] + "#" + str(start_index) + "#" + str(end_index)
+        child_id = f"{document_id}#{str(start_index)}#{str(end_index)}"
         child_vector = vectorize_text([child_text])
         child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document)
         inserted_document = db.documents.insert_one(child_document, session=transaction_session)
@@ -1010,14 +1008,10 @@ def vectorize_document(document): #(text) -> Vector
     purpose: This function is used to update the dictionary with a vectorized version of the title and text
             (Ignores dictionaries containing error keys)
     '''
-    ## Call vectorize_text in this function - based on the text that you're getting from the document - second step after vectorize_text works
     import tensorflow_hub as hub
     if 'error' not in document:
-        # embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
         document['vector'] = vectorize_text([document['title']])
         document['textVector'] = vectorize_text([document['text']])
-        # document['vector'] = embed([document['title']]).numpy()[0].tolist() 
-        # document['textVector'] = embed([document['text']]).numpy()[0].tolist() 
         return document
     else:
         return document
@@ -1032,11 +1026,9 @@ def vectorize_text(text): #(text) -> Vector
     purpose: This function is used to return a vectorized version of the text
             (Assumes the text is error free)
     '''
-    import tensorflow_hub as hub
-    # if 'error' not in text: 
+    import tensorflow_hub as hub 
     embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-    # document['vector'] = embed([document['title']]).numpy()[0].tolist() 
-    vector = embed(text).numpy()[0].tolist() # This is required -> don't need document['text'] -> make it text 
+    vector = embed(text).numpy()[0].tolist()
     return vector
     
 @app.task

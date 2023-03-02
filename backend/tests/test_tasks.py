@@ -7,115 +7,8 @@ from bson.objectid import ObjectId
 import utils, pytest, tasks
 
 
-# ! Setup
-# @pytest.fixture
-# def db():
-# 	db = utils.connect()
-# 	yield db
-
-# @pytest.fixture
-# def session(db):
-# 	"""Fixture to execute asserts before and after a test is run"""
-# 	# Create a session
-# 	res = db.sessions.insert_one({"username": 'test', "history":[], "teleoscopes":[]})
-# 	curr_session_id = str(res.inserted_id)
-# 	yield curr_session_id # this is where the testing happens
-# 	# remove the session
-# 	db.sessions.delete_one({'_id': res.inserted_id})
-
-# @pytest.fixture
-# def user(db):
-# 	"""Fixture to execute asserts before and after a test is run"""
-# 	# Create a user
-# 	res = db.users.insert_one({"username": 'test', "password_hash": hash('test'), 'sessions': []})
-# 	curr_user_id = str(res.inserted_id)
-# 	yield 'test' # this is where the testing happens
-# 	# Remove the user
-# 	db.users.delete_one({'_id': res.inserted_id})
-
-
-# # ! Test cases for initialize_teleoscope
-# # Case 1: Invalid session id - should throw an exception
-# def test_initialize_teleoscope_dummy_label(db):
-# 	with pytest.raises(Exception):
-# 		tasks.initialize_teleoscope((), label = "test label", session_id = 1010)
-# 	# delete test label teleoscope from table
-# 	db.teleoscopes.delete_one({ 'label': "test label" })
-
-# # Case 2: Valid label, and session id
-# def test_initialize_teleoscope_valid_label(db, session):
-# 	try:
-# 		tasks.initialize_teleoscope((), label = "test label", session_id = session)
-# 	except Exception as e:
-# 		pytest.fail(e)
-# 	finally:
-# 		db.teleoscopes.delete_one({ 'label': "test label" })
-
-
-# # ! Test cases for initialize_session
-# # Case 1: Valid username - should not throw an exception
-# def test_initialize_session_valid_username(db, user):
-# 		try:
-# 			tasks.initialize_session(username = user)
-# 		except Exception as e:
-# 			pytest.fail(e)
-# 		finally:
-# 			# Remove session
-# 			db.sessions.delete_one({'username': 'test'})
-	
-# # ! Test cases for save_teleoscope_state
-# # Case 1: Invalid Teleoscope id
-# def test_save_teleoscope_state_invalid_id():
-# 	with pytest.raises(Exception):
-# 		tasks.save_teleoscope_state((), history_object = {"_id": '42', "history_item": {}})
-
-# # ! Test cases for save_UI_state
-# # Case 1: Invalid session id
-# def test_save_UI_state_invalid_session_id():
-# 	with pytest.raises(Exception):
-# 		tasks.save_UI_state((), history_object = {"_id": '42', "history_item": {}})
-
-# # ! Test cases for add_group
-# # Case 1: Invalid session id
-# def test_add_group_invalid_session_id():
-# 	with pytest.raises(Exception):
-# 		tasks.add_group((), label = "test label", color = "test color", session_id = '42')
-
-# # ! Test cases for add_document_to_group
-# # Case 1: Invalid group id
-# def test_add_document_to_group_invalid_group_id():
-# 	with pytest.raises(Exception):
-# 		tasks.add_document_to_group((), document_id = '42', group_id = '42')
-
-# # ! Test cases for remove_document_from_group
-# # Case 2: Invalid group id
-# def test_remove_document_from_group_invalid_group_id():
-# 	with pytest.raises(Exception):
-# 		tasks.remove_document_from_group((), document_id = '42', group_id = '42')
-
-# # ! Test cases for update group_label
-# # Case 2: Invalid group id
-# def test_update_group_label_invalid_group_id():
-# 	with pytest.raises(Exception):
-# 		tasks.update_group_label((), group_id = '42', label = 'test label')
-
-# # ! Test cases for add_note
-# # Case 1: Invalid document_id
-# def test_add_note_invalid_document_id():
-# 	with pytest.raises(Exception):
-# 		tasks.add_note((), document_id = '42')
-
-# # ! Test cases for update_note
-# # Case 1: Invalid document_id
-# def test_update_note_invalid_document_id():
-# 	with pytest.raises(Exception):
-# 		tasks.update_note((), document_id = '42', content={})
 
 #Test cases - boundary cases and equivalence partitions
-# empty string -"", nonempty string, string with multiple words -> just 3 cases
-# TODO: Check equality in a for-loop (new == old or n-o = div -> how bog is div); 
-# np.equal(or something like that) -> if not, use something like np.dist(v_a,v_b) -> to check how equal they are
-# np.cosinedist -> maybe a better way of looking at it 
 # ! Test cases for vectorize_text
 # Case 1: Empty string
 def test_vectorize_text_empty_string():
@@ -168,11 +61,12 @@ def test_create_child_invalid_document_id():
 	with pytest.raises(Exception):
 		tasks.create_child((), start_index = 2, end_index = 40, document_id = '30')
 #Case 2: valid document id
+#TODO: Clean up the database for whatever changes you've made once the test is over (The test_tasks that were there before)
 def test_create_child_valid_document():
 	start = 10
 	end = 1000
-	id = tasks.create_child(start_index = start, end_index = end, document_id = ObjectId("637eabe7f0a9482a337a11d5"))
+	id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
 	session, db = utils.create_transaction_session()
-	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
+	document = db.documents.find_one({"_id": "637eabe7f0a9482a337a11d5"})
 	reddit_id = document["id"]
-	assert id == reddit_id +'#' + str(start) + '#' + str(1000)
+	assert id == f"{reddit_id}#{str(start)}#{str(1000)}"
