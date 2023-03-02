@@ -179,10 +179,10 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         # all document_ids as array
         ids = np.array(document_ids)
         
-        # array of ids of documents with current hdbscan label 
+        # array of object ids of documents with current hdbscan label 
         label_ids = ids[document_indices_array]
 
-        # create list of document ids that are in current hdbscan label
+        # create list of document object ids that are in current hdbscan label
         documents = label_ids.tolist()
         
         # create appropriate label for current hdbscan label
@@ -366,9 +366,9 @@ def get_topic(db, label_ids, nlp):
         db:
             A connection to the MongoDB database.
         label_ids: 
-            An array if documents ids for a machine cluster
+            An array of strings that represent documents ids in a machine cluster.
         nlp:
-            spaCy prepocessing helper
+            spaCy prepocessing helper.
 
     Returns:
         topic:
@@ -378,19 +378,13 @@ def get_topic(db, label_ids, nlp):
     docs = [] 
     
     # create a small corpus of documents that represent a machine cluster
-    # label_ids = label_ids.tolist()
-
     for id in label_ids:
-        document = db.documents.find(
+        document = list(db.documents.find(
             {"_id": ObjectId(str(id))},
             projection = {'text': 1},
-        )
-        docs.append(document["text"])
-
-    # cursor = db.documents.find({"_id":{"$in": label_ids}})
-    # for document in tqdm.tqdm(cursor):
-    #     docs.append(document["text"])
-    
+        ))
+        docs.append(document[0]["text"])
+        
     # use spaCy to preprocess text
     docs_pp = [preprocess(text) for text in nlp.pipe(docs)]
 
