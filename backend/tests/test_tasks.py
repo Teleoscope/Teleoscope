@@ -66,9 +66,9 @@ def test_create_child_invalid_document_id():
 def test_create_child_valid_document():
 	start = 100
 	end = 1000
-	id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
 	session, db = utils.create_transaction_session()
 	try:
+		id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
 		document = db.documents.find_one({"_id": "637eabe7f0a9482a337a11d5"})
 		reddit_id = document["id"]
 		assert id == f"{reddit_id}#{str(start)}#{str(1000)}"
