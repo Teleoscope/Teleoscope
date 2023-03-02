@@ -83,7 +83,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
                 document_vectors = np.append(document_vectors, vector, axis=0)
                 
             finally:
-                indices.append(document_ids.index(id))
+                indices.append(document_ids.index(str(id)))
         
         # dict where keys are group names and values are indices of documents
         group_doc_indices[group["history"][0]["label"]] = indices
