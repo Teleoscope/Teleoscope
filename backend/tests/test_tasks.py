@@ -64,12 +64,12 @@ def test_create_child_invalid_document_id():
 #Case 2: valid document id
 #TODO: Clean up the database for whatever changes you've made once the test is over (The test_tasks that were there before)
 def test_create_child_valid_document():
-	start = 100
-	end = 1000
+	start = 20
+	end = 200
 	session, db = utils.create_transaction_session()
 	try:
 		id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
-		document = db.documents.find_one({"_id": "637eabe7f0a9482a337a11d5"})
+		document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
 		reddit_id = document["id"]
 		assert id == f"{reddit_id}#{str(start)}#{str(1000)}"
 	finally:
