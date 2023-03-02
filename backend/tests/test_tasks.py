@@ -64,22 +64,21 @@ def test_create_child_invalid_document_id():
 #Case 2: valid document id
 #TODO: Clean up the database for whatever changes you've made once the test is over (The test_tasks that were there before)
 def test_create_child_valid_document():
-	start = 200
+	start = 48
 	end = 2000
 	session, db = utils.create_transaction_session()
+	id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
 	try:
-		id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
+		
 		document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
 		reddit_id = document["id"]
 		assert id == f"{reddit_id}#{str(start)}#{str(end)}"
 	finally:
 		db.documents.delete_one({'_id': id})
-# #Case 3: valid document id, end_index outside range of document
-# def test_create_child_outside_document_range():
-# 	start = 0
-# 	end = 100000000
-# 	session, db = utils.create_transaction_session()
-# 	try:
-# 		id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
-# 		document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
-# 		reddit_id = 
+#Case 3: valid document id, end_index outside range of document
+def test_create_child_outside_document_range():
+	start = 0
+	end = 100000000
+	session, db = utils.create_transaction_session()
+	with pytest.raises(Exception):
+		tasks.create_child((), start_index = start, end_index = end, document_id = ObjectId("637eabe7f0a9482a337a11d5"))
