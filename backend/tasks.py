@@ -147,11 +147,13 @@ def create_child(*args, **kwargs):
     with transaction_session.start_transaction(): 
         document_id = ObjectId(str(kwargs["document_id"]))
         start_index = kwargs['start_index']
+        #TODO: add a check to see if the end_index is lesser than the document's last index
         end_index = kwargs['end_index']
         document = db.documents.find_one({"_id": document_id})
         child_text = document["text"][start_index:end_index] 
         child_title = document["title"] + " child"
-        child_id = f"{document_id}#{str(start_index)}#{str(end_index)}"
+        reddit_id = document["id"]
+        child_id = f"{reddit_id}#{str(start_index)}#{str(end_index)}"
         child_vector = vectorize_text([child_text])
         child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document)
         inserted_document = db.documents.insert_one(child_document, session=transaction_session)
