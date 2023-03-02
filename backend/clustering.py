@@ -71,14 +71,14 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         for id in group_document_ids:
             
             try:
-                document_ids.index(id)
+                document_ids.index(str(id))
             
             except:
                 document = db.documents.find_one(
                     {"id": id}, 
                     projection={'id': 1, 'textVector': 1},
                 )
-                document_ids.append(id)
+                document_ids.append(str(id))
                 vector = np.array(document["textVector"]).reshape((1, 512))
                 document_vectors = np.append(document_vectors, vector, axis=0)
                 
