@@ -75,8 +75,8 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
             
             except:
                 document = db.documents.find_one(
-                    {"id": id}, 
-                    projection={'id': 1, 'textVector': 1},
+                    {"_id": id}, 
+                    projection={'textVector': 1},
                 )
                 document_ids.append(str(id))
                 vector = np.array(document["textVector"]).reshape((1, 512))
