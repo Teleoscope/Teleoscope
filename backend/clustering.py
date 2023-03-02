@@ -194,9 +194,6 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
 
         logging.info(f'There are {len(documents)} documents for Machine Cluster "{_label}".')
         
-        logger = logging.getLogger()
-        logger.disabled = True
-
         tasks.add_group(
             userid=userid,
             label=_label,
@@ -205,8 +202,6 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
             human=False, 
             included_documents=documents, 
         )
-        
-        logger.disabled = False
 
     end = time.time()
     diff = end - start
