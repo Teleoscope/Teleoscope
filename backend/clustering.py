@@ -154,7 +154,6 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         labels = hdbscan_labels[group_doc_indices[group]] 
         correct_label = max(labels)
         
-        # TODO - BETTER COMMENTS / DOCUMENTS (SMALLER HELPERS)
         if -1 in labels:
             for i in range(len(labels)):
                 # update outlier label to correct label 
@@ -194,6 +193,9 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
             _label = get_topic(db, label_ids[:limit], nlp)
 
         logging.info(f'There are {len(documents)} documents for Machine Cluster "{_label}".')
+        
+        logger = logging.getLogger()
+        logger.disabled = True
 
         tasks.add_group(
             userid=userid,
@@ -203,6 +205,8 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
             human=False, 
             included_documents=documents, 
         )
+        
+        logger.disabled = False
 
     end = time.time()
     diff = end - start
@@ -406,7 +410,7 @@ def get_topic(db, label_ids, nlp):
     # grab two most similar topic labels for machine cluster
     sorting = np.argsort(lda.components_, axis=1)[:, ::-1]
     feature_names = np.array(vec.get_feature_names_out())
-    topic = feature_names[sorting[0][0]] + " " + feature_names[sorting[0][1]] 
+    topic = feature_names[sorting[0][0]] + " " + feature_names[sorting[0][1]] + " " + feature_names[sorting[0][2]] 
     
     return topic
 
