@@ -379,7 +379,7 @@ def get_topic(db, label_ids, nlp):
     
     # create a small corpus of documents that represent a machine cluster
     label_ids = label_ids.tolist()
-    cursor = db.documents.find({"id":{"$in": label_ids}})
+    cursor = db.documents.find({"_id":{"$in": label_ids}})
     for document in tqdm.tqdm(cursor):
         docs.append(document["text"])
     
