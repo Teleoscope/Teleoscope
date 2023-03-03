@@ -108,18 +108,18 @@ def save_UI_state(*args, **kwargs):
         logging.info(f"Session {session_id} not found.")
         raise Exception("Session not found")
 
-    userid = kwargs["userid"]
+    userid = ObjectId(str(kwargs["userid"]))
     user = db.users.find_one({"_id": userid})
-    user_id = user['_id']
 
     history_item = session["history"][0]
     history_item["bookmarks"] = kwargs["bookmarks"]
     history_item["windows"] =  kwargs["windows"]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Save UI state"
-    history_item["user"] = user_id
+    history_item["user"] = userid
 
-    with transaction_session.start_transaction(): 
+
+    with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
             {
                 '$push': {
@@ -132,6 +132,53 @@ def save_UI_state(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
 
     return 200 # success
+# Create_child   
+# transaction_session, db = utils.create_transaction_session() [DONE]
+# document = db.documents.find_one({"_id": document_id}) [DONE]
+# document["text"][s:e]
+# Declare any fields that are necessary
+# Need the vectorize function # Can write a test for this one -> check if it's actually working
+# inserted_document = db.documents.insert_one( ... )
+# inserted_document.insertedID
+# id = insertedid
+# update_one(…)
+# Write a test to check if it's actually working (can insert a dummy document and delete it once it's done)
+@app.task
+def create_child(start_index, end_index, *args, **kwargs):
+    transaction_session, db = utils.create_transaction_session()
+    with transaction_session.start_transaction(): 
+        document_id = kwargs["document_id"]
+        document = db.documents.find_one({"_id": document_id})
+        # session_id =  ObjectId(str(kwargs["session_id"]))
+        child_text = document["text"][start_index:end_index] # Not sure how I should go about doing the parameter - need to use kwargs?
+        child_title = document["title"] + " child"
+        child_id = document["id"] + "#child" #TODO: Ask Paul about making this unique id
+        child_vector = vectorize_text(child_text)
+        # child_parent = db.sessions.find_one({"_id": session_id})
+        inserted_document = db.documents.insert_one({
+            'title': child_title, 
+            'id': child_id, 
+            'text_vector': child_vector, 
+            'text': child_text,
+            'parent': document
+        }, session=transaction_session)
+        #TODO: Create schema of create_document_object and call that instead
+        new_id = inserted_document.inserted_id
+   
+        # db.documents.update_one({"_id": new_id},
+        # # Don't need the push, look at mongoDB for update_one
+        # {
+        #     '$push': {
+        #         "history": {
+        #             "$each": [inserted_document],
+        #             "$position": 0
+        #             }
+        #         }
+        # }, session=transaction_session)
+
+
+
+
 
 @app.task
 def create_child(*args, **kwargs):
@@ -715,17 +762,13 @@ def cluster_by_groups(*args, **kwargs):
     Cluster documents using user-provided group ids.
 
     kwargs:
-
-        teleoscope_oid: GridFS OID address for ranked documents. 
-        Note this assumes that a teleoscope has already been created for this group.
-
+        user_id: ObjectId
         group_id_strings: list(string) where the strings are MongoDB ObjectID format
-
         session_oid: string OID for session to add clusters to
     """
     import clustering
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
-    clustering.cluster_by_groups(kwargs["group_id_strings"], kwargs["session_oid"])
+    clustering.cluster_by_groups(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"])
 
 
 @app.task
@@ -795,8 +838,8 @@ class reorient(Task):
         else:
             logging.info("Documents are not cached, building cache now.")
             db = utils.connect()
-            allDocuments = utils.getAllDocuments(db, projection={'id':1, 'textVector':1, '_id':0}, batching=True, batchSize=10000)
-            ids = [x['id'] for x in allDocuments]
+            allDocuments = utils.getAllDocuments(db, projection={'textVector':1, '_id':1}, batching=True, batchSize=10000)
+            ids = [x['_id'] for x in allDocuments]
             logging.info(f'There are {len(ids)} ids in documents.')
             vecs = np.array([x['textVector'] for x in allDocuments])
 
@@ -862,7 +905,7 @@ class reorient(Task):
         resultantVec /= np.linalg.norm(resultantVec)
         return resultantVec, direction
 
-    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, magnitude=0.5):
+    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, magnitude=0.5, **kwargs):
         logging.info(f'Received reorient for teleoscope id {teleoscope_id}, positive docs {positive_docs}, negative docs {negative_docs}, and magnitude {magnitude}.')
         # either positive or negative docs should have at least one entry
         if len(positive_docs) == 0 and len(negative_docs) == 0:
@@ -901,7 +944,7 @@ class reorient(Task):
             stateVector = np.array(teleoscope['history'][0]['stateVector'])
         else:
             docs = positive_docs + negative_docs
-            first_doc = self.db.documents.find_one({"id": docs[0]})
+            first_doc = self.db.documents.find_one({"_id": ObjectId(str(docs[0]))})
             logging.info(f'Results of finding first_doc: {first_doc["_id"]}.')
             stateVector = first_doc['textVector']  # grab textVector
 
@@ -1014,8 +1057,10 @@ def vectorize_document(document): #(text) -> Vector
     purpose: This function is used to update the dictionary with a vectorized version of the title and text
             (Ignores dictionaries containing error keys)
     '''
+    ## Call vectorize_text in this function - based on the text that you're getting from the document - second step after vectorize_text works
     import tensorflow_hub as hub
     if 'error' not in document:
+
         document['vector'] = vectorize_text([document['title']])
         document['textVector'] = vectorize_text([document['text']])
         return document
@@ -1037,6 +1082,7 @@ def vectorize_text(text): #(text) -> Vector
     vector = embed(text).numpy()[0].tolist()
     return vector
     
+
 @app.task
 def add_single_document_to_database(document):
     '''
@@ -1047,16 +1093,12 @@ def add_single_document_to_database(document):
     purpose: This function adds a single document to the database
             (Ignores dictionaries containing error keys)
     '''
-    if 'error' not in document:
-         # Create session
-        session, db = utils.create_transaction_session()
-        target = db.documents 
-        with session.start_transaction():
-            # Insert document into database
-            target.insert_one(document, session=session)
-            # Commit the session with retry
-            utils.commit_with_retry(session)
-
+    transaction_session, db = utils.create_transaction_session() 
+    with transaction_session.start_transaction():
+        # Insert document into database
+        db.documents.insert_one(document, session=transaction_session)
+        # Commit the session with retry
+        utils.commit_with_retry(transaction_session)
 
 @app.task
 def add_multiple_documents_to_database(documents):

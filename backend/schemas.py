@@ -44,4 +44,5 @@ def create_document_object(title, id, textVector, text, parent):
         'metadata' : {
             'id' : id
         }
+
     }

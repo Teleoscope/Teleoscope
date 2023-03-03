@@ -8,7 +8,7 @@ import { fetchWrapper } from '../helpers/fetch-wrapper';
 const { publicRuntimeConfig } = getConfig();
 
 // baseUrl is just localhost:3000/api/loginusers
-const baseUrl = `${publicRuntimeConfig.apiUrl}/loginusers`;
+const baseUrl = `${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/loginusers`;
 const userSubject = new BehaviorSubject(process.browser && JSON.parse(localStorage.getItem('user'))); // have to change this to get from mongoDB
 
 // run sessions through subscriber

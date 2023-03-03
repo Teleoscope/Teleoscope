@@ -1,0 +1,16 @@
+- hosts: "{{ groups['newmachines'] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files: 
+    - ./vars/vars.yaml
+  become: yes
+  
+  tasks:
+    - name: Download latest Miniconda
+      ansible.builtin.get_url:
+        url: 'https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh'
+        dest: ~/
+        mode: '0744'
+    - name: Run Install Miniconda
+      ansible.builtin.shell: ~/Miniconda3-latest-Linux-x86_64.sh -b -p "{{ conda_prefix }}" 
+      args:
+        chdir: ~/
