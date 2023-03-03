@@ -12,10 +12,10 @@ export default function Session(props) {
     const getSessions = (username) => {
         if (props.sessions && props.users) {
             for (const i in props.users) {
-                let user = props.users[i];
+                const user = props.users[i];
                 if (user["username"] === username && user["sessions"].length > 0) {
                     return user["sessions"].map((s) => {
-                        let temp = props.sessions.find(ss => ss._id === s)
+                        const temp = props.sessions.find(ss => ss._id === s)
                         return (<MenuItem value={s}>{temp?.history[0].label}</MenuItem>)
                     })
                 }
