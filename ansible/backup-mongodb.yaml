@@ -34,7 +34,8 @@
       ansible.builtin.shell: rm -f "{{ target_prefix }}.test"
       delegate_to: "{{ target }}"
     - name: Create MongoDump
-      ansible.builtin.shell: mongodump --db=aita --excludeCollection=documents --archive="{{ source_prefix }}.archive"
+      # ansible.builtin.shell: mongodump --db=aita --excludeCollection=documents --archive="{{ source_prefix }}.archive"
+      ansible.builtin.shell: mongodump --db=aita --archive="{{ source_prefix }}.archive"
     - name: Pull Dump from Source to Target
       tags: sync-pull
       synchronize:

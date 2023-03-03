@@ -740,8 +740,6 @@ def register_account(*arg, **kwargs):
     """
     Adds a newly registered user to users collection
     kwargs:
-        firstName: (string)
-        lastName: (string)
         password: (hash)
         username: (email)
     """
@@ -749,16 +747,12 @@ def register_account(*arg, **kwargs):
     transaction_session, db = utils.create_transaction_session()
 
     #handle kwargs
-    first_name = kwargs["firstName"]
-    last_name = kwargs["lastName"]
     password = kwargs["password"]
     username = kwargs["username"]
 
     #creating document to be inserted into mongoDB
     obj = {
         "creation_time": datetime.datetime.utcnow(),
-        "firstName": first_name,
-        "lastName": last_name,
         "password": password,
         "username": username,
         "sessions":[],
