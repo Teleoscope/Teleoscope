@@ -65,7 +65,7 @@ def test_create_child_invalid_document_id():
 #TODO: Clean up the database for whatever changes you've made once the test is over (The test_tasks that were there before)
 def test_create_child_valid_document():
 	start = 48
-	end = 2000
+	end = 200
 	session, db = utils.create_transaction_session()
 	id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
 	try:
