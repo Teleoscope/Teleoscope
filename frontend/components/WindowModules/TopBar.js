@@ -69,9 +69,6 @@ export default function TopBar(props) {
     dispatch(loadWindows(history_item["windows"]));
   }
 
-
-
-
   const handleSignOut = () => {
     setCookie("userid", -1, {
       path: "/"
@@ -133,17 +130,7 @@ export default function TopBar(props) {
 
   const [open, toggleOpen] = React.useState(false);
 
-  const handleClickOpen = () => {
-    toggleOpen(true);
-  };
-
-  const handleClose = () => {
-    setDialogValue({
-      label: '',
-    });
-    toggleOpen(false);
-  };
-
+  
 
 
   const AccountMenu = () => {
@@ -151,7 +138,17 @@ export default function TopBar(props) {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [openMenu, setOpenMenu] = React.useState(false);
     
-   
+    const handleClickOpen = () => {
+      toggleOpen(true);
+    };
+  
+    const handleClose = () => {
+      setDialogValue({
+        label: '',
+      });
+      toggleOpen(false);
+    };
+  
     return (
       <Stack spacing={1} direction="row-reverse">
         <Stack spacing={0} direction="row" alignItems="center">

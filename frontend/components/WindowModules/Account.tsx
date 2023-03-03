@@ -15,6 +15,18 @@ export default function Account(props) {
     }
    }
 
+   const handleTimeOut = (username) => {
+    fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/user/${username}`)
+        .then((response) => response.json())
+        .then((user) => {
+          if (user != null) {
+            props.handleSignIn(user)
+          } else {
+            props.handleSignOut()
+          }
+        });
+   }
+
     // Helper functions
     const handleEnterUser = (username) => {
       fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/user/${username}`)
@@ -23,8 +35,8 @@ export default function Account(props) {
           if (user != null) {
             props.handleSignIn(user)
           } else {
-            props.handleSignOut();
             props.client.register_account(value, "password")
+            setTimeout(() => handleTimeOut(username), 2000);
           }
         });
     }
