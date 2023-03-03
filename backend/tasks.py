@@ -766,7 +766,7 @@ def register_account(*arg, **kwargs):
 
     user = db.users.find_one({"username":username})
 
-    initialize_session(user["_id"], "default", "#e76029")
+    initialize_session(userid=user["_id"], label="default", color="#e76029")
 
 class reorient(Task):
     """
