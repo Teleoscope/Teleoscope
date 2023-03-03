@@ -152,7 +152,9 @@ def create_child(*args, **kwargs):
         document = db.documents.find_one({"_id": document_id})
         #TODO: add a check to see if the end_index is lesser than the document's last index
         length_document = len(document)
+        document[length_document]
         if end_index >= length_document:
+            print(document[end_index])
             raise Exception(f'End_index {end_index} is outside bounds of document')
         child_text = document["text"][start_index:end_index] 
         child_title = document["title"] + " child"
