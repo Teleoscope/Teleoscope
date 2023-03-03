@@ -759,12 +759,14 @@ def register_account(*arg, **kwargs):
         "action": "initialize a user"
     }
 
-    collection = db.users
     with transaction_session.start_transaction():
-        users_res = collection.insert_one(obj, session=transaction_session)
+        users_res = db.users.insert_one(obj, session=transaction_session)
         logging.info(f"Added user {username} with result {users_res}.")
         utils.commit_with_retry(transaction_session)
 
+    user = db.users.find_one({"username":username})
+
+    initialize_session(user._id, "default", "#e76029")
 
 class reorient(Task):
     """
