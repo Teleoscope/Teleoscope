@@ -166,8 +166,6 @@ def create_child(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
     return child_id
 
-
-
 @app.task
 def add_user_to_session(*args, **kwargs):
     """
