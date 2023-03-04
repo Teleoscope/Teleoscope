@@ -21,11 +21,11 @@ import useSWRAbstract from "../../util/swr"
 
 export default function SearchWindow(props) {
   const [query, setQuery] = useState(" ");
-  const { documents, documents_loading } = useSWRAbstract("documents", `/api/documents/${query}`);
+  const { documents, documents_loading } = useSWRAbstract("documents", `/api/document/${query}`);
   const dispatch = useDispatch();
 
   // this is a hard-coded hack for ranking of document_id
-  const data = documents ? documents.map((document) => { return [document.id, 1.0]; }) : [];
+  const data = documents ? documents.map((document) => { return [document._id, 1.0]; }) : [];
 
   const handleSetQuery = (e) => {
     setQuery(e.target.value);
@@ -35,12 +35,12 @@ export default function SearchWindow(props) {
   return (
     <div style={{ overflow: "auto", height: "100%", width: "100%"}}>
       <Stack direction="row" alignItems="center" sx={{margin:1}}>
-        <SearchIcon sx={{ color: props.color }}/>
+        <SearchIcon sx={{ '&:hover': {color: props.color}, color: "#AAAAAA" }}/>
         <TextField 
           fullWidth
           placeholder="Search..."
           sx={{
-            '& .MuiInput-underline:before': { borderBottomColor: props.color },
+            // '& .MuiInput-underline:before': { borderBottomColor: props.color },
             '& .MuiInput-underline:after': { borderBottomColor: props.color },
           }} variant="standard" onChange={(e) => handleSetQuery(e)}
         />
