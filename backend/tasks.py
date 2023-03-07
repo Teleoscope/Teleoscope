@@ -118,7 +118,6 @@ def save_UI_state(*args, **kwargs):
     history_item["action"] = "Save UI state"
     history_item["user"] = userid
 
-
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
             {
@@ -726,8 +725,6 @@ def register_account(*arg, **kwargs):
     """
     Adds a newly registered user to users collection
     kwargs:
-        firstName: (string)
-        lastName: (string)
         password: (hash)
         username: (email)
     """
@@ -735,16 +732,12 @@ def register_account(*arg, **kwargs):
     transaction_session, db = utils.create_transaction_session()
 
     #handle kwargs
-    first_name = kwargs["firstName"]
-    last_name = kwargs["lastName"]
     password = kwargs["password"]
     username = kwargs["username"]
 
     #creating document to be inserted into mongoDB
     obj = {
         "creation_time": datetime.datetime.utcnow(),
-        "firstName": first_name,
-        "lastName": last_name,
         "password": password,
         "username": username,
         "sessions":[],
@@ -753,10 +746,13 @@ def register_account(*arg, **kwargs):
 
     collection = db.users
     with transaction_session.start_transaction():
-        users_res = collection.insert_one(obj, session=transaction_session)
+        users_res = db.users.insert_one(obj, session=transaction_session)
         logging.info(f"Added user {username} with result {users_res}.")
         utils.commit_with_retry(transaction_session)
 
+    user = db.users.find_one({"username":username})
+
+    initialize_session(userid=user["_id"], label="default", color="#e76029")
 
 class reorient(Task):
     """
@@ -1010,7 +1006,6 @@ def vectorize_document(document): #(text) -> Vector
     ## Call vectorize_text in this function - based on the text that you're getting from the document - second step after vectorize_text works
     import tensorflow_hub as hub
     if 'error' not in document:
-
         document['vector'] = vectorize_text([document['title']])
         document['textVector'] = vectorize_text([document['text']])
         return document

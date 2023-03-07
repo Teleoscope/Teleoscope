@@ -224,6 +224,8 @@ def update_ids():
             oid_arr = []
             for id in history_item['included_documents']:
                 doc = db.documents.find_one({"id":id})
+                if doc == None:
+                    doc = db.documents.find_one({"_id": ObjectId(str(id))})
                 oid = doc["_id"]
                 oid_arr.append(oid)
             history_item['included_documents'] = oid_arr
@@ -236,6 +238,8 @@ def update_ids():
             oid_arr = []
             for id in history_item['bookmarks']:
                 doc = db.documents.find_one({"id":id})
+                if doc == None:
+                    doc = db.documents.find_one({"_id": ObjectId(str(id))})
                 oid = doc["_id"]
                 oid_arr.append(oid)
             history_item['bookmarks'] = oid_arr
