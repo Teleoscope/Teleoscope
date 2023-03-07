@@ -24,7 +24,6 @@ export default function Document(props) {
 
       <Stack direction="row" justifyContent="right" alignItems="center" style={{ margin: 0 }}>
         <NoteButton id={document?._id} key="document" />
-        
         <GroupSelector id={id} />
       </Stack>
       <Divider />
