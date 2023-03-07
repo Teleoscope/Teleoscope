@@ -33,12 +33,15 @@ def create_user_object(first_name, last_name, password, username):
         "sessions":[],
         "action": "initialize a user"
     }
-
-def create_document_object(title, text, textVector, relations={}, meta={}):
+def create_document_object(title, id, textVector, text, parent):
     return {
-        "title": title,
-        "text": text,
-        "textVector" : textVector,
-        "relations": relations,
-        "meta": meta,
+        "creation_time": datetime.datetime.utcnow(),
+        'title': title, 
+        'id': id, 
+        'textVector': textVector, 
+        'text': text,
+        'parent': parent,
+        'metadata' : {
+            'id' : id
+        }
     }

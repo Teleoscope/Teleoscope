@@ -4,7 +4,7 @@ from celery import Celery, Task, chain
 from bson.objectid import ObjectId
 from kombu import Consumer, Exchange, Queue
 import datetime
-
+import schemas
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -118,7 +118,7 @@ def save_UI_state(*args, **kwargs):
     history_item["action"] = "Save UI state"
     history_item["user"] = userid
 
-    with transaction_session.start_transaction(): # When you do transaction, you want to do it inside this transaction session
+    with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
             {
                 '$push': {
@@ -131,53 +131,38 @@ def save_UI_state(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
 
     return 200 # success
-# Create_child   
-# transaction_session, db = utils.create_transaction_session() [DONE]
-# document = db.documents.find_one({"_id": document_id}) [DONE]
-# document["text"][s:e]
-# Declare any fields that are necessary
-# Need the vectorize function # Can write a test for this one -> check if it's actually working
-# inserted_document = db.documents.insert_one( ... )
-# inserted_document.insertedID
-# id = insertedid
-# update_one(…)
-# Write a test to check if it's actually working (can insert a dummy document and delete it once it's done)
+
 @app.task
-def create_child(start_index, end_index, *args, **kwargs):
+def create_child(*args, **kwargs):
+    """
+    Add new child document to session.
+    kwargs:
+        start_index: (int, represents index from which you start slicing the parent document)
+        end_index: (int, represents index from which you end slicing of the parent document)
+        document_id: (int, represents ObjectId in int)
+    """
     transaction_session, db = utils.create_transaction_session()
+    # When you do transaction, you want to do it inside this transaction session
     with transaction_session.start_transaction(): 
-        document_id = kwargs["document_id"]
+        document_id = ObjectId(str(kwargs["document_id"]))
+        start_index = kwargs['start_index']
+        
+        end_index = kwargs['end_index']
         document = db.documents.find_one({"_id": document_id})
-        # session_id =  ObjectId(str(kwargs["session_id"]))
-        child_text = document["text"][start_index:end_index] # Not sure how I should go about doing the parameter - need to use kwargs?
+        #check to see if the end_index is lesser than the document's last index
+        length_document = len(document["text"])
+        if end_index >= length_document:
+            raise Exception(f'End_index {end_index} is outside bounds of document')
+        child_text = document["text"][start_index:end_index] 
         child_title = document["title"] + " child"
-        child_id = document["id"] + "#child" #TODO: Ask Paul about making this unique id
-        child_vector = vectorize_text(child_text)
-        # child_parent = db.sessions.find_one({"_id": session_id})
-        inserted_document = db.documents.insert_one({
-            'title': child_title, 
-            'id': child_id, 
-            'text_vector': child_vector, 
-            'text': child_text,
-            'parent': document
-        }, session=transaction_session)
-        #TODO: Create schema of create_document_object and call that instead
+        child_id = f"{str(document_id)}#{str(start_index)}#{str(end_index)}"
+        child_vector = vectorize_text([child_text])
+        child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document)
+        inserted_document = db.documents.insert_one(child_document, session=transaction_session)
         new_id = inserted_document.inserted_id
-   
-        # db.documents.update_one({"_id": new_id},
-        # # Don't need the push, look at mongoDB for update_one
-        # {
-        #     '$push': {
-        #         "history": {
-        #             "$each": [inserted_document],
-        #             "$position": 0
-        #             }
-        #         }
-        # }, session=transaction_session)
-
-
-
-
+        print(child_id)
+        utils.commit_with_retry(transaction_session)
+    return {child_id, new_id}
 
 @app.task
 def add_user_to_session(*args, **kwargs):
@@ -759,6 +744,7 @@ def register_account(*arg, **kwargs):
         "action": "initialize a user"
     }
 
+    collection = db.users
     with transaction_session.start_transaction():
         users_res = db.users.insert_one(obj, session=transaction_session)
         logging.info(f"Added user {username} with result {users_res}.")
@@ -1020,9 +1006,8 @@ def vectorize_document(document): #(text) -> Vector
     ## Call vectorize_text in this function - based on the text that you're getting from the document - second step after vectorize_text works
     import tensorflow_hub as hub
     if 'error' not in document:
-        embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-        document['vector'] = embed([document['title']]).numpy()[0].tolist() # Don't need this
-        document['textVector'] = embed([document['text']]).numpy()[0].tolist() # This is required -> don't need document['text'] -> make it text 
+        document['vector'] = vectorize_text([document['title']])
+        document['textVector'] = vectorize_text([document['text']])
         return document
     else:
         return document
@@ -1034,13 +1019,14 @@ def vectorize_text(text): #(text) -> Vector
 
     input: string
     output: numpy
-    purpose: This function is used to update the dictionary with a vectorized version of the title and text
-            (Ignores dictionaries containing error keys)
+    purpose: This function is used to return a vectorized version of the text
+            (Assumes the text is error free)
     '''
-    import tensorflow_hub as hub
+    import tensorflow_hub as hub 
     embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-    vector = embed([text]).numpy()[0].tolist()
+    vector = embed(text).numpy()[0].tolist()
     return vector
+    
 
 @app.task
 def add_single_document_to_database(document):
