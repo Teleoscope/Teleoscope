@@ -156,7 +156,6 @@ def create_child(*args, **kwargs):
             raise Exception(f'End_index {end_index} is outside bounds of document')
         child_text = document["text"][start_index:end_index] 
         child_title = document["title"] + " child"
-        reddit_id = document["id"]
         child_id = f"{str(document_id)}#{str(start_index)}#{str(end_index)}"
         child_vector = vectorize_text([child_text])
         child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document)
@@ -164,7 +163,7 @@ def create_child(*args, **kwargs):
         new_id = inserted_document.inserted_id
 
         utils.commit_with_retry(transaction_session)
-    return child_id
+    return {child_id, new_id}
 
 @app.task
 def add_user_to_session(*args, **kwargs):

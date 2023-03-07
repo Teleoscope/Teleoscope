@@ -34,6 +34,7 @@ def create_user_object(first_name, last_name, password, username):
         "action": "initialize a user"
     }
 def create_document_object(title, id, textVector, text, parent):
+    #TODO : c
     return {
         "creation_time": datetime.datetime.utcnow(),
         'title': title, 
@@ -44,5 +45,4 @@ def create_document_object(title, id, textVector, text, parent):
         'metadata' : {
             'id' : id
         }
-
     }

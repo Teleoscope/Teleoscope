@@ -67,12 +67,12 @@ def test_create_child_valid_document():
 	start = 48
 	end = 100
 	session, db = utils.create_transaction_session()
-	id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
+	reddit_id, id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
 	try:
 		document_id = "637eabe7f0a9482a337a11d5"
 		document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
-		reddit_id = document["id"]
-		assert id == f"{document_id}#{str(start)}#{str(end)}"
+		# reddit_id = document["id"]
+		assert reddit_id == f"{document_id}#{str(start)}#{str(end)}"
 	finally:
 		db.documents.delete_one({'_id': id})
 #Case 3: valid document id, end_index outside range of document
