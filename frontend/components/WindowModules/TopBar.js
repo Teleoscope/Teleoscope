@@ -1,19 +1,16 @@
-import React from "react";
-import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
+import React, { useEffect } from "react";
+import space from 'color-space';
+import hexRgb from 'hex-rgb';
+import rgbHex from 'rgb-hex';
 
 // material ui
-import { Menu, MenuItem} from "@mui/material";
+import { Menu, MenuItem, rgbToHex, Typography } from "@mui/material";
 import { AppBar } from "@mui/material";
 import { Toolbar } from "@mui/material";
-import { Button } from "@mui/material";
-import { FormControl } from '@mui/material';
-import { Select } from '@mui/material';
-import { InputLabel } from '@mui/material';
 import { Stack } from '@mui/material';
 import { Box } from '@mui/material';
 
 import { Divider } from '@mui/material';
-import { alpha } from "@mui/material";
 import { IconButton } from '@mui/material';
 import { AccountCircle } from '@mui/icons-material';
 
@@ -21,46 +18,49 @@ import { AccountCircle } from '@mui/icons-material';
 import TeleoscopeLogo from "./TeleoscopeLogo";
 import AddUserDialogue from "./AddUserDialog";
 import Account from "./Account";
+import Session from "../Session";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { sessionActivator, setUserId } from "../../actions/activeSessionID";
-import { loadWindows } from "../../actions/windows";
+import { loadWindows, setDefault } from "../../actions/windows";
 import { loadBookmarkedDocuments } from "../../actions/bookmark";
 import { getGroups } from "../../actions/groups";
 
 // utilities
 import { useCookies } from "react-cookie";
 import useSWRAbstract from "../../util/swr"
-import randomColor from 'randomcolor';
+
+
 
 // contexts
 import { Stomp } from '../Stomp'
 
 export default function TopBar(props) {
-  const [loaded, setLoaded] = React.useState(false); 
-
-  const dispatch = useDispatch();
   const [cookies, setCookie] = useCookies(["userid"]);
-  const userid = useSelector((state) => state.activeSessionID.userid);  
-  if (cookies.userid && cookies?.userid != "-1") {
-    dispatch(setUserId(cookies.userid))
-  }
+  const session_id = useSelector((state) => state.activeSessionID.value);
+  const userid = useSelector((state) => state.activeSessionID.userid);
+  const [loaded, setLoaded] = React.useState(false);
+  const dispatch = useDispatch();
+
   const client = Stomp.getInstance();
   client.userId = userid;
-  
+
   const { user } = useSWRAbstract("user", `/api/users/${userid}`);
 
-  const session_id = useSelector((state) => state.activeSessionID.value);
-
-  if (session_id == "-1" && user?.sessions) {
-    dispatch(sessionActivator(user.sessions[0]))
-  }
+  useEffect(()=> {
+    if (cookies.userid != -1) {
+      fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${cookies.userid}`)
+      .then((response) => response.json())
+      .then((user) => {
+        handleSignIn(user)
+      })
+    }
+  }, [])
 
   const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
   const { users } = useSWRAbstract("users", `/api/users/`);
   const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
-  
 
   if (session?.history?.length > 0 && !loaded) {
     setLoaded(true);
@@ -69,22 +69,33 @@ export default function TopBar(props) {
     dispatch(loadWindows(history_item["windows"]));
   }
 
-  const [open, toggleOpen] = React.useState(false);
-  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals], length: 1 });
-  const [dialogValue, setDialogValue] = React.useState({label: ''});
-
-  // Helper functions
-  const handleCookie = (username) => {
-    fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/user/${username}`)
-    .then((response) => response.json())
-    .then((data) => {
-      if (data) {
-        dispatch(setUserId(data._id))
-        setCookie("userid", data._id, {
-          path: "/"
-        });          
-      }
+  const handleSignOut = () => {
+    setCookie("userid", -1, {
+      path: "/"
     });
+    dispatch(sessionActivator(-1))
+    dispatch(setUserId(-1))
+    dispatch(setDefault())
+  }
+
+  const handleSignIn = (user) => {
+    setCookie("userid", user._id, {
+      path: "/"
+    });
+    dispatch(setUserId(user._id))
+    dispatch(sessionActivator(user.sessions[0]))
+  }
+
+  const accountColor = () => {
+    if (userid == -1) {
+      return "#AAAAAA"      
+    } else {
+      let rgb = hexRgb(get_color())
+      let hsl = space.rgb.hsl([rgb.red, rgb.green, rgb.blue])
+      let lighter = space.hsl.rgb([hsl[0], hsl[1], Math.min(100, hsl[2] * 2)])
+      let hex = "#" + rgbHex(lighter[0], lighter[1], lighter[2])
+      return hex
+    }
   }
 
   const handleSessionChange = (value) => {
@@ -93,39 +104,7 @@ export default function TopBar(props) {
     dispatch(getGroups(value))
   }
 
-
   const get_color = () => session ? session.history[0].color : "#4E5CBC"
-
-  const handleClickOpen = () => {
-    toggleOpen(true);
-  };
-
-  const handleClose = () => {
-    setDialogValue({
-      label: '',
-    });
-    toggleOpen(false);
-  };
-
-  /////////////////////////////////////////////////////////////////////////
-  // Functional components
-
-  const getSessions = (username) => {
-    if (sessions && users) {
-      for (const i in users) {
-        let user = users[i];
-        if (user["username"] === username && user["sessions"].length > 0) {
-          return user["sessions"].map((s) => {
-            let temp = sessions.find(ss => ss._id === s)
-            return (<MenuItem value={s}>{temp?.history[0].label}</MenuItem>)
-          })
-        }
-      }
-    }
-    return (
-      <MenuItem value={null}>No sessions for this user...</MenuItem>
-    )
-  }
 
   const getUsers = () => {
     if (session && users) {
@@ -149,109 +128,91 @@ export default function TopBar(props) {
     )
   }
 
-  const Session = () => {
-    return (
-      <FormControl
-        sx={{ width: "100%", backgroundColor: alpha('#FFFFFF', 0.0) }}
-        variant="filled"
-      >
-        <InputLabel id="demo-simple-select-label">Session</InputLabel>
-        <Select
-          labelId="demo-simple-select-label"
-          id="demo-simple-select"
-          value={session_id}
-          label="Session ID"
-          size="small"
-          onChange={(event) => handleSessionChange(event.target.value)}
-        >
-          {getSessions(user?.username)}
-          <Button
-            size="small"
-            variant="text"
-            onClick={() => client.initialize_session(randomName, randomColor(
-              {
-                luminosity: 'dark',
-                hue: 'random',
+  const [open, toggleOpen] = React.useState(false);
 
-              }
-            ))}
-            style={{
-              backgroundColor: "#FFFFFF",
-              color: "black",
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          >
-            New session
-          </Button>
-        </Select>
-      </FormControl>
-    )
-  }
+  
+
 
   const AccountMenu = () => {
-    
+    const [dialogValue, setDialogValue] = React.useState({ label: '' });
     const [anchorEl, setAnchorEl] = React.useState(null);
-    const openMenu = Boolean(anchorEl);
-
-    const handleMenuClick = (event) => {
-      setAnchorEl(event.currentTarget);
-    };
+    const [openMenu, setOpenMenu] = React.useState(false);
     
-    const handleMenuClose = () => {
-      setAnchorEl(null);
+    const handleClickOpen = () => {
+      toggleOpen(true);
     };
-
+  
+    const handleClose = () => {
+      setDialogValue({
+        label: '',
+      });
+      toggleOpen(false);
+    };
+  
     return (
       <Stack spacing={1} direction="row-reverse">
-        <IconButton
-          id="bIconasic-button"
-          onClick={handleMenuClick}
-        >
-          <AccountCircle></AccountCircle>
-        </IconButton>
-        <Menu
-          id="basic-menu"
-          anchorEl={anchorEl}
-          open={openMenu}
-          onClose={handleMenuClose}
-        >
-          
-          <MenuItem 
-            onKeyDown={(e) => e.stopPropagation()} 
-            children={<Account user={user} handleCookie={handleCookie} />}>  
+        <Stack spacing={0} direction="row" alignItems="center">
+          <IconButton id="bIconasic-button" 
+              onClick={(event) => {
+                setAnchorEl(event.currentTarget)
+                setOpenMenu(true)
+              }}>
+            <AccountCircle sx={{ color: accountColor() }}></AccountCircle>
+          </IconButton>
+          <Typography sx={{color:accountColor()}}>{ user ? user.username : "Not signed in"}</Typography>
+        </Stack>
+        <Menu id="basic-menu" anchorEl={anchorEl} open={openMenu} 
+            onClose={() => {setAnchorEl(null); setOpenMenu(false)} 
+          }>
+          <MenuItem
+            onKeyDown={(e) => e.stopPropagation()}
+            children={
+              <Account
+                user={user}
+                handleSignIn={handleSignIn}
+                handleSignOut={handleSignOut}
+                client={client}
+              />
+            }>
           </MenuItem>
-          <MenuItem children={<Session />}></MenuItem>
+          <MenuItem children={
+            <Session
+              users={users}
+              sessions={sessions}
+              user={user}
+              client={client}
+              session_id={session_id}
+              handleSessionChange={handleSessionChange}
+            />
+          }></MenuItem>
           <Divider></Divider>
           <MenuItem onClick={handleClickOpen}>Add a different user to this session</MenuItem>
+          <MenuItem onClick={handleSignOut}>Sign out</MenuItem>
         </Menu>
-        <AddUserDialogue 
-            open={open}
-            onClose={handleClose}
-            users={getUsers()}
-            dialogValue={dialogValue}
-            setDialogValue={setDialogValue}
-            session_id={session_id}
-            client={client}
+        <AddUserDialogue
+          open={open}
+          onClose={handleClose}
+          users={getUsers()}
+          dialogValue={dialogValue}
+          setDialogValue={setDialogValue}
+          session_id={session_id}
+          client={client}
         />
       </Stack>
 
     )
   }
 
-
-
   // Main return for this component
   return (
     <AppBar position="static" sx={{ backgroundColor: get_color(), width: "100%" }}>
       <Toolbar >
         <Stack spacing={10} sx={{ width: "100%" }} direction="row" alignItems="center" justifyContent="space-between">
-          <TeleoscopeLogo isConnected={props.isConnected}/>
+          <TeleoscopeLogo isConnected={props.isConnected} color={accountColor()} />
           <AccountMenu />
         </Stack>
       </Toolbar>
-      <Box sx={{backgroundColor: get_color(), height: "1px", boxShadow: 3}}></Box>
-      {/* <ColorPicker defaultColor={get_color()}></ColorPicker> */}
+      <Box sx={{ backgroundColor: get_color(), height: "1px", boxShadow: 3 }}></Box>
     </AppBar>
   );
 }

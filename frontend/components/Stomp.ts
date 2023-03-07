@@ -202,27 +202,13 @@ add_login(username: string, password: string) {
 /*
   Pushes the user account information to create their account
 */
-register_account(jsonData) {
-  const { firstName, lastName, username, password } = jsonData;
-
-  //hash(password) the function uses the bcrypt hashing algorithm for now
-  const salt = bcrypt.genSaltSync(10);
-  const hashedPassword = bcrypt.hashSync(password, salt);
-
-
+register_account(username: string, password) {
   const body = {
     task: "register_account",
     args: {
-      firstName: firstName,
-      lastName: lastName,
-      password: hashedPassword,
+      password: password,
       username: username,
     }
-
-    //   firstName: "Kenneth"
-    //   lastName: "Averna"
-    //   password: "teleoscope"
-    //   username: "admin@teleoscope.com"
   }
   this.publish(body);
   return body;
