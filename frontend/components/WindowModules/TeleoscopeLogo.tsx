@@ -12,9 +12,16 @@ export default function TeleoscopeLogo (props) {
         <Link
           href="http://github.com/Teleoscope/Teleoscope"
           variant="h5"
+          underline="hover"
           sx={{
             fontWeight: 'fontWeightLight',
             fontFamily: "monospace",
+            color: props.color,
+            textDecorationColor: props.color,
+            '&:hover' : {
+              color: '#FFFFFF',
+              textDecorationColor: "#FFFFFF"  
+            }
           }}>
           Teleoscope{props.isConnected ? "" : ": Not connected to database."}
         </Link>

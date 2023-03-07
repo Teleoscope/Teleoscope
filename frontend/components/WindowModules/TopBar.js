@@ -208,7 +208,7 @@ export default function TopBar(props) {
     <AppBar position="static" sx={{ backgroundColor: get_color(), width: "100%" }}>
       <Toolbar >
         <Stack spacing={10} sx={{ width: "100%" }} direction="row" alignItems="center" justifyContent="space-between">
-          <TeleoscopeLogo isConnected={props.isConnected} />
+          <TeleoscopeLogo isConnected={props.isConnected} color={accountColor()} />
           <AccountMenu />
         </Stack>
       </Toolbar>
