@@ -73,5 +73,5 @@ else:
                     meta["assignees"] = [a.login for a in d.assignees]
             
 
-                doc = schemas.create_document_object(title, text, textVector, meta=meta)
+                doc = schemas.create_document_object(title, text, textVector, metadata=meta)
                 tasks.add_single_document_to_database(doc)
