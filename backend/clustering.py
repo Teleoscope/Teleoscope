@@ -7,6 +7,7 @@ import gc
 from pathlib import Path
 import time
 import gridfs
+import datetime
 
 # ml dependencies
 import umap
@@ -208,7 +209,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     num_clusters = max(hdbscan_labels) + 2
     logging.info(f'Built {num_clusters} clusters in {diff} seconds')
 
-    session_action(session_oid, num_clusters)
+    session_action(session_oid, num_clusters, groups)
 
 def first_teleoscope_ordering(db, groups, limit):
     """ Build a training set besed on the first group's teleoscope
@@ -453,7 +454,7 @@ def clean_mongodb(db, userid):
     If so, need to delete clusters and associated teleoscope items
 
     Args:
-        db : 
+        db: 
             A connection to the MongoDB database.
         userid:
             An ObjectID representing the user who made the API call
@@ -498,25 +499,49 @@ def clean_mongodb(db, userid):
 
     pass
 
-def session_action(session_oid, num_clusters):
+def session_action(session_oid, num_clusters, groups):
     """Clustering action history update
 
     Push an update to the session object to document the state of clustering 
 
     Args:
-        session_oid : 
+        session_oid: 
             An int that represents the ObjectID of the current session
         num_clusters:
             An int that represents the number of clusters produced by HDBSCAN
+        groups:
+            A list of group objects that were clustered on
     """
-    
-    # TODO
-    # transaction session that pushes to session.history[0]
-    # all the same as 
-    # update action : built {num_clusters} clusters
-    # add history_item["group_history_indices"] = {group oid : len(group.history) - 1}
 
-    pass
+    transaction_session, db = utils.create_transaction_session()
+    session = db.sessions.find_one({"_id": session_oid})
+    
+    history_item = session["history"][0]
+    history_item["action"] = f"Built {num_clusters} machine clusters"
+    history_item["timestamp"] = datetime.datetime.utcnow()
+
+    # record the groups and their associated documents used for clustering
+    history_item["clustered_groups"] = {}
+    
+    for group in groups:
+
+        # documents used for clustering are denoting using the length of the groups history item.
+        # the index of said documents are at [current history length - denoted hisory length]
+        history_item["clustered_groups"][group["_id"]] = len(group["history"])
+
+    with transaction_session.start_transaction():
+        db.sessions.update_one({"_id": session_oid},
+            {
+                '$push': {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }
+            }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
+
+    return 200 
 
 def cache_distance_matrix(db):
     """ Build a training set besed on the all documents in database
