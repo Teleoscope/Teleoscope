@@ -15,10 +15,10 @@ import useSWRAbstract from "../../util/swr"
 import { PreprocessText } from "../../util/Preprocessers"
 
 export default function Document(props) {
+  console.log("props", props)
   const id = props.id.split("%")[0];
   const { document } = useSWRAbstract("document", `/api/document/${id}`);
   const text = document ? PreprocessText(document.text) : false;
-
   return (
     <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
 

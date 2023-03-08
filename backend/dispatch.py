@@ -244,8 +244,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res = tasks.register_account.signature(
                 args=(),
                 kwargs={
-                    "firstName": args["firstName"],
-                    "lastName": args["lastName"],
                     "password": args["password"],
                     "username": args["username"]
                 }

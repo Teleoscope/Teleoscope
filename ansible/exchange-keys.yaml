@@ -1,0 +1,77 @@
+# ansible-playbook -v -i vars/inventory.yaml backup.yaml
+- name: Make key in Source
+  hosts: "{{ groups['sources'][0] }}" # SOURCE
+  remote_user: "{{ ansible_user }}"
+  vars_files:
+    - ./vars/vars.yaml
+  vars:
+    keyname: "key-for-{{ groups['targets'][0] }}" # TARGET
+
+  tasks:
+    - name: Force regenerate an OpenSSH keypair if it already exists
+      community.crypto.openssh_keypair:
+        path: "~/.ssh/{{ keyname }}"
+        force: True
+    - name: "Store file into {{ keyname }}."
+      ansible.builtin.fetch:
+        src: "~/.ssh/{{ keyname }}.pub"
+        dest: "/tmp/{{ keyname }}.pub"
+        flat: true
+
+- name: Make key in Target
+  hosts: "{{ groups['targets'][0] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files: 
+    - ./vars/vars.yaml
+  vars:
+    keyname: "key-for-{{ groups['sources'][0] }}"
+
+  tasks:
+    - name: Force regenerate an OpenSSH keypair if it already exists
+      community.crypto.openssh_keypair:
+        path: "~/.ssh/{{ keyname }}"
+        force: True
+    - name: "Store file into {{ keyname }}"
+      ansible.builtin.fetch:
+        src: "~/.ssh/{{ keyname }}.pub"
+        dest: "/tmp/{{ keyname }}.pub"
+        flat: true
+
+
+- name: Copy key to Target
+  hosts: "{{ groups['targets'][0] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files: 
+    - ./vars/vars.yaml
+  vars:
+    location_a: "/tmp/key-for-{{ groups['sources'][0] }}.pub"
+    location_b: "/tmp/key-for-{{ groups['targets'][0] }}.pub"
+
+  tasks:
+    - name: Set authorized key taken from file
+      ansible.posix.authorized_key:
+        user: ubuntu
+        key: "{{ lookup('file', location_a, errors='warn') }}"
+    - name: Set authorized key taken from file
+      ansible.posix.authorized_key:
+        user: ubuntu
+        key: "{{ lookup('file', location_b, errors='warn') }}"
+
+- name: Copy key to Source
+  hosts: "{{ groups['sources'][0] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files: 
+    - ./vars/vars.yaml
+  vars:
+    location_a: "/tmp/key-for-{{ groups['sources'][0] }}.pub"
+    location_b: "/tmp/key-for-{{ groups['targets'][0] }}.pub"
+
+  tasks:
+    - name: Set authorized key taken from file
+      ansible.posix.authorized_key:
+        user: explorer
+        key: "{{ lookup('file', location_a, errors='warn') }}"
+    - name: Set authorized key taken from file
+      ansible.posix.authorized_key:
+        user: explorer
+        key: "{{ lookup('file', location_b, errors='warn') }}"

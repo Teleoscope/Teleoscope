@@ -3,8 +3,15 @@
   vars_files: 
     - ./vars/vars.yaml
   become: yes
-
+# echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
   tasks:
+    - name: Run the equivalent of "apt-get update" as a separate step
+      ansible.builtin.apt:
+        update_cache: yes
+    - name: Install Pip
+      ansible.builtin.apt:
+        name: python3-pip
+        state: present
     - name: Install PyMongo
       ansible.builtin.pip:
         name: pymongo
@@ -13,7 +20,10 @@
         url: https://www.mongodb.org/static/pgp/server-6.0.asc
     - name: Add MongoDB repository
       ansible.builtin.apt_repository:
-        repo: 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse'
+        repo: "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse"
+    - name: Run the equivalent of "apt-get update" as a separate step
+      ansible.builtin.apt:
+        update_cache: yes
     - name: Install MongoDB
       ansible.builtin.apt:
         name: mongodb-org
@@ -30,9 +40,16 @@
         password: "{{ mongodb_admin_password }}"
         roles: root
         state: present
+    - name: Initialize MongoDB Dev User on Admin Database
+      community.mongodb.mongodb_user:
+        database: admin
+        name: "{{ mongodb_dev_name }}"
+        password: "{{ mongodb_dev_password }}"
+        roles: readWrite
+        state: present
     - name: Initialize MongoDB Dev User
       community.mongodb.mongodb_user:
-        database: aita
+        database: "{{ mongodb_database }}"
         name: "{{ mongodb_dev_name }}"
         password: "{{ mongodb_dev_password }}"
         roles: readWrite
@@ -60,4 +77,15 @@
         replica_set: rs0
         members: localhost:27017
         validate: no
-
+    - name: Create a single index on a collection
+      community.mongodb.mongodb_index:
+        login_user: "{{ mongodb_admin_name }}"
+        login_password: "{{ mongodb_admin_password }}"
+        indexes:
+          - database: "{{ mongodb_database }}"
+            collection: documents
+            keys:
+              text: text
+            options:
+              name: text
+            state: present
