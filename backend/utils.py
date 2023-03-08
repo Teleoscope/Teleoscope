@@ -222,7 +222,6 @@ def update_metadata():
             'id': doc['id']
         }
         db.documents.update_one({"_id": doc["_id"]}, { "$set": doc })
-        break
 
 
 def update_ids():
