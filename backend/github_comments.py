@@ -46,7 +46,7 @@ else:
                 if len(check) > 0:
                     print("Already in DB...")
                     continue
-                title = str(d.title)
+                title = "Comment"
                 text = str(d.body)
                 textVector = tasks.vectorize_text(text)
                 meta = {
