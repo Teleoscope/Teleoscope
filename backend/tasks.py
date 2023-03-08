@@ -568,6 +568,56 @@ def add_document_to_group(*args, **kwargs):
     res.apply_async()
     return None
 
+
+
+@app.task
+def remove_group(*args, **kwargs):
+    """
+    Delete a group (not the documents within) from the session. Group is not deleted from the whole system, just the session.
+    kwargs:
+        group_id: ObjectId
+        session_id: ObjectId
+        user_id: ObjectId
+    """
+    group_id = ObjectId(str(kwargs["group_id"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+    user_id = ObjectId(str(kwargs["userid"]))
+
+    transaction_session, db = utils.create_transaction_session()
+
+    with transaction_session.start_transaction():
+        session = db.sessions.find_one({'_id': session_id}, session=transaction_session)
+        group = db.groups.find_one({'_id': group_id}, session=transaction_session)
+        
+        history_item = session["history"][0]
+        history_item["timestamp"] = datetime.datetime.utcnow()        
+        history_item["groups"].remove(group_id)
+        history_item["teleoscopes"].remove(ObjectId(str(group["teleoscope"])))
+        history_item["action"] = f"Remove group from session"
+        history_item["user"] = user_id
+
+        db.sessions.update_one(
+            {'_id': session_id},
+            {
+                "$push" : {
+                    "history": {
+                        "$each" : [history_item],
+                        "$position" : 0
+                    }
+                }
+            },
+            session=transaction_session
+        )
+
+
+
+
+
+        logging.info(f"Removed group {group_id} from session {session_id}.")
+        utils.commit_with_retry(transaction_session)
+    return session_id
+
+
 @app.task
 def remove_document_from_group(*args, **kwargs):
     """
@@ -1024,7 +1074,7 @@ def vectorize_text(text): #(text) -> Vector
     '''
     import tensorflow_hub as hub 
     embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-    vector = embed(text).numpy()[0].tolist()
+    vector = embed([text]).numpy()[0].tolist()
     return vector
     
 
