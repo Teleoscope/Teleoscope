@@ -29,8 +29,9 @@ function Login() {
    const { register, handleSubmit, formState } = useForm(formOptions);
    const { errors } = formState;
 
-   async function handleFetch(username, password) {
-      fetch('https://127.0.0.1:5000/login', {
+   function onSubmit({ username, password }) {
+      // create a POST request to the backend auth server
+      fetch(`${process.env.NEXT_PUBLIC_AUTH_SERVER}/login`, {
          method: 'POST',
          headers: {
             'Content-Type': 'application/json'
@@ -42,12 +43,14 @@ function Login() {
       })
       .then(response => {
          if (response.ok) {
+            // if log in is successful, store the token in a cookie and route to workspace
             response.json().then(token => {
                setCookie('token', token, {path: '/'});
                router.push('/');
                alert('Logged in')
             })
          } else {
+            // if log in failed, alert relate error message and let the user re-login.
             router.push('/account/login');
             response.json().then(msg => {
                alert(msg);
@@ -58,16 +61,6 @@ function Login() {
          router.push('/account/login');
          alert(error);
       });
-      // Stomp.getInstance(); //TODO: delete this, use loaded
-      // const data = await fetch(`/api/authenticate/${username}`);
-      // const user = await data.json();
-
-      // setValidUser(authenticateHash( user, username, password ));
-   }
-
-   function onSubmit({ username, password }) {
-      handleFetch(username, password);
-
    }
 
    return (
