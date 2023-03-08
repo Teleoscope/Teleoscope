@@ -157,7 +157,7 @@ def create_child(*args, **kwargs):
         child_title = document["title"] + " child"
         child_id = f"{str(document_id)}#{str(start_index)}#{str(end_index)}"
         child_vector = vectorize_text([child_text])
-        child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document)
+        child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document, None, None)
         inserted_document = db.documents.insert_one(child_document, session=transaction_session)
         new_id = inserted_document.inserted_id
         print(child_id)

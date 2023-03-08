@@ -19,6 +19,9 @@ export default function Document(props) {
   const id = props.id.split("%")[0];
   const { document } = useSWRAbstract("document", `/api/document/${id}`);
   const text = document ? PreprocessText(document.text) : false;
+  //TODO: make a linkselector component similar to GroupSelector
+  // MUI - look into different things for it
+  // Accordion or collapse-> Look at what's better for this case
   return (
     <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
 
