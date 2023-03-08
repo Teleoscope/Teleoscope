@@ -1,0 +1,9 @@
+- hosts: "{{ groups['sources'][0] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files: 
+    - ./vars/vars.yaml
+
+- name: Run Key Exchange
+  ansible.builtin.import_playbook: exchange-keys.yaml  
+- name: Run Backup and Import MonogoDB
+  ansible.builtin.import_playbook: backup-mongodb.yaml

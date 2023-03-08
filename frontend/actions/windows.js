@@ -5,13 +5,9 @@ import { getDefaultWindow } from "../components/WindowFolder/WindowDefault"
 
 console.log("Loading windows.js");
 
-export const Windows = createSlice({
-	name: 'windows',
-	initialState: {
-		// See: https://github.com/react-grid-layout/react-grid-layout
-		// for all of the possible grid item options for the layout
-		// Added options:
-		//	- surface: "Card", "AppBar", "Paper", "Accordion" // MUI surfaces
+
+const initialState = {
+	
 		windows: [
 			{
 				i: "default_FABMenu", 
@@ -26,8 +22,15 @@ export const Windows = createSlice({
 		],
 		dragged: {id: "default", type: "Default"},
 		collision: true,
-	},
+}
+
+export const Windows = createSlice({
+	name: 'windows',
+	initialState: initialState,
 	reducers: {
+		setDefault: (state, action) => {
+			state.windows = initialState.windows;
+		},
 		dragged: (state, action) => {
 			state.dragged = action.payload;
 		},
@@ -151,7 +154,8 @@ export const Windows = createSlice({
 	}
 })
 
-export const { 
+export const {
+	setDefault,
 	addWindow, 
 	removeWindow, 
 	loadWindows, 
