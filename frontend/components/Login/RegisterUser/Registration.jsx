@@ -32,9 +32,32 @@ function Registration() {
     const { register, handleSubmit, formState } = useForm(formOptions);
     const { errors } = formState;
 
-    function onSubmit(user) {
-        client.register_account(user);
-        router.push('login');
+    function onSubmit({ firstName, lastName, username, password }) {
+      fetch(`${process.env.NEXT_PUBLIC_AUTH_SERVER}/register`, {
+         method: 'POST',
+         headers: {
+            'Content-Type': 'application/json'
+         },
+         body: JSON.stringify({
+            firstName: firstName,
+            lastName: lastName,
+            username: username,
+            password: password
+         })
+      })
+      .then(response => {
+         if (response.ok) {
+            router.push('/account/login');
+            alert('Successfully registered, please log in.')
+         } else {
+            router.push('/account/register');
+            alert('Username already exists, please provide a different username.')
+         }
+      })
+      .catch(error => {
+         router.push('/account/register');
+         alert(error);
+      });
     }
 
    return (

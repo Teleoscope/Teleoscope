@@ -1,6 +1,34 @@
 import bcrypt, datetime, jwt
 
 import utils
+import logging
+from tasks import initialize_session
+
+def registerUser(firstName, lastName, username, password):
+    transaction_session, db = utils.create_transaction_session()
+    
+    if db.users.count_documents({ 'username': username }):
+        return False
+
+    #creating document to be inserted into mongoDB
+    obj = {
+        "creation_time": datetime.datetime.utcnow(),
+        "password": password,
+        "username": username,
+        "sessions":[],
+        "action": "initialize a user"
+    }
+
+    with transaction_session.start_transaction():
+        users_res = db.users.insert_one(obj, session=transaction_session)
+        logging.info(f"Added user {username} with result {users_res}.")
+        utils.commit_with_retry(transaction_session)
+
+    user = db.users.find_one({"username": username})
+
+    initialize_session(userid=user["_id"], label="default", color="#e76029")
+    
+    return True
 
 # authenticate user based on provided username and password
 # returns -1 if user is not found in database
