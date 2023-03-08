@@ -207,9 +207,10 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     end = time.time()
     diff = end - start
     num_clusters = max(hdbscan_labels) + 2
-    logging.info(f'Built {num_clusters} clusters in {diff} seconds')
 
     session_action(session_oid, num_clusters, groups)
+
+    logging.info(f'Built {num_clusters} clusters in {diff} seconds')
 
 def first_teleoscope_ordering(db, groups, limit):
     """ Build a training set besed on the first group's teleoscope
@@ -513,21 +514,25 @@ def session_action(session_oid, num_clusters, groups):
             A list of group objects that were clustered on
     """
 
+    logging.info(f'Clustering action history update.')
+
     transaction_session, db = utils.create_transaction_session()
-    session = db.sessions.find_one({"_id": session_oid})
-    
+    session = db.sessions.find_one({"_id": session_oid}, {"history": { "$slice": 1}})  
+
     history_item = session["history"][0]
     history_item["action"] = f"Built {num_clusters} machine clusters"
     history_item["timestamp"] = datetime.datetime.utcnow()
 
     # record the groups and their associated documents used for clustering
-    history_item["clustered_groups"] = {}
-    
+    history_item["clustered_groups"] = []
     for group in groups:
 
         # documents used for clustering are denoting using the length of the groups history item.
-        # the index of said documents are at [current history length - denoted hisory length]
-        history_item["clustered_groups"][group["_id"]] = len(group["history"])
+        # the index of said documents are at [current history length - denoted history length]
+        history_item["clustered_groups"].append({
+            "group_id": group["_id"],
+            "position": len(group["history"])
+        })
 
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_oid},
