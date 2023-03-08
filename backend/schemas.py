@@ -43,6 +43,6 @@ def create_document_object(title, textVector, text, relationships={}, metadata={
             **relationships
         },
         'metadata' : {
-            **meta
+            **metadata
         }
     }
