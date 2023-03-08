@@ -18,15 +18,15 @@ export default async (req, res) => {
   }
 
   if(!sessionsargs) {
-    ret = await db.collection("sessions").find({}).toArray();
+    ret = await db.collection("sessions").find({}, { projection: { history: {"$slice": 1 }}}).toArray();
   } 
   else if (sessionsargs.length === 1) {
-    ret = await db.collection("sessions").findOne({_id: objid});
+    ret = await db.collection("sessions").findOne({_id: objid}, { projection: { history: {"$slice": 1 }}} );
   } 
   else if (sessionsargs.length === 2 && sessionsargs[1] === "groups") {
     // returns groups
-    var groups = await db.collection("groups").find({}).toArray();
-    session = await db.collection("sessions").findOne({_id: objid});
+    var groups = await db.collection("groups").find({},  { projection: { history: {"$slice": 1 }}}).toArray();
+    session = await db.collection("sessions").findOne({_id: objid},  { projection: { history: {"$slice": 1 }}});
     var sessionGroups = session?.history[0].groups.map((group) => {
       return group.toString();
     });
@@ -41,8 +41,8 @@ export default async (req, res) => {
     ret = filteredGroups;
   } 
   else if (sessionsargs.length === 2 && sessionsargs[1] === "clusters") {
-    var clusters = await db.collection("clusters").find({}).toArray();
-    session = await db.collection("sessions").findOne({_id: objid});
+    var clusters = await db.collection("clusters").find({},  { projection: { history: {"$slice": 1 }}}).toArray();
+    session = await db.collection("sessions").findOne({_id: objid},  { projection: { history: {"$slice": 1 }}});
     var sessionClusters = session?.history[0].clusters.map((cluster) => {
       return cluster.toString();
     });
@@ -58,8 +58,8 @@ export default async (req, res) => {
   }
   else if (sessionsargs.length === 2 && sessionsargs[1] === "teleoscopes") {
     // returns teleoscopes
-    var teleoscopes = await db.collection("teleoscopes").find({}).toArray();
-    session = await db.collection("sessions").findOne({_id: objid});
+    var teleoscopes = await db.collection("teleoscopes").find({},  { projection: { history: {"$slice": 1 }}}).toArray();
+    session = await db.collection("sessions").findOne({_id: objid},  { projection: { history: {"$slice": 1 }}});
     var session_teleoscopes = session?.history[0].teleoscopes.map((t_id) => {
       return t_id.toString();
     });
