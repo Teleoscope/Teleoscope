@@ -42,7 +42,7 @@ else:
                 #         next = acc + int(i)
                 #     print(f"current: {acc}; next: {next}; i: {i}")
                 #####################################################
-                check = list(db.documents.find({"meta.id": d.id}))
+                check = list(db.documents.find({"metadata.id": d.id}))
                 if len(check) > 0:
                     print("Already in DB...")
                     continue
