@@ -214,6 +214,15 @@ def gridfsDownload(db, namespace, oid):
     obj = fs.get(oid).read()
     data = json.loads(obj)
     return data
+def update_metadata():
+    db = connect()
+    docs = db.documents.find({})
+    for doc in docs:
+        doc['metadata'] ={
+            'id': doc['id']
+        }
+        db.documents.update_one({"_id": doc["_id"]}, { "$set": doc })
+        break
 
 
 def update_ids():

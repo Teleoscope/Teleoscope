@@ -150,6 +150,7 @@ def create_child(*args, **kwargs):
         end_index = kwargs['end_index']
         document = db.documents.find_one({"_id": document_id})
         # Creating metadata to copy all the prev document's info
+        #TODO: I need to create document['metadata] -> does that have to be in database?
         metadata = copy.deepcopy(document['metadata'])
         # Update or start and end value in metadata
         metadata['teleoscope_start'] = start_index
@@ -158,7 +159,7 @@ def create_child(*args, **kwargs):
         relationships = copy.deepcopy(document['relationships'])
         # Assigning parent of this document's child to the present document
         relationships['parent'] = document
-        #check to see if the end_index is lesser than the document's last index
+        # check to see if the end_index is lesser than the document's last index
         length_document = len(document["text"])
         if end_index >= length_document:
             raise Exception(f'End_index {end_index} is outside bounds of document')
