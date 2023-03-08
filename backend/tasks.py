@@ -5,6 +5,7 @@ from bson.objectid import ObjectId
 from kombu import Consumer, Exchange, Queue
 import datetime
 import schemas
+import copy
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -146,23 +147,32 @@ def create_child(*args, **kwargs):
     with transaction_session.start_transaction(): 
         document_id = ObjectId(str(kwargs["document_id"]))
         start_index = kwargs['start_index']
-        
         end_index = kwargs['end_index']
         document = db.documents.find_one({"_id": document_id})
+        # Creating metadata to copy all the prev document's info
+        metadata = copy.deepcopy(document['metadata'])
+        # Update or start and end value in metadata
+        metadata['teleoscope_start'] = start_index
+        metadata['teleoscope_end']= end_index
+        # Creating relationships to copy document's relationship values
+        relationships = copy.deepcopy(document['relationships'])
+        # Assigning parent of this document's child to the present document
+        relationships['parent'] = document
         #check to see if the end_index is lesser than the document's last index
         length_document = len(document["text"])
         if end_index >= length_document:
             raise Exception(f'End_index {end_index} is outside bounds of document')
         child_text = document["text"][start_index:end_index] 
         child_title = document["title"] + " child"
-        child_id = f"{str(document_id)}#{str(start_index)}#{str(end_index)}"
+        # child_id = f"{str(document_id)}#{str(start_index)}#{str(end_index)}"
         child_vector = vectorize_text([child_text])
-        child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document, None, None)
+        child_document = schemas.create_document_object(child_title, child_vector, child_text, relationships, metadata)
         inserted_document = db.documents.insert_one(child_document, session=transaction_session)
         new_id = inserted_document.inserted_id
-        print(child_id)
+        #TODO: check if correct 
+        relationships['child'] = inserted_document
         utils.commit_with_retry(transaction_session)
-    return {child_id, new_id}
+    return (new_id, inserted_document)
 
 @app.task
 def add_user_to_session(*args, **kwargs):

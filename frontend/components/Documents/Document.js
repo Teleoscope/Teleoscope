@@ -3,6 +3,7 @@ import React from "react";
 
 // custom
 import DocumentText from "./DocumentText"
+import LinkSelector from "../LinkSelector";
 import GroupSelector from "../GroupSelector"
 import NoteButton from "../WindowModules/NoteButton"
 
@@ -27,11 +28,12 @@ export default function Document(props) {
 
       <Stack direction="row" justifyContent="right" alignItems="center" style={{ margin: 0 }}>
         <NoteButton id={document?._id} key="document" />
+        {/* TODO: Need to figure out how to separate components of relationship in props */}
+        <LinkSelector id = {id} />
         <GroupSelector id={id} />
       </Stack>
       <Divider />
       <DocumentText text={text} />
-
       <Divider sx={{margin: 5}}/>
     </div>
   )
