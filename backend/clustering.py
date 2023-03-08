@@ -33,7 +33,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
             A list of strings representing the ObjectID of each group
             to be clustered
         session_oid:
-            An int that represents the ObjectID of the current session
+            An string that represents the ObjectID of the current session
         limit:
             The number of documents to cluster. Default 10000
     """
@@ -517,7 +517,8 @@ def session_action(session_oid, num_clusters, groups):
     logging.info(f'Clustering action history update.')
 
     transaction_session, db = utils.create_transaction_session()
-    session = db.sessions.find_one({"_id": session_oid}, {"history": { "$slice": 1}})  
+    session_id = ObjectId(str(session_oid))
+    session = db.sessions.find_one({"_id": session_id}, {"history": { "$slice": 1}})  
 
     history_item = session["history"][0]
     history_item["action"] = f"Built {num_clusters} machine clusters"
@@ -535,7 +536,7 @@ def session_action(session_oid, num_clusters, groups):
         })
 
     with transaction_session.start_transaction():
-        db.sessions.update_one({"_id": session_oid},
+        db.sessions.update_one({"_id": session_id},
             {
                 '$push': {
                     "history": {
