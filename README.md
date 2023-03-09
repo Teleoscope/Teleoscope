@@ -4,6 +4,8 @@ Telescope is a system for supporting qualitative research with machine learning 
 
 Check out our [Youtube Playlist](https://www.youtube.com/playlist?list=PLfTo3bBE97a0_GllWl9RzzPb9GpwRuayP) for a tutorial on how to use Teleoscope.
 
+Teleoscope is the PhD project of [Paul Bucci](https://paulbucci.ca/) who is working with [Prof. Ivan Beschastnikh](https://www.cs.ubc.ca/~bestchai/) from the [Systopia Lab](https://systopia.cs.ubc.ca/) at the [University of British Columbia](https://www.ubc.ca/). 
+
 ![keywords aren't enough](images/keywords.png)
 
 The problem that Teleoscope addresses is that keyword searches are based on textual similarities between words. However, we want semantic similarities to be the basis of our searches. The above figure (which is an annotated screenshot of the interface) depicts a conceptual similarity between WiFi and Netflix in that they are both types of accounts that people often share among family and friends. A keyword search could not capture the similarity between those concepts. But our Teleoscope system can by using the USE document embeddings.
