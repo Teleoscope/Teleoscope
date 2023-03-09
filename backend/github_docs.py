@@ -4,7 +4,6 @@ import schemas
 import json
 import os
 import utils
-
 import sys
 
 print(f"Name of the script      : {sys.argv[0]=}")
