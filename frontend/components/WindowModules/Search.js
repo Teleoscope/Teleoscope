@@ -21,7 +21,7 @@ import useSWRAbstract from "../../util/swr"
 
 export default function SearchWindow(props) {
   const [query, setQuery] = useState(" ");
-  const { documents, documents_loading } = useSWRAbstract("documents", `/api/document/${query}`);
+  const { documents, documents_loading } = useSWRAbstract("documents", `/api/search/${query}`);
   const dispatch = useDispatch();
 
   // this is a hard-coded hack for ranking of document_id
