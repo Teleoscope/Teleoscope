@@ -223,6 +223,14 @@ def update_metadata():
         }
         db.documents.update_one({"_id": doc["_id"]}, { "$set": doc })
 
+def update_relationships():
+    db = connect()
+    docs = db.documents.find({})
+    for doc in docs:
+        doc['relationships'] ={
+            
+        }
+        db.documents.update_one({"_id": doc["_id"]}, { "$set": doc })
 
 def update_ids():
     db = connect()
