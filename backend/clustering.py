@@ -79,6 +79,9 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
                     {"_id": id}, 
                     projection={'textVector': 1},
                 )
+                if not document:
+                    logging.info(f"Document {str(id)} not found.")
+                    raise Exception("Document not found")
                 document_ids.append(str(id))
                 vector = np.array(document["textVector"]).reshape((1, 512))
                 document_vectors = np.append(document_vectors, vector, axis=0)
