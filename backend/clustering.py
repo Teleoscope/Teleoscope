@@ -71,9 +71,10 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         
         indices = []
         
-        for id in group_document_ids:
+        for str_id in group_document_ids:
             
             try:
+                id = ObjectId(str(str_id))
                 document_ids.index(str(id))
             
             except:
