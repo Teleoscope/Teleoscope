@@ -25,7 +25,7 @@ def test_vectorize_text_first_item():
 	session, db = utils.create_transaction_session()
 	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
 	old_vector = document["textVector"]
-	new_vector = tasks.vectorize_text([document["text"]])
+	new_vector = tasks.vectorize_text(document["text"])
 	for o in range(len(new_vector)):
 		assert new_vector[o] == old_vector[o]
 
@@ -34,7 +34,7 @@ def test_vectorize_text_second_item():
 	session, db = utils.create_transaction_session()
 	document = db.documents.find_one({"_id": ObjectId("637eae8a0381748b89ae518a")})
 	old_vector = document["textVector"]
-	new_vector = tasks.vectorize_text([document["text"]])
+	new_vector = tasks.vectorize_text(document["text"])
 	for o in range(len(new_vector)):
 		assert new_vector[o] == old_vector[o]
 
