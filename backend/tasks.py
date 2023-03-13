@@ -1074,7 +1074,7 @@ def vectorize_document(document): #(text) -> Vector
         return document
 
 @app.task
-def vectorize_text(text: str)-> np.array.dtype:
+def vectorize_text(text: str)-> np.array:
     '''
     vectorize_text
 
