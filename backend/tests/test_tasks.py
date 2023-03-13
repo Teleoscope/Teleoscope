@@ -62,7 +62,6 @@ def test_create_child_invalid_document_id():
 		tasks.create_child((), start_index = 2, end_index = 40, document_id = '30')
 
 #Case 2: valid document id
-#TODO: Clean up the database for whatever changes you've made once the test is over (The test_tasks that were there before)
 def test_create_child_valid_document():
 	start = 48
 	end = 100
