@@ -66,6 +66,8 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         
         # grab latest history item for each group
         group_document_ids = group["history"][0]["included_documents"]
+
+        print(f'group id strings {group_document_ids}\n')
         
         indices = []
         
@@ -75,6 +77,10 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
                 document_ids.index(str(id))
             
             except:
+                print(f'cur {id}\n')
+                print(f'cur id type {type(id)}\n')
+
+
                 document = db.documents.find_one(
                     {"_id": id}, 
                     projection={'textVector': 1},
