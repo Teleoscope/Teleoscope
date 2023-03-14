@@ -9,6 +9,7 @@ import FolderIcon from '@mui/icons-material/Folder';
 import Tooltip from '@mui/material/Tooltip';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
+import Accordion from '@mui/material/Accordion'
 
 // actions 
 import { useAppSelector } from '../hooks'
@@ -27,7 +28,7 @@ export default function linkSelector(props) {
    const session_id = useAppSelector((state) => state.activeSessionID.value);
    //TODO: change groups variable -> need to figure what this means
    const { groups } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
-
+   //TODO: do I change this to include something with metadata?
    const links_this_document_belongs_to = groups ? groups.filter((g) => {
       return g.history[0].included_documents.includes(props.id)
    }) : [];
@@ -62,7 +63,7 @@ export default function linkSelector(props) {
          )
       }
       return (
-         <Tooltip title="No group assigned...">
+         <Tooltip title="No links...">
             <FolderOutlinedIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} />
          </Tooltip>
       )

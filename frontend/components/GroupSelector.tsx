@@ -80,7 +80,6 @@ export default function groupSelector(props) {
                const _id = g._id
 
                return (
-
                   <MenuItem
                      value={_id}
                      onClick={() => handleSelect(_id)}>
