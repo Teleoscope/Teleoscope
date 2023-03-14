@@ -168,6 +168,7 @@ def create_child(*args, **kwargs):
         child_document = schemas.create_document_object(child_title, child_vector, child_text, relationships, metadata)
         inserted_document = db.documents.insert_one(child_document, session=transaction_session)
         new_id = inserted_document.inserted_id
+        print(inserted_document)
         #TODO: check if correct 
         relationships['child'] = inserted_document
         utils.commit_with_retry(transaction_session)
