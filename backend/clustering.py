@@ -19,7 +19,7 @@ import spacy
 import utils
 import tasks
 
-def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
+def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000, strategy="AVG"):
     """Cluster documents using user-defined groups.
 
     Clusters 'limit' documents with respect to the documents already 
@@ -36,12 +36,17 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
             An string that represents the ObjectID of the current session
         limit:
             The number of documents to cluster. Default 10000
+        strategy:
+            Strategy in which to base corpus ordering. Default "AVG"
     """
 
     start = time.time()
 
     # connect to the database
     db = utils.connect()
+
+    # if user already has clusters, delete them to prepare for new clusters
+    clean_mongodb(db, userid)
     
     # Create ObjectIds
     group_ids = [ObjectId(str(id)) for id in group_id_strings]
@@ -51,71 +56,8 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
 
     # get training data based on ordering
-    logging.info('Using average ordering...')
-    document_vectors, document_ids = average_teleoscope_ordering(db, groups, limit)
-
-    # logging.info('Using first group's teleoscope ordering...')
-    # document_vectors, document_ids = first_teleoscop_ordering(db, groups, limit)
-
-    # logging.info('Using all documents...')
-    # dm, document_ids = cache_distance_matrix()
-
-    logging.info("Appending documents from groups to document vector and id list...")
-    group_doc_indices = {}
-    for group in groups:
-        
-        # grab latest history item for each group
-        group_document_ids = group["history"][0]["included_documents"]
-        
-        indices = []
-        
-        for str_id in group_document_ids:
-            
-            try:
-                id = ObjectId(str(str_id))
-                document_ids.index(str(id))
-            
-            except:
-                document = db.documents.find_one(
-                    {"_id": id}, 
-                    projection={'textVector': 1},
-                )
-                if not document:
-                    raise Exception(f"Document {str(id)} not found")
-                document_ids.append(str(id))
-                vector = np.array(document["textVector"]).reshape((1, 512))
-                document_vectors = np.append(document_vectors, vector, axis=0)
-                
-            finally:
-                indices.append(document_ids.index(str(id)))
-        
-        # dict where keys are group names and values are indices of documents
-        group_doc_indices[group["history"][0]["label"]] = indices
-
-    # build distance matrix
-    dm = euclidean_distances(document_vectors)
-
-    # garbage collection
-    del document_vectors
-    gc.collect()
-    logging.info("Bye vectors!!")
-
-    logging.info(f"Distance matrix has shape {dm.shape}.") # e.g., (10000, 10000) square matrix
-
-    # update distance matrix such that documents in the same group have distance 0
-    # TODO - improve hacky code below (map function?)
-    for group in group_doc_indices:
-    
-        indices = group_doc_indices[group]
-        size = range(len(indices))
-
-        for _i in size:
-            i = indices[_i]
-
-            for _j in size:
-                j = indices[_j]
-                dm[i, j] = 0
-
+    dm, group_doc_indices, document_ids = document_ordering(
+        db, groups, limit, strategy)
 
     logging.info("Running UMAP Reduction...")
 
@@ -124,7 +66,7 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         metric = "precomputed", # use distance matrix
         n_components = 30,      # reduce to n_components dimensions (2:100)
         # n_neighbors = 10,     # local (small n ~2) vs. global (large n ~100) structure 
-        min_dist = 0.0,         # minimum distance apart that points are allowed (0.0:0.99)
+        min_dist = 1e-5,        # minimum distance apart that points are allowed (0.0:0.99)
     ).fit_transform(dm)
 
     logging.info(f"Shape after reduction: {umap_embeddings.shape}")
@@ -170,8 +112,8 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
     # spaCy preprocessing object for machine labels
     nlp = spacy.load("en_core_web_sm")
 
-    # if user already has clusters, delete them to prepare for new clusters
-    clean_mongodb(db, userid)
+    # keep track of all topic labels
+    topic_labels = []
 
     # create a new mongoDB group for each machine cluster
     for hdbscan_label in set(hdbscan_labels):
@@ -191,10 +133,11 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
         # create appropriate label for current hdbscan label
         _label, _color = get_label(hdbscan_label, given_labels)
         
-        # learn a topic label for machine clusters
+        # learn a topic label for current machine cluster
         if _label == 'machine':
             limit = min(20, len(label_ids))
-            _label = get_topic(db, label_ids[:limit], nlp)
+            _label = get_topic(db, label_ids[:limit], nlp, topic_labels)
+            topic_labels.append(_label)
 
         logging.info(f'There are {len(documents)} documents for Machine Cluster "{_label}".')
         
@@ -207,70 +150,11 @@ def cluster_by_groups(userid, group_id_strings, session_oid, limit=10000):
             included_documents=documents, 
         )
 
-    end = time.time()
-    diff = end - start
+    total_time = time.time() - start
     num_clusters = max(hdbscan_labels) + 2
-
-    session_action(session_oid, num_clusters, groups)
-
-    logging.info(f'Built {num_clusters} clusters in {diff} seconds')
-
-def first_teleoscope_ordering(db, groups, limit):
-    """ Build a training set besed on the first group's teleoscope
-
-    Args:
-        db:
-            A connection to the MongoDB database.
-        groups: 
-            A list of ObjectIds representing each group to be clustered
-        limit:
-            The number of documents to cluster.  
-
-    Returns:
-        document_vectors:
-            An limit by 512 array of sorted document vectors
-        document_ids:
-            An limit length list of sorted document ids
-    """
-
-    
-
-    # default to ordering documents relative to first group's teleoscope
-    teleoscope_oid = groups[0]["teleoscope"]
-    teleoscope = db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
-
-    # get Teleoscope from GridFS
-    logging.info("Getting ordered documents...")
-    all_ordered_documents = utils.gridfsDownload(db, "teleoscopes", ObjectId(str(teleoscope["history"][0]["ranked_document_ids"])))
-    ordered_documents = all_ordered_documents[0:limit]
-    logging.info(f'Documents downloaded. Top document is {ordered_documents[0]} and length is {len(ordered_documents)}')
-    limit = min(limit, len(ordered_documents))
-    
-    # projection includes only fields we want
-    projection = {'id': 1, 'textVector': 1}
-
-    # cursor is a generator which means that it yields a new doc one at a time
-    logging.info("Getting documents cursor and building document vector and id list...")
-    cursor = db.documents.find(
-        # query
-        {"id":{"$in": [document[0] for document in ordered_documents]}},
-        projection=projection,
-        # batch size means number of documents at a time taken from MDB, no impact on iteration 
-        batch_size=500
-    )
-
-    document_ids = []
-    document_vectors = []
-
-    # for large datasets, this will take a while. Would be better to find out whether the UMAP fns 
-    # can accept generators for lazy calculation 
-    for document in tqdm.tqdm(cursor, total=limit):
-        document_ids.append(document["id"])
-        document_vectors.append(document["textVector"])
-
-    return document_vectors, document_ids
+    session_action(session_oid, num_clusters, groups, total_time)
      
-def average_teleoscope_ordering(db, groups, limit):
+def document_ordering(db, groups, limit, strategy):
     """ Build a training set besed on the average of groups' teleoscopes
 
     Args:
@@ -278,36 +162,54 @@ def average_teleoscope_ordering(db, groups, limit):
             A connection to the MongoDB database.
         groups: 
             A list of ObjectIds representing each group to be clustered
+        strategy:
+            "AVG" - average of groups' teleoscopes
+            "FIRST" - The first group's teleoscope ordering
+            "ALL" - use all documents in embeddings. (limit is ignored)
         limit:
             The number of documents to cluster.  
 
     Returns:
         document_vectors:
-            An limit by 512 array of sorted document vectors
+            An list of document vectors
         document_ids:
-            An limit length list of sorted document ids
+            An list of document object ids
     """
-
-    # get teleoscope vecs of all groups
-    teleo_vecs = []
-    for group in groups:
-
-        teleoscope_oid = group["teleoscope"]
-        teleoscope = db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
-        teleo_vecs.append(teleoscope["history"][0]["stateVector"])
-
-    teleo_vecs = np.array(teleo_vecs)
-
-    # compute average teleoscope vec
-    avg_vec = np.average(teleo_vecs, axis=0)
-
+    
     logging.info("Gathering all document vectors from embeddings...")
     # grab all document data from embeddings
     all_doc_ids, all_doc_vecs = cache_documents()
 
-    logging.info("Gather similarly scores based on new average vector...")
+    if strategy == "AVG":
+        logging.info('Using average ordering...')
+        # get teleoscope vecs of all groups
+        teleo_vecs = []
+        for group in groups:
+
+            teleoscope_oid = group["teleoscope"]
+            teleoscope = db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
+            teleo_vecs.append(teleoscope["history"][0]["stateVector"])
+
+        teleo_vecs = np.array(teleo_vecs)
+
+        # compute average teleoscope vec
+        vec = np.average(teleo_vecs, axis=0)
+
+    elif strategy == "FIRST":
+        logging.info('Using first groups ordering...')
+        # get teleoscope vecs of first groups in groups
+        first = groups[0]["teleoscope"]
+        teleoscope = db.teleoscopes.find_one({"_id": ObjectId(str(first))})
+        vec = np.array(teleoscope["history"][0]["stateVector"])
+
+    # elif strategy == "ALL":
+    #     # TODO - NEED to find a cute way to get group doc indices
+    #     logging.info('Using all docs!')
+    #     return euclidean_distances(all_doc_vecs), {}, all_doc_ids
+
+    logging.info("Gather similarly scores based on vector...")
     # gather similarly scores based on average vector
-    scores = utils.calculateSimilarity(all_doc_vecs, avg_vec)
+    scores = utils.calculateSimilarity(all_doc_vecs, vec)
 
     logging.info("Sorting document ids based on scores...")
     # sort document ids based on scores and take subset
@@ -320,7 +222,59 @@ def average_teleoscope_ordering(db, groups, limit):
     # sorted array of document vectors
     document_vectors = np.array([all_doc_vecs[i] for i in indices])
 
-    return document_vectors, document_ids
+    # make sure documents in groups are included in training data
+    logging.info("Appending documents from groups to document vector and id list...")
+    group_doc_indices = {}
+    for group in groups:
+
+        group_document_ids = group["history"][0]["included_documents"]
+
+        indices = []
+
+        for str_id in group_document_ids:
+
+            try:
+                id = ObjectId(str(str_id))
+                document_ids.index(str(id))
+
+            except:
+                document = db.documents.find_one(
+                    {"_id": id},
+                    projection={'textVector': 1},
+                )
+                if not document: raise Exception(f"Document {str(id)} not found")
+                document_ids.append(str(id))
+                vector = np.array(document["textVector"]).reshape((1, 512))
+                document_vectors = np.append(document_vectors, vector, axis=0)
+
+            finally:
+                indices.append(document_ids.index(str(id)))
+
+        # dict where keys are group names and values are indices of documents
+        group_doc_indices[group["history"][0]["label"]] = indices
+
+    # build distance matrix
+    logging.info("Building distance matrix...")
+    dm = euclidean_distances(document_vectors)
+    logging.info(f"Distance matrix has shape {dm.shape}.") # n-by-n symmetrical matrix
+
+    # update distance matrix such that documents in the same group have distance 0
+    # TODO - improve hacky code below (map function?)
+    INTER_CLUSTER_DISTANCE = 1e-4
+
+    for group in group_doc_indices:
+
+        indices = group_doc_indices[group]
+        size = range(len(indices))
+
+        for _i in size:
+            i = indices[_i]
+
+            for _j in size:
+                j = indices[_j]
+                dm[i, j] *= INTER_CLUSTER_DISTANCE
+
+    return dm, group_doc_indices, document_ids
 
 def get_label(hdbscan_label, given_labels):
     """Identify and produce label & colour for given hdbscan label
@@ -363,7 +317,7 @@ def get_label(hdbscan_label, given_labels):
 
     return 'machine', '#737373'
 
-def get_topic(db, label_ids, nlp):
+def get_topic(db, label_ids, nlp, topic_labels):
     """Provides a topic label for a machine cluster
 
     Args:
@@ -373,6 +327,8 @@ def get_topic(db, label_ids, nlp):
             An array of strings that represent documents ids in a machine cluster.
         nlp:
             spaCy prepocessing helper.
+        topic_lables:
+            list of all given labels to machine clusters
 
     Returns:
         topic:
@@ -410,9 +366,15 @@ def get_topic(db, label_ids, nlp):
     # grab two most similar topic labels for machine cluster
     sorting = np.argsort(lda.components_, axis=1)[:, ::-1]
     feature_names = np.array(vec.get_feature_names_out())
-    topic = feature_names[sorting[0][0]] + " " + feature_names[sorting[0][1]] + " " + feature_names[sorting[0][2]] 
-    
-    return topic
+    label = feature_names[sorting[0][0]] + " " + feature_names[sorting[0][1]]
+
+    i = 1
+    while(1):
+        if label not in topic_labels:
+            return label
+        else:
+            i += 1
+            label += " " + feature_names[sorting[0][i]]
 
 def preprocess(
     doc,
@@ -503,7 +465,7 @@ def clean_mongodb(db, userid):
 
     pass
 
-def session_action(session_oid, num_clusters, groups):
+def session_action(session_oid, num_clusters, groups, total_time):
     """Clustering action history update
 
     Push an update to the session object to document the state of clustering 
@@ -524,8 +486,11 @@ def session_action(session_oid, num_clusters, groups):
     session = db.sessions.find_one({"_id": session_id}, {"history": { "$slice": 1}})  
 
     history_item = session["history"][0]
-    history_item["action"] = f"Built {num_clusters} machine clusters"
     history_item["timestamp"] = datetime.datetime.utcnow()
+
+    copy = f'Built {num_clusters} clusters in {total_time} seconds'
+    logging.info(copy)
+    history_item["action"] = copy
 
     # record the groups and their associated documents used for clustering
     history_item["clustered_groups"] = []
@@ -551,52 +516,6 @@ def session_action(session_oid, num_clusters, groups):
         utils.commit_with_retry(transaction_session)
 
     return 200 
-
-def cache_distance_matrix(db):
-    """ Build a training set besed on the all documents in database
-
-    TODO - DECIDE IF THIS SHOULD EVEN EXIST
-
-    Args:
-        db:
-            A connection to the MongoDB database.
-
-    Returns:
-        document_vectors:
-            An array of sorted document vectors
-        document_ids:
-            A lift of sorted document ids
-    """
-
-    path='~/embeddings/'
-    dir = Path(path).expanduser()
-    dir.mkdir(parents=True, exist_ok=True)
-    cluspath = Path(path + 'clustering.npz').expanduser()
-    npzpath = Path(path + 'embeddings.npz').expanduser()
-    pklpath = Path(path + 'ids.pkl').expanduser()
-    
-    logging.info("Retrieving all document ids from embeddings.")
-    with open(pklpath.as_posix(), 'rb') as handle:
-        ids = pickle.load(handle)
-    
-    if cluspath.exists():
-        logging.info("Distance matrix is cached, retrieving now.")
-        loaded = np.load(cluspath.as_posix(), allow_pickle=False)
-        dm = loaded['dist_matrix']
-        with open(pklpath.as_posix(), 'rb') as handle:
-            ids = pickle.load(handle)
-    
-    else:
-        logging.info("Distance matrix are not cached, building matrix now.")
-        loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
-        vecs = loadDocuments['documents']
-
-        dm = euclidean_distances(vecs)
-        logging.info(f'The distance matrix has shape: {dm.shape}')
-
-        np.savez(cluspath.as_posix(), dist_matrix=dm)
-    
-    return dm, ids
 
 def cache_documents(path='~/embeddings/'):
 
