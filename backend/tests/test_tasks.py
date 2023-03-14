@@ -67,7 +67,7 @@ def test_create_child_valid_document():
 	start = 48
 	end = 100
 	session, db = utils.create_transaction_session()
-	id, returned_document = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
+	id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
 	try:
 		child_document = db.documents.find_one({"_id": id})
 		document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})

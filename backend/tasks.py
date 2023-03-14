@@ -168,11 +168,11 @@ def create_child(*args, **kwargs):
         child_document = schemas.create_document_object(child_title, child_vector, child_text, relationships, metadata)
         inserted_document = db.documents.insert_one(child_document, session=transaction_session)
         new_id = inserted_document.inserted_id
-        print(inserted_document)
+        child_document = db.documents.find_one({"_id": new_id})
         #TODO: check if correct 
-        relationships['child'] = inserted_document
+        relationships['child'] = child_document
         utils.commit_with_retry(transaction_session)
-    return (new_id, inserted_document)
+    return new_id
 
 @app.task
 def add_user_to_session(*args, **kwargs):
