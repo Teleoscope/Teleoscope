@@ -3,7 +3,14 @@ from flask_cors import CORS
 
 from authenticate import *
 
+from dotenv import load_dotenv
+load_dotenv('.env.auth_server')
+
+import os
+
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+
 CORS(app)
 
 @app.route("/register", methods=['POST'])
@@ -34,7 +41,7 @@ def login():
         elif auth_value == 0:
             response = make_response(jsonify('Incorrect password.'), 403)
         else:
-            token = issue_token(username)
+            token = issue_token(app.secret_key, username)
             response = make_response(jsonify(token), 200)
 
         response.headers['Access-Control-Allow-Origin'] = '*'

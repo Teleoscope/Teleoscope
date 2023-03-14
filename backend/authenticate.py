@@ -2,7 +2,7 @@ import bcrypt, datetime, jwt
 
 import utils
 import logging
-from tasks import initialize_session
+# from tasks import initialize_session
 
 def registerUser(firstName, lastName, username, password):
     transaction_session, db = utils.create_transaction_session()
@@ -26,7 +26,9 @@ def registerUser(firstName, lastName, username, password):
 
     user = db.users.find_one({"username": username})
 
-    initialize_session(userid=user["_id"], label="default", color="#e76029")
+    # consider using Stomp.ts -> rabbitmq -> celery pipeline 
+    # after auth_server returns a successful message
+    # initialize_session(userid=user["_id"], label="default", color="#e76029")
     
     return True
 
@@ -41,7 +43,7 @@ def authUser(username, password):
         return -1
     return bcrypt.checkpw(password.encode('utf-8'), user_obj['password'].encode('utf-8'))
 
-def issue_token(username):
+def issue_token(secret, username):
     curr_time = datetime.datetime.utcnow()
     # the time are converted into iso format, which is generic in both python and javascript
     payload = {
@@ -52,5 +54,5 @@ def issue_token(username):
         'eat': (curr_time + datetime.timedelta(days=1)).isoformat()
     }
 
-    token = jwt.encode(payload, 'secret', algorithm='HS256')
+    token = jwt.encode(payload, secret, algorithm='HS256')
     return token
