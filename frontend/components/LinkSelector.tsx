@@ -25,14 +25,18 @@ export default function linkSelector(props) {
    const userid = useAppSelector((state) => state.activeSessionID.userid);
    const client = Stomp.getInstance();
    client.userId = userid;
-   const session_id = useAppSelector((state) => state.activeSessionID.value);
    //TODO: change groups variable -> need to figure what this means
-   const { groups } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
+   // Look for examples in the document components -> want to grab document, so document_id
+   // const { groups } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
+   const { links } = useSWRAbstract("document", `/api/document/${props.id}`);
    //TODO: do I change this to include something with metadata?
-   const links_this_document_belongs_to = groups ? groups.filter((g) => {
-      return g.history[0].included_documents.includes(props.id)
+   // Not filtering it as of now - check it out to understand
+   const links_this_document_belongs_to = links ? links.map((l) => {
+      return l['metadata']
+      // return g.history[0].included_documents.includes(props.id)
    }) : [];
-
+   //TODO: display key and value for the metadata -> display everything (see how that works)
+   // have links to -> so from the relationships dict it finds the document and just shows that
    const [anchorEl, setAnchorEl] = useState(null);
    const open = Boolean(anchorEl);
    const handleClick = (event) => {
@@ -43,22 +47,24 @@ export default function linkSelector(props) {
       setAnchorEl(null);
    };
 
-   const handleSelect = (group_id) => {
-      if (links_this_document_belongs_to.find((item) => item.id == props.id)) {
-         client.remove_document_from_group(group_id, props.id);
+   const handleSelect = (document_id) => {
+      if (links_this_document_belongs_to['relationships']) {
+         //TODO: instead of this, want it to display information about the document
+         client.create_child(document_id)
+         // client.remove_document_from_group(group_id, props.id);
       } else {
-         client.add_document_to_group(group_id, props.id);
+         // client.add_document_to_group(group_id, props.id);
       }
       handleClose();
    }
 
    const LinkIconHandler = (props) => {
-       //TODO: groups needs to be changed 
-      if (props.groups.length >= 1) {
-         const g = props.groups[0].history[0];
+      if (props.links_this_document_belongs_to['relationships']) {
+         // TODO: need to figure out what else to put in here
+         const l = props.links['metadata'];
          return (
-            <Tooltip title={g.label}>
-               <FolderCopyIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
+            <Tooltip title={l.label}>
+               <FolderCopyIcon sx={{ color: l.color }} style={{ fontSize: 15 }} />
             </Tooltip>
          )
       }
@@ -72,28 +78,24 @@ export default function linkSelector(props) {
    return (
       <div>
          <IconButton onClick={handleClick}>
-            <LinkIconHandler groups={links_this_document_belongs_to} />
+            <LinkIconHandler groups={links} />
          </IconButton>
          <Menu
             anchorEl={anchorEl}
             onClose={handleClose}
             open={open}
          >
-
-            {/* TODO: Change groups variable  */}
-            {groups ? groups.map((g) => {
-               const _id = g._id
-
+            {links ? links.map((l) => {
                return (
 
                   <MenuItem
-                     value={_id}
-                     onClick={() => handleSelect(_id)}>
-                     <FolderIcon sx={{ color: g.history[0].color }} style={{ fontSize: 15 }} />
-                     <ListItemText primary={g.history[0].label} />
+                     value={l._id}
+                     onClick={() => handleSelect(l._id)}>
+                     {/* <FolderIcon sx={{ color: g.history[0].color }} style={{ fontSize: 15 }} />
+                     <ListItemText primary={g.history[0].label} /> */}
                   </MenuItem>
                )
-            }) : <MenuItem>No links added yet...</MenuItem>}
+            }) : <MenuItem>No links for the document...</MenuItem>}
          </Menu>
       </div>
    )

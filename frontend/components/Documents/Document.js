@@ -25,10 +25,8 @@ export default function Document(props) {
   // Accordion or collapse-> Look at what's better for this case
   return (
     <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
-
       <Stack direction="row" justifyContent="right" alignItems="center" style={{ margin: 0 }}>
         <NoteButton id={document?._id} key="document" />
-        {/* TODO: Need to figure out how to separate components of relationship in props */}
         <LinkSelector id = {id} />
         <GroupSelector id={id} />
       </Stack>
