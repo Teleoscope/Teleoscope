@@ -1,7 +1,9 @@
 import clientPromise from '../../../util/mongodb';
 import { ObjectId } from 'bson';
 
-export default async (req, res) => {
+import authToken from '../../decorators';
+
+export default authToken(async (req, res) => {
   const client = await clientPromise;
   const db = await client.db(process.env.NEXT_PUBLIC_DATABASE);
   const { user } = req.query;
@@ -10,4 +12,4 @@ export default async (req, res) => {
   }
   const user_data = await db.collection("users").findOne({_id: ObjectId(user)});
   res.json(user_data);
-};
+});
