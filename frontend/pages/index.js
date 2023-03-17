@@ -11,7 +11,6 @@ import store from "../stores/store";
 // custom components
 import Workspace from '../components/Workspace';
 import clientPromise from '../util/mongodb';
-import Flow from '../components/Flow'
 
 // API fetcher for SWR global config
 //const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
@@ -33,8 +32,7 @@ export default function Home({ isConnected }) {
 
           <main>
             <Provider store={store}>
-              {/* <Workspace isConnected={isConnected} /> */}
-              <Flow></Flow>
+              <Workspace isConnected={isConnected} />
             </Provider>
           </main>
         </div>

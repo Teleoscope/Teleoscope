@@ -1,6 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import ReactFlow, { Controls, Background, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import 'reactflow/dist/style.css';
+import SearchNode from './Nodes/SearchNode'
+
+const nodeTypes = { searchNode: SearchNode };
 
 const initialNodes = [
   {
@@ -14,6 +17,13 @@ const initialNodes = [
     data: { label: 'World' },
     position: { x: 100, y: 100 },
   },
+  {
+    id: '3',
+    data: { label: 'Hello' },
+    position: { x: 0, y: 0 },
+    type: 'searchNode',
+  },
+
 ];
 
 const initialEdges = [{ id: '1-2', source: '1', target: '2', label: 'to the', type: 'step' }];
@@ -32,17 +42,16 @@ function Flow() {
   );
 
   return (
-    <div style={{ height: '100vh', width: '100vw' }}>
       <ReactFlow
         nodes={nodes}
         onNodesChange={onNodesChange}
         edges={edges}
+        nodeTypes={nodeTypes}
         onEdgesChange={onEdgesChange}
       >
         <Background />
         <Controls />
       </ReactFlow>
-    </div>
   );
 }
 
