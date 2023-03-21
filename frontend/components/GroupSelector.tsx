@@ -42,11 +42,13 @@ export default function groupSelector(props) {
    };
 
    const handleSelect = (group_id) => {
+      
       if (groups_this_document_belongs_to.find((item) => item.id == props.id)) {
          client.remove_document_from_group(group_id, props.id);
       } else {
          client.add_document_to_group(group_id, props.id);
       }
+      console.log(group_id)
       handleClose();
    }
 
@@ -76,9 +78,10 @@ export default function groupSelector(props) {
             onClose={handleClose}
             open={open}
          >
+           
             {groups ? groups.map((g) => {
                const _id = g._id
-
+               {console.log(_id +"GROUPS")}
                return (
                   <MenuItem
                      value={_id}

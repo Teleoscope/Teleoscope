@@ -10,6 +10,7 @@ import Tooltip from '@mui/material/Tooltip';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 import Accordion from '@mui/material/Accordion'
+import { AccordionSummary } from "@mui/material";
 
 // actions 
 import { useAppSelector } from '../hooks'
@@ -48,7 +49,9 @@ export default function linkSelector(props) {
    };
 
    const handleSelect = (document_id) => {
-      if (links_this_document_belongs_to['relationships']) {
+      console.log("FILTER"+ {links_this_document_belongs_to}); 
+      console.log("LINKS" + {links})
+      if (links_this_document_belongs_to) {
          //TODO: instead of this, want it to display information about the document
          client.create_child(document_id)
          // client.remove_document_from_group(group_id, props.id);
@@ -59,44 +62,24 @@ export default function linkSelector(props) {
    }
 
    const LinkIconHandler = (props) => {
-      if (props.links_this_document_belongs_to['relationships']) {
-         // TODO: need to figure out what else to put in here
-         const l = props.links['metadata'];
+      {links ? links.map((l) => {
          return (
-            <Tooltip title={l.label}>
-               <FolderCopyIcon sx={{ color: l.color }} style={{ fontSize: 15 }} />
-            </Tooltip>
+            <AccordionSummary>
+               value={l._id}
+             </AccordionSummary>
          )
-      }
-      return (
-         <Tooltip title="No links...">
-            <FolderOutlinedIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} />
-         </Tooltip>
-      )
+      }) :
+       <AccordionSummary>No links for the document...</AccordionSummary>}
+
    }
 
    return (
       <div>
+         <Accordion>
          <IconButton onClick={handleClick}>
-            <LinkIconHandler groups={links} />
-         </IconButton>
-         <Menu
-            anchorEl={anchorEl}
-            onClose={handleClose}
-            open={open}
-         >
-            {links ? links.map((l) => {
-               return (
-
-                  <MenuItem
-                     value={l._id}
-                     onClick={() => handleSelect(l._id)}>
-                     {/* <FolderIcon sx={{ color: g.history[0].color }} style={{ fontSize: 15 }} />
-                     <ListItemText primary={g.history[0].label} /> */}
-                  </MenuItem>
-               )
-            }) : <MenuItem>No links for the document...</MenuItem>}
-         </Menu>
+            <LinkIconHandler />  
+         </IconButton> 
+         </Accordion>
       </div>
    )
 }
