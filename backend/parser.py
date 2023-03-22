@@ -55,7 +55,7 @@ class Pushshift:
         
     def handle(self, obj, args):
         if args.check:
-            self.log(obj['subreddit'])
+            print(obj['subreddit'])
         else:
             self.upload(obj, args)
 
