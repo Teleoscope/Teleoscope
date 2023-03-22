@@ -90,7 +90,7 @@ if __name__ == "__main__":
     ps = Pushshift(args)
     try:
         ps.process(files)
-    except KeyboardInterrupt:
+    except:
         print('Interrupted')
         try:
             print("Complete --------------------------------------------------")
