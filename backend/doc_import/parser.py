@@ -12,7 +12,7 @@ parser.add_argument('-D', '--database')   # which database to insert into
 parser.add_argument('-d', '--dir')        # directory to parse
 parser.add_argument('-s', '--subreddit')  # the subreddit to parse
 parser.add_argument('-c', '--check',
-                    action='check_true')  # only print the output rather than inserting into MongoDB
+                    action='store_true')  # only print the output rather than inserting into MongoDB
 
 
 
