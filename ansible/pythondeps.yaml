@@ -34,4 +34,5 @@
           - matplotlib
           - zstandard
           - pygithub
+          - ujson
         executable: "{{ conda_prefix }}/envs/{{ conda_environment }}/bin/pip"

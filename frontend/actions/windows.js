@@ -2,12 +2,15 @@
 import { createSlice } from '@reduxjs/toolkit'
 import _ from 'lodash';
 import { getDefaultWindow } from "../components/WindowFolder/WindowDefault"
+import { applyNodeChanges, applyEdgeChanges } from 'reactflow';
 
 console.log("Loading windows.js");
 
 
 const initialState = {
-	
+		nodes: [],
+		edges: [],
+		logical_clock: -1,
 		windows: [
 			{
 				i: "default_FABMenu", 
@@ -28,6 +31,9 @@ export const Windows = createSlice({
 	name: 'windows',
 	initialState: initialState,
 	reducers: {
+		setLogicalClock: (state, action) => {
+			state.logical_clock = action.payload;
+		},
 		setDefault: (state, action) => {
 			state.windows = initialState.windows;
 		},
@@ -59,6 +65,16 @@ export const Windows = createSlice({
 				temp.splice(index, 1);
 			}
 			state.windows = temp;
+
+			var temp = [...state.nodes];	
+			var ids = state.nodes.map((w) => {return w.id});
+			var index = ids.indexOf(action.payload);
+			if (index > -1) {
+				temp.splice(index, 1);
+			}
+			state.nodes = temp;
+
+
 		},
 		moveWindowToFront: (state, action) => {
 			var temp = [...state.windows];	
@@ -150,11 +166,29 @@ export const Windows = createSlice({
 		},			
 		loadWindows: (state, action) => {
 			state.windows = action.payload;	
+		},
+		setNodes: (state, action) => {
+			state.logical_clock = action.payload.logical_clock;
+			state.nodes = action.payload.nodes;
+		},
+		setEdges: (state, action) => {
+			state.logical_clock = action.payload.logical_clock;
+			state.edges = action.payload.edges;
+		},
+		updateNodes: (state, action) => {
+			const changes = action.payload;
+			const nodes = applyNodeChanges(changes, state.nodes)
+			state.logical_clock = state.logical_clock + 1;
+			state.nodes = nodes;
+			console.log("debug state", state)
 		}
 	}
 })
 
 export const {
+	updateNodes,
+	setEdges,
+	setNodes,
 	setDefault,
 	addWindow, 
 	removeWindow, 
@@ -167,6 +201,8 @@ export const {
 	checkWindow, 
 	selectAll, 
 	deselectAll,
-	moveWindowToFront 
+	moveWindowToFront,
+	setLogicalClock,
+	setWindows
 } = Windows.actions
 export default Windows.reducer

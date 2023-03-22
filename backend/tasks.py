@@ -52,30 +52,12 @@ def initialize_session(*args, **kwargs):
         logging.info(f'User {userid} does not exist.')
         raise Exception(f'User {userid} does not exist.')
 
-    # Object to write for userlist
-    userlist =  {
-        "owner": ObjectId(str(user["_id"])),
-        "contributors": []
-    }
+    obj = schemas.create_session_object(
+        ObjectId(str(userid)),
+        label,
+        color
+    )
 
-    obj = {
-        "creation_time": datetime.datetime.utcnow(),
-        "userlist": userlist,
-        "history": [
-            {
-                "timestamp": datetime.datetime.utcnow(),
-                "bookmarks": [],
-                "windows": [],
-                "groups": [],
-                "clusters": [],
-                "teleoscopes": [],
-                "label": label,
-                "color": color,
-                "action": f"Initialize session",
-                "user": userid,
-            }
-        ],
-    }
     with transaction_session.start_transaction():
         result = db.sessions.insert_one(obj, session=transaction_session)
         db.users.update_one(
@@ -209,6 +191,11 @@ def add_user_to_session(*args, **kwargs):
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = f"Add {contributor_id} to userlist"
     history_item["user"] = user_id
+
+    if "logical_clock" in history_item:
+        history_item["logical_clock"] = history_item["logical_clock"] + 1
+    else:
+        history_item["logical_clock"] = 1
 
     # update session with new userlist that includes contributor
     with transaction_session.start_transaction():

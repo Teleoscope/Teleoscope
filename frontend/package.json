@@ -24,6 +24,7 @@
     "@mui/icons-material": "^5.8.4",
     "@mui/lab": "^5.0.0-alpha.89",
     "@mui/material": "^5.8.7",
+    "@reactflow/node-resizer": "^2.1.0",
     "@reduxjs/toolkit": "^1.8.3",
     "@stomp/stompjs": "^6.1.2",
     "@types/bson": "^4.2.0",

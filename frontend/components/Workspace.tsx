@@ -6,7 +6,6 @@ import Stack from '@mui/material/Stack';
 
 // custom components
 import TopBar from "./WindowModules/TopBar";
-import WindowManager from "./WindowFolder/WindowManager";
 import ContextMenu from "./Context/ContextMenu";
 import Flow from "./Flow";
 
@@ -49,26 +48,17 @@ export default function Workspace(props) {
       onClick={(e) => handleClick(e)}
     >
 
-      <Grid container spacing={0}>
-        <Grid item xs={12}>
+        <div style={{width: "100vw", height: "10vh"}}>
           <TopBar isConnected={props.isConnected} />
-        </Grid>
-        <Grid item xs={12}>
-        <Stack direction="row">
-          <WindowManager />
-          <div style={{ height: '100vh', width: '50vw' }}>
-            <Flow></Flow>
-          </div>
-        </Stack>
-
-        </Grid>
+        </div>
+        <div style={{width: "100vw", height: "90vh"}}>
+          <Flow></Flow>
+        </div>
         
-      </Grid>
       <ContextMenu
         handleCloseContextMenu={handleCloseContextMenu}
         contextMenu={contextMenu}
       />
-
     </div>
 
   );
