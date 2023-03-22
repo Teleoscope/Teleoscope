@@ -32,10 +32,6 @@ parser.add_argument('-v', '--vectorize',
                     action='store_true')                      # vectorize text while putting in MongoDB
 
 
-# Read each line from the reader
-# for line in reader.readlines():
-    # obj = json.loads(line)
-
 class Pushshift:
     def __init__(self):
         self.db = None

@@ -29,7 +29,7 @@ def connect(db='aita'):
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
     # logging.log(f'Connected to MongoDB with user {auth.mongodb["username"]}.')
-    return client.get_database(db)
+    return client[db]
 
 def create_transaction_session():
     autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
