@@ -33,38 +33,38 @@ parser.add_argument('-v', '--vectorize',
 
 
 class Pushshift:
-    def __init__(self):
+    def __init__(self, args):
+        self.args = args
         self.db = None
         self.complete = []
         self.incomplete = []
-        self.db = utils.connect(db=args.database)
+        self.db = utils.connect(db=self.args.database)
 
     def upload(self, obj, args):
-        text = obj[args.text]
-        title = obj[args.title]
+        text = obj[self.args.text]
+        title = obj[self.args.title]
         print("here")
-
         vector = tasks.vectorize_text(text)
-        print("here")
+        print("vectorized")
         doc = schemas.create_document_object(title, vector, text, metadata=obj)
         self.db.documents.insert_one(doc)
         
-    def handle(self, obj, args):
-        if args.check:
+    def handle(self, obj):
+        if self.args.check:
             print(obj['subreddit'])
         else:
             print("here")
-            self.upload(obj, args)
+            self.upload(obj)
 
-    def processfile(self, filename, args):
+    def processfile(self, filename):
         reader = zreader.Zreader(filename, chunk_size=8192)
         # Read each line from the reader
         for line in reader.readlines():
             try:
                 obj = json.loads(line)
-                if args.subreddit != None:
-                    if obj["subreddit"] == args.subreddit:
-                        self.handle(obj, args)
+                if self.args.subreddit != None:
+                    if obj["subreddit"] == self.args.subreddit:
+                        self.handle(obj)
             except KeyError:
                 pass
                 # print("Document has no subreddit field.")
@@ -73,9 +73,9 @@ class Pushshift:
                 print(error)
                 self.incomplete.append(error)
 
-    def process(self, files, args):
+    def process(self, files):
         for filename in files:
-            self.processfile(filename, args)
+            self.processfile(filename)
             self.complete.append(filename)
 
 if __name__ == "__main__":
@@ -83,13 +83,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Get all files (not directories) in given directory
     files = [
-        join(args.directory, f) 
-        for f in listdir(args.directory) 
-        if isfile(join(args.directory, f))
+        join(self.args.directory, f) 
+        for f in listdir(self.args.directory) 
+        if isfile(join(self.args.directory, f))
     ]
-    ps = Pushshift()
+    ps = Pushshift(args)
     try:
-        ps.process(files, args)
+        ps.process(files)
     except KeyboardInterrupt:
         print('Interrupted')
         try:
