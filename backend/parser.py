@@ -97,8 +97,12 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print('Interrupted')
         try:
+            print("Complete --------------------------------------------------")
             print(ps.complete)
+            print("Incomplete ------------------------------------------------")
             print(ps.incomplete)
+            print("Arguments -------------------------------------------------")
+            print(args)
             sys.exit(130)
         except SystemExit:
             os._exit(130)
