@@ -51,7 +51,7 @@ class Pushshift:
         
     def handle(self, obj):
         if self.args.check:
-            print(obj['subreddit'])
+            print(obj['subreddit'], len(obj['selftext']))
         else:
             print("here")
             self.upload(obj)
