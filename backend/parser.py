@@ -46,6 +46,8 @@ class Pushshift:
     def upload(self, obj):
         text = obj[self.args.text]
         title = obj[self.args.title]
+        if len(text) == 0 or text == '[removed]' or text == '[deleted]':
+            return
         vector = []
         if self.args.vectorize:
             vector = tasks.vectorize_text(text)
@@ -56,7 +58,6 @@ class Pushshift:
         if self.args.check:
             print(obj['subreddit'], len(obj['selftext']))
         else:
-            print("here")
             self.upload(obj)
 
     def processfile(self, filename):
