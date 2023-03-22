@@ -65,9 +65,6 @@ class Pushshift:
                 if self.args.subreddit != None:
                     if obj["subreddit"] == self.args.subreddit:
                         self.handle(obj)
-            except KeyError:
-                pass
-                # print("Document has no subreddit field.")
             except Exception as err:
                 error = f"Unexpected {err=}, {type(err)=} for {filename} and {obj}.\n"
                 print(error)
