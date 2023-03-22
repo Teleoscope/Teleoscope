@@ -96,19 +96,6 @@ if __name__ == "__main__":
         if isfile(join(args.directory, f))
     ]
     ps = Pushshift(args)
-    try:
-        ps.process(files)
-    except Exception as err:
-        print(f'Interrupted: {err}')
-        try:
-            print("Complete --------------------------------------------------")
-            print(ps.complete)
-            print("Incomplete ------------------------------------------------")
-            print(ps.incomplete)
-            print("Arguments -------------------------------------------------")
-            print(args)
-            sys.exit(130)
-        except SystemExit:
-            os._exit(130)
+    ps.process(files)
     # print arguments
     print(args)
