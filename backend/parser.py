@@ -52,8 +52,11 @@ class Pushshift:
         if self.args.vectorize:
             vector = tasks.vectorize_text(text)
         doc = schemas.create_document_object(title, vector, text, metadata=obj)
-        self.db.documents.insert_one(doc)
-        
+        try:
+            self.db.documents.insert_one(doc)
+        except Exception as err:
+            print("Insert failed: ", doc, err)
+      
     def handle(self, obj):
         if self.args.check:
             print(obj['subreddit'], len(obj['selftext']))
