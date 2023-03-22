@@ -53,6 +53,7 @@ class Pushshift:
         if args.check:
             print(obj['subreddit'])
         else:
+            print("here")
             self.upload(obj, args)
 
     def processfile(self, filename, args):
