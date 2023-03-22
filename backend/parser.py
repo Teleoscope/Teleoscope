@@ -20,7 +20,7 @@ parser.add_argument('-s', '--subreddit')                      # the subreddit to
 parser.add_argument('-k', '--chunk-size')                     # how large
 
 # Configuration fields
-parser.add_argument('-t', '--text', default="text")           # the text field
+parser.add_argument('-t', '--text', default="selftext")       # the text field
 parser.add_argument('-T', '--title', default="title")         # the title field
 parser.add_argument('-r', '--relationships')                  # the relationships field
 parser.add_argument('-m', '--metadata')                       # the metadata fields
@@ -65,6 +65,9 @@ class Pushshift:
                 if self.args.subreddit != None:
                     if obj["subreddit"] == self.args.subreddit:
                         self.handle(obj)
+            except KeyError as err:
+                print(f"KeyError {err}.")
+                pass
             except Exception as err:
                 error = f"Unexpected {err=}, {type(err)=} for {filename} and {obj}.\n"
                 print(error)
