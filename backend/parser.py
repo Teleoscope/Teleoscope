@@ -94,8 +94,8 @@ if __name__ == "__main__":
     ps = Pushshift(args)
     try:
         ps.process(files)
-    except:
-        print('Interrupted')
+    except Exception as err:
+        print(f'Interrupted: {err}')
         try:
             print("Complete --------------------------------------------------")
             print(ps.complete)
