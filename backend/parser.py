@@ -83,9 +83,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # Get all files (not directories) in given directory
     files = [
-        join(self.args.directory, f) 
-        for f in listdir(self.args.directory) 
-        if isfile(join(self.args.directory, f))
+        join(args.directory, f) 
+        for f in listdir(args.directory) 
+        if isfile(join(args.directory, f))
     ]
     ps = Pushshift(args)
     try:
