@@ -63,11 +63,15 @@ class Pushshift:
         reader = zreader.Zreader(filename, chunk_size=8192)
         # Read each line from the reader
         for line in reader.readlines():
-            obj = json.loads(line)
-            if args.subreddit != None:
-                if obj["subreddit"] == args.subreddit:
-                    self.handle(obj, args)
-
+            try:
+                obj = json.loads(line)
+                if args.subreddit != None:
+                    if obj["subreddit"] == args.subreddit:
+                        self.handle(obj, args)
+            except Exception as err:
+                error = f"Unexpected {err=}, {type(err)=} for {filename}"
+                print(error)
+                self.incomplete.append(error)
 
     def process(self, files, args):
         for filename in files:
