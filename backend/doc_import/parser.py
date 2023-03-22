@@ -55,7 +55,7 @@ class Pushshift:
         
     def handle(self, obj, args):
         if args.check:
-            self.log(obj)
+            self.log(obj['subreddit'])
         else:
             self.upload(obj, args)
 
@@ -65,8 +65,7 @@ class Pushshift:
         for line in reader.readlines():
             obj = json.loads(line)
             if args.subreddit != None:
-                subreddit = obj["subreddit"]
-                if subreddit == args.subreddit:
+                if obj["subreddit"] == args.subreddit:
                     self.handle(obj, args)
 
 
