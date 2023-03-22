@@ -40,7 +40,7 @@ class Pushshift:
         self.incomplete = []
         self.db = utils.connect(db=self.args.database)
 
-    def upload(self, obj, args):
+    def upload(self, obj):
         text = obj[self.args.text]
         title = obj[self.args.title]
         print("here")
