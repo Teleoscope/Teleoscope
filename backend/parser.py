@@ -31,7 +31,7 @@ parser.add_argument('-c', '--check',
 parser.add_argument('-v', '--vectorize',
                     action='store_true')                      # vectorize text while putting in MongoDB
 
-parser.add_argument('-e', '--key-errors',
+parser.add_argument('-e', '--keyerrors',
                     action='store_true')                      # log key errors
 
 
@@ -69,7 +69,7 @@ class Pushshift:
                     if obj["subreddit"] == self.args.subreddit:
                         self.handle(obj)
             except KeyError as err:
-                if self.args.log-keyerrors:
+                if self.args.keyerrors:
                     print(f"KeyError {err}.")
                 pass
             except Exception as err:
