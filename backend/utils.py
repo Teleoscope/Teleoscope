@@ -12,7 +12,7 @@ from json import JSONEncoder
 # local files
 import auth
 
-def connect():
+def connect(db='aita'):
     autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
@@ -29,7 +29,7 @@ def connect():
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
     # logging.log(f'Connected to MongoDB with user {auth.mongodb["username"]}.')
-    return client.aita
+    return client.get_database(db)
 
 def create_transaction_session():
     autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
