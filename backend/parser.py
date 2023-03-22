@@ -43,9 +43,9 @@ class Pushshift:
     def upload(self, obj):
         text = obj[self.args.text]
         title = obj[self.args.title]
-        print("here")
-        vector = tasks.vectorize_text(text)
-        print("vectorized")
+        vector = []
+        if self.args.vectorize:
+            vector = tasks.vectorize_text(text)
         doc = schemas.create_document_object(title, vector, text, metadata=obj)
         self.db.documents.insert_one(doc)
         
