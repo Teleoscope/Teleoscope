@@ -11,7 +11,8 @@ import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 import Accordion from '@mui/material/Accordion'
 import { AccordionSummary } from "@mui/material";
-
+import Collapse from '@mui/material/Collapse';
+import Card from '@mui/material/Card';
 // actions 
 import { useAppSelector } from '../hooks'
 
@@ -62,7 +63,28 @@ export default function linkSelector(props) {
    }
 
    const LinkIconHandler = (props) => {
-      {links ? links.map((l) => {
+      if (links) {
+         const l = props.links[0];
+         return (
+            <Tooltip title={l.label}>
+               <FolderCopyIcon sx={{ color: l.color }} style={{ fontSize: 15 }} />
+            </Tooltip>
+         )
+      }
+      return (
+         <Tooltip title="No link assigned...">
+            <FolderOutlinedIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} />
+         </Tooltip>
+      )
+   }
+
+   return (
+      <div>
+         <IconButton onClick={handleClick}>
+            <LinkIconHandler links = {links_this_document_belongs_to}/>  
+         </IconButton> 
+         <Accordion> 
+            {links ? links.map((l) => {
          return (
             <AccordionSummary>
                value={l._id}
@@ -70,16 +92,8 @@ export default function linkSelector(props) {
          )
       }) :
        <AccordionSummary>No links for the document...</AccordionSummary>}
-
-   }
-
-   return (
-      <div>
-         <Accordion>
-         <IconButton onClick={handleClick}>
-            <LinkIconHandler />  
-         </IconButton> 
          </Accordion>
+         
       </div>
    )
 }
