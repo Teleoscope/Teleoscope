@@ -6,7 +6,7 @@ class Zreader:
         '''Init method'''
         self.fh = open(file,'rb')
         self.chunk_size = chunk_size
-        self.dctx = zstd.ZstdDecompressor()
+        self.dctx = zstd.ZstdDecompressor(max_window_size=2147483648)
         self.reader = self.dctx.stream_reader(self.fh)
         self.buffer = ''
 
