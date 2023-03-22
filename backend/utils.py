@@ -12,7 +12,7 @@ from json import JSONEncoder
 # local files
 import auth
 
-def connect(db='aita'):
+def connect(db='teleoscope'):
     autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
