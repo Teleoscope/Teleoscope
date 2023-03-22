@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser(
                     epilog='Still under construction.')
 
 parser.add_argument('directory')                              # directory to parse
-parser.add_argument('-d', '--database', default="aita")       # which database to insert into
+parser.add_argument('-d', '--database', default="teleoscope") # which database to insert into
 parser.add_argument('-s', '--subreddit')                      # the subreddit to parse
 parser.add_argument('-k', '--chunk-size')                     # how large
 
@@ -37,14 +37,9 @@ class Pushshift:
         self.db = None
         self.complete = []
         self.incomplete = []
-
-    def connect(self):
-        if self.db == None:
-            self.db = utils.connect(args.database)
-        return self.db
+        self.db = utils.connect(args.database)
 
     def upload(self, obj, args):
-        self.connect()
         text = obj[args.text]
         title = obj[args.title]
         vector = tasks.vectorize_text(text)
@@ -67,7 +62,8 @@ class Pushshift:
                     if obj["subreddit"] == args.subreddit:
                         self.handle(obj, args)
             except KeyError:
-                print("Document has no subreddit field.")
+                pass
+                # print("Document has no subreddit field.")
             except Exception as err:
                 error = f"Unexpected {err=}, {type(err)=} for {filename} and {obj}.\n"
                 print(error)
