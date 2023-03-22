@@ -71,7 +71,7 @@ class Pushshift:
                     if obj["subreddit"] == args.subreddit:
                         self.handle(obj, args)
             except Exception as err:
-                error = f"Unexpected {err=}, {type(err)=} for {filename}"
+                error = f"Unexpected {err=}, {type(err)=} for {filename} and {obj}.\n"
                 print(error)
                 self.incomplete.append(error)
 
