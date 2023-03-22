@@ -1,6 +1,8 @@
 import zreader
 import ujson as json
 import argparse
+import os
+import sys
 from os import listdir
 from os.path import isfile, join
 import utils
@@ -75,14 +77,8 @@ class Pushshift:
 
     def process(self, files, args):
         for filename in files:
-            try:
-                self.processfile(filename, args)
-                self.complete.append(filename)
-            except Exception as err:
-                error = f"Unexpected {err=}, {type(err)=} for {filename}"
-                print(error)
-                self.incomplete.append(error)
-
+            self.processfile(filename, args)
+            self.complete.append(filename)
 
 if __name__ == "__main__":
     # Parse the arguments
@@ -94,7 +90,15 @@ if __name__ == "__main__":
         if isfile(join(args.directory, f))
     ]
     ps = Pushshift()
-    ps.process(files, args)
-
+    try:
+        ps.process(files, args)
+    except KeyboardInterrupt:
+        print('Interrupted')
+        try:
+            print(ps.complete)
+            print(ps.incomplete)
+            sys.exit(130)
+        except SystemExit:
+            os._exit(130)
     # print arguments
     print(args)
