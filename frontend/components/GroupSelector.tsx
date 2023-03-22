@@ -78,10 +78,8 @@ export default function groupSelector(props) {
             onClose={handleClose}
             open={open}
          >
-           
             {groups ? groups.map((g) => {
                const _id = g._id
-               {console.log(_id +"GROUPS")}
                return (
                   <MenuItem
                      value={_id}

@@ -9,10 +9,7 @@ import FolderIcon from '@mui/icons-material/Folder';
 import Tooltip from '@mui/material/Tooltip';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
-import Accordion from '@mui/material/Accordion'
-import { AccordionSummary } from "@mui/material";
-import Collapse from '@mui/material/Collapse';
-import Card from '@mui/material/Card';
+
 // actions 
 import { useAppSelector } from '../hooks'
 
@@ -27,16 +24,10 @@ export default function linkSelector(props) {
    const userid = useAppSelector((state) => state.activeSessionID.userid);
    const client = Stomp.getInstance();
    client.userId = userid;
-   //TODO: change groups variable -> need to figure what this means
-   // Look for examples in the document components -> want to grab document, so document_id
-   // const { groups } = useSWRAbstract("groups", `/api/sessions/${session_id}/groups`);
-   const { links } = useSWRAbstract("document", `/api/document/${props.id}`);
-   //TODO: do I change this to include something with metadata?
-   // Not filtering it as of now - check it out to understand
-   const links_this_document_belongs_to = links ? links.map((l) => {
-      return l['metadata']
-      // return g.history[0].included_documents.includes(props.id)
-   }) : [];
+   const { document } = useSWRAbstract("document", `/api/document/${props.id}`);
+   console.log("document", document)
+   const links = document?.metadata;
+   console.log("LINKS", links)
    //TODO: display key and value for the metadata -> display everything (see how that works)
    // have links to -> so from the relationships dict it finds the document and just shows that
    const [anchorEl, setAnchorEl] = useState(null);
@@ -48,23 +39,26 @@ export default function linkSelector(props) {
    const handleClose = () => {
       setAnchorEl(null);
    };
-
-   const handleSelect = (document_id) => {
-      console.log("FILTER"+ {links_this_document_belongs_to}); 
-      console.log("LINKS" + {links})
-      if (links_this_document_belongs_to) {
-         //TODO: instead of this, want it to display information about the document
-         client.create_child(document_id)
-         // client.remove_document_from_group(group_id, props.id);
-      } else {
-         // client.add_document_to_group(group_id, props.id);
-      }
-      handleClose();
+//TODO: for later if you want to be able to create relationships
+   // const handleSelect = (document_id) => {
+   //    console.log("FILTER"+ {links_this_document_belongs_to}); 
+   //    console.log("LINKS" + {links})
+   //    if (links_this_document_belongs_to) {
+   //       //TODO: instead of this, want it to display information about the document
+   //       client.create_child(document_id)
+   //       // client.remove_document_from_group(group_id, props.id);
+   //    } else {
+   //       // client.add_document_to_group(group_id, props.id);
+   //    }
+   //    handleClose();
+   // }
+   
+   const handleSelect = (meta_id) => {
+      console.log("open parent document")
    }
-
    const LinkIconHandler = (props) => {
-      if (links) {
-         const l = props.links[0];
+      if (props.links) {
+         const l = props.links;
          return (
             <Tooltip title={l.label}>
                <FolderCopyIcon sx={{ color: l.color }} style={{ fontSize: 15 }} />
@@ -81,19 +75,22 @@ export default function linkSelector(props) {
    return (
       <div>
          <IconButton onClick={handleClick}>
-            <LinkIconHandler links = {links_this_document_belongs_to}/>  
+            <LinkIconHandler links = {links}/>  
          </IconButton> 
-         <Accordion> 
-            {links ? links.map((l) => {
-         return (
-            <AccordionSummary>
-               value={l._id}
-             </AccordionSummary>
-         )
-      }) :
-       <AccordionSummary>No links for the document...</AccordionSummary>}
-         </Accordion>
+         <Menu
+            anchorEl={anchorEl}
+            onClose={handleClose}
+            open={open}
+         >
+            {/* {console.log(links +"LINK-CHECK")} */}
+               <MenuItem
+                  value = {links.id}
+                   onClick={() => handleSelect(links.id)}>
+                  <FolderIcon style={{ fontSize: 15 }} />
+                  <ListItemText  />
+               </MenuItem>
          
+         </Menu>
       </div>
    )
 }
