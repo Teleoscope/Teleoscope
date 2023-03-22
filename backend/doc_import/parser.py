@@ -11,7 +11,7 @@ parser.add_argument('directory')          # directory to parse
 parser.add_argument('-d', '--database')   # which database to insert into
 parser.add_argument('-s', '--subreddit')  # the subreddit to parse
 parser.add_argument('-c', '--check',
-                    action='check_true')  # only print the output rather than inserting into MongoDB
+                    action='store_true')  # only print the output rather than inserting into MongoDB
 
 
 # Adjust chunk_size as necessary -- defaults to 16,384 if not specified
