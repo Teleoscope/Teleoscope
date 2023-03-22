@@ -38,7 +38,7 @@ function Login() {
          },
          body: JSON.stringify({
             username: username,
-            password: password
+            password: password // NOTE: password in clear text, cannot trust the flask server
          })
       })
       .then(response => {
@@ -47,19 +47,19 @@ function Login() {
             response.json().then(token => {
                setCookie('token', token, {path: '/'});
                router.push('/');
-               alert('Logged in')
+               // alert('Logged in')
             })
          } else {
             // if log in failed, alert relate error message and let the user re-login.
             router.push('/account/login');
             response.json().then(msg => {
-               alert(msg);
+               alert(msg); // show it on <div>
             })
          }
       })
       .catch(error => {
          router.push('/account/login');
-         alert(error);
+         alert(error); // show it on <div>
       });
    }
 
