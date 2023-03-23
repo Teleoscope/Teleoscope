@@ -94,12 +94,12 @@ class Pushshift:
             os.mkdir(outdir)
 
         for filename in files:
-            filepath = os.join(self.args.directory, filename)
+            filepath = os.path.join(self.args.directory, filename)
             print(f'started {filename}.')
             self.processfile(filepath)
             print(f'finished {filename}.' )
             self.complete.append(filename)
-            os.rename(filepath, os.join(outdir, filename))
+            os.rename(filepath, os.path.join(outdir, filename))
 
 if __name__ == "__main__":
     # Parse the arguments
