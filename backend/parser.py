@@ -48,7 +48,7 @@ class Pushshift:
         if self.args.uid != None:
             found = list(self.db.documents.find({"metadata.id": obj[self.args.uid]}))
             if len(found) > 0:
-                print(f"document with {self.args.uid} already in database")
+                print(f"document with {obj[self.args.uid]} already in database")
                 return
         text = obj[self.args.text]
         title = obj[self.args.title]
@@ -89,6 +89,7 @@ class Pushshift:
 
     def process(self, files):
         for filename in files:
+            print(f'started {filename}.')
             self.processfile(filename)
             print(f'finished {filename}.' )
             self.complete.append(filename)
@@ -102,6 +103,9 @@ if __name__ == "__main__":
         for f in listdir(args.directory) 
         if isfile(join(args.directory, f))
     ]
+    print("Starting to process the following files:")
+    for f in files:
+        print(f)
     ps = Pushshift(args)
     ps.process(files)
     # print arguments
