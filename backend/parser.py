@@ -46,8 +46,8 @@ class Pushshift:
 
     def upload(self, obj):
         if self.args.uid != None:
-            found = self.db.documents.find({"metadata.id": obj[self.args.uid]})
-            if found > 0:
+            found = list(self.db.documents.find({"metadata.id": obj[self.args.uid]}))
+            if len(found) > 0:
                 print("document with {self.args.uid} already in database")
                 return
         text = obj[self.args.text]
