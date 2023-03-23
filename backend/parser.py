@@ -109,9 +109,7 @@ class Pushshift:
             except UnicodeDecodeError as err:
                 os.rename(filepath, os.path.join(errdir, filename))
                 pass
-            finally:
-                print("Some catastrophic error.")
-                raise
+
             
 
 if __name__ == "__main__":
