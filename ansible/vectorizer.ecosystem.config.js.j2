@@ -12,7 +12,7 @@ module.exports = {
       name: "worker1",
       cwd: "./Teleoscope/backend",
       script: "/usr/share/miniconda3/envs/teleoscope/bin/python",
-      args: `-m celery -A vectorize_tasks worker --loglevel=INFO -n worker1.${userInfo.username}@%h --queues=vectorizer-task`,
+      args: `-m celery -A vectorize_tasks worker --loglevel=INFO -n worker1.${userInfo.username}@%h --queues=vectorize-task`,
       watch: false,
       interpreter: "",
       max_memory_restart: "4G"
@@ -21,7 +21,7 @@ module.exports = {
       name: "worker2",
       cwd: "./Teleoscope/backend",
       script: "/usr/share/miniconda3/envs/teleoscope/bin/python",
-      args: `-m celery -A vectorize_tasks worker --loglevel=INFO -n worker2.${userInfo.username}@%h --queues=vectorizer-task`,
+      args: `-m celery -A vectorize_tasks worker --loglevel=INFO -n worker2.${userInfo.username}@%h --queues=vectorize-task`,
       watch: false,
       interpreter: "",
       max_memory_restart: "4G"
