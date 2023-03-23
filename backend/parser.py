@@ -9,6 +9,7 @@ import utils
 import tasks
 import schemas
 
+
 parser = argparse.ArgumentParser(
                     prog='Pushshift to MongoDB',
                     description='Takes Pushshift ZST files and puts them into MongoDB.',
@@ -88,22 +89,24 @@ class Pushshift:
                 self.incomplete.append(error)
 
     def process(self, files):
+        outdir = os.path.join(self.args.directory, "done")
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+
         for filename in files:
+            filepath = os.join(self.args.directory, filename)
             print(f'started {filename}.')
-            self.processfile(filename)
+            self.processfile(filepath)
             print(f'finished {filename}.' )
             self.complete.append(filename)
+            os.rename(filepath, os.join(outdir, filename))
 
 if __name__ == "__main__":
     # Parse the arguments
     args = parser.parse_args()
     # Get all files (not directories) in given directory
-    files = [
-        join(args.directory, f) 
-        for f in listdir(args.directory) 
-        if isfile(join(args.directory, f))
-    ]
-    print("Starting to process the following files:")
+    files = [f for f in listdir(args.directory) if isfile(join(args.directory, f))]
+    print(f"Starting to process the following files in {args.directory}:")
     for f in files:
         print(f)
     ps = Pushshift(args)
