@@ -29,7 +29,7 @@ export default function DocumentList(props) {
 
   const BuildDocumentListItem = (pair) => {
     return (
-      <DocumentListItem id={pair[0]} key={pair[0] + "DocumentListItem"} {...props}>
+      <DocumentListItem group={props.group} id={pair[0]} key={pair[0] + "DocumentListItem"} {...props}>
         {" "}
       </DocumentListItem>
     );

@@ -24,6 +24,7 @@ parser.add_argument('-t', '--text', default="selftext")       # the text field
 parser.add_argument('-T', '--title', default="title")         # the title field
 parser.add_argument('-r', '--relationships')                  # the relationships field
 parser.add_argument('-m', '--metadata')                       # the metadata fields
+parser.add_argument('-u', '--uid')                            # a UID field
 
 # True/false option fields
 parser.add_argument('-c', '--check',
@@ -44,6 +45,11 @@ class Pushshift:
         self.db = utils.connect(db=self.args.database)
 
     def upload(self, obj):
+        if self.args.uid != None:
+            found = self.db.documents.find({"metadata.id": obj[self.args.uid]})
+            if found > 0:
+                print("document with {self.args.uid} already in database")
+                return
         text = obj[self.args.text]
         title = obj[self.args.title]
         if len(text) == 0 or text == '[removed]' or text == '[deleted]':
@@ -84,6 +90,7 @@ class Pushshift:
     def process(self, files):
         for filename in files:
             self.processfile(filename)
+            print(f'finished {filename}.' )
             self.complete.append(filename)
 
 if __name__ == "__main__":

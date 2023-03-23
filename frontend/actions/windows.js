@@ -181,11 +181,26 @@ export const Windows = createSlice({
 			state.logical_clock = state.logical_clock + 1;
 			state.nodes = nodes;
 			console.log("debug state", state)
+		},
+		setDraggable: (state, action) => {
+			var temp = [...state.nodes];
+			var index = temp.findIndex((w) => w.id == action.payload.id);
+			console.log("drag", action.payload)
+			temp[index]["draggable"] = action.payload.draggable;
+			state.nodes = temp;
+		},
+		addNode: (state, action) => {
+			var temp = [...state.nodes];
+			temp.concat(action.payload.node);
+			state.logical_clock = state.logical_clock + 1;
+			state.nodes = temp;
 		}
 	}
 })
 
 export const {
+	addNode,
+	setDraggable,
 	updateNodes,
 	setEdges,
 	setNodes,

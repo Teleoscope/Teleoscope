@@ -51,9 +51,8 @@ export default function Workspace(props) {
         <div style={{width: "100vw", height: "10vh"}}>
           <TopBar isConnected={props.isConnected} />
         </div>
-        <div style={{width: "100vw", height: "90vh"}}>
           <Flow></Flow>
-        </div>
+
         
       <ContextMenu
         handleCloseContextMenu={handleCloseContextMenu}
