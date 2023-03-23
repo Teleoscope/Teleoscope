@@ -48,7 +48,7 @@ class Pushshift:
         if self.args.uid != None:
             found = list(self.db.documents.find({"metadata.id": obj[self.args.uid]}))
             if len(found) > 0:
-                print("document with {self.args.uid} already in database")
+                print(f"document with {self.args.uid} already in database")
                 return
         text = obj[self.args.text]
         title = obj[self.args.title]
