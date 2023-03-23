@@ -90,13 +90,22 @@ class Pushshift:
 
     def process(self, files):
         outdir = os.path.join(self.args.directory, "done")
+        errdir = os.path.join(self.args.directory, "err")
+
         if not os.path.exists(outdir):
             os.mkdir(outdir)
+        
+        if not os.path.exists(errdir):
+            os.mkdir(errdir)
 
         for filename in files:
             filepath = os.path.join(self.args.directory, filename)
             print(f'started {filename}.')
-            self.processfile(filepath)
+            try:
+                self.processfile(filepath)
+            except UnicodeDecodeError as err:
+                os.rename(filepath, os.path.join(errdir, filename))
+                pass
             print(f'finished {filename}.' )
             self.complete.append(filename)
             os.rename(filepath, os.path.join(outdir, filename))
