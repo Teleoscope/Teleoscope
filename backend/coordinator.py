@@ -74,7 +74,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         res = None
 
         if task == "vectorize_text":
-            resp = self.start_instance()
+            resp = self.vectorize(args["text"])
             print(resp)
 
         if task == "start_instance":
@@ -87,9 +87,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
     
     def vectorize(self, text):
         res = vectorize_text.signature(
-            args=(text),
-            kwargs={
-            }
+            args=(text,),
+            kwargs={}
         )
         res.apply_async(queue=task_queue_label)
 

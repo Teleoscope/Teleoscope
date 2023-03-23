@@ -45,7 +45,7 @@ def connect(queue, task, args):
     }
 
     channel.basic_publish(
-        exchange='',
+        exchange=queue,
         routing_key=queue,
         body=json.dumps(message),
         properties=pika.BasicProperties(
@@ -54,4 +54,4 @@ def connect(queue, task, args):
     print(" [x] Sent %r" % message)
     connection.close()
 
-connect(task_queue, "vectorize_text", {"text": "hello"})
+connect(dispatch_queue, "vectorize_text", {"text": "hello1"})

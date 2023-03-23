@@ -40,6 +40,7 @@ app.conf.update(
     task_queues=[queue],
 )
 
+@app.task
 def vectorize_text(text): #(text) -> Vector
     '''
     vectorize_text
