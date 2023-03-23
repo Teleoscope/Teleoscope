@@ -103,12 +103,16 @@ class Pushshift:
             print(f'started {filename}.')
             try:
                 self.processfile(filepath)
+                print(f'finished {filename}.' )
+                self.complete.append(filename)
+                os.rename(filepath, os.path.join(outdir, filename))
             except UnicodeDecodeError as err:
                 os.rename(filepath, os.path.join(errdir, filename))
                 pass
-            print(f'finished {filename}.' )
-            self.complete.append(filename)
-            os.rename(filepath, os.path.join(outdir, filename))
+            finally:
+                print("Some catastrophic error.")
+                raise
+            
 
 if __name__ == "__main__":
     # Parse the arguments
