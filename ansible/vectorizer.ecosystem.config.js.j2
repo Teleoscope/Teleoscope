@@ -1,0 +1,30 @@
+// must be run with pm2
+// npm install -g pm2
+// pm2 start ecosystem.config.js
+// pm2 monit
+const os = require("os");
+let userInfo = os.userInfo();
+console.log("User info:", userInfo);
+
+module.exports = {
+  apps: [
+    {
+      name: "worker1",
+      cwd: "./Teleoscope/backend",
+      script: "/usr/share/miniconda3/envs/teleoscope/bin/python",
+      args: `-m celery -A vectorize_tasks worker --loglevel=INFO -n worker1.${userInfo.username}@%h --queues=vectorizer-task`,
+      watch: false,
+      interpreter: "",
+      max_memory_restart: "4G"
+    },
+    {
+      name: "worker2",
+      cwd: "./Teleoscope/backend",
+      script: "/usr/share/miniconda3/envs/teleoscope/bin/python",
+      args: `-m celery -A vectorize_tasks worker --loglevel=INFO -n worker2.${userInfo.username}@%h --queues=vectorizer-task`,
+      watch: false,
+      interpreter: "",
+      max_memory_restart: "4G"
+    },
+  ]
+};

@@ -1,0 +1,19 @@
+- hosts: "{{ groups['newmachines'] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files: 
+    - ./vars/vars.yaml
+
+- name: Run Ensure Root Access
+  ansible.builtin.import_playbook: enable-root-access.yaml
+- name: Ensure pip
+  ansible.builtin.import_playbook: ensurepip.yaml
+- name: Run Install and Setup Miniconda
+  ansible.builtin.import_playbook: miniconda.yaml
+- name: Run Install and Setup Node and PM2
+  ansible.builtin.import_playbook: nodejs.yaml
+- name: Ensure UFW permissions
+  ansible.builtin.import_playbook: ufw.yaml
+- name: Install Python Dependencies
+  ansible.builtin.import_playbook: pythondeps.yaml
+- name: Run Vectorizer-specific tasks
+  ansible.builtin.import_playbook: vectorizer.yaml
