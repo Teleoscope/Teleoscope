@@ -73,7 +73,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         args = msg['body']['args']
         res = None
 
-        if task == "vectorize_text":
+        if task == "vectorize_and_upload_text":
             self.vectorize_and_upload_text(args["text"], args["db"], args["id"])
 
         if task == "start_instance":
