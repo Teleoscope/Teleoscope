@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 import json
 import utils
+import time
 load_dotenv("./.env.coordinator")
 
 RABBITMQ_ADMIN_USERNAME = os.getenv("RABBITMQ_ADMIN_USERNAME")
@@ -58,6 +59,7 @@ db = utils.connect(db="nursing")
 cursor = db.documents.find({})
 for doc in cursor:
     if len(doc["textVector"]) == 0:
+        time.sleep(1)
         connect(dispatch_queue, "vectorize_and_upload_text", {"text": doc["text"], "db": "nursing", "id": str(doc["_id"])})
 
 connection.close()

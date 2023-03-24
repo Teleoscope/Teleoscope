@@ -74,8 +74,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         res = None
 
         if task == "vectorize_text":
-            resp = self.vectorize_and_upload_text(args["text"], args["db"], args["id"])
-            print(resp)
+            self.vectorize_and_upload_text(args["text"], args["db"], args["id"])
 
         if task == "start_instance":
             resp = self.start_instance()
@@ -84,6 +83,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         if task == "stop_instance":
             resp = self.stop_instance()
             print(resp)
+    
     
     def vectorize_and_upload_text(self, text, db, id):
         res = vectorize_and_upload_text.signature(
