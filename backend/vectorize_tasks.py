@@ -12,6 +12,10 @@ simplefilter(action='ignore', category=FutureWarning)
 from dotenv import load_dotenv
 import os
 
+
+import tensorflow_hub as hub
+embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+
 load_dotenv("./.env.coordinator")
 
 os.getenv('')
@@ -34,6 +38,7 @@ queue = Queue(
 )
 
 
+
 app = Celery('vectorize_tasks', backend='rpc://', broker=CELERY_BROKER_URL)
 app.conf.update(
     task_serializer='pickle',
@@ -52,8 +57,6 @@ def vectorize_and_upload_text(text, database, id): #(text) -> Vector
     purpose: This function is used to return a vectorized version of the text
             (Assumes the text is error free)
     '''
-    import tensorflow_hub as hub
-    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
     vector = embed([text]).numpy()[0].tolist()
     db = utils.connect(db=database)
     db.documents.update_one(
