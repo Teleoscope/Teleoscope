@@ -26,9 +26,9 @@ connection = pika.BlockingConnection(
     credentials=credentials
     )
 )
+channel = connection.channel()
 
 def connect(queue, task, args):
-    channel = connection.channel()
 
     channel.queue_declare(queue=queue, durable=True)
 
@@ -52,7 +52,6 @@ def connect(queue, task, args):
             delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
         ))
     print(" [x] Sent %r" % message)
-    connection.close()
 
 
 db = utils.connect(db="nursing")
@@ -60,3 +59,5 @@ cursor = db.documents.find({})
 for doc in cursor:
     if len(doc["textVector"]) == 0:
         connect(dispatch_queue, "vectorize_and_upload_text", {"text": doc["text"], "db": "nursing", "id": str(doc["_id"])})
+
+connection.close()
