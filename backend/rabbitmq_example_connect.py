@@ -3,6 +3,7 @@ import pika
 import os
 from dotenv import load_dotenv
 import json
+import utils
 load_dotenv("./.env.coordinator")
 
 RABBITMQ_ADMIN_USERNAME = os.getenv("RABBITMQ_ADMIN_USERNAME")
@@ -31,7 +32,6 @@ def connect(queue, task, args):
 
     channel.queue_declare(queue=queue, durable=True)
 
-
     headers = { "content_type": "application/json", "content_encoding": "utf-8" }
     body = {
         "task": task,
@@ -54,4 +54,9 @@ def connect(queue, task, args):
     print(" [x] Sent %r" % message)
     connection.close()
 
-connect(dispatch_queue, "vectorize_text", {"text": "hello1"})
+
+db = utils.connect(db="nursing")
+cursor = db.documents.find({})
+for doc in cursor:
+    if len(doc["textVector"]) == 0:
+        connect(dispatch_queue, "vectorize_and_upload_text", {"text": doc["text"], "db": "nursing", "id": str(doc["_id"])})

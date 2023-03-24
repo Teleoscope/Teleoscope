@@ -21,7 +21,7 @@ dispatch_queue_label = "vectorize-dispatch"
 task_queue_label = "vectorize-task"
 
 # local files
-from vectorize_tasks import app, vectorize_text
+from vectorize_tasks import app, vectorize_and_upload_text
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
@@ -74,7 +74,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         res = None
 
         if task == "vectorize_text":
-            resp = self.vectorize(args["text"])
+            resp = self.vectorize_and_upload_text(args["text"], args["db"], args["id"])
             print(resp)
 
         if task == "start_instance":
@@ -85,9 +85,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             resp = self.stop_instance()
             print(resp)
     
-    def vectorize(self, text):
-        res = vectorize_text.signature(
-            args=(text,),
+    def vectorize_and_upload_text(self, text, db, id):
+        res = vectorize_and_upload_text.signature(
+            args=(text, db, id),
             kwargs={}
         )
         res.apply_async(queue=task_queue_label)

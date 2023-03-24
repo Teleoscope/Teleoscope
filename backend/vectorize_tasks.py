@@ -3,6 +3,8 @@ from warnings import simplefilter
 from celery import Celery, Task, chain
 from kombu import Consumer, Exchange, Queue
 import datetime
+import utils
+from bson import ObjectId
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
@@ -41,9 +43,9 @@ app.conf.update(
 )
 
 @app.task
-def vectorize_text(text): #(text) -> Vector
+def vectorize_and_upload_text(text, database, id): #(text) -> Vector
     '''
-    vectorize_text
+    vectorize__and_upload_text
 
     input: string
     output: numpy
@@ -53,4 +55,10 @@ def vectorize_text(text): #(text) -> Vector
     import tensorflow_hub as hub
     embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
     vector = embed([text]).numpy()[0].tolist()
-    return vector
+    db = utils.connect(db=database)
+    db.documents.update_one(
+        {"_id": ObjectId(str(id))},
+        { "$set": {
+            "textVector" : vector
+        }}
+    )
