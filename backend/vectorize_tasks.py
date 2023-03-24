@@ -65,6 +65,7 @@ def vectorize_and_upload_text(text, database, id): #(text) -> Vector
             "textVector" : vector
         }}
     )
+    print(f"Vectorized and uploaded {id}.")
 
 @app.task
 def ping(msg):
