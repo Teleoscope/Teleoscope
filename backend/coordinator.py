@@ -87,7 +87,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
     
     def vectorize_and_upload_text(self, text, db, id):
         res = vectorize_and_upload_text.signature(
-            args=(text, db, id),
+            args=(text, db, id,),
             kwargs={}
         )
         res.apply_async(queue=task_queue_label)
