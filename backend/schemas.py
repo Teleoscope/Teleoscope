@@ -47,12 +47,12 @@ def create_document_object(title,textVector, text, relationships = [],metadata={
         # 'id': id, 
         'textVector': textVector, 
         'text': text,
-        'relationships': {
+        'relationships': [
             # 'parent': parent, 
             # 'child': child, 
             # 'next': next
-            **relationships
-        },
+            # **relationships
+        ],
         'metadata' : {
             # 'id' : id
             **metadata
