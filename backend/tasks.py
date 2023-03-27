@@ -155,6 +155,7 @@ def create_child(*args, **kwargs):
         metadata['teleoscope_start'] = start_index
         metadata['teleoscope_end']= end_index
         # Creating relationships to copy document's relationship values
+        relationship = {}
         relationships = copy.deepcopy(document['relationships'])
         # Assigning parent of this document's child to the present document
         # relationships['parent'] = document
@@ -170,7 +171,6 @@ def create_child(*args, **kwargs):
         new_id = inserted_document.inserted_id
         child_document = db.documents.find_one({"_id": new_id})
         #TODO: relationship = object (with _id and type); 
-        relationship = {}
         relationship = {"type": "child", "_id": child_document._id}
         relationships.append(relationship)
         utils.commit_with_retry(transaction_session)
