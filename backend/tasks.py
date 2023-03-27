@@ -174,6 +174,7 @@ def create_child(*args, **kwargs):
         relationship = {"type": "child", "_id": new_id}
         print(relationship)
         relationships.append(relationship)
+        print(relationships)
         utils.commit_with_retry(transaction_session)
     return new_id
 
