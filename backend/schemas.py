@@ -33,7 +33,7 @@ def create_user_object(first_name, last_name, password, username):
         "sessions":[],
         "action": "initialize a user"
     }
-def create_document_object(title,textVector, text, relationships = {},metadata={}):
+def create_document_object(title,textVector, text, relationships = [],metadata={}):
     #TODO: make comment abotu the i/p type we expect in relationship, metadata
     """
     Schema to create new document object in the database.
