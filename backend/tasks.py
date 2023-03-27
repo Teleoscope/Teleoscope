@@ -158,7 +158,10 @@ def create_child(*args, **kwargs):
         relationship = {}
         relationships = copy.deepcopy(document['relationships'])
         # Assigning parent of this document's child to the present document
-        # relationships['parent'] = document
+        relationship = {"type": "parent", "_id": document_id}
+        relationships.append(relationship)
+        print(relationship)
+        print(relationships)
         # check to see if the end_index is lesser than the document's last index
         length_document = len(document["text"])
         if end_index >= length_document:
@@ -171,10 +174,6 @@ def create_child(*args, **kwargs):
         new_id = inserted_document.inserted_id
         child_document = db.documents.find_one({"_id": new_id})
         #TODO: relationship = object (with _id and type); 
-        relationship = {"type": "child", "_id": new_id}
-        print(relationship)
-        relationships.append(relationship)
-        print(relationships)
         utils.commit_with_retry(transaction_session)
     return new_id
 
