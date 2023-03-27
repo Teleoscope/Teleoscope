@@ -43,5 +43,6 @@ export default function WindowFactory(props) {
 			title={wdefs[w.type].title(data)}
 			color={wdefs[w.type].color(data)}
 		/>
+		
 	)
 }

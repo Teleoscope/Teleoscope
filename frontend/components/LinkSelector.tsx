@@ -11,7 +11,9 @@ import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 
 // actions 
-import { useAppSelector } from '../hooks'
+import { useAppSelector, useAppDispatch } from '../hooks'
+import { addWindow } from "../actions/windows"
+import { getDefaultWindow } from "./WindowFolder/WindowDefault"
 
 // contexts
 import { Stomp } from './Stomp';
@@ -26,8 +28,9 @@ export default function linkSelector(props) {
    client.userId = userid;
    const { document } = useSWRAbstract("document", `/api/document/${props.id}`);
    console.log("document", document)
-   const links = document?.metadata;
+   const links = document?.relationships;
    console.log("LINKS", links)
+   const dispatch = useAppDispatch();
    //TODO: display key and value for the metadata -> display everything (see how that works)
    // have links to -> so from the relationships dict it finds the document and just shows that
    const [anchorEl, setAnchorEl] = useState(null);
@@ -39,6 +42,12 @@ export default function linkSelector(props) {
    const handleClose = () => {
       setAnchorEl(null);
    };
+   const item = (id, type) => {
+      const t = getDefaultWindow()
+      t.i = id;
+      t.type = type;
+      return t;
+    }
 //TODO: for later if you want to be able to create relationships
    // const handleSelect = (document_id) => {
    //    console.log("FILTER"+ {links_this_document_belongs_to}); 
@@ -82,14 +91,17 @@ export default function linkSelector(props) {
             onClose={handleClose}
             open={open}
          >
-            {/* {console.log(links +"LINK-CHECK")} */}
+            {links ? links.map((link) => {
+               return (
                <MenuItem
-                  value = {links.id}
-                   onClick={() => handleSelect(links.id)}>
+                  value = {link.type}
+                   onClick= {() => { dispatch(addWindow({ i: link._id, type: "Document", ...item })) }}>
                   <FolderIcon style={{ fontSize: 15 }} />
                   <ListItemText  />
                </MenuItem>
-         
+               )
+            })
+               : <MenuItem>No links for this document...</MenuItem>}
          </Menu>
       </div>
    )

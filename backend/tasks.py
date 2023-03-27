@@ -169,8 +169,9 @@ def create_child(*args, **kwargs):
         inserted_document = db.documents.insert_one(child_document, session=transaction_session)
         new_id = inserted_document.inserted_id
         child_document = db.documents.find_one({"_id": new_id})
-        #TODO: check if correct 
-        relationships['child'] = child_document
+        #TODO: relationship = object (with _id and type); 
+        relationship = {"type": "child", "_id": child_document._id}
+        relationships.append(relationship)
         utils.commit_with_retry(transaction_session)
     return new_id
 
