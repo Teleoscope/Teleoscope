@@ -157,7 +157,7 @@ def create_child(*args, **kwargs):
         # Creating relationships to copy document's relationship values
         relationships = copy.deepcopy(document['relationships'])
         # Assigning parent of this document's child to the present document
-        relationships['parent'] = document
+        # relationships['parent'] = document
         # check to see if the end_index is lesser than the document's last index
         length_document = len(document["text"])
         if end_index >= length_document:
