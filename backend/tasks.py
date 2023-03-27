@@ -174,7 +174,7 @@ def create_child(*args, **kwargs):
         child_document = db.documents.find_one({"_id": new_id})
         #TODO: relationship = object (with _id and type); 
         relationship['type'] = 'child'
-        relationship['_id'] = child_document._id
+        relationship['document_id'] = child_document._id
         relationships.append(relationship)
         utils.commit_with_retry(transaction_session)
     return new_id
