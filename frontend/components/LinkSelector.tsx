@@ -101,9 +101,8 @@ export default function linkSelector(props) {
                <MenuItem
                   value = {link.type}
                    onClick= {() => { dispatch(addWindow({ i: link._id, type: "Document", ...item })) }}>
-                      
                       <DocumentTitle title={() => {titleHandler(link)}} noWrap={false} />
-                  {/* <FolderIcon style={{ fontSize: 15 }} /> */}
+                  <FolderIcon style={{ fontSize: 15 }} />
                   <ListItemText primary={link.type} sx={{ color: '#6f42c1'}}/>
                </MenuItem>
                )
