@@ -390,9 +390,9 @@ class Clustering:
         """
                 
         # An int that represents min_token_length required
-        min_token_len=2,
+        min_token_len = 2
         # A list of irrelevant pos tags
-        irrelevant_pos=["ADV", "PRON", "CCONJ", "PUNCT", "PART", "DET", "ADP", "SPACE"],
+        irrelevant_pos = ["ADV", "PRON", "CCONJ", "PUNCT", "PART", "DET", "ADP", "SPACE"]
 
         clean_text = []
 
