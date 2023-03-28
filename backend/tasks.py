@@ -845,7 +845,8 @@ class reorient(Task):
             self.allDocumentIDs = ids
             self.allDocumentVectors = vecs
             self.documentsCached = True
-        return
+        
+        return self.allDocumentIDs, self.allDocumentVectors
 
 
     def computeResultantVector(self, positive_docs, negative_docs):
@@ -908,7 +909,7 @@ class reorient(Task):
             # if both are empty, then cache stuff if not cached alreadt
             # Check if document ids and vectors are cached
             if self.documentsCached == False:
-                self.cacheDocumentsData()
+                _, _ = self.cacheDocumentsData()
 
             # Check if db connection is cached
             if self.db is None:
@@ -920,7 +921,7 @@ class reorient(Task):
 
         # Check if document ids and vectors are cached
         if self.documentsCached == False:
-            self.cacheDocumentsData()
+            _, _ = self.cacheDocumentsData()
 
         # Check if db connection is cached
         if self.db is None:
