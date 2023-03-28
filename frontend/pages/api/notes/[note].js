@@ -5,6 +5,6 @@ export default async (req, res) => {
   const client = await clientPromise;
   const db = await client.db(process.env.NEXT_PUBLIC_DATABASE);
   const { note } = req.query;
-  const current = await db.collection("notes").findOne({oid: ObjectId(note)});
+  const current = await db.collection("notes").findOne({oid: new ObjectId(note)});
   res.json(current);
 };

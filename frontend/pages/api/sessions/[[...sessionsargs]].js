@@ -11,7 +11,7 @@ export default async (req, res) => {
 
   if (sessionsargs?.length > 0) {
     if (sessionsargs[0] != "-1") {
-      objid = ObjectId(sessionsargs[0])
+      objid = new ObjectId(sessionsargs[0])
     } else {
       objid = -1
     }

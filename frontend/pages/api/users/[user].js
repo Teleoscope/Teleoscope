@@ -10,6 +10,6 @@ export default authToken(async (req, res) => {
   if (user == "-1") {
     return res.json("userid is -1");
   }
-  const user_data = await db.collection("users").findOne({_id: ObjectId(user)});
+  const user_data = await db.collection("users").findOne({_id: new ObjectId(user)});
   res.json(user_data);
 });
