@@ -767,7 +767,7 @@ def cluster_by_groups(*args, **kwargs):
     """
     import clustering
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
-    clustering.cluster_by_groups(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"])
+    clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"])
 
 
 @app.task
