@@ -9,11 +9,13 @@ import FolderIcon from '@mui/icons-material/Folder';
 import Tooltip from '@mui/material/Tooltip';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
+import DocumentTitle from '../components/Documents/DocumentTitle';
 
 // actions 
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { addWindow } from "../actions/windows"
 import { getDefaultWindow } from "./WindowFolder/WindowDefault"
+import { PreprocessTitle } from "../../frontend/util/Preprocessers"
 
 // contexts
 import { Stomp } from './Stomp';
@@ -46,8 +48,11 @@ export default function linkSelector(props) {
       const t = getDefaultWindow()
       t.i = id;
       t.type = type;
+      console.log("item", t)
       return t;
     }
+   const titleHandler = (props) => {   
+   }
 //TODO: for later if you want to be able to create relationships
    // const handleSelect = (document_id) => {
    //    console.log("FILTER"+ {links_this_document_belongs_to}); 
@@ -69,7 +74,7 @@ export default function linkSelector(props) {
       if (props.links) {
          const l = props.links;
          return (
-            <Tooltip title={l.label}>
+            <Tooltip title={l.type}>
                <FolderCopyIcon sx={{ color: l.color }} style={{ fontSize: 15 }} />
             </Tooltip>
          )
@@ -96,8 +101,10 @@ export default function linkSelector(props) {
                <MenuItem
                   value = {link.type}
                    onClick= {() => { dispatch(addWindow({ i: link._id, type: "Document", ...item })) }}>
-                  <FolderIcon style={{ fontSize: 15 }} />
-                  <ListItemText  />
+                      
+                      <DocumentTitle title={() => {titleHandler(link)}} noWrap={false} />
+                  {/* <FolderIcon style={{ fontSize: 15 }} /> */}
+                  <ListItemText primary={link.type} sx={{ color: '#6f42c1'}}/>
                </MenuItem>
                )
             })

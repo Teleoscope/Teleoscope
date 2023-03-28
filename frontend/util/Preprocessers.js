@@ -16,7 +16,6 @@ export function PreprocessTitle(title) {
       
       var ampreg = /&amp;/g
       var ret = sliced.replace(ampreg, "and")
-
       return ret;
    } else {
       return "Document Loading..."; 
