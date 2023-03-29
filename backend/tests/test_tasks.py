@@ -82,6 +82,19 @@ def test_create_child_outside_document_range():
 	with pytest.raises(Exception):
 		tasks.create_child((), start_index = start, end_index = end, document_id = ObjectId("637eabe7f0a9482a337a11d5"))
 
+#Case 4: valid document id, end_index before the start_index
+def test_create_child_with_overlapping_index():
+	start = 300
+	end = 20
+	with pytest.raises(Exception):
+		tasks.create_child((), start_index = start, end_index = end, document_id = ObjectId("637eabe7f0a9482a337a11d5"))
+
+#Case 5: valid document id, start_index before 0
+def test_create_child_with_overlapping_index():
+	start = -20
+	end = 20
+	with pytest.raises(Exception):
+		tasks.create_child((), start_index = start, end_index = end, document_id = ObjectId("637eabe7f0a9482a337a11d5"))
 
 #Test Cases to check for correct links created
 #Case 1: checking if parent is updated in relationships array after using create_child method
@@ -93,9 +106,9 @@ def test_parent_create_using_create_child():
 	id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
 	try:
 		child_document = db.documents.find_one({"_id": id})
-		document = db.documents.find_one({"_id": parent_id})
-		#TODO: not sure if we'd want this hard-coded
-		assert child_document['relationships'][0]['_id'] == parent_id
+		for relation in child_document['relationships']:
+			if relation['type'] == 'parent':
+				assert relation['_id'] == parent_id
 	finally:
 		db.documents.delete_one({'_id': id})
 
@@ -104,8 +117,35 @@ def test_parent_create_using_create_child():
 #TODO: List comprehension (relationship for relationship in document['relationships'] == relationship)
 def test_next_in_relationships_field():
 	session, db = utils.create_transaction_session()
-	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
-	relation = {'type': 'next', '_id': ObjectId("637eae8a0381748b89ae518a")}
-	document['relationships'].append(relation)
-	assert document['relationships'][0]['type'] == 'next' and document['relationships'][0]['_id'] == ObjectId("637eae8a0381748b89ae518a")
-	
+	try:
+		document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
+		relation = {'type': 'next', '_id': ObjectId("637eae8a0381748b89ae518a")}
+		document['relationships'].append(relation)
+		for relation in document['relationships']:
+			if relation['type'] == 'next':
+				assert relation['_id'] == ObjectId("637eae8a0381748b89ae518a")
+	finally:
+		db.documents.update_one(
+			{'_id':ObjectId("637eabe7f0a9482a337a11d5")},
+			{"$pull": {'relationships': {'next':ObjectId("637eae8a0381748b89ae518a")}}}
+		)
+
+
+#Case 3: check if child field is updated in relationships after using create_child
+def test_parent_using_create_child():
+	session, db = utils.create_transaction_session()
+	start = 48
+	end = 399
+	parent_id = ObjectId("637eabe7f0a9482a337a11d5")
+	id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
+	try:
+		document = db.documents.find_one({"_id": parent_id})
+		for relation in document['relationships']:
+			if relation['type'] == 'parent':
+				assert relation['_id'] == parent_id
+	finally:
+		db.documents.delete_one({'_id': id})
+		db.documents.update_one(
+			{'_id':ObjectId("637eabe7f0a9482a337a11d5")},
+			{"$pull": {'relationships': {'child': id}}}
+		)

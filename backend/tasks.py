@@ -163,7 +163,7 @@ def create_child(*args, **kwargs):
         relationship = {"type": "parent", "_id": document_id}
         relationships.append(relationship)
 
-        # check to see if the end_index is lesser than the document's last index
+        # Check to see if the end_index is lesser than the document's last index
         length_document = len(document["text"])
         if end_index >= length_document or end_index <= start_index or start_index < 0:
             raise Exception(f'index is outside bounds of document')
@@ -178,6 +178,10 @@ def create_child(*args, **kwargs):
         new_id = inserted_document.inserted_id
         child_document = db.documents.find_one({"_id": new_id})
         
+        # Assignign child field to the parent document's relationship field
+        parent_relationship = {}
+        parent_relationship = {"type": "child", "_id": new_id}
+        document['relationships'].append(parent_relationship)
         utils.commit_with_retry(transaction_session)
     return new_id
 
