@@ -79,9 +79,9 @@ class Clustering:
         umap_embeddings = umap.UMAP(
             verbose = True,         # for logging
             metric = "precomputed", # use distance matrix
-            n_components = 30,      # reduce to n_components dimensions (2:100)
+            n_components = 30,      # reduce to n_components dimensions (2~100)
             # n_neighbors = 10,     # local (small n ~2) vs. global (large n ~100) structure 
-            min_dist = 1e-5,        # minimum distance apart that points are allowed (0.0:0.99)
+            min_dist = 1e-5,        # minimum distance apart that points are allowed (0.0~0.99)
         ).fit_transform(dm)
         logging.info(f"Shape after reduction: {umap_embeddings.shape}")
         
@@ -92,7 +92,7 @@ class Clustering:
         
         logging.info("Clustering with HDBSCAN...")
         hdbscan_labels = hdbscan.HDBSCAN(
-            min_cluster_size = 10,              # n-neighbors needed to be considered a cluster (0:50 df=5)
+            min_cluster_size = 10,              # num of neighbors needed to be considered a cluster (0~50, df=5)
             # min_samples = 5,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
             cluster_selection_epsilon = 0.2,    # have large clusters in dense regions while leaving smaller clusters small
                                                 # merge clusters if inter cluster distance is less than thres (df=0)
