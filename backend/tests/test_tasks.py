@@ -79,7 +79,6 @@ def test_create_child_valid_document():
 def test_create_child_outside_document_range():
 	start = 0
 	end = 100000000
-	# session, db = utils.create_transaction_session()
 	with pytest.raises(Exception):
 		tasks.create_child((), start_index = start, end_index = end, document_id = ObjectId("637eabe7f0a9482a337a11d5"))
 
@@ -95,11 +94,19 @@ def test_parent_create_using_create_child():
 	try:
 		child_document = db.documents.find_one({"_id": id})
 		document = db.documents.find_one({"_id": parent_id})
+		#TODO: not sure if we'd want this hard-coded
 		assert child_document['relationships'][0]['_id'] == parent_id
-		# assert child_document['text'] == document['text'][start:end]
 	finally:
 		db.documents.delete_one({'_id': id})
 
 
-#Case 2:
-#Case 3:
+#Case 2: checking if we can update relationships field to have 'next'
+def test_next_in_relationships_field():
+	session, db = utils.create_transaction_session()
+	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
+	relation = {'type': 'next', '_id': ObjectId("637eae8a0381748b89ae518a")}
+	document['relationships'].append(relation)
+	assert document['relationships'][0]['type'] == 'next' and document['relationships'][0]['_id'] == ObjectId("637eae8a0381748b89ae518a")
+	
+	
+#Case 3: when you have 
