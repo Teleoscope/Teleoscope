@@ -1,7 +1,7 @@
 import boto3
 client = boto3.client('ec2')
 
-INSTANCE_IDS: = []
+INSTANCE_IDS = []
 
 def start_instance():
     response = client.start_instances(
