@@ -95,7 +95,7 @@ def test_parent_create_using_create_child():
 	try:
 		child_document = db.documents.find_one({"_id": id})
 		document = db.documents.find_one({"_id": parent_id})
-		assert child_document['relationships']['_id'] == parent_id
+		assert child_document['relationships'][0]['_id'] == parent_id
 		# assert child_document['text'] == document['text'][start:end]
 	finally:
 		db.documents.delete_one({'_id': id})
