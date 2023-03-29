@@ -26,23 +26,22 @@ class Clustering:
     by the limit param--by taking into account human defined / provide clusters.
     """
 
-    def __init__(self, userid, group_id_strings, session_oid, limit=10000):
+    def __init__(self, user_id, group_id_strings, session_id, limit=10000):
         """Initializes the instance 
 
         Args:
-            userid:
+            user_id:
                 An ObjectID representing the user who made the API call
             group_id_strings:
-                A list of strings representing the ObjectID of each group
-                to be clustered
-            session_oid:
+                A list of strings representing the ObjectID of each group to be clustered
+            session_id:
                 An string that represents the ObjectID of the current session
             limit:
                 The number of documents to cluster. Default 10000
         """
-        self.userid = userid
+        self.user_id = user_id
         self.group_id_strings = group_id_strings
-        self.session_oid = session_oid
+        self.session_id = session_id
         self.limit = limit
         self.db = utils.connect()
         self.nlp = spacy.load("en_core_web_sm")
@@ -154,10 +153,10 @@ class Clustering:
             logging.info(f'There are {len(documents)} documents for Machine Cluster "{_label}".')
             
             tasks.add_group(
-                userid=self.userid,
+                userid=self.user_id,
                 label=_label,
                 color=_color,
-                session_id=self.session_oid, 
+                session_id=self.session_id, 
                 human=False, 
                 included_documents=documents, 
             )
@@ -416,7 +415,7 @@ class Clustering:
 
         # check to see user has any clusters
         if db.clusters.count_documents(
-            { "history.user": ObjectId(str(self.userid))}, 
+            { "history.user": ObjectId(str(self.user_id))}, 
             limit=1,
         ):
             
@@ -427,7 +426,7 @@ class Clustering:
 
             # cursor to find all existing clusters
             cursor = db.clusters.find(
-                { "history.user" : ObjectId(str(self.userid))},
+                { "history.user" : ObjectId(str(self.user_id))},
                 projection = {'_id': 1, 'teleoscope': 1},
             )    
 
@@ -468,7 +467,7 @@ class Clustering:
 
         logging.info(f'Clustering action history update.')
         transaction_session, db = utils.create_transaction_session()
-        session_id = ObjectId(str(self.session_oid))
+        session_id = ObjectId(str(self.session_id))
         session = db.sessions.find_one({"_id": session_id}, {"history": { "$slice": 1}})  
 
         history_item = session["history"][0]
