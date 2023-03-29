@@ -75,7 +75,7 @@ class Pushshift:
         # reader = zreader.Zreader(filepath, chunk_size=8192)
         # Read each line from the reader
         # for line in reader.readlines():
-        for line in self.read_lines_zst(filepath):
+        for line, file_bytes_processed in self.read_lines_zst(filepath):
             try:
                 obj = json.loads(line)
                 if self.args.subreddit != None:
@@ -86,7 +86,7 @@ class Pushshift:
                     print(f"KeyError {err}.")
                 pass
             except Exception as err:
-                error = f"Unexpected {err=}, {type(err)=} for {filepath} and {obj}.\n"
+                error = f"Unexpected {err=}, {type(err)=} for {filepath}.\n"
                 print(error)
                 self.incomplete.append(error)
 
