@@ -19,13 +19,7 @@ export default React.forwardRef(({ ...props }) => {
     const w = props.windata;
     const dispatch = useDispatch();
     
-    const handleMove = (e) => {
-        if (e.buttons == 1) {
-            setDrag(true);
-        } else {
-            setDrag(false);
-        }
-    }
+
 
     const handleSelect = (e) => {
         if (e.shiftKey) {
@@ -33,44 +27,25 @@ export default React.forwardRef(({ ...props }) => {
         }
     }
 
-    const handleChipClick = (e) => {
-        if (e.shiftKey) {
-            dispatch(checkWindow({ i: w.i, check: !w.isChecked }))
-        } else {
-            handleShow();
-        }
-    }
-
-    const handleShow = () => {
-        if (show) {
-            dispatch(minimizeWindow(props.id));
-            setShow(false);
-        }
-        if (!show && !drag) {
-            dispatch(maximizeWindow(props.id));
-            setShow(true);
-        }
-    }
-
     const handleDelete = () => {
         dispatch(removeWindow(props.id));
     }
 
-    if (!show) {
+
+    if (props.size.height < 35) {
         return (
             <Chip
                 label={props.title}
                 icon={props.icon}
                 clickable
                 onDelete={handleDelete}
-                onClick={(e) => handleChipClick(e)}
                 className="drag-handle"
-                onMouseMove={(e) => handleMove(e)}
                 sx={{
                     border: w.isChecked ? `2px solid ${props.color}` : "1px solid #DDDDDD",
                     boxShadow: '1',
                     cursor: "move",
                     backgroundColor: "white",
+                    width: props.size.width,
                     [`& .MuiChip-icon`]: {
                         color: props.color
                       }
@@ -98,7 +73,6 @@ export default React.forwardRef(({ ...props }) => {
                     title={props.title}
                     id={props.id}
                     icon={props.icon}
-                    handleShow={handleShow}
                     isChecked={w.isChecked}
                 /></CardActionArea>
             {props.inner}

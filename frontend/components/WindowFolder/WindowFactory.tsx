@@ -33,6 +33,7 @@ export default function WindowFactory(props) {
 		)
 	}
 
+
 	return (
 		<Window {...props}
 			icon={wdefs[w.type].icon(data)}

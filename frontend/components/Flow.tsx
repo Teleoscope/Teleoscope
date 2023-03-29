@@ -90,7 +90,12 @@ function Flow() {
         // type: id.type,
         type: "windowNode",
         position,
-        data: { label: `${id} node` },
+        style : { 
+          width: 400,
+          height: 300,
+        },
+        data: { label: `${id} node`, i: id, type: type},
+
       };
       console.log("drop", newNode, id)
 

@@ -8,11 +8,12 @@ import SpeedDialAction from '@mui/material/SpeedDialAction';
 import MenuActions from "./Context/ContextMenuActions"
 
 // actions
-import { addWindow } from "../actions/windows";
+import { addNode } from "../actions/windows";
 import { useSelector, useDispatch } from "react-redux";
 import useSWRAbstract from "../util/swr"
 
 export default function FABMenu(props) {
+  const [open, setOpen] = React.useState(false);
   const dispatch = useDispatch();
   const session_id = useSelector((state) => state.activeSessionID.value);
   const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
@@ -25,7 +26,31 @@ export default function FABMenu(props) {
   }
   
   const get_color = () => session ? session.history[0].color : "#4E5CBC"
+  const handleAddNode = (id, type) => {
+    const newNode = {
+        id: id,
+        type: "windowNode",
+        position: {x: 0, y: 0},
+        style : { 
+        width: 400,
+        height: 300,
+        },
+        data: { label: `${id} node`, i: id, type: type },
+    };
+    dispatch(addNode({node: newNode}))
+  }
 
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleClick = () => {
+    setOpen((prevOpen) => !prevOpen);
+  };
 
   return (
     <SpeedDial
@@ -41,7 +66,10 @@ export default function FABMenu(props) {
           }
         }
       }}
-
+      onClick={handleClick}
+      onMouseEnter={handleOpen}
+      onMouseLeave={handleClose}
+      open={open}
     >
       {Object.keys(actions).map((action) => (
         <SpeedDialAction
@@ -49,10 +77,9 @@ export default function FABMenu(props) {
           key={action}
           icon={actions[action].icon}
           tooltipTitle={action}
-          onClick={() => dispatch(addWindow(actions[action].default_window))}
+          onClick={() => handleAddNode(actions[action].default_window.i, actions[action].default_window.type)}
         />
       ))}
     </SpeedDial>
-
   );
 }

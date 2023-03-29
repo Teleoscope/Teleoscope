@@ -48,6 +48,7 @@
     "react-hook-form": "^7.39.4",
     "react-redux": "^8.0.2",
     "react-resizable": "^3.0.4",
+    "react-router-dom": "^6.10.0",
     "react-selecto": "^1.17.0",
     "react-sizeme": "^3.0.2",
     "react-test-renderer": "^18.2.0",

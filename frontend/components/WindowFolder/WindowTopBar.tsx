@@ -20,9 +20,6 @@ export default function WindowTopBar(props) {
 		<div onClick={()=>dispatch(moveWindowToFront(props.id))} className="drag-handle" style={{ cursor: "move" }}>
 			<Stack direction="row" alignItems="flex-start" justifyContent="space-between">
 					<IconButton size="small"
-						onClick={() => {
-							props.handleShow();
-						}}
 					>{props.icon}</IconButton>
 						<Typography
 							variant="body1"

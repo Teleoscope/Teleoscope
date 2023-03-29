@@ -46,7 +46,7 @@ export default function DocumentListItem(props) {
 
   const onDragStart = (event, data) => {
     event.dataTransfer.setData('application/reactflow/type', "Document");
-    event.dataTransfer.setData('application/reactflow/id', props.id);
+    event.dataTransfer.setData('application/reactflow/id', props.id + "%document");
 
     event.dataTransfer.effectAllowed = 'move';
   };
