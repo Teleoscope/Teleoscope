@@ -8,6 +8,7 @@ from os.path import isfile, join
 import utils
 import tasks
 import schemas
+import zstandard
 
 
 parser = argparse.ArgumentParser(
@@ -70,10 +71,11 @@ class Pushshift:
         else:
             self.upload(obj)
 
-    def processfile(self, filename):
-        reader = zreader.Zreader(filename, chunk_size=8192)
+    def processfile(self, filepath):
+        # reader = zreader.Zreader(filepath, chunk_size=8192)
         # Read each line from the reader
-        for line in reader.readlines():
+        # for line in reader.readlines():
+        for line in self.read_lines_zst(filepath):
             try:
                 obj = json.loads(line)
                 if self.args.subreddit != None:
@@ -84,7 +86,7 @@ class Pushshift:
                     print(f"KeyError {err}.")
                 pass
             except Exception as err:
-                error = f"Unexpected {err=}, {type(err)=} for {filename} and {obj}.\n"
+                error = f"Unexpected {err=}, {type(err)=} for {filepath} and {obj}.\n"
                 print(error)
                 self.incomplete.append(error)
 
@@ -110,6 +112,36 @@ class Pushshift:
                 os.rename(filepath, os.path.join(errdir, filename))
                 pass
 
+    def read_lines_zst(self, filepath):
+        with open(filepath, 'rb') as file_handle:
+            buffer = ''
+            reader = zstandard.ZstdDecompressor(max_window_size=2**31).stream_reader(file_handle)
+            while True:
+                chunk = self.read_and_decode(reader, 2**27, (2**29) * 2)
+
+                if not chunk:
+                    break
+                lines = (buffer + chunk).split("\n")
+
+                for line in lines[:-1]:
+                    yield line, file_handle.tell()
+
+                buffer = lines[-1]
+
+            reader.close()
+
+    def read_and_decode(self, reader, chunk_size, max_window_size, previous_chunk=None, bytes_read=0):
+        chunk = reader.read(chunk_size)
+        bytes_read += chunk_size
+        if previous_chunk is not None:
+            chunk = previous_chunk + chunk
+        try:
+            return chunk.decode()
+        except UnicodeDecodeError:
+            if bytes_read > max_window_size:
+                raise UnicodeError(f"Unable to decode frame after reading {bytes_read:,} bytes")
+            print(f"Decoding error with {bytes_read:,} bytes, reading another chunk")
+            return self.read_and_decode(reader, chunk_size, max_window_size, chunk, bytes_read)
             
 
 if __name__ == "__main__":
