@@ -115,7 +115,7 @@ class Pushshift:
     def read_lines_zst(self, filepath):
         with open(filepath, 'rb') as file_handle:
             buffer = ''
-            reader = zstandard.ZstdDecompressor(max_window_size=2**30).stream_reader(file_handle)
+            reader = zstandard.ZstdDecompressor(max_window_size=2**31).stream_reader(file_handle)
             while True:
                 chunk = self.read_and_decode(reader, 2**27, (2**29) * 2)
 
