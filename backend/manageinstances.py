@@ -1,5 +1,7 @@
 import boto3
 client = boto3.client('ec2')
+# https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#using-boto3
+# need to configure your machine w/ above
 
 INSTANCE_IDS = []
 
