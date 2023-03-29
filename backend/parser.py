@@ -88,7 +88,7 @@ class Pushshift:
             except Exception as err:
                 error = f"Unexpected {err=}, {type(err)=} for {filepath}.\n"
                 print(error)
-                self.incomplete.append(error)
+                
 
     def process(self, files):
         outdir = os.path.join(self.args.directory, "done")
@@ -106,16 +106,16 @@ class Pushshift:
             try:
                 self.processfile(filepath)
                 print(f'finished {filename}.' )
-                self.complete.append(filename)
                 os.rename(filepath, os.path.join(outdir, filename))
-            except UnicodeDecodeError as err:
+            except Exception as err:
+                print(f'error for {filename}')
                 os.rename(filepath, os.path.join(errdir, filename))
                 pass
 
     def read_lines_zst(self, filepath):
         with open(filepath, 'rb') as file_handle:
             buffer = ''
-            reader = zstandard.ZstdDecompressor(max_window_size=2**31).stream_reader(file_handle)
+            reader = zstandard.ZstdDecompressor(max_window_size=2**30).stream_reader(file_handle)
             while True:
                 chunk = self.read_and_decode(reader, 2**27, (2**29) * 2)
 
