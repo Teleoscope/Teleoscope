@@ -3,7 +3,7 @@ import { ObjectId } from 'bson';
 
 import authToken from '../../decorators';
 
-export default authToken(async (req, res) => {
+export default async (req, res) => {
   const client = await clientPromise;
   const db = await client.db(process.env.NEXT_PUBLIC_DATABASE);
   const { user } = req.query;
@@ -12,4 +12,4 @@ export default authToken(async (req, res) => {
   }
   const user_data = await db.collection("users").findOne({_id: new ObjectId(user)});
   res.json(user_data);
-});
+};

@@ -8,6 +8,7 @@ import { Layout } from '../../components/Login/Layout/Layout';
 import authenticateHash from '../../util/authenticate';
 import { Stomp } from '../../components/Stomp';
 import { useCookies } from "react-cookie";
+import bcrypt from 'bcryptjs';
 
 export default Login;
 
@@ -30,31 +31,55 @@ function Login() {
    const { errors } = formState;
 
    function onSubmit({ username, password }) {
-      // create a POST request to the backend auth server
-      fetch(`${process.env.NEXT_PUBLIC_AUTH_SERVER}/login`, {
+      fetch(`${process.env.NEXT_PUBLIC_AUTH_SERVER}/salt`, {
          method: 'POST',
          headers: {
             'Content-Type': 'application/json'
          },
          body: JSON.stringify({
-            username: username,
-            password: password // NOTE: password in clear text, cannot trust the flask server
+            username: username
          })
       })
       .then(response => {
          if (response.ok) {
-            // if log in is successful, store the token in a cookie and route to workspace
-            response.json().then(token => {
-               setCookie('token', token, {path: '/'});
-               router.push('/');
-               // alert('Logged in')
-            })
+            response.json().then(salt => {
+               // create a POST request to the backend auth server
+               fetch(`${process.env.NEXT_PUBLIC_AUTH_SERVER}/login`, {
+                  method: 'POST',
+                  headers: {
+                     'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                     username: username,
+                     password: bcrypt.hashSync(password, salt)
+                  })
+               })
+               .then(response => {
+                  if (response.ok) {
+                     // if log in is successful, store the token in a cookie and route to workspace
+                     response.json().then(token => {
+                        setCookie('token', token, {path: '/'});
+                        router.push('/');
+                     });
+                  } else {
+                     // if log in failed, alert relate error message and let the user re-login.
+                     router.push('/account/login');
+                     response.json().then(msg => {
+                        alert(msg); //TODO: show it on <div>
+                     });
+                  }
+               })
+               .catch(error => {
+                  router.push('/account/login');
+                  alert(error); // show it on <div>
+               });
+            });
          } else {
             // if log in failed, alert relate error message and let the user re-login.
             router.push('/account/login');
             response.json().then(msg => {
-               alert(msg); // show it on <div>
-            })
+               alert(msg); //TODO: show it on <div>
+            });
          }
       })
       .catch(error => {

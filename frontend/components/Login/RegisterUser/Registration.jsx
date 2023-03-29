@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
+import bcrypt from 'bcryptjs';
 
 // custom components
 import { Link } from '../Link'
@@ -33,25 +34,42 @@ function Registration() {
     const { errors } = formState;
 
     function onSubmit({ firstName, lastName, username, password }) {
-      fetch(`${process.env.NEXT_PUBLIC_AUTH_SERVER}/register`, {
-         method: 'POST',
-         headers: {
-            'Content-Type': 'application/json'
-         },
-         body: JSON.stringify({
-            firstName: firstName,
-            lastName: lastName,
-            username: username,
-            password: password
-         })
+      fetch(`${process.env.NEXT_PUBLIC_AUTH_SERVER}/salt`, {
+         method: 'GET'
       })
       .then(response => {
          if (response.ok) {
-            router.push('/account/login');
-            alert('Successfully registered, please log in.')
+            response.json().then(salt => {
+               fetch(`${process.env.NEXT_PUBLIC_AUTH_SERVER}/register`, {
+                  method: 'POST',
+                  headers: {
+                     'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                     firstName: firstName,
+                     lastName: lastName,
+                     username: username,
+                     password: bcrypt.hashSync(password, salt),
+                     salt: salt
+                  })
+               })
+               .then(response => {
+                  if (response.ok) {
+                     router.push('/account/login');
+                     alert('Successfully registered, please log in.');
+                  } else {
+                     router.push('/account/register');
+                     alert('Username already exists, please provide a different username.');
+                  }
+               })
+               .catch(error => {
+                  router.push('/account/register');
+                  alert(error);
+               });
+            });
          } else {
             router.push('/account/register');
-            alert('Username already exists, please provide a different username.')
+            alert('Unknown server-side error, please try again.');
          }
       })
       .catch(error => {

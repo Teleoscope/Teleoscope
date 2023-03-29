@@ -17,8 +17,9 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
-# API endpoint that allows POST requests to register users
 CORS(app)
+
+# API endpoint that allows POST requests to register users
 @app.route("/register", methods=['POST'])
 def register():
     if request.method == 'POST':
@@ -29,10 +30,14 @@ def register():
         firstName = request_body['firstName']
         lastName = request_body['lastName']
         username = request_body['username']
-        password = request_body['password']
+        password = request_body['password'] # this password is a hashed password
+        salt = request_body['salt'] # the type of the salt here is string
 
         # register the user
-        result = registerUser(firstName, lastName, username, password)
+        result = registerUser(firstName, lastName, username, password, salt)
+        # print(password)
+        # salt1 = salt.encode('utf-8')
+        # print(bcrypt.hashpw('123456'.encode('utf-8'), salt1))
         if result == 1:
             response = make_response(jsonify('Successfully registered.', 201))
         elif result == 0:
@@ -52,8 +57,8 @@ def login():
     if request.method == 'POST':
         # gets the request body in json format
         request_body = request.get_json()
-
-        # get parameters needed for registration
+        
+        # get parameters needed for login
         username = request_body['username']
         password = request_body['password']
 
@@ -64,8 +69,10 @@ def login():
             response = make_response(jsonify(token), 200)
         elif auth_value == 0:
             response = make_response(jsonify('Incorrect password.'), 403)
-        else:
+        elif auth_value == -1:
             response = make_response(jsonify('Username not found.'), 401)
+        else:
+            response = make_response(jsonify('Unknown server error, please try again'), 500)
         
         # sets the CORS header to "*", should be changed to a FQDN if available
         response.headers['Access-Control-Allow-Origin'] = '*'
@@ -76,9 +83,27 @@ def login():
 @app.route("/salt", methods=['GET', 'POST'])
 def salt():
     if request.method == 'GET':
-        return make_response()
+        response = make_response(jsonify(get_rand_salt().decode('utf-8')))
+
+        response.headers['Access-Control-Allow-Origin'] = '*'
+
+        return response
     elif request.method == 'POST':
-        return make_response()
+        request_body = request.get_json()
+        username = request_body['username']
+
+        salt = get_salt(username)
+        if salt == -1:
+            response = make_response(jsonify('Username not found.'), 401)
+        elif salt == -2:
+            response = make_response(jsonify('Unknown server error, please try again'), 500)
+        else:
+            response = make_response(jsonify(salt), 200)
+
+        response.headers['Access-Control-Allow-Origin'] = '*'
+
+        return response
+
 
 if __name__ == "__main__":
     # set SSL with cert.pem and key.pem generated using OpenSSL
