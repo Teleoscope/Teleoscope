@@ -79,6 +79,27 @@ def test_create_child_valid_document():
 def test_create_child_outside_document_range():
 	start = 0
 	end = 100000000
-	session, db = utils.create_transaction_session()
+	# session, db = utils.create_transaction_session()
 	with pytest.raises(Exception):
 		tasks.create_child((), start_index = start, end_index = end, document_id = ObjectId("637eabe7f0a9482a337a11d5"))
+
+
+#Test Cases to check for correct links created
+#Case 1: checking if parent is updated in relationships array after using create_child method
+def test_parent_create_using_create_child():
+	start = 48
+	end = 399
+	session, db = utils.create_transaction_session()
+	parent_id = ObjectId("637eabe7f0a9482a337a11d5")
+	id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
+	try:
+		child_document = db.documents.find_one({"_id": id})
+		document = db.documents.find_one({"_id": parent_id})
+		assert child_document['relationships']['_id'] == parent_id
+		# assert child_document['text'] == document['text'][start:end]
+	finally:
+		db.documents.delete_one({'_id': id})
+
+
+#Case 2:
+#Case 3:

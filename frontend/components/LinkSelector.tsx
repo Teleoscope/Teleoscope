@@ -48,7 +48,7 @@ export default function linkSelector(props) {
       const t = getDefaultWindow()
       t.i = id;
       t.type = type;
-      console.log("item", t)
+      console.log("default_item", t)
       return t;
     }
    const titleHandler = (props) => {   
@@ -101,7 +101,6 @@ export default function linkSelector(props) {
                <MenuItem
                   value = {link.type}
                    onClick= {() => { dispatch(addWindow({ i: link._id, type: "Document", ...item })) }}>
-                      <DocumentTitle title={() => {titleHandler(link)}} noWrap={false} />
                   <FolderIcon style={{ fontSize: 15 }} />
                   <ListItemText primary={link.type} sx={{ color: '#6f42c1'}}/>
                </MenuItem>

@@ -54,7 +54,7 @@ export default function WindowManager(props) {
     item.w = 4;
     dispatch(addWindow({ i: dragged_item.id, type: dragged_item.type, ...item }));
     console.log("dragged_item", dragged_item)
-    console.log("item", item)
+    // console.log("item", item)
   }
 
   const checkCollisions = (newItem, placeholder) => {
