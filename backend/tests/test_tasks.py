@@ -101,6 +101,7 @@ def test_parent_create_using_create_child():
 
 
 #Case 2: checking if we can update relationships field to have 'next'
+#TODO: List comprehension (relationship for relationship in document['relationships'] == relationship)
 def test_next_in_relationships_field():
 	session, db = utils.create_transaction_session()
 	document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
@@ -108,5 +109,3 @@ def test_next_in_relationships_field():
 	document['relationships'].append(relation)
 	assert document['relationships'][0]['type'] == 'next' and document['relationships'][0]['_id'] == ObjectId("637eae8a0381748b89ae518a")
 	
-	
-#Case 3: when you have 

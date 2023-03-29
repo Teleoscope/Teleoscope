@@ -34,17 +34,16 @@ def create_user_object(first_name, last_name, password, username):
         "action": "initialize a user"
     }
 def create_document_object(title,textVector, text, relationships = [],metadata={}):
-    #TODO: make comment abotu the i/p type we expect in relationship, metadata
+    
     """
     Schema to create new document object in the database.
     parameters:
         metadata: dictionary containing (if has) parent's info, start_index and end_index
-        relationships: dictionary inherting (if has) parent's relattionships and updating parent, child or next fields
+        relationships: dictionary inherting (if has) parent's relationships and updating parent, child or next fields
     """
     return {
         "creation_time": datetime.datetime.utcnow(),
-        'title': title, 
-        # 'id': id, 
+        'title': title,  
         'textVector': textVector, 
         'text': text,
         'relationships': [
@@ -54,7 +53,6 @@ def create_document_object(title,textVector, text, relationships = [],metadata={
             *relationships
         ],
         'metadata' : {
-            # 'id' : id
             **metadata
         }
     }

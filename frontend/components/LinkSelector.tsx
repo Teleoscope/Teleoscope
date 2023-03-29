@@ -9,13 +9,11 @@ import FolderIcon from '@mui/icons-material/Folder';
 import Tooltip from '@mui/material/Tooltip';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
-import DocumentTitle from '../components/Documents/DocumentTitle';
 
 // actions 
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { addWindow } from "../actions/windows"
 import { getDefaultWindow } from "./WindowFolder/WindowDefault"
-import { PreprocessTitle } from "../../frontend/util/Preprocessers"
 
 // contexts
 import { Stomp } from './Stomp';
@@ -24,17 +22,11 @@ import { Stomp } from './Stomp';
 import useSWRAbstract from "../util/swr"
 
 export default function linkSelector(props) {
-
-   const userid = useAppSelector((state) => state.activeSessionID.userid);
-   const client = Stomp.getInstance();
-   client.userId = userid;
+   
    const { document } = useSWRAbstract("document", `/api/document/${props.id}`);
-   console.log("document", document)
    const links = document?.relationships;
-   console.log("LINKS", links)
    const dispatch = useAppDispatch();
-   //TODO: display key and value for the metadata -> display everything (see how that works)
-   // have links to -> so from the relationships dict it finds the document and just shows that
+   
    const [anchorEl, setAnchorEl] = useState(null);
    const open = Boolean(anchorEl);
    const handleClick = (event) => {
@@ -51,25 +43,7 @@ export default function linkSelector(props) {
       console.log("default_item", t)
       return t;
     }
-   const titleHandler = (props) => {   
-   }
-//TODO: for later if you want to be able to create relationships
-   // const handleSelect = (document_id) => {
-   //    console.log("FILTER"+ {links_this_document_belongs_to}); 
-   //    console.log("LINKS" + {links})
-   //    if (links_this_document_belongs_to) {
-   //       //TODO: instead of this, want it to display information about the document
-   //       client.create_child(document_id)
-   //       // client.remove_document_from_group(group_id, props.id);
-   //    } else {
-   //       // client.add_document_to_group(group_id, props.id);
-   //    }
-   //    handleClose();
-   // }
-   
-   const handleSelect = (meta_id) => {
-      console.log("open parent document")
-   }
+
    const LinkIconHandler = (props) => {
       if (props.links) {
          const l = props.links;
@@ -100,7 +74,7 @@ export default function linkSelector(props) {
                return (
                <MenuItem
                   value = {link.type}
-                   onClick= {() => { dispatch(addWindow({ i: link._id, type: "Document", ...item })) }}>
+                   onClick= {() => { dispatch(addWindow({ i: link._id + '%document', type: "Document", ...item })) }}>
                   <FolderIcon style={{ fontSize: 15 }} />
                   <ListItemText primary={link.type} sx={{ color: '#6f42c1'}}/>
                </MenuItem>

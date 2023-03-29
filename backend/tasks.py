@@ -149,31 +149,35 @@ def create_child(*args, **kwargs):
         start_index = kwargs['start_index']
         end_index = kwargs['end_index']
         document = db.documents.find_one({"_id": document_id})
+
         # Creating metadata to copy all the prev document's info
         metadata = copy.deepcopy(document['metadata'])
         # Update or start and end value in metadata
         metadata['teleoscope_start'] = start_index
         metadata['teleoscope_end']= end_index
+
         # Creating relationships to copy document's relationship values
         relationship = {}
         relationships = copy.deepcopy(document['relationships'])
         # Assigning parent of this document's child to the present document
         relationship = {"type": "parent", "_id": document_id}
         relationships.append(relationship)
-        print(relationship)
-        print(relationships)
+
         # check to see if the end_index is lesser than the document's last index
         length_document = len(document["text"])
-        if end_index >= length_document:
-            raise Exception(f'End_index {end_index} is outside bounds of document')
+        if end_index >= length_document or end_index <= start_index or start_index < 0:
+            raise Exception(f'index is outside bounds of document')
+
         child_text = document["text"][start_index:end_index] 
         child_title = document["title"] + " child"
         child_vector = vectorize_text(child_text)
+
+        #Creating the child_document based on the fields captured
         child_document = schemas.create_document_object(child_title, child_vector, child_text, relationships, metadata)
         inserted_document = db.documents.insert_one(child_document, session=transaction_session)
         new_id = inserted_document.inserted_id
         child_document = db.documents.find_one({"_id": new_id})
-        #TODO: relationship = object (with _id and type); 
+        
         utils.commit_with_retry(transaction_session)
     return new_id
 
