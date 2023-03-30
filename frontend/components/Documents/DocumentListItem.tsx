@@ -10,6 +10,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useAppSelector, useAppDispatch } from '../../hooks'
 import { RootState } from '../../stores/store'
 import { dragged } from "../../actions/windows";
+import { setDraggable } from "../../actions/windows";
 
 // custom
 import GroupSelector from "../GroupSelector";
@@ -43,14 +44,14 @@ export default function DocumentListItem(props) {
     client.remove_document_from_group(props.group._id, props.id)
   }
 
+
   return (
 
     <div
       draggable={true}
       className="droppable-element"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
       style={{
+        ...props.style,
         borderBottom: "1px solid  #eceeee",
         paddingTop: "2px",
         paddingBottom: "3px",
@@ -59,7 +60,6 @@ export default function DocumentListItem(props) {
         height: "100%",
       }}
       id={props.id}
-      onDragStart={() => { dispatch(dragged({ id: props.id + "%document", type: "Document" })) }}
     >
       <Stack
         direction="row"

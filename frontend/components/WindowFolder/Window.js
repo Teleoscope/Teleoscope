@@ -12,20 +12,14 @@ import CardActionArea from '@mui/material/CardActionArea';
 // actions
 import { useDispatch } from "react-redux";
 import { minimizeWindow, maximizeWindow, checkWindow, removeWindow } from "../../actions/windows";
+import { useAppDispatch } from '../../hooks';
+import { setDraggable } from '../../actions/windows';
 
 export default React.forwardRef(({ ...props }) => {
-    const [show, setShow] = useState(props.showWindow);
-    const [drag, setDrag] = useState(true);
     const w = props.windata;
     const dispatch = useDispatch();
     
-    const handleMove = (e) => {
-        if (e.buttons == 1) {
-            setDrag(true);
-        } else {
-            setDrag(false);
-        }
-    }
+
 
     const handleSelect = (e) => {
         if (e.shiftKey) {
@@ -33,44 +27,25 @@ export default React.forwardRef(({ ...props }) => {
         }
     }
 
-    const handleChipClick = (e) => {
-        if (e.shiftKey) {
-            dispatch(checkWindow({ i: w.i, check: !w.isChecked }))
-        } else {
-            handleShow();
-        }
-    }
-
-    const handleShow = () => {
-        if (show) {
-            dispatch(minimizeWindow(props.id));
-            setShow(false);
-        }
-        if (!show && !drag) {
-            dispatch(maximizeWindow(props.id));
-            setShow(true);
-        }
-    }
-
     const handleDelete = () => {
         dispatch(removeWindow(props.id));
     }
 
-    if (!show) {
+
+    if (props.size.height < 35) {
         return (
             <Chip
                 label={props.title}
                 icon={props.icon}
                 clickable
                 onDelete={handleDelete}
-                onClick={(e) => handleChipClick(e)}
                 className="drag-handle"
-                onMouseMove={(e) => handleMove(e)}
                 sx={{
                     border: w.isChecked ? `2px solid ${props.color}` : "1px solid #DDDDDD",
                     boxShadow: '1',
                     cursor: "move",
                     backgroundColor: "white",
+                    width: props.size.width,
                     [`& .MuiChip-icon`]: {
                         color: props.color
                       }
@@ -78,6 +53,18 @@ export default React.forwardRef(({ ...props }) => {
             />
         )
     }
+
+
+    
+    const [dragging, setDragging] = React.useState(false);
+    const setDrag = (drag) => {
+        if (dragging) {
+            dispatch(setDraggable({ id: `${props.id}`, draggable: true }));
+        } else {
+            dispatch(setDraggable({ id: `${props.id}`, draggable: drag }));
+        }
+    };
+
 
     return (
         <Card
@@ -92,16 +79,21 @@ export default React.forwardRef(({ ...props }) => {
                 boxShadow: '1',
             }}
         ><CardActionArea
-            onClick={(e) => handleSelect(e)}
+            onMouseDown={() => setDragging(true)}
+            onMouseUp={() => setDragging(false)}
+            onMouseEnter={() => setDrag(true)}
+
         >
                 <WindowTopBar
                     title={props.title}
                     id={props.id}
                     icon={props.icon}
-                    handleShow={handleShow}
                     isChecked={w.isChecked}
+
                 /></CardActionArea>
-            {props.inner}
+                <div onMouseEnter={() => setDrag(false)} onMouseLeave={() => setDrag(true)}>
+                    {props.inner}
+                </div>
         </Card>
     )
 })    

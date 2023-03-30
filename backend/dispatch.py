@@ -14,9 +14,6 @@ import tasks
 
 from tasks import robj, app
 
-# Thanks to http://brandonrose.org/clustering!
-# and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32
-
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 

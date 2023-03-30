@@ -12,7 +12,7 @@ from json import JSONEncoder
 # local files
 import auth
 
-def connect():
+def connect(db='teleoscope'):
     autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
@@ -29,7 +29,7 @@ def connect():
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
     # logging.log(f'Connected to MongoDB with user {auth.mongodb["username"]}.')
-    return client.aita
+    return client[db]
 
 def create_transaction_session():
     autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
@@ -151,6 +151,10 @@ def rankDocumentsBySimilarity(documents_ids, scores):
     '''
     return sorted([(document_id, score) for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
 
+def rank_document_ids_by_similarity(documents_ids, scores):
+    '''Create and return a list a document ids sorted by similarity score, high to low
+    '''
+    return sorted([document_id for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
 
 def gridfsUpload(db, namespace, data, encoding='utf-8'):
     '''Uploads data to GridFS under a particular namespace.

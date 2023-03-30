@@ -62,12 +62,12 @@ export default function TopBar(props) {
   const { users } = useSWRAbstract("users", `/api/users/`);
   const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
 
-  if (session?.history?.length > 0 && !loaded) {
-    setLoaded(true);
-    var history_item = session.history[0];
-    dispatch(loadBookmarkedDocuments(history_item["bookmarks"]));
-    dispatch(loadWindows(history_item["windows"]));
-  }
+  // if (session?.history?.length > 0 && !loaded) {
+  //   setLoaded(true);
+  //   var history_item = session.history[0];
+  //   dispatch(loadBookmarkedDocuments(history_item["bookmarks"]));
+  //   dispatch(loadWindows(history_item["windows"]));
+  // }
 
   const handleSignOut = () => {
     setCookie("userid", -1, {

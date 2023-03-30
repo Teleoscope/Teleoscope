@@ -27,6 +27,8 @@
       ansible.builtin.pip:
         name: 
           - celery 
+          - python-dotenv
+          - boto3
           - pymongo 
           - hdbscan 
           - tensorflow 
@@ -34,4 +36,5 @@
           - matplotlib
           - zstandard
           - pygithub
+          - ujson
         executable: "{{ conda_prefix }}/envs/{{ conda_environment }}/bin/pip"
