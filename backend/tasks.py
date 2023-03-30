@@ -185,6 +185,31 @@ def create_child(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
     return new_id
 
+@app.task 
+def create_next_relationship(*args, **kwargs):
+    """
+    Add 'next-type' relationship between two different objects in the database.
+    kwargs:
+        document_one_id: (int, represents ObjectId in int)
+        document_two_id: (int, represents ObjectId in int)
+    """
+    transaction_session, db = utils.create_transaction_session()
+    with transaction_session.start_transaction(): 
+        document_one_id = ObjectId(str(kwargs["document_one_id"]))
+        document_two_id = ObjectId(str(kwargs["document_two_id"]))
+
+        document_one = db.documents.find_one({"_id": document_one_id})
+        document_two = db.documents.find_one({"_id": document_two_id})
+        if document_two != document_one:
+            relationship_one = {'type': 'next', '_id': document_two_id}
+            relationship_two = {'type': 'next', '_id': document_one_id}
+
+            document_one['relationships'].append(relationship_one)
+            document_two['relationships'].append(relationship_two)
+        else:
+            raise Exception(f'same document')
+        utils.commit_with_retry(transaction_session)
+
 @app.task
 def add_user_to_session(*args, **kwargs):
     """
@@ -257,6 +282,7 @@ def add_user_to_session(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
 
     return 200 # success
+
 
 @app.task
 def initialize_teleoscope(*args, **kwargs):

@@ -149,3 +149,51 @@ def test_parent_using_create_child():
 			{'_id':ObjectId("637eabe7f0a9482a337a11d5")},
 			{"$pull": {'relationships': {'child': id}}}
 		)
+
+#Test case to check create_next_relationship
+#Case 1: two objects with invalid document_id
+def test_create_next_relationship_with_invalid_document_id():
+	with pytest.raises(Exception):
+		tasks.create_next_relationship((), document_one_id = '20', document_two_id = '30')
+
+#Case 2: one object with valid document_id, other with invalid
+def test_create_next_relationship_with_one_invalid_document_id():
+	with pytest.raises(Exception):
+		tasks.create_next_relationship((), document_one_id = '637eabe7f0a9482a337a11d5', document_two_id = '30')
+
+#Case 3: both objects with valid document_id
+def test_create_next_relationship_with_valid_id():
+	session, db = utils.create_transaction_session()
+	document_one_id = '637eabe7f0a9482a337a11d5'
+	document_two_id = '637eae8a0381748b89ae518a'
+	tasks.create_next_relationship(document_one_id = document_one_id, document_two_id = document_two_id )
+	try:
+		document_one = db.documents.find_one({"_id": document_one_id})
+		document_two = db.documents.find_one({"_id": document_two_id})
+		for relation in document_one['relationships']:
+			if relation['type'] == 'next':
+				assert relation['_id'] == document_two_id
+		for relation in document_two['relationships']:
+			if relation['type'] == 'next':
+				assert relation['_id'] == document_one_id
+	finally:
+		db.documents.update_one(
+			{'_id':ObjectId("637eabe7f0a9482a337a11d5")},
+			{"$pull": {'relationships': {'next': document_two_id}}}
+		)
+		db.documents.update_one(
+			{'_id':ObjectId("637eae8a0381748b89ae518a")},
+			{"$pull": {'relationships': {'child': document_two_id}}}
+		)
+#Case 4: same document_id
+def test_create_next_relationship_with_same_document():
+	with pytest.raises(Exception):
+		tasks.create_next_relationship((), document_one_id = '637eabe7f0a9482a337a11d5', document_two_id = '637eabe7f0a9482a337a11d5')
+
+
+		
+
+	
+
+
+
