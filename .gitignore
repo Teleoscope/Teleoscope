@@ -161,7 +161,6 @@ experiments/data/
 ansible/vars/*
 
 # yarn
-# yarn
 .pnp.*
 */.yarn/*
 !*/.yarn/patches
