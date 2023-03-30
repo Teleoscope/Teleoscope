@@ -1,9 +1,5 @@
 import React from "react";
 
-// mui
-import Grid from '@mui/material/Grid';
-import Stack from '@mui/material/Stack';
-
 // custom components
 import TopBar from "./WindowModules/TopBar";
 import ContextMenu from "./Context/ContextMenu";
