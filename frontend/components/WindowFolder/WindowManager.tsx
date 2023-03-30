@@ -37,14 +37,14 @@ const collides = (l1, l2) => {
 }
 
 export default function WindowManager(props) {
-  const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); 
-  const session_id = useAppSelector((state: RootState) => state.activeSessionID.value); 
-  const bookmarks = useAppSelector((state: RootState) => state.bookmarker.value); 
+  const userid = useAppSelector((state: RootState) => state.activeSessionID.userid);
+  const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
+  const bookmarks = useAppSelector((state: RootState) => state.bookmarker.value);
   const client = Stomp.getInstance();
   client.userId = userid;
   const windows = useAppSelector((state: RootState) => state.windows.windows);
   const collision = useAppSelector((state: RootState) => state.windows.collision);
-  
+
   const groups = windows.filter(w => w.type == "Group");
   const dragged_item = useAppSelector((state: RootState) => state.windows.dragged);
   const dispatch = useAppDispatch();
@@ -53,8 +53,6 @@ export default function WindowManager(props) {
     item.resizeHandles = [];
     item.w = 4;
     dispatch(addWindow({ i: dragged_item.id, type: dragged_item.type, ...item }));
-    console.log("dragged_item", dragged_item)
-    // console.log("item", item)
   }
 
   const checkCollisions = (newItem, placeholder) => {
@@ -89,7 +87,7 @@ export default function WindowManager(props) {
     if (client.loaded) {
       client.save_UI_state(session_id, bookmarks, windows)
     }
-  } 
+  }
 
   // type ItemCallback = 
   // (layout: Layout, oldItem: LayoutItem, newItem: LayoutItem,
@@ -112,7 +110,7 @@ export default function WindowManager(props) {
       onDrag={(layout, oldItem, newItem, placeholder, e, element) => handleCollisions(layout, newItem, placeholder)}
       onDragStop={(layout, oldItem, newItem, placeholder, e, element) => handleDragStop(layout, newItem)}
       onResizeStop={(layout) => dispatch(updateWindows(layout))}
-      onLayoutChange={(layout) => {handleLayoutChange(layout)}}
+      onLayoutChange={(layout) => { handleLayoutChange(layout) }}
       style={{
         backgroundColor: "#EEEEEE",
         minHeight: "100vh",

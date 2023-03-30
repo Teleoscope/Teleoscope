@@ -281,20 +281,6 @@ add_document_to_group(group_id: string, document_id: string) {
 }
 
 /**
- * Add child to a document.
- */
- create_child(document_id: string) {
-  const body = {
-    task: 'create_child',
-    args: {
-      document_id: document_id
-    }
-  }
-  this.publish(body);
-  return body;
-}
-
-/**
  * Remove a document from a group.
  */
 remove_document_from_group(group_id: string, document_id: string) {

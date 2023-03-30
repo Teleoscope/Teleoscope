@@ -38,6 +38,9 @@ def create_document_object(title,textVector, text, relationships = [],metadata={
     """
     Schema to create new document object in the database.
     parameters:
+        title: string
+        textVector: array
+        text: string
         metadata: dictionary containing (if has) parent's info, start_index and end_index
         relationships: dictionary inherting (if has) parent's relationships and updating parent, child or next fields
     """

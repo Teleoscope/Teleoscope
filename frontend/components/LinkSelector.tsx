@@ -40,7 +40,6 @@ export default function linkSelector(props) {
       const t = getDefaultWindow()
       t.i = id;
       t.type = type;
-      console.log("default_item", t)
       return t;
     }
 

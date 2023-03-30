@@ -48,7 +48,6 @@ export default function groupSelector(props) {
       } else {
          client.add_document_to_group(group_id, props.id);
       }
-      console.log(group_id)
       handleClose();
    }
 
