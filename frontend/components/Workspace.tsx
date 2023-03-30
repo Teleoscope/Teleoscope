@@ -1,7 +1,5 @@
 import React from "react";
 
-
-
 // custom components
 import TopBar from "./WindowModules/TopBar";
 import ContextMenu from "./Context/ContextMenu";
