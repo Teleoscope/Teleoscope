@@ -754,7 +754,7 @@ def cluster_by_groups(*args, **kwargs):
     """
     import clustering
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
-    clustering.cluster_by_groups(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"])
+    clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"])
 
 
 @app.task
@@ -822,7 +822,7 @@ class reorient(Task):
             logging.info("Documents are not cached, building cache now.")
             db = utils.connect()
             allDocuments = utils.getAllDocuments(db, projection={'textVector':1, '_id':1}, batching=True, batchSize=10000)
-            ids = [x['_id'] for x in allDocuments]
+            ids = [str(x['_id']) for x in allDocuments]
             logging.info(f'There are {len(ids)} ids in documents.')
             vecs = np.array([x['textVector'] for x in allDocuments])
 
@@ -832,7 +832,8 @@ class reorient(Task):
             self.allDocumentIDs = ids
             self.allDocumentVectors = vecs
             self.documentsCached = True
-        return
+        
+        return self.allDocumentIDs, self.allDocumentVectors
 
 
     def computeResultantVector(self, positive_docs, negative_docs):
@@ -895,7 +896,7 @@ class reorient(Task):
             # if both are empty, then cache stuff if not cached alreadt
             # Check if document ids and vectors are cached
             if self.documentsCached == False:
-                self.cacheDocumentsData()
+                _, _ = self.cacheDocumentsData()
 
             # Check if db connection is cached
             if self.db is None:
@@ -907,7 +908,7 @@ class reorient(Task):
 
         # Check if document ids and vectors are cached
         if self.documentsCached == False:
-            self.cacheDocumentsData()
+            _, _ = self.cacheDocumentsData()
 
         # Check if db connection is cached
         if self.db is None:
