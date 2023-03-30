@@ -1,6 +1,5 @@
 // actions.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-console.log("Loading groups.js");
 const initialState = {
 		groups: {
 			// _id: {
@@ -64,7 +63,6 @@ export const Groups = createSlice({
 					groupedDocuments.push({ id: i, _id: g._id });
 				})
 			})
-			console.log("groups fulfilled", groups)
 			state.groups = groups;
 			state.grouped_documents = groupedDocuments;
 		},

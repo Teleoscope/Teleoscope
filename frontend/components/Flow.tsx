@@ -71,10 +71,10 @@ function Flow() {
     (event) => {
       event.preventDefault();
 
+
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const id = event.dataTransfer.getData('application/reactflow/id');
       const type = event.dataTransfer.getData('application/reactflow/type');
-
 
       // check if the dropped element is valid
       if (typeof id === 'undefined' || !id) {
@@ -97,8 +97,6 @@ function Flow() {
         data: { label: `${id} node`, i: id, type: type},
 
       };
-      console.log("drop", newNode, id)
-
       dispatch(addNode({node: newNode}))
     },
     [reactFlowInstance]

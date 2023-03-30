@@ -12,10 +12,10 @@ import CardActionArea from '@mui/material/CardActionArea';
 // actions
 import { useDispatch } from "react-redux";
 import { minimizeWindow, maximizeWindow, checkWindow, removeWindow } from "../../actions/windows";
+import { useAppDispatch } from '../../hooks';
+import { setDraggable } from '../../actions/windows';
 
 export default React.forwardRef(({ ...props }) => {
-    const [show, setShow] = useState(props.showWindow);
-    const [drag, setDrag] = useState(true);
     const w = props.windata;
     const dispatch = useDispatch();
     
@@ -54,6 +54,18 @@ export default React.forwardRef(({ ...props }) => {
         )
     }
 
+
+    
+    const [dragging, setDragging] = React.useState(false);
+    const setDrag = (drag) => {
+        if (dragging) {
+            dispatch(setDraggable({ id: `${props.id}`, draggable: true }));
+        } else {
+            dispatch(setDraggable({ id: `${props.id}`, draggable: drag }));
+        }
+    };
+
+
     return (
         <Card
             variant="outlined"
@@ -67,15 +79,21 @@ export default React.forwardRef(({ ...props }) => {
                 boxShadow: '1',
             }}
         ><CardActionArea
-            onClick={(e) => handleSelect(e)}
+            onMouseDown={() => setDragging(true)}
+            onMouseUp={() => setDragging(false)}
+            onMouseEnter={() => setDrag(true)}
+
         >
                 <WindowTopBar
                     title={props.title}
                     id={props.id}
                     icon={props.icon}
                     isChecked={w.isChecked}
+
                 /></CardActionArea>
-            {props.inner}
+                <div onMouseEnter={() => setDrag(false)} onMouseLeave={() => setDrag(true)}>
+                    {props.inner}
+                </div>
         </Card>
     )
 })    

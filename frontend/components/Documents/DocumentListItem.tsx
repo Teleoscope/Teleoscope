@@ -44,31 +44,14 @@ export default function DocumentListItem(props) {
     client.remove_document_from_group(props.group._id, props.id)
   }
 
-  const onDragStart = (event, data) => {
-    event.dataTransfer.setData('application/reactflow/type', "Document");
-    event.dataTransfer.setData('application/reactflow/id', props.id + "%document");
-
-    event.dataTransfer.effectAllowed = 'move';
-  };
-
-  const onMouseEnter = () => {
-    dispatch(setDraggable({id: `${props.group?._id}%group`, draggable: false}))
-  }
-  const onMouseLeave = () => {
-    dispatch(setDraggable({id: `${props.group?._id}%group`, draggable: true}))
-  }
-  
 
   return (
 
     <div
       draggable={true}
       className="droppable-element"
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      // onMouseEnter={() => setHover(true)}
-      // onMouseLeave={() => setHover(false)}
       style={{
+        ...props.style,
         borderBottom: "1px solid  #eceeee",
         paddingTop: "2px",
         paddingBottom: "3px",
@@ -77,8 +60,6 @@ export default function DocumentListItem(props) {
         height: "100%",
       }}
       id={props.id}
-      // onDragStart={() => { dispatch(dragged({ id: props.id + "%document", type: "Document" })) }}
-      onDragStart={(event) => onDragStart(event, {type: "Document", id: props.id})}
     >
       <Stack
         direction="row"

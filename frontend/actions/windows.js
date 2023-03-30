@@ -180,12 +180,10 @@ export const Windows = createSlice({
 			const nodes = applyNodeChanges(changes, state.nodes)
 			state.logical_clock = state.logical_clock + 1;
 			state.nodes = nodes;
-			console.log("debug state", state)
 		},
 		setDraggable: (state, action) => {
 			var temp = [...state.nodes];
 			var index = temp.findIndex((w) => w.id == action.payload.id);
-			console.log("drag", action.payload)
 			if (index >= 0) {
 				temp[index]["draggable"] = action.payload.draggable;
 			}
