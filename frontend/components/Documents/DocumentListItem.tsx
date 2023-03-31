@@ -30,15 +30,8 @@ export default function DocumentListItem(props) {
   client.userId = userid;
   const { document } = useSWRAbstract("document", `/api/document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;
-  const dispatch = useAppDispatch();
-  const [hover, setHover] = useState(false);
-  const magnitude = useAppSelector((state: RootState) => state.teleoscopes.magnitude);
 
   const showGroupIcon = Object.prototype.hasOwnProperty.call(props, "showGroupIcon") ? props.showGroupIcon : true;
-
-  const handleOrientTowards = () => {
-    client.reorient(props.group.teleoscope, [props.id], [], magnitude)
-  }
   
   const handleRemove = () => {
     client.remove_document_from_group(props.group._id, props.id)
@@ -55,7 +48,6 @@ export default function DocumentListItem(props) {
         borderBottom: "1px solid  #eceeee",
         paddingTop: "2px",
         paddingBottom: "3px",
-        backgroundColor: hover ? "#EEEEEE" : "#FFFFFF",
         width: "100%",
         height: "100%",
       }}
@@ -74,13 +66,10 @@ export default function DocumentListItem(props) {
         >
           <BookmarkSelector id={props.id} />
           {showGroupIcon ? <GroupSelector id={props.id} /> : null}
-          {Object.prototype.hasOwnProperty.call(props, "group") ? <IconButton sx={{ width: 20, height: 20 }} onClick={() => handleOrientTowards()}>
-            {<FlareIcon sx={{ '&:hover': {color: 'blue'}, width: 20, height: 20 }}></FlareIcon>}
-          </IconButton> : ""}
           <DocumentTitle title={title} noWrap={false} />
         </Stack>
 
-        {Object.prototype.hasOwnProperty.call(props, "group") ? (
+        {props.ShowDeleteIcon ? (
           <IconButton sx={{ width: 20, height: 20 }} onClick={() => handleRemove()}>
             <DeleteIcon sx={{ '&:hover': {color: 'red'}, width: 20, height: 20 }}></DeleteIcon>
           </IconButton>

@@ -2,7 +2,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import _ from 'lodash';
 import { getDefaultWindow } from "../components/WindowFolder/WindowDefault"
-import { applyNodeChanges, applyEdgeChanges } from 'reactflow';
+import { applyNodeChanges, applyEdgeChanges, addEdge } from 'reactflow';
 
 console.log("Loading windows.js");
 
@@ -181,13 +181,19 @@ export const Windows = createSlice({
 			state.logical_clock = state.logical_clock + 1;
 			state.nodes = nodes;
 		},
+		updateEdges: (state, action) => {
+			const changes = action.payload;
+			const edges = applyEdgeChanges(changes, state.edges)
+			state.logical_clock = state.logical_clock + 1;
+			state.edges = edges;
+		},
 		setDraggable: (state, action) => {
 			var temp = [...state.nodes];
 			var index = temp.findIndex((w) => w.id == action.payload.id);
 			if (index >= 0) {
 				temp[index]["draggable"] = action.payload.draggable;
 			}
-			
+			console.log("drag", action.payload.id)
 			state.nodes = temp;
 		},
 		addNode: (state, action) => {
@@ -195,6 +201,11 @@ export const Windows = createSlice({
 			temp.push(action.payload.node);
 			state.logical_clock = state.logical_clock + 1;
 			state.nodes = temp;
+		},
+		makeEdge: (state, action) => {
+			var temp = addEdge(action.payload.params, state.edges)
+			state.logical_clock = state.logical_clock + 1;
+			state.edges = temp;
 		}
 	}
 })
@@ -204,6 +215,8 @@ export const {
 	setDraggable,
 	updateNodes,
 	setEdges,
+	makeEdge,
+	updateEdges,
 	setNodes,
 	setDefault,
 	addWindow, 

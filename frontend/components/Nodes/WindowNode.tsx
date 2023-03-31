@@ -15,25 +15,35 @@ function WindowNode({ data, id, selected }) {
     };
   });
 
-  if (data.type == "FABMenu") {
+
+  if (data.type == "Document") {
     return (
       <>
         <NodeResizer color="#ff0071" isVisible={selected} minWidth={100} minHeight={30}   />
-        <WindowFactory id={data.i} windata={data} /> 
+        <WindowFactory id={data.i} size={size} windata={data} />
+        <Handle type="source" position={Position.Right} id="a" />
+
       </>
     );
   }
 
+  if (data.type == "Teleoscope") {
+    return (
+      <>
+        <NodeResizer color="#ff0071" isVisible={selected} minWidth={100} minHeight={30}   />
+        <WindowFactory id={data.i} size={size} windata={data} />
+        <Handle type="source" position={Position.Left} id="a" />
 
-
+      </>
+    );
+  }
 
   return (
     <>
         
       <NodeResizer color="#ff0071" isVisible={selected} minWidth={100} minHeight={30}   />
-      <Handle type="target" position={Position.Left} />
       <WindowFactory id={data.i} size={size} windata={data} /> 
-      <Handle type="source" position={Position.Right} id="a" />
+
   
     </>
   );

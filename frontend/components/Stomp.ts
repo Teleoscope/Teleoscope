@@ -173,11 +173,12 @@ export class Stomp {
   /**
    * Requests to create a Teleoscope object in MongoDB.
    */
-  initialize_teleoscope(session_id: string) {
+  initialize_teleoscope(session_id: string, label: string) {
     const body = {
       task: 'initialize_teleoscope',
       args: {
-        session_id: session_id
+        session_id: session_id,
+        label: label
       }
     }
     this.publish(body);

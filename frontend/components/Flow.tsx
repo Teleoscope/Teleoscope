@@ -1,43 +1,38 @@
 import { React, useState, useMemo, useCallback, useRef } from 'react';
-import ReactFlow, { ReactFlowProvider, Controls, Background, applyNodeChanges, applyEdgeChanges } from 'reactflow';
+import ReactFlow, { ReactFlowProvider, Controls, Background } from 'reactflow';
 import 'reactflow/dist/style.css';
 import SearchNode from './Nodes/SearchNode'
 import WindowNode from './Nodes/WindowNode'
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { RootState } from '../stores/store'
-import WindowFactory from './WindowFolder/WindowFactory';
 import useSWRAbstract from '../util/swr';
-import { loadWindows, setDefault, setLogicalClock, setNodes, updateNodes, setEdges, addNode } from "../actions/windows";
-import { loadBookmarkedDocuments } from "../actions/bookmark";
+import { setNodes, updateNodes, updateEdges, setEdges, makeEdge, addNode } from "../actions/windows";
+import { Stomp } from './Stomp'
 
 const nodeTypes = { windowNode: WindowNode };
 const multiSelectionKeyCode = ["Meta", "Control", "Shift"]
 const panOnDrag = [1,2]
 
 function Flow() {
+  
+
   const reactFlowWrapper = useRef(null);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
 
   const session_id = useAppSelector((state) => state.activeSessionID.value);
+  const userid = useAppSelector((state) => state.activeSessionID.userid);
+  const bookmarks = useAppSelector((state: RootState) => state.bookmarker.value); 
+
   const { nodes, edges, logical_clock } = useAppSelector((state) => state.windows);
+
+  const client = Stomp.getInstance();
+  client.userId = userid;
 
   const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
   const session_history_item = session?.history[0];
   const dispatch = useAppDispatch();
 
-  const transformNodes = (windows) => windows.map((w) => {
-    return {
-      id: w.i,
-      data: {label: w.i, ...w},
-      position: {x: w.x, y: w.y},
-      style : { 
-        width: 400,
-        height: 300,
-      },
-      type: "windowNode"
-    }})
-
-    
+  
 
   if (session_history_item) {
     if (session_history_item.logical_clock > logical_clock) {
@@ -45,7 +40,7 @@ function Flow() {
       if (session_history_item.nodes) {
         temp = nodes;
       } else {
-        temp = transformNodes(session_history_item.windows)
+        temp = session_history_item.windows
       }
 
       dispatch(setNodes({
@@ -55,11 +50,20 @@ function Flow() {
     }
   }
 
+
   const onNodesChange = useCallback(
     (changes) => {
       dispatch(updateNodes(changes))
     }, []
   )
+
+
+  const onEdgesChange = useCallback( 
+    (changes) => {
+      dispatch(updateEdges(changes))
+    }, []
+  )
+
 
 
   const onDragOver = useCallback((event) => {
@@ -102,9 +106,7 @@ function Flow() {
     [reactFlowInstance]
   );
 
- 
-
-  const onEdgesChange = useCallback( (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),[] );
+  const onConnect = useCallback((params) => dispatch(makeEdge({params: params})));
   
   return (
     <div className="providerflow">
@@ -123,9 +125,11 @@ function Flow() {
         panOnDrag={panOnDrag}
         onDragOver={onDragOver}
         onDrop={onDrop}
+        onConnect={onConnect}
         onInit={setReactFlowInstance}
         multiSelectionKeyCode={multiSelectionKeyCode}
         fitView
+        onClick={() => client.save_UI_state(session_id, bookmarks, nodes)}
       >
         <Background />
         <Controls />

@@ -32,9 +32,6 @@ export default function Document(props) {
     <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
 
       <Stack direction="row" justifyContent="right" alignItems="center" style={{ margin: 0 }}>
-        <NoteButton id={document?._id} key="document" />
-			
-
         <IconButton onClick={handleClick}>
         <LinkIcon fontSize="small" />
         </IconButton>
