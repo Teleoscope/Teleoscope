@@ -260,62 +260,6 @@ export default function GroupPalette(props) {
     );
   };
 
-  const HeaderContent = () => {
-    return (
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        style={{ margin: 0 }}
-      >
-        <TextField
-          label="Create new group..."
-          placeholder="Type label and press enter."
-          variant="standard"
-          onKeyDown={(e) => keyChange(e)}
-          onChange={(e) => setValue(e.target.value)}
-          InputLabelProps={{
-            sx: {
-              "&.Mui-focused": {
-                color: props.color,
-              },
-            },
-          }}
-          sx={{
-            width: "75%",
-            margin: 1,
-            // '& .MuiInput-underline:before': {borderBottomColor: props.color},
-            "& .MuiInput-underline:after": { borderBottomColor: props.color },
-            // '& .MuiInputLabel-root': {borderBottomColor: props.color},
-          }}
-        />
-
-        <IconButton onClick={() => runClusters()}>
-          <Diversity2Icon
-            sx={[
-              {
-                "&:hover": {
-                  color: props.color,
-                },
-              },
-            ]}
-          />
-        </IconButton>
-        <IconButton onClick={handleClickOpen}>
-          <ConnectingAirportsIcon
-            sx={[
-              {
-                "&:hover": {
-                  color: props.color,
-                },
-              },
-            ]}
-          />
-        </IconButton>
-        <CopyGroup />
-      </Stack>
-    );
-  };
 
   const Picker = (props) => {
     return (
@@ -387,7 +331,58 @@ export default function GroupPalette(props) {
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
-      <HeaderContent />
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        style={{ margin: 0 }}
+      >
+        <TextField
+          label="Create new group..."
+          placeholder="Type label and press enter."
+          variant="standard"
+          onKeyDown={(e) => keyChange(e)}
+          onChange={(e) => setValue(e.target.value)}
+          InputLabelProps={{
+            sx: {
+              "&.Mui-focused": {
+                color: props.color,
+              },
+            },
+          }}
+          sx={{
+            width: "75%",
+            margin: 1,
+            // '& .MuiInput-underline:before': {borderBottomColor: props.color},
+            "& .MuiInput-underline:after": { borderBottomColor: props.color },
+            // '& .MuiInputLabel-root': {borderBottomColor: props.color},
+          }}
+        />
+
+        <IconButton onClick={() => runClusters()}>
+          <Diversity2Icon
+            sx={[
+              {
+                "&:hover": {
+                  color: props.color,
+                },
+              },
+            ]}
+          />
+        </IconButton>
+        <IconButton onClick={handleClickOpen}>
+          <ConnectingAirportsIcon
+            sx={[
+              {
+                "&:hover": {
+                  color: props.color,
+                },
+              },
+            ]}
+          />
+        </IconButton>
+        <CopyGroup />
+      </Stack>
       <Divider />
       <InnerContent />
     </div>

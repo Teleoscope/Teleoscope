@@ -20,6 +20,7 @@ export default function Group(props) {
         showOrientIcon={true} 
         showRemoveIcon={true}
         group={group}
+        ShowDeleteIcon={true}
       ></DocumentList>
     </div>
   );
