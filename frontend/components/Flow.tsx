@@ -1,5 +1,5 @@
 import { React, useState, useMemo, useCallback, useRef } from 'react';
-import ReactFlow, { ReactFlowProvider, Controls, Background } from 'reactflow';
+import ReactFlow, { MiniMap, ReactFlowProvider, Controls, Background } from 'reactflow';
 import 'reactflow/dist/style.css';
 import SearchNode from './Nodes/SearchNode'
 import WindowNode from './Nodes/WindowNode'
@@ -64,8 +64,6 @@ function Flow() {
     }, []
   )
 
-
-
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -74,8 +72,6 @@ function Flow() {
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
-
-
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const id = event.dataTransfer.getData('application/reactflow/id');
       const type = event.dataTransfer.getData('application/reactflow/type');
@@ -106,7 +102,11 @@ function Flow() {
     [reactFlowInstance]
   );
 
-  const onConnect = useCallback((params) => dispatch(makeEdge({params: params})));
+  const onConnect = useCallback((params) => {
+    dispatch(makeEdge({params: params}))
+    client.update_edges(edges)
+    console.log("edges", edges)
+});
   
   return (
     <div className="providerflow">
@@ -132,6 +132,8 @@ function Flow() {
         onClick={() => client.save_UI_state(session_id, bookmarks, nodes)}
       >
         <Background />
+        <MiniMap />
+
         <Controls />
       </ReactFlow>
       </div>

@@ -156,6 +156,20 @@ export class Stomp {
   }
 
   /**
+ * Updates Teleoscopes
+ */
+  update_edges(edges) {
+    const body = {
+      task: 'update_edges',
+      args: {
+        edges: edges
+      }
+    }
+    this.publish(body);
+    return body;
+  }
+
+  /**
    * adds user to userlist of a session in MongoDB.
    */
   add_user_to_session(contributor: string, session_id: string) {

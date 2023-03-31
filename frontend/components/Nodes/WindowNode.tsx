@@ -21,7 +21,7 @@ function WindowNode({ data, id, selected }) {
       <>
         <NodeResizer color="#ff0071" isVisible={selected} minWidth={100} minHeight={30}   />
         <WindowFactory id={data.i} size={size} windata={data} />
-        <Handle type="source" position={Position.Right} id="a" />
+        <Handle type="source" position={Position.Right} id="a" isConnectable={true}/>
 
       </>
     );
@@ -32,7 +32,7 @@ function WindowNode({ data, id, selected }) {
       <>
         <NodeResizer color="#ff0071" isVisible={selected} minWidth={100} minHeight={30}   />
         <WindowFactory id={data.i} size={size} windata={data} />
-        <Handle type="source" position={Position.Left} id="a" />
+        <Handle type="target" position={Position.Left} id="b" isConnectable={true} />
 
       </>
     );
