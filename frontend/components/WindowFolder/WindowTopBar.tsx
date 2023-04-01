@@ -4,7 +4,6 @@ import React from "react";
 // MUI
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 
 // custom
@@ -17,21 +16,16 @@ import { minimizeWindow } from "../../actions/windows";
 export default function WindowTopBar(props) {
 	const dispatch = useDispatch();
 	return (
-		<div className="drag-handle" style={{ cursor: "move" }}>
-			<Stack direction="row" alignItems="flex-start" justifyContent="space-between">
-					<IconButton size="small"
+			<Stack  sx={{ cursor: "move" }} direction="row" alignItems="flex-start" justifyContent="space-between">
+				<IconButton size="small"
 					onClick={() => dispatch(minimizeWindow({id: props.id}))}
-					>{props.icon}</IconButton>
-						<Typography
-							variant="body1"
-							component="div"
-							sx={{ pt: 0.6 }}
-						// className="drag-handle"
-						>{props.title}
-						</Typography>
+					>{props.icon}
+				</IconButton>
+					<Typography variant="body1" component="div" sx={{ pt: 0.6 }}>
+						{props.title}
+					</Typography>
 				<CloseButton id={props.id} size="small" />
 			</Stack>
-			<Divider></Divider>
-		</div>
+
 	)
 }

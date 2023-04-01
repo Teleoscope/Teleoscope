@@ -8,12 +8,13 @@ import WindowTopBar from "./WindowTopBar";
 import Chip from "@mui/material/Chip";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
+import Divider from "@mui/material/Divider";
 
 // actions
 import { useDispatch } from "react-redux";
 import { removeWindow } from "../../actions/windows";
 
-export default React.forwardRef(({ ...props }) => {
+export default function Window (props) {
   const w = props.windata;
   const dispatch = useDispatch();
 
@@ -72,8 +73,6 @@ export default React.forwardRef(({ ...props }) => {
     <Card
       variant="outlined"
       style={{
-        borderColor: w.isChecked ? props.color : "#DDDDDD",
-        borderWidth: w.isChecked ? 2 : 1,
         backgroundColor: "white",
         height: "100%",
         width: "100%",
@@ -82,20 +81,20 @@ export default React.forwardRef(({ ...props }) => {
         boxShadow: "1",
       }}
     >
-      <CardActionArea>
         <WindowTopBar
           title={props.title}
           id={props.id}
           icon={props.icon}
           isChecked={w.isChecked}
         />
-      </CardActionArea>
+        <Divider />
       <div
         className="nodrag nowheel"
         style={{ overflow: "auto", width: "100%", height: "100%" }}
       >
         {props.inner}
       </div>
+     
     </Card>
   );
-});
+}

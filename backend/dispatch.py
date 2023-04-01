@@ -73,6 +73,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "session_id": args["session_id"],
                     "bookmarks": args["bookmarks"],
                     "windows": args["windows"],
+                    "edges": args["edges"],
+
                 },
             )
 

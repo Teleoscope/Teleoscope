@@ -6,7 +6,7 @@ import WindowNode from './Nodes/WindowNode'
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { RootState } from '../stores/store'
 import useSWRAbstract from '../util/swr';
-import { setNodes, updateNodes, updateEdges, makeEdge, makeNode, removeWindow } from "../actions/windows";
+import { setNodes, updateNodes, updateEdges, makeEdge, makeNode, removeWindow, setEdges } from "../actions/windows";
 import { Stomp } from './Stomp'
 
 const nodeTypes = { windowNode: WindowNode };
@@ -34,17 +34,28 @@ function Flow() {
 
   if (session_history_item) {
     if (session_history_item.logical_clock > logical_clock) {
-      let temp = []
+      let incomingNodes = []
       if (session_history_item.nodes) {
-        temp = nodes;
-      } else {
-        temp = session_history_item.windows
+        incomingNodes = session_history_item.nodes;
+      } else if (session_history_item.windows) {
+        incomingNodes = session_history_item.windows;
+      }
+
+      let incomingEdges = []
+      if (session_history_item.edges) {
+        incomingEdges = session_history_item.edges;
       }
 
       dispatch(setNodes({
-        nodes: temp,
+        nodes: incomingNodes,
         logical_clock: session_history_item.logical_clock
       }));
+
+      dispatch(setEdges({
+        edges: incomingNodes,
+        logical_clock: session_history_item.logical_clock
+      }));
+
     }
   }
 
@@ -166,7 +177,7 @@ function Flow() {
         onConnect={onConnect}
         onInit={setReactFlowInstance}
         multiSelectionKeyCode={multiSelectionKeyCode}
-        onClick={() => client.save_UI_state(session_id, bookmarks, nodes)}
+        onClick={() => client.save_UI_state(session_id, bookmarks, nodes, edges)}
         onNodeDrag={onNodeDrag}
         onNodeDragStart={onNodeDragStart}
         onNodeDragStop={onNodeDragStop}

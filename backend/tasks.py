@@ -96,6 +96,7 @@ def save_UI_state(*args, **kwargs):
     history_item = session["history"][0]
     history_item["bookmarks"] = kwargs["bookmarks"]
     history_item["windows"] =  kwargs["windows"]
+    history_item["edges"] =  kwargs["edges"]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Save UI state"
     history_item["user"] = userid

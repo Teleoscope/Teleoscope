@@ -28,27 +28,24 @@ export default function DocumentList(props) {
     );
   }
 
-  const ListItem = (pair) => {
-    const Item = () => {
-      return (
-        <DocumentListItem id={pair[0]} group={props.group} key={pair[0] + "DocumentListItem"} {...props}>
-          {" "}
-        </DocumentListItem>
-      );
-    }
-    const Droppable = withDroppable(Item);
-    return <Droppable id={pair[0]} type="Document" typetag="document"/>;
-  }
+  
+
+
+  const Item = (props) => <DocumentListItem group={props.group} key={props.id + "DocumentListItem"} {...props} />
+  const Droppable = withDroppable(Item);
+
 
   const changePage = (event, value) => {
     setPageNumber(value);
   };
+  
+ 
 
   return (
-    <List dense={true}>
+    <List dense={true} >
       {displayPagination
-        ? paginatedItems.map(pair => ListItem(pair))
-        : data.map(pair => ListItem(pair))
+        ? paginatedItems.map(pair => <DocumentListItem group={props.group} id={pair[0]} key={pair[0] + "DocumentListItem"} {...props} />)
+        : data.map(pair => <DocumentListItem group={props.group} id={pair[0]} key={pair[0] + "DocumentListItem"} {...props} />)
       }
 
       {displayPagination ? (
