@@ -1,4 +1,5 @@
 import datetime
+from bson.objectid import ObjectId
 
 def create_session_object(
         userid, 
@@ -59,3 +60,28 @@ def create_document_object(title, textVector, text, relationships={}, metadata={
             **metadata
         }
     }
+
+def create_teleoscope_history_item(
+        label: str,
+        reddit_ids: list,
+        positive_docs: list, 
+        negative_docs: list, 
+        stateVector: list, 
+        ranked_document_ids: ObjectId, 
+        rank_slice: list,
+        action: str,
+        user: ObjectId):
+    history_item = {
+        'timestamp': datetime.datetime.utcnow(),
+        'label': label,
+        'reddit_ids': reddit_ids,
+        'positive_docs': positive_docs,
+        'negative_docs': negative_docs,
+        'stateVector': stateVector,
+        'ranked_document_ids': ranked_document_ids,
+        'rank_slice': rank_slice,
+        'action': action,
+        'user': user
+    }
+    return history_item
+                    

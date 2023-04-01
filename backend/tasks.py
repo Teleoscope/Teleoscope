@@ -936,17 +936,17 @@ class reorient(Task):
             rank_slice = newRanks[0:100]
             logging.info(f'new rank slice has length {len(rank_slice)}.')
 
-            history_obj = {
-                        '_id': teleoscope_id,
-                        'history_item': {
-                            'label': teleoscope['history'][0]['label'],
-                            'positive_docs': documents,
-                            'negative_docs': [],
-                            'stateVector': vec.tolist(),
-                            'ranked_document_ids': ObjectId(str(gridfs_id)),
-                            'rank_slice': rank_slice
-                        }
-                    }
+            history_item = schemas.create_teleoscope_history_item(
+                teleoscope['history'][0]['label'],
+                teleoscope['history'][0]['reddit_ids'],
+                documents,
+                [],
+                vec.tolist(),
+                ObjectId(str(gridfs_id)),
+                rank_slice,
+                "Reorient teleoscope",
+                ObjectId(str(userid))
+            )
 
             self.db.teleoscopes.update_one({"_id": ObjectId(str(teleoscope_id))},
                                         {
