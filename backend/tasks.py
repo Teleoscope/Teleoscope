@@ -899,7 +899,7 @@ class reorient(Task):
         resultantVec /= np.linalg.norm(resultantVec)
         return resultantVec, direction
 
-    def average(self, teleoscope_id: str, documents: list):
+    def average(self, documents: list):
         if self.db is None:
                 self.db = utils.connect()
         document_vectors = []
@@ -907,18 +907,7 @@ class reorient(Task):
             doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
             document_vectors.append(doc["textVector"])
         vec = np.average(document_vectors, axis=0)
-        teleoscope = self.db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_id))})
-        history_item = teleoscope["history"][0]
-        history_item["stateVector"] = vec
-        self.db.teleoscopes.update_one({"_id": ObjectId(str(teleoscope_id))},
-                                       {
-                '$push': {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }
-            })
+        return vec
 
     def run(self, edges: list, userid: str, **kwargs):
         teleoscopes = {}
@@ -931,9 +920,39 @@ class reorient(Task):
                 teleoscopes[target].append(source)
 
         print(f'Here are the edges: {teleoscopes}')
-        for teleoscope, documents in teleoscopes.items():
-            self.average(teleoscope, documents)
+        for teleoscope_id, documents in teleoscopes.items():
+            vec = self.average(documents)
+            teleoscope = self.db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_id))})
+            scores = utils.calculateSimilarity(self.allDocumentVectors, vec)
 
+            newRanks = utils.rankDocumentsBySimilarity(self.allDocumentIDs, scores)
+            gridfs_id = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
+
+            rank_slice = newRanks[0:100]
+            logging.info(f'new rank slice has length {len(rank_slice)}.')
+
+            history_obj = {
+                        '_id': teleoscope_id,
+                        'history_item': {
+                            'label': teleoscope['history'][0]['label'],
+                            'positive_docs': documents,
+                            'negative_docs': [],
+                            'stateVector': vec.tolist(),
+                            'ranked_document_ids': ObjectId(str(gridfs_id)),
+                            'rank_slice': rank_slice
+                        }
+                    }
+
+            self.db.teleoscopes.update_one({"_id": ObjectId(str(teleoscope))},
+                                        {
+                    '$push': {
+                        "history": {
+                            "$each": [history_obj],
+                            "$position": 0
+                        }
+                    }
+                })
+            
         '''
         logging.info(f'Received reorient for teleoscope id {teleoscope_id}, positive docs {positive_docs}, negative docs {negative_docs}, and magnitude {magnitude}.')
         # either positive or negative docs should have at least one entry
@@ -1006,7 +1025,7 @@ class reorient(Task):
 
         
 
-        return {}
+        return history_obj
 robj = app.register_task(reorient())
 
 #################################################################
