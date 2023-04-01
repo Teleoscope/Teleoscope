@@ -911,6 +911,10 @@ class reorient(Task):
         return vec
 
     def run(self, edges: list, userid: str, **kwargs):
+         # Check if document ids and vectors are cached
+        if self.documentsCached == False:
+            _, _ = self.cacheDocumentsData()
+            
         teleoscopes = {}
         for edge in edges:
             source = edge["source"].split("%")[0]
