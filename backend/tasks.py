@@ -756,6 +756,16 @@ def cluster_by_groups(*args, **kwargs):
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
     clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"])
 
+@app.task
+def update_edges(*arg, **kwargs):
+    """
+    Updates a Teleoscope according to edges.
+    """
+    transaction_session, db = utils.create_transaction_session()
+    edges = kwargs["edges"]
+    
+    
+
 
 @app.task
 def register_account(*arg, **kwargs):
@@ -889,7 +899,41 @@ class reorient(Task):
         resultantVec /= np.linalg.norm(resultantVec)
         return resultantVec, direction
 
-    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, magnitude=0.5, **kwargs):
+    def average(self, teleoscope_id: str, documents: list):
+        if self.db is None:
+                self.db = utils.connect()
+        document_vectors = []
+        for doc_id in documents:
+            doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
+            document_vectors.append(doc["textVector"])
+        vec = np.average(document_vectors, axis=0)
+        teleoscope = self.db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_id))})
+        history_item = teleoscope["history"][0]
+        history_item["stateVector"] = vec
+        self.db.teleoscopes.update_one({"_id": ObjectId(str(teleoscope_id))},
+                                       {
+                '$push': {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }
+            })
+
+    def run(self, edges: list, userid: str, **kwargs):
+        teleoscopes = {}
+        for edge in edges:
+            source = edge["source"].split("%")[0]
+            target = edge["target"].split("%")[0]
+            if target not in teleoscopes:
+                teleoscopes[target] = [source]
+            else:
+                teleoscopes[target].append(source)
+
+        for teleoscope, documents in teleoscopes.items():
+            self.average(teleoscope, documents)
+
+        '''
         logging.info(f'Received reorient for teleoscope id {teleoscope_id}, positive docs {positive_docs}, negative docs {negative_docs}, and magnitude {magnitude}.')
         # either positive or negative docs should have at least one entry
         if len(positive_docs) == 0 and len(negative_docs) == 0:
@@ -946,7 +990,7 @@ class reorient(Task):
 
         rank_slice = newRanks[0:100]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
-
+        '''
         history_obj = {
             '_id': teleoscope_id,
             'history_item': {
@@ -958,6 +1002,8 @@ class reorient(Task):
                 'rank_slice': rank_slice
             }
         }
+
+        
 
         return history_obj
 robj = app.register_task(reorient())

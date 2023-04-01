@@ -46,6 +46,15 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # These should exactly implement the interface standard
         # Make sure they look like Stomp
 
+        if task == 'update_edges':
+            res = tasks.initialize_session.signature(
+                args=(),
+                kwargs={
+                    "edges": args["edges"]
+                },
+            )
+
+
         if task == 'initialize_session':
             res = tasks.initialize_session.signature(
                 args=(),
@@ -78,11 +87,15 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
         if task == "initialize_teleoscope":
+            label = "default"
+            if "label" in args:
+                label = args["label"]
             res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
                     "userid": args["userid"],
-                    "session_id": args["session_id"]
+                    "session_id": args["session_id"],
+                    "label": label
                 },
             )
 
@@ -144,6 +157,18 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res.apply_async()
             return
 
+        if task == "update_edges":
+            res = chain(
+                robj.s(edges=args["edges"],
+                       userid=args["userid"]
+                ).set(queue=auth.rabbitmq["task_queue"]),
+                tasks.save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
+            )
+            
+            res.apply_async()
+            return
+
+        
         if task == "add_group":
             res = tasks.add_group.signature(
                 args=(),
