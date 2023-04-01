@@ -1,4 +1,4 @@
-import { React, useState, useMemo, useCallback, useRef } from 'react';
+import React, {useState, useMemo, useCallback, useRef } from 'react';
 import ReactFlow, { MiniMap, ReactFlowProvider, Controls, Background, addEdge } from 'reactflow';
 import 'reactflow/dist/style.css';
 import SearchNode from './Nodes/SearchNode'
@@ -52,7 +52,7 @@ function Flow() {
       }));
 
       dispatch(setEdges({
-        edges: incomingNodes,
+        edges: incomingEdges,
         logical_clock: session_history_item.logical_clock
       }));
 
@@ -155,7 +155,7 @@ function Flow() {
     const newEdges = addEdge(connection, edges)
     client.update_edges(newEdges)
     dispatch(makeEdge({edges: newEdges}))
-});
+}, []);
   
   return (
     <div className="providerflow">

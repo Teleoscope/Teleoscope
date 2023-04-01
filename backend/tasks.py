@@ -229,7 +229,7 @@ def add_user_to_session(*args, **kwargs):
 def initialize_teleoscope(*args, **kwargs):
     """
     initialize_teleoscope:
-    Performs a text query on aita.documents text index.
+    Performs a text query on db.documents text index.
     If the query string already exists in the teleoscopes collection, returns existing reddit_ids.
     Otherwise, adds the query to the teleoscopes collection and performs a text query the results of which are added to the
     teleoscopes collection and returned.
@@ -902,7 +902,7 @@ class reorient(Task):
 
     def average(self, documents: list):
         if self.db is None:
-                self.db = utils.connect(db="aita")
+                self.db = utils.connect(db=auth.mongodb["db"])
         document_vectors = []
         for doc_id in documents:
             print(f'Finding doc {doc_id}')

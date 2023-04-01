@@ -35,7 +35,7 @@ function WindowNode({ data, id, selected }) {
   if (data.type == "Teleoscope") {
     return (
       <>
-        <NodeResizer color="#ff0071" isVisible={selected} minWidth={windata.minWidth} minHeight={windata.minHeight} lineStyle={{thickness:"10px"}}  />
+        <NodeResizer color="#ff0071" isVisible={selected} minWidth={windata.minWidth} minHeight={windata.minHeight}   />
         <WindowFactory id={data.i} size={size} windata={ windata } />
         <Handle type="target" position={Position.Left} id="b" isConnectable={true} />
 

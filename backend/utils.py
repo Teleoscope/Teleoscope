@@ -31,7 +31,7 @@ def connect(db='teleoscope'):
     # logging.log(f'Connected to MongoDB with user {auth.mongodb["username"]}.')
     return client[db]
 
-def create_transaction_session():
+def create_transaction_session(db='teleoscope'):
     autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
@@ -48,8 +48,8 @@ def create_transaction_session():
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
     session = client.start_session()
-    db = client.aita
-    return session, db
+    database = client[db]
+    return session, database
 
 def commit_with_retry(session):
     while True:
