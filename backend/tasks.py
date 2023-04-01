@@ -1006,7 +1006,7 @@ class reorient(Task):
 
         
 
-        return history_obj
+        return {}
 robj = app.register_task(reorient())
 
 #################################################################
