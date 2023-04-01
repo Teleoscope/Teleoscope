@@ -904,6 +904,7 @@ class reorient(Task):
                 self.db = utils.connect()
         document_vectors = []
         for doc_id in documents:
+            print(f'Finding doc {doc_id}')
             doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
             document_vectors.append(doc["textVector"])
         vec = np.average(document_vectors, axis=0)
@@ -919,7 +920,7 @@ class reorient(Task):
             else:
                 teleoscopes[target].append(source)
 
-        print(f'Here are the edges: {teleoscopes}')
+        print(f'Telescope graph: {teleoscopes}')
         for teleoscope_id, documents in teleoscopes.items():
             vec = self.average(documents)
             teleoscope = self.db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_id))})
