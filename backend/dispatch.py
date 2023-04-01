@@ -158,12 +158,10 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             return
 
         if task == "update_edges":
-            res = chain(
-                robj.s(edges=args["edges"],
+            res = robj.s(edges=args["edges"],
                        userid=args["userid"]
-                ).set(queue=auth.rabbitmq["task_queue"]),
-                tasks.save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
-            )
+                ).set(queue=auth.rabbitmq["task_queue"])
+            
             
             res.apply_async()
             return
