@@ -901,7 +901,7 @@ class reorient(Task):
 
     def average(self, documents: list):
         if self.db is None:
-                self.db = utils.connect()
+                self.db = utils.connect(db="aita")
         document_vectors = []
         for doc_id in documents:
             print(f'Finding doc {doc_id}')
