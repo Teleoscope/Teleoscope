@@ -952,7 +952,7 @@ class reorient(Task):
                                         {
                     '$push': {
                         "history": {
-                            "$each": [history_obj],
+                            "$each": [history_item],
                             "$position": 0
                         }
                     }
