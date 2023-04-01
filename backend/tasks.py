@@ -930,6 +930,7 @@ class reorient(Task):
             else:
                 teleoscopes[target].append(source)
 
+        print(f'Here are the edges: {teleoscopes}')
         for teleoscope, documents in teleoscopes.items():
             self.average(teleoscope, documents)
 
