@@ -948,7 +948,7 @@ class reorient(Task):
                         }
                     }
 
-            self.db.teleoscopes.update_one({"_id": ObjectId(str(teleoscope))},
+            self.db.teleoscopes.update_one({"_id": ObjectId(str(teleoscope_id))},
                                         {
                     '$push': {
                         "history": {
