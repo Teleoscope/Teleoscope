@@ -44,11 +44,8 @@ export default function DocumentList(props) {
     setPageNumber(value);
   };
 
-
-
-
   return (
-    <List  dense={true}>
+    <List dense={true}>
       {displayPagination
         ? paginatedItems.map(pair => ListItem(pair))
         : data.map(pair => ListItem(pair))

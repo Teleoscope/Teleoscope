@@ -8,7 +8,7 @@ import SpeedDialAction from '@mui/material/SpeedDialAction';
 import MenuActions from "./Context/ContextMenuActions"
 
 // actions
-import { addNode } from "../actions/windows";
+import { makeNode } from "../actions/windows";
 import { useSelector, useDispatch } from "react-redux";
 import useSWRAbstract from "../util/swr"
 
@@ -24,20 +24,21 @@ export default function FABMenu(props) {
     'Clusters': MenuActions()['Clusters'],
     'Notes': MenuActions()['Notes']
   }
+
   
   const get_color = () => session ? session.history[0].color : "#4E5CBC"
   const handleAddNode = (id, type) => {
     const newNode = {
         id: id,
         type: "windowNode",
-        position: {x: 0, y: 0},
+        position: {x: props.windata.x + props.windata.width + 10, y: props.windata.y},
         style : { 
         width: 400,
         height: 300,
         },
         data: { label: `${id} node`, i: id, type: type },
     };
-    dispatch(addNode({node: newNode}))
+    dispatch(makeNode({node: newNode}))
   }
 
   const handleOpen = () => {

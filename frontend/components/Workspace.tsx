@@ -32,16 +32,13 @@ export default function Workspace(props) {
   };
 
 
-  const handleClick = (e) => {
-    console.log(e)
-  }
+
 
 
   return (
     <div
       onContextMenu={handleOpenContextMenu}
       style={{ cursor: 'context-menu' }}
-      onClick={(e) => handleClick(e)}
     >
 
         <div style={{width: "100vw", height: "10vh"}}>

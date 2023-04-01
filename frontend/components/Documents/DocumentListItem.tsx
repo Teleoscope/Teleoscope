@@ -33,7 +33,8 @@ export default function DocumentListItem(props) {
 
   const showGroupIcon = Object.prototype.hasOwnProperty.call(props, "showGroupIcon") ? props.showGroupIcon : true;
   
-  const handleRemove = () => {
+  const handleRemove = (e) => {
+    e.stopPropagation()
     client.remove_document_from_group(props.group._id, props.id)
   }
 
@@ -70,7 +71,7 @@ export default function DocumentListItem(props) {
         </Stack>
 
         {props.ShowDeleteIcon ? (
-          <IconButton sx={{ width: 20, height: 20 }} onClick={() => handleRemove()}>
+          <IconButton sx={{ width: 20, height: 20 }} disableRipple onClick={(e) => handleRemove(e)}>
             <DeleteIcon sx={{ '&:hover': {color: 'red'}, width: 20, height: 20 }}></DeleteIcon>
           </IconButton>
          ) 

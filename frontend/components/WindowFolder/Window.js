@@ -5,95 +5,97 @@ import React, { useState } from "react";
 import WindowTopBar from "./WindowTopBar";
 
 // mui
-import Chip from '@mui/material/Chip';
-import Card from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
+import Chip from "@mui/material/Chip";
+import Card from "@mui/material/Card";
+import CardActionArea from "@mui/material/CardActionArea";
 
 // actions
 import { useDispatch } from "react-redux";
-import { minimizeWindow, maximizeWindow, checkWindow, removeWindow } from "../../actions/windows";
-import { useAppDispatch } from '../../hooks';
-import { setDraggable } from '../../actions/windows';
+import { removeWindow } from "../../actions/windows";
 
 export default React.forwardRef(({ ...props }) => {
-    const w = props.windata;
-    const dispatch = useDispatch();
-    
+  const w = props.windata;
+  const dispatch = useDispatch();
 
+  const handleDelete = () => {
+    dispatch(removeWindow(props.id));
+  };
 
-    const handleSelect = (e) => {
-        if (e.shiftKey) {
-            dispatch(checkWindow({ i: w.i, check: !w.isChecked }))
-        }
-    }
-
-    const handleDelete = () => {
-        dispatch(removeWindow(props.id));
-    }
-
-
-    if (props.size.height < 35) {
-        return (
-            <Chip
-                label={props.title}
-                icon={props.icon}
-                clickable
-                onDelete={handleDelete}
-                className="drag-handle"
-                sx={{
-                    border: w.isChecked ? `2px solid ${props.color}` : "1px solid #DDDDDD",
-                    boxShadow: '1',
-                    cursor: "move",
-                    backgroundColor: "white",
-                    width: props.size.width,
-                    [`& .MuiChip-icon`]: {
-                        color: props.color
-                      }
-                }}
-            />
-        )
-    }
-
-
-    
-    const [dragging, setDragging] = React.useState(false);
-    const setDrag = (drag) => {
-        if (dragging) {
-            dispatch(setDraggable({ id: `${props.id}`, draggable: true }));
-        } else {
-            dispatch(setDraggable({ id: `${props.id}`, draggable: drag }));
-        }
-    };
-
-
+  if (props.size.width < props.size.minWidth + 1 ) {
     return (
-        <Card
-            variant="outlined"
-            style={{
-                borderColor: w.isChecked ? props.color : "#DDDDDD",
-                borderWidth: w.isChecked ? 2 : 1,
-                backgroundColor: "white",
-                height: "100%",
-            }}
-            sx={{
-                boxShadow: '1',
-            }}
-        ><CardActionArea
-            onMouseDown={() => setDragging(true)}
-            onMouseUp={() => setDragging(false)}
-            onMouseEnter={() => setDrag(true)}
+      <Chip
+        windata={w}
+        icon={props.icon}
+        sx={{
+          border: w.isChecked
+            ? `2px solid ${props.color}`
+            : "1px solid #DDDDDD",
+          boxShadow: "1",
+          cursor: "move",
+          backgroundColor: "white",
+          [`& .MuiChip-icon`]: {
+            color: props.color,
+            fontSize: "1.5em",
+            marginLeft: "1em",
+          },
+        }}
+      />
+    );
+  }
 
-        >
-                <WindowTopBar
-                    title={props.title}
-                    id={props.id}
-                    icon={props.icon}
-                    isChecked={w.isChecked}
+  if (props.size.height < props.size.minHeight + 1) {
+    return (
+      <Chip
+        windata={w}
+        label={props.title}
+        icon={props.icon}
+        clickable
+        onDelete={handleDelete}
+        className="drag-handle"
+        sx={{
+          border: w.isChecked
+            ? `2px solid ${props.color}`
+            : "1px solid #DDDDDD",
+          boxShadow: "1",
+          cursor: "move",
+          backgroundColor: "white",
+          width: props.size.width,
+          [`& .MuiChip-icon`]: {
+            color: props.color,
+          },
+        }}
+      />
+    );
+  }
 
-                /></CardActionArea>
-                <div onMouseEnter={() => setDrag(false)} onMouseLeave={() => setDrag(true)}>
-                    {props.inner}
-                </div>
-        </Card>
-    )
-})    
+  return (
+    <Card
+      variant="outlined"
+      style={{
+        borderColor: w.isChecked ? props.color : "#DDDDDD",
+        borderWidth: w.isChecked ? 2 : 1,
+        backgroundColor: "white",
+        height: "100%",
+        width: "100%",
+      }}
+      sx={{
+        boxShadow: "1",
+      }}
+    >
+      <CardActionArea>
+        <WindowTopBar
+          title={props.title}
+          id={props.id}
+          icon={props.icon}
+          isChecked={w.isChecked}
+        />
+      </CardActionArea>
+      <div
+        className="nodrag nowheel"
+        style={{ overflow: "auto", width: "100%", height: "100%" }}
+      >
+        {props.inner}
+      </div>
+    </Card>
+  );
+});

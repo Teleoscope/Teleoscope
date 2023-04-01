@@ -113,10 +113,8 @@ function Login() {
 //       // })
 //       // .catch(alertService.error);
 //       //setUsername(username);
-//       //console.log("Login User", user.username);
 
 //       setLogin(verification(username, password, user));
-//       console.log('Login', login)
 //       if (login) {
 //          cookies.set("authorized", "true", {path: '/'});
 //          Router.push('/');

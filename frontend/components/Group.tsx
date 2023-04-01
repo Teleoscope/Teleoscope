@@ -12,7 +12,6 @@ export default function Group(props) {
   const data = group?.history[0].included_documents.map((p) => { return [p, 1.0] });
 
   return (
-    <div style={{ overflow: "auto", height: "100%" }}>
       <DocumentList 
         data={data} 
         pagination={true} 
@@ -22,6 +21,5 @@ export default function Group(props) {
         group={group}
         ShowDeleteIcon={true}
       ></DocumentList>
-    </div>
   );
 }
