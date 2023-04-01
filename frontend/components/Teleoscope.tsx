@@ -25,10 +25,13 @@ export default function Teleoscope(props) {
   const { teleoscope } = useSWRAbstract("teleoscope", `/api/teleoscopes/${teleoscope_id}`);
 
   const data = teleoscope?.history[0]["rank_slice"];
- 
     return (
       <>
-        {teleoscope ? <DocumentList pagination={true} data={data}></DocumentList> : <LoadingButton loading={true} />}
+        {teleoscope ? 
+        <DocumentList
+          data={data}
+          pagination={true}
+           ></DocumentList> : <LoadingButton loading={true} />}
       </>
     )
 

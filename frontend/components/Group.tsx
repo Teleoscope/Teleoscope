@@ -16,8 +16,8 @@ export default function Group(props) {
         data={data} 
         pagination={true} 
         showGroupIcon={false} 
-        showOrientIcon={true} 
-        showRemoveIcon={true}
+        showOrientIcon={false}
+        showRemoveIcon={false}
         group={group}
         ShowDeleteIcon={true}
       ></DocumentList>

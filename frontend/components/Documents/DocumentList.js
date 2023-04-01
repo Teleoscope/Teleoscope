@@ -12,6 +12,7 @@ import withDroppable from "../DropItem";
 export default function DocumentList(props) {
   const data = props.data;
 
+
   // pagination
   const [pageNumber, setPageNumber] = useState(1);
   const itemsPerPage = 10;
@@ -32,7 +33,6 @@ export default function DocumentList(props) {
 
 
   const Item = (props) => <DocumentListItem group={props.group} key={props.id + "DocumentListItem"} {...props} />
-  const Droppable = withDroppable(Item);
 
 
   const changePage = (event, value) => {

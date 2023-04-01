@@ -8,6 +8,9 @@ import schemas
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
+db = auth.mongodb["db"]
+embedding_path = f'~/{db}/embeddings/'
+
 # url: "amqp://myuser:mypassword@localhost:5672/myvhost"
 CELERY_BROKER_URL = (
     f'amqp://'
@@ -814,7 +817,7 @@ class reorient(Task):
         self.db = None
         self.model = None
 
-    def cacheDocumentsData(self, path='~/embeddings/'):
+    def cacheDocumentsData(self, path=embedding_path):
         # cache embeddings
         from pathlib import Path
         dir = Path(path).expanduser()

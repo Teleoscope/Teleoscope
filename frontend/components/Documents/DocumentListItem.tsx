@@ -31,6 +31,8 @@ export default function DocumentListItem(props) {
   const { document } = useSWRAbstract("document", `/api/document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;
 
+  console.log("props id", props.id, document)
+
   const showGroupIcon = Object.prototype.hasOwnProperty.call(
     props,
     "showGroupIcon"
