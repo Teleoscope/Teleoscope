@@ -914,7 +914,7 @@ class reorient(Task):
          # Check if document ids and vectors are cached
         if self.documentsCached == False:
             _, _ = self.cacheDocumentsData()
-            
+
         teleoscopes = {}
         for edge in edges:
             source = edge["source"].split("%")[0]
@@ -1030,7 +1030,7 @@ class reorient(Task):
 
         
 
-        return history_obj
+        return {}
 robj = app.register_task(reorient())
 
 #################################################################
