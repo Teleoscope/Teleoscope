@@ -373,7 +373,7 @@ class Clustering:
         sorting = np.argsort(lda.components_, axis=1)[:, ::-1]
         feature_names = np.array(vec.get_feature_names_out())
 
-        label = None
+        label = ""
         for i in range(self.topic_label_length):
             if i > 0: label += " "
             label += feature_names[sorting[0][i]]
