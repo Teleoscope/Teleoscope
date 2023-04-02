@@ -320,7 +320,7 @@ class Clustering:
                     check = more = True
         
         if check:
-            self.description = "your group(s)"
+            self.description = "your group"
             return name, '#ff70e2'
 
         # return for if label is newly generated machine cluster
