@@ -382,6 +382,7 @@ def add_group(*args, human=True, description="A group", included_documents=[], *
     obj = {
         "creation_time": datetime.datetime.utcnow(),
         "teleoscope": teleoscope_result.inserted_id,
+        "session": _id,
         "history": [
             {
                 "timestamp": datetime.datetime.utcnow(),
