@@ -16,6 +16,8 @@ import Divider from '@mui/material/Divider';
 import Diversity2Icon from '@mui/icons-material/Diversity2';
 import {Box, FormControl, FormHelperText, IconButton, InputLabel, MenuItem, Select, Typography} from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
+import Slider from '@mui/material/Slider';
+
 
 // actions
 import useSWRAbstract from "../../util/swr"
@@ -230,6 +232,43 @@ export default function GroupPalette(props) {
         )
     }
 
+    // const DiscreteSlider = () => {
+    //     return (
+    //         <Box sx={{ width: "50%" }}>
+    //             <Slider
+    //                 size="small"
+    //                 aria-label="Teleoscope Magnitude"
+    //                 valueLabelDisplay="auto"
+    //                 getAriaValueText={v => v.toString()}
+    //                 defaultValue={10000} step={0.1} marks min={0} max={1}
+    //                 onChangeCommitted={(e, value: number) => { dispatch(setMagnitude(value)) }}
+    //             />
+    //         </Box>
+    //     );
+    // }
+
+    const Cluster = () => {
+        return (
+            <Dialog open={open} onClose={handleClose}>
+                <DialogTitle>
+                    <Typography align="center">Cluster on Group</Typography>
+                </DialogTitle>
+                <DialogContent>
+                    <Box component="form" sx={{ display: 'flex', flexWrap: 'wrap' }}>
+                        <Stack direction="column" spacing={1} justifyContent="space-between" alignItems="center"
+                            style={{ margin: 0 }}>
+
+                            <IconButton onClick={() => { runClusters() }}>
+                                <CheckIcon />
+                            </IconButton>
+
+                        </Stack>
+                    </Box>
+                </DialogContent>
+            </Dialog>
+        )
+    }
+
 
 
     return (
@@ -264,6 +303,7 @@ export default function GroupPalette(props) {
                         },
                       },
                 ]}/></IconButton>
+                <Cluster/>
                 <IconButton onClick={handleClickOpen}><ConnectingAirportsIcon sx={[
                     {
                         '&:hover': {

@@ -23,10 +23,10 @@ class Clustering:
     """Semi-supervised Clustering 
 
     The purpose of this class is to cluster a corpus--limited to a subset defined 
-    by the limit param--by taking into account human defined / provide clusters.
+    by the limit param plus the documents in the provided human clusters/groups.
     """
 
-    def __init__(self, user_id, group_id_strings, session_id, limit=10000):
+    def __init__(self, user_id, group_id_strings, session_id, limit=10000, topic_label_length=2):
         """Initializes the instance 
 
         Args:
@@ -38,16 +38,20 @@ class Clustering:
                 An string that represents the ObjectID of the current session
             limit:
                 The number of documents to cluster. Default 10000
+            topic_label_length:
+                Minimum number of words to use for machine cluster topic labels. Default 2
         """
+
         self.user_id = user_id
         self.group_id_strings = group_id_strings
         self.session_id = session_id
         self.limit = limit
-        self.db = utils.connect()
+        self.topic_label_length = topic_label_length
+        self.db = utils.connect() # this needs to be params for each db
         self.nlp = spacy.load("en_core_web_sm")
 
+        # TODO - can we set this up as a transaction session so it dies if we dont succeed
         self.cluster_by_groups()
-        
 
     def cluster_by_groups(self):
         """Cluster documents using user-defined groups.
@@ -123,6 +127,8 @@ class Clustering:
             
             given_labels[group] = correct_label
 
+        # TODO - build out below as helper
+        
         # keep track of all topic labels (for collisions)
         topic_labels = []
 
@@ -344,8 +350,14 @@ class Clustering:
         docs_pp = [self.preprocess(text) for text in self.nlp.pipe(docs)]
 
         # transform as bag of words
-        from sklearn.feature_extraction.text import CountVectorizer
-        vec = CountVectorizer(stop_words='english')
+        # from sklearn.feature_extraction.text import CountVectorizer
+        # vec = CountVectorizer(stop_words='english')
+
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from spacy.tokenizer import Tokenizer
+
+        vec = TfidfVectorizer()
+        # TODO - TF-IDF for frequent stop words - https://www.dataquest.io/blog/tutorial-text-classification-in-python-using-spacy/
         X = vec.fit_transform(docs_pp)
 
         # apply LDA topic modelling reduction
@@ -360,16 +372,22 @@ class Clustering:
         # grab two most similar topic labels for machine cluster
         sorting = np.argsort(lda.components_, axis=1)[:, ::-1]
         feature_names = np.array(vec.get_feature_names_out())
-        label = feature_names[sorting[0][0]] + " " + feature_names[sorting[0][1]]
+
+        label = None
+        for i in range(self.topic_label_length):
+            if i > 0: label += " "
+            label += feature_names[sorting[0][i]]
+
+        # TODO - return the first 10 words as short description under the group name (instead of the current which is OID)
 
         # check for collisions with existing labels; if yes, append another topic label. 
-        i = 1
+        i = self.topic_label_length
         while(1):
             if label not in topic_labels:
                 return label
             else:
-                i += 1
                 label += " " + feature_names[sorting[0][i]]
+                i += 1
 
     def preprocess(self, doc):
         """Preprocess text
@@ -411,6 +429,9 @@ class Clustering:
         Check to see if user has already built clusters.
         If so, need to delete clusters and associated teleoscope items
         """
+
+        #  TODO - forgetting to clear session's clusters and teleoscopes history item
+
         db = self.db
 
         # check to see user has any clusters
