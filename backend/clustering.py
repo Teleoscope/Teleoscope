@@ -465,7 +465,6 @@ class Clustering:
                 teleo = db.teleoscopes.find_one({"_id": teleo_oid})
 
                 # clear teleo from session
-                db.sessions.delete_one({"history.teleoscopes": teleo_oid})
 
                 # associated teleoscope.files
                 teleo_file = teleo["history"][0]["ranked_document_ids"]
