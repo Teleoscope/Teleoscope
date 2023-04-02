@@ -345,7 +345,7 @@ def save_teleoscope_state(*args, **kwargs):
                     }
                 }
             }, session=session)
-        logging.info(f'Saving teleoscope state: {result}')
+        # logging.info(f'Saving teleoscope state: {result}')
         utils.commit_with_retry(session)
 
 @app.task 
