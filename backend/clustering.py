@@ -47,6 +47,7 @@ class Clustering:
         self.session_id = session_id
         self.limit = limit
         self.topic_label_length = topic_label_length
+        self.description = ""
         self.db = utils.connect() # this needs to be params for each db
         self.nlp = spacy.load("en_core_web_sm")
 
@@ -153,7 +154,7 @@ class Clustering:
             # learn a topic label for if current cluster is a machine cluster
             if _label == 'machine':
                 limit = min(20, len(label_ids))
-                _label, _description = self.get_topic(label_ids[:limit], topic_labels)
+                _label = self.get_topic(label_ids[:limit], topic_labels)
                 topic_labels.append(_label)
 
             logging.info(f'There are {len(documents)} documents for Machine Cluster "{_label}".')
@@ -165,7 +166,7 @@ class Clustering:
                 session_id=self.session_id, 
                 human=False, 
                 included_documents=documents, 
-                description=_description
+                description=self.description
             )
 
         total_time = time.time() - start
@@ -299,6 +300,7 @@ class Clustering:
         
         # outlier label
         if hdbscan_label == -1:
+            self.description = "outlier documents"
             return 'outliers', '#ff1919'
 
         # check if hdbscan_label was for a human cluster(s)
@@ -318,6 +320,10 @@ class Clustering:
                     check = more = True
         
         if check:
+            user = self.db.users.find_one({"_id": self.userid})
+            username = user["username"]
+            self.description = f"{username}'s group"
+            if more: self.description += "s"
             return name, '#ff70e2'
 
         # return for if label is newly generated machine cluster
@@ -376,15 +382,15 @@ class Clustering:
             label += feature_names[sorting[0][i]]
 
         # build a 7 word description from frequent topic labels
-        description = feature_names[sorting[0][0]]
-        for i in range(1,7):
-            description += " " + feature_names[sorting[0][i]]
+        self.description = feature_names[sorting[0][0]]
+        for i in range(1,8):
+            self.description += " " + feature_names[sorting[0][i]]
 
         # check for collisions with existing labels; if yes, append another topic label. 
         i = self.topic_label_length
         while(1):
             if label not in topic_labels:
-                return label, description
+                return label
             else:
                 label += " " + feature_names[sorting[0][i]]
                 i += 1
@@ -458,6 +464,9 @@ class Clustering:
                 teleo_oid = cluster["teleoscope"]
                 teleo = db.teleoscopes.find_one({"_id": teleo_oid})
 
+                # clear teleo from session
+                db.sessions.delete_one({"history.teleoscopes": teleo_oid})
+
                 # associated teleoscope.files
                 teleo_file = teleo["history"][0]["ranked_document_ids"]
 
@@ -469,6 +478,8 @@ class Clustering:
 
                 # delete cluster
                 db.clusters.delete_one({"_id": cluster["_id"]})
+            
+            # clear all clusters from sessions
         
         logging.info(f'No clusters for user. Ready to populate.')
 
