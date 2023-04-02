@@ -349,10 +349,15 @@ def save_teleoscope_state(*args, **kwargs):
         utils.commit_with_retry(session)
 
 @app.task 
-def add_group(*args, human=True, included_documents=[], **kwargs):
+def add_group(*args, human=True, desciption=None, included_documents=[], **kwargs):
     """
     Adds a group to the group collection and links newly created group to corresponding session.
     
+    args: 
+        human: check if this call is from clustering or not
+        description: topic label for cluster
+        included documents: documents included in group
+
     kwargs: 
         label: (string, arbitrary)
         color: (string, hex color)
@@ -416,6 +421,9 @@ def add_group(*args, human=True, included_documents=[], **kwargs):
         history_item["clusters"] = clusters
         history_item["action"] = f"Initialize new group: {label}"
         history_item["user"] = user_id
+
+        if not human:
+            history_item["desciption"] = desciption
 
         sessions_res = db.sessions.update_one({'_id': _id},
             {

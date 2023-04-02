@@ -153,7 +153,7 @@ class Clustering:
             # learn a topic label for if current cluster is a machine cluster
             if _label == 'machine':
                 limit = min(20, len(label_ids))
-                _label = self.get_topic(label_ids[:limit], topic_labels)
+                _label, description = self.get_topic(label_ids[:limit], topic_labels)
                 topic_labels.append(_label)
 
             logging.info(f'There are {len(documents)} documents for Machine Cluster "{_label}".')
@@ -165,6 +165,7 @@ class Clustering:
                 session_id=self.session_id, 
                 human=False, 
                 included_documents=documents, 
+                description=description
             )
 
         total_time = time.time() - start
@@ -334,6 +335,8 @@ class Clustering:
         Returns:
             topic:
                 A string that is the topic label for the machine cluster
+            description:
+                A 10 word machine generated description 
         """
 
         docs = [] 
@@ -349,15 +352,9 @@ class Clustering:
         # use spaCy to preprocess text
         docs_pp = [self.preprocess(text) for text in self.nlp.pipe(docs)]
 
-        # transform as bag of words
-        # from sklearn.feature_extraction.text import CountVectorizer
-        # vec = CountVectorizer(stop_words='english')
-
+        # transform as bag of words with tf-idf strategy
         from sklearn.feature_extraction.text import TfidfVectorizer
-        from spacy.tokenizer import Tokenizer
-
         vec = TfidfVectorizer()
-        # TODO - TF-IDF for frequent stop words - https://www.dataquest.io/blog/tutorial-text-classification-in-python-using-spacy/
         X = vec.fit_transform(docs_pp)
 
         # apply LDA topic modelling reduction
@@ -378,13 +375,16 @@ class Clustering:
             if i > 0: label += " "
             label += feature_names[sorting[0][i]]
 
-        # TODO - return the first 10 words as short description under the group name (instead of the current which is OID)
+        # build a 10 word description from frequent topic labels
+        description = ""
+        for i in range(10):
+            description += feature_names[sorting[0][i]]
 
         # check for collisions with existing labels; if yes, append another topic label. 
         i = self.topic_label_length
         while(1):
             if label not in topic_labels:
-                return label
+                return label, description
             else:
                 label += " " + feature_names[sorting[0][i]]
                 i += 1
