@@ -14,6 +14,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Stack from "@mui/material/Stack";
 import Divider from "@mui/material/Divider";
 import Diversity2Icon from "@mui/icons-material/Diversity2";
+import FolderCopyIcon from '@mui/icons-material/FolderCopy';
+
 import {
   Box,
   FormControl,
@@ -234,12 +236,6 @@ export default function GroupPalette(props) {
     );
   };
 
-  const onDragStart = (event, id, type, typetag) => {
-    event.dataTransfer.setData('application/reactflow/type', type);
-    event.dataTransfer.setData('application/reactflow/id', `${id}%${typetag}`);
-    event.dataTransfer.effectAllowed = 'move';
-  };
-
   const CopyGroup = () => {
     return (
       <Dialog open={open} onClose={handleClose}>
@@ -266,6 +262,70 @@ export default function GroupPalette(props) {
     );
   };
 
+
+  const Picker = (props) => {
+    return (
+      <ColorPicker
+        defaultColor={props.group?.history[0].color}
+        onChange={(color) => {
+          client.recolor_group(color, props.group._id);
+          setShowColorPicker(false);
+        }}
+      ></ColorPicker>
+    );
+  };
+
+  const Item = (props) => {
+    return (
+      <ListItem>
+        <Stack
+          sx={{ width: "100%" }}
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Stack direction="row" alignItems="center">
+            <ListItemIcon>
+              <IconButton onClick={() => setShowColorPicker(!showColorPicker)}>
+                <FolderIcon sx={{ color: props.group?.history[0].color }} />
+              </IconButton>
+            </ListItemIcon>
+
+            <EditableText
+              initialValue={props.group.history[0].label}
+              callback={(label) => client.relabel_group(label, props.group._id)}
+            />
+          </Stack>
+          <IconButton
+            onClick={() => client.remove_group(props.group._id, session_id)}
+          >
+            <DeleteIcon
+              sx={[
+                {
+                  "&:hover": {
+                    color: props.color,
+                  },
+                },
+              ]}
+            ></DeleteIcon>
+          </IconButton>
+        </Stack>
+      </ListItem>
+    );
+  };
+
+
+  const Test = (props) => {
+    return (
+      <IconButton onClick={() => console.log("problem")} {...props}>
+          <FolderCopyIcon fontSize="inherit" />
+        </IconButton>
+    )
+  }
+
+  const Droppable = withDroppable(Test);
+
+
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
       <Stack
@@ -321,131 +381,17 @@ export default function GroupPalette(props) {
         <CopyGroup />
       </Stack>
       <Divider />
+      
       <List>
         {groups?.map((g) => {
           return (
-            <div
-            
-            draggable={true}
-        style={{ position: "relative" }}
-        onDragStart={(e) => onDragStart(e, g._id + "%" + "group", "Group", "group")} 
-            >
-              {/* <Droppable group={g} id={g._id} type="Group" typetag="group"></Droppable> */}
-              <ListItem>
-                <Stack
-                  sx={{ width: "100%" }}
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Stack direction="row" alignItems="center">
-                    <ListItemIcon>
-                      <IconButton
-                        onClick={() => setShowColorPicker(!showColorPicker)}
-                      >
-                        <FolderIcon sx={{ color: g.history[0].color }} />
-                      </IconButton>
-                    </ListItemIcon>
-
-                    <EditableText
-                      initialValue={g.history[0].label}
-                      callback={(label) => client.relabel_group(label, g._id)}
-                    />
-                  </Stack>
-                  <IconButton
-                    onClick={() =>
-                      client.remove_group(g._id, session_id)
-                    }
-                  >
-                    <DeleteIcon
-                      sx={[
-                        {
-                          "&:hover": {
-                            color: props.color,
-                          },
-                        },
-                      ]}
-                    ></DeleteIcon>
-                  </IconButton>
-                </Stack>
-              </ListItem>
-              {showColorPicker ? (
-                <ColorPicker
-                  defaultColor={g.history[0].color}
-                  onChange={(color) => {
-                    client.recolor_group(color, g._id);
-                    setShowColorPicker(false);
-                  }}
-                ></ColorPicker>
-              ) : (
-                <span></span>
-              )}
+            <div>
+              <Droppable group={g} id={g._id} type="Group" typetag="group" {...props} />
+              {showColorPicker ? <Picker group={g} /> : <span></span>}
             </div>
           );
         })}
       </List>
-<<<<<<< HEAD
-    );
-  };
-
-  return (
-    <div style={{ overflow: "auto", height: "100%" }}>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        style={{ margin: 0 }}
-      >
-        <TextField
-          label="Create new group..."
-          placeholder="Type label and press enter."
-          variant="standard"
-          onKeyDown={(e) => keyChange(e)}
-          onChange={(e) => setValue(e.target.value)}
-          InputLabelProps={{
-            sx: {
-              "&.Mui-focused": {
-                color: props.color,
-              },
-            },
-          }}
-          sx={{
-            width: "75%",
-            margin: 1,
-            // '& .MuiInput-underline:before': {borderBottomColor: props.color},
-            "& .MuiInput-underline:after": { borderBottomColor: props.color },
-            // '& .MuiInputLabel-root': {borderBottomColor: props.color},
-          }}
-        />
-
-        <IconButton onClick={() => runClusters()}>
-          <Diversity2Icon
-            sx={[
-              {
-                "&:hover": {
-                  color: props.color,
-                },
-              },
-            ]}
-          />
-        </IconButton>
-        <IconButton onClick={handleClickOpen}>
-          <ConnectingAirportsIcon
-            sx={[
-              {
-                "&:hover": {
-                  color: props.color,
-                },
-              },
-            ]}
-          />
-        </IconButton>
-        <CopyGroup />
-      </Stack>
-      <Divider />
-      <InnerContent />
-=======
->>>>>>> pb_flow
     </div>
   );
 }

@@ -15,7 +15,7 @@ const withDroppable = (DragItem) => {
       <div
         draggable={true}
         style={{ position: "relative" }}
-        onDragStart={onDragStart}
+        onDragStart={onDragStart} 
 
       >
         <DragItem

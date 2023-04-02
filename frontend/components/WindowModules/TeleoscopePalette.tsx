@@ -99,6 +99,7 @@ export default function TeleoscopePalette(props) {
         {teleoscopes?.map((t) => (
           <Droppable
             teleoscope={t}
+            key={t._id}
             id={t._id}
             type="Teleoscope"
             typetag="teleoscope"

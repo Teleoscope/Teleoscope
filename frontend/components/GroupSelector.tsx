@@ -81,7 +81,8 @@ export default function groupSelector(props) {
 
                return (
 
-                  <MenuItem
+                  <MenuItem 
+                     key={_id}
                      value={_id}
                      onClick={() => handleSelect(_id)}>
                      <FolderIcon sx={{ color: g.history[0].color }} style={{ fontSize: 15 }} />

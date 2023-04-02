@@ -9,8 +9,6 @@ const options = {
   
 }
 
-console.log(`Connecting to ${uri}...`)
-
 let client
 let clientPromise: Promise<MongoClient>
 

@@ -12,16 +12,14 @@ export default function Group(props) {
   const data = group?.history[0].included_documents.map((p) => { return [p, 1.0] });
 
   return (
-    <div style={{ overflow: "auto", height: "100%" }}>
       <DocumentList 
         data={data} 
         pagination={true} 
         showGroupIcon={false} 
-        showOrientIcon={true} 
-        showRemoveIcon={true}
+        showOrientIcon={false}
+        showRemoveIcon={false}
         group={group}
         ShowDeleteIcon={true}
       ></DocumentList>
-    </div>
   );
 }

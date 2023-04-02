@@ -37,4 +37,5 @@
           - zstandard
           - pygithub
           - ujson
+          - tqdm
         executable: "{{ conda_prefix }}/envs/{{ conda_environment }}/bin/pip"

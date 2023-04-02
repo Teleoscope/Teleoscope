@@ -1,12 +1,12 @@
-import { React, useState, useMemo, useCallback, useRef } from 'react';
-import ReactFlow, { ReactFlowProvider, Controls, Background } from 'reactflow';
+import React, {useState, useMemo, useCallback, useRef } from 'react';
+import ReactFlow, { MiniMap, ReactFlowProvider, Controls, Background, addEdge } from 'reactflow';
 import 'reactflow/dist/style.css';
 import SearchNode from './Nodes/SearchNode'
 import WindowNode from './Nodes/WindowNode'
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { RootState } from '../stores/store'
 import useSWRAbstract from '../util/swr';
-import { setNodes, updateNodes, updateEdges, setEdges, makeEdge, addNode } from "../actions/windows";
+import { setNodes, updateNodes, updateEdges, makeEdge, makeNode, removeWindow, setEdges } from "../actions/windows";
 import { Stomp } from './Stomp'
 
 const nodeTypes = { windowNode: WindowNode };
@@ -32,24 +32,74 @@ function Flow() {
   const session_history_item = session?.history[0];
   const dispatch = useAppDispatch();
 
-  
-
   if (session_history_item) {
     if (session_history_item.logical_clock > logical_clock) {
-      let temp = []
+      let incomingNodes = []
       if (session_history_item.nodes) {
-        temp = nodes;
-      } else {
-        temp = session_history_item.windows
+        incomingNodes = session_history_item.nodes;
+      } else if (session_history_item.windows) {
+        incomingNodes = session_history_item.windows;
+      }
+
+      let incomingEdges = []
+      if (session_history_item.edges) {
+        incomingEdges = session_history_item.edges;
       }
 
       dispatch(setNodes({
-        nodes: temp,
+        nodes: incomingNodes,
         logical_clock: session_history_item.logical_clock
       }));
+
+      dispatch(setEdges({
+        edges: incomingEdges,
+        logical_clock: session_history_item.logical_clock
+      }));
+
     }
   }
 
+    // this ref stores the current dragged node
+    const dragRef = useRef(null);
+
+    // target is the node that the node is dragged over
+    const [target, setTarget] = useState(null);
+
+  const onNodeDragStart = (evt, node) => {
+    dragRef.current = node;
+  };
+
+  const onNodeDrag = (evt, node) => {
+    // calculate the center point of the node from position and dimensions
+    const centerX = node.position.x + node.width / 2;
+    const centerY = node.position.y + node.height / 2;
+
+    // find a node where the center point is inside
+    const targetNode = nodes.find(
+      (n) =>
+        centerX > n.position.x &&
+        centerX < n.position.x + n.width &&
+        centerY > n.position.y &&
+        centerY < n.position.y + n.height &&
+        n.id !== node.id // this is needed, otherwise we would always find the dragged node
+    );
+    setTarget(targetNode);
+  };
+
+  const onNodeDragStop = (evt, node) => {
+    if (node.data.type == "Document") {
+      if (target) {
+        if (target.data.type == "Group") {
+          client.add_document_to_group(target.id.split("%")[0], node.id.split("%")[0]);
+          dispatch(removeWindow(node.id));
+        }
+      }
+    }
+    
+    
+    setTarget(null);
+    dragRef.current = null;
+  };
 
   const onNodesChange = useCallback(
     (changes) => {
@@ -57,6 +107,11 @@ function Flow() {
     }, []
   )
 
+  const onEdgesChange = useCallback( 
+    (changes) => {
+      dispatch(updateEdges(changes))
+    }, []
+  )
 
   const onEdgesChange = useCallback( 
     (changes) => {
@@ -74,8 +129,6 @@ function Flow() {
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
-
-
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const id = event.dataTransfer.getData('application/reactflow/id');
       const type = event.dataTransfer.getData('application/reactflow/type');
@@ -101,12 +154,16 @@ function Flow() {
         data: { label: `${id} node`, i: id, type: type},
 
       };
-      dispatch(addNode({node: newNode}))
+      dispatch(makeNode({node: newNode}))
     },
     [reactFlowInstance]
   );
 
-  const onConnect = useCallback((params) => dispatch(makeEdge({params: params})));
+  const onConnect = useCallback((connection) => {
+    const newEdges = addEdge(connection, edges)
+    client.update_edges(newEdges)
+    dispatch(makeEdge({edges: newEdges}))
+}, []);
   
   return (
     <div className="providerflow">
@@ -128,10 +185,15 @@ function Flow() {
         onConnect={onConnect}
         onInit={setReactFlowInstance}
         multiSelectionKeyCode={multiSelectionKeyCode}
-        fitView
-        onClick={() => client.save_UI_state(session_id, bookmarks, nodes)}
+        onClick={() => client.save_UI_state(session_id, bookmarks, nodes, edges)}
+        onNodeDrag={onNodeDrag}
+        onNodeDragStart={onNodeDragStart}
+        onNodeDragStop={onNodeDragStop}
+
       >
         <Background />
+        <MiniMap />
+
         <Controls />
       </ReactFlow>
       </div>

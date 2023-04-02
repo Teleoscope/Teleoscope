@@ -13,7 +13,7 @@ import Divider from '@mui/material/Divider';
 import MenuActions from "./ContextMenuActions"
 
 // actions
-import { addWindow, selectAll, deselectAll, addNode } from "../../actions/windows";
+import { makeNode } from "../../actions/windows";
 
 // util
 import useSWRAbstract from "../../util/swr"
@@ -48,7 +48,7 @@ export default function ContextMenu(props) {
             },
             data: { label: `${id} node`, i: id, type: type },
         };
-        dispatch(addNode({node: newNode}))
+        dispatch(makeNode({node: newNode}))
     }
 
     const teleoscopes = teleoscopes_raw?.map((t) => {

@@ -142,13 +142,28 @@ export class Stomp {
   /**
    * Saves the workspace UI state (window locations, bookmarks)
    */
-  save_UI_state(session_id: string, bookmarks, windows) {
+  save_UI_state(session_id: string, bookmarks, windows, edges) {
     const body = {
       task: 'save_UI_state',
       args: {
         session_id: session_id,
         bookmarks: bookmarks,
         windows: windows,
+        edges: edges
+      }
+    }
+    this.publish(body);
+    return body;
+  }
+
+  /**
+ * Updates Teleoscopes
+ */
+  update_edges(edges) {
+    const body = {
+      task: 'update_edges',
+      args: {
+        edges: edges
       }
     }
     this.publish(body);
