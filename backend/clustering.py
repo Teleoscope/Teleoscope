@@ -320,10 +320,7 @@ class Clustering:
                     check = more = True
         
         if check:
-            # user = self.db.users.find_one({"_id": self.userid})
-            # username = user["username"]
-            self.description = f"your group"
-            if more: self.description += "s"
+            self.description = "your group(s)"
             return name, '#ff70e2'
 
         # return for if label is newly generated machine cluster
@@ -436,8 +433,6 @@ class Clustering:
         If so, need to delete clusters and associated teleoscope items
         """
 
-        #  TODO - forgetting to clear session's clusters and teleoscopes history item
-
         db = self.db
 
         # check to see user has any clusters
@@ -479,6 +474,15 @@ class Clustering:
                 db.clusters.delete_one({"_id": cluster["_id"]})
             
             # TODO - clear all clusters from current session
+            # session_id = ObjectId(str(self.session_id))
+            # db.sessions.update_one(
+            #     {"_id": session_id}, 
+            #     {"history": { "$slice": 1}}
+            # )  
+            # # db.sessions.update(
+            # #     { "_id": self.session_id},
+            # #     { "$unset": { "history[0].clusters": "" } }
+            # # )
         
         logging.info(f'No clusters for user. Ready to populate.')
 
@@ -504,7 +508,7 @@ class Clustering:
         history_item = session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
 
-        copy = f'Built {num_clusters} clusters in {total_time} seconds'
+        copy = f"Built {num_clusters} clusters in %.2f seconds" % total_time
         logging.info(copy)
         history_item["action"] = copy
 

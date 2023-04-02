@@ -414,7 +414,7 @@ def add_group(*args, human=True, description="A group", included_documents=[], *
         if human:
             groups.append(groups_res.inserted_id)
         else:
-            clusters.append(groups_res.inserted_id)
+            clusters = [groups_res.inserted_id]
 
         history_item = session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
