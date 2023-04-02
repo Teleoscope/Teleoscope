@@ -434,17 +434,17 @@ class Clustering:
         """
 
         db = self.db
+        session_id = ObjectId(str(self.session_id))
 
         # check to see user has any clusters
         if db.clusters.count_documents(
-            { "history.user": ObjectId(str(self.user_id))}, 
+            {"session" : session_id}, 
             limit=1,
         ):
             
             logging.info(f'Clusters for user exists. Delete all.')
 
             # get session's clustering data
-            session_id = ObjectId(str(self.session_id))
             session = db.sessions.find_one({'_id': session_id})
             history_item = session["history"][0]
             teleoscopes = history_item["teleoscopes"]

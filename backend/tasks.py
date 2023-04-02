@@ -361,7 +361,7 @@ def add_group(*args, human=True, description="A group", included_documents=[], *
     kwargs: 
         label: (string, arbitrary)
         color: (string, hex color)
-        session_id: (int, represents ObjectId in int)
+        session_id: (string, represents ObjectId)
     """
     transaction_session, db = utils.create_transaction_session()
 
