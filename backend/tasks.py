@@ -909,7 +909,9 @@ class reorient(Task):
         return resultantVec, direction
 
     def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, magnitude=0.5, **kwargs):
-        logging.info(f'Received reorient for teleoscope id {teleoscope_id}, positive docs {positive_docs}, negative docs {negative_docs}, and magnitude {magnitude}.')
+        
+        # logging.info(f'Received reorient for teleoscope id {teleoscope_id}, positive docs {positive_docs}, negative docs {negative_docs}, and magnitude {magnitude}.')
+        
         # either positive or negative docs should have at least one entry
         if len(positive_docs) == 0 and len(negative_docs) == 0:
             # if both are empty, then cache stuff if not cached alreadt

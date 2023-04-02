@@ -464,7 +464,7 @@ class Clustering:
                 teleo_oid = cluster["teleoscope"]
                 teleo = db.teleoscopes.find_one({"_id": teleo_oid})
 
-                # clear teleo from session
+                # TODO - clear {teleo} from current session
 
                 # associated teleoscope.files
                 teleo_file = teleo["history"][0]["ranked_document_ids"]
@@ -478,7 +478,7 @@ class Clustering:
                 # delete cluster
                 db.clusters.delete_one({"_id": cluster["_id"]})
             
-            # clear all clusters from sessions
+            # TODO - clear all clusters from current session
         
         logging.info(f'No clusters for user. Ready to populate.')
 
