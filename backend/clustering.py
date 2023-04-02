@@ -443,6 +443,12 @@ class Clustering:
             
             logging.info(f'Clusters for user exists. Delete all.')
 
+            # get session's clustering data
+            session_id = ObjectId(str(self.session_id))
+            session = db.sessions.find_one({'_id': session_id})
+            history_item = session["history"][0]
+            teleoscopes = history_item["teleoscopes"]
+
             namespace = "teleoscopes" # teleoscopes.chunks, teleoscopes.files
             fs = gridfs.GridFS(db, namespace)
 
@@ -459,7 +465,8 @@ class Clustering:
                 teleo_oid = cluster["teleoscope"]
                 teleo = db.teleoscopes.find_one({"_id": teleo_oid})
 
-                # TODO - clear {teleo} from current session
+                # remove cluster teleoscope from session's teleoscope list
+                teleoscopes.remove(teleo_oid)
 
                 # associated teleoscope.files
                 teleo_file = teleo["history"][0]["ranked_document_ids"]
@@ -473,16 +480,21 @@ class Clustering:
                 # delete cluster
                 db.clusters.delete_one({"_id": cluster["_id"]})
             
-            # TODO - clear all clusters from current session
-            # session_id = ObjectId(str(self.session_id))
-            # db.sessions.update_one(
-            #     {"_id": session_id}, 
-            #     {"history": { "$slice": 1}}
-            # )  
-            # # db.sessions.update(
-            # #     { "_id": self.session_id},
-            # #     { "$unset": { "history[0].clusters": "" } }
-            # # )
+            # reset session's association to previous clustering
+            history_item["clusters"] = []
+            history_item["teleoscopes"] = teleoscopes
+            
+            db.sessions.update_one(
+                {"_id": session_id}, 
+                {
+                    '$push': {
+                        "history": {
+                            '$each': [history_item],
+                            '$position': 0
+                        }
+                    }
+                },
+            )  
         
         logging.info(f'No clusters for user. Ready to populate.')
 
