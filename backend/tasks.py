@@ -349,7 +349,7 @@ def save_teleoscope_state(*args, **kwargs):
         utils.commit_with_retry(session)
 
 @app.task 
-def add_group(*args, human=True, desciption="A group", included_documents=[], **kwargs):
+def add_group(*args, human=True, description="A group", included_documents=[], **kwargs):
     """
     Adds a group to the group collection and links newly created group to corresponding session.
     
@@ -390,7 +390,7 @@ def add_group(*args, human=True, desciption="A group", included_documents=[], **
                 "label": label,
                 "action": "Initialize group",
                 "user": user_id,
-                "description": desciption
+                "description": description
             }]
     }
     

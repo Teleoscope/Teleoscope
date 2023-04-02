@@ -153,7 +153,7 @@ class Clustering:
             # learn a topic label for if current cluster is a machine cluster
             if _label == 'machine':
                 limit = min(20, len(label_ids))
-                _label, description = self.get_topic(label_ids[:limit], topic_labels)
+                _label, _description = self.get_topic(label_ids[:limit], topic_labels)
                 topic_labels.append(_label)
 
             logging.info(f'There are {len(documents)} documents for Machine Cluster "{_label}".')
@@ -165,7 +165,7 @@ class Clustering:
                 session_id=self.session_id, 
                 human=False, 
                 included_documents=documents, 
-                description=description
+                description=_description
             )
 
         total_time = time.time() - start

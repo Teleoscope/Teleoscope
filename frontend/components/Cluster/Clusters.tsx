@@ -30,7 +30,7 @@ export default function Clusters(props) {
                     </ListItemIcon>
                     <ListItemText
                        primary={cluster.history[0].label}
-                       secondary={cluster.history[0].desciption}
+                       secondary={cluster.history[0].description}
                     />
                  </ListItem>
               </div>
