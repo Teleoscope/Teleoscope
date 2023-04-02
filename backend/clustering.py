@@ -454,7 +454,7 @@ class Clustering:
 
             # cursor to find all existing clusters
             cursor = db.clusters.find(
-                { "history.user" : ObjectId(str(self.user_id))}, # TODO - THIS SHOULD BE PER SESSION NOT USER
+                {"session" : session_id}, 
                 projection = {'_id': 1, 'teleoscope': 1},
             )    
 
