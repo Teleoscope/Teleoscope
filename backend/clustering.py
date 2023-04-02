@@ -320,9 +320,9 @@ class Clustering:
                     check = more = True
         
         if check:
-            user = self.db.users.find_one({"_id": self.userid})
-            username = user["username"]
-            self.description = f"{username}'s group"
+            # user = self.db.users.find_one({"_id": self.userid})
+            # username = user["username"]
+            self.description = f"your group"
             if more: self.description += "s"
             return name, '#ff70e2'
 

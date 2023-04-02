@@ -101,7 +101,8 @@ def moveVector(sourceVector, destinationVector, direction, magnitude):
     scaled_q = direction*magnitude*diff_q
     new_q = sourceVector + scaled_q
     new_q = new_q / np.linalg.norm(new_q)
-    logging.info(f'Magnitude: {magnitude}, difference: {sourceVector - new_q}, scaled_q: {scaled_q}.')
+    
+    # logging.info(f'Magnitude: {magnitude}, difference: {sourceVector - new_q}, scaled_q: {scaled_q}.')
 
     return new_q
 
