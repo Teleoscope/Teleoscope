@@ -51,35 +51,44 @@ class Clustering:
         self.db = utils.connect() 
         self.nlp = spacy.load("en_core_web_sm")
         self.group_doc_indices = None
+        self.groups = None
 
         # large lists (number of examples)
         self.document_ids = None    
         self.hdbscan_labels = None
 
         # TODO - can we set this up as a transaction session so it dies if we dont succeed
-        self.cluster_by_groups()
+        self.clustering_task()
 
-    def cluster_by_groups(self):
+    def clustering_task(self):
         """Cluster documents using user-defined groups.
         """
 
         start = time.time()
 
-        # connect to the database
-        db = self.db
-
         # if user already has clusters, delete them to prepare for new clusters
         self.clean_mongodb()
         
-        # Create list of ObjectIds from human clusters
+        # get groups from mongodb
         group_ids = [ObjectId(str(id)) for id in self.group_id_strings]
+        self.groups = list(self.db.groups.find({"_id":{"$in" : group_ids}}))
 
-        # Get the groups from mongoDB
-        logging.info(f'Getting all groups in {group_ids}.')
-        groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
+        # build distance matrix, run dimensionality reduction, run clustering
+        self.learn_clusters()
+
+        # iteratively add clusters (as groups) to database
+        self.build_clusters()
+
+        # report basic statistics
+        total_time = time.time() - start
+        self.session_action(total_time)
+
+    def learn_clusters(self):
+        """ Learn cluster labels: build distance matrix, run dimensionality reduction, run clustering
+        """
 
         # build training set
-        dm = self.document_ordering(groups)
+        dm = self.document_ordering()
 
         logging.info("Running UMAP Reduction...")
         umap_embeddings = umap.UMAP(
@@ -91,11 +100,6 @@ class Clustering:
         ).fit_transform(dm)
         logging.info(f"Shape after reduction: {umap_embeddings.shape}")
         
-        # for garbage collection
-        del dm
-        gc.collect()
-        logging.info("Bye distance matrix!!")
-        
         logging.info("Clustering with HDBSCAN...")
         self.hdbscan_labels = hdbscan.HDBSCAN(
             min_cluster_size = 10,              # num of neighbors needed to be considered a cluster (0~50, df=5)
@@ -103,21 +107,8 @@ class Clustering:
             cluster_selection_epsilon = 0.2,    # have large clusters in dense regions while leaving smaller clusters small
                                                 # merge clusters if inter cluster distance is less than thres (df=0)
         ).fit_predict(umap_embeddings)
-
-        num_clusters = max(self.hdbscan_labels) + 2 # largest group label + outlier group (-1) + first group (0)
-        logging.info(f'Num Clusters = {num_clusters-1} + outliers')
-
-        # for garbage collection
-        del umap_embeddings
-        gc.collect()
-        logging.info("Bye UMAP embedding!!")
-
-        # iteratively add clusters (as groups) to database
-        self.build_clusters()
-
-        # report basic statistics
-        total_time = time.time() - start
-        self.session_action(num_clusters, groups, total_time)
+        
+        logging.info(f'Num Clusters = {max(self.hdbscan_labels)+1} + outliers')
 
     def build_clusters(self):
         """ Iteratively builds groups in mongoDB relative to clustering
@@ -192,12 +183,8 @@ class Clustering:
 
         return given_labels
     
-    def document_ordering(self, groups):
+    def document_ordering(self):
         """ Build a training set besed on the average of groups' teleoscopes
-
-        Args:
-            groups: 
-                A list of ObjectIds representing each group to be clustered
 
         Returns:
             dm:
@@ -208,11 +195,11 @@ class Clustering:
         # grab all document data from embeddings
         reorient = tasks.reorient()
         all_doc_ids, all_doc_vecs = reorient.cacheDocumentsData()
-
+        
         logging.info('Using average ordering...')
         # get teleoscope vecs of given groups
         teleo_vecs = []
-        for group in groups:
+        for group in self.groups:
 
             teleoscope_oid = group["teleoscope"]
             teleoscope = self.db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
@@ -243,7 +230,7 @@ class Clustering:
         
         # make sure documents in groups are included in training sets
         logging.info("Appending documents from groups to document vector and id list...")
-        for group in groups:
+        for group in self.groups:
 
             group_document_ids = group["history"][0]["included_documents"]
 
@@ -517,16 +504,14 @@ class Clustering:
 
         pass
 
-    def session_action(self, num_clusters, groups, total_time):
+    def session_action(self, total_time):
         """Clustering action history update
 
         Push an update to the session object to document the state of clustering 
 
         Args:
-            num_clusters:
-                An int that represents the number of clusters produced by HDBSCAN
-            groups:
-                A list of group objects that were clustered on
+            total_time:
+                time taken for task to complete
         """
 
         logging.info(f'Clustering action history update.')
@@ -536,14 +521,14 @@ class Clustering:
 
         history_item = session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
-
+        
+        num_clusters = max(self.hdbscan_labels) + 2 # largest group label + outlier group (-1) + first group (0)
         copy = f"Built {num_clusters} clusters in %.2f seconds" % total_time
-        logging.info(copy)
         history_item["action"] = copy
 
         # record the groups and their associated documents used for clustering
         history_item["clustered_groups"] = []
-        for group in groups:
+        for group in self.groups:
 
             # documents used for clustering are denoting using the length of the groups history item.
             # the index of said documents are at [current history length - denoted history length]
