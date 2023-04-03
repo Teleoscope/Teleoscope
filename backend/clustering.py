@@ -184,7 +184,7 @@ class Clustering:
         return given_labels
     
     def document_ordering(self):
-        """ Build a training set besed on the average of groups' teleoscopes
+        """ Build a training set besed on the average of groups' document vectors
 
         Returns:
             dm:
@@ -447,7 +447,8 @@ class Clustering:
             # get session's clustering data
             session = db.sessions.find_one({'_id': session_id})
             history_item = session["history"][0]
-            teleoscopes = history_item["teleoscopes"]
+
+            # teleoscopes = history_item["teleoscopes"] # teleoscopes no longer auto generated
 
             namespace = "teleoscopes" # teleoscopes.chunks, teleoscopes.files
             fs = gridfs.GridFS(db, namespace)
@@ -461,28 +462,30 @@ class Clustering:
             # tidy up all existing clusters
             for cluster in tqdm.tqdm(cursor):
 
+                # NOTE - teleoscopes no longer auto generated. much of below is now redundant. 
                 # cluster teleoscope
-                teleo_oid = cluster["teleoscope"]
-                teleo = db.teleoscopes.find_one({"_id": teleo_oid})
+                # teleo_oid = cluster["teleoscope"]
+                # teleo = db.teleoscopes.find_one({"_id": teleo_oid}) 
 
                 # remove cluster teleoscope from session's teleoscope list
-                teleoscopes.remove(teleo_oid)
+                # teleoscopes.remove(teleo_oid)
 
                 # associated teleoscope.files
-                teleo_file = teleo["history"][0]["ranked_document_ids"]
+                # teleo_file = teleo["history"][0]["ranked_document_ids"]
 
                 # delete telescopes.chunks and teleoscopes.files
-                fs.delete(teleo_file)
+                # fs.delete(teleo_file)
 
                 # delete teleoscope 
-                db.teleoscopes.delete_one({"_id": teleo_oid})
+                # db.teleoscopes.delete_one({"_id": teleo_oid})
 
                 # delete cluster
                 db.clusters.delete_one({"_id": cluster["_id"]})
             
             # reset session's association to previous clustering
             history_item["clusters"] = []
-            history_item["teleoscopes"] = teleoscopes
+
+            # history_item["teleoscopes"] = teleoscopes # teleoscopes no longer auto generated
             
             db.sessions.update_one(
                 {"_id": session_id}, 
