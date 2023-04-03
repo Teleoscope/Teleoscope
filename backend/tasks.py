@@ -649,7 +649,7 @@ def remove_group(*args, **kwargs):
         history_item = session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()        
         history_item["groups"].remove(group_id)
-        history_item["teleoscopes"].remove(ObjectId(str(group["teleoscope"])))
+        # history_item["teleoscopes"].remove(ObjectId(str(group["teleoscope"])))
         history_item["action"] = f"Remove group from session"
         history_item["user"] = user_id
 
