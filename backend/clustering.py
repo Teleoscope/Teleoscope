@@ -197,18 +197,14 @@ class Clustering:
         all_doc_ids, all_doc_vecs = reorient.cacheDocumentsData()
         
         logging.info('Using average ordering...')
-        # get teleoscope vecs of given groups
-        teleo_vecs = []
+        # build a list of ids of documents in all groups 
+        docs = []
         for group in self.groups:
+            group_document_ids = group["history"][0]["included_documents"]
+            docs.append(group_document_ids)
 
-            teleoscope_oid = group["teleoscope"]
-            teleoscope = self.db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
-            teleo_vecs.append(teleoscope["history"][0]["stateVector"])
-
-        teleo_vecs = np.array(teleo_vecs)
-
-        # compute average teleoscope vec
-        vec = np.average(teleo_vecs, axis=0)
+        # compute average vector
+        vec = reorient.average(docs)
 
         logging.info("Gather similarly scores based on vector...")
         # gather similarly scores based on average vector
