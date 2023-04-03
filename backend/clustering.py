@@ -462,21 +462,21 @@ class Clustering:
             # tidy up all existing clusters
             for cluster in tqdm.tqdm(cursor):
 
-                # NOTE - teleoscopes no longer auto generated. much of below is now redundant. 
-                # cluster teleoscope
+                # NOTE - teleoscopes are no longer auto generated per group. much of below is now redundant. 
+                # # cluster teleoscope
                 # teleo_oid = cluster["teleoscope"]
                 # teleo = db.teleoscopes.find_one({"_id": teleo_oid}) 
 
-                # remove cluster teleoscope from session's teleoscope list
+                # # remove cluster teleoscope from session's teleoscope list
                 # teleoscopes.remove(teleo_oid)
 
-                # associated teleoscope.files
+                # # associated teleoscope.files
                 # teleo_file = teleo["history"][0]["ranked_document_ids"]
 
-                # delete telescopes.chunks and teleoscopes.files
+                # # delete telescopes.chunks and teleoscopes.files
                 # fs.delete(teleo_file)
 
-                # delete teleoscope 
+                # # delete teleoscope 
                 # db.teleoscopes.delete_one({"_id": teleo_oid})
 
                 # delete cluster
