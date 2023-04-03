@@ -1,12 +1,10 @@
 import React from "react";
 
-// mui
-import Grid from '@mui/material/Grid';
-
 // custom components
 import TopBar from "./WindowModules/TopBar";
-import WindowManager from "./WindowFolder/WindowManager";
 import ContextMenu from "./Context/ContextMenu";
+import Flow from "./Flow";
+
 
 export default function Workspace(props) {
   interface MouseCoords {
@@ -34,33 +32,25 @@ export default function Workspace(props) {
   };
 
 
-  const handleClick = (e) => {
-    console.log(e)
-  }
+
 
 
   return (
     <div
       onContextMenu={handleOpenContextMenu}
       style={{ cursor: 'context-menu' }}
-      onClick={(e) => handleClick(e)}
     >
 
-      <Grid container spacing={0}>
-        <Grid item xs={12}>
+        <div style={{width: "100vw", height: "10vh"}}>
           <TopBar isConnected={props.isConnected} />
-        </Grid>
-        <Grid item xs={12}>
+        </div>
+          <Flow></Flow>
 
-          <WindowManager />
-
-        </Grid>
-      </Grid>
+        
       <ContextMenu
         handleCloseContextMenu={handleCloseContextMenu}
         contextMenu={contextMenu}
       />
-
     </div>
 
   );

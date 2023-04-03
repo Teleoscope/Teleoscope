@@ -5,6 +5,7 @@ import useSWRAbstract from "../../util/swr"
 
 export default function WindowFactory(props) {
 	const w = props.windata;
+
 	const wdefs = WindowDefinitions();
 
 	const keymap = {
@@ -29,7 +30,7 @@ export default function WindowFactory(props) {
 
 	if (w.type == "FABMenu") {
 		return (
-			<div>{wdefs[w.type].component(w, props.id)}</div>
+			<div>{wdefs[w.type].component(w, props.id, "#FFFFFF")}</div>
 		)
 	}
 

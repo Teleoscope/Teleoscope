@@ -12,7 +12,9 @@ from json import JSONEncoder
 # local files
 import auth
 
-def connect():
+db = auth.mongodb["db"]
+
+def connect(db=db):
     autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
@@ -29,9 +31,9 @@ def connect():
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
     # logging.log(f'Connected to MongoDB with user {auth.mongodb["username"]}.')
-    return client.aita
+    return client[db]
 
-def create_transaction_session():
+def create_transaction_session(db=db):
     autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
@@ -48,8 +50,8 @@ def create_transaction_session():
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
     session = client.start_session()
-    db = client.aita
-    return session, db
+    database = client[db]
+    return session, database
 
 def commit_with_retry(session):
     while True:

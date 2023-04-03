@@ -8,6 +8,9 @@ import schemas
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
+db = auth.mongodb["db"]
+embedding_path = f'~/{db}/embeddings/'
+
 # url: "amqp://myuser:mypassword@localhost:5672/myvhost"
 CELERY_BROKER_URL = (
     f'amqp://'
@@ -52,30 +55,12 @@ def initialize_session(*args, **kwargs):
         logging.info(f'User {userid} does not exist.')
         raise Exception(f'User {userid} does not exist.')
 
-    # Object to write for userlist
-    userlist =  {
-        "owner": ObjectId(str(user["_id"])),
-        "contributors": []
-    }
+    obj = schemas.create_session_object(
+        ObjectId(str(userid)),
+        label,
+        color
+    )
 
-    obj = {
-        "creation_time": datetime.datetime.utcnow(),
-        "userlist": userlist,
-        "history": [
-            {
-                "timestamp": datetime.datetime.utcnow(),
-                "bookmarks": [],
-                "windows": [],
-                "groups": [],
-                "clusters": [],
-                "teleoscopes": [],
-                "label": label,
-                "color": color,
-                "action": f"Initialize session",
-                "user": userid,
-            }
-        ],
-    }
     with transaction_session.start_transaction():
         result = db.sessions.insert_one(obj, session=transaction_session)
         db.users.update_one(
@@ -114,6 +99,7 @@ def save_UI_state(*args, **kwargs):
     history_item = session["history"][0]
     history_item["bookmarks"] = kwargs["bookmarks"]
     history_item["windows"] =  kwargs["windows"]
+    history_item["edges"] =  kwargs["edges"]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Save UI state"
     history_item["user"] = userid
@@ -210,6 +196,11 @@ def add_user_to_session(*args, **kwargs):
     history_item["action"] = f"Add {contributor_id} to userlist"
     history_item["user"] = user_id
 
+    if "logical_clock" in history_item:
+        history_item["logical_clock"] = history_item["logical_clock"] + 1
+    else:
+        history_item["logical_clock"] = 1
+
     # update session with new userlist that includes contributor
     with transaction_session.start_transaction():
         db.sessions.update_one({"_id": session_id},
@@ -241,7 +232,7 @@ def add_user_to_session(*args, **kwargs):
 def initialize_teleoscope(*args, **kwargs):
     """
     initialize_teleoscope:
-    Performs a text query on aita.documents text index.
+    Performs a text query on db.documents text index.
     If the query string already exists in the teleoscopes collection, returns existing reddit_ids.
     Otherwise, adds the query to the teleoscopes collection and performs a text query the results of which are added to the
     teleoscopes collection and returned.
@@ -376,12 +367,12 @@ def add_group(*args, human=True, description="A group", included_documents=[], *
     if user != None:
         user_id = user['_id']
 
-    teleoscope_result = initialize_teleoscope(userid=userid, session_id=_id, label=label)
+    # teleoscope_result = initialize_teleoscope(userid=userid, session_id=_id, label=label)
 
     # Creating document to be inserted into mongoDB
     obj = {
         "creation_time": datetime.datetime.utcnow(),
-        "teleoscope": teleoscope_result.inserted_id,
+        "teleoscope": "deprecated",
         "session": _id,
         "history": [
             {
@@ -436,15 +427,15 @@ def add_group(*args, human=True, description="A group", included_documents=[], *
         logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
 
-        if len(included_documents) > 0:
-            logging.info(f'Reorienting teleoscope {teleoscope_result.inserted_id} for group {label}.')
-            res = chain(
-                    robj.s(teleoscope_id=teleoscope_result.inserted_id,
-                        positive_docs=included_documents,
-                        negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
-                    save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
-            )
-            res.apply_async()
+        # if len(included_documents) > 0:
+        #     logging.info(f'Reorienting teleoscope {teleoscope_result.inserted_id} for group {label}.')
+        #     res = chain(
+        #             robj.s(teleoscope_id=teleoscope_result.inserted_id,
+        #                 positive_docs=included_documents,
+        #                 negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
+        #             save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
+        #     )
+        #     res.apply_async()
         
         return groups_res.inserted_id
 
@@ -776,6 +767,16 @@ def cluster_by_groups(*args, **kwargs):
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
     clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"])
 
+@app.task
+def update_edges(*arg, **kwargs):
+    """
+    Updates a Teleoscope according to edges.
+    """
+    transaction_session, db = utils.create_transaction_session()
+    edges = kwargs["edges"]
+    
+    
+
 
 @app.task
 def register_account(*arg, **kwargs):
@@ -823,7 +824,7 @@ class reorient(Task):
         self.db = None
         self.model = None
 
-    def cacheDocumentsData(self, path='~/embeddings/'):
+    def cacheDocumentsData(self, path=embedding_path):
         # cache embeddings
         from pathlib import Path
         dir = Path(path).expanduser()
@@ -909,10 +910,67 @@ class reorient(Task):
         resultantVec /= np.linalg.norm(resultantVec)
         return resultantVec, direction
 
-    def run(self, teleoscope_id: str, positive_docs: list, negative_docs: list, magnitude=0.5, **kwargs):
-        
-        # logging.info(f'Received reorient for teleoscope id {teleoscope_id}, positive docs {positive_docs}, negative docs {negative_docs}, and magnitude {magnitude}.')
-        
+    def average(self, documents: list):
+        if self.db is None:
+                self.db = utils.connect(db=auth.mongodb["db"])
+        document_vectors = []
+        for doc_id in documents:
+            print(f'Finding doc {doc_id}')
+            doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
+            document_vectors.append(doc["textVector"])
+        vec = np.average(document_vectors, axis=0)
+        return vec
+
+    def run(self, edges: list, userid: str, **kwargs):
+         # Check if document ids and vectors are cached
+        if self.documentsCached == False:
+            _, _ = self.cacheDocumentsData()
+
+        teleoscopes = {}
+        for edge in edges:
+            source = edge["source"].split("%")[0]
+            target = edge["target"].split("%")[0]
+            if target not in teleoscopes:
+                teleoscopes[target] = [source]
+            else:
+                teleoscopes[target].append(source)
+
+        print(f'Telescope graph: {teleoscopes}')
+        for teleoscope_id, documents in teleoscopes.items():
+            vec = self.average(documents)
+            teleoscope = self.db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_id))})
+            scores = utils.calculateSimilarity(self.allDocumentVectors, vec)
+
+            newRanks = utils.rankDocumentsBySimilarity(self.allDocumentIDs, scores)
+            gridfs_id = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
+
+            rank_slice = newRanks[0:100]
+            logging.info(f'new rank slice has length {len(rank_slice)}.')
+
+            history_item = schemas.create_teleoscope_history_item(
+                teleoscope['history'][0]['label'],
+                teleoscope['history'][0]['reddit_ids'],
+                documents,
+                [],
+                vec.tolist(),
+                ObjectId(str(gridfs_id)),
+                rank_slice,
+                "Reorient teleoscope",
+                ObjectId(str(userid))
+            )
+
+            self.db.teleoscopes.update_one({"_id": ObjectId(str(teleoscope_id))},
+                                        {
+                    '$push': {
+                        "history": {
+                            "$each": [history_item],
+                            "$position": 0
+                        }
+                    }
+                })
+            
+        '''
+        logging.info(f'Received reorient for teleoscope id {teleoscope_id}, positive docs {positive_docs}, negative docs {negative_docs}, and magnitude {magnitude}.')
         # either positive or negative docs should have at least one entry
         if len(positive_docs) == 0 and len(negative_docs) == 0:
             # if both are empty, then cache stuff if not cached alreadt
@@ -968,20 +1026,22 @@ class reorient(Task):
 
         rank_slice = newRanks[0:100]
         logging.info(f'new rank slice has length {len(rank_slice)}.')
+        '''
+        # history_obj = {
+        #     '_id': teleoscope_id,
+        #     'history_item': {
+        #         'label': teleoscope['history'][0]['label'],
+        #         'positive_docs': positive_docs,
+        #         'negative_docs': negative_docs,
+        #         'stateVector': qprime.tolist(),
+        #         'ranked_document_ids': ObjectId(str(gridfs_id)),
+        #         'rank_slice': rank_slice
+        #     }
+        # }
 
-        history_obj = {
-            '_id': teleoscope_id,
-            'history_item': {
-                'label': teleoscope['history'][0]['label'],
-                'positive_docs': positive_docs,
-                'negative_docs': negative_docs,
-                'stateVector': qprime.tolist(),
-                'ranked_document_ids': ObjectId(str(gridfs_id)),
-                'rank_slice': rank_slice
-            }
-        }
+        
 
-        return history_obj
+        return {}
 robj = app.register_task(reorient())
 
 #################################################################
