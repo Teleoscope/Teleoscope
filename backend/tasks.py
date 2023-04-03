@@ -336,18 +336,23 @@ def save_teleoscope_state(*args, **kwargs):
                     }
                 }
             }, session=session)
-        logging.info(f'Saving teleoscope state: {result}')
+        # logging.info(f'Saving teleoscope state: {result}')
         utils.commit_with_retry(session)
 
 @app.task 
-def add_group(*args, human=True, included_documents=[], **kwargs):
+def add_group(*args, human=True, description="A group", included_documents=[], **kwargs):
     """
     Adds a group to the group collection and links newly created group to corresponding session.
     
+    args: 
+        human: check if this call is from clustering or not
+        description: topic label for cluster
+        included documents: documents included in group
+
     kwargs: 
         label: (string, arbitrary)
         color: (string, hex color)
-        session_id: (int, represents ObjectId in int)
+        session_id: (string, represents ObjectId)
     """
     transaction_session, db = utils.create_transaction_session()
 
@@ -365,7 +370,8 @@ def add_group(*args, human=True, included_documents=[], **kwargs):
     # teleoscope_result = initialize_teleoscope(userid=userid, session_id=_id, label=label)
 
     # Creating document to be inserted into mongoDB
-    obj = schemas.create_group_object(color, included_documents, label, "Initialize group", user_id)
+
+    obj = schemas.create_group_object(color, included_documents, label, "Initialize group", user_id, description)
     
     # call needs to be transactional due to groups & sessions collections being updated
 

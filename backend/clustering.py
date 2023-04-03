@@ -23,10 +23,10 @@ class Clustering:
     """Semi-supervised Clustering 
 
     The purpose of this class is to cluster a corpus--limited to a subset defined 
-    by the limit param--by taking into account human defined / provide clusters.
+    by the limit param plus the documents in the provided human clusters/groups.
     """
 
-    def __init__(self, user_id, group_id_strings, session_id, limit=10000):
+    def __init__(self, user_id, group_id_strings, session_id, limit=10000, topic_label_length=2):
         """Initializes the instance 
 
         Args:
@@ -38,42 +38,57 @@ class Clustering:
                 An string that represents the ObjectID of the current session
             limit:
                 The number of documents to cluster. Default 10000
+            topic_label_length:
+                Minimum number of words to use for machine cluster topic labels. Default 2
         """
+
         self.user_id = user_id
         self.group_id_strings = group_id_strings
         self.session_id = session_id
         self.limit = limit
-        self.db = utils.connect()
+        self.topic_label_length = topic_label_length
+        self.description = ""
+        self.db = utils.connect() 
         self.nlp = spacy.load("en_core_web_sm")
+        self.group_doc_indices = None
+        self.groups = None
 
-        self.cluster_by_groups()
-        
+        # large lists (number of examples)
+        self.document_ids = None    
+        self.hdbscan_labels = None
 
-    def cluster_by_groups(self):
+        # TODO - can we set this up as a transaction session so it dies if we dont succeed
+        self.clustering_task()
+
+    def clustering_task(self):
         """Cluster documents using user-defined groups.
-
-        Clusters 'limit' documents with respect to the documents already 
-        grouped in group_id_strings. User-defined groups are to be maintained, and 
-        clusters are given topic model labels. 
         """
 
         start = time.time()
 
-        # connect to the database
-        db = self.db
-
         # if user already has clusters, delete them to prepare for new clusters
         self.clean_mongodb()
         
-        # Create list of ObjectIds from human clusters
+        # get groups from mongodb
         group_ids = [ObjectId(str(id)) for id in self.group_id_strings]
+        self.groups = list(self.db.groups.find({"_id":{"$in" : group_ids}}))
 
-        # Get the groups from mongoDB
-        logging.info(f'Getting all groups in {group_ids}.')
-        groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
+        # build distance matrix, run dimensionality reduction, run clustering
+        self.learn_clusters()
+
+        # iteratively add clusters (as groups) to database
+        self.build_clusters()
+
+        # report basic statistics
+        total_time = time.time() - start
+        self.session_action(total_time)
+
+    def learn_clusters(self):
+        """ Learn cluster labels: build distance matrix, run dimensionality reduction, run clustering
+        """
 
         # build training set
-        dm, group_doc_indices, document_ids = self.document_ordering(groups)
+        dm = self.document_ordering()
 
         logging.info("Running UMAP Reduction...")
         umap_embeddings = umap.UMAP(
@@ -85,55 +100,34 @@ class Clustering:
         ).fit_transform(dm)
         logging.info(f"Shape after reduction: {umap_embeddings.shape}")
         
-        # for garbage collection
-        del dm
-        gc.collect()
-        logging.info("Bye distance matrix!!")
-        
         logging.info("Clustering with HDBSCAN...")
-        hdbscan_labels = hdbscan.HDBSCAN(
+        self.hdbscan_labels = hdbscan.HDBSCAN(
             min_cluster_size = 10,              # num of neighbors needed to be considered a cluster (0~50, df=5)
             # min_samples = 5,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
             cluster_selection_epsilon = 0.2,    # have large clusters in dense regions while leaving smaller clusters small
                                                 # merge clusters if inter cluster distance is less than thres (df=0)
         ).fit_predict(umap_embeddings)
+        
+        logging.info(f'Num Clusters = {max(self.hdbscan_labels)+1} + outliers')
 
-        logging.info(f'Num Clusters = {max(hdbscan_labels)+1} + outliers')
-
-        # for garbage collection
-        del umap_embeddings
-        gc.collect()
-        logging.info("Bye UMAP embedding!!")
+    def build_clusters(self):
+        """ Iteratively builds groups in mongoDB relative to clustering
+        """
 
         # identify what machine label was given to each group
-        given_labels = {}
-        for group in group_doc_indices:
-            
-            # list of labels given to docs in group
-            labels = hdbscan_labels[group_doc_indices[group]] 
-            # get non -1 label (if exists)
-            correct_label = max(labels)
-            
-            # if any documents were given -1, make sure they are set to correct_label
-            if -1 in labels:
-                for i in range(len(labels)):
-                    if labels[i] == -1:
-                        index = group_doc_indices[group][i]
-                        hdbscan_labels[index] = correct_label
-            
-            given_labels[group] = correct_label
+        given_labels = self.get_given_labels()
 
         # keep track of all topic labels (for collisions)
         topic_labels = []
 
         # create a new mongoDB group for each machine cluster
-        for hdbscan_label in set(hdbscan_labels):
+        for hdbscan_label in set(self.hdbscan_labels):
             
             # array of indices of documents with current hdbscan label
-            document_indices_array = np.where(hdbscan_labels == hdbscan_label)[0]
+            document_indices_array = np.where(self.hdbscan_labels == hdbscan_label)[0]
             
             # all document_ids as array
-            ids = np.array(document_ids)
+            ids = np.array(self.document_ids)
             
             # array of object ids of documents with current hdbscan label 
             label_ids = ids[document_indices_array]
@@ -159,46 +153,58 @@ class Clustering:
                 session_id=self.session_id, 
                 human=False, 
                 included_documents=documents, 
+                description=self.description
             )
-
-        total_time = time.time() - start
-        num_clusters = max(hdbscan_labels) + 2
-        self.session_action(num_clusters, groups, total_time)
         
-    def document_ordering(self, groups):
-        """ Build a training set besed on the average of groups' teleoscopes
+    def get_given_labels(self):
+        """ Build the given_labels dictionary
 
-        Args:
-            groups: 
-                A list of ObjectIds representing each group to be clustered
+        Returns:
+            given_labels:
+                dict where keys are group names and values are the given hdbscan label
+        """
+        
+        given_labels = {}
+        for group in self.group_doc_indices:
+            
+            # list of labels given to docs in group
+            labels = self.hdbscan_labels[self.group_doc_indices[group]] 
+            # get non -1 label (if exists)
+            correct_label = max(labels)
+            
+            # if any documents were given -1, make sure they are set to correct_label
+            if -1 in labels:
+                for i in range(len(labels)):
+                    if labels[i] == -1:
+                        index = self.group_doc_indices[group][i]
+                        self.hdbscan_labels[index] = correct_label
+            
+            given_labels[group] = correct_label
+
+        return given_labels
+    
+    def document_ordering(self):
+        """ Build a training set besed on the average of groups' document vectors
 
         Returns:
             dm:
                 a diagonal matrix containing where elements are distances between documents
-            group_doc_indices:
-                dict where keys are group names and values are indices of documents in said group
-            document_ids:
-                A list of document object ids
         """
         
         logging.info("Gathering all document vectors from embeddings...")
         # grab all document data from embeddings
         reorient = tasks.reorient()
         all_doc_ids, all_doc_vecs = reorient.cacheDocumentsData()
-
+        
         logging.info('Using average ordering...')
-        # get teleoscope vecs of given groups
-        teleo_vecs = []
-        for group in groups:
+        # build a list of ids of documents in all groups 
+        docs = []
+        for group in self.groups:
+            group_document_ids = group["history"][0]["included_documents"]
+            docs += group_document_ids
 
-            teleoscope_oid = group["teleoscope"]
-            teleoscope = self.db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_oid))})
-            teleo_vecs.append(teleoscope["history"][0]["stateVector"])
-
-        teleo_vecs = np.array(teleo_vecs)
-
-        # compute average teleoscope vec
-        vec = np.average(teleo_vecs, axis=0)
+        # compute average vector
+        vec = reorient.average(docs)
 
         logging.info("Gather similarly scores based on vector...")
         # gather similarly scores based on average vector
@@ -220,7 +226,7 @@ class Clustering:
         
         # make sure documents in groups are included in training sets
         logging.info("Appending documents from groups to document vector and id list...")
-        for group in groups:
+        for group in self.groups:
 
             group_document_ids = group["history"][0]["included_documents"]
 
@@ -269,7 +275,10 @@ class Clustering:
                     j = indices[_j]
                     dm[i, j] *= INTRA_CLUSTER_DISTANCE
 
-        return dm, group_doc_indices, document_ids
+        self.group_doc_indices = group_doc_indices
+        self.document_ids = document_ids
+
+        return dm
 
     def get_label(self, hdbscan_label, given_labels):
         """Identify and produce label & colour for given hdbscan label
@@ -277,9 +286,8 @@ class Clustering:
         Args:
             hdbscan_label:
                 An int that represents the given machine label 
-            given_labels: 
-                A dictionary with keys that represent group names 
-                and values that represent given machine labels
+            given_labels:
+                dict where keys are group names and values are the given hdbscan label
 
         Returns:
             label:
@@ -292,6 +300,7 @@ class Clustering:
         
         # outlier label
         if hdbscan_label == -1:
+            self.description = "outlier documents"
             return 'outliers', '#ff1919'
 
         # check if hdbscan_label was for a human cluster(s)
@@ -311,6 +320,7 @@ class Clustering:
                     check = more = True
         
         if check:
+            self.description = "your group"
             return name, '#ff70e2'
 
         # return for if label is newly generated machine cluster
@@ -328,6 +338,8 @@ class Clustering:
         Returns:
             topic:
                 A string that is the topic label for the machine cluster
+            description:
+                A 10 word machine generated description 
         """
 
         docs = [] 
@@ -343,9 +355,9 @@ class Clustering:
         # use spaCy to preprocess text
         docs_pp = [self.preprocess(text) for text in self.nlp.pipe(docs)]
 
-        # transform as bag of words
-        from sklearn.feature_extraction.text import CountVectorizer
-        vec = CountVectorizer(stop_words='english')
+        # transform as bag of words with tf-idf strategy
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        vec = TfidfVectorizer()
         X = vec.fit_transform(docs_pp)
 
         # apply LDA topic modelling reduction
@@ -360,16 +372,25 @@ class Clustering:
         # grab two most similar topic labels for machine cluster
         sorting = np.argsort(lda.components_, axis=1)[:, ::-1]
         feature_names = np.array(vec.get_feature_names_out())
-        label = feature_names[sorting[0][0]] + " " + feature_names[sorting[0][1]]
+
+        label = ""
+        for i in range(self.topic_label_length):
+            if i > 0: label += " "
+            label += feature_names[sorting[0][i]]
+
+        # build a 7 word description from frequent topic labels
+        self.description = feature_names[sorting[0][0]]
+        for i in range(1,8):
+            self.description += " " + feature_names[sorting[0][i]]
 
         # check for collisions with existing labels; if yes, append another topic label. 
-        i = 1
+        i = self.topic_label_length
         while(1):
             if label not in topic_labels:
                 return label
             else:
-                i += 1
                 label += " " + feature_names[sorting[0][i]]
+                i += 1
 
     def preprocess(self, doc):
         """Preprocess text
@@ -411,58 +432,87 @@ class Clustering:
         Check to see if user has already built clusters.
         If so, need to delete clusters and associated teleoscope items
         """
+
         db = self.db
+        session_id = ObjectId(str(self.session_id))
 
         # check to see user has any clusters
         if db.clusters.count_documents(
-            { "history.user": ObjectId(str(self.user_id))}, 
+            {"session" : session_id}, 
             limit=1,
         ):
             
             logging.info(f'Clusters for user exists. Delete all.')
 
-            namespace = "teleoscopes" # teleoscopes.chunks, teleoscopes.files
-            fs = gridfs.GridFS(db, namespace)
+            # get session's clustering data
+            session = db.sessions.find_one({'_id': session_id})
+            history_item = session["history"][0]
+            
+            # # teleoscopes no longer auto generated. 
+            # teleoscopes = history_item["teleoscopes"] 
+            # namespace = "teleoscopes" # teleoscopes.chunks, teleoscopes.files
+            # fs = gridfs.GridFS(db, namespace)
 
             # cursor to find all existing clusters
             cursor = db.clusters.find(
-                { "history.user" : ObjectId(str(self.user_id))},
+                {"session" : session_id}, 
                 projection = {'_id': 1, 'teleoscope': 1},
             )    
 
             # tidy up all existing clusters
             for cluster in tqdm.tqdm(cursor):
 
-                # cluster teleoscope
-                teleo_oid = cluster["teleoscope"]
-                teleo = db.teleoscopes.find_one({"_id": teleo_oid})
+                # NOTE - teleoscopes are no longer auto generated per group. much of below is now redundant. 
+                #        leaving for now b/c the trick below to remove teleoscope.chunks & .files was kinda tricky
 
-                # associated teleoscope.files
-                teleo_file = teleo["history"][0]["ranked_document_ids"]
+                # # cluster teleoscope
+                # teleo_oid = cluster["teleoscope"]
+                # teleo = db.teleoscopes.find_one({"_id": teleo_oid}) 
 
-                # delete telescopes.chunks and teleoscopes.files
-                fs.delete(teleo_file)
+                # # remove cluster teleoscope from session's teleoscope list
+                # teleoscopes.remove(teleo_oid)
 
-                # delete teleoscope 
-                db.teleoscopes.delete_one({"_id": teleo_oid})
+                # # associated teleoscope.files
+                # teleo_file = teleo["history"][0]["ranked_document_ids"]
+
+                # # delete telescopes.chunks and teleoscopes.files
+                # fs.delete(teleo_file)
+
+                # # delete teleoscope 
+                # db.teleoscopes.delete_one({"_id": teleo_oid})
 
                 # delete cluster
                 db.clusters.delete_one({"_id": cluster["_id"]})
+            
+            # reset session's association to previous clustering
+            history_item["clusters"] = []
+
+            # history_item["teleoscopes"] = teleoscopes # teleoscopes no longer auto generated
+            
+            db.sessions.update_one(
+                {"_id": session_id}, 
+                {
+                    '$push': {
+                        "history": {
+                            '$each': [history_item],
+                            '$position': 0
+                        }
+                    }
+                },
+            )  
         
         logging.info(f'No clusters for user. Ready to populate.')
 
         pass
 
-    def session_action(self, num_clusters, groups, total_time):
+    def session_action(self, total_time):
         """Clustering action history update
 
         Push an update to the session object to document the state of clustering 
 
         Args:
-            num_clusters:
-                An int that represents the number of clusters produced by HDBSCAN
-            groups:
-                A list of group objects that were clustered on
+            total_time:
+                time taken for task to complete
         """
 
         logging.info(f'Clustering action history update.')
@@ -472,14 +522,14 @@ class Clustering:
 
         history_item = session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
-
-        copy = f'Built {num_clusters} clusters in {total_time} seconds'
-        logging.info(copy)
+        
+        num_clusters = max(self.hdbscan_labels) + 2 # largest group label + outlier group (-1) + first group (0)
+        copy = f"Built {num_clusters} clusters in %.2f seconds" % total_time
         history_item["action"] = copy
 
         # record the groups and their associated documents used for clustering
         history_item["clustered_groups"] = []
-        for group in groups:
+        for group in self.groups:
 
             # documents used for clustering are denoting using the length of the groups history item.
             # the index of said documents are at [current history length - denoted history length]
