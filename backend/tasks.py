@@ -979,6 +979,9 @@ class reorient(Task):
         if self.documentsCached == False:
             _, _ = self.cacheDocumentsData()
 
+        if self.db is None:
+            self.db = utils.connect(db=auth.mongodb["db"])
+
         teleoscopes = {}
         for edge in edges:
             source = edge["source"].split("%")[0]
