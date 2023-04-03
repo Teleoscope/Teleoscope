@@ -27,6 +27,7 @@ export default function Clusters(props) {
         {clusters?.map((cluster) => {
            return (
               <div
+              key={cluster._id}
                  style={{ overflow: "auto", height: "100%" }}
                  draggable={true}
                  onDragStart={(e) => onDragStart(e, cluster._id + "%cluster", "Cluster", "cluster")}

@@ -162,10 +162,13 @@ function Flow() {
     [reactFlowInstance]
   );
 
-  const onConnect = useCallback((connection) => {
-    const newEdges = addEdge(connection, edges)
-    client.update_edges(newEdges)
+  const onConnect = useCallback((connection, curredges) => {
+    const newEdges = addEdge(connection, [])
     dispatch(makeEdge({edges: newEdges}))
+
+
+    const alledges = addEdge(connection, curredges)
+    client.update_edges(alledges)
 }, []);
   
   return (
@@ -185,7 +188,7 @@ function Flow() {
         panOnDrag={panOnDrag}
         onDragOver={onDragOver}
         onDrop={onDrop}
-        onConnect={onConnect}
+        onConnect={(connection) => onConnect(connection, edges)}
         onInit={setReactFlowInstance}
         multiSelectionKeyCode={multiSelectionKeyCode}
         onClick={() => client.save_UI_state(session_id, bookmarks, nodes, edges)}
