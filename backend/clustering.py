@@ -170,7 +170,7 @@ class Clustering:
             # list of labels given to docs in group
             labels = self.hdbscan_labels[self.group_doc_indices[group]] 
             # get non -1 label (if exists)
-            correct_label = max(labels)
+            correct_label = -1 if len(labels) is 0 else correct_label = max(labels)
             
             # if any documents were given -1, make sure they are set to correct_label
             if -1 in labels:
