@@ -95,6 +95,15 @@ function Flow() {
         }
       }
     }
+
+    if (node.data.type == "Cluster") {
+      if (target) {
+        if (target.data.type == "GroupPalette") {
+          client.add_document_to_group(target.id.split("%")[0], node.id.split("%")[0]);
+          dispatch(removeWindow(node.id));
+        }
+      }
+    }
     
     
     setTarget(null);
