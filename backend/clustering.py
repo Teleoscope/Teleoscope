@@ -381,7 +381,7 @@ class Clustering:
         # build a 7 word description from frequent topic labels
         self.description = feature_names[sorting[0][0]]
         for i in range(1,8):
-            self.description += " " + feature_names[sorting[0][i-1]]
+            self.description += " " + feature_names[sorting[0][i]]
 
         # check for collisions with existing labels; if yes, append another topic label. 
         i = self.topic_label_length
