@@ -451,7 +451,7 @@ def copy_cluster(*args, **kwargs):
     with transaction_session.start_transaction():
         group_res = db.groups.insert_one(obj, session=transaction_session)
         history_item = session["history"][0]
-        history_item["groups"] = history_item["groups"].append(group_res.inserted_id)
+        history_item["groups"] = [*history_item["groups"], group_res.inserted_id]
         
         sessions_res = db.sessions.update_one({'_id': session_id},
             {
