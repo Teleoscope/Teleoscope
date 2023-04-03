@@ -48,18 +48,19 @@ class Clustering:
         self.limit = limit
         self.topic_label_length = topic_label_length
         self.description = ""
-        self.db = utils.connect() # this needs to be params for each db
+        self.db = utils.connect() 
         self.nlp = spacy.load("en_core_web_sm")
+        self.group_doc_indices = None
+
+        # large lists (number of examples)
+        self.document_ids = None    
+        self.hdbscan_labels = None
 
         # TODO - can we set this up as a transaction session so it dies if we dont succeed
         self.cluster_by_groups()
 
     def cluster_by_groups(self):
         """Cluster documents using user-defined groups.
-
-        Clusters 'limit' documents with respect to the documents already 
-        grouped in group_id_strings. User-defined groups are to be maintained, and 
-        clusters are given topic model labels. 
         """
 
         start = time.time()
@@ -78,7 +79,7 @@ class Clustering:
         groups = list(db.groups.find({"_id":{"$in" : group_ids}}))
 
         # build training set
-        dm, group_doc_indices, document_ids = self.document_ordering(groups)
+        dm = self.document_ordering(groups)
 
         logging.info("Running UMAP Reduction...")
         umap_embeddings = umap.UMAP(
@@ -96,51 +97,46 @@ class Clustering:
         logging.info("Bye distance matrix!!")
         
         logging.info("Clustering with HDBSCAN...")
-        hdbscan_labels = hdbscan.HDBSCAN(
+        self.hdbscan_labels = hdbscan.HDBSCAN(
             min_cluster_size = 10,              # num of neighbors needed to be considered a cluster (0~50, df=5)
             # min_samples = 5,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
             cluster_selection_epsilon = 0.2,    # have large clusters in dense regions while leaving smaller clusters small
                                                 # merge clusters if inter cluster distance is less than thres (df=0)
         ).fit_predict(umap_embeddings)
 
-        logging.info(f'Num Clusters = {max(hdbscan_labels)+1} + outliers')
+        num_clusters = max(self.hdbscan_labels) + 2 # largest group label + outlier group (-1) + first group (0)
+        logging.info(f'Num Clusters = {num_clusters-1} + outliers')
 
         # for garbage collection
         del umap_embeddings
         gc.collect()
         logging.info("Bye UMAP embedding!!")
 
-        # identify what machine label was given to each group
-        given_labels = {}
-        for group in group_doc_indices:
-            
-            # list of labels given to docs in group
-            labels = hdbscan_labels[group_doc_indices[group]] 
-            # get non -1 label (if exists)
-            correct_label = max(labels)
-            
-            # if any documents were given -1, make sure they are set to correct_label
-            if -1 in labels:
-                for i in range(len(labels)):
-                    if labels[i] == -1:
-                        index = group_doc_indices[group][i]
-                        hdbscan_labels[index] = correct_label
-            
-            given_labels[group] = correct_label
+        # iteratively add clusters (as groups) to database
+        self.build_clusters()
 
-        # TODO - build out below as helper
-        
+        # report basic statistics
+        total_time = time.time() - start
+        self.session_action(num_clusters, groups, total_time)
+
+    def build_clusters(self):
+        """ Iteratively builds groups in mongoDB relative to clustering
+        """
+
+        # identify what machine label was given to each group
+        given_labels = self.get_given_labels()
+
         # keep track of all topic labels (for collisions)
         topic_labels = []
 
         # create a new mongoDB group for each machine cluster
-        for hdbscan_label in set(hdbscan_labels):
+        for hdbscan_label in set(self.hdbscan_labels):
             
             # array of indices of documents with current hdbscan label
-            document_indices_array = np.where(hdbscan_labels == hdbscan_label)[0]
+            document_indices_array = np.where(self.hdbscan_labels == hdbscan_label)[0]
             
             # all document_ids as array
-            ids = np.array(document_ids)
+            ids = np.array(self.document_ids)
             
             # array of object ids of documents with current hdbscan label 
             label_ids = ids[document_indices_array]
@@ -168,11 +164,34 @@ class Clustering:
                 included_documents=documents, 
                 description=self.description
             )
-
-        total_time = time.time() - start
-        num_clusters = max(hdbscan_labels) + 2
-        self.session_action(num_clusters, groups, total_time)
         
+    def get_given_labels(self):
+        """ Build the given_labels dictionary
+
+        Returns:
+            given_labels:
+                dict where keys are group names and values are the given hdbscan label
+        """
+        
+        given_labels = {}
+        for group in self.group_doc_indices:
+            
+            # list of labels given to docs in group
+            labels = self.hdbscan_labels[self.group_doc_indices[group]] 
+            # get non -1 label (if exists)
+            correct_label = max(labels)
+            
+            # if any documents were given -1, make sure they are set to correct_label
+            if -1 in labels:
+                for i in range(len(labels)):
+                    if labels[i] == -1:
+                        index = self.group_doc_indices[group][i]
+                        self.hdbscan_labels[index] = correct_label
+            
+            given_labels[group] = correct_label
+
+        return given_labels
+    
     def document_ordering(self, groups):
         """ Build a training set besed on the average of groups' teleoscopes
 
@@ -183,10 +202,6 @@ class Clustering:
         Returns:
             dm:
                 a diagonal matrix containing where elements are distances between documents
-            group_doc_indices:
-                dict where keys are group names and values are indices of documents in said group
-            document_ids:
-                A list of document object ids
         """
         
         logging.info("Gathering all document vectors from embeddings...")
@@ -277,7 +292,10 @@ class Clustering:
                     j = indices[_j]
                     dm[i, j] *= INTRA_CLUSTER_DISTANCE
 
-        return dm, group_doc_indices, document_ids
+        self.group_doc_indices = group_doc_indices
+        self.document_ids = document_ids
+
+        return dm
 
     def get_label(self, hdbscan_label, given_labels):
         """Identify and produce label & colour for given hdbscan label
@@ -285,9 +303,8 @@ class Clustering:
         Args:
             hdbscan_label:
                 An int that represents the given machine label 
-            given_labels: 
-                A dictionary with keys that represent group names 
-                and values that represent given machine labels
+            given_labels:
+                dict where keys are group names and values are the given hdbscan label
 
         Returns:
             label:
