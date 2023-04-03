@@ -434,7 +434,7 @@ def copy_cluster(*args, **kwargs):
 
     cluster_id = ObjectId(str(kwargs["cluster_id"]))
     session_id = ObjectId(str(kwargs["session_id"]))
-    user_id = ObjectId(str(kwargs["yserid"]))
+    user_id = ObjectId(str(kwargs["userid"]))
     
     transaction_session, db = utils.create_transaction_session()
 
