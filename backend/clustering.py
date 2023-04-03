@@ -447,11 +447,11 @@ class Clustering:
             # get session's clustering data
             session = db.sessions.find_one({'_id': session_id})
             history_item = session["history"][0]
-
-            # teleoscopes = history_item["teleoscopes"] # teleoscopes no longer auto generated
-
-            namespace = "teleoscopes" # teleoscopes.chunks, teleoscopes.files
-            fs = gridfs.GridFS(db, namespace)
+            
+            # # teleoscopes no longer auto generated. 
+            # teleoscopes = history_item["teleoscopes"] 
+            # namespace = "teleoscopes" # teleoscopes.chunks, teleoscopes.files
+            # fs = gridfs.GridFS(db, namespace)
 
             # cursor to find all existing clusters
             cursor = db.clusters.find(
@@ -463,6 +463,8 @@ class Clustering:
             for cluster in tqdm.tqdm(cursor):
 
                 # NOTE - teleoscopes are no longer auto generated per group. much of below is now redundant. 
+                #        leaving for now b/c the trick below to remove teleoscope.chunks & .files was kinda tricky
+
                 # # cluster teleoscope
                 # teleo_oid = cluster["teleoscope"]
                 # teleo = db.teleoscopes.find_one({"_id": teleo_oid}) 
