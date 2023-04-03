@@ -201,7 +201,7 @@ class Clustering:
         docs = []
         for group in self.groups:
             group_document_ids = group["history"][0]["included_documents"]
-            docs.append(group_document_ids)
+            docs += group_document_ids
 
         # compute average vector
         vec = reorient.average(docs)
