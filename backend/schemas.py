@@ -1,6 +1,23 @@
 import datetime
 from bson.objectid import ObjectId
 
+
+def create_group_object(color, included_documents, label, action, user_id):
+    obj = {
+        "creation_time": datetime.datetime.utcnow(),
+        "teleoscope": "deprecated",
+        "history": [
+            {
+                "timestamp": datetime.datetime.utcnow(),
+                "color": color,
+                "included_documents": included_documents,
+                "label": label,
+                "action": action,
+                "user": user_id,
+            }]
+    }
+    return obj
+
 def create_session_object(
         userid, 
         label, 

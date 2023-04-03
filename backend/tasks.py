@@ -370,21 +370,8 @@ def add_group(*args, human=True, description="A group", included_documents=[], *
     # teleoscope_result = initialize_teleoscope(userid=userid, session_id=_id, label=label)
 
     # Creating document to be inserted into mongoDB
-    obj = {
-        "creation_time": datetime.datetime.utcnow(),
-        "teleoscope": "deprecated",
-        "session": _id,
-        "history": [
-            {
-                "timestamp": datetime.datetime.utcnow(),
-                "color": color,
-                "included_documents": included_documents,
-                "label": label,
-                "action": "Initialize group",
-                "user": user_id,
-                "description": description
-            }]
-    }
+
+    obj = schemas.create_group_object(color, included_documents, label, "Initialize group", user_id, description)
     
     # call needs to be transactional due to groups & sessions collections being updated
 
@@ -438,6 +425,78 @@ def add_group(*args, human=True, description="A group", included_documents=[], *
         #     res.apply_async()
         
         return groups_res.inserted_id
+
+@app.task
+def copy_cluster(*args, **kwargs):
+    """
+    copies a cluster to a group
+    
+    kwargs:
+        cluster_id: (str) the cluster to copy
+        session_id: (str) the session to copy to
+        user_id: (str) the user commiting the action
+        
+    """
+
+    cluster_id = ObjectId(str(kwargs["cluster_id"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+    user_id = ObjectId(str(kwargs["userid"]))
+    
+    transaction_session, db = utils.create_transaction_session()
+
+    cluster = db.clusters.find_one({"_id": cluster_id })
+    session = db.sessions.find_one({"_id": session_id })
+
+    obj = schemas.create_group_object(
+        cluster["history"][0]["color"], 
+        cluster["history"][0]["included_documents"], 
+        cluster["history"][0]["label"], 
+        "Copy cluster", 
+        user_id)
+
+    with transaction_session.start_transaction():
+        group_res = db.groups.insert_one(obj, session=transaction_session)
+        history_item = session["history"][0]
+        history_item["groups"] = [*history_item["groups"], group_res.inserted_id]
+        
+        sessions_res = db.sessions.update_one({'_id': session_id},
+            {
+                '$push': {
+                            "history": {
+                                '$each': [history_item],
+                                '$position': 0
+                            }
+                }
+            }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
+
+    
+@app.task
+def recolor_group(*args, **kwargs):
+    """
+    Recolors a group.
+    """
+    transaction_session, db = utils.create_transaction_session()
+
+    group_id = ObjectId(str(kwargs["group_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
+    color = kwargs["color"]
+
+    with transaction_session.start_transaction():
+        session = db.groups.find_one({"_id": group_id}, session=transaction_session)
+        history_item = session["history"][0]
+        history_item["color"] = color
+        history_item["user"] = userid
+        db.groups.update_one({"_id": group_id},
+            {"$push": {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }}, session=transaction_session 
+        )
+        utils.commit_with_retry(transaction_session)
+    return 200
 
 @app.task
 def copy_group(*args, **kwargs):
@@ -926,14 +985,26 @@ class reorient(Task):
         if self.documentsCached == False:
             _, _ = self.cacheDocumentsData()
 
+        if self.db is None:
+            self.db = utils.connect(db=auth.mongodb["db"])
+
         teleoscopes = {}
         for edge in edges:
             source = edge["source"].split("%")[0]
             target = edge["target"].split("%")[0]
+            sources = []
+
             if target not in teleoscopes:
-                teleoscopes[target] = [source]
-            else:
-                teleoscopes[target].append(source)
+                teleoscopes[target] = []
+
+            if edge["source"].split("%")[1] == "group":
+                res = self.db.groups.find_one({"_id": ObjectId(str(source))})
+                sources = [id for id in res["history"][0]["included_documents"]]
+
+            if edge["source"].split("%")[1] == "document":
+                sources.append(source)
+
+            teleoscopes[target] = [*sources, *teleoscopes[target]]
 
         print(f'Telescope graph: {teleoscopes}')
         for teleoscope_id, documents in teleoscopes.items():

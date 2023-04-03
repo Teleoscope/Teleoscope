@@ -325,7 +325,7 @@ export default function GroupPalette(props) {
         {groups?.map((g) => {
           return (
             <div
-            
+            key={g._id}
             draggable={true}
         style={{ position: "relative" }}
         onDragStart={(e) => onDragStart(e, g._id + "%" + "group", "Group", "group")} 

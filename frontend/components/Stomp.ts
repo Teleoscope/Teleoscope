@@ -246,6 +246,22 @@ add_group(label: string, color: string, session_id: string) {
   return body;
 }
 
+
+/**
+ * Requests to copy cluster to groups in MongoDB.
+ */
+copy_cluster(cluster_id: string, session_id: string) {
+  const body = {
+    task: 'copy_cluster',
+    args: {
+      cluster_id: cluster_id,
+      session_id: session_id,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
 /**
  * Requests to copy group object in MongoDB.
  */

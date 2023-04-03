@@ -6,7 +6,11 @@ import WindowTopBar from "./WindowTopBar";
 
 // mui
 import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
 import Card from "@mui/material/Card";
+
+import Paper from "@mui/material/Paper";
+
 import CardActionArea from "@mui/material/CardActionArea";
 import Divider from "@mui/material/Divider";
 
@@ -70,7 +74,7 @@ export default function Window (props) {
   }
 
   return (
-    <Card
+    <Paper
       variant="outlined"
       style={{
         backgroundColor: "white",
@@ -81,6 +85,9 @@ export default function Window (props) {
         boxShadow: "1",
       }}
     >
+      <Stack
+      sx={{ width: "100%", height: "100%" }}
+      >
         <WindowTopBar
           title={props.title}
           id={props.id}
@@ -94,7 +101,7 @@ export default function Window (props) {
       >
         {props.inner}
       </div>
-     
-    </Card>
+      </Stack>
+    </Paper>
   );
 }

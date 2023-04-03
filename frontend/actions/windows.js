@@ -193,8 +193,9 @@ export const Windows = createSlice({
 			state.nodes = temp;
 		},
 		makeEdge: (state, action) => {
+			var temp = [...state.edges, ...action.payload.edges];
 			state.logical_clock = state.logical_clock + 1;
-			state.edges = action.payload.edges;
+			state.edges = temp;
 		}
 	}
 })

@@ -21,23 +21,24 @@ function WindowNode({ data, id, selected }) {
 
   const windata = {...data, ...size}
 
-  if (data.type == "Document") {
+  if (data.type == "Document" || data.type == "Group") {
     return (
       <>
         <NodeResizer color="#ff0071" isVisible={selected} minWidth={windata.minWidth} minHeight={windata.minHeight}   />
         <WindowFactory id={data.i} size={size} windata={ windata } />
-        <Handle type="source" position={Position.Right} id="a" isConnectable={true}/>
+        <Handle type="source" position={Position.Right} id={data.i} isConnectable={true}/>
 
       </>
     );
   }
+
 
   if (data.type == "Teleoscope") {
     return (
       <>
         <NodeResizer color="#ff0071" isVisible={selected} minWidth={windata.minWidth} minHeight={windata.minHeight}   />
         <WindowFactory id={data.i} size={size} windata={ windata } />
-        <Handle type="target" position={Position.Left} id="b" isConnectable={true} />
+        <Handle type="target" position={Position.Left} id={data.i} isConnectable={true} />
 
       </>
     );
