@@ -98,7 +98,7 @@ function Flow() {
 
     if (node.data.type == "Cluster") {
       if (target) {
-        if (target.data.type == "GroupPalette") {
+        if (target.data.type == "Group Palette") {
           client.copy_cluster(node.id.split("%")[0], session_id);
           dispatch(removeWindow(node.id));
         }

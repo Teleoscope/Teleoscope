@@ -434,12 +434,12 @@ def copy_cluster(*args, **kwargs):
 
     cluster_id = ObjectId(str(kwargs["cluster_id"]))
     session_id = ObjectId(str(kwargs["session_id"]))
-    user_id = ObjectId(str(kwargs["cluster_id"]))
+    user_id = ObjectId(str(kwargs["yserid"]))
     
     transaction_session, db = utils.create_transaction_session()
 
-    cluster = db.clusters.find_one({"_id", cluster_id })
-    session = db.sessions.find_one({"_id", session_id })
+    cluster = db.clusters.find_one({"_id": cluster_id })
+    session = db.sessions.find_one({"_id": session_id })
 
     obj = schemas.create_group_object(
         cluster["history"][0]["color"], 
