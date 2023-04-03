@@ -362,12 +362,12 @@ def add_group(*args, human=True, included_documents=[], **kwargs):
     if user != None:
         user_id = user['_id']
 
-    teleoscope_result = initialize_teleoscope(userid=userid, session_id=_id, label=label)
+    # teleoscope_result = initialize_teleoscope(userid=userid, session_id=_id, label=label)
 
     # Creating document to be inserted into mongoDB
     obj = {
         "creation_time": datetime.datetime.utcnow(),
-        "teleoscope": teleoscope_result.inserted_id,
+        "teleoscope": "deprecated",
         "history": [
             {
                 "timestamp": datetime.datetime.utcnow(),
@@ -420,15 +420,15 @@ def add_group(*args, human=True, included_documents=[], **kwargs):
         logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
 
-        if len(included_documents) > 0:
-            logging.info(f'Reorienting teleoscope {teleoscope_result.inserted_id} for group {label}.')
-            res = chain(
-                    robj.s(teleoscope_id=teleoscope_result.inserted_id,
-                        positive_docs=included_documents,
-                        negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
-                    save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
-            )
-            res.apply_async()
+        # if len(included_documents) > 0:
+        #     logging.info(f'Reorienting teleoscope {teleoscope_result.inserted_id} for group {label}.')
+        #     res = chain(
+        #             robj.s(teleoscope_id=teleoscope_result.inserted_id,
+        #                 positive_docs=included_documents,
+        #                 negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
+        #             save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
+        #     )
+        #     res.apply_async()
         
         return groups_res.inserted_id
 

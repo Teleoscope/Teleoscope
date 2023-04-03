@@ -113,12 +113,6 @@ function Flow() {
     }, []
   )
 
-  const onEdgesChange = useCallback( 
-    (changes) => {
-      dispatch(updateEdges(changes))
-    }, []
-  )
-
 
 
   const onDragOver = useCallback((event) => {

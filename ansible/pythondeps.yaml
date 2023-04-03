@@ -38,4 +38,5 @@
           - pygithub
           - ujson
           - tqdm
+          - spacy
         executable: "{{ conda_prefix }}/envs/{{ conda_environment }}/bin/pip"
