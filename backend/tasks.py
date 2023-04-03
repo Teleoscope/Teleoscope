@@ -465,7 +465,32 @@ def copy_cluster(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
 
     
+@app.task
+def recolor_group(*args, **kwargs):
+    """
+    Recolors a group.
+    """
+    transaction_session, db = utils.create_transaction_session()
 
+    group_id = ObjectId(str(kwargs["group_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
+    color = kwargs["color"]
+
+    with transaction_session.start_transaction():
+        session = db.groups.find_one({"_id": group_id}, session=transaction_session)
+        history_item = session["history"][0]
+        history_item["color"] = color
+        history_item["user"] = userid
+        db.groups.update_one({"_id": group_id},
+            {"$push": {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }}, session=transaction_session 
+        )
+        utils.commit_with_retry(transaction_session)
+    return 200
 
 @app.task
 def copy_group(*args, **kwargs):
