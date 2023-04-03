@@ -99,7 +99,7 @@ function Flow() {
     if (node.data.type == "Cluster") {
       if (target) {
         if (target.data.type == "GroupPalette") {
-          client.add_document_to_group(target.id.split("%")[0], node.id.split("%")[0]);
+          client.copy_cluster(node.id.split("%")[0], session_id);
           dispatch(removeWindow(node.id));
         }
       }

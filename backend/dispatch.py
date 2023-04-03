@@ -54,6 +54,15 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 },
             )
 
+        if task == 'copy_cluster':
+            res = tasks.copy_cluster.signature(
+                args=(),
+                kwargs={
+                    "userid": args["userid"],
+                    "cluster_id": args["cluster_id"],
+                    "session_id": args["session_id"]
+                },
+            )
 
         if task == 'initialize_session':
             res = tasks.initialize_session.signature(
