@@ -74,6 +74,33 @@ def initialize_session(*args, **kwargs):
     return 200 # success
 
 @app.task
+def recolor_session(*args, **kwargs):
+    """
+    Recolors a session.
+    """
+    transaction_session, db = utils.create_transaction_session()
+    
+    session_id = ObjectId(str(kwargs["session_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
+    color = kwargs["color"]
+
+    with transaction_session.start_transaction():
+        session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
+        history_item = session["history"][0]
+        history_item["color"] = color
+        history_item["user"] = userid
+        db.sessions.update_one({"_id": session_id},
+            {"$push": {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }}, session=transaction_session 
+        )
+        utils.commit_with_retry(transaction_session)
+    return 200
+
+@app.task
 def save_UI_state(*args, **kwargs):
     """
     Updates a session document in the sessions collection.

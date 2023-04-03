@@ -3505,6 +3505,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/clipboard@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "@types/clipboard@npm:2.0.1"
+  checksum: 4ef5af19ac1055693a313194396e00a3f42326b45dd5ae90a2bb47a643957f313ce864c430f387fb16c78c9cd2cde44af84f0f7fd9f2695674a75161a7016937
+  languageName: node
+  linkType: hard
+
 "@types/cookie@npm:^0.3.3":
   version: 0.3.3
   resolution: "@types/cookie@npm:0.3.3"
@@ -4744,6 +4751,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"clipboard@npm:^2.0.0":
+  version: 2.0.11
+  resolution: "clipboard@npm:2.0.11"
+  dependencies:
+    good-listener: ^1.2.2
+    select: ^1.1.2
+    tiny-emitter: ^2.0.0
+  checksum: 413055a6038e43898e0e895216b58ed54fbf386f091cb00188875ef35b186cefbd258acdf4cb4b0ac87cbc00de936f41b45dde9fe1fd1a57f7babb28363b8748
+  languageName: node
+  linkType: hard
+
 "cliui@npm:^8.0.1":
   version: 8.0.1
   resolution: "cliui@npm:8.0.1"
@@ -5108,6 +5126,13 @@ __metadata:
     has-property-descriptors: ^1.0.0
     object-keys: ^1.1.1
   checksum: e60aee6a19b102df4e2b1f301816804e81ab48bb91f00d0d935f269bf4b3f79c88b39e4f89eaa132890d23267335fd1140dfcd8d5ccd61031a0a2c41a54e33a6
+  languageName: node
+  linkType: hard
+
+"delegate@npm:^3.1.2":
+  version: 3.2.0
+  resolution: "delegate@npm:3.2.0"
+  checksum: d943058fe05897228b158cbd1bab05164df28c8f54127873231d6b03b0a5acc1b3ee1f98ac70ccc9b79cd84aa47118a7de111fee2923753491583905069da27d
   languageName: node
   linkType: hard
 
@@ -5907,6 +5932,7 @@ __metadata:
     next: ^12.2.0
     randomcolor: ^0.6.2
     react: ^18.2.0
+    react-clipboard.js: ^2.0.16
     react-color: ^2.19.3
     react-cookie: ^4.1.1
     react-cool-dimensions: ^2.0.7
@@ -6195,6 +6221,15 @@ __metadata:
     merge2: ^1.4.1
     slash: ^3.0.0
   checksum: b4be8885e0cfa018fc783792942d53926c35c50b3aefd3fdcfb9d22c627639dc26bd2327a40a0b74b074100ce95bb7187bfeae2f236856aa3de183af7a02aea6
+  languageName: node
+  linkType: hard
+
+"good-listener@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "good-listener@npm:1.2.2"
+  dependencies:
+    delegate: ^3.1.2
+  checksum: f39fb82c4e41524f56104cfd2d7aef1a88e72f3f75139115fbdf98cc7d844e0c1b39218b2e83438c6188727bf904ed78c7f0f2feff67b32833bc3af7f0202b33
   languageName: node
   linkType: hard
 
@@ -8477,7 +8512,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prop-types@npm:15.x, prop-types@npm:^15.5.10, prop-types@npm:^15.6.2, prop-types@npm:^15.8.1":
+"prop-types@npm:15.x, prop-types@npm:^15.5.0, prop-types@npm:^15.5.10, prop-types@npm:^15.6.2, prop-types@npm:^15.8.1":
   version: 15.8.1
   resolution: "prop-types@npm:15.8.1"
   dependencies:
@@ -8520,6 +8555,20 @@ __metadata:
   version: 0.6.2
   resolution: "randomcolor@npm:0.6.2"
   checksum: 539345c0289f7c52ffd8486e61231e19ccc40b1c4ab9c15594f20a2773b71a9317e0cc8b756160fc8a678ace9ed1e96a8ac90346b2c34c64dfd5acad91f9a73d
+  languageName: node
+  linkType: hard
+
+"react-clipboard.js@npm:^2.0.16":
+  version: 2.0.16
+  resolution: "react-clipboard.js@npm:2.0.16"
+  dependencies:
+    "@types/clipboard": ^2.0.1
+    clipboard: ^2.0.0
+    prop-types: ^15.5.0
+  peerDependencies:
+    react: ">=15.5.0"
+    react-dom: ">=15.0.0"
+  checksum: e5100a71183f01bb2c95031e953bcc1e7d61c491335ccdb2d4161f2517f402c29f7aac81ead96eedfa73c6b3259f3f9164c57dddd7dc8e774ee329ceece18920
   languageName: node
   linkType: hard
 
@@ -9092,6 +9141,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"select@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "select@npm:1.1.2"
+  checksum: 4346151e94f226ea6131e44e68e6d837f3fdee64831b756dd657cc0b02f4cb5107f867cb34a1d1216ab7737d0bf0645d44546afb030bbd8d64e891f5e4c4814e
+  languageName: node
+  linkType: hard
+
 "selecto@npm:^1.17.0, selecto@npm:~1.22.0":
   version: 1.22.0
   resolution: "selecto@npm:1.22.0"
@@ -9538,6 +9594,13 @@ __metadata:
   version: 3.0.1
   resolution: "throttle-debounce@npm:3.0.1"
   checksum: e34ef638e8df3a9154249101b68afcbf2652a139c803415ef8a2f6a8bc577bcd4d79e4bb914ad3cd206523ac78b9fb7e80885bfa049f64fbb1927f99d98b5736
+  languageName: node
+  linkType: hard
+
+"tiny-emitter@npm:^2.0.0":
+  version: 2.1.0
+  resolution: "tiny-emitter@npm:2.1.0"
+  checksum: fbcfb5145751a0e3b109507a828eb6d6d4501352ab7bb33eccef46e22e9d9ad3953158870a6966a59e57ab7c3f9cfac7cab8521db4de6a5e757012f4677df2dd
   languageName: node
   linkType: hard
 

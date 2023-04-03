@@ -2,6 +2,7 @@
 
 require('dotenv').config({ path: './.env.local' })
 module.exports = {
+  reactStrictMode: true,
   distDir: 'build',
   async headers() {
     return [

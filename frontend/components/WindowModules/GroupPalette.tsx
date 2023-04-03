@@ -25,20 +25,19 @@ import {
   Typography,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
-
+import Tooltip from "@mui/material/Tooltip";
+import DownloadIcon from '@mui/icons-material/Download';
 // actions
 import useSWRAbstract from "../../util/swr";
 import { useAppSelector, useAppDispatch } from "../../hooks";
-import { dragged } from "../../actions/windows";
 
 // contexts
 import { Stomp } from "../Stomp";
 import randomColor from "randomcolor";
 import { useCookies } from "react-cookie";
-import ConnectingAirportsIcon from "@mui/icons-material/ConnectingAirports";
 import ColorPicker from "../ColorPicker";
 import EditableText from "../EditableText";
-import withDroppable from "../DropItem";
+import ButtonActions from "../ButtonActions";
 
 // custom components
 export default function GroupPalette(props) {
@@ -235,9 +234,9 @@ export default function GroupPalette(props) {
   };
 
   const onDragStart = (event, id, type, typetag) => {
-    event.dataTransfer.setData('application/reactflow/type', type);
-    event.dataTransfer.setData('application/reactflow/id', `${id}%${typetag}`);
-    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData("application/reactflow/type", type);
+    event.dataTransfer.setData("application/reactflow/id", `${id}%${typetag}`);
+    event.dataTransfer.effectAllowed = "move";
   };
 
   const CopyGroup = () => {
@@ -266,6 +265,48 @@ export default function GroupPalette(props) {
     );
   };
 
+  const ClusterButton = () => {
+    return (
+      <Tooltip title="Cluster on existing groups">
+      <IconButton onClick={() => runClusters()}>
+          <Diversity2Icon fontSize="small"
+            sx={[
+              {
+                "&:hover": {
+                  color: props.color,
+                },
+              },
+            ]}
+          />
+        </IconButton>
+        </Tooltip>
+    )
+  }
+
+  const downloadGroups = () => {
+
+  }
+
+
+  const DownloadButton = () => {
+    return (
+      <Tooltip title="Download group content">
+      <IconButton onClick={() => downloadGroups()}>
+          <DownloadIcon fontSize="small"
+            sx={[
+              {
+                "&:hover": {
+                  color: props.color,
+                },
+              },
+            ]}
+          />
+        </IconButton>
+        </Tooltip>
+    )
+  }
+
+
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
       <Stack
@@ -288,49 +329,27 @@ export default function GroupPalette(props) {
             },
           }}
           sx={{
-            width: "75%",
+            width: "100%",
             margin: 1,
             // '& .MuiInput-underline:before': {borderBottomColor: props.color},
             "& .MuiInput-underline:after": { borderBottomColor: props.color },
             // '& .MuiInputLabel-root': {borderBottomColor: props.color},
           }}
         />
-
-        <IconButton onClick={() => runClusters()}>
-          <Diversity2Icon
-            sx={[
-              {
-                "&:hover": {
-                  color: props.color,
-                },
-              },
-            ]}
-          />
-        </IconButton>
-        <IconButton onClick={handleClickOpen}>
-          <ConnectingAirportsIcon
-            sx={[
-              {
-                "&:hover": {
-                  color: props.color,
-                },
-              },
-            ]}
-          />
-        </IconButton>
-        <CopyGroup />
       </Stack>
       <Divider />
+      <ButtonActions inner={[ClusterButton]}/>
       <List>
         {groups?.map((g) => {
           return (
             <div
-            key={g._id}
-            draggable={true}
-        style={{ position: "relative" }}
-        onDragStart={(e) => onDragStart(e, g._id + "%" + "group", "Group", "group")} 
+              key={g._id}
+              draggable={true}
+              style={{ position: "relative" }}
+              onDragStart={(e) =>
+                onDragStart(e, g._id + "%" + "group", "Group", "group")
+              }
             >
-              {/* <Droppable group={g} id={g._id} type="Group" typetag="group"></Droppable> */}
               <ListItem>
                 <Stack
                   sx={{ width: "100%" }}
@@ -353,9 +372,7 @@ export default function GroupPalette(props) {
                     />
                   </Stack>
                   <IconButton
-                    onClick={() =>
-                      client.remove_group(g._id, session_id)
-                    }
+                    onClick={() => client.remove_group(g._id, session_id)}
                   >
                     <DeleteIcon
                       sx={[
