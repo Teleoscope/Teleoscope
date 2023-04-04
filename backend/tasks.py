@@ -207,7 +207,6 @@ def create_next_relationship(*args, **kwargs):
         document_one = db.documents.find_one({"_id": document_one_id})
         document_two = db.documents.find_one({"_id": document_two_id})
         if document_two != document_one:
-            print("not equal")
             relationship_one = {'type': 'next', '_id': document_two_id}
             relationship_two = {'type': 'next', '_id': document_one_id}
             db.documents.update_one(

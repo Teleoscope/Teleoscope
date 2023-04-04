@@ -140,10 +140,10 @@ def test_parent_using_create_child():
 	id = tasks.create_child(start_index = start, end_index = end, document_id = '637eabe7f0a9482a337a11d5')
 	try:
 		document = db.documents.find_one({"_id": parent_id})
-		# for relation in document['relationships']:
-		# 	if relation['type'] == 'child':
-		# 		assert relation['_id'] == id
-		assert document['relationships'][0]['_id'] == id 
+		for relation in document['relationships']:
+			if relation['type'] == 'child':
+				assert relation['_id'] == id
+		# assert document['relationships'][0]['_id'] == id 
 	finally:
 		db.documents.update_one(
 			{'_id':ObjectId("637eabe7f0a9482a337a11d5")},
@@ -171,13 +171,13 @@ def test_create_next_relationship_with_valid_id():
 	try:
 		document_one = db.documents.find_one({"_id": ObjectId(document_one_id)})
 		document_two = db.documents.find_one({"_id": ObjectId(document_two_id)})
-		# for relation in document_one['relationships']:
-		# 	if relation['type'] == 'next':
-		# 		assert relation['_id'] == document_two_id
-		# for relation in document_two['relationships']:
-		# 	if relation['type'] == 'next':
-		# 		assert relation['_id'] == document_one_id
-		assert document_two['relationships'][0]['_id'] == document_one_id 
+		for relation in document_one['relationships']:
+			if relation['type'] == 'next':
+				assert relation['_id'] == document_two_id
+		for relation in document_two['relationships']:
+			if relation['type'] == 'next':
+				assert relation['_id'] == document_one_id
+		# assert document_two['relationships'][0]['_id'] == document_one_id 
 	finally:
 		db.documents.update_one(
 			{'_id':ObjectId("637eabe7f0a9482a337a11d5")},
