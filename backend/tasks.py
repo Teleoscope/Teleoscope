@@ -181,6 +181,14 @@ def create_child(*args, **kwargs):
         # Assignign child field to the parent document's relationship field
         parent_relationship = {}
         parent_relationship = {"type": "child", "_id": new_id}
+        db.documents.update_one(
+            {"_id": document_id},
+            {
+                "$push": {
+                    "relationships": parent_relationship
+                }
+            },session=transaction_session)
+
         document['relationships'].append(parent_relationship)
         print(document['relationships'])
         print(document)
