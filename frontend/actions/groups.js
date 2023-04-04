@@ -29,7 +29,6 @@ export const Groups = createSlice({
 	reducers: {
 		group: (state, action) => {
 			var temp = [...state.grouped_documents];
-			console.log(action.payload);
 
 			// filters out any duplicates 
 			var filter = temp.filter(item => action.payload.id == item.id && action.payload.label == item.label)

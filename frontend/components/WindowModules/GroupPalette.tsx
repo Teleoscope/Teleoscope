@@ -27,6 +27,9 @@ import {
 import CheckIcon from "@mui/icons-material/Check";
 import Tooltip from "@mui/material/Tooltip";
 import DownloadIcon from '@mui/icons-material/Download';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CopyAllIcon from '@mui/icons-material/CopyAll';
+
 // actions
 import useSWRAbstract from "../../util/swr";
 import { useAppSelector, useAppDispatch } from "../../hooks";
@@ -306,6 +309,59 @@ export default function GroupPalette(props) {
     )
   }
 
+  
+  const fetchgroups = async () => {
+    var out = [] 
+    for (const group of groups) {
+      var g = group;
+      g["included_text"] = []
+      for (const doc of g.history[0].included_documents) {
+        const response = await fetch(`/api/document/${doc}`).then(res => res.json())
+        g["included_text"].push(response)
+      }
+      out.push(g)
+    }
+    return out;
+  }
+
+  const copyTextToClipboard = async () => {
+    const groups = await fetchgroups();
+    var acc = "";
+    for (const group of groups) {
+      acc = acc + `${group.history[0].label}\n`;
+      for (const text of group.included_text) {
+        acc = acc + text.title;
+        acc = acc + text.text;
+      }
+    }
+
+    navigator.clipboard.writeText(acc);
+  }
+  const copyJsonToClipboard = async () => {
+    const groups = await fetchgroups();
+    navigator.clipboard.writeText( JSON.stringify(groups, null, 2))
+  }
+
+  const CopyText = () => {
+    return (
+      <Tooltip title="Copy text to clipboard">
+        <IconButton onClick={copyTextToClipboard}>
+          <ContentCopyIcon fontSize="small" />
+        </IconButton>
+        </Tooltip> 
+    )
+  }
+
+  const CopyJson = () => {
+    return (
+      <Tooltip title="Copy metadata to clipboard">
+        <IconButton onClick={copyJsonToClipboard}>
+          <CopyAllIcon fontSize="small" />
+        </IconButton>
+        </Tooltip> 
+    )
+  }
+
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
@@ -338,7 +394,7 @@ export default function GroupPalette(props) {
         />
       </Stack>
       <Divider />
-      <ButtonActions inner={[ClusterButton]}/>
+      <ButtonActions inner={[CopyJson, CopyText, ClusterButton]}/>
       <List>
         {groups?.map((g) => {
           return (
