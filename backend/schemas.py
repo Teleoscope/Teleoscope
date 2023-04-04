@@ -49,13 +49,13 @@ def create_document_object(title,textVector, text, relationships = [],metadata={
         'title': title,  
         'textVector': textVector, 
         'text': text,
+        'metadata' : {
+            **metadata
+        },
         'relationships': [
             # 'parent': parent, 
             # 'child': child, 
             # 'next': next
             *relationships
-        ],
-        'metadata' : {
-            **metadata
-        }
+        ]  
     }

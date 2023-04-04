@@ -188,10 +188,6 @@ def create_child(*args, **kwargs):
                     "relationships": parent_relationship
                 }
             },session=transaction_session)
-
-        document['relationships'].append(parent_relationship)
-        print(document['relationships'])
-        print(document)
         utils.commit_with_retry(transaction_session)
     return new_id
 
@@ -214,10 +210,20 @@ def create_next_relationship(*args, **kwargs):
             print("not equal")
             relationship_one = {'type': 'next', '_id': document_two_id}
             relationship_two = {'type': 'next', '_id': document_one_id}
-            document_one['relationships'].append(relationship_one)
-            print(document_one['relationships'])
-            document_two['relationships'].append(relationship_two)
-            print(document_two['relationships'])
+            db.documents.update_one(
+            {"_id": document_one_id},
+            {
+                "$push": {
+                    "relationships": relationship_one
+                }
+            },session=transaction_session)
+            db.documents.update_one(
+            {"_id": document_two_id},
+            {
+                "$push": {
+                    "relationships": relationship_two
+                }
+            },session=transaction_session)  
         else:
             raise Exception(f'same document')
         utils.commit_with_retry(transaction_session)
