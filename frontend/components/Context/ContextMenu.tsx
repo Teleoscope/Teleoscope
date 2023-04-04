@@ -37,11 +37,15 @@ export default function ContextMenu(props) {
     const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
     const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
 
+    // props.contextMenu.mouseX 
+
+    
+
     const handleAddNode = (id, type) => {
         const newNode = {
             id: id,
             type: "windowNode",
-            position: {x: 0, y: 0},
+            position: {x: props.contextMenu.worldX, y: props.contextMenu.worldY},
             style : { 
             width: 400,
             height: 300,

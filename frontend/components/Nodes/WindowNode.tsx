@@ -2,13 +2,15 @@ import { useCallback, memo } from 'react';
 import { Handle, Position, useStore } from 'reactflow';
 import WindowFactory from '../WindowFolder/WindowFactory';
 import { NodeResizer } from '@reactflow/node-resizer';
+import { useAppSelector, useAppDispatch } from '../../hooks'
 import '@reactflow/node-resizer/dist/style.css';
 
 function WindowNode({ data, id, selected }) {
+  const { nodes, edges, logical_clock } = useAppSelector((state) => state.windows);
 
   const size = useStore((s) => {
     const node = s.nodeInternals.get(id);
-  
+    // const saved = nodes.find(n => n.id == id)
     return {
       x: node.positionAbsolute.x,
       y: node.positionAbsolute.y,

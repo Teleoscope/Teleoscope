@@ -1,17 +1,17 @@
-import React, {useState, useMemo, useCallback, useRef } from 'react';
+import React, {useState, useCallback, useRef } from 'react';
 import ReactFlow, { MiniMap, ReactFlowProvider, Controls, Background, addEdge } from 'reactflow';
 import 'reactflow/dist/style.css';
-import SearchNode from './Nodes/SearchNode'
 import WindowNode from './Nodes/WindowNode'
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { RootState } from '../stores/store'
 import useSWRAbstract from '../util/swr';
 import { setNodes, updateNodes, updateEdges, makeEdge, makeNode, removeWindow, setEdges } from "../actions/windows";
 import { Stomp } from './Stomp'
+import ContextMenu from './Context/ContextMenu';
 
 const nodeTypes = { windowNode: WindowNode };
 const multiSelectionKeyCode = ["Meta", "Control", "Shift"]
-const panOnDrag = [1,2]
+const panOnDrag = [1]
 
 function Flow() {
   
@@ -162,6 +162,49 @@ function Flow() {
     [reactFlowInstance]
   );
 
+
+  interface MouseCoords {
+    mouseX: number,
+    mouseY: number,
+    worldX: number,
+    worldY: number
+  }
+  const [contextMenu, setContextMenu] = React.useState<MouseCoords | null>(null);
+  const handleOpenContextMenu = (event) => {
+    const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
+    const position = reactFlowInstance.project({
+      x: event.clientX - reactFlowBounds.left,
+      y: event.clientY - reactFlowBounds.top,
+    });
+
+    setContextMenu(
+      contextMenu === null
+        ? {
+          mouseX: event.clientX + 2,
+          mouseY: event.clientY - 6,
+          worldX: position.x,
+          worldY: position.y
+        }
+        : // repeated contextmenu when it is already open closes it with Chrome 84 on Ubuntu
+        // Other native context menus might behave different.
+        // With this behavior we prevent contextmenu from the backdrop to re-locale existing context menus.
+        null,
+    );
+
+    
+
+  };
+
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  const onPaneContextMenu = (e) => {
+    event.preventDefault();
+
+    handleOpenContextMenu(e)
+  }
+
   const onConnect = useCallback((connection, curredges) => {
     const newEdges = addEdge(connection, [])
     dispatch(makeEdge({edges: newEdges}))
@@ -195,6 +238,7 @@ function Flow() {
         onNodeDrag={onNodeDrag}
         onNodeDragStart={onNodeDragStart}
         onNodeDragStop={onNodeDragStop}
+        onPaneContextMenu={onPaneContextMenu}
 
       >
         <Background />
@@ -202,7 +246,12 @@ function Flow() {
 
         <Controls />
       </ReactFlow>
+      <ContextMenu
+        handleCloseContextMenu={handleCloseContextMenu}
+        contextMenu={contextMenu}
+      /> 
       </div>
+      
       </ReactFlowProvider>
       </div>
   );

@@ -92,7 +92,9 @@ export const Windows = createSlice({
 			var index = ids.indexOf(action.payload.id);
 			if (index > -1) {
 				temp[index].width = 60;
-				temp[index].height = 34;		
+				temp[index].height = 34;
+				temp[index].style.width = 60;
+				temp[index].style.height = 34;
 			}
 			state.windows = temp;
 		},
@@ -106,7 +108,6 @@ export const Windows = createSlice({
 				temp[index].isResizable = true;
 				temp[index].resizeHandles = ["se"];
 				temp[index].showWindow = true;
-
 			}
 			state.windows = temp;	
 		},
