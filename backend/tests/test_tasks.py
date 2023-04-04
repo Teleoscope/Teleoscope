@@ -144,11 +144,11 @@ def test_parent_using_create_child():
 			if relation['type'] == 'parent':
 				assert relation['_id'] == parent_id
 	finally:
-		db.documents.delete_one({'_id': id})
 		db.documents.update_one(
 			{'_id':ObjectId("637eabe7f0a9482a337a11d5")},
 			{"$pull": {'relationships': {'child': id}}}
 		)
+		db.documents.delete_one({'_id': id})
 
 #Test case to check create_next_relationship
 #Case 1: two objects with invalid document_id
@@ -168,8 +168,8 @@ def test_create_next_relationship_with_valid_id():
 	document_two_id = '637eae8a0381748b89ae518a'
 	tasks.create_next_relationship(document_one_id = document_one_id, document_two_id = document_two_id )
 	try:
-		document_one = db.documents.find_one({"_id": document_one_id})
-		document_two = db.documents.find_one({"_id": document_two_id})
+		document_one = db.documents.find_one({"_id": ObjectId(document_one_id)})
+		document_two = db.documents.find_one({"_id": ObjectId(document_two_id)})
 		for relation in document_one['relationships']:
 			if relation['type'] == 'next':
 				assert relation['_id'] == document_two_id

@@ -200,11 +200,14 @@ def create_next_relationship(*args, **kwargs):
 
         document_one = db.documents.find_one({"_id": document_one_id})
         document_two = db.documents.find_one({"_id": document_two_id})
+        print("document_one" + document_one)
+        print("document_two" + document_two)
         if document_two != document_one:
+            print("not equal")
             relationship_one = {'type': 'next', '_id': document_two_id}
             relationship_two = {'type': 'next', '_id': document_one_id}
-
             document_one['relationships'].append(relationship_one)
+            print("document_one_rel" + document_one)
             document_two['relationships'].append(relationship_two)
         else:
             raise Exception(f'same document')
@@ -1089,7 +1092,6 @@ def read_and_validate_document(path_to_document):
 
     return document
 
-# Write a new function - vectorize_text -> to check that it's actually working
 @app.task
 def vectorize_document(document): #(text) -> Vector
     '''
@@ -1100,7 +1102,6 @@ def vectorize_document(document): #(text) -> Vector
     purpose: This function is used to update the dictionary with a vectorized version of the title and text
             (Ignores dictionaries containing error keys)
     '''
-    ## Call vectorize_text in this function - based on the text that you're getting from the document - second step after vectorize_text works
     import tensorflow_hub as hub
     if 'error' not in document:
         document['vector'] = vectorize_text(document['title'])
