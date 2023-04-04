@@ -109,6 +109,7 @@ def test_parent_create_using_create_child():
 		for relation in child_document['relationships']:
 			if relation['type'] == 'parent':
 				assert relation['_id'] == parent_id
+				break
 	finally:
 		db.documents.delete_one({'_id': id})
 
@@ -173,10 +174,10 @@ def test_create_next_relationship_with_valid_id():
 		document_two = db.documents.find_one({"_id": ObjectId(document_two_id)})
 		for relation in document_one['relationships']:
 			if relation['type'] == 'next':
-				assert relation['_id'] == document_two_id
+				assert relation['_id'] == ObjectId(document_two_id)
 		for relation in document_two['relationships']:
 			if relation['type'] == 'next':
-				assert relation['_id'] == document_one_id
+				assert relation['_id'] == ObjectId(document_one_id)
 		# assert document_two['relationships'][0]['_id'] == document_one_id 
 	finally:
 		db.documents.update_one(
