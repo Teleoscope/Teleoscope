@@ -183,6 +183,7 @@ def create_child(*args, **kwargs):
         parent_relationship = {"type": "child", "_id": new_id}
         document['relationships'].append(parent_relationship)
         print(document['relationships'])
+        print(document)
         utils.commit_with_retry(transaction_session)
     return new_id
 
