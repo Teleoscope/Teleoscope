@@ -1,0 +1,31 @@
+- hosts: "{{ groups['coordinators'] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files: 
+    - ./vars/vars.yaml
+  become: yes
+
+  tasks:
+    - name: "Ensure directory exists: /home/{{ ansible_user }}/.aws/"
+      file: 
+        path: "/home/{{ ansible_user }}/.aws/"
+        state: directory
+    - name: Install pip packages
+      ansible.builtin.pip:
+        name: 
+          - boto3
+          - celery 
+          - python-dotenv
+          - numpy
+        executable: "/usr/bin/pip"
+    - name: Copy AWS credentials
+      ansible.builtin.template:
+        src: ./awscredentials.j2
+        dest: "/home/{{ ansible_user }}/.aws/credentials"
+    - name: Copy AWS config
+      ansible.builtin.template:
+        src: ./awsconfig.j2
+        dest: "/home/{{ ansible_user }}/.aws/config"
+    - name: Copy .env.coordinator
+      ansible.builtin.template:
+        src: ./.env.coordinator.j2
+        dest: "/home/{{ ansible_user }}/.env.coordinator"

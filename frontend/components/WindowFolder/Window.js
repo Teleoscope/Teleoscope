@@ -5,103 +5,103 @@ import React, { useState } from "react";
 import WindowTopBar from "./WindowTopBar";
 
 // mui
-import Chip from '@mui/material/Chip';
-import Card from '@mui/material/Card';
-import CardActionArea from '@mui/material/CardActionArea';
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import Card from "@mui/material/Card";
+
+import Paper from "@mui/material/Paper";
+
+import CardActionArea from "@mui/material/CardActionArea";
+import Divider from "@mui/material/Divider";
 
 // actions
 import { useDispatch } from "react-redux";
-import { minimizeWindow, maximizeWindow, checkWindow, removeWindow } from "../../actions/windows";
+import { removeWindow } from "../../actions/windows";
 
-export default React.forwardRef(({ ...props }) => {
-    const [show, setShow] = useState(props.showWindow);
-    const [drag, setDrag] = useState(true);
-    const w = props.windata;
-    const dispatch = useDispatch();
-    
-    const handleMove = (e) => {
-        if (e.buttons == 1) {
-            setDrag(true);
-        } else {
-            setDrag(false);
-        }
-    }
+export default function Window (props) {
+  const w = props.windata;
+  const dispatch = useDispatch();
 
-    const handleSelect = (e) => {
-        if (e.shiftKey) {
-            dispatch(checkWindow({ i: w.i, check: !w.isChecked }))
-        }
-    }
+  const handleDelete = () => {
+    dispatch(removeWindow(props.id));
+  };
 
-    const handleChipClick = (e) => {
-        if (e.shiftKey) {
-            dispatch(checkWindow({ i: w.i, check: !w.isChecked }))
-        } else {
-            handleShow();
-        }
-    }
-
-    const handleShow = () => {
-        if (show) {
-            dispatch(minimizeWindow(props.id));
-            setShow(false);
-        }
-        if (!show && !drag) {
-            dispatch(maximizeWindow(props.id));
-            setShow(true);
-        }
-    }
-
-    const handleDelete = () => {
-        dispatch(removeWindow(props.id));
-    }
-
-    if (!show) {
-        return (
-            <Chip
-                label={props.title}
-                icon={props.icon}
-                clickable
-                onDelete={handleDelete}
-                onClick={(e) => handleChipClick(e)}
-                className="drag-handle"
-                onMouseMove={(e) => handleMove(e)}
-                sx={{
-                    border: w.isChecked ? `2px solid ${props.color}` : "1px solid #DDDDDD",
-                    boxShadow: '1',
-                    cursor: "move",
-                    backgroundColor: "white",
-                    [`& .MuiChip-icon`]: {
-                        color: props.color
-                      }
-                }}
-            />
-        )
-    }
-
+  if (props.size.width < props.size.minWidth + 1 ) {
     return (
-        <Card
-            variant="outlined"
-            style={{
-                borderColor: w.isChecked ? props.color : "#DDDDDD",
-                borderWidth: w.isChecked ? 2 : 1,
-                backgroundColor: "white",
-                height: "100%",
-            }}
-            sx={{
-                boxShadow: '1',
-            }}
-        ><CardActionArea
-            onClick={(e) => handleSelect(e)}
-        >
-                <WindowTopBar
-                    title={props.title}
-                    id={props.id}
-                    icon={props.icon}
-                    handleShow={handleShow}
-                    isChecked={w.isChecked}
-                /></CardActionArea>
-            {props.inner}
-        </Card>
-    )
-})    
+      <Chip
+        windata={w}
+        icon={props.icon}
+        sx={{
+          border: w.isChecked
+            ? `2px solid ${props.color}`
+            : "1px solid #DDDDDD",
+          boxShadow: "1",
+          cursor: "move",
+          backgroundColor: "white",
+          [`& .MuiChip-icon`]: {
+            color: props.color,
+            fontSize: "1.5em",
+            marginLeft: "1em",
+          },
+        }}
+      />
+    );
+  }
+
+  if (props.size.height < props.size.minHeight + 1) {
+    return (
+      <Chip
+        windata={w}
+        label={props.title}
+        icon={props.icon}
+        clickable
+        onDelete={handleDelete}
+        className="drag-handle"
+        sx={{
+          border: w.isChecked
+            ? `2px solid ${props.color}`
+            : "1px solid #DDDDDD",
+          boxShadow: "1",
+          cursor: "move",
+          backgroundColor: "white",
+          width: props.size.width,
+          [`& .MuiChip-icon`]: {
+            color: props.color,
+          },
+        }}
+      />
+    );
+  }
+
+  return (
+    <Paper
+      variant="outlined"
+      style={{
+        backgroundColor: "white",
+        height: "100%",
+        width: "100%",
+      }}
+      sx={{
+        boxShadow: "1",
+      }}
+    >
+      <Stack
+      sx={{ width: "100%", height: "100%" }}
+      >
+        <WindowTopBar
+          title={props.title}
+          id={props.id}
+          icon={props.icon}
+          isChecked={w.isChecked}
+        />
+        <Divider />
+      <div
+        className="nodrag nowheel"
+        style={{ overflow: "auto", width: "100%", height: "100%" }}
+      >
+        {props.inner}
+      </div>
+      </Stack>
+    </Paper>
+  );
+}

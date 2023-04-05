@@ -1,0 +1,22 @@
+// must be run with pm2
+// npm install -g pm2
+// pm2 start ecosystem.config.js
+// pm2 monit
+const os = require("os");
+let userInfo = os.userInfo();
+console.log("User info:", userInfo);
+
+module.exports = {
+  apps: [
+    {
+      name: "coordinator",
+      cwd: "./",
+      script: "/usr/bin/python3",
+      args: `-m celery -A coordinator worker --loglevel=INFO -n coordinator.${userInfo.username}@%h`,
+      watch: false,
+      interpreter: "",
+      max_memory_restart: "1G"
+    },
+
+  ]
+};

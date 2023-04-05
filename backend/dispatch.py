@@ -14,9 +14,6 @@ import tasks
 
 from tasks import robj, app
 
-# Thanks to http://brandonrose.org/clustering!
-# and https://towardsdatascience.com/how-to-rank-text-content-by-semantic-similarity-4d2419a84c32
-
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -49,6 +46,24 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # These should exactly implement the interface standard
         # Make sure they look like Stomp
 
+        if task == 'update_edges':
+            res = tasks.initialize_session.signature(
+                args=(),
+                kwargs={
+                    "edges": args["edges"]
+                },
+            )
+
+        if task == 'copy_cluster':
+            res = tasks.copy_cluster.signature(
+                args=(),
+                kwargs={
+                    "userid": args["userid"],
+                    "cluster_id": args["cluster_id"],
+                    "session_id": args["session_id"]
+                },
+            )
+
         if task == 'initialize_session':
             res = tasks.initialize_session.signature(
                 args=(),
@@ -67,6 +82,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "session_id": args["session_id"],
                     "bookmarks": args["bookmarks"],
                     "windows": args["windows"],
+                    "edges": args["edges"],
+
                 },
             )
 
@@ -81,11 +98,15 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             )
 
         if task == "initialize_teleoscope":
+            label = "default"
+            if "label" in args:
+                label = args["label"]
             res = tasks.initialize_teleoscope.signature(
                 args=(),
                 kwargs={
                     "userid": args["userid"],
-                    "session_id": args["session_id"]
+                    "session_id": args["session_id"],
+                    "label": label
                 },
             )
 
@@ -147,6 +168,14 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             res.apply_async()
             return
 
+        if task == "update_edges":
+            res = chain(robj.s(edges=args["edges"],
+                       userid=args["userid"]
+                ).set(queue=auth.rabbitmq["task_queue"]))
+            res.apply_async()
+            return
+
+        
         if task == "add_group":
             res = tasks.add_group.signature(
                 args=(),

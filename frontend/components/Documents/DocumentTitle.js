@@ -11,7 +11,7 @@ import '@fontsource/roboto/700.css';
 
 export default function DocumentTitle(props) {
    return (
-
+         
          <Typography
             variant={props.size == "small" ? "caption" : "subtitle"}
             color={props.color ? props.color : "black"}

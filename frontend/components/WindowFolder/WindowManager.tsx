@@ -85,7 +85,7 @@ export default function WindowManager(props) {
 
   const handleLayoutChange = (layout) => {
     if (client.loaded) {
-      client.save_UI_state(session_id, bookmarks, windows)
+      client.save_UI_state(session_id, bookmarks, windows, [])
     }
   } 
 

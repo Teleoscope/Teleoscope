@@ -23,8 +23,7 @@ import Session from "../Session";
 // actions
 import { useSelector, useDispatch } from "react-redux";
 import { sessionActivator, setUserId } from "../../actions/activeSessionID";
-import { loadWindows, setDefault } from "../../actions/windows";
-import { loadBookmarkedDocuments } from "../../actions/bookmark";
+import { setDefault } from "../../actions/windows";
 import { getGroups } from "../../actions/groups";
 
 // utilities
@@ -61,13 +60,6 @@ export default function TopBar(props) {
   const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
   const { users } = useSWRAbstract("users", `/api/users/`);
   const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
-
-  if (session?.history?.length > 0 && !loaded) {
-    setLoaded(true);
-    var history_item = session.history[0];
-    dispatch(loadBookmarkedDocuments(history_item["bookmarks"]));
-    dispatch(loadWindows(history_item["windows"]));
-  }
 
   const handleSignOut = () => {
     setCookie("userid", -1, {
@@ -119,7 +111,7 @@ export default function TopBar(props) {
       // show all users that are not already in userlist
       return users.map((u) => {
         if (!owner.includes(u._id) && !contributors.includes(u._id)) {
-          return (<MenuItem value={u}>{u.username}</MenuItem>)
+          return (<MenuItem key={u._id} value={u}>{u.username}</MenuItem>)
         }
       })
     }
@@ -197,6 +189,7 @@ export default function TopBar(props) {
           setDialogValue={setDialogValue}
           session_id={session_id}
           client={client}
+          key={"addUserDialog" + session_id}
         />
       </Stack>
 

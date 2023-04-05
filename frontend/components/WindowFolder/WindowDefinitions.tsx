@@ -82,7 +82,7 @@ export default function WindowDefinitions() {
         },
         "FABMenu": {
             icon: () => { return <AddIcon fontSize="inherit" /> },
-            component: (w, id, color) => { return (<FABMenu id={id} windata={w} color={color} />) },
+            component: (w, id, color) => {return (<FABMenu id={id} windata={w} color={color} />) },
             showWindow: false,
             title: () => { return "FABMenu" },
             color: () => get_color(),
