@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import space from 'color-space';
 import hexRgb from 'hex-rgb';
 import rgbHex from 'rgb-hex';
+import { useRouter } from 'next/router';
 
 // material ui
 import { Menu, MenuItem, rgbToHex, Typography } from "@mui/material";
@@ -41,6 +42,7 @@ export default function TopBar(props) {
   const userid = useSelector((state) => state.activeSessionID.userid);
   const [loaded, setLoaded] = React.useState(false);
   const dispatch = useDispatch();
+  const router = useRouter();
 
   const client = Stomp.getInstance();
   client.userId = userid;
@@ -49,6 +51,11 @@ export default function TopBar(props) {
 
   useEffect(()=> {
     if (cookies.userid != -1) {
+      // TODO: check the cookies.userid before do this.
+      // if cookies.userid === undefined, route to login page.
+      if (cookies.userid == undefined) {
+        router.push('/account/login');
+      }
       fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${cookies.userid}`)
       .then((response) => response.json())
       .then((user) => {
