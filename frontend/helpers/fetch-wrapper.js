@@ -30,7 +30,6 @@ function post(url, body) {
       body: JSON.stringify(body)
    };
 
-   console.log('Fetch response',  fetch(url, requestOptions).then(response => { return response}))
    return fetch(url, requestOptions);
    //.then(handleResponse);
 }
@@ -70,12 +69,8 @@ function authHeader(url) {
 }
 
 function handleResponse(response) {
-   console.log('Response', response)
    return response.text().then(text => {
       const data = text && JSON.parse(text);
-      console.log('Text', text)
-      console.log('data', data)
-
       if (!response.ok) {
          if ([401, 403].includes(response.status) && userService.userValue) {
             // auto logout if 401 Unauthorized or 403 Forbidden response returned from api

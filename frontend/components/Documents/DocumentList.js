@@ -7,9 +7,11 @@ import Stack from "@mui/material/Stack";
 
 // custom components
 import DocumentListItem from "./DocumentListItem";
+import withDroppable from "../DropItem";
 
 export default function DocumentList(props) {
   const data = props.data;
+
 
   // pagination
   const [pageNumber, setPageNumber] = useState(1);
@@ -27,22 +29,23 @@ export default function DocumentList(props) {
     );
   }
 
-  const BuildDocumentListItem = (pair) => {
-    return (
-      <DocumentListItem id={pair[0]} key={pair[0] + "DocumentListItem"} {...props}>
-        {" "}
-      </DocumentListItem>
-    );
-  }
+  
+
+
+  const Item = (props) => <DocumentListItem group={props.group} key={props.id + "DocumentListItem"} {...props} />
+
 
   const changePage = (event, value) => {
     setPageNumber(value);
   };
+  
+ 
+
   return (
-    <List dense={true}>
+    <List dense={true} >
       {displayPagination
-        ? paginatedItems.map(pair => BuildDocumentListItem(pair))
-        : data.map(pair => BuildDocumentListItem(pair))
+        ? paginatedItems.map(pair => <DocumentListItem group={props.group} id={pair[0]} key={pair[0] + "DocumentListItem"} {...props} />)
+        : data.map(pair => <DocumentListItem group={props.group} id={pair[0]} key={pair[0] + "DocumentListItem"} {...props} />)
       }
 
       {displayPagination ? (

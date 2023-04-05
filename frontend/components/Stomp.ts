@@ -142,13 +142,28 @@ export class Stomp {
   /**
    * Saves the workspace UI state (window locations, bookmarks)
    */
-  save_UI_state(session_id: string, bookmarks, windows) {
+  save_UI_state(session_id: string, bookmarks, windows, edges) {
     const body = {
       task: 'save_UI_state',
       args: {
         session_id: session_id,
         bookmarks: bookmarks,
         windows: windows,
+        edges: edges
+      }
+    }
+    this.publish(body);
+    return body;
+  }
+
+  /**
+ * Updates Teleoscopes
+ */
+  update_edges(edges) {
+    const body = {
+      task: 'update_edges',
+      args: {
+        edges: edges
       }
     }
     this.publish(body);
@@ -173,11 +188,12 @@ export class Stomp {
   /**
    * Requests to create a Teleoscope object in MongoDB.
    */
-  initialize_teleoscope(session_id: string) {
+  initialize_teleoscope(session_id: string, label: string) {
     const body = {
       task: 'initialize_teleoscope',
       args: {
-        session_id: session_id
+        session_id: session_id,
+        label: label
       }
     }
     this.publish(body);
@@ -224,6 +240,22 @@ add_group(label: string, color: string, session_id: string) {
       session_id: session_id,
       label: label,
       color: color
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+
+/**
+ * Requests to copy cluster to groups in MongoDB.
+ */
+copy_cluster(cluster_id: string, session_id: string) {
+  const body = {
+    task: 'copy_cluster',
+    args: {
+      cluster_id: cluster_id,
+      session_id: session_id,
     }
   }
   this.publish(body);

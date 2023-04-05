@@ -53,5 +53,4 @@ function _delete(id) {
 
 function saveData() {
     fs.writeFileSync('data/users.json', JSON.stringify(users, null, 4));
-    console.log('JSON Data', JSON.stringify(users, null, 4))
 }

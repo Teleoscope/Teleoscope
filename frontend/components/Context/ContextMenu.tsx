@@ -13,7 +13,7 @@ import Divider from '@mui/material/Divider';
 import MenuActions from "./ContextMenuActions"
 
 // actions
-import { addWindow, selectAll, deselectAll } from "../../actions/windows";
+import { makeNode } from "../../actions/windows";
 
 // util
 import useSWRAbstract from "../../util/swr"
@@ -37,6 +37,24 @@ export default function ContextMenu(props) {
     const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
     const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
 
+    // props.contextMenu.mouseX 
+
+    
+
+    const handleAddNode = (id, type) => {
+        const newNode = {
+            id: id,
+            type: "windowNode",
+            position: {x: props.contextMenu.worldX, y: props.contextMenu.worldY},
+            style : { 
+            width: 400,
+            height: 300,
+            },
+            data: { label: `${id} node`, i: id, type: type },
+        };
+        dispatch(makeNode({node: newNode}))
+    }
+
     const teleoscopes = teleoscopes_raw?.map((t) => {
         const ret = {
             _id: t._id,
@@ -46,14 +64,15 @@ export default function ContextMenu(props) {
     });
 
     const handleOpenNewWindow = (menu_action) => {
-        dispatch(addWindow(MenuActions()[menu_action].default_window));
+        const w = { ...MenuActions()[menu_action].default_window }
+        handleAddNode(w.i, w.type);
         props.handleCloseContextMenu();
     }
 
     const handleExistingTeleoscope = (t) => {
         const w = { ...MenuActions()["Teleoscope"].default_window };
         w.i = t + w.i;
-        dispatch(addWindow(w))
+        handleAddNode(w.i, w.type)
         props.handleCloseContextMenu();
     }
 
@@ -128,14 +147,6 @@ export default function ContextMenu(props) {
             </MenuItem>
             <MenuItem onClick={() => handleOpenNewWindow("FABMenu")}>
                 Open Floating Menu
-            </MenuItem>
-            <Divider />
-
-            <MenuItem onClick={() => dispatch(selectAll(null))}>
-                Select All
-            </MenuItem>
-            <MenuItem onClick={() => dispatch(deselectAll(null))}>
-                Deselect All
             </MenuItem>
             <Divider />
             <MenuItem onClick={() => handleOpenColorPicker()}>Change session color</MenuItem>

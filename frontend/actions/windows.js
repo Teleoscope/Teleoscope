@@ -2,12 +2,15 @@
 import { createSlice } from '@reduxjs/toolkit'
 import _ from 'lodash';
 import { getDefaultWindow } from "../components/WindowFolder/WindowDefault"
+import { applyNodeChanges, applyEdgeChanges, addEdge } from 'reactflow';
 
 console.log("Loading windows.js");
 
 
 const initialState = {
-	
+		nodes: [],
+		edges: [],
+		logical_clock: -1,
 		windows: [
 			{
 				i: "default_FABMenu", 
@@ -28,6 +31,9 @@ export const Windows = createSlice({
 	name: 'windows',
 	initialState: initialState,
 	reducers: {
+		setLogicalClock: (state, action) => {
+			state.logical_clock = action.payload;
+		},
 		setDefault: (state, action) => {
 			state.windows = initialState.windows;
 		},
@@ -52,13 +58,21 @@ export const Windows = createSlice({
 			}
 		},
 		removeWindow: (state, action) => {
-			var temp = [...state.windows];	
-			var ids = state.windows.map((w) => {return w.i});
-			var index = ids.indexOf(action.payload);
-			if (index > -1) {
-				temp.splice(index, 1);
+			var temp_nodes = [...state.nodes];	
+			var node_ids = state.nodes.map((n) => {return n.id});
+			var node_index = node_ids.indexOf(action.payload);
+			if (node_index > -1) {
+				temp_nodes.splice(node_index, 1);
 			}
-			state.windows = temp;
+
+			var temp_edges = [...state.edges];	
+			var edge_ids = state.edges.map((e) => {return e.source});
+			var edge_index = edge_ids.indexOf(action.payload);
+			if (edge_index > -1) {
+				temp_edges.splice(edge_index, 1);
+			}
+			state.nodes = temp_nodes;
+			state.edges = temp_edges;
 		},
 		moveWindowToFront: (state, action) => {
 			var temp = [...state.windows];	
@@ -73,16 +87,14 @@ export const Windows = createSlice({
 			state.windows = temp;			
 		},
 		minimizeWindow: (state, action) => {
-			var temp = [...state.windows];
-			var ids = state.windows.map((w) => {return w.i});
-			var index = ids.indexOf(action.payload);
+			var temp = [...state.nodes];
+			var ids = state.nodes.map((w) => {return w.id});
+			var index = ids.indexOf(action.payload.id);
 			if (index > -1) {
-				temp[index].w = 4;
-				temp[index].h = 1;
-				temp[index].isResizable = false;
-				temp[index].resizeHandles = [];
-				temp[index].showWindow = false;
-				
+				temp[index].width = 60;
+				temp[index].height = 34;
+				temp[index].style.width = 60;
+				temp[index].style.height = 34;
 			}
 			state.windows = temp;
 		},
@@ -96,7 +108,6 @@ export const Windows = createSlice({
 				temp[index].isResizable = true;
 				temp[index].resizeHandles = ["se"];
 				temp[index].showWindow = true;
-
 			}
 			state.windows = temp;	
 		},
@@ -112,7 +123,6 @@ export const Windows = createSlice({
 			var temp = [...state.windows]
 			action.payload.forEach((w) => {
 				var index = state.windows.findIndex(item => w.i === item.i)
-				console.log("layout i", w, index)
 				if (index > -1) {
 					temp[index].x = w.x;
 					temp[index].y = w.y;
@@ -120,9 +130,7 @@ export const Windows = createSlice({
 					temp[index].w = w.w; 	
 				}
 			})
-			console.log("layout temp", temp)
 			state.windows = temp;
-			console.log("layout temp", temp, state.windows)
 
 		},
 		// checkWindow({i: str, check: bool})
@@ -150,11 +158,57 @@ export const Windows = createSlice({
 		},			
 		loadWindows: (state, action) => {
 			state.windows = action.payload;	
+		},
+		setNodes: (state, action) => {
+			state.logical_clock = action.payload.logical_clock;
+			state.nodes = action.payload.nodes;
+		},
+		setEdges: (state, action) => {
+			state.logical_clock = action.payload.logical_clock;
+			state.edges = action.payload.edges;
+		},
+		updateNodes: (state, action) => {
+			const changes = action.payload;
+			const nodes = applyNodeChanges(changes, state.nodes);
+			state.logical_clock = state.logical_clock + 1;
+			state.nodes = nodes;
+		},
+		updateEdges: (state, action) => {
+			const changes = action.payload;
+			const edges = applyEdgeChanges(changes, state.edges)
+			state.logical_clock = state.logical_clock + 1;
+			state.edges = edges;
+		},
+		setDraggable: (state, action) => {
+			var temp = [...state.nodes];
+			var index = temp.findIndex((w) => w.id == action.payload.id);
+			if (index >= 0) {
+				temp[index]["draggable"] = action.payload.draggable;
+			}
+			state.nodes = temp;
+		},
+		makeNode: (state, action) => {
+			var temp = [...state.nodes];
+			temp.push(action.payload.node);
+			state.logical_clock = state.logical_clock + 1;
+			state.nodes = temp;
+		},
+		makeEdge: (state, action) => {
+			var temp = [...state.edges, ...action.payload.edges];
+			state.logical_clock = state.logical_clock + 1;
+			state.edges = temp;
 		}
 	}
 })
 
 export const {
+	makeNode,
+	setDraggable,
+	updateNodes,
+	setEdges,
+	makeEdge,
+	updateEdges,
+	setNodes,
 	setDefault,
 	addWindow, 
 	removeWindow, 
@@ -167,6 +221,8 @@ export const {
 	checkWindow, 
 	selectAll, 
 	deselectAll,
-	moveWindowToFront 
+	moveWindowToFront,
+	setLogicalClock,
+	setWindows
 } = Windows.actions
 export default Windows.reducer

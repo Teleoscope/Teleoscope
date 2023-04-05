@@ -27,6 +27,8 @@
       ansible.builtin.pip:
         name: 
           - celery 
+          - python-dotenv
+          - boto3
           - pymongo 
           - hdbscan 
           - tensorflow 
@@ -34,4 +36,7 @@
           - matplotlib
           - zstandard
           - pygithub
+          - ujson
+          - tqdm
+          - spacy # python -m spacy download en_core_web_sm
         executable: "{{ conda_prefix }}/envs/{{ conda_environment }}/bin/pip"
