@@ -73,6 +73,10 @@ def test_create_child_valid_document():
 		document = db.documents.find_one({"_id": ObjectId("637eabe7f0a9482a337a11d5")})
 		assert child_document['text'] == document['text'][start:end]
 	finally:
+		db.documents.update_one(
+			{'_id':ObjectId("637eabe7f0a9482a337a11d5")},
+			{"$pull": {'relationships': {'child': id}}}
+		)
 		db.documents.delete_one({'_id': id})
 		
 #Case 3: valid document id, end_index outside range of document
@@ -111,6 +115,10 @@ def test_parent_create_using_create_child():
 				assert relation['_id'] == parent_id
 				break
 	finally:
+		db.documents.update_one(
+			{'_id':ObjectId("637eabe7f0a9482a337a11d5")},
+			{"$pull": {'relationships': {'child':id}}}
+		)
 		db.documents.delete_one({'_id': id})
 
 
