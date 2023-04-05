@@ -1,7 +1,9 @@
 import clientPromise from '../../../util/mongodb';
 import { ObjectId } from 'bson';
 
-export default async (req, res) => {
+import authDecorator from '../../../middlewares/authDecorator';
+
+export default authDecorator(async (req, res) => {
   const client = await clientPromise;
   const db = await client.db(process.env.NEXT_PUBLIC_DATABASE);
   const { sessionsargs } = req.query;
@@ -76,4 +78,4 @@ export default async (req, res) => {
 
   // returns groups or list of session objects dependending on the conditionals
   res.json(ret);
-};
+});

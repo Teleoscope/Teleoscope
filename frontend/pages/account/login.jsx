@@ -58,6 +58,8 @@ function Login() {
                   if (response.ok) {
                      // if log in is successful, store the token in a cookie and route to workspace
                      response.json().then(token => {
+                        setCookie('userid', username, {path: '/'});
+                        setCookie('user', username, {path: '/'});
                         setCookie('token', token, {path: '/'});
                         router.push('/');
                      });
