@@ -948,7 +948,7 @@ class reorient(Task):
             self.documentsCached = True
         else:
             logging.info("Documents are not cached, building cache now.")
-            db = utils.connect()
+            db = utils.connect(db=self.dbstring)
             allDocuments = utils.getAllDocuments(db, projection={'textVector':1, '_id':1}, batching=True, batchSize=10000)
             ids = [str(x['_id']) for x in allDocuments]
             logging.info(f'There are {len(ids)} ids in documents.')
@@ -1019,7 +1019,7 @@ class reorient(Task):
 
     def average(self, documents: list):
         if self.db is None:
-                self.db = utils.connect(db=auth.mongodb["db"])
+                self.db = utils.connect(db=self.dbstring)
         document_vectors = []
         for doc_id in documents:
             print(f'Finding doc {doc_id}')
@@ -1038,7 +1038,7 @@ class reorient(Task):
             _, _ = self.cacheDocumentsData()
 
         if self.db is None:
-            self.db = utils.connect(db=db)
+            self.db = utils.connect(db=self.dbstring)
 
 
         teleoscopes = {}
