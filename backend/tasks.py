@@ -936,10 +936,10 @@ class reorient(Task):
     def cacheDocumentsData(self, path=embedding_path):
         # cache embeddings
         from pathlib import Path
-        dir = Path(path).expanduser()
+        dir = Path("~/embeddings/").expanduser()
         dir.mkdir(parents=True, exist_ok=True)
-        npzpath = Path(f'~/{self.dbstring}/embeddings.npz').expanduser()
-        pklpath = Path(f'~/{self.dbstring}/ids.pkl').expanduser()
+        npzpath = Path(f'~/embeddings/{self.dbstring}/embeddings.npz').expanduser()
+        pklpath = Path(f'~/embeddings/{self.dbstring}/ids.pkl').expanduser()
         
         if npzpath.exists() and pklpath.exists():
             logging.info("Documents have been cached, retrieving now.")
@@ -1035,7 +1035,7 @@ class reorient(Task):
          
         if self.dbstring is None:
             self.dbstring = db
-            
+
         if self.documentsCached == False:
             _, _ = self.cacheDocumentsData()
 
