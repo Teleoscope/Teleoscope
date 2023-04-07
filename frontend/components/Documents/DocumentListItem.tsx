@@ -1,16 +1,15 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 
 // material ui
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
-import FlareIcon from "@mui/icons-material/Flare";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 // actions
-import { useAppSelector, useAppDispatch } from "../../hooks";
-import { RootState } from "../../stores/store";
-import { dragged } from "../../actions/windows";
-import { setDraggable } from "../../actions/windows";
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { RootState } from "@/stores/store";
+import { dragged } from "@/actions/windows";
+import { setDraggable } from "@/actions/windows";
 
 // custom
 import GroupSelector from "../GroupSelector";
@@ -18,17 +17,17 @@ import BookmarkSelector from "../BookmarkSelector";
 import DocumentTitle from "./DocumentTitle";
 
 //utils
-import useSWRAbstract from "../../util/swr";
-import { PreprocessTitle } from "../../util/Preprocessers";
+import { swrContext } from "@/util/swr";
+import { PreprocessTitle } from "@/util/Preprocessers";
 
 // contexts
-import { Stomp } from "../Stomp";
+import { StompContext } from "../Stomp";
 
 export default function DocumentListItem(props) {
   const userid = useAppSelector((state) => state.activeSessionID.userid);
-  const client = Stomp.getInstance();
-  client.userId = userid;
-  const { document } = useSWRAbstract("document", `/api/document/${props.id}`);
+  const client = useContext(StompContext)
+  const swr = useContext(swrContext);
+  const { document } = swr.useSWRAbstract("document", `document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;
 
   const showGroupIcon = Object.prototype.hasOwnProperty.call(

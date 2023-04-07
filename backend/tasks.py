@@ -41,8 +41,9 @@ def initialize_session(*args, **kwargs):
     kwargs: 
         userid: (string, Bson ObjectId format)
     """
-    transaction_session, db = utils.create_transaction_session()
-    
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+        
     # handle kwargs
     userid = kwargs["userid"]
     label = kwargs['label']
@@ -78,11 +79,14 @@ def recolor_session(*args, **kwargs):
     """
     Recolors a session.
     """
-    transaction_session, db = utils.create_transaction_session()
-    
     session_id = ObjectId(str(kwargs["session_id"]))
     userid = ObjectId(str(kwargs["userid"]))
+    
     color = kwargs["color"]
+
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
 
     with transaction_session.start_transaction():
         session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
@@ -108,7 +112,8 @@ def save_UI_state(*args, **kwargs):
         session_id: (int, represents ObjectId in int)
         history_item: (Dict)
     """
-    transaction_session, db = utils.create_transaction_session()
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
     
     session_id = ObjectId(str(kwargs["session_id"]))
 
@@ -154,8 +159,9 @@ def create_child(*args, **kwargs):
         end_index: (int, represents index from which you end slicing of the parent document)
         document_id: (int, represents ObjectId in int)
     """
-    transaction_session, db = utils.create_transaction_session()
-    # When you do transaction, you want to do it inside this transaction session
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+        # When you do transaction, you want to do it inside this transaction session
     with transaction_session.start_transaction(): 
         document_id = ObjectId(str(kwargs["document_id"]))
         start_index = kwargs['start_index']
@@ -186,8 +192,9 @@ def add_user_to_session(*args, **kwargs):
         contributor: (string, represent username of contributor to be added)
         session_id: (int, represents ObjectId in int)
     """
-    transaction_session, db = utils.create_transaction_session()
-
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     logging.info(f'Adding {kwargs["contributor"]} to {kwargs["session_id"]}.')
 
     # handle session id kwarg
@@ -268,8 +275,9 @@ def initialize_teleoscope(*args, **kwargs):
         session_id: string
         label: string (optional)
     """
-    transaction_session, db = utils.create_transaction_session()
-
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     # handle kwargs
     session_id = kwargs["session_id"]
     label = "default"
@@ -336,8 +344,9 @@ def save_teleoscope_state(*args, **kwargs):
         _id (int, represents ObjectId for a teleoscope)
         history_item (Dict)
     """
-    session, db = utils.create_transaction_session()
-
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     # handle args
     history_item = args[0]["history_item"]
     _id = str(args[0]["_id"])
@@ -353,7 +362,7 @@ def save_teleoscope_state(*args, **kwargs):
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Save Teleoscope state"
 
-    with session.start_transaction():
+    with transaction_session.start_transaction():
         result = db.teleoscopes.update_one({"_id": obj_id},
             {
                 '$push': {
@@ -362,9 +371,9 @@ def save_teleoscope_state(*args, **kwargs):
                         "$position": 0
                     }
                 }
-            }, session=session)
+            }, session=transaction_session)
         # logging.info(f'Saving teleoscope state: {result}')
-        utils.commit_with_retry(session)
+        utils.commit_with_retry(transaction_session)
 
 @app.task 
 def add_group(*args, human=True, description="A group", included_documents=[], **kwargs):
@@ -381,8 +390,9 @@ def add_group(*args, human=True, description="A group", included_documents=[], *
         color: (string, hex color)
         session_id: (string, represents ObjectId)
     """
-    transaction_session, db = utils.create_transaction_session()
-
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     # handle kwargs
     color = kwargs["color"]
     label = kwargs["label"]
@@ -469,8 +479,9 @@ def copy_cluster(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
     
-    transaction_session, db = utils.create_transaction_session()
-
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     cluster = db.clusters.find_one({"_id": cluster_id })
     session = db.sessions.find_one({"_id": session_id })
 
@@ -504,8 +515,9 @@ def recolor_group(*args, **kwargs):
     """
     Recolors a group.
     """
-    transaction_session, db = utils.create_transaction_session()
-
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     group_id = ObjectId(str(kwargs["group_id"]))
     userid = ObjectId(str(kwargs["userid"]))
     color = kwargs["color"]
@@ -537,8 +549,9 @@ def copy_group(*args, **kwargs):
         session_id:  (int, represent ObjectId for current session)
         group_id: (int, represent ObjectId for a group to be copies(
     """
-    transaction_session, db = utils.create_transaction_session()
-
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     # handle kwargs
     userid = kwargs["userid"]
     user = db.users.find_one({"_id": ObjectId(str(userid))})
@@ -607,8 +620,9 @@ def add_document_to_group(*args, **kwargs):
         group_id: (int, represents ObjectId for a group)
         document_id: (string, arbitrary)
     """
-    session, db = utils.create_transaction_session()
-
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     # handle kwargs
     group_id = ObjectId(kwargs["group_id"])
     document_id = kwargs["document_id"]
@@ -632,7 +646,7 @@ def add_document_to_group(*args, **kwargs):
     history_item["included_documents"].append(document_id)
     history_item["action"] = "Add document to group"
 
-    with session.start_transaction():
+    with transaction_session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
                 "$push":
                     {
@@ -641,8 +655,8 @@ def add_document_to_group(*args, **kwargs):
                             "$position": 0
                         }
                     }
-                }, session=session)
-        utils.commit_with_retry(session)
+                }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
     logging.info(f'Reorienting teleoscope {group["teleoscope"]} for group {group["history"][0]["label"]} for document {document_id}.')
     res = chain(
                 robj.s(teleoscope_id=group["teleoscope"],
@@ -668,8 +682,9 @@ def remove_group(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
 
-    transaction_session, db = utils.create_transaction_session()
-
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     with transaction_session.start_transaction():
         session = db.sessions.find_one({'_id': session_id}, session=transaction_session)
         group = db.groups.find_one({'_id': group_id}, session=transaction_session)
@@ -712,8 +727,9 @@ def remove_document_from_group(*args, **kwargs):
         group_id (int, represents ObjectId for a group)
         document_id (string, arbitrary)
     """
-    session, db = utils.create_transaction_session()
-
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     # handle kwargs
     group_id = ObjectId(kwargs["group_id"])
     document_id = kwargs["document_id"]
@@ -728,7 +744,7 @@ def remove_document_from_group(*args, **kwargs):
     history_item["included_documents"].remove(document_id)
     history_item["action"] = "Remove document from group"
 
-    with session.start_transaction():
+    with transaction_session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
             "$push":
                 {
@@ -737,8 +753,8 @@ def remove_document_from_group(*args, **kwargs):
                         "$position": 0
                     }
                 }
-            }, session=session)
-        utils.commit_with_retry(session)
+            }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
         
 
 @app.task
@@ -750,7 +766,8 @@ def update_group_label(*args, **kwargs):
         group_id: (int, represents ObjectId for a group)
         label: (string, arbitrary)
     """    
-    session, db = utils.create_transaction_session()
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs
     group_id = ObjectId(kwargs["group_id"])
@@ -764,7 +781,7 @@ def update_group_label(*args, **kwargs):
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Update group label"
 
-    with session.start_transaction():
+    with transaction_session.start_transaction():
         db.groups.update_one({'_id': group_id}, {
                 "$push":
                     {
@@ -773,8 +790,8 @@ def update_group_label(*args, **kwargs):
                             "$position": 0
                         }
                     }
-                }, session = session)
-        utils.commit_with_retry(session)
+                }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
 
 
 @app.task
@@ -786,7 +803,9 @@ def add_note(*args, **kwargs):
         id: document_id (string) 
     """    
     # Try finding document
-    session, db = utils.create_transaction_session()
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     document_id = kwargs["document_id"]
 
     if not db.documents.find_one({'id': document_id}):
@@ -801,10 +820,10 @@ def add_note(*args, **kwargs):
             "timestamp": datetime.datetime.utcnow()
         }]
     }
-    with session.start_transaction():
-        res = db.notes.insert_one(obj, session=session)
+    with transaction_session.start_transaction():
+        res = db.notes.insert_one(obj, session=transaction_session)
         logging.info(f"Added note for document {document_id} with result {res}.")
-        utils.commit_with_retry(session)
+        utils.commit_with_retry(transaction_session)
 
 
 @app.task
@@ -859,7 +878,8 @@ def update_edges(*arg, **kwargs):
     """
     Updates a Teleoscope according to edges.
     """
-    transaction_session, db = utils.create_transaction_session()
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
     edges = kwargs["edges"]
     
     
@@ -874,8 +894,9 @@ def register_account(*arg, **kwargs):
         username: (email)
     """
 
-    transaction_session, db = utils.create_transaction_session()
-
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
     #handle kwargs
     password = kwargs["password"]
     username = kwargs["username"]
@@ -1248,7 +1269,7 @@ def vectorize_text(text): #(text) -> Vector
     
 
 @app.task
-def add_single_document_to_database(document):
+def add_single_document_to_database(document, **kwargs):
     '''
     add_single_document_to_database
 
@@ -1257,7 +1278,8 @@ def add_single_document_to_database(document):
     purpose: This function adds a single document to the database
             (Ignores dictionaries containing error keys)
     '''
-    transaction_session, db = utils.create_transaction_session() 
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
     with transaction_session.start_transaction():
         # Insert document into database
         db.documents.insert_one(document, session=transaction_session)
@@ -1276,11 +1298,12 @@ def add_multiple_documents_to_database(documents):
     '''
     documents = (list (filter (lambda x: 'error' not in x, documents)))
     # Create session
-    session, db = utils.create_transaction_session()
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
     if len(documents) > 0:
         target = db.documents
-        with session.start_transaction():
+        with transaction_session.start_transaction():
             # Insert documents into database
-            target.insert_many(documents, session=session)
+            target.insert_many(documents, session=transaction_session)
             # Commit the session with retry
-            utils.commit_with_retry(session)
+            utils.commit_with_retry(transaction_session)

@@ -2,26 +2,34 @@
 import { createSlice } from '@reduxjs/toolkit'
 import _ from 'lodash';
 import { getDefaultWindow } from "../components/WindowFolder/WindowDefault"
-import { applyNodeChanges, applyEdgeChanges, addEdge } from 'reactflow';
+import { applyNodeChanges, applyEdgeChanges } from 'reactflow';
 
 console.log("Loading windows.js");
 
 
 const initialState = {
-		nodes: [],
+		nodes: [
+			{
+				"id": "default_FABMenu",
+				"type": "windowNode",
+				"position": {
+				  "x": 0,
+				  "y": 0
+				},
+				"style": {
+				  "width": 100,
+				  "height": 100
+				},
+				"data": {
+				  "label": "default_FABMenunode",
+				  "i": "default_FABMenu",
+				  "type": "FABMenu"
+				}
+			  }
+		],
 		edges: [],
 		logical_clock: -1,
 		windows: [
-			{
-				i: "default_FABMenu", 
-				x:1, 
-				y:1,
-				w:1,
-				h:2,
-				isDraggable: true, 
-				isResizable: false,
-				type: "FABMenu"
-			}
 		],
 		dragged: {id: "default", type: "Default"},
 		collision: true,

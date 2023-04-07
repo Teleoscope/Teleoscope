@@ -1,5 +1,5 @@
 // GroupPalette.js
-import React from "react";
+import React, { useContext } from "react";
 
 // MUI
 import TextField from "@mui/material/TextField";
@@ -31,11 +31,11 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CopyAllIcon from '@mui/icons-material/CopyAll';
 
 // actions
-import useSWRAbstract from "../../util/swr";
-import { useAppSelector, useAppDispatch } from "../../hooks";
+import { swrContext } from "@/util/swr";
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
 
 // contexts
-import { Stomp } from "../Stomp";
+import { StompContext } from "@/components/Stomp";
 import randomColor from "randomcolor";
 import { useCookies } from "react-cookie";
 import ColorPicker from "../ColorPicker";
@@ -44,11 +44,11 @@ import ButtonActions from "../ButtonActions";
 
 // custom components
 export default function GroupPalette(props) {
-  const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
-  const { users } = useSWRAbstract("users", `/api/users/`);
+  const swr = useContext(swrContext);
+  const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
+  const { users } = swr.useSWRAbstract("users", `users/`);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
-  const client = Stomp.getInstance();
-  client.userId = userid;
+  const client = useContext(StompContext)
   const dispatch = useAppDispatch();
   const [value, setValue] = React.useState(null);
   const [sessionValue, setSessionValue] = React.useState({ label: "" });
@@ -59,9 +59,9 @@ export default function GroupPalette(props) {
   const [open, toggleOpen] = React.useState(false);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
 
-  const { groups } = useSWRAbstract(
+  const { groups } = swr.useSWRAbstract(
     "groups",
-    `/api/sessions/${session_id}/groups`
+    `sessions/${session_id}/groups`
   );
   const group_labels = groups
     ? groups.map((g) => {
@@ -121,9 +121,9 @@ export default function GroupPalette(props) {
     const currSession = sessions.find((ss) => ss._id == selectedSession);
     if (currSession) {
       const groups = currSession.history[0]?.groups;
-      const groups_obj = useSWRAbstract(
+      const groups_obj = swr.useSWRAbstract(
         "groups",
-        `/api/sessions/${selectedSession}/groups`
+        `sessions/${selectedSession}/groups`
       );
 
       if (groups.length == 0) {
@@ -316,7 +316,7 @@ export default function GroupPalette(props) {
       var g = group;
       g["included_text"] = []
       for (const doc of g.history[0].included_documents) {
-        const response = await fetch(`/api/document/${doc}`).then(res => res.json())
+        const response = await fetch(`/api/${swr.database}/document/${doc}`).then(res => res.json())
         g["included_text"].push(response)
       }
       out.push(g)

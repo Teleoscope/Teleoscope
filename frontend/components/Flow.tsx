@@ -1,12 +1,14 @@
-import React, {useState, useCallback, useRef } from 'react';
-import ReactFlow, { MiniMap, ReactFlowProvider, Controls, Background, addEdge } from 'reactflow';
+import React, {useState, useCallback, useContext, useRef } from 'react';
+import ReactFlow, { MiniMap, ReactFlowProvider, Controls, Background, addEdge, Panel, useViewport } from 'reactflow';
 import 'reactflow/dist/style.css';
 import WindowNode from './Nodes/WindowNode'
-import { useAppSelector, useAppDispatch } from '../hooks'
-import { RootState } from '../stores/store'
-import useSWRAbstract from '../util/swr';
-import { setNodes, updateNodes, updateEdges, makeEdge, makeNode, removeWindow, setEdges } from "../actions/windows";
-import { Stomp } from './Stomp'
+
+import FABMenu from './FABMenu'
+import { useAppSelector, useAppDispatch } from '@/util/hooks'
+import { RootState } from '@/stores/store'
+import { swrContext } from '@/util/swr';
+import { setNodes, updateNodes, updateEdges, makeEdge, makeNode, removeWindow, setEdges } from "@/actions/windows";
+import { StompContext } from './Stomp'
 import ContextMenu from './Context/ContextMenu';
 
 const nodeTypes = { windowNode: WindowNode };
@@ -14,7 +16,6 @@ const multiSelectionKeyCode = ["Meta", "Control", "Shift"]
 const panOnDrag = [1]
 
 function Flow() {
-  
 
   const reactFlowWrapper = useRef(null);
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -25,10 +26,9 @@ function Flow() {
 
   const { nodes, edges, logical_clock } = useAppSelector((state) => state.windows);
 
-  const client = Stomp.getInstance();
-  client.userId = userid;
-
-  const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+  const client = useContext(StompContext)
+  const swr = useContext(swrContext);
+  const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const session_history_item = session?.history[0];
   const dispatch = useAppDispatch();
 
@@ -214,6 +214,17 @@ function Flow() {
     client.update_edges(alledges)
 }, []);
   
+const FABWrapper = () => {
+  var coords = {x: 0, y: 0, width: 1}
+  if (reactFlowInstance) {
+    const vp = reactFlowInstance.project({x: 100, y: 100})
+    coords.x = vp.x;
+    coords.y = vp.y;
+  }
+  return <FABMenu windata={{x: coords.x, y: coords.y, width: 1}}/>
+  
+}
+  
   return (
     <div className="providerflow">
       <ReactFlowProvider>
@@ -242,9 +253,10 @@ function Flow() {
 
       >
         <Background />
-        <MiniMap />
-
+        <MiniMap zoomable pannable />
         <Controls />
+        <Panel position="top-left" style={{margin: "2em"}}><FABWrapper /></Panel>
+
       </ReactFlow>
       <ContextMenu
         handleCloseContextMenu={handleCloseContextMenu}

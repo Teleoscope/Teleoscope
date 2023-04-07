@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import space from 'color-space';
 import hexRgb from 'hex-rgb';
 import rgbHex from 'rgb-hex';
@@ -22,18 +22,18 @@ import Session from "../Session";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";
-import { sessionActivator, setUserId } from "../../actions/activeSessionID";
-import { setDefault } from "../../actions/windows";
-import { getGroups } from "../../actions/groups";
+import { sessionActivator, setUserId } from "@/actions/activeSessionID";
+import { setDefault } from "@/actions/windows";
+import { getGroups } from "@/actions/groups";
 
 // utilities
 import { useCookies } from "react-cookie";
-import useSWRAbstract from "../../util/swr"
+import { swrContext } from "@/util/swr"
 
 
 
 // contexts
-import { Stomp } from '../Stomp'
+import { StompContext } from '@/components/Stomp'
 
 export default function TopBar(props) {
   const [cookies, setCookie] = useCookies(["userid"]);
@@ -41,15 +41,13 @@ export default function TopBar(props) {
   const userid = useSelector((state) => state.activeSessionID.userid);
   const [loaded, setLoaded] = React.useState(false);
   const dispatch = useDispatch();
-
-  const client = Stomp.getInstance();
-  client.userId = userid;
-
-  const { user } = useSWRAbstract("user", `/api/users/${userid}`);
+  const client = useContext(StompContext)
+  const swr = useContext(swrContext);
+  const { user } = swr.useSWRAbstract("user", `users/${userid}`);
 
   useEffect(()=> {
     if (cookies.userid != -1) {
-      fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${cookies.userid}`)
+      fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.database}/users/${cookies.userid}`)
       .then((response) => response.json())
       .then((user) => {
         handleSignIn(user)
@@ -57,9 +55,9 @@ export default function TopBar(props) {
     }
   }, [])
 
-  const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
-  const { users } = useSWRAbstract("users", `/api/users/`);
-  const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
+  const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
+  const { users } = swr.useSWRAbstract("users", `users/`);
+  const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
 
   const handleSignOut = () => {
     setCookie("userid", -1, {

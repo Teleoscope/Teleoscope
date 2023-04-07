@@ -1,4 +1,7 @@
 import { Client } from "@stomp/stompjs";
+import React, {createContext} from "react";
+
+export const StompContext = createContext(null)
 
 // TODO: look at websocket example code here and replicate
 // anywhere that needs to route a request to the server
@@ -24,23 +27,26 @@ interface Body {
 export class Stomp {
 
   private _userid: string;
+  private database: string;
   private client: Client;
   private static stomp: Stomp;
   private creationTime: Date;
   private _loaded: boolean;
 
-  private constructor() {
+  private constructor(options) {
     this.creationTime = new Date();
     this.loaded = false;
+    this.database = options.database;
+    this._userid = options.userid;
   }
 
   /**
    * Ensure that there is only one copy of the Stomp class.
    * @returns 
    */
-  public static getInstance(): Stomp {
+  public static getInstance(options): Stomp {
     if (!Stomp.stomp) {
-      Stomp.stomp = new Stomp();
+      Stomp.stomp = new Stomp(options);
       Stomp.stomp.client_init();
     }
     return Stomp.stomp;
@@ -114,6 +120,7 @@ export class Stomp {
   publish(body: Body) {
     const headers = { content_type: "application/json", content_encoding: "utf-8" };
     body['args']['userid'] = this.userId;
+    body['args']['db'] = this.database;
     this.client.publish({
       destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,
       headers: headers,

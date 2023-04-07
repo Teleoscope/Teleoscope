@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useContext } from "react";
 import Window from "./Window"
 import WindowDefinitions from "./WindowDefinitions"
-import useSWRAbstract from "../../util/swr"
+import { swrContext } from "@/util/swr"
 
 export default function WindowFactory(props) {
 	const w = props.windata;
@@ -25,8 +25,8 @@ export default function WindowFactory(props) {
 	const id = w.i.split("%")[0];
 
 	const key = keymap[type];
-
-	const { data } = useSWRAbstract("data", `/api/${key}/${id}`);
+	const swr = useContext(swrContext);
+	const { data } = swr.useSWRAbstract("data", `${key}/${id}`);
 
 	if (w.type == "FABMenu") {
 		return (

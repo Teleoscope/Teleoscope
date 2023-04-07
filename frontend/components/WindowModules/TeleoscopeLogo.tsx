@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 
 // MUI
 import { Link, Typography } from '@mui/material';

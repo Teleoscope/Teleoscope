@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Button, Stack, TextField } from '@mui/material';
 import { InputAdornment } from '@mui/material';
 import { alpha } from "@mui/material";
-
+import { swrContext } from "@/util/swr"
 import { AccountCircle } from '@mui/icons-material';
 
 export default function Account(props) {
+  const swr = useContext(swrContext)
+
   const [value, setValue] = React.useState("")
    const handleKeyPress = (e) => {
     if (e.key === "Enter") {
@@ -16,7 +18,7 @@ export default function Account(props) {
    }
 
    const handleTimeOut = (username) => {
-    fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/user/${username}`)
+    fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.database}/user/${username}`)
         .then((response) => response.json())
         .then((user) => {
           if (user != null) {
@@ -29,7 +31,7 @@ export default function Account(props) {
 
     // Helper functions
     const handleEnterUser = (username) => {
-      fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/user/${username}`)
+      fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.database}/user/${username}`)
         .then((response) => response.json())
         .then((user) => {
           if (user != null) {

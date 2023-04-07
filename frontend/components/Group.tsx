@@ -9,18 +9,19 @@ import IconButton from "@mui/material/IconButton";
 import DocumentList from "./Documents/DocumentList"
 
 //utils
-import useSWRAbstract from "../util/swr"
+import { swrContext } from "@/util/swr"
 import ButtonActions from './ButtonActions';
 
 export default function Group(props) {
   const id = props.id.split("%")[0];
-  const { group } = useSWRAbstract("group", `/api/groups/${id}`);
+  const swr = useContext(swrContext);
+  const { group } = swr.useSWRAbstract("group", `groups/${id}`);
   const data = group?.history[0].included_documents.map((p) => { return [p, 1.0] });
 
   const fetchdocs = async () => {
     var docs = []    
     for (const [pid, s] of data) {
-      const response = await fetch(`/api/document/${pid}`).then(res => res.json())
+      const response = await fetch(`/api/${swr.database}/document/${pid}`).then(res => res.json())
       docs = docs.concat([response])
     }
     return docs;

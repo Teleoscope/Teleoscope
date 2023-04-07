@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useContext } from "react";
 
-import { useAppSelector, useAppDispatch } from '../../hooks'
-import { RootState } from '../../stores/store'
+import { useAppSelector, useAppDispatch } from '@/util/hooks'
+import { RootState } from '@/stores/store'
 
 // mui
 import Menu from '@mui/material/Menu';
@@ -13,29 +13,29 @@ import Divider from '@mui/material/Divider';
 import MenuActions from "./ContextMenuActions"
 
 // actions
-import { makeNode } from "../../actions/windows";
+import { makeNode } from "@/actions/windows";
 
 // util
-import useSWRAbstract from "../../util/swr"
+import { swrContext } from "@/util/swr"
 //import { cluster_by_groups, initialize_teleoscope } from "../Stomp";
 
 // contexts
-import { Stomp } from '../Stomp'
+import { StompContext } from '../Stomp'
 import ColorPicker from "../ColorPicker";
 import Typography from "@mui/material/Typography";
 
 export default function ContextMenu(props) {
     const userid = useAppSelector((state: RootState) => state.activeSessionID.userid);
-    const client = Stomp.getInstance();
-    client.userId = userid;
+    const client = useContext(StompContext)
 
     const [colorPicker, setColorPicker] = React.useState(false);
 
     const dispatch = useAppDispatch();
 
     const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
-    const { teleoscopes_raw } = useSWRAbstract("teleoscopes_raw", `/api/sessions/${session_id}/teleoscopes`);
-    const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+    const swr = useContext(swrContext);
+    const { teleoscopes_raw } = swr.useSWRAbstract("teleoscopes_raw", `sessions/${session_id}/teleoscopes`);
+    const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
 
     // props.contextMenu.mouseX 
 

@@ -16,7 +16,7 @@ import Divider from "@mui/material/Divider";
 
 // actions
 import { useDispatch } from "react-redux";
-import { removeWindow } from "../../actions/windows";
+import { removeWindow } from "@/actions/windows";
 
 export default function Window (props) {
   const w = props.windata;

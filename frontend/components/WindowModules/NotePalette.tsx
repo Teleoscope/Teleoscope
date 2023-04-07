@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 // mui
 import List from '@mui/material/List';
@@ -7,15 +7,16 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import CommentIcon from '@mui/icons-material/Comment';
 // actions
-import { useAppDispatch } from '../../hooks'
-import { dragged } from "../../actions/windows";
+import { useAppDispatch } from '@/util/hooks'
+import { dragged } from "@/actions/windows";
 
 // utils
-import useSWRAbstract from "../../util/swr"
+import { swrContext } from "@/util/swr"
 
 
 function NotePaletteItem(props) {
-  const { obj } = useSWRAbstract("obj", `/api/${props.note.key}/${props.note.oid}`);
+  const swr = useContext(swrContext);
+  const { obj } = swr.useSWRAbstract("obj", `${props.note.key}/${props.note.oid}`);
   let title = "Note";
   let description = "";
   if (props.note.key == "document" && obj) {
@@ -32,7 +33,8 @@ function NotePaletteItem(props) {
 }
 
 export default function NotePalette(props) {
-    const { notes } = useSWRAbstract("notes", `/api/notes/`);
+    const swr = useContext(swrContext);
+    const { notes } = swr.useSWRAbstract("notes", `notes/`);
     const dispatch = useAppDispatch();
 
     return (

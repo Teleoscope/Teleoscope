@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { useSelector } from "react-redux";
-import useSWRAbstract from "../../util/swr"
+import { swrContext } from "@/util/swr"
 
 // mui
 import ShortTextIcon from '@mui/icons-material/ShortText';
@@ -14,7 +14,7 @@ import Diversity2Icon from '@mui/icons-material/Diversity2';
 import CommentIcon from '@mui/icons-material/Comment';
 
 // actions
-import { RootState } from '../../stores/store'
+import { RootState } from '@/stores/store'
 
 // custom
 import Notes from "../WindowModules/Notes"
@@ -28,12 +28,13 @@ import GroupPalette from "../WindowModules/GroupPalette"
 import Clusters from "../Cluster/Clusters"
 import Cluster from '../Cluster/Cluster';
 
-import { PreprocessTitle } from "../../util/Preprocessers"
+import { PreprocessTitle } from "@/util/Preprocessers"
 import NotePalette from '../WindowModules/NotePalette';
 
 export default function WindowDefinitions() {
     const session_id = useSelector((state: RootState) => state.activeSessionID.value);
-    const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+    const swr = useContext(swrContext);
+    const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
 
     interface Document {
         title: string;
@@ -44,7 +45,7 @@ export default function WindowDefinitions() {
 
     // Helper functions
     const getReferencedDocument = (oid) => {
-        fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/document/${oid}`)
+        fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.database}/document/${oid}`)
             .then((response) => response.json())
             .then((data) => setDoc(data))
     }

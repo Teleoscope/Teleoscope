@@ -4,8 +4,8 @@ import { createSlice } from '@reduxjs/toolkit'
 export const ActiveSessionID = createSlice({
   name: 'activeSessionID',
   initialState: {
-    value: "-1",
-    userid: "-1"
+    value: "642f37867d81bd8062d1f63f",
+    userid: "642f37867d81bd8062d1f63d"
   },
   reducers: {
     sessionActivator: (state, action) => {

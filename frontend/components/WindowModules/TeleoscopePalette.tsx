@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 
 // mui
 import List from "@mui/material/List";
@@ -10,25 +10,26 @@ import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
 
 // actions
-import { useAppSelector, useAppDispatch } from "../../hooks";
-import { RootState } from "../../stores/store";
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { RootState } from "@/stores/store";
 
 // utils
-import useSWRAbstract from "../../util/swr";
+import { swrContext } from "@/util/swr";
 import withDroppable from "../DropItem";
-import { Stomp } from "../Stomp";
+import { StompContext } from "@/components/Stomp";
 
 export default function TeleoscopePalette(props) {
   const userid = useAppSelector((state) => state.activeSessionID.userid);
 
-  const client = Stomp.getInstance();
-  client.userId = userid;
+  const client = useContext(StompContext)
+
   const session_id = useAppSelector(
     (state: RootState) => state.activeSessionID.value
   );
-  const { teleoscopes_raw } = useSWRAbstract(
+  const swr = useContext(swrContext);
+  const { teleoscopes_raw } = swr.useSWRAbstract(
     "teleoscopes_raw",
-    `/api/sessions/${session_id}/teleoscopes`
+    `sessions/${session_id}/teleoscopes`
   );
   const dispatch = useAppDispatch();
 

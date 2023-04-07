@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Editor, EditorState, convertFromRaw, convertToRaw } from "draft-js";
 import "draft-js/dist/Draft.css";
 
@@ -7,21 +7,21 @@ import Stack from '@mui/material/Stack';
 import Card from '@mui/material/Card';
 
 // actions
-import { useAppSelector } from '../../hooks'
-import { RootState } from '../../stores/store'
+import { useAppSelector } from '@/util/hooks'
+import { RootState } from '@/stores/store'
 
 //utils
-import useSWRAbstract from "../../util/swr"
+import { swrContext } from "@/util/swr"
 
 // contexts
-import { Stomp } from '../Stomp'
+import { StompContext } from '@/components/Stomp'
 
 export default function Note(props) {
   const id = props.id.split("%")[0]
-  const { note } = useSWRAbstract("note", `/api/note/${id}`);
+  const swr = useContext(swrContext);
+  const { note } = swr.useSWRAbstract("note", `note/${id}`);
   const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); //value was userid
-  const client = Stomp.getInstance();
-  client.userId = userid;
+  const client = useContext(StompContext)
   const editor = React.useRef(null);
 
 

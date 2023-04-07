@@ -1,5 +1,5 @@
 // Window.js
-import React from "react";
+import React, { useContext } from "react";
 
 // custom
 import DocumentText from "./DocumentText";
@@ -14,14 +14,15 @@ import CopyAllIcon from '@mui/icons-material/CopyAll';
 import Tooltip from "@mui/material/Tooltip";
 
 //utils
-import useSWRAbstract from "../../util/swr";
-import { PreprocessText } from "../../util/Preprocessers";
+import { swrContext } from "@/util/swr";
+import { PreprocessText } from "@/util/Preprocessers";
 import ButtonActions from "../ButtonActions";
 
 
 export default function Document(props) {
   const id = props.id.split("%")[0];
-  const { document } = useSWRAbstract("document", `/api/document/${id}`);
+  const swr = useContext(swrContext);
+  const { document } = swr.useSWRAbstract("document", `document/${id}`);
   const text = document ? PreprocessText(document.text) : false;
 
   const handleLinkClick = () => {

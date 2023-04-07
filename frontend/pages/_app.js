@@ -1,8 +1,7 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-
-import '../styles/global.css';
+import '@/styles/global.css';
 
 
 import { userService } from '../services/user.service';
@@ -48,12 +47,10 @@ function App({ Component, pageProps }) {
             setAuthorized(true);
         }
     }
-
     return (
         <>
             <Head>
                 <title>Teleoscope</title>
-                <link href="//netdna.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
             </Head>
 
             <main>

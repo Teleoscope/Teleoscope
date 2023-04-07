@@ -1,6 +1,6 @@
 // EditableText.tsx
 
-import React from "react";
+import React, { useContext } from "react";
 
 // Creat an EditableText component
 function EditableText(props) {

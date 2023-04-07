@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 
 // mui
 import TextField from '@mui/material/TextField';
@@ -10,18 +10,19 @@ import Stack from '@mui/material/Stack';
 
 // actions
 import { useDispatch } from "react-redux";
-import { updateWindow } from "../../actions/windows";
+import { updateWindow } from "@/actions/windows";
 
 // custom components
 import DocumentList from "../Documents/DocumentList"
 
 // util
-import useSWRAbstract from "../../util/swr"
+import { swrContext } from "@/util/swr"
 
 
 export default function SearchWindow(props) {
   const [query, setQuery] = useState(" ");
-  const { documents, documents_loading } = useSWRAbstract("documents", `/api/search/${query}`);
+  const swr = useContext(swrContext);
+  const { documents, documents_loading } = swr.useSWRAbstract("documents", `search/${query}`);
   const dispatch = useDispatch();
 
   // this is a hard-coded hack for ranking of document_id

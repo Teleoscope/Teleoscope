@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 
 // Mui imports
 import ListItemText from "@mui/material/ListItemText";
@@ -11,22 +11,23 @@ import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import FolderCopyIcon from "@mui/icons-material/FolderCopy";
 
 // actions
-import { useAppSelector } from "../hooks";
+import { useAppSelector } from "../util/hooks";
 
 // contexts
-import { Stomp } from "./Stomp";
+import { StompContext } from './Stomp'
 
 //utils
-import useSWRAbstract from "../util/swr";
+import { swrContext } from "@/util/swr";
 
 export default function groupSelector(props) {
   const userid = useAppSelector((state) => state.activeSessionID.userid);
-  const client = Stomp.getInstance();
-  client.userId = userid;
+  const client = useContext(StompContext)
+
   const session_id = useAppSelector((state) => state.activeSessionID.value);
-  const { groups } = useSWRAbstract(
+  const swr = useContext(swrContext);
+  const { groups } = swr.useSWRAbstract(
     "groups",
-    `/api/sessions/${session_id}/groups`
+    `sessions/${session_id}/groups`
   );
 
   const groups_this_document_belongs_to = groups

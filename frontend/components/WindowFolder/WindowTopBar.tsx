@@ -1,5 +1,5 @@
 // WindowTopBar.js
-import React from "react";
+import React, { useContext } from "react";
 
 // MUI
 import Stack from "@mui/material/Stack";
@@ -11,7 +11,7 @@ import CloseButton from "../CloseButton"
 
 // actions
 import { useDispatch } from "react-redux";
-import { minimizeWindow } from "../../actions/windows";
+import { minimizeWindow } from "@/actions/windows";
 
 export default function WindowTopBar(props) {
 	const dispatch = useDispatch();
