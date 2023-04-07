@@ -8,8 +8,6 @@ import schemas
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
-db = auth.mongodb["db"]
-embedding_path = f'~/{db}/embeddings/'
 
 # url: "amqp://myuser:mypassword@localhost:5672/myvhost"
 CELERY_BROKER_URL = (
@@ -1293,7 +1291,7 @@ def add_single_document_to_database(document, **kwargs):
         utils.commit_with_retry(transaction_session)
 
 @app.task
-def add_multiple_documents_to_database(documents):
+def add_multiple_documents_to_database(documents, **kwargs):
     '''
     add_single_document_to_database
 
