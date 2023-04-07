@@ -1032,14 +1032,16 @@ class reorient(Task):
 
     def run(self, edges: list, userid: str, db: str, **kwargs):
          # Check if document ids and vectors are cached
+         
+        if self.dbstring is None:
+            self.dbstring = db
+            
         if self.documentsCached == False:
             _, _ = self.cacheDocumentsData()
 
         if self.db is None:
             self.db = utils.connect(db=db)
 
-        if self.dbstring is None:
-            self.dbstring = db
 
         teleoscopes = {}
         for edge in edges:
