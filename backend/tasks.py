@@ -931,7 +931,7 @@ class reorient(Task):
         self.model = None
         self.dbstring = None
 
-    def cacheDocumentsData(self, path=embedding_path):
+    def cacheDocumentsData(self):
         # cache embeddings
         from pathlib import Path
         dir = Path(f'~/embeddings/{self.dbstring}/').expanduser()
