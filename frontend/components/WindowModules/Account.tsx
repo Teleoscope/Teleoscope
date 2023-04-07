@@ -37,7 +37,7 @@ export default function Account(props) {
           if (user != null) {
             props.handleSignIn(user)
           } else {
-            props.client.register_account(value, "password")
+            props.client.register_account(value, "password", swr.database)
             setTimeout(() => handleTimeOut(username), 2000);
           }
         });

@@ -1,17 +1,18 @@
-import React, { useContext } from "react";
+import React, {createContext} from "react";
 import Head from "next/head";
 
 import { Provider } from "react-redux";
 import { CookiesProvider } from "react-cookie";
 import { SWRConfig } from 'swr'
+
 import { useRouter } from 'next/router'
 
 // store
-import store from "../../stores/store";
+import store from "@/stores/store";
 
 // custom components
-import Workspace from '../../components/Workspace';
-import clientPromise from '../../util/mongodb';
+import Workspace from '@/components/Workspace';
+import clientPromise from '@/util/mongodb';
 
 // API fetcher for SWR global config
 //const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
@@ -19,8 +20,9 @@ const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 export default function Home({ isConnected }) {
   const router = useRouter()
-  const { sub } = router.query
-  console.log("sub", router, sub)
+  const subdomain = router.query.site
+
+
   return (
     <SWRConfig value={{ 
       fetcher: fetcher,
@@ -36,7 +38,7 @@ export default function Home({ isConnected }) {
 
           <main>
             <Provider store={store}>
-              <Workspace isConnected={isConnected} />
+              <Workspace isConnected={isConnected} subdomain={"aita"} />
             </Provider>
           </main>
         </div>

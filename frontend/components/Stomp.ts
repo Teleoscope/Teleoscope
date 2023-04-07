@@ -225,12 +225,13 @@ add_login(username: string, password: string) {
 /*
   Pushes the user account information to create their account
 */
-register_account(username: string, password) {
+register_account(username: string, password, database: string) {
   const body = {
     task: "register_account",
     args: {
       password: password,
       username: username,
+      db: database
     }
   }
   this.publish(body);

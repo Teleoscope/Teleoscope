@@ -294,7 +294,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 args=(),
                 kwargs={
                     "password": args["password"],
-                    "username": args["username"]
+                    "username": args["username"],
+                    "db": args["db"]
                 }
             )
 
