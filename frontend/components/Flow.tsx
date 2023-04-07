@@ -21,7 +21,6 @@ function Flow() {
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
 
   const session_id = useAppSelector((state) => state.activeSessionID.value);
-  const userid = useAppSelector((state) => state.activeSessionID.userid);
   const bookmarks = useAppSelector((state: RootState) => state.bookmarker.value); 
 
   const { nodes, edges, logical_clock } = useAppSelector((state) => state.windows);

@@ -316,7 +316,7 @@ export default function GroupPalette(props) {
       var g = group;
       g["included_text"] = []
       for (const doc of g.history[0].included_documents) {
-        const response = await fetch(`/api/${swr.database}/document/${doc}`).then(res => res.json())
+        const response = await fetch(`/api/${swr.subdomain}/document/${doc}`).then(res => res.json())
         g["included_text"].push(response)
       }
       out.push(g)

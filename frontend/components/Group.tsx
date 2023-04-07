@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useContext } from 'react';
 
 // mui
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -21,7 +21,7 @@ export default function Group(props) {
   const fetchdocs = async () => {
     var docs = []    
     for (const [pid, s] of data) {
-      const response = await fetch(`/api/${swr.database}/document/${pid}`).then(res => res.json())
+      const response = await fetch(`/api/${swr.subdomain}/document/${pid}`).then(res => res.json())
       docs = docs.concat([response])
     }
     return docs;

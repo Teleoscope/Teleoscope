@@ -17,8 +17,11 @@ export default function Account(props) {
     }
    }
 
+   
+  // http://nursing.localhost:3000/api/nursing/user/paul
+
    const handleTimeOut = (username) => {
-    fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.database}/user/${username}`)
+    fetch(`http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/user/${username}`)
         .then((response) => response.json())
         .then((user) => {
           if (user != null) {
@@ -31,10 +34,13 @@ export default function Account(props) {
 
     // Helper functions
     const handleEnterUser = (username) => {
-      fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.database}/user/${username}`)
+      const url =  `http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/user/${username}`
+
+      fetch(url)
         .then((response) => response.json())
         .then((user) => {
           if (user != null) {
+            console.log("user", user, url)
             props.handleSignIn(user)
           } else {
             props.client.register_account(value, "password", swr.database)

@@ -17,10 +17,7 @@ const initialState = {
 export const getGroups = createAsyncThunk(
 	'groups/getGroups',
 	async (id, thunkAPI) => {
-		const res = await fetch(`/api/sessions/${id}/groups`).then(
-			(data) => data.json()
-		)
-		return res
+		return ""
 	})
 
 export const Groups = createSlice({
@@ -52,16 +49,16 @@ export const Groups = createSlice({
 			state.loading = false
 			var groups = {}
 			var groupedDocuments = [];
-			payload.forEach((g) => {
-				groups[g._id] = {
-					color: g.color,
-					label: g.label
-				}
-				var lastItem = g.history[0];
-				lastItem.included_documents.forEach((i) => {
-					groupedDocuments.push({ id: i, _id: g._id });
-				})
-			})
+			// payload.forEach((g) => {
+			// 	groups[g._id] = {
+			// 		color: g.color,
+			// 		label: g.label
+			// 	}
+			// 	var lastItem = g.history[0];
+			// 	lastItem.included_documents.forEach((i) => {
+			// 		groupedDocuments.push({ id: i, _id: g._id });
+			// 	})
+			// })
 			state.groups = groups;
 			state.grouped_documents = groupedDocuments;
 		},

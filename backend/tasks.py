@@ -931,14 +931,15 @@ class reorient(Task):
         self.allDocumentVectors = None
         self.db = None
         self.model = None
+        self.dbstring = None
 
     def cacheDocumentsData(self, path=embedding_path):
         # cache embeddings
         from pathlib import Path
         dir = Path(path).expanduser()
         dir.mkdir(parents=True, exist_ok=True)
-        npzpath = Path(path + 'embeddings.npz').expanduser()
-        pklpath = Path(path + 'ids.pkl').expanduser()
+        npzpath = Path(f'~/{self.dbstring}/embeddings.npz').expanduser()
+        pklpath = Path(f'~/{self.dbstring}/ids.pkl').expanduser()
         
         if npzpath.exists() and pklpath.exists():
             logging.info("Documents have been cached, retrieving now.")
@@ -1029,13 +1030,16 @@ class reorient(Task):
         vec = np.average(document_vectors, axis=0)
         return vec
 
-    def run(self, edges: list, userid: str, **kwargs):
+    def run(self, edges: list, userid: str, db: str, **kwargs):
          # Check if document ids and vectors are cached
         if self.documentsCached == False:
             _, _ = self.cacheDocumentsData()
 
         if self.db is None:
-            self.db = utils.connect(db=auth.mongodb["db"])
+            self.db = utils.connect(db=db)
+
+        if self.dbstring is None:
+            self.dbstring = db
 
         teleoscopes = {}
         for edge in edges:

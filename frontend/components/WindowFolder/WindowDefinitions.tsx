@@ -45,7 +45,7 @@ export default function WindowDefinitions() {
 
     // Helper functions
     const getReferencedDocument = (oid) => {
-        fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.database}/document/${oid}`)
+        fetch(`http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/document/${oid}`)
             .then((response) => response.json())
             .then((data) => setDoc(data))
     }

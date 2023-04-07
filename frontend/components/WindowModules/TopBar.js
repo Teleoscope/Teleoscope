@@ -24,7 +24,6 @@ import Session from "../Session";
 import { useSelector, useDispatch } from "react-redux";
 import { sessionActivator, setUserId } from "@/actions/activeSessionID";
 import { setDefault } from "@/actions/windows";
-import { getGroups } from "@/actions/groups";
 
 // utilities
 import { useCookies } from "react-cookie";
@@ -47,13 +46,14 @@ export default function TopBar(props) {
 
   useEffect(()=> {
     if (cookies.userid != -1) {
-      fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.database}/users/${cookies.userid}`)
+      fetch(`http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/users/${cookies.userid}`)
       .then((response) => response.json())
       .then((user) => {
         handleSignIn(user)
       })
     }
   }, [])
+
 
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const { users } = swr.useSWRAbstract("users", `users/`);
@@ -65,6 +65,7 @@ export default function TopBar(props) {
     });
     dispatch(sessionActivator(-1))
     dispatch(setUserId(-1))
+    client.userId = -1
     dispatch(setDefault())
   }
 
@@ -73,6 +74,7 @@ export default function TopBar(props) {
       path: "/"
     });
     dispatch(setUserId(user._id))
+    client.userId = user._id
     dispatch(sessionActivator(user.sessions[0]))
   }
 
@@ -91,7 +93,6 @@ export default function TopBar(props) {
   const handleSessionChange = (value) => {
     setLoaded(false);
     dispatch(sessionActivator(value))
-    dispatch(getGroups(value))
   }
 
   const get_color = () => session ? session.history[0].color : "#4E5CBC"

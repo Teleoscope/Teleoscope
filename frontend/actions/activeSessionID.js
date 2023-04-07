@@ -9,8 +9,13 @@ export const ActiveSessionID = createSlice({
   },
   reducers: {
     sessionActivator: (state, action) => {
+      console.log("action", action.payload)
     	var id = action.payload // value of documentid
-			state.value = id;
+      if (id) {
+        state.value = id;
+
+      }
+      
     },
     loadActiveSessionID: (state, action) => {
       state.value = action.payload

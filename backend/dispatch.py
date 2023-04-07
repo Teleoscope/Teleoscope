@@ -171,7 +171,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                        positive_docs=args["positive_docs"],
                        negative_docs=args["negative_docs"],
                        magnitude=magnitude,
-                       userid=args["userid"]
+                       userid=args["userid"],
+                       db=args["db"]
                 ).set(queue=auth.rabbitmq["task_queue"]),
                 tasks.save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
             )
@@ -181,7 +182,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
         if task == "update_edges":
             res = chain(robj.s(edges=args["edges"],
-                       userid=args["userid"]
+                       userid=args["userid"],
+                       db=args["db"]
                 ).set(queue=auth.rabbitmq["task_queue"]))
             res.apply_async()
             return
