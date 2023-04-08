@@ -197,6 +197,7 @@ class Clustering:
         logging.info("Gathering all document vectors from embeddings...")
         # grab all document data from embeddings
         reorient = tasks.reorient()
+        reorient.dbstring = self.dbstring
         all_doc_ids, all_doc_vecs = reorient.cacheDocumentsData()
         
         logging.info('Using average ordering...')
