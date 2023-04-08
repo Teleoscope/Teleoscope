@@ -156,7 +156,8 @@ class Clustering:
                 session_id=self.session_id, 
                 human=False, 
                 included_documents=documents, 
-                description=self.description
+                description=self.description,
+                db=self.dbstring
             )
         
     def get_given_labels(self):
