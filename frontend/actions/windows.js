@@ -9,23 +9,23 @@ console.log("Loading windows.js");
 
 const initialState = {
 		nodes: [
-			{
-				"id": "default_FABMenu",
-				"type": "windowNode",
-				"position": {
-				  "x": 0,
-				  "y": 0
-				},
-				"style": {
-				  "width": 100,
-				  "height": 100
-				},
-				"data": {
-				  "label": "default_FABMenunode",
-				  "i": "default_FABMenu",
-				  "type": "FABMenu"
-				}
-			  }
+			// {
+			// 	"id": "default_FABMenu",
+			// 	"type": "windowNode",
+			// 	"position": {
+			// 	  "x": 0,
+			// 	  "y": 0
+			// 	},
+			// 	"style": {
+			// 	  "width": 100,
+			// 	  "height": 100
+			// 	},
+			// 	"data": {
+			// 	  "label": "default_FABMenunode",
+			// 	  "i": "default_FABMenu",
+			// 	  "type": "FABMenu"
+			// 	}
+			//   }
 		],
 		edges: [],
 		logical_clock: -1,

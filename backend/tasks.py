@@ -869,7 +869,7 @@ def cluster_by_groups(*args, **kwargs):
     """
     import clustering
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
-    clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"])
+    clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"], kwargs["db"])
 
 @app.task
 def update_edges(*arg, **kwargs):

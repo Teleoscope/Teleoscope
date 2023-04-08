@@ -26,7 +26,7 @@ class Clustering:
     by the limit param plus the documents in the provided human clusters/groups.
     """
 
-    def __init__(self, user_id, group_id_strings, session_id, limit=10000, topic_label_length=2):
+    def __init__(self, user_id, group_id_strings, session_id, db, limit=10000, topic_label_length=2):
         """Initializes the instance 
 
         Args:
@@ -35,20 +35,23 @@ class Clustering:
             group_id_strings:
                 A list of strings representing the ObjectID of each group to be clustered
             session_id:
-                An string that represents the ObjectID of the current session
+                A string that represents the ObjectID of the current session
+            db: 
+                A string that specifies the current database
             limit:
                 The number of documents to cluster. Default 10000
             topic_label_length:
                 Minimum number of words to use for machine cluster topic labels. Default 2
         """
 
+        self.dbstring = db
         self.user_id = user_id
         self.group_id_strings = group_id_strings
         self.session_id = session_id
         self.limit = limit
         self.topic_label_length = topic_label_length
         self.description = ""
-        self.db = utils.connect() 
+        self.db = utils.connect(db=self.dbstring)
         self.nlp = spacy.load("en_core_web_sm")
         self.group_doc_indices = None
         self.groups = None
@@ -516,7 +519,7 @@ class Clustering:
         """
 
         logging.info(f'Clustering action history update.')
-        transaction_session, db = utils.create_transaction_session()
+        transaction_session, db = utils.create_transaction_session(db=self.dbstring)
         session_id = ObjectId(str(self.session_id))
         session = db.sessions.find_one({"_id": session_id}, {"history": { "$slice": 1}})  
 
