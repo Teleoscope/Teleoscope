@@ -112,5 +112,6 @@ def salt():
 
 if __name__ == "__main__":
     # set SSL with cert.pem and key.pem generated using OpenSSL
-    app.run(ssl_context=('cert.pem', 'key.pem'))
-    # app.run()
+    # app.run(ssl_context=('cert.pem', 'key.pem'))
+    # the https connection is handled by Nginx
+    app.run()

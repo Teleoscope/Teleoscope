@@ -78,7 +78,7 @@ tensorflow
 tensorflow_hub
 zstandard
 Flask
-flask_cors
+flask-cors
 python-dotenv
 bcrypt
 pyjwt
