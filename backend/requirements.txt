@@ -77,3 +77,8 @@ zict
 tensorflow
 tensorflow_hub
 zstandard
+Flask
+flask_cors
+python-dotenv
+bcrypt
+pyjwt
