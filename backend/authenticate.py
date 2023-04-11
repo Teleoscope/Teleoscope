@@ -4,6 +4,7 @@
 import bcrypt, datetime, jwt, logging
 
 import utils
+from tasks import initialize_session
 
 # register the user based on provided first name, last name, username and password
 # returns -2 if any exception is raised
@@ -29,6 +30,10 @@ def registerUser(firstName, lastName, username, password, salt):
             users_res = db.users.insert_one(obj, session=transaction_session)
             logging.info(f"Added user {username} with result {users_res}.")
             utils.commit_with_retry(transaction_session)
+
+        user = db.users.find_one({"username":username})
+
+        initialize_session(userid=user["_id"], label="default", color="#e76029")
 
         return 1
     except:
@@ -83,5 +88,16 @@ def get_salt(username):
         if user_obj is None:
             return -1
         return user_obj['salt']
+    except:
+        return -2
+    
+# a simple helper function to get the ObjectID of a user
+# returns -2 if any exception is raised
+# return the userid if success
+def get_userid(username):
+    try:
+        db = utils.connect()
+        user_obj = db.users.find_one({'username': username})
+        return str(user_obj['_id'])
     except:
         return -2

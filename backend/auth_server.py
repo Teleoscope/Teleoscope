@@ -64,9 +64,14 @@ def login():
 
         # authenticate the user
         auth_value = authUser(username, password)
-        if auth_value == 1:
+        if auth_value == 1 and (userid := get_userid(username)) != -2:
             token = issue_token(app.secret_key, username)
-            response = make_response(jsonify(token), 200)
+            if userid == -2:
+                return 
+            response = make_response(jsonify({
+                'token': token,
+                'userid': userid
+            }), 200)
         elif auth_value == 0:
             response = make_response(jsonify('Incorrect password.'), 403)
         elif auth_value == -1:
