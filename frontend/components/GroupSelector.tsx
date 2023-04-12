@@ -54,59 +54,6 @@ export default function groupSelector(props) {
     handleClose();
   };
 
-<<<<<<< HEAD
-   const handleSelect = (group_id) => {
-      
-      if (groups_this_document_belongs_to.find((item) => item.id == props.id)) {
-         client.remove_document_from_group(group_id, props.id);
-      } else {
-         client.add_document_to_group(group_id, props.id);
-      }
-      handleClose();
-   }
-
-   const GroupIconHandler = (props) => {
-      if (props.groups.length >= 1) {
-         const g = props.groups[0].history[0];
-         return (
-            <Tooltip title={g.label}>
-               <FolderCopyIcon sx={{ color: g.color }} style={{ fontSize: 15 }} />
-            </Tooltip>
-         )
-      }
-      return (
-         <Tooltip title="No group assigned...">
-            <FolderOutlinedIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} />
-         </Tooltip>
-      )
-   }
-
-   return (
-      <div>
-         <IconButton onClick={handleClick}>
-            <GroupIconHandler groups={groups_this_document_belongs_to} />
-         </IconButton>
-         <Menu
-            anchorEl={anchorEl}
-            onClose={handleClose}
-            open={open}
-         >
-            {groups ? groups.map((g) => {
-               const _id = g._id
-               return (
-                  <MenuItem
-                     value={_id}
-                     onClick={() => handleSelect(_id)}>
-                     <FolderIcon sx={{ color: g.history[0].color }} style={{ fontSize: 15 }} />
-                     <ListItemText primary={g.history[0].label} />
-                  </MenuItem>
-               )
-            }) : <MenuItem>No groups added yet...</MenuItem>}
-         </Menu>
-      </div>
-   )
-}
-=======
   const GroupIconHandler = (props) => {
     if (props.groups.length >= 1) {
       const g = props.groups[0].history[0];
@@ -155,4 +102,3 @@ export default function groupSelector(props) {
     </div>
   );
 }
->>>>>>> main

@@ -43,6 +43,7 @@ export default function Document(props) {
   };
 
   const Group = () => <GroupSelector id={id} />;
+  const Relationship = () => <LinkSelector id = {id}/>
 
   const copyTextToClipboard = () => navigator.clipboard.writeText(`${document.title} \n ${document.text}`)
   const copyJsonToClipboard = () => navigator.clipboard.writeText( JSON.stringify(document, null, 2))
@@ -69,20 +70,9 @@ export default function Document(props) {
 
   return (
     <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
-<<<<<<< HEAD
-      <Stack direction="row" justifyContent="right" alignItems="center" style={{ margin: 0 }}>
-        <NoteButton id={document?._id} key="document" />
-        <GroupSelector id={id} />
-        <LinkSelector id = {id} />
-      </Stack>
-      <Divider />
-      <DocumentText text={text} />
-      <Divider sx={{margin: 5}}/>
-=======
-      <ButtonActions inner={[CopyJson, CopyText, Link, Group]}></ButtonActions>
+      <ButtonActions inner={[CopyJson, CopyText, Link, Group, Relationship]}></ButtonActions>
       <DocumentText text={text} />
       <Divider sx={{ margin: 5 }} />
->>>>>>> main
     </div>
   );
 }

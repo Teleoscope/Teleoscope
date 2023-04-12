@@ -9,7 +9,9 @@ import FolderIcon from '@mui/icons-material/Folder';
 import Tooltip from '@mui/material/Tooltip';
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
-
+import AttachmentIcon from '@mui/icons-material/Attachment';
+import FileOpenIcon from '@mui/icons-material/FileOpen';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
 // actions 
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { addWindow } from "../actions/windows"
@@ -48,13 +50,13 @@ export default function linkSelector(props) {
          const l = props.links;
          return (
             <Tooltip title={l.type}>
-               <FolderCopyIcon sx={{ color: l.color }} style={{ fontSize: 15 }} />
+               <FileCopyIcon style={{ fontSize: 15 }} />
             </Tooltip>
          )
       }
       return (
          <Tooltip title="No link assigned...">
-            <FolderOutlinedIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} />
+            <FileOpenIcon sx={{ color: "#BBBBBB" }} style={{ fontSize: 15 }} />
          </Tooltip>
       )
    }
@@ -74,7 +76,7 @@ export default function linkSelector(props) {
                <MenuItem
                   value = {link.type}
                    onClick= {() => { dispatch(addWindow({ i: link._id + '%document', type: "Document", ...item })) }}>
-                  <FolderIcon style={{ fontSize: 15 }} />
+                  <FileOpenIcon style={{ fontSize: 15 }} />
                   <ListItemText primary={link.type} sx={{ color: '#6f42c1'}}/>
                </MenuItem>
                )

@@ -100,8 +100,7 @@ export default function WindowDefinitions() {
             icon: () => { return <ShortTextIcon fontSize="inherit" /> },
             component: (w, id, color) => { return (<Document id={id} windata={w} color={color} />) },
             showWindow: false,
-            title: (d) => { console.log("document_title", d)
-                return PreprocessTitle(d?.title) },
+            title: (d) => {return PreprocessTitle(d?.title) },
             color: () => get_color(),
             tag: "document",
         },
