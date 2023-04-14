@@ -10,13 +10,13 @@ parser = argparse.ArgumentParser(
                     description='Create text vectors for a random sample of texts.',
                     epilog='Still under construction.')
 
-parser.add_argument('-c', '--collection')                     # collection to vectorize
-parser.add_argument('-d', '--database', default="teleoscope") # databse to vectorize
+parser.add_argument('-c', '--collection')                       # collection to vectorize
+parser.add_argument('-d', '--database', default="teleoscope")   # databse to vectorize
 
 # Configuration fields
-parser.add_argument('-t', '--text', default="text")           # the text field
-parser.add_argument('-s', '--samples', default=100)           # sample size per iteration
-parser.add_argument('-i', '--iterations', default=100)        # number of iterations
+parser.add_argument('-t', '--text', default="text")             # the text field
+parser.add_argument('-s', '--samples', default=100, type=int)   # sample size per iteration
+parser.add_argument('-i', '--iterations', default=10, type=int) # number of iterations
 
 
 def get_memory_usage():
