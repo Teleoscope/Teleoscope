@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(
                     epilog='Still under construction.')
 
 parser.add_argument('-c', '--collection')                       # collection to vectorize
-parser.add_argument('-d', '--database', default="teleoscope")   # databse to vectorize
+parser.add_argument('-d', '--database', default="codex")   # databse to vectorize
 
 # Configuration fields
 parser.add_argument('-t', '--text', default="text")             # the text field
