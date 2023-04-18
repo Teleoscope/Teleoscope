@@ -383,6 +383,8 @@ class Clustering:
             if i > 0: label += " "
             try:
                 label += feature_names[sorting[0][i]]
+            except:
+                pass
 
         # build a 7 word description from frequent topic labels
         self.description = feature_names[sorting[0][0]]
