@@ -1050,11 +1050,11 @@ class reorient(Task):
             if target not in teleoscopes:
                 teleoscopes[target] = []
 
-            if edge["source"].split("%")[1] == "group":
+            if edge["source"].split("%")[-1] == "group":
                 res = self.db.groups.find_one({"_id": ObjectId(str(source))})
                 sources = [id for id in res["history"][0]["included_documents"]]
 
-            if edge["source"].split("%")[1] == "document":
+            if edge["source"].split("%")[-1] == "document":
                 sources.append(source)
 
             teleoscopes[target] = [*sources, *teleoscopes[target]]
