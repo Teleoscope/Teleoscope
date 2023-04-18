@@ -1,13 +1,20 @@
 import React, { useContext } from "react";
 
 // mui
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemText from "@mui/material/ListItemText";
-import ListItemIcon from "@mui/material/ListItemIcon";
+import {
+  IconButton,
+  Stack,
+  TextField,
+  List,
+  ListItem,
+  ListItemIcon
+} from "@mui/material";
+
 import FlareIcon from "@mui/icons-material/Flare";
-import TextField from "@mui/material/TextField";
-import Stack from "@mui/material/Stack";
+import DeleteIcon from "@mui/icons-material/Delete";
+
+// custom
+import EditableText from "../EditableText";
 
 // actions
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
@@ -19,8 +26,6 @@ import withDroppable from "../DropItem";
 import { StompContext } from "@/components/Stomp";
 
 export default function TeleoscopePalette(props) {
-  const userid = useAppSelector((state) => state.activeSessionID.userid);
-
   const client = useContext(StompContext)
 
   const session_id = useAppSelector(
@@ -44,14 +49,46 @@ export default function TeleoscopePalette(props) {
   const Item = (props) => {
     return (
       <ListItem>
-        <ListItemIcon>
-          <FlareIcon />
-        </ListItemIcon>
-        <ListItemText
-          primary={props.teleoscope.label}
-          secondary={props.teleoscope._id}
-        />
+
+
+                <Stack
+                  sx={{ width: "100%" }}
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Stack direction="row" alignItems="center">
+                    <ListItemIcon>
+                      <IconButton>
+                        <FlareIcon />
+                      </IconButton>
+                    </ListItemIcon>
+
+                    <EditableText
+                      initialValue={props.teleoscope.label}
+                      callback={(label) => client.relabel_teleoscope(label, props.teleoscope._id)}
+                    />
+                  </Stack>
+                  <IconButton
+                    onClick={() => client.remove_teleoscope(props.teleoscope._id, session_id)}
+                  >
+                    <DeleteIcon
+                      sx={[
+                        {
+                          "&:hover": {
+                            color: props.color,
+                          },
+                        },
+                      ]}
+                    ></DeleteIcon>
+                  </IconButton>
+                </Stack>
+
+
       </ListItem>
+
+
+
     );
   };
   const Droppable = withDroppable(Item);
