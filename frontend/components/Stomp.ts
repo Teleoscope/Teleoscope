@@ -470,12 +470,12 @@ relabel_group(label: string, group_id: string) {
  * Relabel the group.
  */
 
-relabel_teleoscope(label: string, teleoscpoe_id: string) {
+relabel_teleoscope(label: string, teleoscope_id: string) {
   const body = {
     task: "relabel_teleoscope",
     args: {
       label: label,
-      teleoscpoe_id: teleoscpoe_id
+      teleoscope_id: teleoscope_id
     }
   }
   this.publish(body);
