@@ -177,6 +177,33 @@ def relabel_group(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
     return 200
 
+@app.task
+def relabel_teleoscope(*args, **kwargs):
+    """
+    Relabels a teleoscope.
+    """
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+
+    teleoscope_id = ObjectId(str(kwargs["teleoscope_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
+    label = kwargs["label"]
+
+    with transaction_session.start_transaction():
+        session = db.teleoscopes.find_one({"_id": teleoscope_id}, session=transaction_session)
+        history_item = session["history"][0]
+        history_item["label"] = label
+        history_item["user"] = userid
+        db.teleoscopes.update_one({"_id": teleoscope_id},
+            {"$push": {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }}, session=transaction_session 
+        )
+        utils.commit_with_retry(transaction_session)
+    return 200
 
 @app.task
 def create_child(*args, **kwargs):
@@ -695,6 +722,45 @@ def add_document_to_group(*args, **kwargs):
     res.apply_async()
     return None
 
+
+@app.task
+def remove_teleoscope(*args, **kwargs):
+    """
+    Delete a teleoscope (not the documents within) from the session. Teleoscope is not deleted from the whole system, just the session.
+    kwargs:
+        teleoscope_id: ObjectId
+        session_id: ObjectId
+        user_id: ObjectId
+    """
+    teleoscope_id = ObjectId(str(kwargs["teleoscope_id"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+    user_id = ObjectId(str(kwargs["userid"]))
+
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    with transaction_session.start_transaction():
+        session = db.sessions.find_one({'_id': session_id}, session=transaction_session)
+        teleoscope = db.teleoscopes.find_one({'_id': teleoscope_id}, session=transaction_session)
+        
+        history_item = session["history"][0]
+        history_item["timestamp"] = datetime.datetime.utcnow()        
+        history_item["teleoscopes"].remove(teleoscope_id)
+        history_item["action"] = f"Remove teleoscope from session"
+        history_item["user"] = user_id
+
+        db.sessions.update_one(
+            {'_id': session_id},
+            {
+                "$push" : {
+                    "history": {
+                        "$each" : [history_item],
+                        "$position" : 0
+                    }
+                }
+            },
+            session=transaction_session
+        )
 
 
 @app.task

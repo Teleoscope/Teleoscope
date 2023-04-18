@@ -160,6 +160,17 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "group_id": args["group_id"],
                 },
             )
+        
+        if task == "relabel_teleoscope":
+            res = tasks.relabel_teleoscope.signature(
+                args=(),
+                kwargs={
+                    "userid": args["userid"],
+                    "db": args["db"],
+                    "label": args["label"],
+                    "teleoscope_id": args["teleoscope_id"],
+                },
+            )
 
 
         if task == "reorient":
@@ -209,6 +220,17 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "db": args["db"],
                     "session_id": args["session_id"],
                     "group_id": args["group_id"]
+                }
+            )
+
+        if task == "remove_teleoscope":
+            res = tasks.remove_teleoscope.signature(
+                args=(),
+                kwargs={
+                    "userid": args["userid"],
+                    "db": args["db"],
+                    "session_id": args["session_id"],
+                    "teleoscope_id": args["teleoscope_id"]
                 }
             )
 
