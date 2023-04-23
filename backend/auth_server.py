@@ -35,9 +35,7 @@ def register():
 
         # register the user
         result = registerUser(firstName, lastName, username, password, salt)
-        # print(password)
-        # salt1 = salt.encode('utf-8')
-        # print(bcrypt.hashpw('123456'.encode('utf-8'), salt1))
+        
         if result == 1:
             response = make_response(jsonify('Successfully registered.', 201))
         elif result == 0:
