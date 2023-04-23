@@ -1,8 +1,10 @@
+// Marked as can be deleted
+
 import clientPromise from '../../../util/mongodb';
 
-export default async (req, res) => {
+export default authDecorator(async (req, res) => {
   const client = await clientPromise;
   const db = await client.db(process.env.NEXT_PUBLIC_DATABASE);
   const users = await db.collection("registeredUsers").find({}).toArray();
   res.json(users);
-};
+});

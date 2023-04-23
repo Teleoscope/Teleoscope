@@ -51,7 +51,6 @@ export default function TopBar(props) {
 
   useEffect(()=> {
     if (cookies.userid != -1) {
-      // TODO: check the cookies.userid before do this.
       // if cookies.userid === undefined, route to login page.
       if (cookies.userid == undefined) {
         router.push('/account/login');

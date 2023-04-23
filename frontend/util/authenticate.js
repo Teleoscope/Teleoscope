@@ -1,3 +1,5 @@
+// Marked as can be deleted
+
 import Router from 'next/router'
 import { Stomp } from '../components/Stomp'
 

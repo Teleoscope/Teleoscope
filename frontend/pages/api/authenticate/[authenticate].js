@@ -1,7 +1,9 @@
+// Marked as can be deleted
+
 import clientPromise from "../../../util/mongodb";
 
 
-export default async (req, res) => {
+export default authDecorator(async (req, res) => {
     const client = await clientPromise;
     const db = await client.db(process.env.NEXT_PUBLIC_DATABASE);
     const { authenticate } = req.query;
@@ -24,4 +26,4 @@ export default async (req, res) => {
     //     lastName: user.lastName,
     //     token
     // });
-};
+});

@@ -1,3 +1,5 @@
+// Marked as can be deleted
+
 // middleware uses teh express-jwt library to validate JWT tokens
 // in requests sent to protected API routes, if a token is invalid
 // an error is thrown which causes the global error handler to 

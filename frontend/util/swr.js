@@ -1,16 +1,13 @@
 // swr.js
 import useSWR from "swr";
 import { useRouter } from "next/router";
-import { useCookies } from "react-cookie";
 
-const fetcher = async (url, token) => {
+// a custom fetcher to detect unauthorized actions
+const fetcher = async (url) => {
 	const res = await fetch(url);
  
-	// If the status code is not in the range 200-299,
-	// we still try to parse and throw it.
 	if (res.status === 401) {
 		const error = new Error('Unauthorized action.');
-		// Attach extra info to the error object.
 		error.status = res.status;
 		throw error;
 	}

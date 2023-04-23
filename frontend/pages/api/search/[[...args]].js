@@ -1,6 +1,7 @@
 import clientPromise from '../../../util/mongodb';
+import authDecorator from '../../../middlewares/authDecorator';
 
-export default async (req, res) => {
+export default authDecorator(async (req, res) => {
   const client = await clientPromise;
   const db = await client.db(process.env.NEXT_PUBLIC_DATABASE);
   
@@ -26,4 +27,4 @@ export default async (req, res) => {
     .limit(parseInt(args[1])).toArray();
   }
   res.json(queries);
-};
+});
