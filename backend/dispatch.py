@@ -218,7 +218,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 kwargs={
                     "userid": args["userid"],
                     "db": args["db"],
-                    "session_id": args["session_id"],
                     "label": args["label"],
                     "relabeled_session_id": args["relabeled_session_id"]
                 }
