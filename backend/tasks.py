@@ -166,7 +166,7 @@ def relabel_session(*args, **kwargs):
         history_item["label"] = label
         history_item["user"] = userid
         history_item["action"] = "Relabeled session"
-        db.session.update_one({"_id": relabeled_session_id},
+        db.sessions.update_one({"_id": relabeled_session_id},
             {"$push": {
                     "history": {
                         "$each": [history_item],
