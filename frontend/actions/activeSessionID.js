@@ -4,8 +4,8 @@ import { createSlice } from '@reduxjs/toolkit'
 export const ActiveSessionID = createSlice({
   name: 'activeSessionID',
   initialState: {
-    value: "642f37867d81bd8062d1f63f",
-    userid: "642f37867d81bd8062d1f63d"
+    value:  "000000000000000000000000",
+    userid: "000000000000000000000000"
   },
   reducers: {
     sessionActivator: (state, action) => {
@@ -13,9 +13,7 @@ export const ActiveSessionID = createSlice({
     	var id = action.payload // value of documentid
       if (id) {
         state.value = id;
-
       }
-      
     },
     loadActiveSessionID: (state, action) => {
       state.value = action.payload

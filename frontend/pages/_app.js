@@ -2,13 +2,14 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import '@/styles/global.css';
+import { SessionProvider } from "next-auth/react"
 
 
 import { userService } from '../services/user.service';
 
 export default App;
 
-function App({ Component, pageProps }) {
+function App({ Component, pageProps: { session, ...pageProps }}) {
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [authorized, setAuthorized] = useState(false);
@@ -35,7 +36,7 @@ function App({ Component, pageProps }) {
     function authCheck(url) {
         // redirect to login page if accessing a private page and not logged in 
         setUser(userService.userValue);
-        const publicPaths = ['/account/login', '/account/register', '/'];
+        const publicPaths = ['/account/login', '/account/register', '/', '/auth/signin'];
         const path = url.split('?')[0];
         if (!userService.userValue && !publicPaths.includes(path)) {
             setAuthorized(false);
@@ -55,7 +56,11 @@ function App({ Component, pageProps }) {
 
             <main>
                 <div className={`app-container ${user ? 'bg-light' : ''}`}>
-                    {authorized && <Component {...pageProps} />}
+                    {authorized &&
+                        <SessionProvider session={session}> 
+                            <Component {...pageProps} />
+                        </SessionProvider>
+                    }
                 </div>
             </main>
         </>

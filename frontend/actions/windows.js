@@ -4,31 +4,11 @@ import _ from 'lodash';
 import { getDefaultWindow } from "../components/WindowFolder/WindowDefault"
 import { applyNodeChanges, applyEdgeChanges } from 'reactflow';
 
-console.log("Loading windows.js");
-
-
 const initialState = {
-		nodes: [
-			// {
-			// 	"id": "default_FABMenu",
-			// 	"type": "windowNode",
-			// 	"position": {
-			// 	  "x": 0,
-			// 	  "y": 0
-			// 	},
-			// 	"style": {
-			// 	  "width": 100,
-			// 	  "height": 100
-			// 	},
-			// 	"data": {
-			// 	  "label": "default_FABMenunode",
-			// 	  "i": "default_FABMenu",
-			// 	  "type": "FABMenu"
-			// 	}
-			//   }
-		],
+		nodes: [],
 		edges: [],
 		logical_clock: -1,
+		color: "#D3D3D3",
 		windows: [
 		],
 		selection: {
@@ -47,6 +27,10 @@ export const Windows = createSlice({
 	name: 'windows',
 	initialState: initialState,
 	reducers: {
+		resetWorkspace: () => initialState,
+		setColor: (state, action) => {
+			state.color = action.payload.color;
+		},
 		setSettings: (state, action) => {
 			state.settings = action.payload;
 		},
@@ -224,6 +208,8 @@ export const Windows = createSlice({
 })
 
 export const {
+	setColor,
+	resetWorkspace,
 	setSelection,
 	setSettings,
 	makeNode,

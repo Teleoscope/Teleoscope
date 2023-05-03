@@ -241,7 +241,7 @@ register_account(username: string, password, database: string) {
 /**
  * Requests to create a new group object in MongoDB.
  */
-add_group(label: string, color: string, session_id: string) {
+add_group(label: string, color: string, session_id: string, documents=[]) {
   const body = {
     task: 'add_group',
     args: {
@@ -474,12 +474,12 @@ relabel_group(label: string, group_id: string) {
  * Relabel the session.
  */
 
-relabel_session(label: string, session_id: string) {
+relabel_session(label: string, relabeled_session_id: string) {
   const body = {
     task: "relabel_session",
     args: {
       label: label,
-      session_id: session_id
+      relabeled_session_id: relabeled_session_id
     }
   }
   this.publish(body);

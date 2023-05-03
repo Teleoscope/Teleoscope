@@ -1,10 +1,15 @@
 import { Virtuoso } from "react-virtuoso";
 import React from "react";
+// actions
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { RootState } from "@/stores/store";
+import { mark } from "@/actions/bookmark";
 
 export default function Itemlist(props) {
   const ref = React.useRef(null);
   const [currentItemIndex, setCurrentItemIndex] = React.useState(-1);
   const listRef = React.useRef(null);
+  const dispatch = useAppDispatch();
 
   const keyDownCallback = React.useCallback(
     (e) => {
@@ -13,7 +18,10 @@ export default function Itemlist(props) {
       if (e.code === "ArrowUp") {
         nextIndex = Math.max(0, currentItemIndex - 1);
       } else if (e.code === "ArrowDown") {
-        nextIndex = Math.min(99, currentItemIndex + 1);
+        nextIndex = Math.min(props.data.length - 1, currentItemIndex + 1);
+      } else if (e.code === "Enter") {
+
+        dispatch(mark(props.data[currentItemIndex][0]))    
       }
 
       if (nextIndex !== null) {

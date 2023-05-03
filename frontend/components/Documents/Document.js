@@ -47,7 +47,7 @@ export default function Document(props) {
 
   const CopyText = () => {
     return (
-      <Tooltip title="Copy text to clipboard">
+      <Tooltip title="Copy text to clipboard" key="Copy text to clipboard">
         <IconButton onClick={copyTextToClipboard}>
           <ContentCopyIcon fontSize="small" />
         </IconButton>
@@ -57,7 +57,7 @@ export default function Document(props) {
 
   const CopyJson = () => {
     return (
-      <Tooltip title="Copy metadata to clipboard">
+      <Tooltip title="Copy metadata to clipboard" key="Copy metadata to clipboard" >
         <IconButton onClick={copyJsonToClipboard}>
           <CopyAllIcon fontSize="small" />
         </IconButton>

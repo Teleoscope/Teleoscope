@@ -78,7 +78,7 @@ export default async (req, res) => {
     const userid = new ObjectId(sessionsargs[1])
     const filter = { "$or" : 
       [{ "userlist.owner": userid},
-      { "userlist.constributors": userid}]
+      { "userlist.contributors": userid}]
     }
     var sessions = await db.collection("sessions").find(filter, { projection: { history: {"$slice": 1 }}}).toArray();
     ret = sessions;

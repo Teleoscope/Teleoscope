@@ -37,7 +37,7 @@
     "lodash": "^4.17.21",
     "mongodb": "^4.7.0",
     "mui-nested-menu": "^2.1.2",
-    "next": "^12.2.0",
+    "next": "^13.3.4",
     "next-auth": "^4.22.1",
     "randomcolor": "^0.6.2",
     "react": "^18.2.0",

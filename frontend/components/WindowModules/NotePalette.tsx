@@ -25,7 +25,7 @@ function NotePaletteItem(props) {
   }
 
   return (
-    <ListItem>
+    <ListItem key={title}>
       <ListItemIcon><CommentIcon /></ListItemIcon>
       <ListItemText primary={title} secondary={description} />
     </ListItem>
@@ -45,6 +45,7 @@ export default function NotePalette(props) {
 
             return (
                 <div draggable={true}
+                  key={n._id}
                     onDragStart={(e:React.DragEvent<HTMLDivElement>):void => {dispatch(dragged({ id: n?._id + "%note", type: "Note" }))}}
                 >
                     <NotePaletteItem note={n}/>

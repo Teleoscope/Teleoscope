@@ -24,10 +24,11 @@ import {
   removeWindow,
   setEdges,
   setSelection,
+  setColor
 } from "@/actions/windows";
+import { sessionActivator } from "@/actions/activeSessionID";
 import { StompContext } from "./Stomp";
 import ContextMenu from "./Context/ContextMenu";
-
 
 const nodeTypes = { windowNode: WindowNode };
 const multiSelectionKeyCode = ["Meta", "Control", "Shift"];
@@ -38,11 +39,13 @@ function Flow(props) {
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
 
   const session_id = useAppSelector((state) => state.activeSessionID.value);
+  const userid = useAppSelector((state) => state.activeSessionID.userid);
+
   const bookmarks = useAppSelector(
     (state: RootState) => state.bookmarker.value
   );
 
-  const settings = useAppSelector((state) => state.windows.settings)
+  const settings = useAppSelector((state) => state.windows.settings);
 
   const { nodes, edges, logical_clock } = useAppSelector(
     (state) => state.windows
@@ -51,8 +54,17 @@ function Flow(props) {
   const client = useContext(StompContext);
   const swr = useContext(swrContext);
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
+  const { user } = swr.useSWRAbstract("user", `users/${userid}`);
+
+  
+
   const session_history_item = session?.history[0];
   const dispatch = useAppDispatch();
+
+  if (user && !session) {
+
+    dispatch(sessionActivator(user.sessions[0]))
+  }
 
   if (session_history_item) {
     if (session_history_item.logical_clock > logical_clock) {
@@ -79,6 +91,12 @@ function Flow(props) {
         setEdges({
           edges: incomingEdges,
           logical_clock: session_history_item.logical_clock,
+        })
+      );
+
+      dispatch(
+        setColor({
+          color: session_history_item.color
         })
       );
     }
@@ -241,12 +259,9 @@ function Flow(props) {
     return <FABMenu windata={{ x: coords.x, y: coords.y, width: 1 }} />;
   };
 
-  const onSelectionChange = useCallback(
-    ({ nodes, edges }) => {
-      dispatch(setSelection({ nodes: nodes, edges: edges }));
-    },
-    { nodes: [], edges: [] }
-  );
+  const onSelectionChange = useCallback(({ nodes, edges }) => {
+    dispatch(setSelection({ nodes: nodes, edges: edges }));
+  }, []);
 
   return (
     <div className="providerflow">
@@ -270,6 +285,7 @@ function Flow(props) {
             onConnect={(connection) => onConnect(connection, edges)}
             onInit={setReactFlowInstance}
             multiSelectionKeyCode={multiSelectionKeyCode}
+            disableKeyboardA11y={true}
             onClick={() =>
               client.save_UI_state(session_id, bookmarks, nodes, edges)
             }

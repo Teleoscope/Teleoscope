@@ -4,6 +4,9 @@ import React, { useContext } from 'react';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CopyAllIcon from '@mui/icons-material/CopyAll';
 import Tooltip from "@mui/material/Tooltip";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+
 import IconButton from "@mui/material/IconButton";
 // custom
 import DocumentList from "./Documents/DocumentList"
@@ -42,7 +45,7 @@ export default function Group(props) {
 
   const CopyText = () => {
     return (
-      <Tooltip title="Copy text to clipboard">
+      <Tooltip title="Copy text to clipboard" key="Copy text to clipboard">
         <IconButton onClick={copyTextToClipboard}>
           <ContentCopyIcon fontSize="small" />
         </IconButton>
@@ -52,7 +55,7 @@ export default function Group(props) {
 
   const CopyJson = () => {
     return (
-      <Tooltip title="Copy metadata to clipboard">
+      <Tooltip title="Copy metadata to clipboard" key="Copy metadata to clipboard">
         <IconButton onClick={copyJsonToClipboard}>
           <CopyAllIcon fontSize="small" />
         </IconButton>
@@ -60,8 +63,10 @@ export default function Group(props) {
     )
   }
   return (
-    <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
-      <ButtonActions inner={[CopyJson, CopyText, ]}></ButtonActions>
+    <Stack direction="column" sx={{ height: "100%" }}>
+
+    <Box sx={{ flexGrow: 1, flexDirection: "column", margin: "2px"}}>
+    <ButtonActions inner={[CopyJson, CopyText ]}></ButtonActions>
       <DocumentList 
         data={data} 
         pagination={true} 
@@ -71,6 +76,8 @@ export default function Group(props) {
         group={group}
         ShowDeleteIcon={true}
       ></DocumentList>
-      </div>
+      </Box>
+      </Stack>
+
   );
 }

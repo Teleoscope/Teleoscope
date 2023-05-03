@@ -25,7 +25,7 @@ export default function SettingsPalette(props) {
 
   return (
     <Stack sx={{ margin: "2px" }}>
-      <Typography>Document width</Typography>
+      <Typography>Dropped item width</Typography>
       <Slider
         aria-label="default_document_width"
         defaultValue={settings.default_document_width}
@@ -35,6 +35,17 @@ export default function SettingsPalette(props) {
         min={50}
         max={500}
         onChangeCommitted={(event, value) => handleChange(event, value, "default_document_width")}
+      />
+      <Typography>Dropped item height</Typography>
+      <Slider
+        aria-label="default_document_height"
+        defaultValue={settings.default_document_height}
+        valueLabelDisplay="auto"
+        step={25}
+        marks
+        min={30}
+        max={500}
+        onChangeCommitted={(event, value) => handleChange(event, value, "default_document_height")}
       />
     </Stack>
   );

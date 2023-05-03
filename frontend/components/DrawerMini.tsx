@@ -50,33 +50,17 @@ export default function PermanentDrawerRight() {
       },
     };
 
-    if (width < breakpoint) {
       return (
         <Drawer sx={sx} variant="permanent" anchor="right">
-            <Stack direction="column" alignItems="center" spacing={1} sx={{paddingTop: "2em", paddingBottom: "2em"}}>
-              <TeleoscopeLogo compact={true} color="#CCCCCC"></TeleoscopeLogo>
-              <TopBar compact={true}></TopBar>
+            <Stack direction="column" alignItems="center" spacing={1} sx={{paddingTop: "2em", paddingBottom: "2em", marginBottom: "2em"}}>
+              <TeleoscopeLogo compact={width < breakpoint} color="#CCCCCC"></TeleoscopeLogo>
+              <TopBar compact={width < breakpoint}></TopBar>
             </Stack>
           <Divider />
-          <Accordion compact={true}></Accordion>
+          <Accordion compact={width < breakpoint}></Accordion>
         </Drawer>
       );
     }
-
-
-    
-
-    return (
-      <Drawer sx={sx} variant="permanent" anchor="right">
-          <Stack direction="column" alignItems="center" spacing={1} sx={{paddingTop: "2em", paddingBottom: "2em"}}>
-            <TeleoscopeLogo color="#CCCCCC"></TeleoscopeLogo>
-            <TopBar></TopBar>
-          </Stack>
-        <Divider />
-        <Accordion></Accordion>
-      </Drawer>
-    );
-  };
 
   return (
     <Box

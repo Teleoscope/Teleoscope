@@ -4,6 +4,8 @@ import EditableText from "@/components/EditableText";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import randomColor from "randomcolor";
 import { sessionActivator } from "@/actions/activeSessionID";
+import { resetWorkspace } from "@/actions/windows";
+
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
@@ -21,6 +23,13 @@ export default function WorkflowsPalette(props) {
 
   // Handle key event for creating a new workflow
   const keyChange = e => e.code === "Enter" && client.initialize_session(value, randomColor());
+  
+  const handleWorkflowChoice = (sid) => {
+    dispatch(resetWorkspace())
+
+    dispatch(sessionActivator(sid))
+    dispatch(resetWorkspace())
+  }
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
@@ -47,7 +56,7 @@ export default function WorkflowsPalette(props) {
                   {/* Workflow icon and label */}
                   <Stack direction="row" alignItems="center">
                     <ListItemIcon>
-                      <IconButton onClick={() => dispatch(sessionActivator(session._id))}>
+                      <IconButton onClick={() => handleWorkflowChoice(session._id)}>
                         {wdefs["Workflows"].icon([{ color: session.history[0].color }, { '& .MuiChip-icon': { color: session.history[0].color } }])}
                       </IconButton>
                     </ListItemIcon>

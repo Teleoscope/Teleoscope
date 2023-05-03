@@ -212,6 +212,18 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 }
             )
 
+        if task == "relabel_session":
+            res = tasks.relabel_session.signature(
+                args=(),
+                kwargs={
+                    "userid": args["userid"],
+                    "db": args["db"],
+                    "session_id": args["session_id"],
+                    "label": args["label"],
+                    "relabeled_session_id": args["relabeled_session_id"]
+                }
+            )
+
         if task == "remove_group":
             res = tasks.remove_group.signature(
                 args=(),
