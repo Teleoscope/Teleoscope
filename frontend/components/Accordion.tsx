@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useState } from "react";
 import Accordion from "@mui/material/Accordion";
 import Stack from "@mui/material/Stack";
 
@@ -22,9 +22,11 @@ export default function SimpleAccordion(props) {
   const selection = useAppSelector((state) => state.windows.selection);
 
   const Section = (props) => {
+    const [expanded, setExpanded] = useState(false); 
     return (
-      <Accordion disableGutters={true} square={true}>
+      <Accordion  expanded={expanded} disableGutters={true} square={true}>
         <AccordionSummary
+          onClick={() => setExpanded(!expanded)}
           expandcompact={props.compact}
           aria-controls="panel2a-content"
           id="panel2a-header"

@@ -36,7 +36,6 @@ export default function TopBar(props) {
   const [cookies, setCookie] = useCookies(["userid"]);
   const session_id = useSelector((state) => state.activeSessionID.value);
   const userid = useSelector((state) => state.activeSessionID.userid);
-  const [loaded, setLoaded] = React.useState(false);
   const dispatch = useDispatch();
   const client = useContext(StompContext);
   const swr = useContext(swrContext);
@@ -84,14 +83,9 @@ export default function TopBar(props) {
       let rgb = hexRgb(get_color());
       let hsl = space.rgb.hsl([rgb.red, rgb.green, rgb.blue]);
       let lighter = space.hsl.rgb([hsl[0], hsl[1], Math.min(100, hsl[2] * 2)]);
-      let hex = "#" + rgbHex(lighter[0], lighter[1], lighter[2]);
+      let hex = "#" + rgbHex([rgb.red, rgb.green, rgb.blue]);
       return hex;
     }
-  };
-
-  const handleSessionChange = (value) => {
-    setLoaded(false);
-    dispatch(sessionActivator(value));
   };
 
   const get_color = () => (session ? session.history[0].color : "#4E5CBC");
@@ -152,7 +146,7 @@ export default function TopBar(props) {
               setOpenMenu(true);
             }}
           >
-            <AccountCircle sx={{ color: accountColor() }}></AccountCircle>
+            <AccountCircle sx={{ color: get_color() }}></AccountCircle>
           </IconButton>
 
           {props.compact ? "" : 
@@ -184,21 +178,9 @@ export default function TopBar(props) {
               />
             }
           ></MenuItem>
-          <MenuItem
-            children={
-              <Session
-                users={users}
-                sessions={sessions}
-                user={user}
-                client={client}
-                session_id={session_id}
-                handleSessionChange={handleSessionChange}
-              />
-            }
-          ></MenuItem>
           <Divider></Divider>
           <MenuItem onClick={handleClickOpen}>
-            Add a different user to this session
+            Add a different user to this workflow
           </MenuItem>
           <MenuItem onClick={handleSignOut}>Sign out</MenuItem>
         </Menu>

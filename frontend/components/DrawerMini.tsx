@@ -63,6 +63,9 @@ export default function PermanentDrawerRight() {
       );
     }
 
+
+    
+
     return (
       <Drawer sx={sx} variant="permanent" anchor="right">
           <Stack direction="column" alignItems="center" spacing={1} sx={{paddingTop: "2em", paddingBottom: "2em"}}>
