@@ -9,7 +9,7 @@ export default async (req, res) => {
   var objid;
   var session;
 
-  if (sessionsargs?.length > 0) {
+  if (sessionsargs?.length > 0 && sessionsargs[0] != "users") {
     if (sessionsargs[0] != "-1") {
       objid = new ObjectId(sessionsargs[0])
     } else {
@@ -72,6 +72,16 @@ export default async (req, res) => {
       }
     })
     ret = filtered_teleoscopes;
+  }
+  else if (sessionsargs.length === 2 && sessionsargs[0] === "users") {
+    // returns sessions for user
+    const userid = new ObjectId(sessionsargs[1])
+    const filter = { "$or" : 
+      [{ "userlist.owner": userid},
+      { "userlist.constributors": userid}]
+    }
+    var sessions = await db.collection("sessions").find(filter, { projection: { history: {"$slice": 1 }}}).toArray();
+    ret = sessions;
   }
 
   // returns groups or list of session objects dependending on the conditionals

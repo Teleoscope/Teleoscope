@@ -26,9 +26,9 @@ import {
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import Tooltip from "@mui/material/Tooltip";
-import DownloadIcon from '@mui/icons-material/Download';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CopyAllIcon from '@mui/icons-material/CopyAll';
+import DownloadIcon from "@mui/icons-material/Download";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CopyAllIcon from "@mui/icons-material/CopyAll";
 
 // actions
 import { swrContext } from "@/util/swr";
@@ -48,7 +48,7 @@ export default function GroupPalette(props) {
   const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
   const { users } = swr.useSWRAbstract("users", `users/`);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
-  const client = useContext(StompContext)
+  const client = useContext(StompContext);
   const dispatch = useAppDispatch();
   const [value, setValue] = React.useState(null);
   const [sessionValue, setSessionValue] = React.useState({ label: "" });
@@ -271,8 +271,9 @@ export default function GroupPalette(props) {
   const ClusterButton = () => {
     return (
       <Tooltip title="Cluster on existing groups">
-      <IconButton onClick={() => runClusters()}>
-          <Diversity2Icon fontSize="small"
+        <IconButton onClick={() => runClusters()}>
+          <Diversity2Icon
+            fontSize="small"
             sx={[
               {
                 "&:hover": {
@@ -282,20 +283,18 @@ export default function GroupPalette(props) {
             ]}
           />
         </IconButton>
-        </Tooltip>
-    )
-  }
+      </Tooltip>
+    );
+  };
 
-  const downloadGroups = () => {
-
-  }
-
+  const downloadGroups = () => {};
 
   const DownloadButton = () => {
     return (
       <Tooltip title="Download group content">
-      <IconButton onClick={() => downloadGroups()}>
-          <DownloadIcon fontSize="small"
+        <IconButton onClick={() => downloadGroups()}>
+          <DownloadIcon
+            fontSize="small"
             sx={[
               {
                 "&:hover": {
@@ -305,24 +304,25 @@ export default function GroupPalette(props) {
             ]}
           />
         </IconButton>
-        </Tooltip>
-    )
-  }
+      </Tooltip>
+    );
+  };
 
-  
   const fetchgroups = async () => {
-    var out = [] 
+    var out = [];
     for (const group of groups) {
       var g = group;
-      g["included_text"] = []
+      g["included_text"] = [];
       for (const doc of g.history[0].included_documents) {
-        const response = await fetch(`/api/${swr.subdomain}/document/${doc}`).then(res => res.json())
-        g["included_text"].push(response)
+        const response = await fetch(
+          `/api/${swr.subdomain}/document/${doc}`
+        ).then((res) => res.json());
+        g["included_text"].push(response);
       }
-      out.push(g)
+      out.push(g);
     }
     return out;
-  }
+  };
 
   const copyTextToClipboard = async () => {
     const groups = await fetchgroups();
@@ -336,11 +336,11 @@ export default function GroupPalette(props) {
     }
 
     navigator.clipboard.writeText(acc);
-  }
+  };
   const copyJsonToClipboard = async () => {
     const groups = await fetchgroups();
-    navigator.clipboard.writeText( JSON.stringify(groups, null, 2))
-  }
+    navigator.clipboard.writeText(JSON.stringify(groups, null, 2));
+  };
 
   const CopyText = () => {
     return (
@@ -348,9 +348,9 @@ export default function GroupPalette(props) {
         <IconButton onClick={copyTextToClipboard}>
           <ContentCopyIcon fontSize="small" />
         </IconButton>
-        </Tooltip> 
-    )
-  }
+      </Tooltip>
+    );
+  };
 
   const CopyJson = () => {
     return (
@@ -358,10 +358,9 @@ export default function GroupPalette(props) {
         <IconButton onClick={copyJsonToClipboard}>
           <CopyAllIcon fontSize="small" />
         </IconButton>
-        </Tooltip> 
-    )
-  }
-
+      </Tooltip>
+    );
+  };
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
@@ -394,7 +393,7 @@ export default function GroupPalette(props) {
         />
       </Stack>
       <Divider />
-      <ButtonActions inner={[CopyJson, CopyText, ClusterButton]}/>
+      <ButtonActions inner={[CopyJson, CopyText, ClusterButton]} />
       <List>
         {groups?.map((g) => {
           return (

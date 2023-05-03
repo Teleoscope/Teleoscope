@@ -48,7 +48,7 @@ export default function DocumentListItem(props) {
         onClick={(e) => handleRemove(e)}
       >
         <DeleteIcon
-          sx={{ "&:hover": { color: "red" }, width: 20, height: 20 }}
+          sx={{ "&:hover": { color: "blue" }, width: 20, height: 20 }}
         ></DeleteIcon>
       </IconButton>
     );
@@ -60,9 +60,17 @@ export default function DocumentListItem(props) {
     event.dataTransfer.effectAllowed = 'move';
   };
 
+
+  const handleSetIndex = () => {
+    if (props.setIndex) {
+      props.setIndex(props.listIndex)
+    }
+  }
+
   return (
     <div
     draggable={true}
+    onClick={handleSetIndex}
     onDragStart={(e) => onDragStart(e, props.id + "%" + "document", "Document", "document")}
       style={{
         ...props.style,
@@ -72,6 +80,7 @@ export default function DocumentListItem(props) {
         paddingBottom: "3px",
         width: "100%",
         height: "100%",
+        backgroundColor: props.highlight ? "#EEEEEE" : "white"
       }}
       id={props.id}
     >

@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 
 // material ui
-import List from "@mui/material/List";
-import Pagination from "@mui/material/Pagination";
-import Stack from "@mui/material/Stack";
+import LoadingButton from "@mui/lab/LoadingButton";
 
 // custom components
 import DocumentListItem from "./DocumentListItem";
-import withDroppable from "../DropItem";
+import ItemList from "../ItemList";
+import { setSelection } from "@/actions/windows";
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
 
 export default function DocumentList(props) {
   const data = props.data;
-
+  const dispatch = useAppDispatch();
 
   // pagination
   const [pageNumber, setPageNumber] = useState(1);
@@ -21,7 +21,7 @@ export default function DocumentList(props) {
   var paginatedItems = [];
 
   if (data) {
-    displayPagination = (data.length > itemsPerPage) && props.pagination;
+    displayPagination = data.length > itemsPerPage && props.pagination;
     pageCount = Math.ceil(data.length / itemsPerPage);
     paginatedItems = data.slice(
       (pageNumber - 1) * itemsPerPage,
@@ -29,35 +29,41 @@ export default function DocumentList(props) {
     );
   }
 
-  
-
-
-  const Item = (props) => <DocumentListItem group={props.group} key={props.id + "DocumentListItem"} {...props} />
-
+  const renderItem = (index, item, currentIndex, setIndex) => {
+    return (
+      <DocumentListItem
+        setIndex={setIndex}
+        listIndex={index}
+        group={props.group}
+        highlight={index == currentIndex}
+        id={item[0]}
+        key={item[0] + "DocumentListItem"}
+        {...props}
+      />
+    );
+  };
 
   const changePage = (event, value) => {
     setPageNumber(value);
   };
-  
- 
+
+  if (props.loading) {
+    return <LoadingButton></LoadingButton>;
+  }
+
+  const onSelect = (doc) => {
+    if (doc) {
+      dispatch(
+        setSelection({
+          nodes: [{ id: doc[0], data: { type: "Document" } }],
+          edges: [],
+        })
+      );
+    }
+  };
+
 
   return (
-    <List dense={true} >
-      {displayPagination
-        ? paginatedItems.map(pair => <DocumentListItem group={props.group} id={pair[0]} key={pair[0] + "DocumentListItem"} {...props} />)
-        : data.map(pair => <DocumentListItem group={props.group} id={pair[0]} key={pair[0] + "DocumentListItem"} {...props} />)
-      }
-
-      {displayPagination ? (
-        <Stack style={{ paddingTop: 30 }}>
-          <Pagination
-            count={pageCount}
-            onChange={changePage}
-            page={pageNumber}
-            style={{ marginTop: 20, margin: "auto" }}
-          />
-        </Stack>
-      ) : null}
-    </List>
+    <ItemList data={data} render={renderItem} onSelect={onSelect}></ItemList>
   );
 }

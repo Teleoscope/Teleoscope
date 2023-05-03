@@ -31,14 +31,28 @@ const initialState = {
 		logical_clock: -1,
 		windows: [
 		],
+		selection: {
+			nodes: [],
+			edges: []
+		},
 		dragged: {id: "default", type: "Default"},
 		collision: true,
+		settings: {
+			default_document_width: 200,
+			default_document_height: 34,
+		}
 }
 
 export const Windows = createSlice({
 	name: 'windows',
 	initialState: initialState,
 	reducers: {
+		setSettings: (state, action) => {
+			state.settings = action.payload;
+		},
+		setSelection: (state, action) => {
+			state.selection = action.payload;
+		},
 		setLogicalClock: (state, action) => {
 			state.logical_clock = action.payload;
 		},
@@ -210,6 +224,8 @@ export const Windows = createSlice({
 })
 
 export const {
+	setSelection,
+	setSettings,
 	makeNode,
 	setDraggable,
 	updateNodes,

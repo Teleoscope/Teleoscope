@@ -12,6 +12,9 @@ import SearchIcon from '@mui/icons-material/Search';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 import Diversity2Icon from '@mui/icons-material/Diversity2';
 import CommentIcon from '@mui/icons-material/Comment';
+import StarIcon from '@mui/icons-material/Star';
+import SettingsIcon from '@mui/icons-material/Settings';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
 
 // actions
 import { RootState } from '@/stores/store'
@@ -152,6 +155,30 @@ export default function WindowDefinitions() {
             title: (d) => { return d?.history[0].label },
             color: (d) => { return d?.history[0].color },
             tag: "cluster",
+        },
+        "Bookmarks": {
+            icon: () => { return <StarIcon fontSize="inherit" sx={style} /> },
+            component: (w, id, color) => { return (<Clusters id={id} windata={w} color={color} />) },
+            showWindow: true,
+            title: () => { return "Bookmarks" },
+            color: () => get_color(),
+            tag: "bookmarks",
+        },
+        "Settings": {
+            icon: () => { return <SettingsIcon fontSize="inherit" sx={style} /> },
+            component: (w, id, color) => { return (<Clusters id={id} windata={w} color={color} />) },
+            showWindow: true,
+            title: () => { return "Settings" },
+            color: () => get_color(),
+            tag: "settings",
+        },
+        "Workflows": {
+            icon: (sx=style) => { return <AccountTreeIcon fontSize="inherit" sx={sx} /> },
+            component: (w, id, color) => { return (<Clusters id={id} windata={w} color={color} />) },
+            showWindow: true,
+            title: () => { return "Workflows" },
+            color: () => get_color(),
+            tag: "workflows",
         },
     }
 }

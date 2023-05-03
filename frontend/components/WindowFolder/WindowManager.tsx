@@ -127,7 +127,7 @@ export default function WindowManager(props) {
               // padding:"1.5em",
               width: "100%",
               height: "100%",
-              // backgroundColor: "red"
+              backgroundColor: "blue"
             }}
           >
             <WindowFactory id={w.i} windata={w} />

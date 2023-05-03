@@ -305,6 +305,9 @@ remove_group(group_id: string, session_id: string) {
   return body;
 }
 
+
+
+
 /**
  * Removes a group from a session in MongoDB. Does not delete the group.
  * 
@@ -312,7 +315,7 @@ remove_group(group_id: string, session_id: string) {
  * @param session_id 
  * @returns 
  */
-remove_telescope(teleoscope_id: string, session_id: string) {
+remove_teleoscope(teleoscope_id: string, session_id: string) {
   const body = {
     task: 'remove_teleoscope',
     args: {
@@ -466,8 +469,27 @@ relabel_group(label: string, group_id: string) {
   return body;
 }
 
+
 /**
- * Relabel the group.
+ * Relabel the session.
+ */
+
+relabel_session(label: string, session_id: string) {
+  const body = {
+    task: "relabel_session",
+    args: {
+      label: label,
+      session_id: session_id
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+
+
+/**
+ * Relabel the teleoscope.
  */
 
 relabel_teleoscope(label: string, teleoscope_id: string) {

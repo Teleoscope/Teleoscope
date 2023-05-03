@@ -168,6 +168,7 @@ ansible/vars/*
 !*/.yarn/releases
 !*/.yarn/sdks
 !*/.yarn/versions
+*/yarn.lock
 
 # .env
 *.env*

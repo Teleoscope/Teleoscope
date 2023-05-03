@@ -6,8 +6,7 @@ import DocumentText from "./DocumentText";
 import GroupSelector from "../GroupSelector";
 
 // mui
-import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
+import { Divider, Box, Stack, IconButton } from "@mui/material";
 import LinkIcon from "@mui/icons-material/Link";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CopyAllIcon from '@mui/icons-material/CopyAll';
@@ -67,10 +66,9 @@ export default function Document(props) {
   }
 
   return (
-    <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
+    <Stack sx={{ height: "100%" }}>
       <ButtonActions inner={[CopyJson, CopyText, Link, Group]}></ButtonActions>
       <DocumentText text={text} />
-      <Divider sx={{ margin: 5 }} />
-    </div>
+    </Stack>
   );
 }
