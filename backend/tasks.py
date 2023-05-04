@@ -967,7 +967,6 @@ def remove_note(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     userid = ObjectId(str(kwargs["userid"]))
 
-    note = schemas.create_note_object(userid, label)
     with transaction_session.start_transaction():
         session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
         history_item = session["history"][0]
