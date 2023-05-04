@@ -952,6 +952,7 @@ def add_note(*args, **kwargs):
         logging.info(f"Added note with result {res}.")
         utils.commit_with_retry(transaction_session)
 
+@app.task
 def remove_note(*args, **kwargs):
     """
     Removes a note from the session but NOT from the notes collection.
