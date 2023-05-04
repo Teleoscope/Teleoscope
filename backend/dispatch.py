@@ -300,6 +300,17 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "session_id": args["session_id"]
                 }
             )
+        
+        if task == "remove_note":
+            res = tasks.remove_note.signature(
+                args=(),
+                kwargs={
+                    "userid": args["userid"],
+                    "db": args["db"],
+                    "note_id": args["note_id"],
+                    "session_id": args["session_id"]
+                }
+            )
 
         if task == "update_note":
             res = tasks.update_note.signature(

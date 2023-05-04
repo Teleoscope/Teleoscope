@@ -73,6 +73,23 @@ export default async (req, res) => {
     })
     ret = filtered_teleoscopes;
   }
+  else if (sessionsargs.length === 2 && sessionsargs[1] === "notes") {
+    // returns notes
+    var notes = await db.collection("notes").find({},  { projection: { history: {"$slice": 1 }}}).toArray();
+    session = await db.collection("sessions").findOne({_id: objid},  { projection: { history: {"$slice": 1 }}});
+    var session_notes = session?.history[0].notes.map((note_id) => {
+      return note_id.toString();
+    });
+    var filtered_notes = notes.filter((note) => {
+      var n = note._id.toString();
+      if (session_notes?.includes(n)) {
+        return true;
+      } else {
+        return false;
+      }
+    })
+    ret = filtered_notes;
+  }
   else if (sessionsargs.length === 2 && sessionsargs[0] === "users") {
     // returns sessions for user
     const userid = new ObjectId(sessionsargs[1])

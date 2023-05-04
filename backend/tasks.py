@@ -952,6 +952,40 @@ def add_note(*args, **kwargs):
         logging.info(f"Added note with result {res}.")
         utils.commit_with_retry(transaction_session)
 
+def remove_note(*args, **kwargs):
+    """
+    Removes a note from the session but NOT from the notes collection.
+
+    kwargs:
+        id: document_id (string) 
+    """    
+    # Try finding document
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    note_id = ObjectId(str(kwargs["note_id"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
+
+    note = schemas.create_note_object(userid, label)
+    with transaction_session.start_transaction():
+        session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
+        history_item = session["history"][0]
+        history_item["user"] = userid,
+        history_item["action"] = "Remove note"
+        history_item["notes"].remove(note_id) 
+        db.sessions.update_one({"_id": session_id},
+            {"$push": {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }}, session=transaction_session 
+        )
+
+        logging.info(f"Removed note {note_id} from session {session_id}.")
+        utils.commit_with_retry(transaction_session)
+
+
 
 @app.task
 def update_note(*args, **kwargs):

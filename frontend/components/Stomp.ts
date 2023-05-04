@@ -379,7 +379,23 @@ add_note(session_id: string, label: string = "new note") {
   const body = {
     task: 'add_note',
     args: {
-      label: label,
+      session_id: session_id,
+      label: label
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+
+/**
+ * Request to add a note for a particular interface object.
+ */
+remove_note(note_id: string, session_id: string) {
+  const body = {
+    task: 'remove_note',
+    args: {
+      note_id: note_id,
       session_id: session_id
     }
   }
