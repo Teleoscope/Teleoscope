@@ -101,7 +101,7 @@ export default function NotePalette(props) {
 
                   <EditableText
                     initialValue={n.label}
-                    callback={(label) => client.relabel_note(label, n._id)}
+                    callback={(label) => client.relabel_note(n._id, label)}
                   />
                 </Stack>
                 <IconButton

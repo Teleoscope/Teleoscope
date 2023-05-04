@@ -1006,7 +1006,8 @@ def update_note(*args, **kwargs):
 
     with transaction_session.start_transaction():
 
-        history_item = db.notes.find_one({"_id": note_id})
+        note = db.notes.find_one({"_id": note_id})
+        history_item = note["history"][0]
         history_item["content"] = content
         history_item["action"] = "Update note content."
         history_item["userid"] = userid
@@ -1042,7 +1043,8 @@ def relabel_note(*args, **kwargs):
 
     with transaction_session.start_transaction():
 
-        history_item = db.notes.find_one({"_id": note_id})
+        note = db.notes.find_one({"_id": note_id})
+        history_item = note["history"][0]
         history_item["label"] = label
         history_item["action"] = "Update note label."
         history_item["userid"] = userid

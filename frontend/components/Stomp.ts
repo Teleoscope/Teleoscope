@@ -423,7 +423,7 @@ update_note(note_id: string, content) {
  */
 relabel_note(note_id: string, label: string) {
   const body = {
-    task: 'update_note',
+    task: 'relabel_note',
     args: {
       note_id: note_id,
       label: label
