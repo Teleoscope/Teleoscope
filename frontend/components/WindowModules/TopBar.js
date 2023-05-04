@@ -76,18 +76,6 @@ export default function TopBar(props) {
     dispatch(sessionActivator(user.sessions[0]));
   };
 
-  const accountColor = () => {
-    if (!user) {
-      return "#AAAAAA";
-    } else {
-      let rgb = hexRgb(get_color());
-      let hsl = space.rgb.hsl([rgb.red, rgb.green, rgb.blue]);
-      let lighter = space.hsl.rgb([hsl[0], hsl[1], Math.min(100, hsl[2] * 2)]);
-      let hex = "#" + rgbHex([rgb.red, rgb.green, rgb.blue]);
-      return hex;
-    }
-  };
-
   const get_color = () => (session ? session.history[0].color : "#4E5CBC");
 
   const getUsers = () => {
@@ -121,7 +109,6 @@ export default function TopBar(props) {
   const [open, toggleOpen] = React.useState(false);
 
   const AccountMenu = () => {
-    const [dialogValue, setDialogValue] = React.useState({ label: "" });
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [openMenu, setOpenMenu] = React.useState(false);
 
@@ -179,21 +166,8 @@ export default function TopBar(props) {
             }
           ></MenuItem>
           <Divider></Divider>
-          <MenuItem onClick={handleClickOpen}>
-            Add a different user to this workflow
-          </MenuItem>
           <MenuItem onClick={handleSignOut}>Sign out</MenuItem>
         </Menu>
-        <AddUserDialogue
-          open={open}
-          onClose={handleClose}
-          users={getUsers()}
-          dialogValue={dialogValue}
-          setDialogValue={setDialogValue}
-          session_id={session_id}
-          client={client}
-          key={"addUserDialog" + session_id}
-        />
       </Stack>
     );
   };

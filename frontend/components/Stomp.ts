@@ -375,12 +375,12 @@ update_group_label(group_id: string, label: string) {
 /**
  * Request to add a note for a particular interface object.
  */
-add_note(oid: string, type:string) {
+add_note(session_id: string, label: string = "new note") {
   const body = {
     task: 'add_note',
     args: {
-      oid: oid,
-      type: type
+      label: label,
+      session_id: session_id
     }
   }
   this.publish(body);

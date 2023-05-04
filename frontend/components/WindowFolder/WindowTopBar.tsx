@@ -16,9 +16,10 @@ import { minimizeWindow } from "@/actions/windows";
 export default function WindowTopBar(props) {
 	const dispatch = useDispatch();
 	return (
-			<Stack  sx={{ cursor: "move" }} direction="row" alignItems="flex-start" justifyContent="space-between">
+			<Stack sx={{ cursor: "move" }} direction="row" alignItems="flex-start" justifyContent="space-between" 
+			onDoubleClick={() => dispatch(minimizeWindow({id: props.id}))}
+			>
 				<IconButton size="small"
-					onClick={() => dispatch(minimizeWindow({id: props.id}))}
 					>{props.icon}
 				</IconButton>
 					<Typography variant="body1" component="div" sx={{ pt: 0.6 }}>

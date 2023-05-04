@@ -15,7 +15,7 @@ export default function SearchWindow(props) {
   const bookmarks = useAppSelector((state: RootState) => state.bookmarker.value);
 
   return (
-      <Box sx={{  margin: "2px"}}>
+      <Box>
         {bookmarks.map((docid) => <DocumentListItem key={docid} id={docid}> </DocumentListItem>)}
       </Box>
   );

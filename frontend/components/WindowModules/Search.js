@@ -52,7 +52,7 @@ export default function SearchWindow(props) {
           onChange={(e) => handleSetQuery(e)}
         />
       </Stack>
-      <Box sx={{ flexGrow: 1, flexDirection: "column", margin: "2px"}}>
+      <Box sx={{ flexGrow: 1, flexDirection: "column"}}>
         <DocumentList
           loading={documents_loading}
           pagination={true}

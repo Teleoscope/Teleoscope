@@ -24,7 +24,7 @@ export default function SettingsPalette(props) {
   }
 
   return (
-    <Stack sx={{ margin: "2px" }}>
+    <Stack>
       <Typography>Dropped item width</Typography>
       <Slider
         aria-label="default_document_width"

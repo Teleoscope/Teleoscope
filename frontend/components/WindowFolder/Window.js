@@ -17,7 +17,7 @@ import {
 
 // actions
 import { useDispatch } from "react-redux";
-import { removeWindow } from "@/actions/windows";
+import { removeWindow, maximizeWindow } from "@/actions/windows";
 
 export default function Window(props) {
   const w = props.windata;
@@ -32,6 +32,7 @@ export default function Window(props) {
       <Chip
         windata={w}
         icon={props.icon}
+        onDoubleClick={() => dispatch(maximizeWindow({id: props.id}))}
         sx={{
           border: w.isChecked
             ? `2px solid ${props.color}`
@@ -55,6 +56,7 @@ export default function Window(props) {
         windata={w}
         label={props.title}
         icon={props.icon}
+        onDoubleClick={() => dispatch(maximizeWindow({id: props.id}))}
         clickable
         onDelete={handleDelete}
         className="drag-handle"
@@ -87,8 +89,8 @@ export default function Window(props) {
     >
       <Stack
         style={{
-          height: props.size.height,
-          width: props.size.width,
+          height: props.size.height - 2,
+          width: props.size.width - 2,
         }}
       >
         <WindowTopBar

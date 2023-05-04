@@ -929,24 +929,27 @@ def add_note(*args, **kwargs):
     # Try finding document
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
-    
-    document_id = kwargs["document_id"]
-
-    if not db.documents.find_one({'id': document_id}):
-        logging.info(f"Warning: document with id {document_id} not found.")
-        raise Exception(f"document with id {document_id} not found")
-
-    obj = {
-        "document_id": document_id,
-        "creation_time": datetime.datetime.utcnow(),
-        "history": [{
-            "content": {},
-            "timestamp": datetime.datetime.utcnow()
-        }]
-    }
+    label = kwargs["label"]
+    session_id = ObjectId(str(kwargs["session_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
+    note = schemas.create_note_object(userid, label)
     with transaction_session.start_transaction():
-        res = db.notes.insert_one(obj, session=transaction_session)
-        logging.info(f"Added note for document {document_id} with result {res}.")
+        res = db.notes.insert_one(note, session=transaction_session)
+        session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
+        history_item = session["history"][0]
+        history_item["user"] = userid,
+        history_item["action"] = "Add note"
+        history_item["notes"].append(res.inserted_id) 
+        db.sessions.update_one({"_id": session_id},
+            {"$push": {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }}, session=transaction_session 
+        )
+
+        logging.info(f"Added note with result {res}.")
         utils.commit_with_retry(transaction_session)
 
 

@@ -105,17 +105,16 @@ export const Windows = createSlice({
 			state.windows = temp;
 		},
 		maximizeWindow: (state, action) => {
-			var temp = [...state.windows];
-			var ids = state.windows.map((w) => {return w.i});
-			var index = ids.indexOf(action.payload);
+			var temp = [...state.nodes];
+			var ids = state.nodes.map((w) => {return w.id});
+			var index = ids.indexOf(action.payload.id);
 			if (index > -1) {
-				temp[index].w = 5;
-				temp[index].h = 9;
-				temp[index].isResizable = true;
-				temp[index].resizeHandles = ["se"];
-				temp[index].showWindow = true;
+				temp[index].width = 300;
+				temp[index].height = 340;
+				temp[index].style.width = 300;
+				temp[index].style.height = 340;
 			}
-			state.windows = temp;	
+			state.windows = temp;
 		},
 		updateWindow: (state, action) => {
 			var temp = [...state.windows];

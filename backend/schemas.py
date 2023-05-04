@@ -31,7 +31,8 @@ def create_session_object(
         groups=[],
         clusters=[],
         teleoscopes=[],
-        bookmarks=[]):
+        bookmarks=[],
+        notes=[]):
     return {
         "creation_time": datetime.datetime.utcnow(),
         "userlist": {
@@ -52,6 +53,7 @@ def create_session_object(
                 "color": color,
                 "action": action,
                 "user": userid,
+                "notes": notes
             }
         ],
     }
@@ -104,4 +106,14 @@ def create_teleoscope_history_item(
         'user': user
     }
     return history_item
-                    
+
+def create_note_object(userid, label):
+    return {
+        "creation_time": datetime.datetime.utcnow(),
+        "user" : userid,
+        "history": [{
+            "label" : label,
+            "content": {},
+            "timestamp": datetime.datetime.utcnow()
+        }]
+    }

@@ -26,6 +26,7 @@ import {
   setSelection,
   setColor
 } from "@/actions/windows";
+import { loadBookmarkedDocuments } from "@/actions/bookmark";
 import { sessionActivator } from "@/actions/activeSessionID";
 import { StompContext } from "./Stomp";
 import ContextMenu from "./Context/ContextMenu";
@@ -53,16 +54,13 @@ function Flow(props) {
 
   const client = useContext(StompContext);
   const swr = useContext(swrContext);
-  const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
+  const { session, session_loading, session_error } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const { user } = swr.useSWRAbstract("user", `users/${userid}`);
-
-  
 
   const session_history_item = session?.history[0];
   const dispatch = useAppDispatch();
 
-  if (user && !session) {
-
+  if (user && session_error ) {
     dispatch(sessionActivator(user.sessions[0]))
   }
 
@@ -99,6 +97,10 @@ function Flow(props) {
           color: session_history_item.color
         })
       );
+
+      dispatch(
+        loadBookmarkedDocuments(session_history_item.bookmarks)
+      )
     }
   }
 

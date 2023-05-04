@@ -62,7 +62,6 @@ export default function Itemlist(props) {
       data={props.data}
       itemContent={(index, item) => props.render(index, item, currentItemIndex, handleSetCurrentItemIndex)}
       scrollerRef={scrollerRef}
-      // style={{margin: "2px"}}
     />
   );
 }
