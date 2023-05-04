@@ -1012,7 +1012,7 @@ def update_note(*args, **kwargs):
         history_item["action"] = "Update note content."
         history_item["userid"] = userid
         
-        res = db.notes.update_one({"note_id": note_id}, {"$push":
+        res = db.notes.update_one({"_id": note_id}, {"$push":
                 {
                     "history": {
                         "$each": [history_item],
@@ -1042,14 +1042,13 @@ def relabel_note(*args, **kwargs):
     label = kwargs["label"]
 
     with transaction_session.start_transaction():
-
         note = db.notes.find_one({"_id": note_id})
         history_item = note["history"][0]
         history_item["label"] = label
         history_item["action"] = "Update note label."
         history_item["userid"] = userid
         
-        res = db.notes.update_one({"note_id": note_id}, {"$push":
+        res = db.notes.update_one({"_id": note_id}, {"$push":
                 {
                     "history": {
                         "$each": [history_item],
@@ -1058,7 +1057,7 @@ def relabel_note(*args, **kwargs):
                 }
             }, session=transaction_session)
         utils.commit_with_retry(transaction_session)
-        logging.info(f"Updated note label {note_id} with {res} and {label}.")
+        logging.info(f"Updated note {note_id} with {res} and label {label}.")
 
 
 @app.task
