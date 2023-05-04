@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 
 // mui
-import { Stack, Box, Slider, Typography } from "@mui/material";
+import { Stack, Box, Slider, Typography, Switch } from "@mui/material";
 
 // actions
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
@@ -15,6 +15,7 @@ import {
 export default function SettingsPalette(props) {
   const dispatch = useAppDispatch();
   const settings = useAppSelector((state) => state.windows.settings)
+  const color = useAppSelector((state) => state.windows.color)
 
   const handleChange = (event, value, setting) => {
     console.log("settings", event, value, setting)
@@ -35,6 +36,7 @@ export default function SettingsPalette(props) {
         min={50}
         max={500}
         onChangeCommitted={(event, value) => handleChange(event, value, "default_document_width")}
+        sx={{ color: color }}
       />
       <Typography>Dropped item height</Typography>
       <Slider
@@ -46,7 +48,21 @@ export default function SettingsPalette(props) {
         min={30}
         max={500}
         onChangeCommitted={(event, value) => handleChange(event, value, "default_document_height")}
+        sx={{ color: color }}
+
       />
+      <Typography>Automatically Expand Infopanel</Typography>
+      <Switch 
+          checked={settings.defaultExpanded}
+          onChange={(event) => handleChange(event, event.target.checked, "defaultExpanded")}
+          color="primary"
+            sx={{ '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+              backgroundColor: color,
+            }, ".MuiSwitch-colorPrimary": {color: color} }}
+
+      />
+
+
     </Stack>
   );
 }

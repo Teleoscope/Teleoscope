@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Stack from "@mui/material/Stack";
 
-
 import DocViewer from "@/components/DocViewer";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 
@@ -12,20 +11,34 @@ import NotePalette from "@/components/WindowModules/NotePalette";
 import BookmarkPalette from "@/components/BookmarkPalette";
 import SettingsPalette from "@/components/SettingsPalette";
 import AccordionSection from "@/components/AccordionSection";
-
+import GroupViewer from "@/components/GroupViewer";
 import Clusters from "@/components/Cluster/Clusters";
 import WorkflowsPalette from "./WorkflowsPalette";
+import NotesViewer from "./NotesViewer";
 export default function SimpleAccordion(props) {
   const selection = useAppSelector((state) => state.windows.selection);
   return (
-    <Stack sx={{ height: "100%", width: "100%" }}    direction="column"
-     justifyContent="space-between">
+    <Stack
+      sx={{ height: "100%", width: "100%" }}
+      direction="column"
+      justifyContent="space-between"
+    >
       <div>
         {selection.nodes.map((node) => {
           if (node.data.type == "Document") {
             return (
               <DocViewer compact={true} id={node.id.split("%")[0]}></DocViewer>
             );
+          }
+          if (node.data.type == "Group") {
+            return (
+              <GroupViewer compact={true} id={node.id.split("%")[0]}></GroupViewer>
+            )
+          }
+          if (node.data.type == "Note") {
+            return (
+              <NotesViewer compact={true} id={node.id.split("%")[0]}></NotesViewer>
+            )
           }
         })}
       </div>

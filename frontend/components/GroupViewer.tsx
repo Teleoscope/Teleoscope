@@ -7,10 +7,11 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Typography, Stack, List, ListItem } from "@mui/material";
 import WindowDefinitions from "./WindowFolder/WindowDefinitions";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import DocumentListItem from "./Documents/DocumentListItem";
 
 export default function DocViewer(props) {
   const swr = useContext(swrContext);
-  const { document } = swr.useSWRAbstract("document", `document/${props.id}`);
+  const { group } = swr.useSWRAbstract("group", `groups/${props.id}`);
   const settings = useAppSelector((state) => state.windows.settings);
 
   return (
@@ -21,29 +22,15 @@ export default function DocViewer(props) {
         id="panel3a-header"
       >
           <Typography noWrap align="left">
-            {WindowDefinitions()["Document"].icon()}
-            {`${document?.title.slice(0,20)}...`}
+            {WindowDefinitions()["Group"].icon(group)}
+            {`${group?.history[0].label}`}
           </Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1} sx={{ margin: "1em" }}>
-          <Typography variant="h5">{document?.title}</Typography>
-          <Typography variant="body">{document?.text}</Typography>
+          <Typography variant="h5">{group?.history[0].label}</Typography>
           <List>
-            {document?.metadata
-              ? Object.entries(document.metadata).map(([key, value]) => {
-                  return (
-                    <ListItem key={key + value}>
-                      <Typography variant="caption" sx={{ marginRight: "1em" }}>
-                        {key}:{" "}
-                      </Typography>
-                      <Typography noWrap variant="caption">
-                        {value}
-                      </Typography>
-                    </ListItem>
-                  );
-                })
-              : ""}
+            {group?.history[0].included_documents.map(docid => <DocumentListItem key={docid} id={docid}></DocumentListItem>)}
           </List>
         </Stack>
       </AccordionDetails>
