@@ -963,9 +963,10 @@ def remove_note(*args, **kwargs):
     # Try finding document
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
+    userid = ObjectId(str(kwargs["userid"]))
+
     note_id = ObjectId(str(kwargs["note_id"]))
     session_id = ObjectId(str(kwargs["session_id"]))
-    userid = ObjectId(str(kwargs["userid"]))
 
     with transaction_session.start_transaction():
         session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
@@ -985,39 +986,77 @@ def remove_note(*args, **kwargs):
         logging.info(f"Removed note {note_id} from session {session_id}.")
         utils.commit_with_retry(transaction_session)
 
-
-
 @app.task
 def update_note(*args, **kwargs):
     """
     Updates a note.
 
     kwargs:
-        document_id: string
-        content: string
+        note_id: string
+        userid: string
+        db: string
+
+        content: string 
     """
-    session, db = utils.commit_with_retry()
-    document_id = kwargs["document_id"]
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    userid = ObjectId(str(kwargs["userid"]))
+    note_id = kwargs["note_id"]
     content = kwargs["content"]
 
-    if not db.notes.find_one({'document_id': document_id}):
-        logging.info(f"Warning: note with id {document_id} not found.")
-        raise Exception(f"note with id {document_id} not found")
+    with transaction_session.start_transaction():
 
-    with session.start_transaction():
-        res = db.notes.update_one({"document_id": document_id}, {"$push":
+        history_item = db.notes.find_one({"_id": note_id})
+        history_item["content"] = content
+        history_item["action"] = "Update note content."
+        history_item["userid"] = userid
+        
+        res = db.notes.update_one({"note_id": note_id}, {"$push":
                 {
                     "history": {
-                        "$each": [{
-                        "content": content,
-                        "timestamp": datetime.datetime.utcnow()
-                        }],
+                        "$each": [history_item],
                         "$position": 0
                     }
                 }
-            }, session=session)
-        utils.commit_with_retry(session)
-        logging.info(f"Updated note for document {document_id} with result {res}.")
+            }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
+        logging.info(f"Updated note {note_id} with {res}.")
+
+@app.task
+def relabel_note(*args, **kwargs):
+    """
+    Relabels a note.
+
+    kwargs:
+        note_id: string
+        userid: string
+        db: string
+
+        label: string 
+    """
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    userid = ObjectId(str(kwargs["userid"]))
+    note_id = kwargs["note_id"]
+    label = kwargs["label"]
+
+    with transaction_session.start_transaction():
+
+        history_item = db.notes.find_one({"_id": note_id})
+        history_item["label"] = label
+        history_item["action"] = "Update note label."
+        history_item["userid"] = userid
+        
+        res = db.notes.update_one({"note_id": note_id}, {"$push":
+                {
+                    "history": {
+                        "$each": [history_item],
+                        "$position": 0
+                    }
+                }
+            }, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
+        logging.info(f"Updated note label {note_id} with {res} and {label}.")
 
 
 @app.task

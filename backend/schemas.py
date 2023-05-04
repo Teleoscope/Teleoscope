@@ -110,10 +110,14 @@ def create_teleoscope_history_item(
 def create_note_object(userid, label):
     return {
         "creation_time": datetime.datetime.utcnow(),
-        "user" : userid,
-        "history": [{
+        "history": [create_note_history_item(userid, label, "Add note.")]
+    }
+
+def create_note_history_item(userid, label, action, content={}):
+    return {
+            "user" : userid,
             "label" : label,
-            "content": {},
+            "action" : action,
+            "content": content,
             "timestamp": datetime.datetime.utcnow()
-        }]
     }

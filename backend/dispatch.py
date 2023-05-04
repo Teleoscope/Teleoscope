@@ -322,7 +322,18 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "content": args["content"],
                 }
             )
-        
+
+        if task == "relabel_note":
+            res = tasks.relabel_note.signature(
+                args=(),
+                kwargs={
+                    "userid": args["userid"],
+                    "db": args["db"],
+                    "note_id": args["note_id"],
+                    "relabel": args["relabel"],
+                }
+            )
+                
 
         if task == "cluster_by_groups":
             res = tasks.cluster_by_groups.signature(
