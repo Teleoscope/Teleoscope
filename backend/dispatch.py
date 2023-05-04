@@ -330,7 +330,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "userid": args["userid"],
                     "db": args["db"],
                     "note_id": args["note_id"],
-                    "relabel": args["relabel"],
+                    "label": args["label"],
                 }
             )
                 

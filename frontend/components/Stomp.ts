@@ -419,6 +419,22 @@ update_note(note_id: string, content) {
 }
 
 /**
+ * Relabels a note.
+ */
+relabel_note(note_id: string, label: string) {
+  const body = {
+    task: 'update_note',
+    args: {
+      note_id: note_id,
+      label: label
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+
+/**
  * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
  */
 reorient(teleoscope_id: string, positive_docs: Array<string>, negative_docs: Array<string>, magnitude ?: number) {
