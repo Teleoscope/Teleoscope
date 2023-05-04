@@ -63,16 +63,7 @@ export default function WindowDefinitions() {
             icon: () => { return <CommentIcon fontSize="inherit" /> },
             component: (w, id, color) => { return (<Notes id={id} windata={w} color={color} />) },
             showWindow: false,
-            title: (d) => {
-                if (d) {
-                    getReferencedDocument(d.oid);
-                }
-                if (doc) {
-                    return doc?.title;
-                } else {
-                    return "Notez";
-                }
-            },
+            title: (d) => `${d?.history[0].label}`,
             color: () => get_color(),
             tag: "note",
         },

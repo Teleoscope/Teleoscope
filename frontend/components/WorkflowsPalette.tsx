@@ -8,20 +8,23 @@ import {
   ListItemIcon,
   Menu,
 } from "@mui/material";
+import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
+import PaletteIcon from "@mui/icons-material/Palette";
+import PeopleIcon from '@mui/icons-material/People';
 
-import EditableText from "@/components/EditableText";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
-import randomColor from "randomcolor";
 import { sessionActivator } from "@/actions/activeSessionID";
 import { resetWorkspace } from "@/actions/windows";
-import PaletteIcon from "@mui/icons-material/Palette";
-import { swrContext } from "@/util/swr";
-import { StompContext } from "@/components/Stomp";
+
+import EditableText from "@/components/EditableText";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import AddUserDialogue from "./WindowModules/AddUserDialog";
-import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
+
 import { CompactPicker } from "react-color";
-import PeopleIcon from '@mui/icons-material/People';
+import randomColor from "randomcolor";
+
+import { swrContext } from "@/util/swr";
+import { StompContext } from "@/components/Stomp";
 
 export default function WorkflowsPalette(props) {
   const client = useContext(StompContext);

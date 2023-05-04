@@ -201,6 +201,10 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
         
         if task == "add_group":
+            documents = []
+            if "documents" in args:
+                documents = args["documents"]
+
             res = tasks.add_group.signature(
                 args=(),
                 kwargs={
@@ -208,7 +212,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                     "db": args["db"],
                     "label": args["label"],
                     "color": args["color"],
-                    "session_id": args["session_id"]
+                    "session_id": args["session_id"],
+                    "documents": documents
                 }
             )
 

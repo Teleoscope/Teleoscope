@@ -245,9 +245,10 @@ add_group(label: string, color: string, session_id: string, documents=[]) {
   const body = {
     task: 'add_group',
     args: {
-      session_id: session_id,
       label: label,
-      color: color
+      color: color,
+      session_id: session_id,
+      documents: documents
     }
   }
   this.publish(body);

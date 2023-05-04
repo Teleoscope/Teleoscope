@@ -461,7 +461,7 @@ def save_teleoscope_state(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
 
 @app.task 
-def add_group(*args, human=True, description="A group", included_documents=[], **kwargs):
+def add_group(*args, human=True, description="A group", documents=[], **kwargs):
     """
     Adds a group to the group collection and links newly created group to corresponding session.
     
@@ -493,7 +493,7 @@ def add_group(*args, human=True, description="A group", included_documents=[], *
 
     # Creating document to be inserted into mongoDB
 
-    obj = schemas.create_group_object(color, included_documents, label, "Initialize group", user_id, description)
+    obj = schemas.create_group_object(color, documents, label, "Initialize group", user_id, description)
     
     # call needs to be transactional due to groups & sessions collections being updated
 
