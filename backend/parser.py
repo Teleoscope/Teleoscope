@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('directory')                              # directory to parse
 parser.add_argument('-d', '--database', default="teleoscope") # which database to insert into
-parser.add_argument('-s', '--subreddit')                      # the subreddit to parse
+parser.add_argument('-s', '--subreddit', nargs='+')           # the subreddit(s) to parse space delimited
 parser.add_argument('-k', '--chunk-size')                     # how large
 
 # Configuration fields
@@ -79,7 +79,7 @@ class Pushshift:
             try:
                 obj = json.loads(line)
                 if self.args.subreddit != None:
-                    if obj["subreddit"] == self.args.subreddit:
+                    if obj["subreddit"] in self.args.subreddit:
                         self.handle(obj)
             except KeyError as err:
                 if self.args.keyerrors:

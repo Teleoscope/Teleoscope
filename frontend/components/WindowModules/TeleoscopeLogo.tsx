@@ -1,17 +1,27 @@
-import React from "react";
+import React, { useContext } from "react";
 
 // MUI
-import { Link, Typography } from '@mui/material';
+import { Link } from '@mui/material';
 import { Flare } from '@mui/icons-material';
 import { Stack } from '@mui/material';
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
 
 export default function TeleoscopeLogo (props) {
+  const color = useAppSelector((state) => state.windows.color);
+
     return (
-      <Stack direction="row" alignItems="center">
-        <Flare />
+      <Stack direction={props.compact ? "column" : "row"} alignItems="center">
+        <Flare sx={
+          {
+            color: props.color,
+            marginRight: "0.33em",
+            '&:hover' : {
+              color: color
+            }
+          }
+        } />
         <Link
           href="http://github.com/Teleoscope/Teleoscope"
-          variant="h5"
           underline="hover"
           sx={{
             fontWeight: 'fontWeightLight',
@@ -19,11 +29,11 @@ export default function TeleoscopeLogo (props) {
             color: props.color,
             textDecorationColor: props.color,
             '&:hover' : {
-              color: '#FFFFFF',
-              textDecorationColor: "#FFFFFF"  
+              color: props.hoverColor ?  props.hoverColor : color,
+              textDecorationColor: props.textDecorationColor ? props.textDecorationColor : color 
             }
           }}>
-          Teleoscope{props.isConnected ? "" : ": Not connected to database."}
+          {props.compact ? "" : "Teleoscope"}
         </Link>
       </Stack>
     )

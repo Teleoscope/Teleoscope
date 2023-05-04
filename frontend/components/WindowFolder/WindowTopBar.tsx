@@ -1,5 +1,5 @@
 // WindowTopBar.js
-import React from "react";
+import React, { useContext } from "react";
 
 // MUI
 import Stack from "@mui/material/Stack";
@@ -11,14 +11,15 @@ import CloseButton from "../CloseButton"
 
 // actions
 import { useDispatch } from "react-redux";
-import { minimizeWindow } from "../../actions/windows";
+import { minimizeWindow } from "@/actions/windows";
 
 export default function WindowTopBar(props) {
 	const dispatch = useDispatch();
 	return (
-			<Stack  sx={{ cursor: "move" }} direction="row" alignItems="flex-start" justifyContent="space-between">
+			<Stack sx={{ cursor: "move" }} direction="row" alignItems="flex-start" justifyContent="space-between" 
+			onDoubleClick={() => dispatch(minimizeWindow({id: props.id}))}
+			>
 				<IconButton size="small"
-					onClick={() => dispatch(minimizeWindow({id: props.id}))}
 					>{props.icon}
 				</IconButton>
 					<Typography variant="body1" component="div" sx={{ pt: 0.6 }}>

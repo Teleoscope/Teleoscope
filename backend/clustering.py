@@ -26,7 +26,7 @@ class Clustering:
     by the limit param plus the documents in the provided human clusters/groups.
     """
 
-    def __init__(self, user_id, group_id_strings, session_id, limit=10000, topic_label_length=2):
+    def __init__(self, user_id, group_id_strings, session_id, db, limit=10000, topic_label_length=2):
         """Initializes the instance 
 
         Args:
@@ -35,20 +35,23 @@ class Clustering:
             group_id_strings:
                 A list of strings representing the ObjectID of each group to be clustered
             session_id:
-                An string that represents the ObjectID of the current session
+                A string that represents the ObjectID of the current session
+            db: 
+                A string that specifies the current database
             limit:
                 The number of documents to cluster. Default 10000
             topic_label_length:
                 Minimum number of words to use for machine cluster topic labels. Default 2
         """
 
+        self.dbstring = db
         self.user_id = user_id
         self.group_id_strings = group_id_strings
         self.session_id = session_id
         self.limit = limit
         self.topic_label_length = topic_label_length
         self.description = ""
-        self.db = utils.connect() 
+        self.db = utils.connect(db=self.dbstring)
         self.nlp = spacy.load("en_core_web_sm")
         self.group_doc_indices = None
         self.groups = None
@@ -153,7 +156,8 @@ class Clustering:
                 session_id=self.session_id, 
                 human=False, 
                 included_documents=documents, 
-                description=self.description
+                description=self.description,
+                db=self.dbstring
             )
         
     def get_given_labels(self):
@@ -194,6 +198,7 @@ class Clustering:
         logging.info("Gathering all document vectors from embeddings...")
         # grab all document data from embeddings
         reorient = tasks.reorient()
+        reorient.dbstring = self.dbstring
         all_doc_ids, all_doc_vecs = reorient.cacheDocumentsData()
         
         logging.info('Using average ordering...')
@@ -376,11 +381,14 @@ class Clustering:
         label = ""
         for i in range(self.topic_label_length):
             if i > 0: label += " "
-            label += feature_names[sorting[0][i]]
+            try:
+                label += feature_names[sorting[0][i]]
+            except:
+                pass
 
         # build a 7 word description from frequent topic labels
         self.description = feature_names[sorting[0][0]]
-        for i in range(1,min(8, len(sorting[0]))):
+        for i in range(1, min(8, len(sorting[0]))):
             self.description += " " + feature_names[sorting[0][i]]
 
         # check for collisions with existing labels; if yes, append another topic label. 
@@ -516,7 +524,7 @@ class Clustering:
         """
 
         logging.info(f'Clustering action history update.')
-        transaction_session, db = utils.create_transaction_session()
+        transaction_session, db = utils.create_transaction_session(db=self.dbstring)
         session_id = ObjectId(str(self.session_id))
         session = db.sessions.find_one({"_id": session_id}, {"history": { "$slice": 1}})  
 

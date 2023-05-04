@@ -2,35 +2,42 @@
 import { createSlice } from '@reduxjs/toolkit'
 import _ from 'lodash';
 import { getDefaultWindow } from "../components/WindowFolder/WindowDefault"
-import { applyNodeChanges, applyEdgeChanges, addEdge } from 'reactflow';
-
-console.log("Loading windows.js");
-
+import { applyNodeChanges, applyEdgeChanges } from 'reactflow';
 
 const initialState = {
 		nodes: [],
 		edges: [],
 		logical_clock: -1,
+		color: "#D3D3D3",
 		windows: [
-			{
-				i: "default_FABMenu", 
-				x:1, 
-				y:1,
-				w:1,
-				h:2,
-				isDraggable: true, 
-				isResizable: false,
-				type: "FABMenu"
-			}
 		],
+		selection: {
+			nodes: [],
+			edges: []
+		},
 		dragged: {id: "default", type: "Default"},
 		collision: true,
+		settings: {
+			default_document_width: 200,
+			default_document_height: 34,
+			defaultExpanded: true
+		}
 }
 
 export const Windows = createSlice({
 	name: 'windows',
 	initialState: initialState,
 	reducers: {
+		resetWorkspace: () => initialState,
+		setColor: (state, action) => {
+			state.color = action.payload.color;
+		},
+		setSettings: (state, action) => {
+			state.settings = action.payload;
+		},
+		setSelection: (state, action) => {
+			state.selection = action.payload;
+		},
 		setLogicalClock: (state, action) => {
 			state.logical_clock = action.payload;
 		},
@@ -99,17 +106,16 @@ export const Windows = createSlice({
 			state.windows = temp;
 		},
 		maximizeWindow: (state, action) => {
-			var temp = [...state.windows];
-			var ids = state.windows.map((w) => {return w.i});
-			var index = ids.indexOf(action.payload);
+			var temp = [...state.nodes];
+			var ids = state.nodes.map((w) => {return w.id});
+			var index = ids.indexOf(action.payload.id);
 			if (index > -1) {
-				temp[index].w = 5;
-				temp[index].h = 9;
-				temp[index].isResizable = true;
-				temp[index].resizeHandles = ["se"];
-				temp[index].showWindow = true;
+				temp[index].width = 300;
+				temp[index].height = 340;
+				temp[index].style.width = 300;
+				temp[index].style.height = 340;
 			}
-			state.windows = temp;	
+			state.windows = temp;
 		},
 		updateWindow: (state, action) => {
 			var temp = [...state.windows];
@@ -202,6 +208,10 @@ export const Windows = createSlice({
 })
 
 export const {
+	setColor,
+	resetWorkspace,
+	setSelection,
+	setSettings,
 	makeNode,
 	setDraggable,
 	updateNodes,

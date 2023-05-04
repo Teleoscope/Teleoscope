@@ -16,13 +16,22 @@ export default function Session(props) {
                 if (user["username"] === username && user["sessions"].length > 0) {
                     return user["sessions"].map((s) => {
                         const temp = props.sessions.find(ss => ss._id === s)
-                        return (<MenuItem value={s}>{temp?.history[0].label}</MenuItem>)
+                        return (<MenuItem key={s._id} value={s}>{temp?.history[0].label}</MenuItem>)
                     })
                 }
             }
         }
         return (
             <MenuItem value={null}>No sessions for this user...</MenuItem>
+        )
+    }
+
+    const handleNewSession = () => {
+        props.client.initialize_session(
+            randomName, randomColor({
+                luminosity: 'dark',
+                hue: 'random',
+            })
         )
     }
 
@@ -44,12 +53,7 @@ export default function Session(props) {
                 <Button
                     size="small"
                     variant="text"
-                    onClick={() => props.client.initialize_session(
-                        randomName, randomColor({
-                            luminosity: 'dark',
-                            hue: 'random',
-                        })
-                    )}
+                    onClick={handleNewSession}
                     style={{
                         backgroundColor: "#FFFFFF",
                         color: "black",

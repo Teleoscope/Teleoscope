@@ -90,7 +90,7 @@ function Login() {
 
 // function Login({router}) {
 //    const [username, setUsername] = useState("");
-//    const { user } = useSWRAbstract("user", `/api/authenticate/${username}`);
+//    const { user } = swr.useSWRAbstract("user", `/api/authenticate/${username}`);
 //    const [login, setLogin] = useState(false);
 //    const cookies = new Cookies();
 

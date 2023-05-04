@@ -12,7 +12,7 @@ from json import JSONEncoder
 # local files
 import auth
 
-db = auth.mongodb["db"]
+db = "test"
 
 def connect(db=db):
     autht = "authSource=admin&authMechanism=SCRAM-SHA-256"

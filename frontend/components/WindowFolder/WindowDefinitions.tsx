@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { useSelector } from "react-redux";
-import useSWRAbstract from "../../util/swr"
+import { swrContext } from "@/util/swr"
 
 // mui
 import ShortTextIcon from '@mui/icons-material/ShortText';
@@ -12,9 +12,12 @@ import SearchIcon from '@mui/icons-material/Search';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 import Diversity2Icon from '@mui/icons-material/Diversity2';
 import CommentIcon from '@mui/icons-material/Comment';
+import StarIcon from '@mui/icons-material/Star';
+import SettingsIcon from '@mui/icons-material/Settings';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
 
 // actions
-import { RootState } from '../../stores/store'
+import { RootState } from '@/stores/store'
 
 // custom
 import Notes from "../WindowModules/Notes"
@@ -28,12 +31,13 @@ import GroupPalette from "../WindowModules/GroupPalette"
 import Clusters from "../Cluster/Clusters"
 import Cluster from '../Cluster/Cluster';
 
-import { PreprocessTitle } from "../../util/Preprocessers"
+import { PreprocessTitle } from "@/util/Preprocessers"
 import NotePalette from '../WindowModules/NotePalette';
 
 export default function WindowDefinitions() {
     const session_id = useSelector((state: RootState) => state.activeSessionID.value);
-    const { session } = useSWRAbstract("session", `/api/sessions/${session_id}`);
+    const swr = useContext(swrContext);
+    const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
 
     interface Document {
         title: string;
@@ -44,7 +48,7 @@ export default function WindowDefinitions() {
 
     // Helper functions
     const getReferencedDocument = (oid) => {
-        fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/document/${oid}`)
+        fetch(`http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/document/${oid}`)
             .then((response) => response.json())
             .then((data) => setDoc(data))
     }
@@ -59,16 +63,7 @@ export default function WindowDefinitions() {
             icon: () => { return <CommentIcon fontSize="inherit" /> },
             component: (w, id, color) => { return (<Notes id={id} windata={w} color={color} />) },
             showWindow: false,
-            title: (d) => {
-                if (d) {
-                    getReferencedDocument(d.oid);
-                }
-                if (doc) {
-                    return doc?.title;
-                } else {
-                    return "Notez";
-                }
-            },
+            title: (d) => `${d?.history[0].label}`,
             color: () => get_color(),
             tag: "note",
         },
@@ -151,6 +146,30 @@ export default function WindowDefinitions() {
             title: (d) => { return d?.history[0].label },
             color: (d) => { return d?.history[0].color },
             tag: "cluster",
+        },
+        "Bookmarks": {
+            icon: () => { return <StarIcon fontSize="inherit" sx={style} /> },
+            component: (w, id, color) => { return (<Clusters id={id} windata={w} color={color} />) },
+            showWindow: true,
+            title: () => { return "Bookmarks" },
+            color: () => get_color(),
+            tag: "bookmarks",
+        },
+        "Settings": {
+            icon: () => { return <SettingsIcon fontSize="inherit" sx={style} /> },
+            component: (w, id, color) => { return (<Clusters id={id} windata={w} color={color} />) },
+            showWindow: true,
+            title: () => { return "Settings" },
+            color: () => get_color(),
+            tag: "settings",
+        },
+        "Workflows": {
+            icon: (sx=style) => { return <AccountTreeIcon fontSize="inherit" sx={sx} /> },
+            component: (w, id, color) => { return (<Clusters id={id} windata={w} color={color} />) },
+            showWindow: true,
+            title: () => { return "Workflows" },
+            color: () => get_color(),
+            tag: "workflows",
         },
     }
 }

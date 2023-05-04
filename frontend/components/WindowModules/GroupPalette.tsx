@@ -1,5 +1,5 @@
 // GroupPalette.js
-import React from "react";
+import React, { useContext } from "react";
 
 // MUI
 import TextField from "@mui/material/TextField";
@@ -26,16 +26,16 @@ import {
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import Tooltip from "@mui/material/Tooltip";
-import DownloadIcon from '@mui/icons-material/Download';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CopyAllIcon from '@mui/icons-material/CopyAll';
+import DownloadIcon from "@mui/icons-material/Download";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CopyAllIcon from "@mui/icons-material/CopyAll";
 
 // actions
-import useSWRAbstract from "../../util/swr";
-import { useAppSelector, useAppDispatch } from "../../hooks";
+import { swrContext } from "@/util/swr";
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
 
 // contexts
-import { Stomp } from "../Stomp";
+import { StompContext } from "@/components/Stomp";
 import randomColor from "randomcolor";
 import { useCookies } from "react-cookie";
 import ColorPicker from "../ColorPicker";
@@ -44,11 +44,11 @@ import ButtonActions from "../ButtonActions";
 
 // custom components
 export default function GroupPalette(props) {
-  const { sessions } = useSWRAbstract("sessions", `/api/sessions/`);
-  const { users } = useSWRAbstract("users", `/api/users/`);
+  const swr = useContext(swrContext);
+  const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
+  const { users } = swr.useSWRAbstract("users", `users/`);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
-  const client = Stomp.getInstance();
-  client.userId = userid;
+  const client = useContext(StompContext);
   const dispatch = useAppDispatch();
   const [value, setValue] = React.useState(null);
   const [sessionValue, setSessionValue] = React.useState({ label: "" });
@@ -59,9 +59,9 @@ export default function GroupPalette(props) {
   const [open, toggleOpen] = React.useState(false);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
 
-  const { groups } = useSWRAbstract(
+  const { groups } = swr.useSWRAbstract(
     "groups",
-    `/api/sessions/${session_id}/groups`
+    `sessions/${session_id}/groups`
   );
   const group_labels = groups
     ? groups.map((g) => {
@@ -121,9 +121,9 @@ export default function GroupPalette(props) {
     const currSession = sessions.find((ss) => ss._id == selectedSession);
     if (currSession) {
       const groups = currSession.history[0]?.groups;
-      const groups_obj = useSWRAbstract(
+      const groups_obj = swr.useSWRAbstract(
         "groups",
-        `/api/sessions/${selectedSession}/groups`
+        `sessions/${selectedSession}/groups`
       );
 
       if (groups.length == 0) {
@@ -271,8 +271,9 @@ export default function GroupPalette(props) {
   const ClusterButton = () => {
     return (
       <Tooltip title="Cluster on existing groups">
-      <IconButton onClick={() => runClusters()}>
-          <Diversity2Icon fontSize="small"
+        <IconButton onClick={() => runClusters()}>
+          <Diversity2Icon
+            fontSize="small"
             sx={[
               {
                 "&:hover": {
@@ -282,20 +283,18 @@ export default function GroupPalette(props) {
             ]}
           />
         </IconButton>
-        </Tooltip>
-    )
-  }
+      </Tooltip>
+    );
+  };
 
-  const downloadGroups = () => {
-
-  }
-
+  const downloadGroups = () => {};
 
   const DownloadButton = () => {
     return (
       <Tooltip title="Download group content">
-      <IconButton onClick={() => downloadGroups()}>
-          <DownloadIcon fontSize="small"
+        <IconButton onClick={() => downloadGroups()}>
+          <DownloadIcon
+            fontSize="small"
             sx={[
               {
                 "&:hover": {
@@ -305,24 +304,25 @@ export default function GroupPalette(props) {
             ]}
           />
         </IconButton>
-        </Tooltip>
-    )
-  }
+      </Tooltip>
+    );
+  };
 
-  
   const fetchgroups = async () => {
-    var out = [] 
+    var out = [];
     for (const group of groups) {
       var g = group;
-      g["included_text"] = []
+      g["included_text"] = [];
       for (const doc of g.history[0].included_documents) {
-        const response = await fetch(`/api/document/${doc}`).then(res => res.json())
-        g["included_text"].push(response)
+        const response = await fetch(
+          `/api/${swr.subdomain}/document/${doc}`
+        ).then((res) => res.json());
+        g["included_text"].push(response);
       }
-      out.push(g)
+      out.push(g);
     }
     return out;
-  }
+  };
 
   const copyTextToClipboard = async () => {
     const groups = await fetchgroups();
@@ -336,11 +336,11 @@ export default function GroupPalette(props) {
     }
 
     navigator.clipboard.writeText(acc);
-  }
+  };
   const copyJsonToClipboard = async () => {
     const groups = await fetchgroups();
-    navigator.clipboard.writeText( JSON.stringify(groups, null, 2))
-  }
+    navigator.clipboard.writeText(JSON.stringify(groups, null, 2));
+  };
 
   const CopyText = () => {
     return (
@@ -348,9 +348,9 @@ export default function GroupPalette(props) {
         <IconButton onClick={copyTextToClipboard}>
           <ContentCopyIcon fontSize="small" />
         </IconButton>
-        </Tooltip> 
-    )
-  }
+      </Tooltip>
+    );
+  };
 
   const CopyJson = () => {
     return (
@@ -358,10 +358,9 @@ export default function GroupPalette(props) {
         <IconButton onClick={copyJsonToClipboard}>
           <CopyAllIcon fontSize="small" />
         </IconButton>
-        </Tooltip> 
-    )
-  }
-
+      </Tooltip>
+    );
+  };
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
@@ -394,7 +393,7 @@ export default function GroupPalette(props) {
         />
       </Stack>
       <Divider />
-      <ButtonActions inner={[CopyJson, CopyText, ClusterButton]}/>
+      <ButtonActions inner={[CopyJson, CopyText, ClusterButton]} />
       <List>
         {groups?.map((g) => {
           return (

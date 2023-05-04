@@ -1,8 +1,8 @@
 // imports
-import React from "react";
+import React, { useContext } from "react";
 import RGL, { WidthProvider } from "react-grid-layout";
-import { useAppSelector, useAppDispatch } from '../../hooks'
-import { RootState } from '../../stores/store'
+import { useAppSelector, useAppDispatch } from '@/util/hooks'
+import { RootState } from '@/stores/store'
 
 // custom
 import WindowFactory from "./WindowFactory"
@@ -13,10 +13,10 @@ import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
 
 // actions
-import { checkWindow, removeWindow, addWindow, updateWindows } from "../../actions/windows";
+import { checkWindow, removeWindow, addWindow, updateWindows } from "@/actions/windows";
 
 // contexts
-import { Stomp } from '../Stomp'
+import { StompContext } from '@/components/Stomp'
 
 const ReactGridLayout = WidthProvider(RGL);
 
@@ -40,8 +40,8 @@ export default function WindowManager(props) {
   const userid = useAppSelector((state: RootState) => state.activeSessionID.userid); 
   const session_id = useAppSelector((state: RootState) => state.activeSessionID.value); 
   const bookmarks = useAppSelector((state: RootState) => state.bookmarker.value); 
-  const client = Stomp.getInstance();
-  client.userId = userid;
+  const client = useContext(StompContext)
+
   const windows = useAppSelector((state: RootState) => state.windows.windows);
   const collision = useAppSelector((state: RootState) => state.windows.collision);
   
@@ -127,7 +127,7 @@ export default function WindowManager(props) {
               // padding:"1.5em",
               width: "100%",
               height: "100%",
-              // backgroundColor: "red"
+              backgroundColor: "blue"
             }}
           >
             <WindowFactory id={w.i} windata={w} />

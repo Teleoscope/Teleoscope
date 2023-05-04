@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 
 // MUI imports
 import IconButton from "@mui/material/IconButton";
@@ -7,7 +7,7 @@ import StarOutlinedIcon from '@mui/icons-material/StarOutlined';
 
 // Actions
 import { useSelector, useDispatch } from "react-redux";
-import { mark } from "../actions/bookmark";
+import { mark } from "@/actions/bookmark";
 
 
 

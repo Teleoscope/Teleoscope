@@ -5,20 +5,21 @@ import React, { useState } from "react";
 import WindowTopBar from "./WindowTopBar";
 
 // mui
-import Chip from "@mui/material/Chip";
-import Stack from "@mui/material/Stack";
-import Card from "@mui/material/Card";
-
-import Paper from "@mui/material/Paper";
-
-import CardActionArea from "@mui/material/CardActionArea";
-import Divider from "@mui/material/Divider";
+import {
+  Chip,
+  Stack,
+  Card,
+  Paper,
+  Box,
+  CardActionArea,
+  Divider,
+} from "@mui/material";
 
 // actions
 import { useDispatch } from "react-redux";
-import { removeWindow } from "../../actions/windows";
+import { removeWindow, maximizeWindow } from "@/actions/windows";
 
-export default function Window (props) {
+export default function Window(props) {
   const w = props.windata;
   const dispatch = useDispatch();
 
@@ -26,11 +27,12 @@ export default function Window (props) {
     dispatch(removeWindow(props.id));
   };
 
-  if (props.size.width < props.size.minWidth + 1 ) {
+  if (props.size.width < props.size.minWidth + 1) {
     return (
       <Chip
         windata={w}
         icon={props.icon}
+        onDoubleClick={() => dispatch(maximizeWindow({id: props.id}))}
         sx={{
           border: w.isChecked
             ? `2px solid ${props.color}`
@@ -54,6 +56,7 @@ export default function Window (props) {
         windata={w}
         label={props.title}
         icon={props.icon}
+        onDoubleClick={() => dispatch(maximizeWindow({id: props.id}))}
         clickable
         onDelete={handleDelete}
         className="drag-handle"
@@ -77,16 +80,18 @@ export default function Window (props) {
     <Paper
       variant="outlined"
       style={{
-        backgroundColor: "white",
-        height: "100%",
-        width: "100%",
+        height: props.size.height,
+        width: props.size.width,
       }}
       sx={{
         boxShadow: "1",
       }}
     >
       <Stack
-      sx={{ width: "100%", height: "100%" }}
+        style={{
+          height: props.size.height - 2,
+          width: props.size.width - 2,
+        }}
       >
         <WindowTopBar
           title={props.title}
@@ -95,12 +100,16 @@ export default function Window (props) {
           isChecked={w.isChecked}
         />
         <Divider />
-      <div
-        className="nodrag nowheel"
-        style={{ overflow: "auto", width: "100%", height: "100%" }}
-      >
-        {props.inner}
-      </div>
+        <Box
+          className="nodrag nowheel"
+          sx={{
+            flexGrow: 1,
+            flexDirection: "column",
+            overflow: "hidden"
+          }}
+        >
+          {props.inner}
+        </Box>
       </Stack>
     </Paper>
   );

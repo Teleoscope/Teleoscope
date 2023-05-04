@@ -1,0 +1,2 @@
+#!/bin/bash
+pm2 start /home/ubuntu/Teleoscope/backend/importexample.py --max-memory-restart=5G  --instances=4

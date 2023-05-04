@@ -1,11 +1,12 @@
-import React from "react"
+import React, { useContext } from "react"
 import DocumentList from "../Documents/DocumentList"
 
-import useSWRAbstract from "../../util/swr"
+import { swrContext } from "@/util/swr"
 
 export default function Cluster(props) {
     const id = props.id.split("%")[0];
-    const { cluster } = useSWRAbstract("cluster", `/api/clusters/${id}`);
+    const swr = useContext(swrContext);
+    const { cluster } = swr.useSWRAbstract("cluster", `clusters/${id}`);
     const data = cluster?.history[0].included_documents.map((p) => { return [p, 1.0] });
   
     return (

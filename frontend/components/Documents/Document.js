@@ -1,27 +1,27 @@
 // Window.js
-import React from "react";
+import React, { useContext } from "react";
 
 // custom
 import DocumentText from "./DocumentText";
 import GroupSelector from "../GroupSelector";
 
 // mui
-import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
+import { Divider, Box, Stack, IconButton } from "@mui/material";
 import LinkIcon from "@mui/icons-material/Link";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CopyAllIcon from '@mui/icons-material/CopyAll';
 import Tooltip from "@mui/material/Tooltip";
 
 //utils
-import useSWRAbstract from "../../util/swr";
-import { PreprocessText } from "../../util/Preprocessers";
+import { swrContext } from "@/util/swr";
+import { PreprocessText } from "@/util/Preprocessers";
 import ButtonActions from "../ButtonActions";
 
 
 export default function Document(props) {
   const id = props.id.split("%")[0];
-  const { document } = useSWRAbstract("document", `/api/document/${id}`);
+  const swr = useContext(swrContext);
+  const { document } = swr.useSWRAbstract("document", `document/${id}`);
   const text = document ? PreprocessText(document.text) : false;
 
   const handleLinkClick = () => {
@@ -47,7 +47,7 @@ export default function Document(props) {
 
   const CopyText = () => {
     return (
-      <Tooltip title="Copy text to clipboard">
+      <Tooltip title="Copy text to clipboard" key="Copy text to clipboard">
         <IconButton onClick={copyTextToClipboard}>
           <ContentCopyIcon fontSize="small" />
         </IconButton>
@@ -57,7 +57,7 @@ export default function Document(props) {
 
   const CopyJson = () => {
     return (
-      <Tooltip title="Copy metadata to clipboard">
+      <Tooltip title="Copy metadata to clipboard" key="Copy metadata to clipboard" >
         <IconButton onClick={copyJsonToClipboard}>
           <CopyAllIcon fontSize="small" />
         </IconButton>
@@ -66,10 +66,9 @@ export default function Document(props) {
   }
 
   return (
-    <div style={{ overflow: "auto", height: "100%", marginTop: "0em" }}>
+    <Stack sx={{ height: "100%" }}>
       <ButtonActions inner={[CopyJson, CopyText, Link, Group]}></ButtonActions>
       <DocumentText text={text} />
-      <Divider sx={{ margin: 5 }} />
-    </div>
+    </Stack>
   );
 }

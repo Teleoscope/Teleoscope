@@ -1,4 +1,7 @@
 import { Client } from "@stomp/stompjs";
+import React, {createContext} from "react";
+
+export const StompContext = createContext(null)
 
 // TODO: look at websocket example code here and replicate
 // anywhere that needs to route a request to the server
@@ -24,23 +27,26 @@ interface Body {
 export class Stomp {
 
   private _userid: string;
+  private database: string;
   private client: Client;
   private static stomp: Stomp;
   private creationTime: Date;
   private _loaded: boolean;
 
-  private constructor() {
+  private constructor(options) {
     this.creationTime = new Date();
     this.loaded = false;
+    this.database = options.database;
+    this._userid = options.userid;
   }
 
   /**
    * Ensure that there is only one copy of the Stomp class.
    * @returns 
    */
-  public static getInstance(): Stomp {
+  public static getInstance(options): Stomp {
     if (!Stomp.stomp) {
-      Stomp.stomp = new Stomp();
+      Stomp.stomp = new Stomp(options);
       Stomp.stomp.client_init();
     }
     return Stomp.stomp;
@@ -114,6 +120,7 @@ export class Stomp {
   publish(body: Body) {
     const headers = { content_type: "application/json", content_encoding: "utf-8" };
     body['args']['userid'] = this.userId;
+    body['args']['db'] = this.database;
     this.client.publish({
       destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,
       headers: headers,
@@ -218,12 +225,13 @@ add_login(username: string, password: string) {
 /*
   Pushes the user account information to create their account
 */
-register_account(username: string, password) {
+register_account(username: string, password, database: string) {
   const body = {
     task: "register_account",
     args: {
       password: password,
       username: username,
+      db: database
     }
   }
   this.publish(body);
@@ -233,13 +241,14 @@ register_account(username: string, password) {
 /**
  * Requests to create a new group object in MongoDB.
  */
-add_group(label: string, color: string, session_id: string) {
+add_group(label: string, color: string, session_id: string, documents=[]) {
   const body = {
     task: 'add_group',
     args: {
-      session_id: session_id,
       label: label,
-      color: color
+      color: color,
+      session_id: session_id,
+      documents: documents
     }
   }
   this.publish(body);
@@ -297,6 +306,28 @@ remove_group(group_id: string, session_id: string) {
   return body;
 }
 
+
+
+
+/**
+ * Removes a group from a session in MongoDB. Does not delete the group.
+ * 
+ * @param teleoscope_id 
+ * @param session_id 
+ * @returns 
+ */
+remove_teleoscope(teleoscope_id: string, session_id: string) {
+  const body = {
+    task: 'remove_teleoscope',
+    args: {
+      teleoscope_id: teleoscope_id,
+      session_id: session_id,
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
 /**
  * Add a document to a group.
  */
@@ -345,12 +376,28 @@ update_group_label(group_id: string, label: string) {
 /**
  * Request to add a note for a particular interface object.
  */
-add_note(oid: string, type:string) {
+add_note(session_id: string, label: string = "new note") {
   const body = {
     task: 'add_note',
     args: {
-      oid: oid,
-      type: type
+      session_id: session_id,
+      label: label
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+
+/**
+ * Request to add a note for a particular interface object.
+ */
+remove_note(note_id: string, session_id: string) {
+  const body = {
+    task: 'remove_note',
+    args: {
+      note_id: note_id,
+      session_id: session_id
     }
   }
   this.publish(body);
@@ -371,6 +418,22 @@ update_note(note_id: string, content) {
   this.publish(body);
   return body;
 }
+
+/**
+ * Relabels a note.
+ */
+relabel_note(note_id: string, label: string) {
+  const body = {
+    task: 'relabel_note',
+    args: {
+      note_id: note_id,
+      label: label
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
 
 /**
  * Reorients the Teleoscope to the positive_docs and away from the negative_docs.
@@ -433,6 +496,41 @@ relabel_group(label: string, group_id: string) {
     args: {
       label: label,
       group_id: group_id
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+
+/**
+ * Relabel the session.
+ */
+
+relabel_session(label: string, relabeled_session_id: string) {
+  const body = {
+    task: "relabel_session",
+    args: {
+      label: label,
+      relabeled_session_id: relabeled_session_id
+    }
+  }
+  this.publish(body);
+  return body;
+}
+
+
+
+/**
+ * Relabel the teleoscope.
+ */
+
+relabel_teleoscope(label: string, teleoscope_id: string) {
+  const body = {
+    task: "relabel_teleoscope",
+    args: {
+      label: label,
+      teleoscope_id: teleoscope_id
     }
   }
   this.publish(body);
