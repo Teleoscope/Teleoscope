@@ -965,7 +965,7 @@ def remove_note(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session(db=database)
     userid = ObjectId(str(kwargs["userid"]))
 
-    note_id = ObjectId(str(kwargs["note_id"])))
+    note_id = ObjectId(str(kwargs["note_id"]))
     session_id = ObjectId(str(kwargs["session_id"]))
 
     with transaction_session.start_transaction():
