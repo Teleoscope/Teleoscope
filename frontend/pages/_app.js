@@ -56,9 +56,7 @@ function App({ Component, pageProps: { session, ...pageProps }}) {
             <main>
                 <div className={`app-container ${user ? 'bg-light' : ''}`}>
                     {authorized &&
-                        <SessionProvider session={session}> 
                             <Component {...pageProps} />
-                        </SessionProvider>
                     }
                 </div>
             </main>
