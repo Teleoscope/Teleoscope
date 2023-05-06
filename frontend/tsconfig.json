@@ -32,7 +32,7 @@
      "next-env.d.ts",
      "**/*.ts",
      "**/*.tsx"
- , "pages/home/index.js", "stores/store.ts", "pages/_app.js", "util/authenticate.js"  ],
+ , "pages/home/index.js", "stores/store.ts", "pages/_app.js", "util/authenticate.js", "components/AccordionSection.jsx"  ],
    "exclude": [
      "node_modules"
    ]

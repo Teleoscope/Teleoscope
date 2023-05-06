@@ -100,7 +100,7 @@ export default function DocViewer(props) {
                         {key}:{" "}
                       </Typography>
                       <Typography noWrap variant="caption">
-                        {value}
+                        {JSON.stringify(value)}
                       </Typography>
                     </ListItem>
                   );
