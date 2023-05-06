@@ -2,7 +2,6 @@ import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import '@/styles/global.css';
-import { SessionProvider } from "next-auth/react"
 
 
 import { userService } from '../services/user.service';
