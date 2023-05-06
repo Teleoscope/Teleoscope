@@ -40,6 +40,15 @@ export class Stomp {
     this._userid = options.userid;
   }
 
+
+  public static getFakeClient(): Stomp {
+    if (!Stomp.stomp) {
+      Stomp.stomp = new Stomp({database: "aita", userid: "0"});
+      Stomp.stomp.fake_client_init();
+    }
+    return Stomp.stomp;
+  }
+
   /**
    * Ensure that there is only one copy of the Stomp class.
    * @returns 
@@ -66,6 +75,12 @@ export class Stomp {
 
   public get loaded() {
     return this._loaded;
+  }
+
+  fake_client_init() {
+    this.client = {
+      publish: (...args) => console.log(args)
+    }
   }
 
   /**

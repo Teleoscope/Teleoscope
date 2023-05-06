@@ -24,7 +24,7 @@ import {
   removeWindow,
   setEdges,
   setSelection,
-  setColor
+  setColor,
 } from "@/actions/windows";
 import { loadBookmarkedDocuments } from "@/actions/bookmark";
 import { sessionActivator } from "@/actions/activeSessionID";
@@ -32,8 +32,6 @@ import { StompContext } from "./Stomp";
 import ContextMenu from "./Context/ContextMenu";
 
 const nodeTypes = { windowNode: WindowNode };
-const multiSelectionKeyCode = ["Meta", "Control", "Shift"];
-const panOnDrag = [1];
 
 function Flow(props) {
   const reactFlowWrapper = useRef(null);
@@ -54,14 +52,17 @@ function Flow(props) {
 
   const client = useContext(StompContext);
   const swr = useContext(swrContext);
-  const { session, session_loading, session_error } = swr.useSWRAbstract("session", `sessions/${session_id}`);
+  const { session, session_loading, session_error } = swr.useSWRAbstract(
+    "session",
+    `sessions/${session_id}`
+  );
   const { user } = swr.useSWRAbstract("user", `users/${userid}`);
 
   const session_history_item = session?.history[0];
   const dispatch = useAppDispatch();
 
-  if (user && session_error ) {
-    dispatch(sessionActivator(user.sessions[0]))
+  if (user && session_error) {
+    dispatch(sessionActivator(user.sessions[0]));
   }
 
   if (session_history_item) {
@@ -94,13 +95,11 @@ function Flow(props) {
 
       dispatch(
         setColor({
-          color: session_history_item.color
+          color: session_history_item.color,
         })
       );
 
-      dispatch(
-        loadBookmarkedDocuments(session_history_item.bookmarks)
-      )
+      dispatch(loadBookmarkedDocuments(session_history_item.bookmarks));
     }
   }
 
@@ -169,6 +168,7 @@ function Flow(props) {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
+
 
   const onDrop = useCallback(
     (event) => {
@@ -281,12 +281,12 @@ function Flow(props) {
             onEdgesChange={onEdgesChange}
             panOnScroll={true}
             selectionOnDrag={true}
-            panOnDrag={panOnDrag}
+            panOnDrag={[1]}
             onDragOver={onDragOver}
             onDrop={onDrop}
             onConnect={(connection) => onConnect(connection, edges)}
             onInit={setReactFlowInstance}
-            multiSelectionKeyCode={multiSelectionKeyCode}
+            multiSelectionKeyCode={["Meta", "Control", "Shift"]}
             disableKeyboardA11y={true}
             onClick={() =>
               client.save_UI_state(session_id, bookmarks, nodes, edges)

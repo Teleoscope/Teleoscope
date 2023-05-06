@@ -5,15 +5,7 @@ import React, { useState } from "react";
 import WindowTopBar from "./WindowTopBar";
 
 // mui
-import {
-  Chip,
-  Stack,
-  Card,
-  Paper,
-  Box,
-  CardActionArea,
-  Divider,
-} from "@mui/material";
+import { Chip, Stack, Paper, Box, Divider } from "@mui/material";
 
 // actions
 import { useDispatch } from "react-redux";
@@ -32,7 +24,7 @@ export default function Window(props) {
       <Chip
         windata={w}
         icon={props.icon}
-        onDoubleClick={() => dispatch(maximizeWindow({id: props.id}))}
+        onDoubleClick={() => dispatch(maximizeWindow({ id: props.id }))}
         sx={{
           border: w.isChecked
             ? `2px solid ${props.color}`
@@ -56,7 +48,7 @@ export default function Window(props) {
         windata={w}
         label={props.title}
         icon={props.icon}
-        onDoubleClick={() => dispatch(maximizeWindow({id: props.id}))}
+        onDoubleClick={() => dispatch(maximizeWindow({ id: props.id }))}
         clickable
         onDelete={handleDelete}
         className="drag-handle"
@@ -105,7 +97,7 @@ export default function Window(props) {
           sx={{
             flexGrow: 1,
             flexDirection: "column",
-            overflow: "hidden"
+            overflow: "hidden",
           }}
         >
           {props.inner}

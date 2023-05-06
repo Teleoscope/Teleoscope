@@ -59,10 +59,11 @@ export default function GroupPalette(props) {
   const [open, toggleOpen] = React.useState(false);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
 
-  const { groups } = props.demo ? props.demoGroups : swr.useSWRAbstract(
+  const { groups } = swr.useSWRAbstract(
     "groups",
     `sessions/${session_id}/groups`
   );
+
 
   const [showGroupsBool, setShowGroupsBool] = React.useState(false);
   const [showSubmitBool, setShowSubmitBool] = React.useState(false);
