@@ -8,13 +8,17 @@ import {
 } from "@mui/material";
 import { swrContext } from "@/util/swr";
 
-import Notes from "./WindowModules/Notes";
+import Teleoscope from "./Teleoscope";
 import { useAppSelector } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import DocumentListItem from "./Documents/DocumentListItem";
 
-export default function NotesViewer(props) {
+export default function TeleoscopeViewer(props) {
   const swr = useContext(swrContext);
-  const { note } = swr.useSWRAbstract("note", `note/${props.id}`);
+  const { teleoscope } = swr.useSWRAbstract(
+    "teleoscope",
+    `teleoscopes/${props.id}`
+  );
   const settings = useAppSelector((state) => state.windows.settings);
 
   return (
@@ -28,11 +32,12 @@ export default function NotesViewer(props) {
         aria-controls="panel3a-content"
         id="panel3a-header"
       >
-        <Typography variant="h5">{note?.history[0].label}</Typography>
+        <Typography variant="h5">{teleoscope?.history[0].label}</Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack direction="column">
-          <Notes id={props.id}></Notes>
+        {teleoscope?.history[0].rank_slice.map(([docid, rank]) => <DocumentListItem key={docid} id={docid}></DocumentListItem>)}
+
         </Stack>
       </AccordionDetails>
     </Accordion>

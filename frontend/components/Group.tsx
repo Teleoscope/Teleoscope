@@ -18,7 +18,7 @@ import ButtonActions from './ButtonActions';
 export default function Group(props) {
   const id = props.id.split("%")[0];
   const swr = useContext(swrContext);
-  const { group } = swr.useSWRAbstract("group", `groups/${id}`);
+  const { group } = props.windata.demo ? props.windata.demodata : swr.useSWRAbstract("group", `groups/${id}`);
   const data = group?.history[0].included_documents.map((p) => { return [p, 1.0] });
 
   const fetchdocs = async () => {

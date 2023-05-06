@@ -29,7 +29,7 @@ export default function SearchWindow(props) {
       dispatch(loadBookmarkedDocuments([]))
     }
     return (
-      <Tooltip title="Copy metadata to clipboard" key="Copy metadata to clipboard">
+      <Tooltip title="Make group from bookmarks" key="Make group from bookmarks">
         <IconButton onClick={handleMakeGroupFromBookmarks}>
           <GroupWorkIcon fontSize="small" />
         </IconButton>

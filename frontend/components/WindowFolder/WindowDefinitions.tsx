@@ -119,7 +119,7 @@ export default function WindowDefinitions() {
             icon: () => { return <SearchIcon fontSize="inherit" sx={style} /> },
             component: (w, id, color) => { return (<Search id={id} windata={w} color={color} />) },
             showWindow: true,
-            title: () => { return "Search" },
+            title: (d) => { return `Search` },
             color: () => get_color(),
             tag: "search",
         },

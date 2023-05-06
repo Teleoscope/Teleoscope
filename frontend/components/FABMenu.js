@@ -74,13 +74,14 @@ export default function FABMenu(props) {
       onClick={handleClick}
       onMouseEnter={handleOpen}
       onMouseLeave={handleClose}
-      open={open}
+      open={open || props.alwaysOpen}
       transitionDuration={0}
     >
       {Object.keys(actions).map((action) => (
         <SpeedDialAction
           sx={{color: get_color()}}
           key={action}
+          open={open}
           icon={actions[action].icon}
           tooltipTitle={action}
           onClick={() => handleAddNode(actions[action].default_window.i, actions[action].default_window.type)}
