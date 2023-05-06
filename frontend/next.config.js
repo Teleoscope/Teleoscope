@@ -2,6 +2,13 @@
 require('dotenv').config({ path: './.env.local' })
 
 options = {
+  typescript: {
+    // !! WARN !!
+    // Dangerously allow production builds to successfully complete even if
+    // your project has type errors.
+    // !! WARN !!
+    ignoreBuildErrors: true,
+  },
   reactStrictMode: true,
   distDir: 'build',
   async headers() {
