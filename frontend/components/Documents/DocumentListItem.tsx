@@ -32,18 +32,6 @@ export default function DocumentListItem(props) {
     client.remove_document_from_group(props.group._id, props.id);
   };
 
-  const Delete = () => {
-    return (
-      <IconButton
-        sx={{ width: 20, height: 20 }}
-        onClick={(e) => handleRemove(e)}
-      >
-        <DeleteIcon
-          sx={{ "&:hover": { color: "blue" }, width: 20, height: 20 }}
-        ></DeleteIcon>
-      </IconButton>
-    );
-  };
 
   const onDragStart = (event, id, type, typetag) => {
     event.dataTransfer.setData('application/reactflow/type', type);
@@ -94,7 +82,14 @@ export default function DocumentListItem(props) {
           <DocumentTitle title={title} noWrap={false} />
         </Stack>
 
-        {props.ShowDeleteIcon ? <Delete /> : <></>}
+        {props.ShowDeleteIcon ? <IconButton
+        sx={{ width: 20, height: 20 }}
+        onClick={(e) => handleRemove(e)}
+      >
+        <DeleteIcon
+          sx={{ "&:hover": { color: "blue" }, width: 20, height: 20 }}
+        ></DeleteIcon>
+      </IconButton> : <></>}
       </Stack>
     </div>
   );

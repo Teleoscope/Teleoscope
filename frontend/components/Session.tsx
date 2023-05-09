@@ -27,6 +27,7 @@ export default function Session(props) {
     }
 
     const handleNewSession = () => {
+        console.log("I am being called")
         props.client.initialize_session(
             randomName, randomColor({
                 luminosity: 'dark',

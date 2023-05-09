@@ -53,9 +53,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # Make sure they look like Stomp
 
         match task:
-            case "update_edges":
-                res = tasks.initialize_session.signature(args=(), kwargs=kwargs)
-
             case "copy_cluster":
                 res = tasks.copy_cluster.signature(args=(), kwargs=kwargs)
 
