@@ -14,7 +14,7 @@ export default function ButtonActions(props) {
         alignItems="center"
         style={{ margin: 0 }}
       >
-        {props.inner.map((Component) => Component())}
+        {props.inner.map(([Component, props]) => Component(props))}
       </Stack>
       <Divider />
     </>

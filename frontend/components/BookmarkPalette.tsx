@@ -40,7 +40,7 @@ export default function SearchWindow(props) {
   
   return (
     <Stack direction="column">
-    <ButtonActions inner={[MakeGroupFromBookmarks]}></ButtonActions>
+    <ButtonActions inner={[[MakeGroupFromBookmarks, {}]]}></ButtonActions>
       <Box>
         {bookmarks.map((docid) => <DocumentListItem key={docid} id={docid}> </DocumentListItem>)}
       </Box>

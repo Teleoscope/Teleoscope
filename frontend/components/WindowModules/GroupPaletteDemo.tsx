@@ -390,7 +390,7 @@ export default function GroupPalette(props) {
         />
       </Stack>
       <Divider />
-      <ButtonActions inner={[CopyJson, CopyText, ClusterButton]} />
+      <ButtonActions inner={[[CopyJson, {}], [CopyText, {}], [ClusterButton, {}]]} />
       <List>
         {groups?.map((g) => {
           return (
