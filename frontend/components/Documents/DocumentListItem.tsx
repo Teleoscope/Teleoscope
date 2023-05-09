@@ -4,12 +4,10 @@ import React, { useContext, useState } from "react";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
-
+import CircleIcon from '@mui/icons-material/Circle';
+import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
 // actions
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
-import { RootState } from "@/stores/store";
-import { dragged } from "@/actions/windows";
-import { setDraggable } from "@/actions/windows";
 
 // custom
 import GroupSelector from "../GroupSelector";
@@ -23,19 +21,12 @@ import { PreprocessTitle } from "@/util/Preprocessers";
 // contexts
 import { StompContext } from "../Stomp";
 
+
 export default function DocumentListItem(props) {
-  const userid = useAppSelector((state) => state.activeSessionID.userid);
   const client = useContext(StompContext)
   const swr = useContext(swrContext);
   const { document } = swr.useSWRAbstract("document", `document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;
-
-  const showGroupIcon = Object.prototype.hasOwnProperty.call(
-    props,
-    "showGroupIcon"
-  )
-    ? props.showGroupIcon
-    : true;
 
   const handleRemove = (e) => {
     client.remove_document_from_group(props.group._id, props.id);
@@ -66,7 +57,9 @@ export default function DocumentListItem(props) {
       props.setIndex(props.listIndex)
     }
   }
-
+  const handleRead = () => {
+    client.mark(document._id, !document.state.read)
+  }
   return (
     <div
     draggable={true}
@@ -91,8 +84,13 @@ export default function DocumentListItem(props) {
           spacing={1}
           sx={{ marginRight: "0.5em" }}
         >
-          <BookmarkSelector id={props.id} />
-          {showGroupIcon ? <GroupSelector id={props.id} /> : null}
+          <Stack direction="row" alignItems="center" sx={{marginRight: "0.75em"}}>
+            <BookmarkSelector id={props.id} />
+            {props.showReadIcon ? <IconButton onClick={handleRead}>
+      {document?.state.read ? <CircleIcon sx={{ fontSize: 15 }} /> : <CircleOutlinedIcon sx={{ fontSize: 15 }} />}
+    </IconButton> : null }
+            {props.showGroupIcon ? <GroupSelector id={props.id} /> : null}
+          </Stack>
           <DocumentTitle title={title} noWrap={false} />
         </Stack>
 

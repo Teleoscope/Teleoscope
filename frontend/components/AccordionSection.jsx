@@ -12,7 +12,7 @@ export default function AccordionSection(props) {
       <Accordion expanded={expanded} disableGutters={true} square={true} sx={{ paddingTop: expanded ? "4px" : "", borderTop: expanded ? "1px solid #D3D3D3" : ""}}>
         <AccordionSummary
           onClick={handleExpand}
-          expandcompact={props.compact}
+          expanded={props.expanded}
           aria-controls="panel2a-content"
           id="panel2a-header"
         >

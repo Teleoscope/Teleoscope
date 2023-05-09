@@ -32,6 +32,7 @@ export default function DocumentList(props) {
   const renderItem = (index, item, currentIndex, setIndex) => {
     return (
       <DocumentListItem
+        showReadIcon={true}
         setIndex={setIndex}
         listIndex={index}
         group={props.group}
