@@ -74,7 +74,7 @@ export default function NotePalette(props) {
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
-      <ButtonActions inner={[NewNote]}></ButtonActions>
+      <ButtonActions inner={[[NewNote, {}]]}></ButtonActions>
       <List>
         {notes?.map((n) => (
           <div

@@ -19,7 +19,7 @@ import { StompContext } from './Stomp'
 //utils
 import { swrContext } from "@/util/swr";
 
-export default function groupSelector(props) {
+export default function GroupSelector(props) {
   const userid = useAppSelector((state) => state.activeSessionID.userid);
   const client = useContext(StompContext)
 

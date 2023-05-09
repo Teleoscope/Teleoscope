@@ -41,11 +41,13 @@ import { useCookies } from "react-cookie";
 import ColorPicker from "../ColorPicker";
 import EditableText from "../EditableText";
 import ButtonActions from "../ButtonActions";
+import { MakeDocx } from "../DocxMaker";
 
 // custom components
 export default function GroupPalette(props) {
   const swr = useContext(swrContext);
   const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
+  
   const { users } = swr.useSWRAbstract("users", `users/`);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
   const client = useContext(StompContext);
@@ -59,10 +61,12 @@ export default function GroupPalette(props) {
   const [open, toggleOpen] = React.useState(false);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
 
-  const { groups } = props.demo ? props.demoGroups : swr.useSWRAbstract(
-    "groups",
-    `sessions/${session_id}/groups`
-  );
+  const { groups } = props.demo
+    ? props.demoGroups
+    : swr.useSWRAbstract("groups", `sessions/${session_id}/groups`);
+
+    const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
+
 
   const [showGroupsBool, setShowGroupsBool] = React.useState(false);
   const [showSubmitBool, setShowSubmitBool] = React.useState(false);
@@ -308,12 +312,12 @@ export default function GroupPalette(props) {
     var out = [];
     for (const group of groups) {
       var g = group;
-      g["included_text"] = [];
+      g["documents"] = [];
       for (const doc of g.history[0].included_documents) {
         const response = await fetch(
           `/api/${swr.subdomain}/document/${doc}`
         ).then((res) => res.json());
-        g["included_text"].push(response);
+        g["documents"].push(response);
       }
       out.push(g);
     }
@@ -325,7 +329,7 @@ export default function GroupPalette(props) {
     var acc = "";
     for (const group of groups) {
       acc = acc + `${group.history[0].label}\n`;
-      for (const text of group.included_text) {
+      for (const text of group.documents) {
         acc = acc + text.title;
         acc = acc + text.text;
       }
@@ -358,6 +362,26 @@ export default function GroupPalette(props) {
     );
   };
 
+
+  const SaveDocx = () => {
+    return (
+      <Tooltip title="Download as Docx" key="Download as Docx">
+        <IconButton onClick={() => createDocx()}>
+          <DownloadIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    );
+  }
+
+    const createDocx = async () => {
+      const groups = await fetchgroups();
+      MakeDocx({
+        tag: "All Groups for Session",
+        title: session.history[0].label,
+        groups: groups
+      });
+    };
+
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
       <Stack
@@ -389,7 +413,14 @@ export default function GroupPalette(props) {
         />
       </Stack>
       <Divider />
-      <ButtonActions inner={[CopyJson, CopyText, ClusterButton]} />
+      <ButtonActions
+        inner={[
+          [SaveDocx, {}],
+          [CopyJson, {}],
+          [CopyText, {}],
+          [ClusterButton, {}],
+        ]}
+      />
       <List>
         {groups?.map((g) => {
           return (

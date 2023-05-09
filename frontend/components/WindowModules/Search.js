@@ -62,7 +62,7 @@ export default function SearchWindow(props) {
           onChange={(e) => handleSetQuery(e)}
         />
       </Stack>
-      <ButtonActions inner={[Count]}></ButtonActions>
+      <ButtonActions inner={[[Count, {}]]}></ButtonActions>
 
       <Box sx={{ flexGrow: 1, flexDirection: "column"}}>
         <DocumentList
