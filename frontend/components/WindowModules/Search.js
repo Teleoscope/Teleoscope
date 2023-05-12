@@ -9,11 +9,11 @@ import { useDispatch } from "react-redux";
 import { updateWindow } from "@/actions/windows";
 
 // custom components
-import DocumentList from "../Documents/DocumentList";
+import DocumentList from "@/components/Documents/DocumentList";
 
 // util
 import { swrContext } from "@/util/swr";
-import ButtonActions from "../ButtonActions";
+import ButtonActions from "@/components/ButtonActions";
 
 export default function SearchWindow(props) {
   const [query, setQuery] = useState(" ");

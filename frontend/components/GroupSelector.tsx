@@ -11,10 +11,10 @@ import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import FolderCopyIcon from "@mui/icons-material/FolderCopy";
 
 // actions
-import { useAppSelector } from "../util/hooks";
+import { useAppSelector } from "@/util/hooks";
 
 // contexts
-import { StompContext } from './Stomp'
+import { StompContext } from '@/components/Stomp'
 
 //utils
 import { swrContext } from "@/util/swr";

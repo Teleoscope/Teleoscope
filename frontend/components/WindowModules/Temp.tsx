@@ -38,9 +38,9 @@ import { StompContext } from "@/components/Stomp";
 import randomColor from "randomcolor";
 import { useCookies } from "react-cookie";
 import ConnectingAirportsIcon from "@mui/icons-material/ConnectingAirports";
-import ColorPicker from "../ColorPicker";
-import EditableText from "../EditableText";
-import withDroppable from "../DropItem";
+import ColorPicker from "@/components/ColorPicker";
+import EditableText from "@/components/EditableText";
+import withDroppable from "@/components/DropItem";
 
 // custom components
 export default function GroupPalette(props) {

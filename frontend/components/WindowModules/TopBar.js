@@ -1,24 +1,15 @@
 import React, { useContext, useEffect } from "react";
-import space from "color-space";
-import hexRgb from "hex-rgb";
-import rgbHex from "rgb-hex";
 
 // material ui
-import { Menu, MenuItem, rgbToHex, Typography } from "@mui/material";
-import { AppBar } from "@mui/material";
-import { Toolbar } from "@mui/material";
-import { Stack, Paper } from "@mui/material";
-import { Box } from "@mui/material";
+import { Menu, MenuItem, Typography } from "@mui/material";
+import { Stack } from "@mui/material";
 
 import { Divider } from "@mui/material";
 import { IconButton } from "@mui/material";
 import { AccountCircle } from "@mui/icons-material";
 
 // components
-import TeleoscopeLogo from "./TeleoscopeLogo";
-import AddUserDialogue from "./AddUserDialog";
-import Account from "./Account";
-import Session from "../Session";
+import Account from "@/components/WindowModules/Account";
 
 // actions
 import { useSelector, useDispatch } from "react-redux";

@@ -5,7 +5,7 @@ import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 import SpeedDialAction from '@mui/material/SpeedDialAction';
 
 // custom
-import MenuActions from "./Context/ContextMenuActions"
+import MenuActions from "@/components/Context/ContextMenuActions"
 
 // actions
 import { makeNode } from "@/actions/windows";

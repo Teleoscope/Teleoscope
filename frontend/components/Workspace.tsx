@@ -3,9 +3,11 @@ import React, { useContext } from "react";
 // custom components
 import DrawerMini from "@/components/DrawerMini";
 
-import { useAppSelector } from '@/util/hooks'
-import { Stomp, StompContext } from './Stomp'
+
+import { Stomp, StompContext } from '@/components/Stomp'
+
 import { swr, swrContext } from "@/util/swr";
+import { useAppSelector } from '@/util/hooks'
 
 export default function Workspace(props) {
   

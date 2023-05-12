@@ -2,7 +2,7 @@
 import React, { useContext } from "react";
 
 // custom
-import DocumentText from "./DocumentText";
+import DocumentText from "@/components/Documents/DocumentText";
 
 // mui
 import { Stack, IconButton } from "@mui/material";
@@ -10,8 +10,8 @@ import { Stack, IconButton } from "@mui/material";
 //utils
 import { swrContext } from "@/util/swr";
 import { PreprocessText } from "@/util/Preprocessers";
-import ButtonActions from "../ButtonActions";
-import { SaveDocx, CopyJson, CopyText, Link, Group } from "./DocumentActions";
+import ButtonActions from "@/components/ButtonActions";
+import { SaveDocx, CopyJson, CopyText, Link, Group } from "@/components/Documents/DocumentActions";
 
 export default function Document(props) {
   const id = props.id.split("%")[0];

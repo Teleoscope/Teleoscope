@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 
 // custom
-import CloseButton from "../CloseButton";
+import CloseButton from "@/components/CloseButton";
 
 // actions
 import { useDispatch } from "react-redux";

@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import LoadingButton from "@mui/lab/LoadingButton";
 
 // custom components
-import DocumentListItem from "./DocumentListItem";
-import ItemList from "../ItemList";
+import DocumentListItem from "@/components/Documents/DocumentListItem";
+import ItemList from "@/components/ItemList";
 import { setSelection } from "@/actions/windows";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 

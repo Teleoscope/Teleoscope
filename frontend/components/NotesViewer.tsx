@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { swrContext } from "@/util/swr";
 
-import Notes from "./WindowModules/Notes";
+import Notes from "@/components/WindowModules/Notes";
 import { useAppSelector } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 

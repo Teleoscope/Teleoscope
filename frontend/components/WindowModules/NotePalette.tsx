@@ -15,7 +15,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CreateIcon from "@mui/icons-material/Create";
 
 // custom
-import EditableText from "../EditableText";
+import EditableText from "@/components/EditableText";
 import ButtonActions from "@/components/ButtonActions";
 
 // actions

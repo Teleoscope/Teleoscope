@@ -10,18 +10,17 @@ import Divider from '@mui/material/Divider';
 
 
 // custom components
-import MenuActions from "./ContextMenuActions"
+import MenuActions from "@/components/Context/ContextMenuActions"
 
 // actions
 import { makeNode } from "@/actions/windows";
 
 // util
 import { swrContext } from "@/util/swr"
-//import { cluster_by_groups, initialize_teleoscope } from "../Stomp";
 
 // contexts
-import { StompContext } from '../Stomp'
-import ColorPicker from "../ColorPicker";
+import { StompContext } from '@/components/Stomp'
+import ColorPicker from "@/components/ColorPicker";
 import Typography from "@mui/material/Typography";
 
 export default function ContextMenu(props) {

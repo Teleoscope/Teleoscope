@@ -12,8 +12,8 @@ import {
 // custom
 import Flow from "@/components/Flow";
 import Accordion from "@/components/Accordion";
-import TopBar from "./WindowModules/TopBar";
-import TeleoscopeLogo from "./WindowModules/TeleoscopeLogo";
+import TopBar from "@/components/WindowModules/TopBar";
+import TeleoscopeLogo from "@/components/WindowModules/TeleoscopeLogo";
 
 const drawerWidth = 300;
 const breakpoint = 100;

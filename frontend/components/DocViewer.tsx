@@ -9,10 +9,10 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 
 import { Typography, Stack, List, ListItem, Divider } from "@mui/material";
-import WindowDefinitions from "./WindowFolder/WindowDefinitions";
+import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import ButtonActions from "@/components/ButtonActions";
-import { CopyJson, CopyText, Group, Link, SaveDocx } from "./Documents/DocumentActions";
+import { CopyJson, CopyText, Group, Link, SaveDocx } from "@/components/Documents/DocumentActions";
 
 
 export default function DocViewer(props) {

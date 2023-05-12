@@ -6,7 +6,7 @@ import { Stack, Box, Tooltip, IconButton } from "@mui/material";
 // actions
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { RootState } from "@/stores/store";
-import { StompContext } from "./Stomp";
+import { StompContext } from "@/components/Stomp";
 
 // custom components
 import DocumentListItem from "@/components/Documents/DocumentListItem";

@@ -9,9 +9,9 @@ import ReactFlow, {
   useViewport,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import WindowNode from "./Nodes/WindowNode";
+import WindowNode from "@/components/Nodes/WindowNode";
 
-import FABMenu from "./FABMenu";
+import FABMenu from "@/components/FABMenu";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 import { swrContext } from "@/util/swr";
@@ -28,8 +28,8 @@ import {
 } from "@/actions/windows";
 import { loadBookmarkedDocuments } from "@/actions/bookmark";
 import { sessionActivator } from "@/actions/activeSessionID";
-import { StompContext } from "./Stomp";
-import ContextMenu from "./Context/ContextMenu";
+import { StompContext } from "@/components/Stomp";
+import ContextMenu from "@/components/Context/ContextMenu";
 
 const nodeTypes = { windowNode: WindowNode };
 

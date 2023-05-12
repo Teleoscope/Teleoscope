@@ -6,20 +6,18 @@ import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CircleIcon from '@mui/icons-material/Circle';
 import CircleOutlinedIcon from '@mui/icons-material/CircleOutlined';
-// actions
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
 
 // custom
-import GroupSelector from "../GroupSelector";
-import BookmarkSelector from "../BookmarkSelector";
-import DocumentTitle from "./DocumentTitle";
+import GroupSelector from "@/components/GroupSelector";
+import BookmarkSelector from "@/components/BookmarkSelector";
+import DocumentTitle from "@/components/Documents/DocumentTitle";
 
 //utils
 import { swrContext } from "@/util/swr";
 import { PreprocessTitle } from "@/util/Preprocessers";
 
 // contexts
-import { StompContext } from "../Stomp";
+import { StompContext } from "@/components/Stomp";
 
 
 export default function DocumentListItem(props) {

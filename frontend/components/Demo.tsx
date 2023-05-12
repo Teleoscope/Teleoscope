@@ -15,7 +15,7 @@ import Flow from "@/components/Flow";
 import BookmarkPalette from "@/components/BookmarkPalette";
 
 import { swr, swrContext } from "@/util/swr";
-import { Stomp, StompContext } from "./Stomp";
+import { Stomp, StompContext } from "@/components/Stomp";
 import ReactFlow, {
   MiniMap,
   ReactFlowProvider,
@@ -29,14 +29,14 @@ import ReactFlow, {
 } from "reactflow";
 import { setSelection } from "@/actions/windows";
 import WindowNode from "@/components/Nodes/WindowNode";
-import SelectionViewer from "./SelectionViewer";
+import SelectionViewer from "@/components/SelectionViewer";
 import {
   account_fights_teleoscope,
   blocking_doc,
   blocking_teleoscope,
   taking_doc,
   taking_teleoscope,
-} from "./demoTeleoscopes";
+} from "@/components/demoTeleoscopes";
 // API fetcher for SWR global config
 //const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
 const fetcher = (...args) => fetch(...args).then((res) => res.json());

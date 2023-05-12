@@ -1,6 +1,6 @@
 import { useCallback, memo } from "react";
 import { Handle, Position, useStore } from "reactflow";
-import WindowFactory from "../WindowFolder/WindowFactory";
+import WindowFactory from "@/components/WindowFolder/WindowFactory";
 import { NodeResizer } from "@reactflow/node-resizer";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import "@reactflow/node-resizer/dist/style.css";

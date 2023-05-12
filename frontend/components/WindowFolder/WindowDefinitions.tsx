@@ -20,19 +20,19 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import { RootState } from '@/stores/store'
 
 // custom
-import Notes from "../WindowModules/Notes"
-import FABMenu from "../FABMenu"
-import Group from "../Group"
-import Document from "../Documents/Document"
-import TeleoscopePalette from "../WindowModules/TeleoscopePalette"
-import Teleoscope from "../Teleoscope"
-import Search from "../WindowModules/Search"
-import GroupPalette from "../WindowModules/GroupPalette"
-import Clusters from "../Cluster/Clusters"
-import Cluster from '../Cluster/Cluster';
+import Notes from "@/components/WindowModules/Notes"
+import FABMenu from "@/components/FABMenu"
+import Group from "@/components/Group"
+import Document from "@/components/Documents/Document"
+import TeleoscopePalette from "@/components/WindowModules/TeleoscopePalette"
+import Teleoscope from "@/components/Teleoscope"
+import Search from "@/components/WindowModules/Search"
+import GroupPalette from "@/components/WindowModules/GroupPalette"
+import Clusters from "@/components/Cluster/Clusters"
+import Cluster from '@/components/Cluster/Cluster';
 
 import { PreprocessTitle } from "@/util/Preprocessers"
-import NotePalette from '../WindowModules/NotePalette';
+import NotePalette from '@/components/WindowModules/NotePalette';
 
 export default function WindowDefinitions() {
     const session_id = useSelector((state: RootState) => state.activeSessionID.value);

@@ -5,7 +5,7 @@ import React, { useState, useContext } from 'react';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 // custom components
-import DocumentList from "./Documents/DocumentList"
+import DocumentList from "@/components/Documents/DocumentList"
 
 // util
 import { swrContext } from "@/util/swr"
