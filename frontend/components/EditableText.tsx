@@ -1,5 +1,6 @@
 // EditableText.tsx
 
+import clientPromise from "@/util/mongodb";
 import React, { useContext } from "react";
 
 // Creat an EditableText component
@@ -9,7 +10,6 @@ function EditableText(props) {
   
   const handleChange = (e) => {
     setValue(e.target.value)
-    props.callback(e.target.value)
   }
 
   return (
@@ -22,12 +22,17 @@ function EditableText(props) {
             type="text"
             value={value}
             onChange={(e) => handleChange(e)}
-            onBlur={() => setShowInputElement(false)}
+            onBlur={() => {
+              setShowInputElement(false)
+              props.callback(value)
+            }}
             autoFocus
           />
         ) : (
           <span 
-            onDoubleClick={() => setShowInputElement(true)}
+            onDoubleClick={() => {
+              setShowInputElement(true)
+            }}
           >
             {value}
           </span>

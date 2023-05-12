@@ -3,7 +3,6 @@ import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit'
 import ActiveSessionID from "@/actions/activeSessionID"
 import ActiveHistoryItem from "@/actions/activeHistoryItem"
 import Bookmark from "@/actions/bookmark"
-import Groups from '../actions/groups'
 import Windows from '../actions/windows'
 import Teleoscopes from '../actions/teleoscopes'
 
@@ -12,7 +11,6 @@ const store = configureStore({
     activeSessionID: ActiveSessionID,
     activeHistoryItem: ActiveHistoryItem,
     bookmarker: Bookmark,
-    grouper: Groups,
     windows: Windows,
     teleoscopes: Teleoscopes
   },

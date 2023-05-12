@@ -7,7 +7,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
 // custom components
-import DocumentText from "./DocumentText"
+import DocumentText from "@/components/DocumentText"
 
 
 export default function Expander(props) {

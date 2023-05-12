@@ -3,8 +3,8 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
 import DownloadIcon from "@mui/icons-material/Download";
 import Tooltip from "@mui/material/Tooltip";
-import GroupSelector from "../GroupSelector";
-import { MakeDocx } from "../DocxMaker";
+import GroupSelector from "@/components/GroupSelector";
+import { MakeDocx } from "@/components/DocxMaker";
 import { Stack, IconButton } from "@mui/material";
 
 export const handleLinkClick = (props) => {

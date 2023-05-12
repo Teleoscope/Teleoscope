@@ -13,13 +13,14 @@ export default function SelectionViewer(props) {
       {selection.nodes.map((node) => {
         if (node.data.type == "Document") {
           return (
-            <DocViewer compact={true} windata={node.data} id={node.id.split("%")[0]}></DocViewer>
+            <DocViewer compact={true} windata={node.data} key={node.id.split("%")[0]} id={node.id.split("%")[0]}></DocViewer>
           );
         }
         if (node.data.type == "Group" && !props.noGroup) {
           return (
             <GroupViewer
               compact={true}
+              key={node.id.split("%")[0]}
               id={node.id.split("%")[0]}
             ></GroupViewer>
           );
@@ -28,6 +29,7 @@ export default function SelectionViewer(props) {
           return (
             <NotesViewer
               compact={true}
+              key={node.id.split("%")[0]}
               id={node.id.split("%")[0]}
             ></NotesViewer>
           );
@@ -37,6 +39,7 @@ export default function SelectionViewer(props) {
           return (
             <TeleoscopeViewer
               compact={true}
+              key={node.id.split("%")[0]}
               id={node.id.split("%")[0]}
             ></TeleoscopeViewer>
           );

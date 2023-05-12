@@ -6,12 +6,12 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 
 // custom
-import DocumentList from "./Documents/DocumentList";
+import DocumentList from "@/components/Documents/DocumentList";
 
 //utils
 import { swrContext } from "@/util/swr";
-import ButtonActions from "./ButtonActions";
-import { CopyJson, CopyText, SaveDocx } from "./GroupActions";
+import ButtonActions from "@/components/ButtonActions";
+import { CopyJson, CopyText, SaveDocx } from "@/components/GroupActions";
 
 export default function Group(props) {
   const id = props.id.split("%")[0];

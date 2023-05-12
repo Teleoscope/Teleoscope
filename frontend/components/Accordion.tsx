@@ -12,7 +12,7 @@ import AccordionSection from "@/components/AccordionSection";
 import SelectionViewer from "@/components/SelectionViewer";
 
 import Clusters from "@/components/Cluster/Clusters";
-import WorkflowsPalette from "./WorkflowsPalette";
+import WorkflowsPalette from "@/components/WorkflowsPalette";
 export default function SimpleAccordion(props) {
   return (
     <Stack

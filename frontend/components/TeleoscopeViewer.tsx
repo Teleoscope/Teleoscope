@@ -8,10 +8,9 @@ import {
 } from "@mui/material";
 import { swrContext } from "@/util/swr";
 
-import Teleoscope from "./Teleoscope";
 import { useAppSelector } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import DocumentListItem from "./Documents/DocumentListItem";
+import DocumentListItem from "@/components/Documents/DocumentListItem";
 
 export default function TeleoscopeViewer(props) {
   const swr = useContext(swrContext);

@@ -14,7 +14,7 @@ import FlareIcon from "@mui/icons-material/Flare";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 // custom
-import EditableText from "../EditableText";
+import EditableText from "@/components/EditableText";
 
 // actions
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
@@ -22,7 +22,6 @@ import { RootState } from "@/stores/store";
 
 // utils
 import { swrContext } from "@/util/swr";
-import withDroppable from "../DropItem";
 import { StompContext } from "@/components/Stomp";
 
 export default function TeleoscopePalette(props) {

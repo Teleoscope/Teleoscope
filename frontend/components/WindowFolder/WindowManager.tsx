@@ -5,8 +5,8 @@ import { useAppSelector, useAppDispatch } from '@/util/hooks'
 import { RootState } from '@/stores/store'
 
 // custom
-import WindowFactory from "./WindowFactory"
-import { getDefaultWindow } from "./WindowDefault"
+import WindowFactory from "@/components/WindowFolder/WindowFactory"
+import { getDefaultWindow } from "@/components/WindowFolder/WindowDefault"
 
 // css
 import "react-grid-layout/css/styles.css"

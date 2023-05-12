@@ -18,7 +18,7 @@ import { resetWorkspace } from "@/actions/windows";
 
 import EditableText from "@/components/EditableText";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
-import AddUserDialogue from "./WindowModules/AddUserDialog";
+import AddUserDialogue from "@/components/WindowModules/AddUserDialog";
 
 import { CompactPicker } from "react-color";
 import randomColor from "randomcolor";

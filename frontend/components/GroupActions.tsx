@@ -4,7 +4,7 @@ import Tooltip from "@mui/material/Tooltip";
 
 import IconButton from "@mui/material/IconButton";
 import DownloadIcon from "@mui/icons-material/Download";
-import { MakeDocx } from "./DocxMaker";
+import { MakeDocx } from "@/components/DocxMaker";
 
 const fetchdocs = async ({ data, swr }) => {
   var docs = [];

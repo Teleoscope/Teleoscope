@@ -566,5 +566,24 @@ cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {
   this.publish(body);
   return body;
 }
+
+/**
+ * Marks a document read or unread.
+ * @param document_id 
+ * @param read 
+ * @returns 
+ */
+mark(document_id: string, read: boolean) {
+  console.log("here fffs")
+  const body = {
+    task: "mark",
+    args: {
+      document_id: document_id,
+      read: read
+    }
+  }
+  this.publish(body);
+  return body;
+}
   
 }

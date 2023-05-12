@@ -38,9 +38,9 @@ import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { StompContext } from "@/components/Stomp";
 import randomColor from "randomcolor";
 import { useCookies } from "react-cookie";
-import ColorPicker from "../ColorPicker";
-import EditableText from "../EditableText";
-import ButtonActions from "../ButtonActions";
+import ColorPicker from "@/components/ColorPicker";
+import EditableText from "@/components/EditableText";
+import ButtonActions from "@/components/ButtonActions";
 
 // custom components
 export default function GroupPalette(props) {

@@ -38,10 +38,10 @@ import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { StompContext } from "@/components/Stomp";
 import randomColor from "randomcolor";
 import { useCookies } from "react-cookie";
-import ColorPicker from "../ColorPicker";
-import EditableText from "../EditableText";
-import ButtonActions from "../ButtonActions";
-import { MakeDocx } from "../DocxMaker";
+import ColorPicker from "@/components/ColorPicker";
+import EditableText from "@/components/EditableText";
+import ButtonActions from "@/components/ButtonActions";
+import { MakeDocx } from "@/components/DocxMaker";
 
 // custom components
 export default function GroupPalette(props) {
@@ -49,9 +49,7 @@ export default function GroupPalette(props) {
   const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
   
   const { users } = swr.useSWRAbstract("users", `users/`);
-  const userid = useAppSelector((state) => state.activeSessionID.userid);
   const client = useContext(StompContext);
-  const dispatch = useAppDispatch();
   const [value, setValue] = React.useState(null);
   const [sessionValue, setSessionValue] = React.useState({ label: "" });
   const [groupValue, setGroupValue] = React.useState({ label: null });

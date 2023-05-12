@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 
 // custom
-import WindowTopBar from "./WindowTopBar";
+import WindowTopBar from "@/components/WindowFolder/WindowTopBar";
 
 // mui
 import { Chip, Stack, Paper, Box, Divider } from "@mui/material";

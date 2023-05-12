@@ -5,11 +5,11 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Typography, Stack, List, ListItem, Divider } from "@mui/material";
-import WindowDefinitions from "./WindowFolder/WindowDefinitions";
+import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
-import DocumentListItem from "./Documents/DocumentListItem";
-import { CopyJson, CopyText, SaveDocx } from "./GroupActions";
-import ButtonActions from "./ButtonActions";
+import DocumentListItem from "@/components/Documents/DocumentListItem";
+import { CopyJson, CopyText, SaveDocx } from "@/components/GroupActions";
+import ButtonActions from "@/components/ButtonActions";
 export default function DocViewer(props) {
   const swr = useContext(swrContext);
   const { group } = swr.useSWRAbstract("group", `groups/${props.id}`);
