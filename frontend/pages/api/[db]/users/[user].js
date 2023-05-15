@@ -1,5 +1,5 @@
-import clientPromise from '@/util/mongodb';
-import { ObjectId } from 'bson';
+import clientPromise from "@/util/mongodb";
+import { ObjectId } from "bson";
 
 export default async (req, res) => {
   const client = await clientPromise;
@@ -8,6 +8,8 @@ export default async (req, res) => {
   if (user == "-1") {
     return res.json("userid is -1");
   }
-  const user_data = await db.collection("users").findOne({_id: new ObjectId(user)});
+  const user_data = await db
+    .collection("users")
+    .findOne({ _id: new ObjectId(user) });
   res.json(user_data);
 };

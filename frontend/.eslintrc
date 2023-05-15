@@ -1,19 +1,15 @@
 {
-   "root": true,
-   "parser": "@typescript-eslint/parser",
-   "plugins": [
-     "@typescript-eslint",
-     "react", 
-     "react-hooks"
-   ],
-   "extends": [
-     "eslint:recommended",
-     "plugin:@typescript-eslint/eslint-recommended",
-     "plugin:@typescript-eslint/recommended",
-     "plugin:json/recommended"
-   ],
-   env: {
-    browser: true,
-    node: true,
-  },
- }
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "react", "react-hooks"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:json/recommended"
+  ],
+  "env": {
+    "browser": true,
+    "node": true
+  }
+}

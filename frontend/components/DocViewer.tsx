@@ -6,21 +6,19 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-
-
 import { Typography, Stack, List, ListItem, Divider } from "@mui/material";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import ButtonActions from "@/components/ButtonActions";
-import { CopyJson, CopyText, Group, Link, SaveDocx } from "@/components/Documents/DocumentActions";
-
+import { DocumentActions } from "@/components/Documents/DocumentActions";
 
 export default function DocViewer(props) {
   const swr = useContext(swrContext);
-  const { document } = props.windata?.demo ? props.windata.demodata : swr.useSWRAbstract("document", `document/${props.id}`);
+  const { document } = props.windata?.demo
+    ? props.windata.demodata
+    : swr.useSWRAbstract("document", `document/${props.id}`);
   const settings = useAppSelector((state) => state.windows.settings);
 
-  
   return (
     <Accordion
       defaultExpanded={settings.defaultExpanded}
@@ -41,15 +39,7 @@ export default function DocViewer(props) {
         <Stack spacing={1} sx={{ margin: "1em" }}>
           <Typography variant="h5">{document?.title}</Typography>
           <Divider></Divider>
-          <ButtonActions
-        inner={[
-          [SaveDocx, { document: document }],
-          [CopyJson, { document: document }],
-          [CopyText, { document: document }],
-          [Link, { document: document }],
-          [Group, { document: document }],
-        ]}
-      ></ButtonActions>
+          <DocumentActions document={document} />
           <Typography variant="body">{document?.text}</Typography>
           <List>
             {document?.metadata

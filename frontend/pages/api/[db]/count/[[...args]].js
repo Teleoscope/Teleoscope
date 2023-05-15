@@ -1,4 +1,4 @@
-import clientPromise from '@/util/mongodb';
+import clientPromise from "@/util/mongodb";
 
 export default async (req, res) => {
   const client = await clientPromise;
@@ -7,17 +7,15 @@ export default async (req, res) => {
 
   var count = 0;
   if (!args) {
-    count = await db
-    .collection("documents")
-    .count({})
+    count = await db.collection("documents").count({});
   } else if (args.length == 1) {
     count = await db
-    .collection("documents")
-    .count({ $text: { $search: args[0].replace("\"", "\\\"") } })
+      .collection("documents")
+      .count({ $text: { $search: args[0].replace('"', '\\"') } });
   } else if (args.length == 2) {
     count = await db
-    .collection("documents")
-    .count({ $text: { $search: args[0].replace("\"", "\\\"") } })
+      .collection("documents")
+      .count({ $text: { $search: args[0].replace('"', '\\"') } });
   }
   res.json(count);
 };

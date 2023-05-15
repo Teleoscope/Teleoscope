@@ -63,7 +63,6 @@ export default function DocumentList(props) {
     }
   };
 
-
   return (
     <ItemList data={data} render={renderItem} onSelect={onSelect}></ItemList>
   );

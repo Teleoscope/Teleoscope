@@ -5,7 +5,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  MenuItem
+  MenuItem,
 } from "@mui/material";
 import { Box } from "@mui/material";
 import { FormControl } from "@mui/material";
@@ -26,9 +26,7 @@ export default function AddUserDialogue(props) {
 
   return (
     <Box component="form" sx={{ display: "flex", flexWrap: "wrap" }}>
-      <FormControl
-        variant="filled"
-      >
+      <FormControl variant="filled">
         <InputLabel id="demo-simple-select-helper-label">User</InputLabel>
         <Select
           labelId="demo-simple-select-helper-label"
@@ -36,17 +34,19 @@ export default function AddUserDialogue(props) {
           label="User"
           value={dialogValue.label}
           onChange={(event) => setDialogValue({ label: event.target.value })}
-        ><MenuItem value="">None</MenuItem>
-          {users.map(u => <MenuItem key={u._id} value={u}>{u.username}</MenuItem>)}
+        >
+          <MenuItem value="">None</MenuItem>
+          {users.map((u) => (
+            <MenuItem key={u._id} value={u}>
+              {u.username}
+            </MenuItem>
+          ))}
         </Select>
         <FormHelperText>Select User</FormHelperText>
       </FormControl>
       <Button
         onClick={() => {
-          client.add_user_to_session(
-            dialogValue.label._id,
-            props.session_id
-          );
+          client.add_user_to_session(dialogValue.label._id, props.session_id);
         }}
       >
         Add

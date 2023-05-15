@@ -1,7 +1,6 @@
-import { useCallback } from 'react';
-import { Handle, Position } from 'reactflow';
-import Search from '@/components/WindowModules/Search';
-
+import { useCallback } from "react";
+import { Handle, Position } from "reactflow";
+import Search from "@/components/WindowModules/Search";
 
 const handleStyle = { left: 10 };
 
@@ -17,7 +16,12 @@ export default function SearchNode({ data }) {
         <Search></Search>
       </div>
       <Handle type="source" position={Position.Bottom} id="a" />
-      <Handle type="source" position={Position.Bottom} id="b" style={handleStyle} />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="b"
+        style={handleStyle}
+      />
     </>
   );
 }

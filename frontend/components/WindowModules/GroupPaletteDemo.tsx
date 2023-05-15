@@ -64,7 +64,6 @@ export default function GroupPalette(props) {
     `sessions/${session_id}/groups`
   );
 
-
   const [showGroupsBool, setShowGroupsBool] = React.useState(false);
   const [showSubmitBool, setShowSubmitBool] = React.useState(false);
   const [showColorPicker, setShowColorPicker] = React.useState(false);
@@ -390,7 +389,13 @@ export default function GroupPalette(props) {
         />
       </Stack>
       <Divider />
-      <ButtonActions inner={[[CopyJson, {}], [CopyText, {}], [ClusterButton, {}]]} />
+      <ButtonActions
+        inner={[
+          [CopyJson, {}],
+          [CopyText, {}],
+          [ClusterButton, {}],
+        ]}
+      />
       <List>
         {groups?.map((g) => {
           return (

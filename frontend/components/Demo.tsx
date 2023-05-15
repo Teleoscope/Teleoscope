@@ -399,7 +399,7 @@ export default function Demo(props) {
     ],
   };
 
-  const [teleoscopeEdges, setTelescopeEdges] = React.useState([])
+  const [teleoscopeEdges, setTelescopeEdges] = React.useState([]);
 
   const [teleoscopeNode, setTeleoscopeNode] = React.useState({
     id: "%teleoscope",
@@ -433,20 +433,20 @@ export default function Demo(props) {
     draggable: false,
     connectable: true,
   });
-const doc2edge = {
-  "source": "637f7e826bc2573503502eb5%document",
-  "sourceHandle": "637f7e826bc2573503502eb5%document",
-  "target": "%teleoscope",
-  "targetHandle": "%teleoscope",
-  "id": "reactflow__edge-637f7e826bc2573503502eb5%document637f7e826bc2573503502eb5%document-%teleoscope%teleoscope"
-}
-const doc1edge =  {
-    "source": "637f6542b4b0ff51b395d612%document",
-    "sourceHandle": "637f6542b4b0ff51b395d612%document",
-    "target": "%teleoscope",
-    "targetHandle": "%teleoscope",
-    "id": "reactflow__edge-637f6542b4b0ff51b395d612%document637f6542b4b0ff51b395d612%document-%teleoscope%teleoscope"
-}
+  const doc2edge = {
+    source: "637f7e826bc2573503502eb5%document",
+    sourceHandle: "637f7e826bc2573503502eb5%document",
+    target: "%teleoscope",
+    targetHandle: "%teleoscope",
+    id: "reactflow__edge-637f7e826bc2573503502eb5%document637f7e826bc2573503502eb5%document-%teleoscope%teleoscope",
+  };
+  const doc1edge = {
+    source: "637f6542b4b0ff51b395d612%document",
+    sourceHandle: "637f6542b4b0ff51b395d612%document",
+    target: "%teleoscope",
+    targetHandle: "%teleoscope",
+    id: "reactflow__edge-637f6542b4b0ff51b395d612%document637f6542b4b0ff51b395d612%document-%teleoscope%teleoscope",
+  };
 
   const doc1 = {
     id: "637f6542b4b0ff51b395d612%document",
@@ -529,8 +529,8 @@ const doc1edge =  {
     };
 
     if (sources.includes(doc1.id) && sources.includes(doc2.id) === false) {
-      setTelescopeEdges([doc1edge])
-      
+      setTelescopeEdges([doc1edge]);
+
       update = {
         data: {
           ...teleoscopeNode.data,
@@ -544,7 +544,7 @@ const doc1edge =  {
     }
 
     if (sources.includes(doc2.id) && sources.includes(doc1.id) === false) {
-      setTelescopeEdges([doc2edge])
+      setTelescopeEdges([doc2edge]);
 
       update = {
         data: {
@@ -559,7 +559,7 @@ const doc1edge =  {
     }
 
     if (sources.includes(doc2.id) && sources.includes(doc1.id)) {
-      setTelescopeEdges([doc1edge, doc2edge])
+      setTelescopeEdges([doc1edge, doc2edge]);
 
       update = {
         data: {

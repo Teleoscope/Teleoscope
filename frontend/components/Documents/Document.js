@@ -11,7 +11,13 @@ import { Stack, IconButton } from "@mui/material";
 import { swrContext } from "@/util/swr";
 import { PreprocessText } from "@/util/Preprocessers";
 import ButtonActions from "@/components/ButtonActions";
-import { SaveDocx, CopyJson, CopyText, Link, Group } from "@/components/Documents/DocumentActions";
+import {
+  SaveDocx,
+  CopyJson,
+  CopyText,
+  Link,
+  Group,
+} from "@/components/Documents/DocumentActions";
 
 export default function Document(props) {
   const id = props.id.split("%")[0];

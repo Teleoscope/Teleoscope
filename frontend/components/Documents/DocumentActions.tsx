@@ -5,7 +5,8 @@ import DownloadIcon from "@mui/icons-material/Download";
 import Tooltip from "@mui/material/Tooltip";
 import GroupSelector from "@/components/GroupSelector";
 import { MakeDocx } from "@/components/DocxMaker";
-import { Stack, IconButton } from "@mui/material";
+import { IconButton } from "@mui/material";
+import ButtonActions from "../ButtonActions";
 
 export const handleLinkClick = (props) => {
   if (props.document.metadata.url) {
@@ -74,5 +75,19 @@ export const SaveDocx = (props) => {
         <DownloadIcon fontSize="small" />
       </IconButton>
     </Tooltip>
+  );
+};
+
+export const DocumentActions = ({ document }) => {
+  return (
+    <ButtonActions
+      inner={[
+        [SaveDocx, { document: document }],
+        [CopyJson, { document: document }],
+        [CopyText, { document: document }],
+        [Link, { document: document }],
+        [Group, { document: document }],
+      ]}
+    ></ButtonActions>
   );
 };

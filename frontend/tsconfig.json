@@ -1,39 +1,38 @@
 {
-   "compilerOptions": {
-     "target": "es5",
-     "lib": [
-       "dom",
-       "dom.iterable",
-       "esnext"
-     ],
-     "allowJs": true,
-     "skipLibCheck": true,
-     "strict": false,
-     "forceConsistentCasingInFileNames": true,
-     "noEmit": true,
-     "incremental": true,
-     "esModuleInterop": true,
-     "module": "esnext",
-     "moduleResolution": "node",
-     "resolveJsonModule": true,
-     "isolatedModules": true,
-     "jsx": "preserve",
-     "baseUrl": ".",
-     "paths": {
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
       "@/components/*": ["components/*"],
-      "@/util/*" : ["util/*"],
+      "@/util/*": ["util/*"],
       "@/styles/*": ["styles/*"],
       "@/stores/*": ["stores/*"],
-      "@/actions/*": ["actions/*"],  
-      "@/tests/*": ["tests/*"],
-     }
-   },
-   "include": [
-     "next-env.d.ts",
-     "**/*.ts",
-     "**/*.tsx"
- , "pages/home/index.js", "stores/store.ts", "pages/_app.js", "util/authenticate.js", "components/AccordionSection.jsx"  ],
-   "exclude": [
-     "node_modules"
-   ]
- }
+      "@/actions/*": ["actions/*"],
+      "@/tests/*": ["tests/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "pages/home/index.js",
+    "stores/store.ts",
+    "pages/_app.js",
+    "util/authenticate.js",
+    "components/AccordionSection.jsx"
+  ],
+  "exclude": ["node_modules"]
+}

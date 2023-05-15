@@ -14,7 +14,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Stack from "@mui/material/Stack";
 import Divider from "@mui/material/Divider";
 import Diversity2Icon from "@mui/icons-material/Diversity2";
-import FolderCopyIcon from '@mui/icons-material/FolderCopy';
+import FolderCopyIcon from "@mui/icons-material/FolderCopy";
 
 import {
   Box,
@@ -48,7 +48,7 @@ export default function GroupPalette(props) {
   const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
   const { users } = swr.useSWRAbstract("users", `users/`);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
-  const client = useContext(StompContext)
+  const client = useContext(StompContext);
 
   const dispatch = useAppDispatch();
   const [value, setValue] = React.useState(null);
@@ -263,7 +263,6 @@ export default function GroupPalette(props) {
     );
   };
 
-
   const Picker = (props) => {
     return (
       <ColorPicker
@@ -315,17 +314,15 @@ export default function GroupPalette(props) {
     );
   };
 
-
   const Test = (props) => {
     return (
       <IconButton onClick={() => console.log("problem")} {...props}>
-          <FolderCopyIcon fontSize="inherit" />
-        </IconButton>
-    )
-  }
+        <FolderCopyIcon fontSize="inherit" />
+      </IconButton>
+    );
+  };
 
   const Droppable = withDroppable(Test);
-
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
@@ -382,12 +379,18 @@ export default function GroupPalette(props) {
         <CopyGroup />
       </Stack>
       <Divider />
-      
+
       <List>
         {groups?.map((g) => {
           return (
             <div>
-              <Droppable group={g} id={g._id} type="Group" typetag="group" {...props} />
+              <Droppable
+                group={g}
+                id={g._id}
+                type="Group"
+                typetag="group"
+                {...props}
+              />
               {showColorPicker ? <Picker group={g} /> : <span></span>}
             </div>
           );

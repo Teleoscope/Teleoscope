@@ -169,7 +169,6 @@ function Flow(props) {
     event.dataTransfer.dropEffect = "move";
   }, []);
 
-
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
