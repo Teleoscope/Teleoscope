@@ -20,8 +20,7 @@ export default function Itemlist(props) {
       } else if (e.code === "ArrowDown") {
         nextIndex = Math.min(props.data.length - 1, currentItemIndex + 1);
       } else if (e.code === "Enter") {
-
-        dispatch(mark(props.data[currentItemIndex][0]))    
+        dispatch(mark(props.data[currentItemIndex][0]));
       }
 
       if (nextIndex !== null) {
@@ -54,13 +53,15 @@ export default function Itemlist(props) {
   const handleSetCurrentItemIndex = (index) => {
     setCurrentItemIndex(index);
     props.onSelect(props.data[index]);
-  }
+  };
 
   return (
     <Virtuoso
       ref={ref}
       data={props.data}
-      itemContent={(index, item) => props.render(index, item, currentItemIndex, handleSetCurrentItemIndex)}
+      itemContent={(index, item) =>
+        props.render(index, item, currentItemIndex, handleSetCurrentItemIndex)
+      }
       scrollerRef={scrollerRef}
     />
   );

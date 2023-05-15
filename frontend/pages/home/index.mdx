@@ -1,8 +1,9 @@
 # Teleoscope
- 
+
 Teleoscope is a system for searching through large document sets supported by machine learning workflows.
 
 ## Tutorial
+
 This tutorial uses data from Reddit's [AmITheAsshole](https://www.reddit.com/r/AmItheAsshole/) advice forum. Follow along step-by-step to learn how the Teleoscope system works and to explore this fascinating slice of the internet.
 
 ### Search
@@ -15,61 +16,63 @@ Try copying the following search and clicking on a post to read it.
 "friendly" wedding -mother
 ```
 
-import Demo from "@/components/Demo"
+import Demo from "@/components/Demo";
 export function MakeDemo(props) {
-    return <Demo type={props.type} />
+  return <Demo type={props.type} />;
 }
 
 <MakeDemo type="Search" />
 
-import { Callout } from 'nextra-theme-docs'
+import { Callout } from "nextra-theme-docs";
 
 <Callout emoji="💡">
-    Use up ⬆️ or down ⬇️ to navigate the search results and `Enter` to **bookmark**.
+  Use up ⬆️ or down ⬇️ to navigate the search results and `Enter` to
+  **bookmark**.
 </Callout>
 
 ### Bookmarks
+
 You can choose documents that you'd like to save to read later by **bookmarking** them. Bookmarks are one of a few ways to **group** documents together. Try bookmarking by clicking on the ⭐ or by pressing `Enter` while a document is selected.
 
-<br/>
+<br />
 
 <MakeDemo type="Bookmarks" />
 
-import GroupWorkIcon from '@mui/icons-material/GroupWork';
+import GroupWorkIcon from "@mui/icons-material/GroupWork";
 export function GroupIcon() {
-    return <GroupWorkIcon />
+  return <GroupWorkIcon />;
 }
 
-
-
-
-
 <Callout emoji="💡">
-    You can click the <GroupIcon /> to make a **group** from the existing bookmarks.
+  You can click the <GroupIcon /> to make a **group** from the existing
+  bookmarks.
 </Callout>
 
 ### Groups
+
 You can create **groups** of documents. At first, you can use this just to organize your documents. But, as you use the Teleoscope system more, you'll start to use groups as a primary interaction mechanism.
+
 <br />
 <MakeDemo type="Groups" />
 
+import PanToolIcon from "@mui/icons-material/PanTool";
 
-import PanToolIcon from '@mui/icons-material/PanTool';
+import ControlCameraIcon from "@mui/icons-material/ControlCamera";
 
-import ControlCameraIcon from '@mui/icons-material/ControlCamera';
+import ReadMoreIcon from "@mui/icons-material/ReadMore";
 
-import ReadMoreIcon from '@mui/icons-material/ReadMore';
+import HeightIcon from "@mui/icons-material/Height";
 
-import HeightIcon from '@mui/icons-material/Height';
+import RotateRightIcon from "@mui/icons-material/RotateRight";
 
-import RotateRightIcon from '@mui/icons-material/RotateRight';
+import MapIcon from "@mui/icons-material/Map";
 
-import MapIcon from '@mui/icons-material/Map';
-
-import AllOutIcon from '@mui/icons-material/AllOut';
+import AllOutIcon from "@mui/icons-material/AllOut";
 
 ### Workspace
+
 All operations take place on the **Workspace**. You can:
+
 - **Pan** by clicking and dragging on the background <PanToolIcon />
 - **Move** by clicking and dragging on a workspace item's titlebar <ControlCameraIcon />
 - **Resize** by clicking and dragging on the edge of a workspace item ↕️ ↔️
@@ -78,15 +81,15 @@ All operations take place on the **Workspace**. You can:
 
 There are also reset controls <AllOutIcon /> on the left and a minimap <MapIcon /> on the right if you get lost.
 
-<br/>
+<br />
 
 <MakeDemo type="Workspace" />
 
-
 ### Teleoscoping
-Keyword searches, like above, are great, but they don't get you documents that are **conceptually** similar but have different keywords. With Teleoscope, you search by _example_. The big idea with the Teleoscope that we mix your example documents together to get a much more interesting and relevant results. You connect examples of documents (or groups) to the Teleoscope. 
 
-You can click and drag from **output** area of a document or group to the **input** area of a Teleoscope. Think of mixing together examples like mixing together paints. The Teleoscope produces a list of documents that are closest in concept (and math) to your example documents. 
+Keyword searches, like above, are great, but they don't get you documents that are **conceptually** similar but have different keywords. With Teleoscope, you search by _example_. The big idea with the Teleoscope that we mix your example documents together to get a much more interesting and relevant results. You connect examples of documents (or groups) to the Teleoscope.
 
-<br/>
+You can click and drag from **output** area of a document or group to the **input** area of a Teleoscope. Think of mixing together examples like mixing together paints. The Teleoscope produces a list of documents that are closest in concept (and math) to your example documents.
+
+<br />
 <MakeDemo type="Teleoscope" />

@@ -19,52 +19,57 @@ export default function DocViewer(props) {
   });
 
   return (
-    <Accordion defaultExpanded={settings.defaultExpanded} disableGutters={true} square={true}>
+    <Accordion
+      defaultExpanded={settings.defaultExpanded}
+      disableGutters={true}
+      square={true}
+    >
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         aria-controls="panel3a-content"
         id="panel3a-header"
       >
-          <Typography noWrap align="left">
-            {WindowDefinitions()["Group"].icon(group)}
-            {`${group?.history[0].label}`}
-          </Typography>
-
+        <Typography noWrap align="left">
+          {WindowDefinitions()["Group"].icon(group)}
+          {`${group?.history[0].label}`}
+        </Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1} sx={{ margin: "1em" }}>
           <Typography variant="h5">{group?.history[0].label}</Typography>
           <Divider></Divider>
           <ButtonActions
-          inner={[
-            [
-              SaveDocx,
-              {
-                swr: swr,
-                data: data,
-                group: group,
-              },
-            ],
-            [
-              CopyJson,
-              {
-                swr: swr,
-                data: data,
-                group: group,
-              },
-            ],
-            [
-              CopyText,
-              {
-                swr: swr,
-                data: data,
-                group: group,
-              },
-            ],
-          ]}
-        ></ButtonActions>
+            inner={[
+              [
+                SaveDocx,
+                {
+                  swr: swr,
+                  data: data,
+                  group: group,
+                },
+              ],
+              [
+                CopyJson,
+                {
+                  swr: swr,
+                  data: data,
+                  group: group,
+                },
+              ],
+              [
+                CopyText,
+                {
+                  swr: swr,
+                  data: data,
+                  group: group,
+                },
+              ],
+            ]}
+          ></ButtonActions>
           <List>
-            {group?.history[0].included_documents.map(docid => <DocumentListItem key={docid} id={docid}></DocumentListItem>)}
+            {group?.history[0].included_documents.map((docid) => (
+              <DocumentListItem key={docid} id={docid}></DocumentListItem>
+            ))}
           </List>
         </Stack>
       </AccordionDetails>

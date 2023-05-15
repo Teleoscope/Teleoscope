@@ -1,24 +1,22 @@
 import React, { useContext, useEffect } from "react";
 
 // material ui
-import { Menu, MenuItem, Typography } from "@mui/material";
-import { Stack } from "@mui/material";
+import { Menu, MenuItem, Stack, Typography } from "@mui/material";
 
-import { Divider } from "@mui/material";
-import { IconButton } from "@mui/material";
 import { AccountCircle } from "@mui/icons-material";
+import { Divider, IconButton } from "@mui/material";
 
 // components
 import Account from "@/components/WindowModules/Account";
 
 // actions
-import { useSelector, useDispatch } from "react-redux";
 import { sessionActivator, setUserId } from "@/actions/activeSessionID";
 import { setDefault } from "@/actions/windows";
+import { useDispatch, useSelector } from "react-redux";
 
 // utilities
-import { useCookies } from "react-cookie";
 import { swrContext } from "@/util/swr";
+import { useCookies } from "react-cookie";
 
 // contexts
 import { StompContext } from "@/components/Stomp";
@@ -46,7 +44,6 @@ export default function TopBar(props) {
 
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const { users } = swr.useSWRAbstract("users", `users/`);
-  const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
 
   const handleSignOut = () => {
     setCookie("userid", -1, {
@@ -127,14 +124,19 @@ export default function TopBar(props) {
             <AccountCircle sx={{ color: get_color() }}></AccountCircle>
           </IconButton>
 
-          {props.compact ? "" : 
-          <Typography 
-          
-          noWrap
-          onClick={(event) => {
-              setAnchorEl(event.currentTarget);
-              setOpenMenu(true);
-            }}>{user ? user.username : "Not signed in"}</Typography>}
+          {props.compact ? (
+            ""
+          ) : (
+            <Typography
+              noWrap
+              onClick={(event) => {
+                setAnchorEl(event.currentTarget);
+                setOpenMenu(true);
+              }}
+            >
+              {user ? user.username : "Not signed in"}
+            </Typography>
+          )}
         </Stack>
         <Menu
           id="basic-menu"

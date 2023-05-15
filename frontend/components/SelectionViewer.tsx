@@ -13,7 +13,12 @@ export default function SelectionViewer(props) {
       {selection.nodes.map((node) => {
         if (node.data.type == "Document") {
           return (
-            <DocViewer compact={true} windata={node.data} key={node.id.split("%")[0]} id={node.id.split("%")[0]}></DocViewer>
+            <DocViewer
+              compact={true}
+              windata={node.data}
+              key={node.id.split("%")[0]}
+              id={node.id.split("%")[0]}
+            ></DocViewer>
           );
         }
         if (node.data.type == "Group" && !props.noGroup) {
@@ -44,7 +49,6 @@ export default function SelectionViewer(props) {
             ></TeleoscopeViewer>
           );
         }
-
       })}
     </div>
   );

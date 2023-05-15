@@ -29,15 +29,13 @@ export default function PermanentDrawerRight() {
     }
   };
 
-
   const handleDoubleClick = () => {
     if (width == minWidth) {
-      setWidth(drawerWidth)
+      setWidth(drawerWidth);
     } else {
-      setWidth(minWidth)
+      setWidth(minWidth);
     }
-
-  }
+  };
 
   const DrawerComponent = () => {
     const sx = {
@@ -50,17 +48,25 @@ export default function PermanentDrawerRight() {
       },
     };
 
-      return (
-        <Drawer sx={sx} variant="permanent" anchor="right">
-            <Stack direction="column" alignItems="center" spacing={1} sx={{paddingTop: "2em", paddingBottom: "2em", marginBottom: "2em"}}>
-              <TeleoscopeLogo compact={width < breakpoint} color="#CCCCCC"></TeleoscopeLogo>
-              <TopBar compact={width < breakpoint}></TopBar>
-            </Stack>
-          <Divider />
-          <Accordion compact={width < breakpoint}></Accordion>
-        </Drawer>
-      );
-    }
+    return (
+      <Drawer sx={sx} variant="permanent" anchor="right">
+        <Stack
+          direction="column"
+          alignItems="center"
+          spacing={1}
+          sx={{ paddingTop: "2em", paddingBottom: "2em", marginBottom: "2em" }}
+        >
+          <TeleoscopeLogo
+            compact={width < breakpoint}
+            color="#CCCCCC"
+          ></TeleoscopeLogo>
+          <TopBar compact={width < breakpoint}></TopBar>
+        </Stack>
+        <Divider />
+        <Accordion compact={width < breakpoint}></Accordion>
+      </Drawer>
+    );
+  };
 
   return (
     <Box

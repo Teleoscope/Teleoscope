@@ -35,8 +35,9 @@ export default function TeleoscopeViewer(props) {
       </AccordionSummary>
       <AccordionDetails>
         <Stack direction="column">
-        {teleoscope?.history[0].rank_slice.map(([docid, rank]) => <DocumentListItem key={docid} id={docid}></DocumentListItem>)}
-
+          {teleoscope?.history[0].rank_slice.map(([docid, rank]) => (
+            <DocumentListItem key={docid} id={docid}></DocumentListItem>
+          ))}
         </Stack>
       </AccordionDetails>
     </Accordion>

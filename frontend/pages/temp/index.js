@@ -1,35 +1,36 @@
-import React, {createContext} from "react";
+import React, { createContext } from "react";
 import Head from "next/head";
 
 import { Provider } from "react-redux";
 import { CookiesProvider } from "react-cookie";
-import { SWRConfig } from 'swr'
+import { SWRConfig } from "swr";
 
-import { useRouter } from 'next/router'
+import { useRouter } from "next/router";
 
 // store
 import store from "@/stores/store";
 
 // custom components
-import Workspace from '@/components/Workspace';
-import clientPromise from '@/util/mongodb';
+import Workspace from "@/components/Workspace";
+import clientPromise from "@/util/mongodb";
 
 // API fetcher for SWR global config
 //const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 export default function Home({ isConnected }) {
-  const router = useRouter()
-  const subdomain = router.query.site
-
+  const router = useRouter();
+  const subdomain = router.query.site;
 
   return (
-    <SWRConfig value={{ 
-      fetcher: fetcher,
-      errorRetryCount: 10,
-      refreshInterval: 250
-    }}>
-    <CookiesProvider>
+    <SWRConfig
+      value={{
+        fetcher: fetcher,
+        errorRetryCount: 10,
+        refreshInterval: 250,
+      }}
+    >
+      <CookiesProvider>
         <div>
           <Head>
             <title>Explore Documents</title>
@@ -42,16 +43,14 @@ export default function Home({ isConnected }) {
             </Provider>
           </main>
         </div>
-    </CookiesProvider>
+      </CookiesProvider>
     </SWRConfig>
   );
 }
 
-
-
 export async function getServerSideProps(context) {
   try {
-    await clientPromise
+    await clientPromise;
     // `await clientPromise` will use the default database passed in the MONGODB_URI
     // However you can use another database (e.g. myDatabase) by replacing the `await clientPromise` with the following code:
     //
@@ -63,16 +62,16 @@ export async function getServerSideProps(context) {
 
     return {
       props: { isConnected: true },
-    }
+    };
   } catch (e) {
-    console.error(e, context)
+    console.error(e, context);
     return {
       props: { isConnected: false },
-    }
+    };
   }
 }
 //
-// 
+//
 // Connect to MongoDB
 // export async function getServerSideProps(context) {
 //   const { client } = await connectToDatabase();

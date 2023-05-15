@@ -43,12 +43,9 @@ export function MakeDocx({ tag, title, groups }) {
         });
       });
 
-
       const Break = new Paragraph({
-        children: [
-          new PageBreak()
-        ]
-      })
+        children: [new PageBreak()],
+      });
 
       return [title, body, metadata_label, ...metadata, Break];
     });

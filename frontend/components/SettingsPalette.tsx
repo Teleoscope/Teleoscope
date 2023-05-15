@@ -8,21 +8,19 @@ import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 
 // custom components
-import {
-  setSettings
-} from "@/actions/windows";
+import { setSettings } from "@/actions/windows";
 
 export default function SettingsPalette(props) {
   const dispatch = useAppDispatch();
-  const settings = useAppSelector((state) => state.windows.settings)
-  const color = useAppSelector((state) => state.windows.color)
+  const settings = useAppSelector((state) => state.windows.settings);
+  const color = useAppSelector((state) => state.windows.color);
 
   const handleChange = (event, value, setting) => {
-    console.log("settings", event, value, setting)
-    var temp = {...settings}
+    console.log("settings", event, value, setting);
+    var temp = { ...settings };
     temp[setting] = value;
-    dispatch(setSettings(temp))
-  }
+    dispatch(setSettings(temp));
+  };
 
   return (
     <Stack>
@@ -35,7 +33,9 @@ export default function SettingsPalette(props) {
         marks
         min={50}
         max={500}
-        onChangeCommitted={(event, value) => handleChange(event, value, "default_document_width")}
+        onChangeCommitted={(event, value) =>
+          handleChange(event, value, "default_document_width")
+        }
         sx={{ color: color }}
       />
       <Typography>Dropped item height</Typography>
@@ -47,22 +47,25 @@ export default function SettingsPalette(props) {
         marks
         min={30}
         max={500}
-        onChangeCommitted={(event, value) => handleChange(event, value, "default_document_height")}
+        onChangeCommitted={(event, value) =>
+          handleChange(event, value, "default_document_height")
+        }
         sx={{ color: color }}
-
       />
       <Typography>Automatically Expand Infopanel</Typography>
-      <Switch 
-          checked={settings.defaultExpanded}
-          onChange={(event) => handleChange(event, event.target.checked, "defaultExpanded")}
-          color="primary"
-            sx={{ '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-              backgroundColor: color,
-            }, ".MuiSwitch-colorPrimary": {color: color} }}
-
+      <Switch
+        checked={settings.defaultExpanded}
+        onChange={(event) =>
+          handleChange(event, event.target.checked, "defaultExpanded")
+        }
+        color="primary"
+        sx={{
+          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+            backgroundColor: color,
+          },
+          ".MuiSwitch-colorPrimary": { color: color },
+        }}
       />
-
-
     </Stack>
   );
 }
