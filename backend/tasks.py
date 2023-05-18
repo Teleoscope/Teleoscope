@@ -31,6 +31,8 @@ app.conf.update(
     task_queues=[queue],
 )
 
+
+
 @app.task
 def initialize_session(*args, **kwargs):
     """
@@ -91,14 +93,7 @@ def recolor_session(*args, **kwargs):
         history_item = session["history"][0]
         history_item["color"] = color
         history_item["user"] = userid
-        db.sessions.update_one({"_id": session_id},
-            {"$push": {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }}, session=transaction_session 
-        )
+        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
         utils.commit_with_retry(transaction_session)
     return 200
 
@@ -135,15 +130,7 @@ def save_UI_state(*args, **kwargs):
     history_item["user"] = userid
 
     with transaction_session.start_transaction():
-        db.sessions.update_one({"_id": session_id},
-            {
-                '$push': {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }
-            }, session=transaction_session)
+        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
         utils.commit_with_retry(transaction_session)
 
     return 200 # success
@@ -166,14 +153,7 @@ def relabel_session(*args, **kwargs):
         history_item["label"] = label
         history_item["user"] = userid
         history_item["action"] = "Relabeled session"
-        db.sessions.update_one({"_id": relabeled_session_id},
-            {"$push": {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }}, session=transaction_session 
-        )
+        utils.push_history(db, transaction_session, "sessions", relabeled_session_id, history_item)
         utils.commit_with_retry(transaction_session)
     return 200
 
@@ -196,14 +176,7 @@ def relabel_group(*args, **kwargs):
         history_item["label"] = label
         history_item["user"] = userid
         history_item["action"] = "Relabeled group"
-        db.groups.update_one({"_id": group_id},
-            {"$push": {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }}, session=transaction_session 
-        )
+        utils.push_history(db, transaction_session, "groups", group_id, history_item)
         utils.commit_with_retry(transaction_session)
     return 200
 
@@ -224,14 +197,7 @@ def relabel_teleoscope(*args, **kwargs):
         history_item = session["history"][0]
         history_item["label"] = label
         history_item["user"] = userid
-        db.teleoscopes.update_one({"_id": teleoscope_id},
-            {"$push": {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }}, session=transaction_session 
-        )
+        utils.push_history(db, transaction_session, "teleoscopes", teleoscope_id, history_item)
         utils.commit_with_retry(transaction_session)
     return 200
 
@@ -406,16 +372,7 @@ def initialize_teleoscope(*args, **kwargs):
         history_item["user"] = user_id
 
         # associate the newly created teleoscope with correct session
-
-        db.sessions.update_one({"_id": ObjectId(str(session_id))},
-            {
-                '$push': {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }
-            }, session=transaction_session)
+        utils.push_history(db, transaction_session, "sessions", ObjectId(str(session_id)), history_item)
         utils.commit_with_retry(transaction_session)
     return teleoscope_result
 
@@ -448,16 +405,7 @@ def save_teleoscope_state(*args, **kwargs):
     history_item["action"] = "Save Teleoscope state"
 
     with transaction_session.start_transaction():
-        result = db.teleoscopes.update_one({"_id": obj_id},
-            {
-                '$push': {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }
-            }, session=transaction_session)
-        # logging.info(f'Saving teleoscope state: {result}')
+        utils.push_history(db, transaction_session, "teleoscopes", obj_id, history_item)
         utils.commit_with_retry(transaction_session)
 
 @app.task 
@@ -524,15 +472,8 @@ def add_group(*args, human=True, description="A group", documents=[], **kwargs):
         history_item["action"] = f"Initialize new group: {label}"
         history_item["user"] = user_id
 
-        sessions_res = db.sessions.update_one({'_id': _id},
-            {
-                '$push': {
-                            "history": {
-                                '$each': [history_item],
-                                '$position': 0
-                            }
-                }
-            }, session=transaction_session)
+        sessions_res = utils.push_history(db, transaction_session, "sessions", _id, history_item)
+        
         logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
 
@@ -582,16 +523,7 @@ def copy_cluster(*args, **kwargs):
         group_res = db.groups.insert_one(obj, session=transaction_session)
         history_item = session["history"][0]
         history_item["groups"] = [*history_item["groups"], group_res.inserted_id]
-        
-        sessions_res = db.sessions.update_one({'_id': session_id},
-            {
-                '$push': {
-                            "history": {
-                                '$each': [history_item],
-                                '$position': 0
-                            }
-                }
-            }, session=transaction_session)
+        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
         utils.commit_with_retry(transaction_session)
 
     
@@ -612,14 +544,7 @@ def recolor_group(*args, **kwargs):
         history_item = session["history"][0]
         history_item["color"] = color
         history_item["user"] = userid
-        db.groups.update_one({"_id": group_id},
-            {"$push": {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }}, session=transaction_session 
-        )
+        utils.push_history(db, transaction_session, "groups", group_id, history_item)
         utils.commit_with_retry(transaction_session)
     return 200
 
@@ -665,22 +590,14 @@ def copy_group(*args, **kwargs):
     group_new = db.groups.find_one({'_id': group_new_id})
 
     # copy over appropriate data from group to be copied
-    group_new_history = group_new["history"][0]
-    group_new_history["timestamp"] = datetime.datetime.utcnow()
-    group_new_history["included_documents"] = included_documents
-    group_new_history["action"] = f"Copying group ({group_id}) data"
-    group_new_history["user"] = user_id
+    history_item = group_new["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["included_documents"] = included_documents
+    history_item["action"] = f"Copying group ({group_id}) data"
+    history_item["user"] = user_id
 
     with transaction_session.start_transaction():
-        db.groups.update_one({'_id': group_new_id}, {
-                "$push":
-                    {
-                        "history": {
-                            "$each": [group_new_history],
-                            "$position": 0
-                        }
-                    }
-                }, session=transaction_session)
+        utils.push_history(db, transaction_session, "groups", group_new_id, history_item)
         utils.commit_with_retry(transaction_session)
 
     res = chain(
@@ -732,15 +649,7 @@ def add_document_to_group(*args, **kwargs):
     history_item["action"] = "Add document to group"
 
     with transaction_session.start_transaction():
-        db.groups.update_one({'_id': group_id}, {
-                "$push":
-                    {
-                        "history": {
-                            "$each": [history_item],
-                            "$position": 0
-                        }
-                    }
-                }, session=transaction_session)
+        utils.push_history(db, transaction_session, "groups", group_id, history_item)
         utils.commit_with_retry(transaction_session)
     logging.info(f'Reorienting teleoscope {group["teleoscope"]} for group {group["history"][0]["label"]} for document {document_id}.')
     res = chain(
@@ -779,18 +688,8 @@ def remove_teleoscope(*args, **kwargs):
         history_item["action"] = f"Remove teleoscope from session"
         history_item["user"] = user_id
 
-        db.sessions.update_one(
-            {'_id': session_id},
-            {
-                "$push" : {
-                    "history": {
-                        "$each" : [history_item],
-                        "$position" : 0
-                    }
-                }
-            },
-            session=transaction_session
-        )
+        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.commit_with_retry(transaction_session)
 
 
 @app.task
@@ -820,23 +719,7 @@ def remove_group(*args, **kwargs):
         history_item["action"] = f"Remove group from session"
         history_item["user"] = user_id
 
-        db.sessions.update_one(
-            {'_id': session_id},
-            {
-                "$push" : {
-                    "history": {
-                        "$each" : [history_item],
-                        "$position" : 0
-                    }
-                }
-            },
-            session=transaction_session
-        )
-
-
-
-
-
+        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
         logging.info(f"Removed group {group_id} from session {session_id}.")
         utils.commit_with_retry(transaction_session)
     return session_id
@@ -869,15 +752,7 @@ def remove_document_from_group(*args, **kwargs):
     history_item["action"] = "Remove document from group"
 
     with transaction_session.start_transaction():
-        db.groups.update_one({'_id': group_id}, {
-            "$push":
-                {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }
-            }, session=transaction_session)
+        utils.push_history(db, transaction_session, "groups", group_id, history_item)
         utils.commit_with_retry(transaction_session)
         
 
@@ -906,15 +781,7 @@ def update_group_label(*args, **kwargs):
     history_item["action"] = "Update group label"
 
     with transaction_session.start_transaction():
-        db.groups.update_one({'_id': group_id}, {
-                "$push":
-                    {
-                        "history": {
-                            "$each": [history_item],
-                            "$position": 0
-                        }
-                    }
-                }, session=transaction_session)
+        utils.push_history(db, transaction_session, "groups", group_id, history_item)
         utils.commit_with_retry(transaction_session)
 
 
@@ -940,15 +807,7 @@ def add_note(*args, **kwargs):
         history_item["user"] = userid,
         history_item["action"] = "Add note"
         history_item["notes"].append(res.inserted_id) 
-        db.sessions.update_one({"_id": session_id},
-            {"$push": {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }}, session=transaction_session 
-        )
-
+        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
         logging.info(f"Added note with result {res}.")
         utils.commit_with_retry(transaction_session)
 
@@ -974,15 +833,7 @@ def remove_note(*args, **kwargs):
         history_item["user"] = userid,
         history_item["action"] = "Remove note"
         history_item["notes"].remove(note_id) 
-        db.sessions.update_one({"_id": session_id},
-            {"$push": {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }}, session=transaction_session 
-        )
-
+        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
         logging.info(f"Removed note {note_id} from session {session_id}.")
         utils.commit_with_retry(transaction_session)
 
@@ -1005,21 +856,12 @@ def update_note(*args, **kwargs):
     content = kwargs["content"]
 
     with transaction_session.start_transaction():
-
         note = db.notes.find_one({"_id": note_id})
         history_item = note["history"][0]
         history_item["content"] = content
         history_item["action"] = "Update note content."
         history_item["userid"] = userid
-        
-        res = db.notes.update_one({"_id": note_id}, {"$push":
-                {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }
-            }, session=transaction_session)
+        utils.push_history(db, transaction_session, "notes", note_id, history_item)
         utils.commit_with_retry(transaction_session)
         logging.info(f"Updated note {note_id} with {res}.")
 
@@ -1047,15 +889,7 @@ def relabel_note(*args, **kwargs):
         history_item["label"] = label
         history_item["action"] = "Update note label."
         history_item["userid"] = userid
-        
-        res = db.notes.update_one({"_id": note_id}, {"$push":
-                {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }
-            }, session=transaction_session)
+        utils.push_history(db, transaction_session, "notes", note_id, history_item)
         utils.commit_with_retry(transaction_session)
         logging.info(f"Updated note {note_id} with {res} and label {label}.")
 
@@ -1084,7 +918,6 @@ def update_edges(*arg, **kwargs):
     edges = kwargs["edges"]
     
     
-
 
 @app.task
 def register_account(*arg, **kwargs):
@@ -1286,88 +1119,8 @@ class reorient(Task):
                 ObjectId(str(userid))
             )
 
-            self.db.teleoscopes.update_one({"_id": ObjectId(str(teleoscope_id))},
-                                        {
-                    '$push': {
-                        "history": {
-                            "$each": [history_item],
-                            "$position": 0
-                        }
-                    }
-                })
-            
-        '''
-        logging.info(f'Received reorient for teleoscope id {teleoscope_id}, positive docs {positive_docs}, negative docs {negative_docs}, and magnitude {magnitude}.')
-        # either positive or negative docs should have at least one entry
-        if len(positive_docs) == 0 and len(negative_docs) == 0:
-            # if both are empty, then cache stuff if not cached alreadt
-            # Check if document ids and vectors are cached
-            if self.documentsCached == False:
-                _, _ = self.cacheDocumentsData()
-
-            # Check if db connection is cached
-            if self.db is None:
-                self.db = utils.connect()
-
-            # do nothing since no feedback given on docs
-            logging.info(f'No positive or negative docs specified for teleoscope {teleoscope_id}.')
-            return 200 # trival pass
-
-        # Check if document ids and vectors are cached
-        if self.documentsCached == False:
-            _, _ = self.cacheDocumentsData()
-
-        # Check if db connection is cached
-        if self.db is None:
-            self.db = utils.connect()
-
-        # get query document from teleoscopes collection
-        _id = ObjectId(teleoscope_id)
-        teleoscope = self.db.teleoscopes.find_one({"_id": _id})
-
-        if teleoscope is None:
-            logging.info(f'Teleoscope with id {_id} does not exist!')
-            return 400  # fail
-
-        # check if stateVector exists
-        stateVector = []
-        if len(teleoscope['history'][0]['stateVector']) > 0:
-            stateVector = np.array(teleoscope['history'][0]['stateVector'])
-        else:
-            docs = positive_docs + negative_docs
-            first_doc = self.db.documents.find_one({"_id": ObjectId(str(docs[0]))})
-            logging.info(f'Results of finding first_doc: {first_doc["_id"]}.')
-            stateVector = first_doc['textVector']  # grab textVector
-
-        resultantVec, direction = self.computeResultantVector(positive_docs, negative_docs)
-        # move qvector towards/away from feedbackVector
-        qprime = utils.moveVector(
-            sourceVector=stateVector,
-            destinationVector=resultantVec,
-            direction=direction,
-            magnitude=magnitude
-        )
-        scores = utils.calculateSimilarity(self.allDocumentVectors, qprime)
-        newRanks = utils.rankDocumentsBySimilarity(self.allDocumentIDs, scores)
-        gridfs_id = utils.gridfsUpload(self.db, "teleoscopes", newRanks)
-
-        rank_slice = newRanks[0:100]
-        logging.info(f'new rank slice has length {len(rank_slice)}.')
-        '''
-        # history_obj = {
-        #     '_id': teleoscope_id,
-        #     'history_item': {
-        #         'label': teleoscope['history'][0]['label'],
-        #         'positive_docs': positive_docs,
-        #         'negative_docs': negative_docs,
-        #         'stateVector': qprime.tolist(),
-        #         'ranked_document_ids': ObjectId(str(gridfs_id)),
-        #         'rank_slice': rank_slice
-        #     }
-        # }
-
-        
-
+            utils.push_history(self.db, transaction_session, "teleoscopes", ObjectId(str(teleoscope_id)), history_item)
+            utils.commit_with_retry(transaction_session)
         return {}
 robj = app.register_task(reorient())
 
@@ -1514,3 +1267,7 @@ def add_multiple_documents_to_database(documents, **kwargs):
             target.insert_many(documents, session=transaction_session)
             # Commit the session with retry
             utils.commit_with_retry(transaction_session)
+
+@app.task
+def mark(**kwargs):
+    print(kwargs)
