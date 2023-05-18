@@ -60,7 +60,7 @@
     "react-sizeme": "^3.0.2",
     "react-test-renderer": "^18.2.0",
     "react-virtuoso": "^4.3.1",
-    "reactflow": "^11.6.1",
+    "reactflow": "^11.7.2",
     "recharts": "^2.6.0",
     "redux": "^4.2.0",
     "redux-thunk": "^2.4.1",

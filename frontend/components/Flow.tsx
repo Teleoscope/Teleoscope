@@ -1,35 +1,27 @@
 import React, { useState, useCallback, useContext, useRef } from "react";
-import ReactFlow, {
-  MiniMap,
-  ReactFlowProvider,
-  Controls,
-  Background,
-  addEdge,
-  Panel,
-  useViewport,
-} from "reactflow";
-import "reactflow/dist/style.css";
-import WindowNode from "@/components/Nodes/WindowNode";
-
-import FABMenu from "@/components/FABMenu";
+import { addEdge } from "reactflow";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 import { swrContext } from "@/util/swr";
 import {
-  setNodes,
   updateNodes,
   updateEdges,
   makeEdge,
   makeNode,
   removeWindow,
-  setEdges,
   setSelection,
-  setColor,
 } from "@/actions/windows";
-import { loadBookmarkedDocuments } from "@/actions/bookmark";
 import { sessionActivator } from "@/actions/activeSessionID";
 import { StompContext } from "@/components/Stomp";
-import ContextMenu from "@/components/Context/ContextMenu";
+import { SessionLoader } from "@/components/SessionLoader";
+import FlowProviderWrapper from "@/components/FlowProviderWrapper";
+import FlowWrapper from "@/components/FlowWrapper";
+import FlowUIComponents from "@/components/FlowUIComponents";
+import ContextMenuHandler from "@/components/ContextMenuHandler";
+import WindowNode from "@/components/Nodes/WindowNode";
+import FlowFABWrapper from "@/components/FlowFABWrapper";
+
+import "reactflow/dist/style.css";
 
 const nodeTypes = { windowNode: WindowNode };
 
@@ -50,6 +42,8 @@ function Flow(props) {
     (state) => state.windows
   );
 
+  const [tempEdges, setTempEdges] = React.useState([]);
+
   const client = useContext(StompContext);
   const swr = useContext(swrContext);
   const { session, session_loading, session_error } = swr.useSWRAbstract(
@@ -66,41 +60,7 @@ function Flow(props) {
   }
 
   if (session_history_item) {
-    if (session_history_item.logical_clock > logical_clock) {
-      let incomingNodes = [];
-      if (session_history_item.nodes) {
-        incomingNodes = session_history_item.nodes;
-      } else if (session_history_item.windows) {
-        incomingNodes = session_history_item.windows;
-      }
-
-      let incomingEdges = [];
-      if (session_history_item.edges) {
-        incomingEdges = session_history_item.edges;
-      }
-
-      dispatch(
-        setNodes({
-          nodes: incomingNodes,
-          logical_clock: session_history_item.logical_clock,
-        })
-      );
-
-      dispatch(
-        setEdges({
-          edges: incomingEdges,
-          logical_clock: session_history_item.logical_clock,
-        })
-      );
-
-      dispatch(
-        setColor({
-          color: session_history_item.color,
-        })
-      );
-
-      dispatch(loadBookmarkedDocuments(session_history_item.bookmarks));
-    }
+    SessionLoader(session_history_item, logical_clock);
   }
 
   // this ref stores the current dragged node
@@ -113,7 +73,7 @@ function Flow(props) {
     dragRef.current = node;
   };
 
-  const onNodeDrag = (evt, node) => {
+  const handleTarget = (node) => {
     // calculate the center point of the node from position and dimensions
     const centerX = node.position.x + node.width / 2;
     const centerY = node.position.y + node.height / 2;
@@ -130,8 +90,13 @@ function Flow(props) {
     setTarget(targetNode);
   };
 
+  const onNodeDrag = (evt, node) => {
+    handleTarget(node);
+    handleTempEdge(evt, node);
+  };
+
   const onNodeDragStop = (evt, node) => {
-    if (node.data.type == "Document") {
+    if (node?.data?.type == "Document") {
       if (target) {
         if (target.data.type == "Group") {
           client.add_document_to_group(
@@ -143,7 +108,7 @@ function Flow(props) {
       }
     }
 
-    if (node.data.type == "Cluster") {
+    if (node?.data?.type == "Cluster") {
       if (target) {
         if (target.data.type == "Group Palette") {
           client.copy_cluster(node.id.split("%")[0], session_id);
@@ -168,7 +133,6 @@ function Flow(props) {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
-
 
   const onDrop = useCallback(
     (event) => {
@@ -251,43 +215,91 @@ function Flow(props) {
     client.update_edges(alledges);
   }, []);
 
-  const FABWrapper = () => {
-    var coords = { x: 0, y: 0, width: 1 };
-    if (reactFlowInstance) {
-      const vp = reactFlowInstance.project({ x: 100, y: 100 });
-      coords.x = vp.x;
-      coords.y = vp.y;
-    }
-    return <FABMenu windata={{ x: coords.x, y: coords.y, width: 1 }} />;
-  };
-
   const onSelectionChange = useCallback(({ nodes, edges }) => {
     dispatch(setSelection({ nodes: nodes, edges: edges }));
   }, []);
 
+  const getClosestEdge = useCallback((node) => {
+    const MIN_DISTANCE = 150;
+
+    const closestNode = nodes.reduce(
+      (res, n) => {
+        if (n.id !== node.id) {
+          const dx = n.positionAbsolute.x - node.positionAbsolute.x;
+          const dy = n.positionAbsolute.y - node.positionAbsolute.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+
+          if (d < res.distance && d < MIN_DISTANCE) {
+            res.distance = d;
+            res.node = n;
+          }
+        }
+
+        return res;
+      },
+      {
+        distance: Number.MAX_VALUE,
+        node: null,
+      }
+    );
+
+    if (!closestNode.node) {
+      return null;
+    }
+
+    const closeNodeIsSource =
+      closestNode.node.positionAbsolute.x < node.positionAbsolute.x;
+
+    return {
+      id: `${node.id}-${closestNode.node.id}`,
+      source: closeNodeIsSource ? closestNode.node.id : node.id,
+      target: closeNodeIsSource ? node.id : closestNode.node.id,
+    };
+  }, []);
+
+  const handleTempEdge = useCallback(
+    (_, node) => {
+      const closeEdge = getClosestEdge(node);
+
+      setTempEdges((es) => {
+        const nextEdges = es.filter((e) => e.className !== "temp");
+
+        if (
+          closeEdge &&
+          !nextEdges.find(
+            (ne) =>
+              ne.source === closeEdge.source && ne.target === closeEdge.target
+          )
+        ) {
+          closeEdge.className = "temp";
+          nextEdges.push(closeEdge);
+        }
+
+        return nextEdges;
+      });
+    },
+    [getClosestEdge, setTempEdges]
+  );
+
   return (
     <div className="providerflow">
-      <ReactFlowProvider>
+      <FlowProviderWrapper>
         <div
           className="reactflow-wrapper"
           ref={reactFlowWrapper}
           style={{ width: `calc(100% - ${props.drawerWidth})`, height: "97vh" }}
         >
-          <ReactFlow
+          <FlowWrapper
             nodes={nodes}
             edges={edges}
+            tempEdges={tempEdges}
             nodeTypes={nodeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
-            panOnScroll={true}
-            selectionOnDrag={true}
-            panOnDrag={[1]}
             onDragOver={onDragOver}
             onDrop={onDrop}
-            onConnect={(connection) => onConnect(connection, edges)}
+            onConnect={onConnect}
             onInit={setReactFlowInstance}
-            multiSelectionKeyCode={["Meta", "Control", "Shift"]}
-            disableKeyboardA11y={true}
             onClick={() =>
               client.save_UI_state(session_id, bookmarks, nodes, edges)
             }
@@ -297,19 +309,18 @@ function Flow(props) {
             onPaneContextMenu={onPaneContextMenu}
             onSelectionChange={onSelectionChange}
           >
-            <Background />
-            <MiniMap zoomable pannable />
-            <Controls />
-            <Panel position="top-left" style={{ margin: "2em" }}>
-              <FABWrapper />
-            </Panel>
-          </ReactFlow>
-          <ContextMenu
+            <FlowUIComponents
+              fabWrapper={
+                <FlowFABWrapper reactFlowInstance={reactFlowInstance} />
+              }
+            />
+          </FlowWrapper>
+          <ContextMenuHandler
             handleCloseContextMenu={handleCloseContextMenu}
             contextMenu={contextMenu}
           />
         </div>
-      </ReactFlowProvider>
+      </FlowProviderWrapper>
     </div>
   );
 }

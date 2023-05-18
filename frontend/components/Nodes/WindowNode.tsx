@@ -1,18 +1,13 @@
-import { useCallback, memo } from "react";
+import { memo } from "react";
 import { Handle, Position, useStore } from "reactflow";
 import WindowFactory from "@/components/WindowFolder/WindowFactory";
 import { NodeResizer } from "@reactflow/node-resizer";
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import "@reactflow/node-resizer/dist/style.css";
 
 function WindowNode({ data, id, selected }) {
-  const { nodes, edges, logical_clock } = useAppSelector(
-    (state) => state.windows
-  );
 
   const size = useStore((s) => {
     const node = s.nodeInternals.get(id);
-    // const saved = nodes.find(n => n.id == id)
     return {
       x: node.positionAbsolute.x,
       y: node.positionAbsolute.y,
@@ -25,45 +20,19 @@ function WindowNode({ data, id, selected }) {
 
   const windata = { ...data, ...size };
 
-  if (data.type == "Document" || data.type == "Group") {
-    return (
-      <>
-        <NodeResizer
-          color="#ff0071"
-          isVisible={selected}
-          minWidth={windata.minWidth}
-          minHeight={windata.minHeight}
-        />
-        <WindowFactory id={data.i} size={size} windata={windata} />
-        <Handle
-          type="source"
-          position={Position.Right}
-          id={data.i}
-          isConnectable={true}
-        />
-      </>
-    );
+  const getHandleType = (dataType) => {
+    switch(dataType) {
+      case "Document":
+      case "Group":
+        return "source";
+      case "Teleoscope":
+        return "target";
+      default:
+        return null;
+    }
   }
 
-  if (data.type == "Teleoscope") {
-    return (
-      <>
-        <NodeResizer
-          color="#ff0071"
-          isVisible={selected}
-          minWidth={windata.minWidth}
-          minHeight={windata.minHeight}
-        />
-        <WindowFactory id={data.i} size={size} windata={windata} />
-        <Handle
-          type="target"
-          position={Position.Left}
-          id={data.i}
-          isConnectable={true}
-        />
-      </>
-    );
-  }
+  const handleType = getHandleType(data.type);
 
   return (
     <>
@@ -74,6 +43,14 @@ function WindowNode({ data, id, selected }) {
         minHeight={windata.minHeight}
       />
       <WindowFactory id={data.i} size={size} windata={windata} />
+      {handleType && (
+        <Handle
+          type={handleType}
+          position={handleType === "source" ? Position.Right : Position.Left}
+          id={data.i}
+          isConnectable={true}
+        />
+      )}
     </>
   );
 }

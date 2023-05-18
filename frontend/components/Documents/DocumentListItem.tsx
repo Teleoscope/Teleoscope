@@ -73,7 +73,7 @@ export default function DocumentListItem(props) {
           <Stack direction="row" alignItems="center" sx={{marginRight: "0.75em"}}>
             <BookmarkSelector id={props.id} />
             {props.showReadIcon ? <IconButton onClick={handleRead}>
-      {document?.state.read ? <CircleIcon sx={{ fontSize: 15 }} /> : <CircleOutlinedIcon sx={{ fontSize: 15 }} />}
+      {document?.state.read ? <CircleOutlinedIcon sx={{ fontSize: 15 }} /> : <CircleIcon sx={{ fontSize: 15 }} />}
     </IconButton> : null }
             {props.showGroupIcon ? <GroupSelector id={props.id} /> : null}
           </Stack>
