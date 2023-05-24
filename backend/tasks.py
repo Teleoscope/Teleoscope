@@ -1277,7 +1277,7 @@ def mark(**kwargs):
     history_item["action"] = f"Mark document read set to {read}."
 
     with transaction_session.start_transaction():
-        db.documents.update_one({"_id": document_id}, {"state.read": read})        
+        db.documents.update_one({"_id": document_id}, {"$set": {"state.read": read}})        
         utils.push_history(db, transaction_session, "teleoscopes", session_id, history_item)
         utils.commit_with_retry(transaction_session)
 
