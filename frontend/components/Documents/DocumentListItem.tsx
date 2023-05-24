@@ -1,4 +1,5 @@
 import React, { useContext, useState } from "react";
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
 
 // material ui
 import Stack from "@mui/material/Stack";
@@ -24,6 +25,7 @@ export default function DocumentListItem(props) {
   const swr = useContext(swrContext);
   const { document } = swr.useSWRAbstract("document", `document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;
+  const session_id = useAppSelector((state) => state.activeSessionID.value);
 
   const handleRemove = (e) => {
     client.remove_document_from_group(props.group._id, props.id);
@@ -41,7 +43,7 @@ export default function DocumentListItem(props) {
     }
   };
   const handleRead = () => {
-    client.mark(document._id, !document.state.read);
+    client.mark(document._id, session_id, !document.state.read);
   };
   return (
     <div
@@ -78,9 +80,9 @@ export default function DocumentListItem(props) {
             {props.showReadIcon ? (
               <IconButton onClick={handleRead}>
                 {document?.state.read ? (
-                  <CircleIcon sx={{ fontSize: 15 }} />
-                ) : (
                   <CircleOutlinedIcon sx={{ fontSize: 15 }} />
+                ) : (
+                  <CircleIcon sx={{ fontSize: 15 }} />
                 )}
               </IconButton>
             ) : null}

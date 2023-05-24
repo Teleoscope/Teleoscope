@@ -71,6 +71,23 @@ def commit_with_retry(session):
                 raise
 
 
+def update_history(db, collection, transaction_session):
+
+
+def push_history(db, transaction_session, collection_name, item_id, history_item):
+    """
+    Update one document and push a history item.
+    """
+    res = db[collection_name].update_one({"_id": item_id},
+        {"$push": {
+                "history": {
+                    "$each": [history_item],
+                    "$position": 0
+                }
+            }}, session=transaction_session 
+    )
+    return res
+
 def mergeCollections():
     db = connect()
     cursor = db.clean.documents.v2.find({})

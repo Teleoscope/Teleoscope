@@ -53,6 +53,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # Make sure they look like Stomp
 
         match task:
+            case "mark":
+                res = tasks.mark.signature(args=(), kwargs=kwargs)
+
             case "copy_cluster":
                 res = tasks.copy_cluster.signature(args=(), kwargs=kwargs)
 
