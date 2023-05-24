@@ -1,30 +1,29 @@
-const prompt = require('prompt');
-const bcrypt = require("bcryptjs")
+const prompt = require("prompt");
+const bcrypt = require("bcryptjs");
 prompt.start();
 
 var salt = bcrypt.genSaltSync(10);
 
-
 const properties = [
   {
-    name: 'username',
+    name: "username",
     validator: /^[a-zA-Z\s-]+$/,
-    warning: 'Username must be only letters, spaces, or dashes'
+    warning: "Username must be only letters, spaces, or dashes",
   },
   {
-    name: 'password',
+    name: "password",
     hidden: true,
-    before: (x) => bcrypt.hashSync(x, salt)
-  }
+    before: (x) => bcrypt.hashSync(x, salt),
+  },
 ];
 
 prompt.get(properties, function (err, result) {
   if (err) {
     return onErr(err);
   }
-  console.log('Command-line input received:');
-  console.log('  Username: ' + result.username);
-  console.log('  Password: ' + result.password);
+  console.log("Command-line input received:");
+  console.log("  Username: " + result.username);
+  console.log("  Password: " + result.password);
 });
 
 function onErr(err) {

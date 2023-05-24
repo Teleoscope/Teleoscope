@@ -6,11 +6,11 @@ import React, { useContext } from "react";
 // Creat an EditableText component
 function EditableText(props) {
   const [showInputElement, setShowInputElement] = React.useState(false);
-  const [value, setValue] = React.useState(props.initialValue)
-  
+  const [value, setValue] = React.useState(props.initialValue);
+
   const handleChange = (e) => {
-    setValue(e.target.value)
-  }
+    setValue(e.target.value);
+  };
 
   return (
     // Render a <span> element
@@ -18,20 +18,20 @@ function EditableText(props) {
       {
         // Use JavaScript's ternary operator to specify <span>'s inner content
         showInputElement ? (
-          <input 
+          <input
             type="text"
             value={value}
             onChange={(e) => handleChange(e)}
             onBlur={() => {
-              setShowInputElement(false)
-              props.callback(value)
+              setShowInputElement(false);
+              props.callback(value);
             }}
             autoFocus
           />
         ) : (
-          <span 
+          <span
             onDoubleClick={() => {
-              setShowInputElement(true)
+              setShowInputElement(true);
             }}
           >
             {value}

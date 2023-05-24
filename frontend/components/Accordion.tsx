@@ -14,6 +14,7 @@ import SelectionViewer from "@/components/SelectionViewer";
 import Clusters from "@/components/Cluster/Clusters";
 import WorkflowsPalette from "@/components/WorkflowsPalette";
 export default function SimpleAccordion(props) {
+  const wdefs = WindowDefinitions();
   return (
     <Stack
       sx={{ height: "100%", width: "100%" }}
@@ -25,49 +26,49 @@ export default function SimpleAccordion(props) {
       <div>
         <AccordionSection
           compact={props.compact}
-          icon={WindowDefinitions()["Workflows"].icon()}
+          icon={wdefs["Workflows"].icon()}
           text="Workflows"
         >
           <WorkflowsPalette />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={WindowDefinitions()["Teleoscope Palette"].icon()}
+          icon={wdefs["Teleoscope Palette"].icon()}
           text="Teleoscopes"
         >
           <TeleoscopePalette />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={WindowDefinitions()["Group Palette"].icon()}
+          icon={wdefs["Group Palette"].icon()}
           text="Groups"
         >
           <GroupPalette />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={WindowDefinitions()["Clusters"].icon()}
+          icon={wdefs["Clusters"].icon()}
           text="Clusters"
         >
           <Clusters />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={WindowDefinitions()["Note Palette"].icon()}
+          icon={wdefs["Note Palette"].icon()}
           text="Notes"
         >
           <NotePalette />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={WindowDefinitions()["Bookmarks"].icon()}
+          icon={wdefs["Bookmarks"].icon()}
           text="Bookmarks"
         >
           <BookmarkPalette />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={WindowDefinitions()["Settings"].icon()}
+          icon={wdefs["Settings"].icon()}
           text="Settings"
         >
           <SettingsPalette />

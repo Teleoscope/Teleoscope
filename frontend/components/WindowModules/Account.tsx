@@ -36,7 +36,7 @@ export default function Account(props) {
   // Helper functions
   const handleEnterUser = (username) => {
     if (!username) {
-      return
+      return;
     }
     const url = `http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/user/${username}`;
 

@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import PaletteIcon from "@mui/icons-material/Palette";
-import PeopleIcon from '@mui/icons-material/People';
+import PeopleIcon from "@mui/icons-material/People";
 
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { sessionActivator } from "@/actions/activeSessionID";
@@ -126,41 +126,43 @@ export default function WorkflowsPalette(props) {
                     />
                   </Stack>
                   <Stack direction="row">
-                  <PopupState variant="popover" popupId="demo-popup-menu">
-                    {(popupState) => (
-                      <React.Fragment>
-                        <IconButton
-                          variant="contained"
-                          {...bindTrigger(popupState)}
-                        >
-                          <PaletteIcon fontSize="small"></PaletteIcon>
-                        </IconButton>
-                        <Menu {...bindMenu(popupState)}>
-                          <CompactPicker
-                            color={session.history[0].color}
-                            onChangeComplete={(color) =>
-                              handleColorChange(color, session._id)
-                            }
-                          />
-                        </Menu>
-                      </React.Fragment>
-                    )}
-                  </PopupState>
-                  <PopupState variant="popover" popupId="demo-popup-menu">
-                    {(popupState) => (
-                      <React.Fragment>
-                        <IconButton
-                          variant="contained"
-                          {...bindTrigger(popupState)}
-                        >
-                          <PeopleIcon fontSize="small"></PeopleIcon>
-                        </IconButton>
-                        <Menu {...bindMenu(popupState)}>
-                          <AddUserDialogue session_id={session._id}></AddUserDialogue>
-                        </Menu>
-                      </React.Fragment>
-                    )}
-                  </PopupState>
+                    <PopupState variant="popover" popupId="demo-popup-menu">
+                      {(popupState) => (
+                        <React.Fragment>
+                          <IconButton
+                            variant="contained"
+                            {...bindTrigger(popupState)}
+                          >
+                            <PaletteIcon fontSize="small"></PaletteIcon>
+                          </IconButton>
+                          <Menu {...bindMenu(popupState)}>
+                            <CompactPicker
+                              color={session.history[0].color}
+                              onChangeComplete={(color) =>
+                                handleColorChange(color, session._id)
+                              }
+                            />
+                          </Menu>
+                        </React.Fragment>
+                      )}
+                    </PopupState>
+                    <PopupState variant="popover" popupId="demo-popup-menu">
+                      {(popupState) => (
+                        <React.Fragment>
+                          <IconButton
+                            variant="contained"
+                            {...bindTrigger(popupState)}
+                          >
+                            <PeopleIcon fontSize="small"></PeopleIcon>
+                          </IconButton>
+                          <Menu {...bindMenu(popupState)}>
+                            <AddUserDialogue
+                              session_id={session._id}
+                            ></AddUserDialogue>
+                          </Menu>
+                        </React.Fragment>
+                      )}
+                    </PopupState>
                   </Stack>
                 </Stack>
               </ListItem>

@@ -13,45 +13,30 @@ import { swrContext } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
 import { CopyJson, CopyText, SaveDocx } from "@/components/GroupActions";
 
-export default function Group(props) {
-  const id = props.id.split("%")[0];
+export default function Group({ id: winId, windata }) {
+  const id = winId.split("%")[0];
   const swr = useContext(swrContext);
-  const { group } = props.windata.demo
-    ? props.windata.demodata
+  const { group } = windata.demo
+    ? windata.demodata
     : swr.useSWRAbstract("group", `groups/${id}`);
   const data = group?.history[0].included_documents.map((p) => {
     return [p, 1.0];
   });
+
+  const ButtonActionsConfig = {
+    swr: swr,
+    data: data,
+    group: group,
+  };
 
   return (
     <Stack direction="column" sx={{ height: "100%" }}>
       <Box sx={{ flexGrow: 1, flexDirection: "column", margin: "2px" }}>
         <ButtonActions
           inner={[
-            [
-              SaveDocx,
-              {
-                swr: swr,
-                data: data,
-                group: group,
-              },
-            ],
-            [
-              CopyJson,
-              {
-                swr: swr,
-                data: data,
-                group: group,
-              },
-            ],
-            [
-              CopyText,
-              {
-                swr: swr,
-                data: data,
-                group: group,
-              },
-            ],
+            [SaveDocx, ButtonActionsConfig],
+            [CopyJson, ButtonActionsConfig],
+            [CopyText, ButtonActionsConfig],
           ]}
         ></ButtonActions>
         <DocumentList
