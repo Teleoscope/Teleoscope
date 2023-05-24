@@ -573,11 +573,12 @@ cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {
  * @param read 
  * @returns 
  */
-mark(document_id: string, read: boolean) {
+mark(document_id: string, session_id: string, read: boolean) {
   const body = {
     task: "mark",
     args: {
       document_id: document_id,
+      session_id: session_id,
       read: read
     }
   }

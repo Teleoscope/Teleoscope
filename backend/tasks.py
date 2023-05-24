@@ -86,13 +86,14 @@ def recolor_session(*args, **kwargs):
 
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
+    session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
+
+    history_item = session["history"][0]
+    history_item["color"] = color
+    history_item["user"] = userid    
 
     with transaction_session.start_transaction():
-        session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
-        history_item = session["history"][0]
-        history_item["color"] = color
-        history_item["user"] = userid
         utils.push_history(db, transaction_session, "sessions", session_id, history_item)
         utils.commit_with_retry(transaction_session)
     return 200
@@ -147,12 +148,13 @@ def relabel_session(*args, **kwargs):
     userid = ObjectId(str(kwargs["userid"]))
     label = kwargs["label"]
 
+    session = db.sessions.find_one({"_id": relabeled_session_id}, session=transaction_session)
+    history_item = session["history"][0]
+    history_item["label"] = label
+    history_item["user"] = userid
+    history_item["action"] = "Relabeled session"
+
     with transaction_session.start_transaction():
-        session = db.sessions.find_one({"_id": relabeled_session_id}, session=transaction_session)
-        history_item = session["history"][0]
-        history_item["label"] = label
-        history_item["user"] = userid
-        history_item["action"] = "Relabeled session"
         utils.push_history(db, transaction_session, "sessions", relabeled_session_id, history_item)
         utils.commit_with_retry(transaction_session)
     return 200
@@ -170,12 +172,13 @@ def relabel_group(*args, **kwargs):
     userid = ObjectId(str(kwargs["userid"]))
     label = kwargs["label"]
 
+    group = db.groups.find_one({"_id": group_id}, session=transaction_session)
+    history_item = group["history"][0]
+    history_item["label"] = label
+    history_item["user"] = userid
+    history_item["action"] = "Relabeled group"
+
     with transaction_session.start_transaction():
-        group = db.groups.find_one({"_id": group_id}, session=transaction_session)
-        history_item = group["history"][0]
-        history_item["label"] = label
-        history_item["user"] = userid
-        history_item["action"] = "Relabeled group"
         utils.push_history(db, transaction_session, "groups", group_id, history_item)
         utils.commit_with_retry(transaction_session)
     return 200
@@ -192,14 +195,71 @@ def relabel_teleoscope(*args, **kwargs):
     userid = ObjectId(str(kwargs["userid"]))
     label = kwargs["label"]
 
+    session = db.teleoscopes.find_one({"_id": teleoscope_id}, session=transaction_session)
+    history_item = session["history"][0]
+    history_item["label"] = label
+    history_item["user"] = userid
+
     with transaction_session.start_transaction():
-        session = db.teleoscopes.find_one({"_id": teleoscope_id}, session=transaction_session)
-        history_item = session["history"][0]
-        history_item["label"] = label
-        history_item["user"] = userid
         utils.push_history(db, transaction_session, "teleoscopes", teleoscope_id, history_item)
         utils.commit_with_retry(transaction_session)
     return 200
+
+
+@app.task
+def save_teleoscope_state(*args, **kwargs):
+    """
+    Save the current state of a teleoscope.
+    
+    input:
+        _id (int, represents ObjectId for a teleoscope)
+        history_item (Dict)
+    """
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle args
+    history_item = args[0]["history_item"]
+    _id = str(args[0]["_id"])
+
+    logging.info(f'Saving state for teleoscope {_id}.')
+    obj_id = ObjectId(_id)
+
+    # check if teleoscope id is valid, if not, raise exception
+    if not db.teleoscopes.find_one({"_id": obj_id}):
+        logging.info(f"Teleoscope {_id} not found.")
+        raise Exception("Teleoscope not found")
+
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["action"] = "Save Teleoscope state"
+
+    with transaction_session.start_transaction():
+        utils.push_history(db, transaction_session, "teleoscopes", obj_id, history_item)
+        utils.commit_with_retry(transaction_session)
+
+    
+@app.task
+def recolor_group(*args, **kwargs):
+    """
+    Recolors a group.
+    """
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    group_id = ObjectId(str(kwargs["group_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
+    color = kwargs["color"]
+
+    session = db.groups.find_one({"_id": group_id}, session=transaction_session)
+    history_item = session["history"][0]
+    history_item["color"] = color
+    history_item["user"] = userid
+
+    with transaction_session.start_transaction():
+        utils.push_history(db, transaction_session, "groups", group_id, history_item)
+        utils.commit_with_retry(transaction_session)
+    return 200
+
 
 @app.task
 def create_child(*args, **kwargs):
@@ -377,37 +437,6 @@ def initialize_teleoscope(*args, **kwargs):
     return teleoscope_result
 
 
-@app.task
-def save_teleoscope_state(*args, **kwargs):
-    """
-    Save the current state of a teleoscope.
-    
-    input:
-        _id (int, represents ObjectId for a teleoscope)
-        history_item (Dict)
-    """
-    database = kwargs["db"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    
-    # handle args
-    history_item = args[0]["history_item"]
-    _id = str(args[0]["_id"])
-
-    logging.info(f'Saving state for teleoscope {_id}.')
-    obj_id = ObjectId(_id)
-
-    # check if teleoscope id is valid, if not, raise exception
-    if not db.teleoscopes.find_one({"_id": obj_id}):
-        logging.info(f"Teleoscope {_id} not found.")
-        raise Exception("Teleoscope not found")
-
-    history_item["timestamp"] = datetime.datetime.utcnow()
-    history_item["action"] = "Save Teleoscope state"
-
-    with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "teleoscopes", obj_id, history_item)
-        utils.commit_with_retry(transaction_session)
-
 @app.task 
 def add_group(*args, human=True, description="A group", documents=[], **kwargs):
     """
@@ -476,17 +505,6 @@ def add_group(*args, human=True, description="A group", documents=[], **kwargs):
         
         logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
-
-        # if len(included_documents) > 0:
-        #     logging.info(f'Reorienting teleoscope {teleoscope_result.inserted_id} for group {label}.')
-        #     res = chain(
-        #             robj.s(teleoscope_id=teleoscope_result.inserted_id,
-        #                 positive_docs=included_documents,
-        #                 negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
-        #             save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
-        #     )
-        #     res.apply_async()
-        
         return groups_res.inserted_id
 
 @app.task
@@ -526,27 +544,6 @@ def copy_cluster(*args, **kwargs):
         utils.push_history(db, transaction_session, "sessions", session_id, history_item)
         utils.commit_with_retry(transaction_session)
 
-    
-@app.task
-def recolor_group(*args, **kwargs):
-    """
-    Recolors a group.
-    """
-    database = kwargs["db"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    
-    group_id = ObjectId(str(kwargs["group_id"]))
-    userid = ObjectId(str(kwargs["userid"]))
-    color = kwargs["color"]
-
-    with transaction_session.start_transaction():
-        session = db.groups.find_one({"_id": group_id}, session=transaction_session)
-        history_item = session["history"][0]
-        history_item["color"] = color
-        history_item["user"] = userid
-        utils.push_history(db, transaction_session, "groups", group_id, history_item)
-        utils.commit_with_retry(transaction_session)
-    return 200
 
 @app.task
 def copy_group(*args, **kwargs):
@@ -678,16 +675,14 @@ def remove_teleoscope(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    with transaction_session.start_transaction():
-        session = db.sessions.find_one({'_id': session_id}, session=transaction_session)
-        teleoscope = db.teleoscopes.find_one({'_id': teleoscope_id}, session=transaction_session)
-        
-        history_item = session["history"][0]
-        history_item["timestamp"] = datetime.datetime.utcnow()        
-        history_item["teleoscopes"].remove(teleoscope_id)
-        history_item["action"] = f"Remove teleoscope from session"
-        history_item["user"] = user_id
+    session = db.sessions.find_one({'_id': session_id}, session=transaction_session)        
+    history_item = session["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()        
+    history_item["teleoscopes"].remove(teleoscope_id)
+    history_item["action"] = f"Remove teleoscope from session"
+    history_item["user"] = user_id
 
+    with transaction_session.start_transaction():
         utils.push_history(db, transaction_session, "sessions", session_id, history_item)
         utils.commit_with_retry(transaction_session)
 
@@ -708,20 +703,18 @@ def remove_group(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    with transaction_session.start_transaction():
-        session = db.sessions.find_one({'_id': session_id}, session=transaction_session)
-        group = db.groups.find_one({'_id': group_id}, session=transaction_session)
-        
-        history_item = session["history"][0]
-        history_item["timestamp"] = datetime.datetime.utcnow()        
-        history_item["groups"].remove(group_id)
-        # history_item["teleoscopes"].remove(ObjectId(str(group["teleoscope"])))
-        history_item["action"] = f"Remove group from session"
-        history_item["user"] = user_id
+    session = db.sessions.find_one({'_id': session_id}, session=transaction_session)        
+    history_item = session["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()        
+    history_item["groups"].remove(group_id)
+    history_item["action"] = f"Remove group from session"
+    history_item["user"] = user_id
 
+    with transaction_session.start_transaction():
         utils.push_history(db, transaction_session, "sessions", session_id, history_item)
-        logging.info(f"Removed group {group_id} from session {session_id}.")
         utils.commit_with_retry(transaction_session)
+        logging.info(f"Removed group {group_id} from session {session_id}.")
+
     return session_id
 
 
@@ -754,7 +747,63 @@ def remove_document_from_group(*args, **kwargs):
     with transaction_session.start_transaction():
         utils.push_history(db, transaction_session, "groups", group_id, history_item)
         utils.commit_with_retry(transaction_session)
-        
+
+
+@app.task
+def update_note(*args, **kwargs):
+    """
+    Updates a note.
+
+    kwargs:
+        note_id: string
+        userid: string
+        db: string
+
+        content: string 
+    """
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    userid = ObjectId(str(kwargs["userid"]))
+    note_id = ObjectId(str(kwargs["note_id"]))
+    content = kwargs["content"]
+    note = db.notes.find_one({"_id": note_id})
+    history_item = note["history"][0]
+    history_item["content"] = content
+    history_item["action"] = "Update note content."
+    history_item["userid"] = userid
+
+    with transaction_session.start_transaction():
+        res = utils.push_history(db, transaction_session, "notes", note_id, history_item)
+        utils.commit_with_retry(transaction_session)
+        logging.info(f"Updated note {note_id} with {res}.")
+
+@app.task
+def relabel_note(*args, **kwargs):
+    """
+    Relabels a note.
+
+    kwargs:
+        note_id: string
+        userid: string
+        db: string
+
+        label: string 
+    """
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    userid = ObjectId(str(kwargs["userid"]))
+    note_id = ObjectId(str(kwargs["note_id"]))
+    label = kwargs["label"]
+    note = db.notes.find_one({"_id": note_id})
+    history_item = note["history"][0]
+    history_item["label"] = label
+    history_item["action"] = "Update note label."
+    history_item["userid"] = userid
+
+    with transaction_session.start_transaction():
+        res = utils.push_history(db, transaction_session, "notes", note_id, history_item)
+        utils.commit_with_retry(transaction_session)
+        logging.info(f"Updated note {note_id} with {res} and label {label}.")
 
 @app.task
 def update_group_label(*args, **kwargs):
@@ -827,71 +876,16 @@ def remove_note(*args, **kwargs):
     note_id = ObjectId(str(kwargs["note_id"]))
     session_id = ObjectId(str(kwargs["session_id"]))
 
+    session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
+    history_item = session["history"][0]
+    history_item["user"] = userid,
+    history_item["action"] = "Remove note"
+    history_item["notes"].remove(note_id) 
+
     with transaction_session.start_transaction():
-        session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
-        history_item = session["history"][0]
-        history_item["user"] = userid,
-        history_item["action"] = "Remove note"
-        history_item["notes"].remove(note_id) 
         utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.commit_with_retry(transaction_session)
         logging.info(f"Removed note {note_id} from session {session_id}.")
-        utils.commit_with_retry(transaction_session)
-
-@app.task
-def update_note(*args, **kwargs):
-    """
-    Updates a note.
-
-    kwargs:
-        note_id: string
-        userid: string
-        db: string
-
-        content: string 
-    """
-    database = kwargs["db"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    userid = ObjectId(str(kwargs["userid"]))
-    note_id = ObjectId(str(kwargs["note_id"]))
-    content = kwargs["content"]
-
-    with transaction_session.start_transaction():
-        note = db.notes.find_one({"_id": note_id})
-        history_item = note["history"][0]
-        history_item["content"] = content
-        history_item["action"] = "Update note content."
-        history_item["userid"] = userid
-        utils.push_history(db, transaction_session, "notes", note_id, history_item)
-        utils.commit_with_retry(transaction_session)
-        logging.info(f"Updated note {note_id} with {res}.")
-
-@app.task
-def relabel_note(*args, **kwargs):
-    """
-    Relabels a note.
-
-    kwargs:
-        note_id: string
-        userid: string
-        db: string
-
-        label: string 
-    """
-    database = kwargs["db"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    userid = ObjectId(str(kwargs["userid"]))
-    note_id = ObjectId(str(kwargs["note_id"]))
-    label = kwargs["label"]
-
-    with transaction_session.start_transaction():
-        note = db.notes.find_one({"_id": note_id})
-        history_item = note["history"][0]
-        history_item["label"] = label
-        history_item["action"] = "Update note label."
-        history_item["userid"] = userid
-        utils.push_history(db, transaction_session, "notes", note_id, history_item)
-        utils.commit_with_retry(transaction_session)
-        logging.info(f"Updated note {note_id} with {res} and label {label}.")
 
 
 @app.task
@@ -944,7 +938,6 @@ def register_account(*arg, **kwargs):
         "action": "initialize a user"
     }
 
-    collection = db.users
     with transaction_session.start_transaction():
         users_res = db.users.insert_one(obj, session=transaction_session)
         logging.info(f"Added user {username} with result {users_res}.")
@@ -1119,6 +1112,7 @@ class reorient(Task):
                 ObjectId(str(userid))
             )
 
+            transaction_session, db = utils.create_transaction_session(db=self.dbstring)
             utils.push_history(self.db, transaction_session, "teleoscopes", ObjectId(str(teleoscope_id)), history_item)
             utils.commit_with_retry(transaction_session)
         return {}
@@ -1267,7 +1261,24 @@ def add_multiple_documents_to_database(documents, **kwargs):
             target.insert_many(documents, session=transaction_session)
             # Commit the session with retry
             utils.commit_with_retry(transaction_session)
-
+    
 @app.task
 def mark(**kwargs):
-    print(kwargs)
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    userid = ObjectId(str(kwargs["userid"]))
+    document_id = ObjectId(str(kwargs["document_id"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+    read = kwargs["read"]
+    session = db.sessions.find_one({"_id": session_id})
+    history_item = session["history"][0]
+    history_item["userid"] = userid
+    history_item["action"] = f"Mark document read set to {read}."
+
+    with transaction_session.start_transaction():
+        db.documents.update_one({"_id": document_id}, {"state.read": read})        
+        utils.push_history(db, transaction_session, "teleoscopes", session_id, history_item)
+        utils.commit_with_retry(transaction_session)
+
+
