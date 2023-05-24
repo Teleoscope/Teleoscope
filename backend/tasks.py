@@ -957,6 +957,7 @@ class reorient(Task):
         self.allDocumentIDs = None
         self.allDocumentVectors = None
         self.db = None
+        self.client = None
         self.model = None
         self.dbstring = None
 
@@ -977,8 +978,8 @@ class reorient(Task):
             self.documentsCached = True
         else:
             logging.info("Documents are not cached, building cache now.")
-            db = utils.connect(db=self.dbstring)
-            allDocuments = utils.getAllDocuments(db, projection={'textVector':1, '_id':1}, batching=True, batchSize=10000)
+            self.connect()
+            allDocuments = utils.getAllDocuments(self.db, projection={'textVector':1, '_id':1}, batching=True, batchSize=10000)
             ids = [str(x['_id']) for x in allDocuments]
             logging.info(f'There are {len(ids)} ids in documents.')
             vecs = np.array([x['textVector'] for x in allDocuments])
@@ -1047,8 +1048,7 @@ class reorient(Task):
         return resultantVec, direction
 
     def average(self, documents: list):
-        if self.db is None:
-                self.db = utils.connect(db=self.dbstring)
+        self.connect()
         document_vectors = []
         for doc_id in documents:
             print(f'Finding doc {doc_id}')
@@ -1056,6 +1056,10 @@ class reorient(Task):
             document_vectors.append(doc["textVector"])
         vec = np.average(document_vectors, axis=0)
         return vec
+    
+    def connect(self):
+        if self.db is None:
+            self.db = utils.connect(db=self.dbstring)
 
     def run(self, edges: list, userid: str, db: str, **kwargs):
          # Check if document ids and vectors are cached
@@ -1066,9 +1070,7 @@ class reorient(Task):
         if self.documentsCached == False:
             _, _ = self.cacheDocumentsData()
 
-        if self.db is None:
-            self.db = utils.connect(db=self.dbstring)
-
+        self.connect()
 
         teleoscopes = {}
         for edge in edges:
@@ -1112,9 +1114,9 @@ class reorient(Task):
                 ObjectId(str(userid))
             )
 
-            transaction_session, db = utils.create_transaction_session(db=self.dbstring)
-            utils.push_history(self.db, transaction_session, "teleoscopes", ObjectId(str(teleoscope_id)), history_item)
-            utils.commit_with_retry(transaction_session)
+            # transaction_session, db = utils.create_transaction_session(db=self.dbstring)
+            utils.push_history(self.db, None, "teleoscopes", ObjectId(str(teleoscope_id)), history_item)
+            # utils.commit_with_retry(transaction_session)
         return {}
 robj = app.register_task(reorient())
 

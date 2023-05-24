@@ -14,7 +14,7 @@ import auth
 
 db = "test"
 
-def connect(db=db):
+def make_client():
     autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
     connect_str = (
         f'mongodb://'
@@ -31,24 +31,14 @@ def connect(db=db):
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
     # logging.log(f'Connected to MongoDB with user {auth.mongodb["username"]}.')
+    return client
+
+def connect(db=db):
+    client = make_client()
     return client[db]
 
 def create_transaction_session(db=db):
-    autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
-    connect_str = (
-        f'mongodb://'
-        f'{auth.mongodb["username"]}:'
-        f'{auth.mongodb["password"]}@'
-        f'{auth.mongodb["host"]}/?{autht}'
-    )
-    client = MongoClient(
-        connect_str, 
-        connectTimeoutMS = 50000, 
-        serverSelectionTimeoutMS = 50000,
-        directConnection=True,
-        replicaSet = "rs0"
-        # read_preference = ReadPreference.PRIMARY_PREFERRED
-    )
+    client = make_client()
     session = client.start_session()
     database = client[db]
     return session, database
