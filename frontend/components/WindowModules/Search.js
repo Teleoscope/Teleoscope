@@ -28,6 +28,11 @@ export default function SearchWindow(props) {
     `count/${query}`
   );
 
+  const { read, read_loading } = swr.useSWRAbstract(
+    "read",
+    `stats/search/${query}`
+  );
+
   const dispatch = useDispatch();
 
   // this is a hard-coded hack for ranking of document_id
@@ -44,7 +49,7 @@ export default function SearchWindow(props) {
 
   const Count = () => (
     <Typography sx={{ width: "100%" }} align="center" variant="caption">
-      Results {count_loading ? "loading..." : `: ${count}`}
+      Results {count_loading && read_loading ? "loading..." : `: ${count} (${read} read)`}
     </Typography>
   );
 
