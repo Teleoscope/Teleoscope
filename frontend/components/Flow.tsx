@@ -233,7 +233,10 @@ function Flow(props) {
     client.update_edges(alledges);
   }
 
-  const onConnect = useCallback((connection, curredges) => create_edge(connection, curredges), []);
+  const onConnect = useCallback((connection, curredges) => {
+      create_edge(connection, curredges)
+  
+  }, []);
 
   const onSelectionChange = useCallback(({ nodes, edges }) => {
     dispatch(setSelection({ nodes: nodes, edges: edges }));
@@ -252,8 +255,8 @@ function Flow(props) {
               return;
             }
           })
-          const _dx = (n.positionAbsolute.x - n.width) - (node.positionAbsolute.x + node.width);
-          const _dy = n.positionAbsolute.y - node.positionAbsolute.y;
+          const _dx = (n.positionAbsolute.x) - (node.positionAbsolute.x + node.width);
+          const _dy = (n.positionAbsolute.y + n.height/2) - (node.positionAbsolute.y + node.height/2);
           
           const dx = Math.sqrt(_dx * _dx);
           const dy = Math.sqrt(_dy * _dy);
