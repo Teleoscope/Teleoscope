@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Stack,
   Typography,
@@ -7,10 +7,12 @@ import {
   AccordionDetails,
 } from "@mui/material";
 import { swrContext } from "@/util/swr";
+import * as d3 from "d3";
 
 import { useAppSelector } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
+import Histogram from "./Histogram";
 
 export default function TeleoscopeViewer(props) {
   const swr = useContext(swrContext);
@@ -35,6 +37,7 @@ export default function TeleoscopeViewer(props) {
       </AccordionSummary>
       <AccordionDetails>
         <Stack direction="column">
+          {teleoscope ? <Histogram data={teleoscope?.history[0].rank_slice.map(([docid, rank]) => rank)}></Histogram> :<></>}
           {teleoscope?.history[0].rank_slice.map(([docid, rank]) => (
             <DocumentListItem key={docid} id={docid}></DocumentListItem>
           ))}
