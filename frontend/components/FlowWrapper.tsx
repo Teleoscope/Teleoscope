@@ -21,6 +21,7 @@ const FlowWrapper = ({
   onSelectionChange,
   children
 }) => {
+  // console.log("temp edges at flow", edges, tempEdges, edges.concat(tempEdges))
   return (
     <ReactFlow
       nodes={nodes}

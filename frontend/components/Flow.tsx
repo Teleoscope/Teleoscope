@@ -22,13 +22,25 @@ import WindowNode from "@/components/Nodes/WindowNode";
 import FlowFABWrapper from "@/components/FlowFABWrapper";
 
 import "reactflow/dist/style.css";
+import styles from "@/styles/flow.module.css";
 
 const nodeTypes = { windowNode: WindowNode };
 
 function Flow(props) {
-  const reactFlowWrapper = useRef(null);
-  const [reactFlowInstance, setReactFlowInstance] = useState(null);
 
+  const client = useContext(StompContext);
+  const swr = useContext(swrContext);
+  const reactFlowWrapper = useRef(null);
+  // this ref stores the current dragged node
+  const dragRef = useRef(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const [tempEdges, setTempEdges] = useState([]);
+
+  // target is the node that the node is dragged over
+  const [target, setTarget] = useState(null);
+  const [contextMenu, setContextMenu] = useState<MouseCoords | null>(
+    null
+  );
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
 
@@ -42,10 +54,7 @@ function Flow(props) {
     (state) => state.windows
   );
 
-  const [tempEdges, setTempEdges] = React.useState([]);
 
-  const client = useContext(StompContext);
-  const swr = useContext(swrContext);
   const { session, session_loading, session_error } = swr.useSWRAbstract(
     "session",
     `sessions/${session_id}`
@@ -63,11 +72,7 @@ function Flow(props) {
     SessionLoader(session_history_item, logical_clock);
   }
 
-  // this ref stores the current dragged node
-  const dragRef = useRef(null);
 
-  // target is the node that the node is dragged over
-  const [target, setTarget] = useState(null);
 
   const onNodeDragStart = (evt, node) => {
     dragRef.current = node;
@@ -90,10 +95,15 @@ function Flow(props) {
     setTarget(targetNode);
   };
 
-  const onNodeDrag = (evt, node) => {
-    handleTarget(node);
-    handleTempEdge(evt, node);
-  };
+  const make_connection = (edge) => {
+    return {
+      source: edge.source,
+      sourceHandle: edge.source,
+      target: edge.target,
+      targetHandle: edge.target
+    }
+  }
+
 
   const onNodeDragStop = (evt, node) => {
     if (node?.data?.type == "Document") {
@@ -106,6 +116,12 @@ function Flow(props) {
           dispatch(removeWindow(node.id));
         }
       }
+      if (tempEdges.length == 1 && tempEdges[0] != null) {
+        const connection = make_connection(tempEdges[0])
+        create_edge(connection, edges)
+        setTempEdges([])
+      }
+
     }
 
     if (node?.data?.type == "Cluster") {
@@ -154,7 +170,8 @@ function Flow(props) {
         id: id,
         // type: id.type,
         type: "windowNode",
-        position,
+        position: position,
+        positionAbsolute: position,
         style: {
           width: settings.default_document_width,
           height: settings.default_document_height,
@@ -172,9 +189,7 @@ function Flow(props) {
     worldX: number;
     worldY: number;
   }
-  const [contextMenu, setContextMenu] = React.useState<MouseCoords | null>(
-    null
-  );
+
   const handleOpenContextMenu = (event) => {
     const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
     const position = reactFlowInstance.project({
@@ -207,34 +222,52 @@ function Flow(props) {
     handleOpenContextMenu(e);
   };
 
-  const onConnect = useCallback((connection, curredges) => {
+
+  
+
+  const create_edge = (connection, curredges) => {
     const newEdges = addEdge(connection, []);
     dispatch(makeEdge({ edges: newEdges }));
 
     const alledges = addEdge(connection, curredges);
     client.update_edges(alledges);
+  }
+
+  const onConnect = useCallback((connection, curredges) => {
+      create_edge(connection, curredges)
+  
   }, []);
 
   const onSelectionChange = useCallback(({ nodes, edges }) => {
     dispatch(setSelection({ nodes: nodes, edges: edges }));
   }, []);
 
-  const getClosestEdge = useCallback((node) => {
-    const MIN_DISTANCE = 150;
 
-    const closestNode = nodes.reduce(
+  const getClosestEdge = (node) => {
+    const X_MIN_DISTANCE = 50;
+    const Y_MIN_DISTANCE = 100;
+    
+    const closestNode = nodes.filter(n => n.data.type == "Teleoscope").reduce(
       (res, n) => {
         if (n.id !== node.id) {
-          const dx = n.positionAbsolute.x - node.positionAbsolute.x;
-          const dy = n.positionAbsolute.y - node.positionAbsolute.y;
-          const d = Math.sqrt(dx * dx + dy * dy);
+          edges.forEach((e) => {
+            if (e.source == node.id && e.target == n.id) {
+              return;
+            }
+          })
+          const _dx = (n.positionAbsolute.x) - (node.positionAbsolute.x + node.width);
+          const _dy = (n.positionAbsolute.y + n.height/2) - (node.positionAbsolute.y + node.height/2);
+          
+          const dx = Math.sqrt(_dx * _dx);
+          const dy = Math.sqrt(_dy * _dy);
 
-          if (d < res.distance && d < MIN_DISTANCE) {
-            res.distance = d;
+          // console.log("dist", dx, dy)
+
+          if (dx < res.distance && dx < X_MIN_DISTANCE && dy < Y_MIN_DISTANCE) {
+            res.distance = dx;
             res.node = n;
           }
         }
-
         return res;
       },
       {
@@ -244,42 +277,33 @@ function Flow(props) {
     );
 
     if (!closestNode.node) {
-      return null;
+      return null
     }
-
-    const closeNodeIsSource =
-      closestNode.node.positionAbsolute.x < node.positionAbsolute.x;
 
     return {
       id: `${node.id}-${closestNode.node.id}`,
-      source: closeNodeIsSource ? closestNode.node.id : node.id,
-      target: closeNodeIsSource ? node.id : closestNode.node.id,
+      source: node.id,
+      target: closestNode.node.id,
     };
-  }, []);
+  }
 
-  const handleTempEdge = useCallback(
-    (_, node) => {
+
+  const onNodeDrag =  useCallback((evt, node) => {
+    if (node?.data.type == "Document") {
+      handleTarget(node);
+      handleTempEdge(evt, node);  
+    }
+  }, [getClosestEdge, setTempEdges]);
+
+  const handleTempEdge = (_, node) => {
       const closeEdge = getClosestEdge(node);
-
-      setTempEdges((es) => {
-        const nextEdges = es.filter((e) => e.className !== "temp");
-
-        if (
-          closeEdge &&
-          !nextEdges.find(
-            (ne) =>
-              ne.source === closeEdge.source && ne.target === closeEdge.target
-          )
-        ) {
-          closeEdge.className = "temp";
-          nextEdges.push(closeEdge);
-        }
-
-        return nextEdges;
-      });
-    },
-    [getClosestEdge, setTempEdges]
-  );
+      if (closeEdge) {
+        closeEdge.className = styles.temp
+      }
+      setTempEdges([closeEdge])
+    }
+    
+  
 
   return (
     <div className="providerflow">

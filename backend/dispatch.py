@@ -122,36 +122,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "register_account":
                 res = tasks.register_account.signature(args=(), kwargs=kwargs)
 
-            case "reorient":
-                magnitude = 0.5
-                if "magnitude" in kwargs:
-                    magnitude = kwargs["magnitude"]
-                res = chain(
-                    robj.s(
-                        teleoscope_id=kwargs["teleoscope_id"],
-                        positive_docs=kwargs["positive_docs"],
-                        negative_docs=kwargs["negative_docs"],
-                        magnitude=magnitude,
-                        userid=kwargs["userid"],
-                        db=kwargs["db"],
-                    ).set(queue=auth.rabbitmq["task_queue"]),
-                    tasks.save_teleoscope_state.s().set(
-                        queue=auth.rabbitmq["task_queue"]
-                    ),
-                )
-
-                res.apply_async()
-                return
-
-            case "update_edges":
-                res = chain(
-                    robj.s(
-                        edges=kwargs["edges"], userid=kwargs["userid"], db=kwargs["db"]
-                    ).set(queue=auth.rabbitmq["task_queue"])
-                )
-                res.apply_async()
-                return
-
+            # TODO: refactor to be like above syntax when we're sure that everything
+            # has all arguments
             case "add_group":
                 documents = []
                 if "documents" in kwargs:
@@ -164,6 +136,17 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                         "documents": documents,
                     },
                 )
+
+            case "update_edges":
+                res = chain(
+                    robj.s(
+                        edges=kwargs["edges"], userid=kwargs["userid"], db=kwargs["db"]
+                    ).set(queue=auth.rabbitmq["task_queue"])
+                )
+                res.apply_async()
+                return
+
+
 
         try:
             res.apply_async(queue=auth.rabbitmq["task_queue"])
