@@ -228,9 +228,6 @@ function Flow(props) {
   const create_edge = (connection, curredges) => {
     const newEdges = addEdge(connection, []);
     dispatch(makeEdge({ edges: newEdges }));
-
-    const alledges = addEdge(connection, curredges);
-    client.update_edges(alledges);
   }
 
   const onConnect = useCallback((connection, curredges) => {
