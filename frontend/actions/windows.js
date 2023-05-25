@@ -208,9 +208,20 @@ export const Windows = createSlice({
       state.nodes = temp;
     },
     makeEdge: (state, action) => {
-      var temp = [...state.edges, ...action.payload.edges];
+      var temp = [...state.edges];
+      var duplicateEdge = false;
+      temp.forEach(se => action.payload.edges.forEach(ae => {
+        if (se.id == ae.id) {
+          duplicateEdge = true;
+        }
+      }))
+      var combine = [...state.edges, ...action.payload.edges];
       state.logical_clock = state.logical_clock + 1;
-      state.edges = temp;
+      if (!duplicateEdge) {
+        state.edges = combine;        
+      } else {
+        state.edges = state.edges;
+      }
     },
   },
 });

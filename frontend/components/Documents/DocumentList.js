@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
 
 // material ui
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -7,12 +8,15 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
 import ItemList from "@/components/ItemList";
 import { setSelection } from "@/actions/windows";
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { StompContext } from "@/components/Stomp";
 
 export default function DocumentList(props) {
   const data = props.data;
   const dispatch = useAppDispatch();
-
+  const client = useContext(StompContext);
+  const session_id = useAppSelector(
+    (state) => state.activeSessionID.value
+  );
   // pagination
   const [pageNumber, setPageNumber] = useState(1);
   const itemsPerPage = 10;
@@ -60,6 +64,7 @@ export default function DocumentList(props) {
           edges: [],
         })
       );
+      client.mark(doc[0], session_id, true);
     }
   };
 
