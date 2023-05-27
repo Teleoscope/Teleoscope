@@ -114,9 +114,7 @@ export default function TeleoscopePalette(props) {
                 >
                   <Stack direction="row" alignItems="center">
                     <ListItemIcon>
-                      {/* <IconButton> */}
-                        <FlareIcon />
-                      {/* </IconButton> */}
+                      <FlareIcon />
                     </ListItemIcon>
 
                     <EditableText

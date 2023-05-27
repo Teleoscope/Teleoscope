@@ -19,6 +19,22 @@ def create_group_object(color, included_documents, label, action, user_id, descr
     }
     return obj
 
+def create_projection_object(session_id, clusters, source_groups, label, action, user_id):
+    obj = {
+        "creation_time": datetime.datetime.utcnow(),
+        "session": session_id,
+        "history": [
+            {
+                "timestamp": datetime.datetime.utcnow(),
+                "label": label,
+                "clusters": clusters,
+                "source_groups": source_groups,
+                "action": action,
+                "user": user_id,
+            }]
+    }
+    return obj
+
 def create_session_object(
         userid, 
         label, 
@@ -29,7 +45,7 @@ def create_session_object(
         windows=[],
         edges=[],
         groups=[],
-        clusters=[],
+        projections=[],
         teleoscopes=[],
         bookmarks=[],
         notes=[]):
@@ -47,7 +63,7 @@ def create_session_object(
                 "windows": windows,
                 "edges": edges,
                 "groups": groups,
-                "clusters": clusters,
+                "projections": projections,
                 "teleoscopes": teleoscopes,
                 "label": label,
                 "color": color,
