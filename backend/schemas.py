@@ -19,7 +19,7 @@ def create_group_object(color, included_documents, label, action, user_id, descr
     }
     return obj
 
-def create_projection_object(session_id, clusters, source_groups, label, action, user_id):
+def create_projection_object(session_id, label, user_id, action=f"initialize_projection"):
     obj = {
         "creation_time": datetime.datetime.utcnow(),
         "session": session_id,
@@ -27,8 +27,8 @@ def create_projection_object(session_id, clusters, source_groups, label, action,
             {
                 "timestamp": datetime.datetime.utcnow(),
                 "label": label,
-                "clusters": clusters,
-                "source_groups": source_groups,
+                "clusters": [],
+                "source_groups": [],
                 "action": action,
                 "user": user_id,
             }]

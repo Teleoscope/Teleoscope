@@ -71,6 +71,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "initialize_teleoscope":
                 res = tasks.initialize_teleoscope.signature(args=(), kwargs=kwargs)
 
+            case "initialize_projection":
+                res = tasks.initialize_projection.signature(args=(), kwargs=kwargs)
+
             case "recolor_session":
                 res = tasks.recolor_session.signature(args=(), kwargs=kwargs)
 
@@ -83,11 +86,17 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "relabel_teleoscope":
                 res = tasks.relabel_teleoscope.signature(args=(), kwargs=kwargs)
 
+            case "relabel_projection":
+                res = tasks.relabel_projection.signature(args=(), kwargs=kwargs)
+
             case "relabel_session":
                 res = tasks.relabel_session.signature(args=(), kwargs=kwargs)
 
             case "remove_group":
                 res = tasks.remove_group.signature(args=(), kwargs=kwargs)
+            
+            case "remove_projection":
+                res = tasks.remove_projection.signature(args=(), kwargs=kwargs)
 
             case "remove_teleoscope":
                 res = tasks.remove_teleoscope.signature(args=(), kwargs=kwargs)

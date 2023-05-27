@@ -1283,4 +1283,100 @@ def mark(**kwargs):
         utils.push_history(db, transaction_session, "teleoscopes", session_id, history_item)
         utils.commit_with_retry(transaction_session)
 
+@app.task 
+def initialize_projection(*args, **kwargs):
+    """
+    initialize a projection object
+    """
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle kwargs
+    label = kwargs["label"]
+    _id = ObjectId(str(kwargs["session_id"]))
+    userid = kwargs["userid"]
+    
+    user = db.users.find_one({"_id": ObjectId(str(userid))})
+    user_id = "1"
+    if user != None:
+        user_id = user['_id']
+
+    obj = schemas.create_projection_object(_id, label, user_id)
+    # call needs to be transactional due to groups & sessions collections being updated
+
+    collection = db.projections
+
+    with transaction_session.start_transaction():
+
+        projection_res = collection.insert_one(obj, session=transaction_session)
+        logging.info(f"Added projection {obj['history'][0]['label']} with result {projection_res}.")
+        # add created groups document to the correct session
+        session = db.sessions.find_one({'_id': _id}, session=transaction_session)
+        if not session:
+            logging.info(f"Warning: session with id {_id} not found.")
+            raise Exception(f"session with id {_id} not found")
+
+        projections = session["history"][0]["projections"]
+
+        history_item = session["history"][0]
+        history_item["timestamp"] = datetime.datetime.utcnow()
+        history_item["projections"] = projections
+        history_item["action"] = f"Initialize new projection: {label}"
+        history_item["user"] = user_id
+
+        sessions_res = utils.push_history(db, transaction_session, "sessions", _id, history_item)
+        
+        logging.info(f"Associated projection {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
+        utils.commit_with_retry(transaction_session)
+        return projection_res.inserted_id
+    
+@app.task
+def remove_projection(*args, **kwargs):
+    """
+    Delete a projection and associated clusters
+    """
+    projection_id = ObjectId(str(kwargs["projection_id"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+    user_id = ObjectId(str(kwargs["userid"]))
+
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    session = db.sessions.find_one({'_id': session_id}, session=transaction_session)        
+    history_item = session["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()        
+    history_item["projections"].remove(projection_id)
+    history_item["action"] = f"Remove projection from session"
+    history_item["user"] = user_id
+
+    # TODO - also delete projection objection and associated clusters
+    db.projections.delete_one({'_id': projection_id}, session=transaction_session)        
+
+    with transaction_session.start_transaction():
+        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.commit_with_retry(transaction_session)
+
+@app.task
+def relabel_projection(*args, **kwargs):
+    """
+    Relabels a projection.
+    """
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+
+    projection_id = ObjectId(str(kwargs["projection_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
+    label = kwargs["label"]
+
+    session = db.projections.find_one({"_id": projection_id}, session=transaction_session)
+    history_item = session["history"][0]
+    history_item["label"] = label
+    history_item["action"] = "update label"
+    history_item["user"] = userid
+
+    with transaction_session.start_transaction():
+        utils.push_history(db, transaction_session, "projections", projection_id, history_item)
+        utils.commit_with_retry(transaction_session)
+    return 200
+
 
