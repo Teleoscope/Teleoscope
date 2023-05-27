@@ -1,24 +1,53 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 
-import { useAppSelector } from "@/util/hooks";
+// mui
+import {
+  IconButton,
+  Stack,
+  TextField,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+} from "@mui/material";
+
+import {
+  Flare as FlareIcon,
+  Delete as DeleteIcon,
+  Folder as FolderIcon,
+  Diversity2 as Diversity2Icon,
+} from "@mui/icons-material";
+
+// custom
+import EditableText from "@/components/EditableText";
+
+// actions
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { RootState } from "@/stores/store";
+
+// utils
 import { swrContext } from "@/util/swr";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemText from "@mui/material/ListItemText";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import FolderIcon from "@mui/icons-material/Folder";
+import { StompContext } from "@/components/Stomp";
 
 export default function Clusters(props) {
+  const client = useContext(StompContext);
+
   const session_id = useAppSelector(
     (state: RootState) => state.activeSessionID.value
   );
   const swr = useContext(swrContext);
-  const { clusters } = swr.useSWRAbstract(
-    "clusters",
-    `sessions/${session_id}/clusters`
+  const { projections } = swr.useSWRAbstract(
+    "projections",
+    `sessions/${session_id}/projections`
   );
 
+  const [value, setValue] = React.useState(null);
+
+  const keyChange = (e) => {
+    if (e.code == "Enter") {
+      client.initialize_projection(session_id, value);
+    }
+  };
   const onDragStart = (event, id, type, typetag) => {
     event.dataTransfer.setData("application/reactflow/type", type);
     event.dataTransfer.setData("application/reactflow/id", `${id}%${typetag}`);
@@ -27,30 +56,98 @@ export default function Clusters(props) {
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
-      <List>
-        {clusters?.map((cluster) => {
-          return (
-            <div
-              key={cluster._id}
-              style={{ overflow: "auto", height: "100%" }}
-              draggable={true}
-              onDragStart={(e) =>
-                onDragStart(e, cluster._id + "%cluster", "Cluster", "cluster")
-              }
-            >
-              <ListItem>
-                <ListItemIcon>
-                  <FolderIcon sx={{ color: cluster.history[0].color }} />
-                </ListItemIcon>
-                <ListItemText
-                  primary={cluster.history[0].label}
-                  secondary={cluster.history[0].description}
-                />
-              </ListItem>
-            </div>
-          );
-        })}
-      </List>
+      <Stack>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          style={{ margin: 0 }}
+        >
+          <TextField
+            label="Create new Projection..."
+            placeholder="Type label and press enter."
+            variant="standard"
+            onKeyDown={(e) => keyChange(e)}
+            onChange={(e) => setValue(e.target.value)}
+            InputLabelProps={{
+              sx: {
+                "&.Mui-focused": {
+                  color: props.color,
+                },
+              },
+            }}
+            sx={{
+              width: "100%",
+              margin: 1,
+              // '& .MuiInput-underline:before': {borderBottomColor: props.color},
+              "& .MuiInput-underline:after": { borderBottomColor: props.color },
+              // '& .MuiInputLabel-root': {borderBottomColor: props.color},
+            }}
+          />
+        </Stack>
+        <List>
+          {projections?.map((p) => {
+            return (
+              <div
+                key={p._id}
+                style={{ overflow: "auto", height: "100%" }}
+                draggable={true}
+                onDragStart={(e) =>
+                  onDragStart(
+                    e, 
+                    p._id + "%projection", 
+                    "projection", 
+                    "projection")
+                }
+              >
+                <ListItem key={p._id}>
+                  <Stack
+                    sx={{ width: "100%" }}
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <Stack direction="row" alignItems="center">
+                      <ListItemIcon>
+                        <Diversity2Icon />
+                      </ListItemIcon>
+
+                      <EditableText
+                        initialValue={p.label}
+                        callback={(label) =>
+                          client.relabel_projection(label, p._id)
+                        }
+                      />
+                    </Stack>
+                    <IconButton
+                      onClick={() => client.remove_projection(p._id, session_id)}
+                    >
+                      <DeleteIcon
+                        sx={[
+                          {
+                            "&:hover": {
+                              color: props.color,
+                            },
+                          },
+                        ]}
+                      ></DeleteIcon>
+                    </IconButton>
+                  </Stack>
+                </ListItem>
+                {/* <ListItem>
+                  <ListItemIcon>
+                    <FolderIcon sx={{ color: cluster.history[0].color }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={cluster.history[0].label}
+                    secondary={cluster.history[0].description}
+                  />
+                </ListItem> */}
+              </div>
+            );
+          })}
+        </List>
+      </Stack>
     </div>
   );
 }
