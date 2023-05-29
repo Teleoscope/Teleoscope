@@ -20,8 +20,8 @@ const Histogram = ({ data, height = 100 }) => {
       .range([height - margin.bottom, margin.top]);  // Subtract margins from height
 
     const xDomain = [
-      d3.min(data) - (d3.max(data) - d3.min(data)) / 20,
-      d3.max(data) + (d3.max(data) - d3.min(data)) / 20
+      0, // d3.min(data) - (d3.max(data) - d3.min(data)) / 20,
+      1 // d3.max(data) + (d3.max(data) - d3.min(data)) / 20
     ];
 
     const xScale = d3.scaleLinear()
