@@ -113,11 +113,12 @@ def create_note_object(userid, label):
         "history": [create_note_history_item(userid, label, "Add note.")]
     }
 
-def create_note_history_item(userid, label, action, content={}):
+def create_note_history_item(userid, label, action, content={}, vector=[]):
     return {
             "user" : userid,
             "label" : label,
             "action" : action,
             "content": content,
+            "vector": vector,
             "timestamp": datetime.datetime.utcnow()
     }

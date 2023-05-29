@@ -766,8 +766,12 @@ def update_note(*args, **kwargs):
     userid = ObjectId(str(kwargs["userid"]))
     note_id = ObjectId(str(kwargs["note_id"]))
     content = kwargs["content"]
+
+    vector = vectorize_text([block["text"] for block in content["blocks"]])
+
     note = db.notes.find_one({"_id": note_id})
     history_item = note["history"][0]
+    history_item["vector"] = vector
     history_item["content"] = content
     history_item["action"] = "Update note content."
     history_item["userid"] = userid
