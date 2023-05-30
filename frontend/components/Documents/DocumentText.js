@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 // mui
 import { Typography, Box, Popover } from "@mui/material";
+import Snippet from "../Snippet";
 
 export default function DocumentText(props) {
   const [selectedText, setSelectedText] = useState("");
@@ -56,7 +57,7 @@ export default function DocumentText(props) {
           horizontal: 'center',
         }}
       >
-        <Typography sx={{ p: 2 }}>{selectedText}</Typography>
+        <Snippet text={selectedText} {...props}></Snippet>
       </Popover>
     </Box>
   );

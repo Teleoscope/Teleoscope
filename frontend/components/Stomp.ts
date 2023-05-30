@@ -386,12 +386,13 @@ export class Stomp {
   /**
    * Request to add a note for a particular interface object.
    */
-  add_note(session_id: string, label: string = "new note") {
+  add_note(session_id: string, label: string = "new note", content: {}) {
     const body = {
       task: "add_note",
       args: {
         session_id: session_id,
         label: label,
+        content: content
       },
     };
     this.publish(body);
@@ -580,6 +581,23 @@ export class Stomp {
     this.publish(body);
     return body;
   }
+
+  /**
+   * Create Snippet
+   */
+  snippet(document_id: string, session_id: string, text: string ) {
+    const body = {
+      task: "mark",
+      args: {
+        document_id: document_id,
+        session_id: session_id,
+        text: text
+      },
+    };
+    this.publish(body);
+    return body;
+  } 
+  
 
 
 }

@@ -122,6 +122,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "register_account":
                 res = tasks.register_account.signature(args=(), kwargs=kwargs)
 
+            case "snippet":
+                res = tasks.snippet.signature(args=(), kwargs=kwargs)
+
             # TODO: refactor to be like above syntax when we're sure that everything
             # has all arguments
             case "add_group":
