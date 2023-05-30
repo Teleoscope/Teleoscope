@@ -116,12 +116,14 @@ function Flow(props) {
           dispatch(removeWindow(node.id));
         }
       }
+    }
+
+    if (node?.data?.type == "Document" || node?.data?.type == "Note") {
       if (tempEdges.length == 1 && tempEdges[0] != null) {
         const connection = make_connection(tempEdges[0])
         create_edge(connection, edges)
         setTempEdges([])
       }
-
     }
 
     if (node?.data?.type == "Cluster") {

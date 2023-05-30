@@ -799,13 +799,13 @@ def update_note(*args, **kwargs):
 
     note = db.notes.find_one({"_id": note_id})
     history_item = note["history"][0]
-    history_item["vector"] = vector
     history_item["content"] = content
     history_item["action"] = "Update note content."
     history_item["userid"] = userid
 
     with transaction_session.start_transaction():
         res = utils.push_history(db, transaction_session, "notes", note_id, history_item)
+        db.notes.update_one({"_id": note_id}, {"$set": {"textVector": vector}})
         utils.commit_with_retry(transaction_session)
         logging.info(f"Updated note {note_id} with {res}.")
 
@@ -1088,7 +1088,28 @@ class reorient(Task):
         document_vectors = []
         for doc_id in documents:
             print(f'Finding doc {doc_id}')
-            doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
+            # Define the aggregation pipeline
+            pipeline = [
+                { '$match': { "_id" : ObjectId(str(doc_id)) } },
+                {
+                    '$unionWith': {
+                        'coll': 'notes',
+                        'pipeline': [
+                            { '$match': { "_id" : ObjectId(str(doc_id)) } }
+                        ]
+                    }
+                }
+            ]
+
+            # Execute the aggregation query
+            result = list(documents.aggregate(pipeline))
+
+            # # Process the result
+            # for document in result:
+            #     # Process each document
+            #     print(document)
+
+            # doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
             document_vectors.append(doc["textVector"])
         vec = np.average(document_vectors, axis=0)
         return vec
@@ -1121,7 +1142,7 @@ class reorient(Task):
                 res = self.db.groups.find_one({"_id": ObjectId(str(source))})
                 sources = [id for id in res["history"][0]["included_documents"]]
 
-            if edge["source"].split("%")[-1] == "document":
+            if edge["source"].split("%")[-1] == "document" or edge["source"].split("%")[-1] == "note":
                 sources.append(source)
 
             teleoscopes[target] = [*sources, *teleoscopes[target]]

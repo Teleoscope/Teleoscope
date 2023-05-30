@@ -110,17 +110,17 @@ def create_teleoscope_history_item(
 def create_note_object(userid, label, content, vector):
     return {
         "creation_time": datetime.datetime.utcnow(),
-        "history": [create_note_history_item(userid, label, "Add note.", content=content, vector=vector)]
+        "textVector": vector,
+        "history": [create_note_history_item(userid, label, "Add note.", content=content)]
     }
 
 
 
-def create_note_history_item(userid, label, action, content={}, vector=[]):
+def create_note_history_item(userid, label, action, content={}):
     return {
             "user" : userid,
             "label" : label,
             "action" : action,
             "content": content,
-            "vector": vector,
             "timestamp": datetime.datetime.utcnow()
     }
