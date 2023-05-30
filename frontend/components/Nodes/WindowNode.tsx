@@ -24,6 +24,7 @@ function WindowNode({ data, id, selected }) {
     switch(dataType) {
       case "Document":
       case "Group":
+      case "Note":
         return "source";
       case "Teleoscope":
         return "target";

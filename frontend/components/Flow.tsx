@@ -289,7 +289,7 @@ function Flow(props) {
 
 
   const onNodeDrag =  useCallback((evt, node) => {
-    if (node?.data.type == "Document") {
+    if (node?.data.type == "Document" || node?.data.type == "Note") {
       handleTarget(node);
       handleTempEdge(evt, node);  
     }
