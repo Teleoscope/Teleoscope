@@ -1314,8 +1314,6 @@ def initialize_projection(*args, **kwargs):
             logging.info(f"Warning: session with id {session_id} not found.")
             raise Exception(f"session with id {session_id} not found")
 
-        projections = session["history"][0]["projections"]
-
         history_item = session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
         history_item["projections"].append(projection_res.inserted_id)
@@ -1349,7 +1347,7 @@ def remove_projection(*args, **kwargs):
 
     with transaction_session.start_transaction():
         
-        cluster = clustering.Clustering(kwargs["userid"], [], kwargs["session_oid"], kwargs["db"])
+        cluster = clustering.Clustering(kwargs["userid"], [], kwargs["projection_id"], kwargs["session_oid"], kwargs["db"])
         cluster.clean_mongodb() # cleans up clusters associate with projection
         db.projections.delete_one({'_id': projection_id}, session=transaction_session) 
 
