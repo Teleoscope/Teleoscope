@@ -1349,7 +1349,7 @@ def remove_projection(*args, **kwargs):
     history_item["action"] = f"Remove projection from session"
     history_item["user"] = user_id
 
-    # TODO - also delete projection objection and associated clusters
+    # TODO - use clean_mongo() in clustering.py to clean clusters associated with projection
     db.projections.delete_one({'_id': projection_id}, session=transaction_session)        
 
     with transaction_session.start_transaction():
