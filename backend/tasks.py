@@ -75,6 +75,33 @@ def initialize_session(*args, **kwargs):
     return 200 # success
 
 @app.task
+def snippet(*args, **kwargs):
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+
+    session_id = ObjectId(str(kwargs["session_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
+    document_id =  ObjectId(str(kwargs["document_id"]))
+    text = kwargs["text"]
+    
+    snip = {
+        "document_id": document_id,
+        "userid": userid,
+        "text": text,
+        "vector": vectorize_text([text])
+    }
+    session = db.sessions.find_one({"_id": session_id})
+    history_item = session["history"][0]
+    history_item["user"] = userid
+    history_item["action"] = f"Add snippet for session {session_id} and document {document_id}."
+
+    with transaction_session.start_transaction():
+        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        db.snippets.insert_one(snip, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
+
+
+@app.task
 def recolor_session(*args, **kwargs):
     """
     Recolors a session.
@@ -87,11 +114,12 @@ def recolor_session(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
 
-    session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
+    session = db.sessions.find_one({"_id": session_id})
 
     history_item = session["history"][0]
     history_item["color"] = color
     history_item["user"] = userid    
+    history_item["action"] = "Recolor session."
 
     with transaction_session.start_transaction():
         utils.push_history(db, transaction_session, "sessions", session_id, history_item)
@@ -766,6 +794,9 @@ def update_note(*args, **kwargs):
     userid = ObjectId(str(kwargs["userid"]))
     note_id = ObjectId(str(kwargs["note_id"]))
     content = kwargs["content"]
+
+    vector = vectorize_text([block["text"] for block in content["blocks"]])
+
     note = db.notes.find_one({"_id": note_id})
     history_item = note["history"][0]
     history_item["content"] = content
@@ -774,6 +805,7 @@ def update_note(*args, **kwargs):
 
     with transaction_session.start_transaction():
         res = utils.push_history(db, transaction_session, "notes", note_id, history_item)
+        db.notes.update_one({"_id": note_id}, {"$set": {"textVector": vector}})
         utils.commit_with_retry(transaction_session)
         logging.info(f"Updated note {note_id} with {res}.")
 
@@ -846,9 +878,13 @@ def add_note(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
     label = kwargs["label"]
+    content = kwargs["content"]
     session_id = ObjectId(str(kwargs["session_id"]))
     userid = ObjectId(str(kwargs["userid"]))
-    note = schemas.create_note_object(userid, label)
+
+    vector = vectorize_text([block["text"] for block in content["blocks"]])
+
+    note = schemas.create_note_object(userid, label, content, vector)
     with transaction_session.start_transaction():
         res = db.notes.insert_one(note, session=transaction_session)
         session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
@@ -1052,7 +1088,28 @@ class reorient(Task):
         document_vectors = []
         for doc_id in documents:
             print(f'Finding doc {doc_id}')
-            doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
+            # Define the aggregation pipeline
+            pipeline = [
+                { '$match': { "_id" : ObjectId(str(doc_id)) } },
+                {
+                    '$unionWith': {
+                        'coll': 'notes',
+                        'pipeline': [
+                            { '$match': { "_id" : ObjectId(str(doc_id)) } }
+                        ]
+                    }
+                }
+            ]
+
+            # Execute the aggregation query
+            result = list(documents.aggregate(pipeline))
+
+            # # Process the result
+            # for document in result:
+            #     # Process each document
+            #     print(document)
+
+            # doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
             document_vectors.append(doc["textVector"])
         vec = np.average(document_vectors, axis=0)
         return vec
@@ -1085,7 +1142,7 @@ class reorient(Task):
                 res = self.db.groups.find_one({"_id": ObjectId(str(source))})
                 sources = [id for id in res["history"][0]["included_documents"]]
 
-            if edge["source"].split("%")[-1] == "document":
+            if edge["source"].split("%")[-1] == "document" or edge["source"].split("%")[-1] == "note":
                 sources.append(source)
 
             teleoscopes[target] = [*sources, *teleoscopes[target]]
