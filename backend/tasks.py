@@ -796,9 +796,9 @@ def update_note(*args, **kwargs):
     content = kwargs["content"]
 
     text = " ".join([block["text"] for block in content["blocks"]])
-    logging.info(f"text:\n {text} \n\n content:\n {content}\n\n")
     vector = vectorize_text(text)
-    
+    logging.info(f"Vectorized note with {text}.")
+
     note = db.notes.find_one({"_id": note_id})
     history_item = note["history"][0]
     history_item["content"] = content
@@ -807,7 +807,7 @@ def update_note(*args, **kwargs):
 
     with transaction_session.start_transaction():
         res = utils.push_history(db, transaction_session, "notes", note_id, history_item)
-        db.notes.update_one({"_id": note_id}, {"$set": {"textVector": vector}})
+        db.notes.update_one({"_id": note_id}, {"$set": {"textVector": vector}}, session=transaction_session)
         utils.commit_with_retry(transaction_session)
         logging.info(f"Updated note {note_id} with {res}.")
 
@@ -885,9 +885,7 @@ def add_note(*args, **kwargs):
     userid = ObjectId(str(kwargs["userid"]))
 
     text = " ".join([block["text"] for block in content["blocks"]])
-    logging.info(f"text:\n {text} \n\n content:\n {content}\n\n")
     vector = vectorize_text(text)
-
 
     note = schemas.create_note_object(userid, label, content, vector)
     with transaction_session.start_transaction():

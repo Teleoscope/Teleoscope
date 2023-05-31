@@ -1,6 +1,7 @@
-import React, { useContext } from "react";
+import React, { useContext, useRef, useEffect } from "react";
 import { Editor, EditorState, convertFromRaw, convertToRaw } from "draft-js";
 import "draft-js/dist/Draft.css";
+import lodash from 'lodash';
 
 // mui
 import Stack from "@mui/material/Stack";
@@ -26,6 +27,21 @@ export default function Note(props) {
   const client = useContext(StompContext);
   const editor = React.useRef(null);
 
+  const debouncedSave = useRef(
+    lodash.debounce((e) => {
+      const content = e.getCurrentContent();
+      client.update_note(id, convertToRaw(content));
+    }, 5000)  // waits 5000 ms after the last call
+  ).current;
+
+  useEffect(() => {
+    return () => {
+      debouncedSave.cancel();
+    };
+  }, []);
+
+ 
+
   const handleLoad = () => {
     if (note) {
       const item = note["history"][0];
@@ -41,12 +57,11 @@ export default function Note(props) {
   // Handlers
   const handleBlur = () => {
     const content = editorState.getCurrentContent();
-    client.update_note(id, convertToRaw(content));
   };
 
   const handleOnChange = (e) => {
     setEditorState(e);
-    const content = editorState.getCurrentContent();
+    debouncedSave(e);
   };
 
   const handleFocus = () => {
