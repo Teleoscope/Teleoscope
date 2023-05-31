@@ -1102,7 +1102,7 @@ class reorient(Task):
             ]
 
             # Execute the aggregation query
-            result = list(documents.aggregate(pipeline))
+            result = list(self.db.documents.aggregate(pipeline))
 
             # # Process the result
             # for document in result:
@@ -1110,7 +1110,7 @@ class reorient(Task):
             #     print(document)
 
             # doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
-            document_vectors.append(doc["textVector"])
+            document_vectors.append(result[0]["textVector"])
         vec = np.average(document_vectors, axis=0)
         return vec
     

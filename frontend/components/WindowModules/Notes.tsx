@@ -47,7 +47,6 @@ export default function Note(props) {
   const handleOnChange = (e) => {
     setEditorState(e);
     const content = editorState.getCurrentContent();
-    client.update_note(id, convertToRaw(content));
   };
 
   const handleFocus = () => {
