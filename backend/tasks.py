@@ -1103,6 +1103,7 @@ class reorient(Task):
 
             # Execute the aggregation query
             result = list(self.db.documents.aggregate(pipeline))
+            print("result", result)
 
             # # Process the result
             # for document in result:
