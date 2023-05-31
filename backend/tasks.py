@@ -797,6 +797,8 @@ def update_note(*args, **kwargs):
     logging.info(f"Vector {vector} is being .")
     text = " ".join([block["text"] for block in content["blocks"]])
     logging.info(f"text:\n {text} \n\n content:\n {content}\n\n")
+    
+    
     vector = vectorize_text(text)
     
     note = db.notes.find_one({"_id": note_id})
