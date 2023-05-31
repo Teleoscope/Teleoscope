@@ -795,7 +795,9 @@ def update_note(*args, **kwargs):
     note_id = ObjectId(str(kwargs["note_id"]))
     content = kwargs["content"]
 
-    vector = vectorize_text([block["text"] for block in content["blocks"]])
+    text = " ".join([block["text"] for block in content["blocks"]])
+    vector = vectorize_text(text)
+    logging.info(f"Vectorized note with {text}.")
 
     note = db.notes.find_one({"_id": note_id})
     history_item = note["history"][0]
@@ -805,7 +807,7 @@ def update_note(*args, **kwargs):
 
     with transaction_session.start_transaction():
         res = utils.push_history(db, transaction_session, "notes", note_id, history_item)
-        db.notes.update_one({"_id": note_id}, {"$set": {"textVector": vector}})
+        db.notes.update_one({"_id": note_id}, {"$set": {"textVector": vector}}, session=transaction_session)
         utils.commit_with_retry(transaction_session)
         logging.info(f"Updated note {note_id} with {res}.")
 
@@ -882,7 +884,8 @@ def add_note(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     userid = ObjectId(str(kwargs["userid"]))
 
-    vector = vectorize_text([block["text"] for block in content["blocks"]])
+    text = " ".join([block["text"] for block in content["blocks"]])
+    vector = vectorize_text(text)
 
     note = schemas.create_note_object(userid, label, content, vector)
     with transaction_session.start_transaction():
@@ -1102,7 +1105,8 @@ class reorient(Task):
             ]
 
             # Execute the aggregation query
-            result = list(documents.aggregate(pipeline))
+            result = list(self.db.documents.aggregate(pipeline))
+            print("result", result)
 
             # # Process the result
             # for document in result:
@@ -1110,7 +1114,7 @@ class reorient(Task):
             #     print(document)
 
             # doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
-            document_vectors.append(doc["textVector"])
+            document_vectors.append(result[0]["textVector"])
         vec = np.average(document_vectors, axis=0)
         return vec
     

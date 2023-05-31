@@ -28,11 +28,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "pages/home/index.js",
-    "stores/store.ts",
-    "pages/_app.js",
-    "util/authenticate.js",
-    "components/AccordionSection.jsx"
+    "**/*.js",
+    "**/*.jsx"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", ".yarn", ".vscode", "build"]
 }

@@ -114,8 +114,6 @@ def create_note_object(userid, label, content, vector):
         "history": [create_note_history_item(userid, label, "Add note.", content=content)]
     }
 
-
-
 def create_note_history_item(userid, label, action, content={}):
     return {
             "user" : userid,

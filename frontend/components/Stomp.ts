@@ -386,7 +386,7 @@ export class Stomp {
   /**
    * Request to add a note for a particular interface object.
    */
-  add_note(session_id: string, label: string = "new note", content: {}) {
+  add_note(session_id: string, label: string = "new note", content = {}) {
     const body = {
       task: "add_note",
       args: {
