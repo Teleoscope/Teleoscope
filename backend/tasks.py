@@ -794,11 +794,9 @@ def update_note(*args, **kwargs):
     userid = ObjectId(str(kwargs["userid"]))
     note_id = ObjectId(str(kwargs["note_id"]))
     content = kwargs["content"]
-    logging.info(f"Vector {vector} is being .")
+
     text = " ".join([block["text"] for block in content["blocks"]])
     logging.info(f"text:\n {text} \n\n content:\n {content}\n\n")
-    
-    
     vector = vectorize_text(text)
     
     note = db.notes.find_one({"_id": note_id})
@@ -886,7 +884,10 @@ def add_note(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     userid = ObjectId(str(kwargs["userid"]))
 
-    vector = vectorize_text([block["text"] for block in content["blocks"]])
+    text = " ".join([block["text"] for block in content["blocks"]])
+    logging.info(f"text:\n {text} \n\n content:\n {content}\n\n")
+    vector = vectorize_text(text)
+
 
     note = schemas.create_note_object(userid, label, content, vector)
     with transaction_session.start_transaction():
