@@ -36,10 +36,18 @@ export default function Clusters(props) {
     (state: RootState) => state.activeSessionID.value
   );
   const swr = useContext(swrContext);
-  const { projections } = swr.useSWRAbstract(
-    "projections",
+  const { projections_raw } = swr.useSWRAbstract(
+    "projections_raw",
     `sessions/${session_id}/projections`
   );
+
+  const projections = projections_raw?.map((p) => {
+    const ret = {
+      _id: p._id,
+      label: p.history[0].label,
+    };
+    return ret;
+  });
 
   const [value, setValue] = React.useState(null);
 
@@ -96,7 +104,7 @@ export default function Clusters(props) {
                   onDragStart(
                     e, 
                     p._id + "%projection", 
-                    "projection", 
+                    "Projection", 
                     "projection")
                 }
               >
@@ -134,15 +142,6 @@ export default function Clusters(props) {
                     </IconButton>
                   </Stack>
                 </ListItem>
-                {/* <ListItem>
-                  <ListItemIcon>
-                    <FolderIcon sx={{ color: cluster.history[0].color }} />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={cluster.history[0].label}
-                    secondary={cluster.history[0].description}
-                  />
-                </ListItem> */}
               </div>
             );
           })}
