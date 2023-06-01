@@ -1354,7 +1354,7 @@ def ping(*args, **kwargs):
     reply_queue = f'/temp-queue/{kwargs["userid"]}'
 
     # Create a connection
-    conn = stomp.Connection([('localhost', 61613)])
+    conn = stomp.Connection([('localhost', 15674)])
 
     # Instantiate listener and subscribe to reply queue
     # conn.set_listener('', MyListener())
