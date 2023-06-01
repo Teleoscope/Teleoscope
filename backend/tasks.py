@@ -5,6 +5,8 @@ from bson.objectid import ObjectId
 from kombu import Consumer, Exchange, Queue
 import datetime
 import schemas
+import stomp
+
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -1326,7 +1328,7 @@ def add_multiple_documents_to_database(documents, **kwargs):
             utils.commit_with_retry(transaction_session)
     
 @app.task
-def mark(**kwargs):
+def mark(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
@@ -1343,5 +1345,27 @@ def mark(**kwargs):
         db.documents.update_one({"_id": document_id}, {"$set": {"state.read": read}})        
         utils.push_history(db, transaction_session, "teleoscopes", session_id, history_item)
         utils.commit_with_retry(transaction_session)
+
+
+@app.task
+def ping(*args, **kwargs):
+    userid = ObjectId(str(kwargs["userid"]))
+    # Unique ID for the reply queue
+    reply_queue = f'/temp-queue/{kwargs["userid"]}'
+
+    # Create a connection
+    conn = stomp.Connection([('localhost', 61613)])
+
+    # Instantiate listener and subscribe to reply queue
+    # conn.set_listener('', MyListener())
+    conn.start()
+    conn.connect(auth.rabbitmq["username"], auth.rabbitmq["password"], wait=True)
+    conn.subscribe(destination=reply_queue, id=1, ack='auto')
+
+    # Send a message
+    conn.send(body='Hello, Reply Queue', destination=reply_queue)
+
+    # Clean up
+    conn.disconnect()
 
 

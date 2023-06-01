@@ -1,4 +1,5 @@
 import { Client } from "@stomp/stompjs";
+import crypto from 'crypto';
 import React, { createContext } from "react";
 
 export const StompContext = createContext(null);
@@ -107,6 +108,15 @@ export class Stomp {
       Stomp.stomp.loaded = true;
       // Do something, all subscribes must be done is this callback
       // This is needed because this will be executed after a (re)connect
+      this.client.subscribe(`/temp-queue/${this.userid}`, function(message) {
+        // Parse the message body
+        let body = message.body;
+        console.log("Received: " + body);
+    
+        // Acknowledge the message
+        message.ack();
+      });
+      
       console.log("Connected to RabbitMQ webSTOMP server.", frame);
     };
 
@@ -135,6 +145,7 @@ export class Stomp {
     };
     body["args"]["userid"] = this.userId;
     body["args"]["db"] = this.database;
+    body["message_id"] = crypto.randomBytes(10);
     this.client.publish({
       destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,
       headers: headers,
@@ -597,7 +608,24 @@ export class Stomp {
     this.publish(body);
     return body;
   } 
-  
+
+
+  /**
+   * Ping temporary queue.
+   */
+  ping(args) {
+    const body = {
+      task: "ping",
+      args: {
+        message: "ping",
+        ...args,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+
 
 
 }
