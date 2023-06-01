@@ -12,6 +12,9 @@ import AccordionSection from "@/components/AccordionSection";
 import SelectionViewer from "@/components/SelectionViewer";
 
 import Clusters from "@/components/Cluster/Clusters";
+import Projection from "@/components/Cluster/Projection";
+import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
+
 import WorkflowsPalette from "@/components/WorkflowsPalette";
 export default function SimpleAccordion(props) {
   const wdefs = WindowDefinitions();
@@ -50,7 +53,7 @@ export default function SimpleAccordion(props) {
           icon={wdefs["Clusters"].icon()}
           text="Projections"
         >
-          <Clusters />
+          <ProjectionPalette />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}

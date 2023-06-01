@@ -29,6 +29,8 @@ import Search from "@/components/WindowModules/Search";
 import GroupPalette from "@/components/WindowModules/GroupPalette";
 import Clusters from "@/components/Cluster/Clusters";
 import Cluster from "@/components/Cluster/Cluster";
+import Projection from "@/components/Cluster/Projection";
+import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
 
 import { PreprocessTitle } from "@/util/Preprocessers";
 import NotePalette from "@/components/WindowModules/NotePalette";
@@ -165,6 +167,38 @@ export default function WindowDefinitions() {
       },
       color: () => get_color(),
       tag: "teleoscopepalette",
+    },
+    Projection: {
+      icon: (d) => {
+        return (
+          <Diversity2Icon fontSize="inherit" sx={{ color: d?.history[0].color }} />
+        );
+      },
+      component: (w, id, color) => {
+        return <Projection id={id} windata={w} color={color} />;
+      },
+      showWindow: false,
+      title: (d) => {
+        return `Projection: ${d?.history[0].label}`;
+      },
+      color: (d) => {
+        return d?.history[0].color;
+      },
+      tag: "projection",
+    },
+    "Projection Palette": {
+      icon: () => {
+        return <Diversity2Icon fontSize="inherit" sx={style} />;
+      },
+      component: (w, id, color) => {
+        return <ProjectionPalette id={id} windata={w} color={color} />;
+      },
+      showWindow: false,
+      title: () => {
+        return `Projections`;
+      },
+      color: () => get_color(),
+      tag: "projectionpalette",
     },
     Search: {
       icon: () => {

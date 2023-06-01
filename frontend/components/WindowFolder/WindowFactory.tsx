@@ -16,6 +16,8 @@ export default function WindowFactory(props) {
     document: "document",
     teleoscope: "teleoscopes",
     teleoscopepalette: "teleoscopepalette",
+    projetion: "projetions",
+    projetionpalette: "projetionpalette",
     search: "search",
     grouppalette: "grouppalette",
     clusters: "clusters",
