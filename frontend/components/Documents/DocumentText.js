@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 
 // mui
-import { Typography, Box } from "@mui/material";
+import { Typography, Box, Popover } from "@mui/material";
+import Snippet from "../Snippet";
 
 export default function DocumentText(props) {
   const [selectedText, setSelectedText] = useState("");
+  const [popoverAnchorEl, setPopoverAnchorEl] = useState(null);
 
-  const handleTextSelection = () => {
+  const handleTextSelection = (e) => {
     const selection = window.getSelection();
     const selectedString = selection.toString().trim();
+
+    const text = props.text ? props.text : "Content not available.";
 
     // Check if selected text matches a complete word
     const isWordMatch = selectedString
@@ -17,12 +21,18 @@ export default function DocumentText(props) {
 
     if (isWordMatch) {
       setSelectedText(selectedString);
+      setPopoverAnchorEl(e.currentTarget);
     } else {
       setSelectedText("");
+      setPopoverAnchorEl(null);
     }
   };
-  const text = props.text ? props.text : "Content not available.";
-  const selectedWords = selectedText.split(" ").filter((word) => word !== "");
+
+  const handleClose = () => {
+    setPopoverAnchorEl(null);
+  };
+
+  const open = Boolean(popoverAnchorEl);
 
   return (
     <Box sx={{ height: "100%", overflow: "auto" }}>
@@ -31,19 +41,24 @@ export default function DocumentText(props) {
         sx={{ margin: "1em", userSelect: "text" }}
         onMouseUp={handleTextSelection}
       >
-        {text.split(" ").map((word, index) => {
-          const isSelected =
-            selectedText.split(/\s+/).indexOf(word.trim()) >= 0;
-          return (
-            <span
-              key={index}
-              style={{ background: isSelected ? "yellow" : "transparent" }}
-            >
-              {word}{" "}
-            </span>
-          );
-        })}
+        {props.text}
       </Typography>
+      <Popover
+        id={open ? "simple-popover" : undefined}
+        open={open}
+        anchorEl={popoverAnchorEl}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+      >
+        <Snippet text={selectedText} {...props}></Snippet>
+      </Popover>
     </Box>
   );
 }

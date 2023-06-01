@@ -36,7 +36,7 @@ export default function Document(props) {
           [Group, { document: document }],
         ]}
       ></ButtonActions>
-      <DocumentText text={text} />
+      <DocumentText text={text} id={id} />
     </Stack>
   );
 }

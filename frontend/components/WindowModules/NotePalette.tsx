@@ -13,6 +13,7 @@ import {
 
 import DeleteIcon from "@mui/icons-material/Delete";
 import CreateIcon from "@mui/icons-material/Create";
+import { ContentState, convertToRaw } from "draft-js";
 
 // custom
 import EditableText from "@/components/EditableText";
@@ -60,7 +61,8 @@ export default function NotePalette(props) {
     const session_id = useAppSelector((state) => state.activeSessionID.value);
 
     const handleNewNote = () => {
-      client.add_note(session_id);
+      const content = convertToRaw(ContentState.createFromText(" "));
+      client.add_note(session_id, "new note", content);
     };
 
     return (
