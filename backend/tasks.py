@@ -1358,7 +1358,6 @@ def ping(*args, **kwargs):
 
     # Instantiate listener and subscribe to reply queue
     # conn.set_listener('', MyListener())
-    conn.start()
     conn.connect(auth.rabbitmq["username"], auth.rabbitmq["password"], wait=True)
     conn.subscribe(destination=reply_queue, id=1, ack='auto')
 
