@@ -6,21 +6,22 @@ import LoadingButton from "@mui/lab/LoadingButton";
 
 // custom components
 import DocumentList from "@/components/Documents/DocumentList";
+import Clusters from "@/components/Cluster/Clusters";
 
 // util
 import { swrContext } from "@/util/swr";
 
-export default function Teleoscope(props) {
-  const [teleoscope_id] = useState(props.id.split("%")[0]);
+export default function Projection(props) {
+  const [projection_id] = useState(props.id.split("%")[0]);
   const swr = useContext(swrContext);
-  const { teleoscope } = props.windata?.demo
+  const { projection } = props.windata?.demo
     ? props.windata.demodata
-    : swr.useSWRAbstract("teleoscope", `teleoscopes/${teleoscope_id}`);
-  const data = teleoscope?.history[0]["rank_slice"];
+    : swr.useSWRAbstract("projection", `projections/${projection_id}`);
+  const clusters = projection?.history[0]["clusters"];
   return (
     <>
-      {teleoscope ? (
-        <DocumentList data={data} pagination={true}></DocumentList>
+      {projection ? (
+        <Clusters />
       ) : (
         <LoadingButton loading={true} />
       )}

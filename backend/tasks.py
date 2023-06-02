@@ -467,12 +467,11 @@ def initialize_teleoscope(*args, **kwargs):
 
 
 @app.task 
-def add_group(*args, human=True, description="A group", documents=[], **kwargs):
+def add_group(*args, description="A group", documents=[], **kwargs):
     """
     Adds a group to the group collection and links newly created group to corresponding session.
     
     args: 
-        human: check if this call is from clustering or not
         description: topic label for cluster
         included documents: documents included in group
 
@@ -503,30 +502,21 @@ def add_group(*args, human=True, description="A group", documents=[], **kwargs):
     
     # call needs to be transactional due to groups & sessions collections being updated
 
-    collection = db.groups
-    if not human:
-        collection = db.clusters
-
     with transaction_session.start_transaction():
-        groups_res = collection.insert_one(obj, session=transaction_session)
+        groups_res = groups.insert_one(obj, session=transaction_session)
         logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
         # add created groups document to the correct session
         session = db.sessions.find_one({'_id': _id}, session=transaction_session)
         if not session:
             logging.info(f"Warning: session with id {_id} not found.")
             raise Exception(f"session with id {_id} not found")
-        clusters = session["history"][0]["clusters"]
-        groups = session["history"][0]["groups"]
 
-        if human:
-            groups.append(groups_res.inserted_id)
-        else:
-            clusters.append(groups_res.inserted_id)
+        groups = session["history"][0]["groups"]
+        groups.append(groups_res.inserted_id)
 
         history_item = session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
         history_item["groups"] = groups
-        history_item["clusters"] = clusters
         history_item["action"] = f"Initialize new group: {label}"
         history_item["user"] = user_id
 
