@@ -5,7 +5,6 @@ from bson.objectid import ObjectId
 from kombu import Consumer, Exchange, Queue
 import datetime
 import schemas
-import stomp
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
