@@ -551,11 +551,12 @@ export class Stomp {
   /**
    * Create MLGroups using the UMAP and HBDSCAN with the given groups' documents as seeds.
    */
-  cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {
+  cluster_by_groups(group_id_strings: Array<string>, projection_id: string, session_oid: string) {
     const body = {
       task: "cluster_by_groups",
       args: {
         group_id_strings: group_id_strings,
+        projection_id: projection_id,
         session_oid: session_oid,
       },
     };

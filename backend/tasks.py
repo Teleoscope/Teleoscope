@@ -929,7 +929,7 @@ def cluster_by_groups(*args, **kwargs):
         session_oid: string OID for session to add clusters to
     """
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
-    cluster = clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"], kwargs["db"])
+    cluster = clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["projection_id"], kwargs["session_oid"], kwargs["db"])
     cluster.clustering_task()
 
 @app.task
