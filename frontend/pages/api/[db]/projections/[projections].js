@@ -5,13 +5,10 @@ export default async (req, res) => {
   const client = await clientPromise;
   const db = await client.db(req.query.db);
   const { args } = req.query;
-  var ret;
-  var objid = new ObjectId(args);
-  var projection;
 
-  ret = await db
+  var ret = await db
     .collection("projections")
-    .findOne({ _id: objid }, { projection: { history: { $slice: 1 } } });
+    .findOne({ _id: new ObjectId(args) }, { projection: { history: { $slice: 1 } } });
 
   // for clusters
   if (args.length === 2) {
@@ -19,7 +16,7 @@ export default async (req, res) => {
       .collection("clusters")
       .find({}, { projection: { history: { $slice: 1 } } })
       .toArray();
-    projection = ret;
+    var projection = ret;
     var projClusters = projection?.history[0].clusters.map((cluster) => {
       return cluster.toString();
     });
