@@ -50,7 +50,7 @@ export default function SimpleAccordion(props) {
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={wdefs["Clusters"].icon()}
+          icon={wdefs["Projection Palette"].icon()}
           text="Projections"
         >
           <ProjectionPalette />

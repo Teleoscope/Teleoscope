@@ -10,13 +10,15 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import FolderIcon from "@mui/icons-material/Folder";
 
 export default function Clusters(props) {
+  const p_id = props.data;
   const session_id = useAppSelector(
     (state: RootState) => state.activeSessionID.value
   );
   const swr = useContext(swrContext);
+
   const { clusters } = swr.useSWRAbstract(
     "clusters",
-    `sessions/${session_id}/clusters`
+    `projections/${p_id}/clusters`
   );
 
   const onDragStart = (event, id, type, typetag) => {
