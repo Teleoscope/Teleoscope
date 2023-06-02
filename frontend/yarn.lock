@@ -4531,6 +4531,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"crypto@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "crypto@npm:1.0.1"
+  checksum: 087fe3165bd94c333a49e6ed66a0193911f63eac38a24f379b3001a5fe260a59c413646e53a0f67875ba13902b2686d81dc703cb2c147a4ec727dcdc04e5645e
+  languageName: node
+  linkType: hard
+
 "css-styled@npm:^1.0.7":
   version: 1.0.7
   resolution: "css-styled@npm:1.0.7"
@@ -5746,6 +5753,7 @@ __metadata:
     bcryptjs: ^2.4.3
     bson: ^5.3.0
     color-space: ^2.0.0
+    crypto: ^1.0.1
     docx: ^8.0.4
     dotenv: ^16.1.2
     draft-js: ^0.11.7

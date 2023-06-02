@@ -92,6 +92,10 @@ export default function ContextMenu(props) {
     client.recolor_session(color, session_id);
   };
 
+  const handleStompPing = () => {
+    client.ping();
+  }
+
   if (colorPicker) {
     return (
       <Menu
@@ -154,6 +158,10 @@ export default function ContextMenu(props) {
       <MenuItem onClick={() => handleOpenColorPicker()}>
         Change session color
       </MenuItem>
+      <MenuItem onClick={() => handleStompPing()}>
+        Ping Stomp
+      </MenuItem>
+      
     </Menu>
   );
 }

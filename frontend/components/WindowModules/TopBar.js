@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useCallback } from "react";
 
 // material ui
 import { Menu, MenuItem, Stack, Typography } from "@mui/material";
@@ -30,17 +30,17 @@ export default function TopBar(props) {
   const swr = useContext(swrContext);
   const { user } = swr.useSWRAbstract("user", `users/${userid}`);
 
-  useEffect(() => {
-    if (cookies.userid != -1) {
-      fetch(
-        `http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/users/${cookies.userid}`
-      )
-        .then((response) => response.json())
-        .then((user) => {
-          handleSignIn(user);
-        });
-    }
-  }, []);
+  // useCallback(() => {
+  //   if (cookies.userid != -1) {
+  //     fetch(
+  //       `http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/users/${cookies.userid}`
+  //     )
+  //       .then((response) => response.json())
+  //       .then((user) => {
+  //         handleSignIn(user);
+  //       });
+  //   }
+  // }, [cookies.userid, userid]);
 
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const { users } = swr.useSWRAbstract("users", `users/`);
@@ -56,12 +56,14 @@ export default function TopBar(props) {
   };
 
   const handleSignIn = (user) => {
+    console.log("client state", client)
     setCookie("userid", user._id, {
       path: "/",
     });
     dispatch(setUserId(user._id));
-    client.userId = user._id;
     dispatch(sessionActivator(user.sessions[0]));
+    client.restart({userid: user._id, database: client.database})
+    console.log("Stomp client: ", client, user)
   };
 
   const get_color = () => (session ? session.history[0].color : "#4E5CBC");

@@ -5,6 +5,7 @@ from bson.objectid import ObjectId
 from kombu import Consumer, Exchange, Queue
 import datetime
 import schemas
+
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -1326,7 +1327,7 @@ def add_multiple_documents_to_database(documents, **kwargs):
             utils.commit_with_retry(transaction_session)
     
 @app.task
-def mark(**kwargs):
+def mark(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
@@ -1345,3 +1346,14 @@ def mark(**kwargs):
         utils.commit_with_retry(transaction_session)
 
 
+@app.task
+def ping(*args, **kwargs):
+    import pika
+    userid = ObjectId(str(kwargs["userid"]))
+    credentials = pika.PlainCredentials(auth.rabbitmq["username"], auth.rabbitmq["password"])
+    parameters = pika.ConnectionParameters(host='localhost', port=5672, virtual_host='teleoscope', credentials=credentials)
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    queue_name = str(kwargs["userid"])
+    message = f"ping {userid}"
+    channel.basic_publish(exchange='', routing_key=queue_name, body=message)
