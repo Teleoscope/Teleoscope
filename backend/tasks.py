@@ -1349,21 +1349,12 @@ def mark(*args, **kwargs):
 
 @app.task
 def ping(*args, **kwargs):
+    import pika
     userid = ObjectId(str(kwargs["userid"]))
-    # Unique ID for the reply queue
-    reply_queue = f'/temp-queue/{kwargs["userid"]}'
-
-    # Create a connection
-    conn = stomp.Connection([('localhost', 15674)])
-
-    # Instantiate listener and subscribe to reply queue
-    # conn.set_listener('', MyListener())
-    conn.connect(auth.rabbitmq["username"], auth.rabbitmq["password"], wait=True)
-
-    # Send a message
-    conn.send(body='Hello, Reply Queue', destination=reply_queue)
-
-    # Clean up
-    conn.disconnect()
-
-
+    credentials = pika.PlainCredentials(auth.rabbitmq["username"], auth.rabbitmq["password"])
+    parameters = pika.ConnectionParameters(host='localhost', port=5672, virtual_host='teleoscope', credentials=credentials)
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    queue_name = str(kwargs["userid"])
+    message = kwargs
+    channel.basic_publish(exchange='', routing_key=queue_name, body=message)
