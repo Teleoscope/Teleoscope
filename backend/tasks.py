@@ -503,7 +503,7 @@ def add_group(*args, description="A group", documents=[], **kwargs):
     # call needs to be transactional due to groups & sessions collections being updated
 
     with transaction_session.start_transaction():
-        groups_res = groups.insert_one(obj, session=transaction_session)
+        groups_res = db.groups.insert_one(obj, session=transaction_session)
         logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
         # add created groups document to the correct session
         session = db.sessions.find_one({'_id': _id}, session=transaction_session)
