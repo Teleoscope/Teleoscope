@@ -37,6 +37,7 @@ export class Stomp {
     this.loaded = false;
     this.database = options.database;
     this._userid = options.userid;
+    this.client = null;
   }
 
   public static getFakeClient(): Stomp {
@@ -49,7 +50,7 @@ export class Stomp {
 
   /**
    * Ensure that there is only one copy of the Stomp class.
-   * @returns
+   * @returns Stomp
    */
   public static getInstance(options): Stomp {
     if (!Stomp.stomp) {
@@ -59,6 +60,18 @@ export class Stomp {
     return Stomp.stomp;
   }
 
+  /**
+   * Restart the client.
+   * @returns Stomp
+   */
+  public async restart(options) {
+    // console.log(`Restarting client with options:`, options)
+    // await Stomp.stomp.client.deactivate();
+    Stomp.stomp = new Stomp(options);
+    Stomp.stomp.client_init();
+    console.log(`Restarted client:`, Stomp.stomp)
+  }
+  
   public set userId(userid: string) {
     this._userid = userid;
   }
@@ -85,7 +98,7 @@ export class Stomp {
    * Initializes the client (there should only be one)
    */
   client_init() {
-    console.log("Initializing Stomp client...");
+    console.log(`Initializing Stomp client for user ${this.userId}`);
     this.client = new Client({
       brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:15674/ws`,
       connectHeaders: {
@@ -100,21 +113,24 @@ export class Stomp {
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,
     });
+    console.log(`Initializing Stomp client for user ${this.userId}`, this.client);
+    
+
+  
 
     /**
      * Called when the client connects to RabbitMQ.
      */
-    this.client.onConnect = function (frame) {
+    this.client.onConnect = (frame) => {
       Stomp.stomp.loaded = true;
       // Do something, all subscribes must be done is this callback
       // This is needed because this will be executed after a (re)connect
-      this.client.subscribe(`/temp-queue/${this.userid}`, function(message) {
+      this.client.subscribe(`/queue/${this.userId}`, (message) => {
         // Parse the message body
         let body = message.body;
+        
         console.log("Received: " + body);
-    
-        // Acknowledge the message
-        message.ack();
+
       });
       
       console.log("Connected to RabbitMQ webSTOMP server.", frame);

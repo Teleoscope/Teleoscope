@@ -50,7 +50,9 @@ export default function TeleoscopePalette(props) {
   const keyChange = (e) => {
     if (e.code == "Enter") {
       client.initialize_teleoscope(session_id, value);
+      // const mid = msg["message_id"]
     }
+      
   };
 
   const onDragStart = (event, id, type, typetag) => {
