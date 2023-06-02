@@ -544,22 +544,22 @@ class Clustering:
 
         obj = schemas.create_group_object(color, documents, label, "Initialize cluster", self.user_id, self.description)
         
-        with self.transaction_session.start_transaction():
+        # with self.transaction_session.start_transaction():
             
-            cluster_id = self.db.clusters.insert_one(obj, session=self.transaction_session)
+        cluster_id = self.db.clusters.insert_one(obj, session=self.transaction_session)
 
-            projection = self.db.projections.find_one({'_id': ObjectId(str(self.projection_id))}, session=self.transaction_session)
+        projection = self.db.projections.find_one({'_id': ObjectId(str(self.projection_id))}, session=self.transaction_session)
 
-            clusters = projection["history"][0]["clusters"]
-            clusters.append(cluster_id.inserted_id)
+        clusters = projection["history"][0]["clusters"]
+        clusters.append(cluster_id.inserted_id)
 
-            history_item = projection["history"][0]
-            history_item["timestamp"] = datetime.datetime.utcnow()
-            history_item["clusters"] = clusters
-            history_item["source_groups"] = self.group_id_strings
-            history_item["action"] = f"Initialize new cluster: {label}"
-            history_item["user"] = self.user_id
+        history_item = projection["history"][0]
+        history_item["timestamp"] = datetime.datetime.utcnow()
+        history_item["clusters"] = clusters
+        history_item["source_groups"] = self.group_id_strings
+        history_item["action"] = f"Initialize new cluster: {label}"
+        history_item["user"] = self.user_id
 
-            sessions_res = utils.push_history(self.db, self.transaction_session, "projections", self.projection_id, history_item)
-            
-            utils.commit_with_retry(self.transaction_session)
+        sessions_res = utils.push_history(self.db, self.transaction_session, "projections", self.projection_id, history_item)
+        
+            # utils.commit_with_retry(self.transaction_session)
