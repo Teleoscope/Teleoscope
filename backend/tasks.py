@@ -1356,5 +1356,5 @@ def ping(*args, **kwargs):
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     queue_name = str(kwargs["userid"])
-    message = kwargs
+    message = f"ping {userid}"
     channel.basic_publish(exchange='', routing_key=queue_name, body=message)
