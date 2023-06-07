@@ -90,7 +90,7 @@ class Clustering:
 
             # report basic statistics
             total_time = time.time() - start
-            self.session_action(total_time)
+            self.projection_action(total_time)
 
             utils.commit_with_retry(self.transaction_session)
 
@@ -106,7 +106,7 @@ class Clustering:
         umap_embeddings = umap.UMAP(
             verbose = True,         # for logging
             metric = "precomputed", # use distance matrix
-            n_components = 30,      # reduce to n_components dimensions (2~100)
+            n_components = 10,      # reduce to n_components dimensions (2~100)
             # n_neighbors = 10,     # local (small n ~2) vs. global (large n ~100) structure 
             min_dist = 1e-5,        # minimum distance apart that points are allowed (0.0~0.99)
         ).fit_transform(dm)
@@ -114,7 +114,7 @@ class Clustering:
         
         logging.info("Clustering with HDBSCAN...")
         self.hdbscan_labels = hdbscan.HDBSCAN(
-            min_cluster_size = 10,              # num of neighbors needed to be considered a cluster (0~50, df=5)
+            min_cluster_size = 15,              # num of neighbors needed to be considered a cluster (0~50, df=5)
             # min_samples = 5,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
             cluster_selection_epsilon = 0.2,    # have large clusters in dense regions while leaving smaller clusters small
                                                 # merge clusters if inter cluster distance is less than thres (df=0)
@@ -526,8 +526,9 @@ class Clustering:
         # with self.transaction_session.start_transaction():
             
         cluster_id = self.db.clusters.insert_one(obj, session=self.transaction_session)
+        projection_id = ObjectId(str(self.projection_id))
 
-        projection = self.db.projections.find_one({'_id': ObjectId(str(self.projection_id))}, session=self.transaction_session)
+        projection = self.db.projections.find_one({'_id': projection_id}, session=self.transaction_session)
 
         clusters = projection["history"][0]["clusters"]
         clusters.append(cluster_id.inserted_id)
@@ -538,6 +539,6 @@ class Clustering:
         history_item["action"] = f"Initialize new cluster: {label}"
         history_item["user"] = self.user_id
 
-        sessions_res = utils.push_history(self.db, self.transaction_session, "projections", self.projection_id, history_item)
+        utils.push_history(self.db, self.transaction_session, "projections", projection_id, history_item)
         
             # utils.commit_with_retry(self.transaction_session)
