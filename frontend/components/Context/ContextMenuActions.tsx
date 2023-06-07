@@ -57,13 +57,23 @@ const actions = {
       isResizable: true,
     },
   },
-  Clusters: {
-    icon: <Diversity2Icon />,
+  Cluster: {
+    icon: <TopicIcon />,
     default_window: {
-      i: "%clusters",
+      i: "%cluster",
       w: 5,
       h: 9,
-      type: "Clusters",
+      type: "Cluster",
+      isResizable: true,
+    },
+  },
+  Projection: {
+    icon: <Diversity2Icon />,
+    default_window: {
+      i: "%projection",
+      w: 2,
+      h: 1,
+      type: "Projection",
       isResizable: true,
     },
   },

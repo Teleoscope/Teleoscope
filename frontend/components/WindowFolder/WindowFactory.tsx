@@ -20,8 +20,7 @@ export default function WindowFactory(props) {
     projectionpalette: "projectionpalette",
     search: "search",
     grouppalette: "grouppalette",
-    clusters: "clusters",
-    cluster: "cluster",
+    cluster: "clusters",
   };
   const type = w.i.split("%")[1];
   const id = w.i.split("%")[0];

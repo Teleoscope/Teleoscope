@@ -30,6 +30,7 @@ export default function Clusters(props) {
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
       <List>
+        {/* TODO clusters ? cluster.map : run button */}
         {clusters?.map((cluster) => {
           return (
             <div
@@ -37,7 +38,12 @@ export default function Clusters(props) {
               style={{ overflow: "auto", height: "100%" }}
               draggable={true}
               onDragStart={(e) =>
-                onDragStart(e, cluster._id + "%cluster", "Cluster", "cluster")
+                onDragStart(
+                  e, 
+                  cluster._id + "%cluster", 
+                  "Cluster", 
+                  "cluster"
+                )
               }
             >
               <ListItem>

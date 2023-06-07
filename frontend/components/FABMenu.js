@@ -22,7 +22,8 @@ export default function FABMenu(props) {
     Search: MenuActions()["Search"],
     Teleoscopes: MenuActions()["Teleoscopes"],
     Groups: MenuActions()["Groups"],
-    Clusters: MenuActions()["Clusters"],
+    Cluster: MenuActions()["Cluster"],
+    Projection: MenuActions()["Projection"],
     Notes: MenuActions()["Notes"],
   };
 

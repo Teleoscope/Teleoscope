@@ -150,6 +150,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 )
 
             case "update_edges":
+                # res = tasks.update_edges.signature(args=(), kwargs=kwargs)
+
                 res = chain(
                     robj.s(
                         edges=kwargs["edges"], userid=kwargs["userid"], db=kwargs["db"]

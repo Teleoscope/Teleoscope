@@ -27,11 +27,11 @@ function WindowNode({ data, id, selected }) {
     switch(dataType) {
       case "Document":
       case "Group":
+      case "Cluster":
       case "Note":
         return "source";
       case "Teleoscope":
-        return "target";
-      case "Cluster":
+      case "Projection":
         return "target";
       default:
         return null;

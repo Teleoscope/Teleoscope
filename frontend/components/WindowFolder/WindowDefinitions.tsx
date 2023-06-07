@@ -228,20 +228,6 @@ export default function WindowDefinitions() {
       color: () => get_color(),
       tag: "grouppalette",
     },
-    Clusters: {
-      icon: () => {
-        return <Diversity2Icon fontSize="inherit" sx={style} />;
-      },
-      component: (w, id, color) => {
-        return <Clusters id={id} windata={w} color={color} />;
-      },
-      showWindow: true,
-      title: () => {
-        return "Clusters";
-      },
-      color: () => get_color(),
-      tag: "clusters",
-    },
     Cluster: {
       icon: (d) => {
         return (
@@ -253,7 +239,7 @@ export default function WindowDefinitions() {
       },
       showWindow: false,
       title: (d) => {
-        return d?.history[0].label;
+        return `Cluster: ${d?.history[0].label}`;
       },
       color: (d) => {
         return d?.history[0].color;
