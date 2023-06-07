@@ -88,12 +88,11 @@ class Clustering:
             # iteratively add clusters (as groups) to database
             self.build_clusters()
 
-            # report basic statistics
-            total_time = time.time() - start
-            self.projection_action(total_time)
-
             utils.commit_with_retry(self.transaction_session)
 
+        # report basic statistics
+        total_time = time.time() - start
+        self.projection_action(total_time)
 
     def learn_clusters(self):
         """ Learn cluster labels: build distance matrix, run dimensionality reduction, run clustering
