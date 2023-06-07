@@ -4,14 +4,14 @@ import { ObjectId } from "bson";
 export default async (req, res) => {
   const client = await clientPromise;
   const db = await client.db(req.query.db);
-  const { projectionsargs } = req.query;
+  const { projargs } = req.query;
 
   var ret = await db
     .collection("projections")
-    .findOne({ _id: new ObjectId(projectionsargs) }, { projection: { history: { $slice: 1 } } });
+    .findOne({ _id: new ObjectId(projargs) }, { projection: { history: { $slice: 1 } } });
 
   // for clusters
-  if (projectionsargs.length === 2) {
+  if (projargs.length === 2) {
     var clusters = await db
       .collection("clusters")
       .find({}, { projection: { history: { $slice: 1 } } })
