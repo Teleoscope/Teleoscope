@@ -8,7 +8,7 @@ export default async (req, res) => {
 
   var ret = await db
     .collection("projections")
-    .findOne({ _id: new ObjectId(projargs) }, { projection: { history: { $slice: 1 } } });
+    .findOne({ _id: new ObjectId(projargs[0]) }, { projection: { history: { $slice: 1 } } });
 
   // for clusters
   if (projargs.length === 2) {
