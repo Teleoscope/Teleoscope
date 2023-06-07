@@ -519,13 +519,17 @@ class Clustering:
         """
         Adds a cluster to projection
         """
+        projection_id = ObjectId(str(self.projection_id))
 
-        obj = schemas.create_group_object(color, documents, label, "Initialize cluster", self.user_id, self.description)
-        
-        # with self.transaction_session.start_transaction():
+        obj = schemas.create_cluster_object(
+            color, 
+            projection_id, 
+            documents, 
+            label, 
+            self.user_id, 
+            self.description)
             
         cluster_id = self.db.clusters.insert_one(obj, session=self.transaction_session)
-        projection_id = ObjectId(str(self.projection_id))
 
         projection = self.db.projections.find_one({'_id': projection_id}, session=self.transaction_session)
 
@@ -540,4 +544,3 @@ class Clustering:
 
         utils.push_history(self.db, self.transaction_session, "projections", projection_id, history_item)
         
-            # utils.commit_with_retry(self.transaction_session)
