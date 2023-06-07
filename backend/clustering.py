@@ -71,7 +71,7 @@ class Clustering:
 
         start = time.time()
 
-        self.transaction_session, n = utils.create_transaction_session(db=self.dbstring)
+        self.transaction_session, self.db = utils.create_transaction_session(db=self.dbstring)
 
         with self.transaction_session.start_transaction():
 
@@ -473,26 +473,16 @@ class Clustering:
             history_item["source_groups"] = []
             history_item["action"] = "reset clusters"
             
-            db.projections.update_one(
-                {"_id": projection_id}, 
-                {
-                    '$push': {
-                        "history": {
-                            '$each': [history_item],
-                            '$position': 0
-                        }
-                    }
-                },
-            )  
+            utils.push_history(self.db, self.transaction_session, "projections", projection_id, history_item)
         
         logging.info(f'No clusters for user. Ready to populate.')
 
         pass
 
-    def session_action(self, total_time):
+    def projection_action(self, total_time):
         """Clustering action history update
 
-        Push an update to the session object to document the state of clustering 
+        Push an update to the projection object to document the state of clustering 
 
         Args:
             total_time:
@@ -501,10 +491,10 @@ class Clustering:
 
         logging.info(f'Clustering action history update.')
 
-        session_id = ObjectId(str(self.session_id))
-        session = self.db.sessions.find_one({"_id": session_id}, {"history": { "$slice": 1}})  
+        projection_id = ObjectId(str(self.projection_id))
+        projection = self.db.projections.find_one({"_id": projection_id}, {"history": { "$slice": 1}})  
 
-        history_item = session["history"][0]
+        history_item = projection["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
         
         num_clusters = max(self.hdbscan_labels) + 2 # largest group label + outlier group (-1) + first group (0)
@@ -512,28 +502,17 @@ class Clustering:
         history_item["action"] = copy
 
         # record the groups and their associated documents used for clustering
-        history_item["clustered_groups"] = []
+        history_item["source_groups"] = []
         for group in self.groups:
 
             # documents used for clustering are denoting using the length of the groups history item.
             # the index of said documents are at [current history length - denoted history length]
-            history_item["clustered_groups"].append({
+            history_item["source_groups"].append({
                 "group_id": group["_id"],
                 "position": len(group["history"])
             })
-
-        self.db.sessions.update_one(
-            {"_id": session_id},
-            {
-                '$push': {
-                    "history": {
-                        "$each": [history_item],
-                        "$position": 0
-                    }
-                }
-            }, 
-            session=self.transaction_session
-        )
+        
+        utils.push_history(self.db, self.transaction_session, "projections", projection_id, history_item)
 
         return 200 
     
@@ -556,7 +535,6 @@ class Clustering:
         history_item = projection["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
         history_item["clusters"] = clusters
-        history_item["source_groups"] = self.group_id_strings
         history_item["action"] = f"Initialize new cluster: {label}"
         history_item["user"] = self.user_id
 

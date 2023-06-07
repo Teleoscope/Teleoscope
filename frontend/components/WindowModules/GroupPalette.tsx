@@ -141,6 +141,7 @@ export default function GroupPalette(props) {
   const runClusters = () => {
     client.cluster_by_groups(
       groups.map((g) => g._id),
+      "6477f784a74fad35f333b607", // projection: work?
       session_id
     );
   };
