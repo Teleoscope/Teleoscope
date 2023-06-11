@@ -8,6 +8,22 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import FolderIcon from "@mui/icons-material/Folder";
+import ButtonActions from "@/components/ButtonActions";
+import {
+  ClusterButtonAction,
+} from "@/components/GroupPaletteActions";
+import { StompContext } from "@/components/Stomp";
+import { IconButton, Tooltip } from "@mui/material";
+import {
+  Download as DownloadIcon,
+  ContentCopy as ContentCopyIcon,
+  CopyAll as CopyAllIcon,
+  Diversity2 as Diversity2Icon,
+} from "@mui/icons-material";
+import Stack from "@mui/material/Stack";
+import Divider from "@mui/material/Divider";
+
+
 
 export default function Clusters(props) {
   const p_id = props.data;
@@ -15,11 +31,14 @@ export default function Clusters(props) {
     (state: RootState) => state.activeSessionID.value
   );
   const swr = useContext(swrContext);
+  const client = useContext(StompContext);
 
   const { clusters } = swr.useSWRAbstract(
     "clusters",
     `projections/${p_id}/clusters`
   );
+
+  const { groups } = swr.useSWRAbstract("groups", `sessions/${session_id}/groups`);
 
   const onDragStart = (event, id, type, typetag) => {
     event.dataTransfer.setData("application/reactflow/type", type);
@@ -27,38 +46,65 @@ export default function Clusters(props) {
     event.dataTransfer.effectAllowed = "move";
   };
 
+  const runClusters = () => {
+    client.cluster_by_groups(
+      groups.map((g) => g._id),
+      p_id,
+      session_id
+    );
+  };
+
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
-      <List>
-        {/* TODO clusters ? cluster.map : run button */}
-        {clusters?.map((cluster) => {
-          return (
-            <div
-              key={cluster._id}
-              style={{ overflow: "auto", height: "100%" }}
-              draggable={true}
-              onDragStart={(e) =>
-                onDragStart(
-                  e, 
-                  cluster._id + "%cluster", 
-                  "Cluster", 
-                  "cluster"
-                )
-              }
-            >
-              <ListItem>
-                <ListItemIcon>
-                  <FolderIcon sx={{ color: cluster.history[0].color }} />
-                </ListItemIcon>
-                <ListItemText
-                  primary={cluster.history[0].label}
-                  secondary={cluster.history[0].description}
-                />
-              </ListItem>
-            </div>
-          );
-        })}
-      </List>
+    <>
+      <Stack
+        direction="row"
+        justifyContent="center"
+        alignItems="center"
+        style={{ margin: 0 }}
+      >
+        <Tooltip title="Cluster on connected groups...">
+        <IconButton onClick={runClusters}>
+          <Diversity2Icon fontSize="small" />
+        </IconButton>
+        </Tooltip>
+      </Stack>
+      <Divider />
+    </>
+      {clusters.length !== 0 ? (
+          <List>
+            {clusters?.map((cluster) => {
+              return (
+                <div
+                  key={cluster._id}
+                  style={{ overflow: "auto", height: "100%" }}
+                  draggable={true}
+                  onDragStart={(e) =>
+                    onDragStart(
+                      e, 
+                      cluster._id + "%cluster", 
+                      "Cluster", 
+                      "cluster"
+                    )
+                  }
+                >
+                  <ListItem>
+                    <ListItemIcon>
+                      <FolderIcon sx={{ color: cluster.history[0].color }} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={cluster.history[0].label}
+                      secondary={cluster.history[0].description}
+                    />
+                  </ListItem>
+                </div>
+              );
+            })}
+          </List>
+      ) : (
+        <p>Use button above to build clusters...</p>
+      )}
+
     </div>
   );
 }
