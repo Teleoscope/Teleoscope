@@ -1428,8 +1428,8 @@ def relabel_projection(*args, **kwargs):
         utils.push_history(db, transaction_session, "projections", projection_id, history_item)
         utils.commit_with_retry(transaction_session)
 
-    ping(userid)
-    
+    ping(kwargs["userid"])
+
     return 200
 
 
