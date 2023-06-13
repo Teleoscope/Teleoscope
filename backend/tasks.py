@@ -1428,16 +1428,6 @@ def relabel_projection(*args, **kwargs):
         utils.push_history(db, transaction_session, "projections", projection_id, history_item)
         utils.commit_with_retry(transaction_session)
 
-    import pika
-    userid = ObjectId(str(kwargs["userid"]))
-    credentials = pika.PlainCredentials(auth.rabbitmq["username"], auth.rabbitmq["password"])
-    parameters = pika.ConnectionParameters(host='localhost', port=5672, virtual_host='teleoscope', credentials=credentials)
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-    queue_name = str(kwargs["userid"])
-    message = f"ping {userid}"
-    channel.basic_publish(exchange='', routing_key=queue_name, body=message)
-
     return 200
 
 

@@ -1,5 +1,5 @@
 # boilerplate
-import tqdm, numpy as np, pickle
+import tqdm, numpy as np, pickle, auth
 import matplotlib.pyplot as plt
 import logging, pickle
 from bson.objectid import ObjectId
@@ -9,6 +9,7 @@ import time
 import gridfs
 import datetime
 import schemas
+import pika
 
 # ml dependencies
 import umap
@@ -65,6 +66,15 @@ class Clustering:
         self.document_ids = None    
         self.hdbscan_labels = None
 
+    def ping_stomp(self, message):
+
+        credentials = pika.PlainCredentials(auth.rabbitmq["username"], auth.rabbitmq["password"])
+        parameters = pika.ConnectionParameters(host='localhost', port=5672, virtual_host='teleoscope', credentials=credentials)
+        connection = pika.BlockingConnection(parameters)
+        channel = connection.channel()
+        queue_name = str(self.user_id)
+        channel.basic_publish(exchange='', routing_key=queue_name, body=message)
+
     def clustering_task(self):
         """Cluster documents using user-defined groups.
         """
@@ -77,6 +87,8 @@ class Clustering:
 
             # if projection already has clusters, delete them to prepare for new clusters
             self.clean_mongodb()
+
+            self.ping_stomp("MongoDB ready... 1/5")
             
             # get groups from mongodb
             group_ids = [ObjectId(str(id)) for id in self.group_id_strings]
@@ -85,13 +97,16 @@ class Clustering:
             # build distance matrix, run dimensionality reduction, run clustering
             self.learn_clusters()
 
-            # iteratively add clusters (as groups) to database
+            # iteratively add clusters (as groups) to database\
+            self.ping_stomp("Creating clusters... 4/5")
             self.build_clusters()
 
             utils.commit_with_retry(self.transaction_session)
 
         # report basic statistics
         total_time = time.time() - start
+        
+        self.ping_stomp("Done... 5/5")
         self.projection_action(total_time)
 
     def learn_clusters(self):
@@ -110,7 +125,9 @@ class Clustering:
             min_dist = 1e-5,        # minimum distance apart that points are allowed (0.0~0.99)
         ).fit_transform(dm)
         logging.info(f"Shape after reduction: {umap_embeddings.shape}")
-        
+
+        self.ping_stomp(f"Shape after reduction: {umap_embeddings.shape}... 2/5")
+
         logging.info("Clustering with HDBSCAN...")
         self.hdbscan_labels = hdbscan.HDBSCAN(
             min_cluster_size = 15,              # num of neighbors needed to be considered a cluster (0~50, df=5)
@@ -120,6 +137,7 @@ class Clustering:
         ).fit_predict(umap_embeddings)
         
         logging.info(f'Num Clusters = {max(self.hdbscan_labels)+1} + outliers')
+        self.ping_stomp(f'Num Clusters = {max(self.hdbscan_labels)+1} + outliers... 3/5')
 
     def build_clusters(self):
         """ Iteratively builds groups in mongoDB relative to clustering
