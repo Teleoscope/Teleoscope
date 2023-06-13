@@ -71,7 +71,7 @@ export default function Clusters(props) {
       </Stack>
       <Divider />
     </>
-      {clusters.length !== 0 ? (
+      {clusters?.length !== 0 ? (
           <List>
             {clusters?.map((cluster) => {
               return (
