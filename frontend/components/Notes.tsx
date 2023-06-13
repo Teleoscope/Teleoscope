@@ -27,7 +27,7 @@ import { RootState } from "@/stores/store";
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
 
-export default function NotePalette(props) {
+export default function Notes(props) {
   const client = useContext(StompContext);
 
   const session_id = useAppSelector(

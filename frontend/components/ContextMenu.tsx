@@ -9,7 +9,8 @@ import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 
 // custom components
-import MenuActions from "@/components/Context/ContextMenuActions";
+import WindowDefinitions from "./WindowFolder/WindowDefinitions";
+import { useSelector } from "react-redux";
 
 // actions
 import { makeNode } from "@/actions/windows";
@@ -23,9 +24,7 @@ import ColorPicker from "@/components/ColorPicker";
 import Typography from "@mui/material/Typography";
 
 export default function ContextMenu(props) {
-  const userid = useAppSelector(
-    (state: RootState) => state.activeSessionID.userid
-  );
+
   const client = useContext(StompContext);
 
   const [colorPicker, setColorPicker] = React.useState(false);
@@ -40,22 +39,22 @@ export default function ContextMenu(props) {
     "teleoscopes_raw",
     `sessions/${session_id}/teleoscopes`
   );
+  const windowState = useSelector((state) => state.windows);
+  const wdefs = WindowDefinitions(windowState);
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
+  const settings = useSelector((state) => state.windows.settings);
 
   // props.contextMenu.mouseX
 
-  const handleAddNode = (id, type) => {
-    const newNode = {
-      id: id,
-      type: "windowNode",
-      position: { x: props.contextMenu.worldX, y: props.contextMenu.worldY },
-      style: {
-        width: 400,
-        height: 300,
-      },
-      data: { label: `${id} node`, i: id, type: type },
-    };
-    dispatch(makeNode({ node: newNode }));
+  const handleAddNode = (id, type) => {    
+    dispatch(makeNode({
+      oid: id, 
+      type: type,
+      width: settings.default_document_width,
+      height: settings.default_document_height,
+      x: props.contextMenu.worldX, 
+      y: props.contextMenu.worldY
+    }));
   };
 
   const teleoscopes = teleoscopes_raw?.map((t) => {
@@ -67,15 +66,14 @@ export default function ContextMenu(props) {
   });
 
   const handleOpenNewWindow = (menu_action) => {
-    const w = { ...MenuActions()[menu_action].default_window };
-    handleAddNode(w.i, w.type);
+    const w = { ...wdefs[menu_action] };
+    handleAddNode(w.tag, w.type);
     props.handleCloseContextMenu();
   };
 
   const handleExistingTeleoscope = (t) => {
-    const w = { ...MenuActions()["Teleoscope"].default_window };
-    w.i = t + w.i;
-    handleAddNode(w.i, w.type);
+    const w = { ...wdefs["Teleoscope"] };
+    handleAddNode(t, w.type);
     props.handleCloseContextMenu();
   };
 
@@ -149,7 +147,7 @@ export default function ContextMenu(props) {
         Open Search
       </MenuItem>
       <MenuItem onClick={() => handleOpenNewWindow("Groups")}>
-        Open Group Palette
+        Open Groups
       </MenuItem>
       <MenuItem onClick={() => handleOpenNewWindow("FABMenu")}>
         Open Floating Menu

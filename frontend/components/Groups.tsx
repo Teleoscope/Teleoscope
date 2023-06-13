@@ -126,9 +126,9 @@ import {
   CopyJsonAction,
   CopyTextAction,
   ClusterButtonAction,
-} from "@/components/GroupPaletteActions";
+} from "@/components/GroupsActions";
 
-export default function GroupPalette(props) {
+export default function Groups(props) {
   const swr = useContext(swrContext);
   const client = useContext(StompContext);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
@@ -158,9 +158,9 @@ export default function GroupPalette(props) {
   };
 
   const fetchgroups = async () => {
-    var out = [];
+    const out = [];
     for (const group of groups) {
-      var g = group;
+      const g = group;
       g["documents"] = [];
       for (const doc of g.history[0].included_documents) {
         const response = await fetch(

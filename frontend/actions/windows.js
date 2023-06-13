@@ -1,8 +1,8 @@
 // windows.js
 import { createSlice } from "@reduxjs/toolkit";
 import _ from "lodash";
-import { getDefaultWindow } from "../components/WindowFolder/WindowDefault";
 import { applyNodeChanges, applyEdgeChanges } from "reactflow";
+import crypto from 'crypto';
 
 const initialState = {
   nodes: [],
@@ -49,21 +49,8 @@ export const Windows = createSlice({
     collision: (state, action) => {
       state.collision = action.payload;
     },
-    addWindow: (state, action) => {
-      var item = getDefaultWindow();
-      // make sure that each default option that is being overridden
-      // is set in the final object that gets sent to the window store
-      Object.keys(action.payload).forEach((opt) => {
-        item[opt] = action.payload[opt];
-      });
-      var temp = [...state.windows];
-
-      if (!temp.find((item) => item.i === action.payload.i)) {
-        temp.push(item);
-        state.windows = temp;
-      }
-    },
     removeWindow: (state, action) => {
+      console.log("remove", action.payload)
       var temp_nodes = [...state.nodes];
       var node_ids = state.nodes.map((n) => {
         return n.id;
@@ -203,7 +190,34 @@ export const Windows = createSlice({
     },
     makeNode: (state, action) => {
       var temp = [...state.nodes];
-      temp.push(action.payload.node);
+      const { oid, type, width, height, x, y } = action.payload;
+      const uid =  crypto.randomBytes(8).toString('hex');
+      const id = `${oid.split("%")[0]}%${uid}%${type.toLowerCase()}`
+
+      const newNode = {
+        id: id,
+        type: type,
+        position: {
+          x: x,
+          y: y,
+        },
+        positionAbsolute: {
+          x: x,
+          y: y
+        },
+        style: {
+          width: width,
+          height: height,
+        },
+        data: { 
+          label: id,
+          i: oid.split("%")[0],
+          type: type,
+          uid: uid
+        },
+      };
+
+      temp.push(newNode);
       state.logical_clock = state.logical_clock + 1;
       state.nodes = temp;
     },
@@ -239,7 +253,6 @@ export const {
   updateEdges,
   setNodes,
   setDefault,
-  addWindow,
   removeWindow,
   loadWindows,
   dragged,

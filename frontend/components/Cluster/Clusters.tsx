@@ -9,7 +9,7 @@ import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import FolderIcon from "@mui/icons-material/Folder";
 
-export default function Clusters(props) {
+export default function Clusters() {
   const session_id = useAppSelector(
     (state: RootState) => state.activeSessionID.value
   );

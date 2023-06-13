@@ -10,14 +10,13 @@ import { RootState } from "@/stores/store";
 // custom components
 import { setSettings } from "@/actions/windows";
 
-export default function SettingsPalette(props) {
+export default function Settings(props) {
   const dispatch = useAppDispatch();
   const settings = useAppSelector((state) => state.windows.settings);
   const color = useAppSelector((state) => state.windows.color);
 
   const handleChange = (event, value, setting) => {
-    console.log("settings", event, value, setting);
-    var temp = { ...settings };
+    const temp = { ...settings };
     temp[setting] = value;
     dispatch(setSettings(temp));
   };

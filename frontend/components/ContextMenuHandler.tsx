@@ -1,6 +1,6 @@
 // ContextMenuHandler.tsx
 import React from 'react';
-import ContextMenu from "@/components/Context/ContextMenu";
+import ContextMenu from "@/components/ContextMenu";
 
 const ContextMenuHandler = ({handleCloseContextMenu, contextMenu}) => {
   return (

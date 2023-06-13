@@ -1,4 +1,4 @@
-// GroupPalette.js
+// Groups.js
 import React, { useContext } from "react";
 
 // MUI
@@ -31,7 +31,6 @@ import CheckIcon from "@mui/icons-material/Check";
 // actions
 import { swrContext } from "@/util/swr";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
-import { dragged } from "@/actions/windows";
 
 // contexts
 import { StompContext } from "@/components/Stomp";
@@ -43,14 +42,12 @@ import EditableText from "@/components/EditableText";
 import withDroppable from "@/components/DropItem";
 
 // custom components
-export default function GroupPalette(props) {
+export default function Groups(props) {
   const swr = useContext(swrContext);
   const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
   const { users } = swr.useSWRAbstract("users", `users/`);
-  const userid = useAppSelector((state) => state.activeSessionID.userid);
   const client = useContext(StompContext);
 
-  const dispatch = useAppDispatch();
   const [value, setValue] = React.useState(null);
   const [sessionValue, setSessionValue] = React.useState({ label: "" });
   const [groupValue, setGroupValue] = React.useState({ label: null });
@@ -64,11 +61,7 @@ export default function GroupPalette(props) {
     "groups",
     `sessions/${session_id}/groups`
   );
-  const group_labels = groups
-    ? groups.map((g) => {
-        return g.history[0].label;
-      })
-    : [];
+
   const [showGroupsBool, setShowGroupsBool] = React.useState(false);
   const [showSubmitBool, setShowSubmitBool] = React.useState(false);
   const [showColorPicker, setShowColorPicker] = React.useState(false);

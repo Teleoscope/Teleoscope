@@ -127,7 +127,7 @@ export class Stomp {
       // This is needed because this will be executed after a (re)connect
       this.client.subscribe(`/queue/${this.userId}`, (message) => {
         // Parse the message body
-        let body = message.body;
+        const body = message.body;
         
         console.log("Received: " + body);
 
@@ -161,7 +161,7 @@ export class Stomp {
     };
     body["args"]["userid"] = this.userId;
     body["args"]["db"] = this.database;
-    body["message_id"] = crypto.randomBytes(10);
+    body["message_id"] = crypto.randomBytes(8).toString('hex');
     this.client.publish({
       destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,
       headers: headers,
@@ -413,7 +413,7 @@ export class Stomp {
   /**
    * Request to add a note for a particular interface object.
    */
-  add_note(session_id: string, label: string = "new note", content = {}) {
+  add_note(session_id: string, label = "new note", content = {}) {
     const body = {
       task: "add_note",
       args: {

@@ -6,9 +6,9 @@ import { StrictMode } from "react";
 
 export default App;
 
-function App({ Component, pageProps: { session, ...pageProps } }) {
+function App({ Component, pageProps: { ...pageProps } }) {
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  const [user] = useState(null);
   const [authorized, setAuthorized] = useState(false);
 
   useEffect(() => {
@@ -42,6 +42,7 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
     //         query: { returnUrl: router.asPath }
     //     });
     // } else {
+    console.log(url)
     setAuthorized(true);
     // }
   }

@@ -17,21 +17,7 @@ export default function DocumentList(props) {
   const session_id = useAppSelector(
     (state) => state.activeSessionID.value
   );
-  // pagination
-  const [pageNumber, setPageNumber] = useState(1);
-  const itemsPerPage = 10;
-  var displayPagination = true;
-  var pageCount = 0;
-  var paginatedItems = [];
-
-  if (data) {
-    displayPagination = data.length > itemsPerPage && props.pagination;
-    pageCount = Math.ceil(data.length / itemsPerPage);
-    paginatedItems = data.slice(
-      (pageNumber - 1) * itemsPerPage,
-      pageNumber * itemsPerPage - 1
-    );
-  }
+  
 
   const renderItem = (index, item, currentIndex, setIndex) => {
     return (
@@ -46,10 +32,6 @@ export default function DocumentList(props) {
         {...props}
       />
     );
-  };
-
-  const changePage = (event, value) => {
-    setPageNumber(value);
   };
 
   if (props.loading) {

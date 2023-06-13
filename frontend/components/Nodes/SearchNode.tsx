@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { Handle, Position } from "reactflow";
-import Search from "@/components/WindowModules/Search";
+import Search from "@/components/Search";
 
 const handleStyle = { left: 10 };
 

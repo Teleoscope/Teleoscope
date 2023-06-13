@@ -43,7 +43,7 @@ function WindowNode({ data, id, selected }) {
         minWidth={windata.minWidth}
         minHeight={windata.minHeight}
       />
-      <WindowFactory id={data.i} size={size} windata={windata} />
+      <WindowFactory size={size} windata={windata} />
       {handleType && (
         <Handle
           type={handleType}
