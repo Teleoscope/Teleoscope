@@ -50,7 +50,6 @@ export const Windows = createSlice({
       state.collision = action.payload;
     },
     removeWindow: (state, action) => {
-      console.log("remove", action.payload)
       var temp_nodes = [...state.nodes];
       var node_ids = state.nodes.map((n) => {
         return n.id;
@@ -113,13 +112,15 @@ export const Windows = createSlice({
       }
       state.windows = temp;
     },
-    updateWindow: (state, action) => {
-      var temp = [...state.windows];
-      var index = temp.findIndex((w) => w.i == action.payload.i);
-      if (index > 0) {
-        temp[index].i = action.payload.term + "%search";
+    updateSearch: (state, action) => {
+      var temp = [...state.nodes];
+      var index = temp.findIndex(n => n.id === action.payload.id);
+      if (index > -1) {
+        temp[index].data["query"] = action.payload.term;
+        
       }
-      state.windows = temp;
+      console.log("query", action.payload.term, action.payload.id, index, temp[index])
+      state.nodes = temp;
     },
     updateWindows: (state, action) => {
       var temp = [...state.windows];
@@ -256,7 +257,7 @@ export const {
   removeWindow,
   loadWindows,
   dragged,
-  updateWindow,
+  updateSearch,
   updateWindows,
   minimizeWindow,
   maximizeWindow,

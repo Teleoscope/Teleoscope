@@ -2,11 +2,11 @@ import React, { useState, useContext } from "react";
 
 // mui
 import SearchIcon from "@mui/icons-material/Search";
-import { Stack, Divider, TextField, Box, Typography } from "@mui/material";
+import { Stack, TextField, Box, Typography } from "@mui/material";
 
 // actions
 import { useDispatch } from "react-redux";
-import { updateWindow } from "@/actions/windows";
+import { updateSearch } from "@/actions/windows";
 
 // custom components
 import DocumentList from "@/components/Documents/DocumentList";
@@ -15,7 +15,7 @@ import DocumentList from "@/components/Documents/DocumentList";
 import { swrContext } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
 
-export default function SearchWindow(props) {
+export default function Search(props) {
   const [query, setQuery] = useState(" ");
   const swr = useContext(swrContext);
   const { documents, documents_loading } = swr.useSWRAbstract(
@@ -39,7 +39,7 @@ export default function SearchWindow(props) {
 
   const handleSetQuery = (e) => {
     setQuery(e.target.value);
-    dispatch(updateWindow({ i: "%search", term: e.target.value }));
+    dispatch(updateSearch({ id: props.id, term: e.target.value }));
   };
 
   const Count = () => (

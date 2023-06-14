@@ -61,6 +61,5 @@ export { default as DocumentListItem } from '@/components/Documents/DocumentList
 export { default as Document } from '@/components/Documents/Document';
 export { default as FlowWrapper } from '@/components/FlowWrapper';
 export { default as Workflowss } from '@/components/Workflows';
-export { default as Expander } from '@/components/Expander';
 export { default as ColorPicker } from '@/components/ColorPicker';
 export { default as TeleoscopeViewer } from '@/components/TeleoscopeViewer';

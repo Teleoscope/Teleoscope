@@ -11,6 +11,7 @@ import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import { useAppSelector } from "@/util/hooks";
 import { DocumentActions } from "@/components/Documents/DocumentActions";
 import { useSelector } from "react-redux";
+import Highlighter from "@/components/Highlighter";
 
 export default function DocViewer(props) {
   const swr = useContext(swrContext);
@@ -41,7 +42,7 @@ export default function DocViewer(props) {
           <Typography variant="h5">{document?.title}</Typography>
           <Divider></Divider>
           <DocumentActions document={document} />
-          <Typography variant="body">{document?.text}</Typography>
+          <Typography><Highlighter>{document?.text}</Highlighter></Typography>
           <List>
             {document?.metadata
               ? Object.entries(document.metadata).map(([key, value]) => {

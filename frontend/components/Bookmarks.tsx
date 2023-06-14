@@ -14,7 +14,7 @@ import ButtonActions from "@/components/ButtonActions";
 import GroupWorkIcon from "@mui/icons-material/GroupWork";
 import { loadBookmarkedDocuments } from "@/actions/bookmark";
 
-export default function SearchWindow() {
+export default function Bookmarks() {
   const bookmarks = useAppSelector(
     (state: RootState) => state.bookmarker.value
   );
