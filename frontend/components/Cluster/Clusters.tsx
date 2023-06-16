@@ -27,9 +27,9 @@ import Divider from "@mui/material/Divider";
 
 export default function Clusters(props) {
   const p_id = props.data;
-  const session_id = useAppSelector(
-    (state: RootState) => state.activeSessionID.value
-  );
+  const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
+  const userid = useAppSelector((state) => state.activeSessionID.userid);
+
   const swr = useContext(swrContext);
   const client = useContext(StompContext);
 

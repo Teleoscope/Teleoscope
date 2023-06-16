@@ -117,6 +117,8 @@ class Clustering:
         dm = self.document_ordering()
 
         logging.info("Running UMAP Reduction...")
+        self.ping_stomp("Running UMAP Reduction... 2/5")
+
         umap_embeddings = umap.UMAP(
             verbose = True,         # for logging
             metric = "precomputed", # use distance matrix
@@ -126,18 +128,16 @@ class Clustering:
         ).fit_transform(dm)
         logging.info(f"Shape after reduction: {umap_embeddings.shape}")
 
-        self.ping_stomp(f"Shape after reduction: {umap_embeddings.shape}... 2/5")
 
         logging.info("Clustering with HDBSCAN...")
+        self.ping_stomp("Clustering with HDBSCAN... 3/5')
+
         self.hdbscan_labels = hdbscan.HDBSCAN(
             min_cluster_size = 15,              # num of neighbors needed to be considered a cluster (0~50, df=5)
             # min_samples = 5,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
             cluster_selection_epsilon = 0.2,    # have large clusters in dense regions while leaving smaller clusters small
                                                 # merge clusters if inter cluster distance is less than thres (df=0)
         ).fit_predict(umap_embeddings)
-        
-        logging.info(f'Num Clusters = {max(self.hdbscan_labels)+1} + outliers')
-        self.ping_stomp(f'Num Clusters = {max(self.hdbscan_labels)+1} + outliers... 3/5')
 
     def build_clusters(self):
         """ Iteratively builds groups in mongoDB relative to clustering
