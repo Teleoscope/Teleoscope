@@ -77,6 +77,17 @@ const actions = {
       isResizable: true,
     },
   },
+  Projections: {
+    icon: <Diversity2Icon />,
+    default_window: {
+      i: "%projectionpalette",
+      w: 5,
+      h: 9,
+      type: "Projection Palette",
+      isResizable: true,
+      showWindow: true,
+    },
+  },
   Notes: {
     icon: <CommentIcon />,
     default_window: {

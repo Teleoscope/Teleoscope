@@ -119,23 +119,25 @@ export default function WindowDefinitions(windowState) {
       icon:      () => <FlareIcon fontSize="inherit" sx={style} />,
       component: (w, id, color) => <Teleoscopes id={id} windata={w} color={color} />,
     },
-    Projection: { // TODO REFACTOR
-      icon: (d) => {
-        return (
-          <Diversity2Icon fontSize="inherit" sx={{ color: d?.history[0].color }} />
-        );
-      },
-      component: (w, id, color) => {
-        return <Projection id={id} windata={w} color={color} />;
-      },
-      showWindow: false,
-      title: (d) => {
-        return `Projection: ${d?.history[0].label}`;
-      },
-      color: (d) => {
-        return d?.history[0].color;
-      },
-      tag: "projection",
+    Projection: {
+      tag:       "projection",
+      type:      "Projection",
+      apipath:   "projections",
+      nodetype:  TargetNode,      
+      title:     (d) => `Projection: ${d?.history[0].label}`,
+      color:     (d) => d?.history[0].color,
+      icon:      (d) => <Diversity2Icon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
+      component: (w, id, color) => <Projection id={id} windata={w} color={color} />,
+    },
+    Projections: {
+      tag:       "projectionpalette", // projections?
+      type:      "Projections",
+      apipath:   "projections",
+      nodetype:  WindowNode,      
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      () => <Diversity2Icon fontSize="inherit" sx={style} />,
+      component: (w, id, color) => <ProjectionPalette id={id} windata={w} color={color} />,
     },
     "Projection Palette": { // TODO REFACTOR
       icon: () => {
