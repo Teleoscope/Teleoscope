@@ -7,7 +7,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { MakeDocx } from "@/components/DocxMaker";
 
 const fetchdocs = async ({ data, swr }) => {
-  var docs = [];
+  let docs = [];
   for (const [pid, s] of data) {
     const response = await fetch(`/api/${swr.subdomain}/document/${pid}`).then(
       (res) => res.json()
@@ -19,7 +19,7 @@ const fetchdocs = async ({ data, swr }) => {
 
 const copyTextToClipboard = async (props) => {
   const docs = await fetchdocs(props);
-  var output = docs
+  const output = docs
     .map(({ title, text }) => {
       return `${title}\n${text}\n\n`;
     })

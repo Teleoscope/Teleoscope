@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useCallback } from "react";
+import React, { useContext } from "react";
 
 // material ui
 import { Menu, MenuItem, Stack, Typography } from "@mui/material";
@@ -7,7 +7,7 @@ import { AccountCircle } from "@mui/icons-material";
 import { Divider, IconButton } from "@mui/material";
 
 // components
-import Account from "@/components/WindowModules/Account";
+import Account from "@/components/Account";
 
 // actions
 import { sessionActivator, setUserId } from "@/actions/activeSessionID";
@@ -56,45 +56,15 @@ export default function TopBar(props) {
   };
 
   const handleSignIn = (user) => {
-    console.log("client state", client)
     setCookie("userid", user._id, {
       path: "/",
     });
     dispatch(setUserId(user._id));
     dispatch(sessionActivator(user.sessions[0]));
     client.restart({userid: user._id, database: client.database})
-    console.log("Stomp client: ", client, user)
   };
 
   const get_color = () => (session ? session.history[0].color : "#4E5CBC");
-
-  const getUsers = () => {
-    if (session && users) {
-      let owner = session.userlist.owner;
-      let contributors = session.userlist.contributors;
-
-      // check if all users have already been added to session
-      if (contributors.length + 1 === users.length) {
-        return (
-          <MenuItem value={"No users to be added..."}>
-            No users to be added...
-          </MenuItem>
-        );
-      }
-
-      // show all users that are not already in userlist
-      return users.map((u) => {
-        if (!owner.includes(u._id) && !contributors.includes(u._id)) {
-          return (
-            <MenuItem key={u._id} value={u}>
-              {u.username}
-            </MenuItem>
-          );
-        }
-      });
-    }
-    return <MenuItem value={""}>No session selected...</MenuItem>;
-  };
 
   const [open, toggleOpen] = React.useState(false);
 

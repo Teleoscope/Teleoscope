@@ -1,4 +1,4 @@
-import React, { createContext } from "react";
+import React from "react";
 import Head from "next/head";
 
 import { Provider } from "react-redux";

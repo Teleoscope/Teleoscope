@@ -1,6 +1,4 @@
-import React, { useContext } from "react";
-import { useSelector } from "react-redux";
-import { swrContext } from "@/util/swr";
+import React from "react";
 
 // mui
 import ShortTextIcon from "@mui/icons-material/ShortText";
@@ -15,258 +13,228 @@ import StarIcon from "@mui/icons-material/Star";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 
-// actions
-import { RootState } from "@/stores/store";
+import { CgPathIntersect, CgPathExclude, CgPathUnite } from 'react-icons/cg';
+
+import WindowNode from "@/components/Nodes/WindowNode";
+import OperationNode from "@/components/Nodes/OperationNode";
+import SourceNode from "@/components/Nodes/SourceNode";
+import TargetNode from "@/components/Nodes/TargetNode";
 
 // custom
-import Notes from "@/components/WindowModules/Notes";
+import Note from "@/components/Note";
 import FABMenu from "@/components/FABMenu";
 import Group from "@/components/Group";
 import Document from "@/components/Documents/Document";
-import TeleoscopePalette from "@/components/WindowModules/TeleoscopePalette";
+import Teleoscopes from "@/components/Teleoscopes";
 import Teleoscope from "@/components/Teleoscope";
-import Search from "@/components/WindowModules/Search";
-import GroupPalette from "@/components/WindowModules/GroupPalette";
+import Search from "@/components/Search";
+import Groups from "@/components/Groups";
 import Clusters from "@/components/Cluster/Clusters";
 import Cluster from "@/components/Cluster/Cluster";
+import Notes from "@/components/Notes";
+import Intersection from "@/components/Operations/Intersection";
+import Exclusion from "@/components/Operations/Exclusion";
+import Union from "@/components/Operations/Union";
 
 import { PreprocessTitle } from "@/util/Preprocessers";
-import NotePalette from "@/components/WindowModules/NotePalette";
 
-export default function WindowDefinitions() {
-  const session_id = useSelector(
-    (state: RootState) => state.activeSessionID.value
-  );
-  const swr = useContext(swrContext);
-  const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
-
-  interface Document {
-    title: string;
-  }
-  const [doc, setDoc] = React.useState<Document | undefined>();
-
-  const get_color = () => (session ? session.history[0].color : "#FF0000");
-
-  // Helper functions
-  const getReferencedDocument = (oid) => {
-    fetch(
-      `http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/document/${oid}`
-    )
-      .then((response) => response.json())
-      .then((data) => setDoc(data));
-  };
+export default function WindowDefinitions(windowState) {
+  const color = windowState.color;
 
   const style = [
-    { color: get_color() },
-    { "& .MuiChip-icon": { color: get_color() } },
+    { color: color },
+  { "& .MuiChip-icon": { color: color } },
   ];
 
-  return {
+  const config = {
     Note: {
-      icon: () => {
-        return <CommentIcon fontSize="inherit" />;
-      },
-      component: (w, id, color) => {
-        return <Notes id={id} windata={w} color={color} />;
-      },
-      showWindow: false,
-      title: (d) => `${d?.history[0].label}`,
-      color: () => get_color(),
-      tag: "note",
+      tag:       "note",
+      type:      "Note",
+      apipath:   "note",
+      nodetype:  SourceNode,      
+      title:     (d) => `${d?.history[0].label}`,
+      color:     () => color,
+      icon:      () => <CommentIcon fontSize="inherit" />,
+      component: (w, id, color) => <Note id={id} windata={w} color={color} />,
     },
-    "Note Palette": {
-      icon: () => {
-        return <CommentIcon fontSize="inherit" sx={style} />;
-      },
-      component: (w, id, color) => {
-        return <NotePalette id={id} windata={w} color={color} />;
-      },
-      showWindow: false,
-      title: () => {
-        return `Notes`;
-      },
-      color: () => get_color(),
-      tag: "notepalette",
+    Notes: {
+      tag:       "notes",
+      type:      "Notes",
+      apipath:   "notes",
+      nodetype:  WindowNode,
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      () => <CommentIcon fontSize="inherit" sx={style} />,
+      component: (w, id, color) => <Notes id={id} windata={w} color={color} />,
     },
     FABMenu: {
-      icon: () => {
-        return <AddIcon fontSize="inherit" />;
-      },
-      component: (w, id, color) => {
-        return <FABMenu id={id} windata={w} color={color} />;
-      },
-      showWindow: false,
-      title: () => {
-        return "FABMenu";
-      },
-      color: () => get_color(),
-      tag: "fabmenu",
+      tag:       "fabmenu",
+      type:      "FABMenu",
+      apipath:   "fabmenu",
+      nodetype:  WindowNode,      
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      () => <AddIcon fontSize="inherit" />,
+      component: (w, id, color) => <FABMenu id={id} windata={w} color={color} />,
     },
     Group: {
-      icon: (d) => {
-        return (
-          <TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />
-        );
-      },
-      component: (w, id, color) => {
-        return <Group id={id} windata={w} color={color} />;
-      },
-      showWindow: false,
-      title: (d) => {
-        return `Group: ${d?.history[0].label}`;
-      },
-      color: (d) => {
-        return d?.history[0].color;
-      },
-      tag: "group",
+      tag:       "group",
+      type:      "Group",
+      apipath:   "groups",
+      nodetype:  SourceNode,      
+      title:     (d) => `Group: ${d?.history[0].label}`,
+      color:     (d) => d?.history[0].color,
+      icon:      (d) => <TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
+      component: (w, id, color) => <Group id={id} windata={w} color={color} />,
     },
     Document: {
-      icon: () => {
-        return <ShortTextIcon fontSize="inherit" />;
-      },
-      component: (w, id, color) => {
-        return <Document id={id} windata={w} color={color} />;
-      },
-      showWindow: false,
-      title: (d) => {
-        return PreprocessTitle(d?.title);
-      },
-      color: () => get_color(),
-      tag: "document",
+      tag:       "document",
+      type:      "Document",
+      apipath:   "document",
+      nodetype:  SourceNode,      
+      title:     (d) => PreprocessTitle(d?.title),
+      color:     () => color,
+      icon:      () => <ShortTextIcon fontSize="inherit" />,
+      component: (w, id, color) => <Document id={id} windata={w} color={color} />,
     },
     Teleoscope: {
-      icon: (d) => {
-        return (
-          <FlareIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />
-        );
-      },
-      component: (w, id, color) => {
-        return <Teleoscope id={id} windata={w} color={color} />;
-      },
-      showWindow: false,
-      title: (d) => {
-        return `Teleoscope: ${d?.history[0].label}`;
-      },
-      color: (d) => {
-        return d?.history[0].color;
-      },
-      tag: "teleoscope",
+      tag:       "teleoscope",
+      type:      "Teleoscope",
+      apipath:   "teleoscopes",
+      nodetype:  TargetNode,      
+      title:     (d) => `Teleoscope: ${d?.history[0].label}`,
+      color:     (d) => d?.history[0].color,
+      icon:      (d) => <FlareIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
+      component: (w, id, color) => <Teleoscope id={id} windata={w} color={color} />,
     },
-    "Teleoscope Palette": {
-      icon: () => {
-        return <FlareIcon fontSize="inherit" sx={style} />;
-      },
-      component: (w, id, color) => {
-        return <TeleoscopePalette id={id} windata={w} color={color} />;
-      },
-      showWindow: false,
-      title: () => {
-        return `Teleoscopes`;
-      },
-      color: () => get_color(),
-      tag: "teleoscopepalette",
+    Teleoscopes: {
+      tag:       "teleoscopes",
+      type:      "Teleoscopes",
+      apipath:   "teleoscopes",
+      nodetype:  WindowNode,      
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      () => <FlareIcon fontSize="inherit" sx={style} />,
+      component: (w, id, color) => <Teleoscopes id={id} windata={w} color={color} />,
     },
     Search: {
-      icon: () => {
-        return <SearchIcon fontSize="inherit" sx={style} />;
-      },
-      component: (w, id, color) => {
-        return <Search id={id} windata={w} color={color} />;
-      },
-      showWindow: true,
-      title: (d) => {
-        return `Search`;
-      },
-      color: () => get_color(),
-      tag: "search",
+      tag:       "search",
+      type:      "Search",
+      apipath:   "search",
+      nodetype:  SourceNode,      
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      () => <SearchIcon fontSize="inherit" sx={style} />,
+      component: (w, id, color) => <Search id={id} windata={w} color={color} />,
     },
-    "Group Palette": {
-      icon: () => {
-        return <FolderCopyIcon fontSize="inherit" sx={style} />;
-      },
-      component: (w, id, color) => {
-        return <GroupPalette id={id} windata={w} color={color} />;
-      },
-      showWindow: true,
-      title: () => {
-        return "Group Palette";
-      },
-      color: () => get_color(),
-      tag: "grouppalette",
+    Groups: {
+      tag:       "groups",
+      type:      "Groups",
+      apipath:   "groups",
+      nodetype:  WindowNode,      
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      () => <FolderCopyIcon fontSize="inherit" sx={style} />,
+      component: (w, id, color) => <Groups id={id} windata={w} color={color} />,
     },
     Clusters: {
-      icon: () => {
-        return <Diversity2Icon fontSize="inherit" sx={style} />;
-      },
-      component: (w, id, color) => {
-        return <Clusters id={id} windata={w} color={color} />;
-      },
-      showWindow: true,
-      title: () => {
-        return "Clusters";
-      },
-      color: () => get_color(),
-      tag: "clusters",
+      tag:       "clusters",
+      type:      "Clusters",
+      apipath:   "clusters",
+      nodetype:  WindowNode,      
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      () => <Diversity2Icon fontSize="inherit" sx={style} />,
+      component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
     },
     Cluster: {
-      icon: (d) => {
-        return (
-          <TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />
-        );
-      },
-      component: (w, id, color) => {
-        return <Cluster id={id} windata={w} color={color} />;
-      },
-      showWindow: false,
-      title: (d) => {
-        return d?.history[0].label;
-      },
-      color: (d) => {
-        return d?.history[0].color;
-      },
-      tag: "cluster",
+      tag:       "cluster",
+      type:      "Cluster",
+      apipath:   "cluster",
+      nodetype:  WindowNode,      
+      title:     (d) => d?.history[0].label,
+      color:     (d) => d?.history[0].color,
+      icon:      (d) => <TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
+      component: (w, id, color) => <Cluster id={id} windata={w} color={color} />,
     },
     Bookmarks: {
-      icon: () => {
-        return <StarIcon fontSize="inherit" sx={style} />;
-      },
-      component: (w, id, color) => {
-        return <Clusters id={id} windata={w} color={color} />;
-      },
-      showWindow: true,
-      title: () => {
-        return "Bookmarks";
-      },
-      color: () => get_color(),
-      tag: "bookmarks",
+      tag:       "bookmarks",
+      type:      "Bookmarks",
+      apipath:   "bookmarks",
+      nodetype:  WindowNode,      
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      () => <StarIcon fontSize="inherit" sx={style} />,
+      component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
     },
     Settings: {
-      icon: () => {
-        return <SettingsIcon fontSize="inherit" sx={style} />;
-      },
-      component: (w, id, color) => {
-        return <Clusters id={id} windata={w} color={color} />;
-      },
-      showWindow: true,
-      title: () => {
-        return "Settings";
-      },
-      color: () => get_color(),
-      tag: "settings",
+      tag:       "settings",
+      type:      "Settings",
+      apipath:   "settings",
+      nodetype:  WindowNode,      
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      () => <SettingsIcon fontSize="inherit" sx={style} />,
+      component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
     },
     Workflows: {
-      icon: (sx = style) => {
-        return <AccountTreeIcon fontSize="inherit" sx={sx} />;
-      },
-      component: (w, id, color) => {
-        return <Clusters id={id} windata={w} color={color} />;
-      },
-      showWindow: true,
-      title: () => {
-        return "Workflows";
-      },
-      color: () => get_color(),
-      tag: "workflows",
+      tag:       "workflows",
+      type:      "Workflows",
+      apipath:   "workflows",
+      nodetype:  WindowNode,
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      (sx = style) => <AccountTreeIcon fontSize="inherit" sx={sx} />,
+      component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
+    },
+    Operation: {
+      tag:       "operation",
+      type:      "Operation",
+      apipath:   "operation",
+      nodetype: OperationNode,
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      (sx = style) => <AccountTreeIcon fontSize="inherit" sx={sx} />,
+      component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
+    },
+    Intersection: {
+      tag:       "intersection",
+      type:      "Intersection",
+      apipath:   "intersection",
+      nodetype: OperationNode,
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      (sx = style) => <CgPathIntersect fontSize="inherit" sx={sx} />,
+      component: (w, id, color) => <Intersection id={id} windata={w} color={color} />,
+    },
+    Exclusion: {
+      tag:       "exclusion",
+      type:      "Exclusion",
+      apipath:   "exclusion",
+      nodetype: OperationNode,
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      (sx = style) => <CgPathExclude fontSize="inherit" sx={sx} />,
+      component: (w, id, color) => <Exclusion id={id} windata={w} color={color} />,
+    },
+    Union: {
+      tag:       "union",
+      type:      "Union",
+      apipath:   "union",
+      nodetype: OperationNode,
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      (sx = style) => <CgPathUnite fontSize="inherit" sx={sx} />,
+      component: (w, id, color) => <Union id={id} windata={w} color={color} />,
     },
   };
+
+  // Backwards compatibility
+  config["Group Palette"] = config.Groups;
+  config["Teleoscope Palette"] = config.Teleoscopes;
+  config["Note Palette"] = config.Notes;
+  config["Settings Palette"] = config.Settings;
+  config["Workflow Palette"] = config.Workflows;
+
+  return config;
 }

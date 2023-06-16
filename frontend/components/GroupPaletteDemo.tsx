@@ -1,4 +1,4 @@
-// GroupPalette.js
+// Groups.js
 import React, { useContext } from "react";
 
 // MUI
@@ -32,7 +32,7 @@ import CopyAllIcon from "@mui/icons-material/CopyAll";
 
 // actions
 import { swrContext } from "@/util/swr";
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector } from "@/util/hooks";
 
 // contexts
 import { StompContext } from "@/components/Stomp";
@@ -43,13 +43,11 @@ import EditableText from "@/components/EditableText";
 import ButtonActions from "@/components/ButtonActions";
 
 // custom components
-export default function GroupPalette(props) {
+export default function GroupsDemo(props) {
   const swr = useContext(swrContext);
   const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
   const { users } = swr.useSWRAbstract("users", `users/`);
-  const userid = useAppSelector((state) => state.activeSessionID.userid);
   const client = useContext(StompContext);
-  const dispatch = useAppDispatch();
   const [value, setValue] = React.useState(null);
   const [sessionValue, setSessionValue] = React.useState({ label: "" });
   const [groupValue, setGroupValue] = React.useState({ label: null });
@@ -79,10 +77,6 @@ export default function GroupPalette(props) {
     if (e.code == "Enter") {
       client.add_group(e.target.value, randomColor(), session_id);
     }
-  };
-
-  const handleClickOpen = () => {
-    toggleOpen(true);
   };
 
   const handleClose = () => {
@@ -283,7 +277,7 @@ export default function GroupPalette(props) {
     );
   };
 
-  const downloadGroups = () => {};
+  const downloadGroups = () => { return 0 };
 
   const DownloadButton = () => {
     return (
@@ -305,9 +299,9 @@ export default function GroupPalette(props) {
   };
 
   const fetchgroups = async () => {
-    var out = [];
+    const out = [];
     for (const group of groups) {
-      var g = group;
+      const g = group;
       g["included_text"] = [];
       for (const doc of g.history[0].included_documents) {
         const response = await fetch(
@@ -322,7 +316,7 @@ export default function GroupPalette(props) {
 
   const copyTextToClipboard = async () => {
     const groups = await fetchgroups();
-    var acc = "";
+    let acc = "";
     for (const group of groups) {
       acc = acc + `${group.history[0].label}\n`;
       for (const text of group.included_text) {

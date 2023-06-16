@@ -18,7 +18,7 @@ import { resetWorkspace } from "@/actions/windows";
 
 import EditableText from "@/components/EditableText";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
-import AddUserDialogue from "@/components/WindowModules/AddUserDialog";
+import AddUserDialogue from "@/components/AddUserDialog";
 
 import { CompactPicker } from "react-color";
 import randomColor from "randomcolor";
@@ -26,9 +26,11 @@ import randomColor from "randomcolor";
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
 
-export default function WorkflowsPalette(props) {
+export default function Workflows(props) {
   const client = useContext(StompContext);
-  const wdefs = WindowDefinitions();
+  const windowState = useAppSelector((state) => state.windows);
+  const wdefs = WindowDefinitions(windowState);
+
   const dispatch = useAppDispatch();
   const swr = useContext(swrContext);
   const color = useAppSelector((state) => state.windows.color);

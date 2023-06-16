@@ -2,10 +2,13 @@ import { memo } from "react";
 import { Handle, Position } from "reactflow";
 import BaseNode from "./BaseNode";
 
-function WindowNode({ data, id, selected }) {
+function TargetNode({ data, id, selected }) {
   return (
+    <>
       <BaseNode data={data} id={id} selected={selected} />
+      
+      <Handle type="source" position={Position.Right} id={`${id}_output`} />
+    </>
   );
 }
-
-export default memo(WindowNode);
+export default memo(TargetNode)

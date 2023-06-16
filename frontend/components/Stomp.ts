@@ -4,17 +4,9 @@ import React, { createContext } from "react";
 
 export const StompContext = createContext(null);
 
-// TODO: look at websocket example code here and replicate
-// anywhere that needs to route a request to the server
-// possibly best to move this into an action? I'm unsure
-
 import { WebsocketBuilder } from "websocket-ts";
 Object.assign(global, WebsocketBuilder);
-//Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
 
-// custom imports
-import bcrypt from "bcryptjs";
-// let client: Client;
 
 /**
  * Type definition for Body
@@ -127,7 +119,7 @@ export class Stomp {
       // This is needed because this will be executed after a (re)connect
       this.client.subscribe(`/queue/${this.userId}`, (message) => {
         // Parse the message body
-        let body = message.body;
+        const body = message.body;
         
         console.log("Received: " + body);
 
@@ -161,13 +153,17 @@ export class Stomp {
     };
     body["args"]["userid"] = this.userId;
     body["args"]["db"] = this.database;
-    body["message_id"] = crypto.randomBytes(10);
-    this.client.publish({
-      destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,
-      headers: headers,
-      body: JSON.stringify(body),
-    });
-    console.log("Sent from Stomp: ", body);
+    body["message_id"] = crypto.randomBytes(8).toString('hex');
+    try {
+      this.client.publish({
+        destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,
+        headers: headers,
+        body: JSON.stringify(body),
+      });
+      console.log("Sent from Stomp: ", body);
+    } catch(err) {
+      console.log("Error in sending:", err, body);
+    }
     return body;
   }
 
@@ -413,7 +409,7 @@ export class Stomp {
   /**
    * Request to add a note for a particular interface object.
    */
-  add_note(session_id: string, label: string = "new note", content = {}) {
+  add_note(session_id: string, label = "new note", content = {}) {
     const body = {
       task: "add_note",
       args: {
@@ -624,6 +620,24 @@ export class Stomp {
     this.publish(body);
     return body;
   } 
+
+  /**
+   * Add a node to the interface.
+   */
+  add_node(session_id: string, oid: string, uid: string, type: string, state) {
+    const body = {
+      task: "add_node",
+      args: {
+        session_id: session_id,
+        oid: oid,
+        uid: uid,
+        type: type,
+        state: state
+      },
+    };
+    this.publish(body);
+    return body;
+  }
 
 
   /**

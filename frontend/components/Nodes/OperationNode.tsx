@@ -1,27 +1,17 @@
-import { useCallback } from "react";
+import { memo } from "react";
 import { Handle, Position } from "reactflow";
+import BaseNode from "./BaseNode";
 
-const handleStyle = { left: 10 };
-
-export default function SearchNode({ data }) {
-  const onChange = useCallback((evt) => {
-    console.log(evt.target.value);
-  }, []);
-
+function SourceNode({ data, id, selected }) {
   return (
     <>
-      <Handle type="target" position={Position.Top} />
-      <Handle type="target" position={Position.Bottom} />
-      <div>
-
-      </div>
-      <Handle type="source" position={Position.Bottom} id="a" />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="b"
-        style={handleStyle}
-      />
+      <BaseNode data={data} id={id} selected={selected} />
+      
+      <Handle type="target" position={Position.Top}    id={`${id}_source`}  />
+      <Handle type="target" position={Position.Bottom} id={`${id}_control`} />
+      <Handle type="source" position={Position.Right}  id={`${id}_output`}  />
     </>
   );
 }
+
+export default memo(SourceNode);

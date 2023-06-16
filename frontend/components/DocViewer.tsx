@@ -8,9 +8,10 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { Typography, Stack, List, ListItem, Divider } from "@mui/material";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
-import ButtonActions from "@/components/ButtonActions";
+import { useAppSelector } from "@/util/hooks";
 import { DocumentActions } from "@/components/Documents/DocumentActions";
+import { useSelector } from "react-redux";
+import Highlighter from "@/components/Highlighter";
 
 export default function DocViewer(props) {
   const swr = useContext(swrContext);
@@ -18,7 +19,8 @@ export default function DocViewer(props) {
     ? props.windata.demodata
     : swr.useSWRAbstract("document", `document/${props.id}`);
   const settings = useAppSelector((state) => state.windows.settings);
-
+  const windowState = useSelector((state) => state.windows);
+  const wdefs = WindowDefinitions(windowState);
   return (
     <Accordion
       defaultExpanded={settings.defaultExpanded}
@@ -31,7 +33,7 @@ export default function DocViewer(props) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {WindowDefinitions()["Document"].icon()}
+          {wdefs["Document"].icon()}
           {`${document?.title.slice(0, 20)}...`}
         </Typography>
       </AccordionSummary>
@@ -40,7 +42,7 @@ export default function DocViewer(props) {
           <Typography variant="h5">{document?.title}</Typography>
           <Divider></Divider>
           <DocumentActions document={document} />
-          <Typography variant="body">{document?.text}</Typography>
+          <Typography><Highlighter>{document?.text}</Highlighter></Typography>
           <List>
             {document?.metadata
               ? Object.entries(document.metadata).map(([key, value]) => {

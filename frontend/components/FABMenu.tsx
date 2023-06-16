@@ -5,7 +5,7 @@ import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 
 // custom
-import MenuActions from "@/components/Context/ContextMenuActions";
+import WindowDefinitions from "./WindowFolder/WindowDefinitions";
 
 // actions
 import { makeNode } from "@/actions/windows";
@@ -18,30 +18,31 @@ export default function FABMenu(props) {
   const session_id = useSelector((state) => state.activeSessionID.value);
   const swr = useContext(swrContext);
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
-  const actions = {
-    Search: MenuActions()["Search"],
-    Teleoscopes: MenuActions()["Teleoscopes"],
-    Groups: MenuActions()["Groups"],
-    Clusters: MenuActions()["Clusters"],
-    Notes: MenuActions()["Notes"],
-  };
+  const windowState = useSelector((state) => state.windows);
+  const wdefs = WindowDefinitions(windowState);
+  const settings = useSelector((state) => state.windows.settings);
+  
+  const actions = [
+    "Search",
+    "Teleoscopes" ,
+    "Groups",
+    "Clusters",
+    "Notes",
+    "Intersection",
+    "Exclusion",
+    "Union",
+  ]
 
-  const get_color = () => (session ? session.history[0].color : "#4E5CBC");
-  const handleAddNode = (id, type) => {
-    const newNode = {
-      id: id,
-      type: "windowNode",
-      position: {
-        x: props.windata.x + props.windata.width + 10,
-        y: props.windata.y,
-      },
-      style: {
-        width: 400,
-        height: 300,
-      },
-      data: { label: `${id} node`, i: id, type: type },
-    };
-    dispatch(makeNode({ node: newNode }));
+  const get_color = () => session ? session.history[0].color : "#4E5CBC";
+  const handleAddNode = (type) => {
+    dispatch(makeNode({ 
+      oid: type, 
+      type: type,
+      width: settings.default_document_width,
+      height: settings.default_document_height,
+      x: props.windata.x + props.windata.width + 10, 
+      y: props.windata.y
+    }));
   };
 
   const handleOpen = () => {
@@ -76,17 +77,16 @@ export default function FABMenu(props) {
       open={open || props.alwaysOpen}
       transitionDuration={0}
     >
-      {Object.keys(actions).map((action) => (
+      {actions.map((action) => (
         <SpeedDialAction
           sx={{ color: get_color() }}
           key={action}
           open={open}
-          icon={actions[action].icon}
+          icon={wdefs[action].icon()}
           tooltipTitle={action}
           onClick={() =>
             handleAddNode(
-              actions[action].default_window.i,
-              actions[action].default_window.type
+              wdefs[action].type
             )
           }
         />

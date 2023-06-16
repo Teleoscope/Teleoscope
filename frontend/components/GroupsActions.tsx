@@ -48,7 +48,7 @@ export const CopyTextAction = (props) => {
   const { fetchgroups } = props;
   const copyTextToClipboard = async () => {
     const groups = await fetchgroups();
-    var acc = "";
+    let acc = "";
     for (const group of groups) {
       acc = acc + `${group.history[0].label}\n`;
       for (const text of group.documents) {
