@@ -9,7 +9,11 @@ export default function WindowFactory(props) {
 
   const windowState = useSelector((state) => state.windows);
   const wdefs = WindowDefinitions(windowState);
-
+  const paths = Object.entries(wdefs).reduce((obj, [w, def]) => {
+    obj[w] = def.apipath;
+    return obj;
+  }, {})  
+  
   const keymap = {
     note: "note",
     notes: "notes",
@@ -26,22 +30,10 @@ export default function WindowFactory(props) {
     clusters: "clusters",
     cluster: "cluster",
     operation: "operation",
-    Note: "note",
-    Notes: "notes",
-    Notepalette: "notes",
-    FABMenu: "fabmenu",
-    Group: "groups",
-    Grouppalette: "groups",
-    Document: "document",
-    Teleoscope: "teleoscopes",
-    Teleoscopes: "teleoscopes",
-    Teleoscopepalette: "teleoscopes",
-    Search: "search",
-    Groups: "groups",
-    Clusters: "clusters",
-    Cluster: "cluster",
-    Operation: "operation"
+    intersection: "intersection",
+    ...paths
   };
+  
   const type = w.type;
   const oid = w.data?.id ? w.data.id : w.i.split("%")[0];
 

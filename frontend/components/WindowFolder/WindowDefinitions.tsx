@@ -13,6 +13,13 @@ import StarIcon from "@mui/icons-material/Star";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 
+import { CgPathIntersect, CgPathExclude, CgPathUnite } from 'react-icons/cg';
+
+import WindowNode from "@/components/Nodes/WindowNode";
+import OperationNode from "@/components/Nodes/OperationNode";
+import SourceNode from "@/components/Nodes/SourceNode";
+import TargetNode from "@/components/Nodes/TargetNode";
+
 // custom
 import Note from "@/components/Note";
 import FABMenu from "@/components/FABMenu";
@@ -25,6 +32,9 @@ import Groups from "@/components/Groups";
 import Clusters from "@/components/Cluster/Clusters";
 import Cluster from "@/components/Cluster/Cluster";
 import Notes from "@/components/Notes";
+import Intersection from "@/components/Operations/Intersection";
+import Exclusion from "@/components/Operations/Exclusion";
+import Union from "@/components/Operations/Union";
 
 import { PreprocessTitle } from "@/util/Preprocessers";
 
@@ -40,6 +50,8 @@ export default function WindowDefinitions(windowState) {
     Note: {
       tag:       "note",
       type:      "Note",
+      apipath:   "note",
+      nodetype:  SourceNode,      
       title:     (d) => `${d?.history[0].label}`,
       color:     () => color,
       icon:      () => <CommentIcon fontSize="inherit" />,
@@ -48,6 +60,8 @@ export default function WindowDefinitions(windowState) {
     Notes: {
       tag:       "notes",
       type:      "Notes",
+      apipath:   "notes",
+      nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
       icon:      () => <CommentIcon fontSize="inherit" sx={style} />,
@@ -56,6 +70,8 @@ export default function WindowDefinitions(windowState) {
     FABMenu: {
       tag:       "fabmenu",
       type:      "FABMenu",
+      apipath:   "fabmenu",
+      nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
       icon:      () => <AddIcon fontSize="inherit" />,
@@ -64,6 +80,8 @@ export default function WindowDefinitions(windowState) {
     Group: {
       tag:       "group",
       type:      "Group",
+      apipath:   "groups",
+      nodetype:  SourceNode,      
       title:     (d) => `Group: ${d?.history[0].label}`,
       color:     (d) => d?.history[0].color,
       icon:      (d) => <TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
@@ -72,6 +90,8 @@ export default function WindowDefinitions(windowState) {
     Document: {
       tag:       "document",
       type:      "Document",
+      apipath:   "document",
+      nodetype:  SourceNode,      
       title:     (d) => PreprocessTitle(d?.title),
       color:     () => color,
       icon:      () => <ShortTextIcon fontSize="inherit" />,
@@ -80,6 +100,8 @@ export default function WindowDefinitions(windowState) {
     Teleoscope: {
       tag:       "teleoscope",
       type:      "Teleoscope",
+      apipath:   "teleoscopes",
+      nodetype:  TargetNode,      
       title:     (d) => `Teleoscope: ${d?.history[0].label}`,
       color:     (d) => d?.history[0].color,
       icon:      (d) => <FlareIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
@@ -88,6 +110,8 @@ export default function WindowDefinitions(windowState) {
     Teleoscopes: {
       tag:       "teleoscopes",
       type:      "Teleoscopes",
+      apipath:   "teleoscopes",
+      nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
       icon:      () => <FlareIcon fontSize="inherit" sx={style} />,
@@ -96,6 +120,8 @@ export default function WindowDefinitions(windowState) {
     Search: {
       tag:       "search",
       type:      "Search",
+      apipath:   "search",
+      nodetype:  SourceNode,      
       title:     function () {return this.type},
       color:     () => color,
       icon:      () => <SearchIcon fontSize="inherit" sx={style} />,
@@ -104,6 +130,8 @@ export default function WindowDefinitions(windowState) {
     Groups: {
       tag:       "groups",
       type:      "Groups",
+      apipath:   "groups",
+      nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
       icon:      () => <FolderCopyIcon fontSize="inherit" sx={style} />,
@@ -112,6 +140,8 @@ export default function WindowDefinitions(windowState) {
     Clusters: {
       tag:       "clusters",
       type:      "Clusters",
+      apipath:   "clusters",
+      nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
       icon:      () => <Diversity2Icon fontSize="inherit" sx={style} />,
@@ -120,6 +150,8 @@ export default function WindowDefinitions(windowState) {
     Cluster: {
       tag:       "cluster",
       type:      "Cluster",
+      apipath:   "cluster",
+      nodetype:  WindowNode,      
       title:     (d) => d?.history[0].label,
       color:     (d) => d?.history[0].color,
       icon:      (d) => <TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
@@ -128,6 +160,8 @@ export default function WindowDefinitions(windowState) {
     Bookmarks: {
       tag:       "bookmarks",
       type:      "Bookmarks",
+      apipath:   "bookmarks",
+      nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
       icon:      () => <StarIcon fontSize="inherit" sx={style} />,
@@ -136,6 +170,8 @@ export default function WindowDefinitions(windowState) {
     Settings: {
       tag:       "settings",
       type:      "Settings",
+      apipath:   "settings",
+      nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
       icon:      () => <SettingsIcon fontSize="inherit" sx={style} />,
@@ -144,6 +180,8 @@ export default function WindowDefinitions(windowState) {
     Workflows: {
       tag:       "workflows",
       type:      "Workflows",
+      apipath:   "workflows",
+      nodetype:  WindowNode,
       title:     function () {return this.type},
       color:     () => color,
       icon:      (sx = style) => <AccountTreeIcon fontSize="inherit" sx={sx} />,
@@ -152,10 +190,42 @@ export default function WindowDefinitions(windowState) {
     Operation: {
       tag:       "operation",
       type:      "Operation",
+      apipath:   "operation",
+      nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
       icon:      (sx = style) => <AccountTreeIcon fontSize="inherit" sx={sx} />,
       component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
+    },
+    Intersection: {
+      tag:       "intersection",
+      type:      "Intersection",
+      apipath:   "intersection",
+      nodetype: OperationNode,
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      (sx = style) => <CgPathIntersect fontSize="inherit" sx={sx} />,
+      component: (w, id, color) => <Intersection id={id} windata={w} color={color} />,
+    },
+    Exclusion: {
+      tag:       "exclusion",
+      type:      "Exclusion",
+      apipath:   "exclusion",
+      nodetype: OperationNode,
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      (sx = style) => <CgPathExclude fontSize="inherit" sx={sx} />,
+      component: (w, id, color) => <Exclusion id={id} windata={w} color={color} />,
+    },
+    Union: {
+      tag:       "union",
+      type:      "Union",
+      apipath:   "union",
+      nodetype: OperationNode,
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      (sx = style) => <CgPathUnite fontSize="inherit" sx={sx} />,
+      component: (w, id, color) => <Union id={id} windata={w} color={color} />,
     },
   };
 

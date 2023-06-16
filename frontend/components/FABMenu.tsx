@@ -22,13 +22,16 @@ export default function FABMenu(props) {
   const wdefs = WindowDefinitions(windowState);
   const settings = useSelector((state) => state.windows.settings);
   
-  const actions = {
-    Search: wdefs["Search"],
-    Teleoscopes: wdefs["Teleoscopes"],
-    Groups: wdefs["Groups"],
-    Clusters: wdefs["Clusters"],
-    Notes: wdefs["Notes"],
-  };
+  const actions = [
+    "Search",
+    "Teleoscopes" ,
+    "Groups",
+    "Clusters",
+    "Notes",
+    "Intersection",
+    "Exclusion",
+    "Union",
+  ]
 
   const get_color = () => session ? session.history[0].color : "#4E5CBC";
   const handleAddNode = (type) => {
@@ -74,16 +77,16 @@ export default function FABMenu(props) {
       open={open || props.alwaysOpen}
       transitionDuration={0}
     >
-      {Object.keys(actions).map((action) => (
+      {actions.map((action) => (
         <SpeedDialAction
           sx={{ color: get_color() }}
           key={action}
           open={open}
-          icon={actions[action].icon()}
+          icon={wdefs[action].icon()}
           tooltipTitle={action}
           onClick={() =>
             handleAddNode(
-              actions[action].type
+              wdefs[action].type
             )
           }
         />

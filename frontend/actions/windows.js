@@ -2,7 +2,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import _ from "lodash";
 import { applyNodeChanges, applyEdgeChanges } from "reactflow";
-import crypto from 'crypto';
 
 const initialState = {
   nodes: [],
@@ -191,8 +190,7 @@ export const Windows = createSlice({
     },
     makeNode: (state, action) => {
       var temp = [...state.nodes];
-      const { oid, type, width, height, x, y } = action.payload;
-      const uid =  crypto.randomBytes(8).toString('hex');
+      const { oid, uid, type, width, height, x, y } = action.payload;
       const id = `${oid.split("%")[0]}%${uid}%${type.toLowerCase()}`
 
       const newNode = {

@@ -1,5 +1,4 @@
 import React from 'react';
-import Typography from '@mui/material/Typography';
 import { useSelector } from "react-redux";
 
 export default function Highlighter({ children }) {
@@ -28,6 +27,6 @@ export default function Highlighter({ children }) {
     
 
       return (
-        <>{query} {highlight(children)}</>
+        <>{highlight(children)}</>
       );
 };

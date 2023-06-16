@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext, useRef, useEffect } from "react";
+import React, { useMemo, useState, useCallback, useContext, useRef, useEffect } from "react";
 import { addEdge } from "reactflow";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { RootState } from "@/stores/store";
@@ -17,35 +17,32 @@ import FlowProviderWrapper from "@/components/FlowProviderWrapper";
 import FlowWrapper from "@/components/FlowWrapper";
 import FlowUIComponents from "@/components/FlowUIComponents";
 import ContextMenuHandler from "@/components/ContextMenuHandler";
-import WindowNode from "@/components/Nodes/WindowNode";
+import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import FlowFABWrapper from "@/components/FlowFABWrapper";
-
 import "reactflow/dist/style.css";
 import styles from "@/styles/flow.module.css";
 import lodash from 'lodash';
 import { setNodes, setEdges, setColor } from "@/actions/windows";
 import { loadBookmarkedDocuments } from "@/actions/bookmark";
+import WindowNode from "@/components/Nodes/WindowNode";
 
-const nodeTypes = { 
-  windowNode: WindowNode,
-  Note: WindowNode,
-  Notes: WindowNode,
-  FABMenu: WindowNode,
-  Group: WindowNode,
-  Document: WindowNode,
-  Teleoscope: WindowNode,
-  Teleoscopes: WindowNode,
-  Search: WindowNode,
-  Groups: WindowNode,
-  Clusters: WindowNode,
-  Cluster: WindowNode,
-  Bookmarks: WindowNode,
-  Settings: WindowNode,
-  Workflows: WindowNode,
-  Operation: WindowNode,
-};
+
 
 function Flow(props) {
+  const windowState = useAppSelector((state) => state.windows);
+  const wdefs = WindowDefinitions(windowState);
+  const nodeTypeDefs = Object.entries(wdefs).reduce((obj, [w, def]) => {
+    obj[w] = def.nodetype;
+    return obj;
+  }, {})  
+  
+  
+  
+  const nodeTypes = useMemo(
+    () => ({ 
+    windowNode: WindowNode,
+    ...nodeTypeDefs  
+  }),[]);
 
   const client = useContext(StompContext);
   const swr = useContext(swrContext);
@@ -225,7 +222,8 @@ function Flow(props) {
         y: event.clientY - reactFlowBounds.top,
       });
 
-      dispatch(makeNode({ 
+      dispatch(makeNode({
+        client: client,
         oid: id, 
         type: type,
         width: settings.default_document_width,

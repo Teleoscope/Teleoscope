@@ -3,6 +3,7 @@ import React, { useState } from "react";
 // mui
 import { Typography, Box, Popover } from "@mui/material";
 import Snippet from "../Snippet";
+import Highlighter from "../Highlighter";
 
 export default function DocumentText(props) {
   const [selectedText, setSelectedText] = useState("");
@@ -41,7 +42,7 @@ export default function DocumentText(props) {
         sx={{ margin: "1em", userSelect: "text" }}
         onMouseUp={handleTextSelection}
       >
-        {props.text}
+        <Highlighter>{props.text}</Highlighter>
       </Typography>
       <Popover
         id={open ? "simple-popover" : undefined}

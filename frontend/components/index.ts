@@ -5,7 +5,6 @@ export { default as Clusters } from '@/components/Cluster/Clusters';
 export { default as GroupViewer } from '@/components/GroupViewer';
 export { default as NotesViewer } from '@/components/NotesViewer';
 export { default as OperationNode } from '@/components/Nodes/OperationNode';
-export { default as SearchNode } from '@/components/Nodes/SearchNode';
 export { default as WindowNode } from '@/components/Nodes/WindowNode';
 export { default as Demo } from '@/components/Demo';
 export { default as FlowFABWrapper } from '@/components/FlowFABWrapper';
