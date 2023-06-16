@@ -19,6 +19,7 @@ export default function FABMenu(props) {
   const session_id = useSelector((state) => state.activeSessionID.value);
   const swr = useContext(swrContext);
   const client = useContext(StompContext);
+
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const windowState = useSelector((state) => state.windows);
   const wdefs = WindowDefinitions(windowState);
