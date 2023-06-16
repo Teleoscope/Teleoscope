@@ -134,8 +134,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "snippet":
                 res = tasks.snippet.signature(args=(), kwargs=kwargs)
 
-            case "add_node":
-                res = tasks.add_node.signature(args=(), kwargs=kwargs)
+            case "add_item":
+                res = tasks.add_item.signature(args=(), kwargs=kwargs)
 
             case "ping":
                 res = tasks.ping.signature(args=(), kwargs=kwargs)

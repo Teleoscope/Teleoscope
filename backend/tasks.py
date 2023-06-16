@@ -1432,7 +1432,8 @@ def relabel_projection(*args, **kwargs):
 
 
 @app.task
-def add_node(*args, **kwargs):
+def add_item(*args, **kwargs):
+
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
 
@@ -1445,11 +1446,6 @@ def add_node(*args, **kwargs):
 
     if ObjectId.is_valid(oid):
         return
-    
-    
-    
-
-
 
 
 @app.task
