@@ -32,7 +32,7 @@ const makeNodeMiddleware = store => next => action => {
     // Perform the action or side effect you want to do after the store update
     const updatedState = store.getState();
     
-    action.payload.client.add_node(
+    action.payload.client.add_item(
       modifiedAction.payload.session_id,
       modifiedAction.payload.oid,      
       modifiedAction.payload.uid,

@@ -622,11 +622,11 @@ export class Stomp {
   } 
 
   /**
-   * Add a node to the interface.
+   * Add a workspace item to the interface.
    */
-  add_node(session_id: string, oid: string, uid: string, type: string, state) {
+  add_item(session_id: string, oid: string, uid: string, type: string, state) {
     const body = {
-      task: "add_node",
+      task: "add_item",
       args: {
         session_id: session_id,
         oid: oid,
