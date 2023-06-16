@@ -1,7 +1,6 @@
 // windows.js
 import { createSlice } from "@reduxjs/toolkit";
 import _ from "lodash";
-import { getDefaultWindow } from "../components/WindowFolder/WindowDefault";
 import { applyNodeChanges, applyEdgeChanges } from "reactflow";
 
 const initialState = {
@@ -9,7 +8,7 @@ const initialState = {
   edges: [],
   logical_clock: -1,
   color: "#D3D3D3",
-  windows: [],
+  windows: [], // try not to use this
   selection: {
     nodes: [],
     edges: [],
@@ -48,20 +47,6 @@ export const Windows = createSlice({
     },
     collision: (state, action) => {
       state.collision = action.payload;
-    },
-    addWindow: (state, action) => {
-      var item = getDefaultWindow();
-      // make sure that each default option that is being overridden
-      // is set in the final object that gets sent to the window store
-      Object.keys(action.payload).forEach((opt) => {
-        item[opt] = action.payload[opt];
-      });
-      var temp = [...state.windows];
-
-      if (!temp.find((item) => item.i === action.payload.i)) {
-        temp.push(item);
-        state.windows = temp;
-      }
     },
     removeWindow: (state, action) => {
       var temp_nodes = [...state.nodes];
@@ -126,13 +111,15 @@ export const Windows = createSlice({
       }
       state.windows = temp;
     },
-    updateWindow: (state, action) => {
-      var temp = [...state.windows];
-      var index = temp.findIndex((w) => w.i == action.payload.i);
-      if (index > 0) {
-        temp[index].i = action.payload.term + "%search";
+    updateSearch: (state, action) => {
+      var temp = [...state.nodes];
+      var index = temp.findIndex(n => n.id === action.payload.id);
+      if (index > -1) {
+        temp[index].data["query"] = action.payload.term;
+        
       }
-      state.windows = temp;
+      console.log("query", action.payload.term, action.payload.id, index, temp[index])
+      state.nodes = temp;
     },
     updateWindows: (state, action) => {
       var temp = [...state.windows];
@@ -203,7 +190,33 @@ export const Windows = createSlice({
     },
     makeNode: (state, action) => {
       var temp = [...state.nodes];
-      temp.push(action.payload.node);
+      const { oid, uid, type, width, height, x, y } = action.payload;
+      const id = `${oid.split("%")[0]}%${uid}%${type.toLowerCase()}`
+
+      const newNode = {
+        id: id,
+        type: type,
+        position: {
+          x: x,
+          y: y,
+        },
+        positionAbsolute: {
+          x: x,
+          y: y
+        },
+        style: {
+          width: width,
+          height: height,
+        },
+        data: { 
+          label: id,
+          i: oid.split("%")[0],
+          type: type,
+          uid: uid
+        },
+      };
+
+      temp.push(newNode);
       state.logical_clock = state.logical_clock + 1;
       state.nodes = temp;
     },
@@ -239,11 +252,10 @@ export const {
   updateEdges,
   setNodes,
   setDefault,
-  addWindow,
   removeWindow,
   loadWindows,
   dragged,
-  updateWindow,
+  updateSearch,
   updateWindows,
   minimizeWindow,
   maximizeWindow,

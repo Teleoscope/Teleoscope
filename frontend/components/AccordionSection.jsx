@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   Typography,
   Accordion,
-  Divider,
   AccordionDetails,
   AccordionSummary,
 } from "@mui/material";

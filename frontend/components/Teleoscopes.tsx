@@ -24,7 +24,7 @@ import { RootState } from "@/stores/store";
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
 
-export default function TeleoscopePalette(props) {
+export default function Teleoscopes(props) {
   const client = useContext(StompContext);
 
   const session_id = useAppSelector(

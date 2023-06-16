@@ -31,7 +31,7 @@ export default function Note(props) {
     lodash.debounce((e) => {
       const content = e.getCurrentContent();
       client.update_note(id, convertToRaw(content));
-    }, 5000)  // waits 5000 ms after the last call
+    }, 1000)  // waits 5000 ms after the last call
   ).current;
 
   useEffect(() => {

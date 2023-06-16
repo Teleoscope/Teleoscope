@@ -1,5 +1,5 @@
 // Window.js
-import React, { useState } from "react";
+import React from "react";
 
 // custom
 import WindowTopBar from "@/components/WindowFolder/WindowTopBar";

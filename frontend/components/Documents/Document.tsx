@@ -5,7 +5,7 @@ import React, { useContext } from "react";
 import DocumentText from "@/components/Documents/DocumentText";
 
 // mui
-import { Stack, IconButton } from "@mui/material";
+import { Stack } from "@mui/material";
 
 //utils
 import { swrContext } from "@/util/swr";

@@ -454,7 +454,7 @@ def initialize_teleoscope(*args, **kwargs):
             }, session=transaction_session)
         logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
   
-        ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))})
+        ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))}, session=transaction_session)
         history_item = ui_session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
         history_item["teleoscopes"].append(ObjectId(teleoscope_result.inserted_id))
@@ -1322,11 +1322,11 @@ def mark(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    userid = ObjectId(str(kwargs["userid"]))
+    userid      = ObjectId(str(kwargs["userid"]))
     document_id = ObjectId(str(kwargs["document_id"]))
-    session_id = ObjectId(str(kwargs["session_id"]))
-    read = kwargs["read"]
-    session = db.sessions.find_one({"_id": session_id})
+    session_id  = ObjectId(str(kwargs["session_id"]))
+    read        = kwargs["read"]
+    session     = db.sessions.find_one({"_id": session_id})
     history_item = session["history"][0]
     history_item["userid"] = userid
     history_item["action"] = f"Mark document read set to {read}."
@@ -1429,6 +1429,27 @@ def relabel_projection(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
 
     return 200
+
+
+@app.task
+def add_node(*args, **kwargs):
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+
+    userid = ObjectId(str(kwargs["userid"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+
+    uid  = kwargs["uid"]
+    oid  = kwargs["oid"]
+    type = kwargs["type"]
+
+    if ObjectId.is_valid(oid):
+        return
+    
+    
+    
+
+
 
 
 @app.task
