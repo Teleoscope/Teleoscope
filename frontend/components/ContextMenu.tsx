@@ -48,6 +48,7 @@ export default function ContextMenu(props) {
 
   const handleAddNode = (id, type) => {    
     dispatch(makeNode({
+      client: client,
       oid: id, 
       type: type,
       width: settings.default_document_width,

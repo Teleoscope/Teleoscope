@@ -11,12 +11,15 @@ import WindowDefinitions from "./WindowFolder/WindowDefinitions";
 import { makeNode } from "@/actions/windows";
 import { useSelector, useDispatch } from "react-redux";
 import { swrContext } from "@/util/swr";
+import { StompContext } from "./Stomp";
 
 export default function FABMenu(props) {
   const [open, setOpen] = React.useState(false);
   const dispatch = useDispatch();
   const session_id = useSelector((state) => state.activeSessionID.value);
   const swr = useContext(swrContext);
+  const client = useContext(StompContext);
+
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const windowState = useSelector((state) => state.windows);
   const wdefs = WindowDefinitions(windowState);
@@ -35,7 +38,8 @@ export default function FABMenu(props) {
 
   const get_color = () => session ? session.history[0].color : "#4E5CBC";
   const handleAddNode = (type) => {
-    dispatch(makeNode({ 
+    dispatch(makeNode({
+      client: client,
       oid: type, 
       type: type,
       width: settings.default_document_width,
