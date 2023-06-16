@@ -621,10 +621,6 @@ export class Stomp {
     return body;
   } 
 
-
-  
-
-
   /**
    * Add a node to the interface.
    */
@@ -642,7 +638,6 @@ export class Stomp {
     this.publish(body);
     return body;
   }
-
 
 
   /**

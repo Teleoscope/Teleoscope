@@ -8,7 +8,7 @@ const initialState = {
   edges: [],
   logical_clock: -1,
   color: "#D3D3D3",
-  windows: [],
+  windows: [], // try not to use this
   selection: {
     nodes: [],
     edges: [],

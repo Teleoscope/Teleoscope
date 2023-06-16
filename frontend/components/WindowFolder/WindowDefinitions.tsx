@@ -61,7 +61,7 @@ export default function WindowDefinitions(windowState) {
       tag:       "notes",
       type:      "Notes",
       apipath:   "notes",
-      nodetype:  WindowNode,      
+      nodetype:  WindowNode,
       title:     function () {return this.type},
       color:     () => color,
       icon:      () => <CommentIcon fontSize="inherit" sx={style} />,
