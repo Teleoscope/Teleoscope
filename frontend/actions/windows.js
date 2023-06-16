@@ -6,29 +6,52 @@ import { applyNodeChanges, applyEdgeChanges } from "reactflow";
 const initialState = {
   nodes: [],
   edges: [],
+  bookmarks: [],
   logical_clock: -1,
-  color: "#D3D3D3",
-  windows: [], // try not to use this
+  label: "default",
   selection: {
     nodes: [],
     edges: [],
   },
-  dragged: { id: "default", type: "Default" },
-  collision: true,
   settings: {
     default_document_width: 200,
     default_document_height: 34,
     defaultExpanded: true,
+    color: "#D3D3D3",
   },
+  // deprecated but in for legacy
+  windows: [],
 };
 
 export const Windows = createSlice({
   name: "windows",
   initialState: initialState,
   reducers: {
+    relabelSession: (state, action) => {
+      state.label = action.payload.label;
+    },
+    bookmark: (state, action) => {
+      // Redux Toolkit allows us to write "mutating" logic in reducers. It
+      // doesn't actually mutate the state because it uses the Immer library,
+      // which detects changes to a "draft state" and produces a brand new
+      // immutable state based off those changes
+      var id = action.payload; // value of documentid
+      var temp = [...state.bookmarks];
+      // add to workspace
+      var i = temp.indexOf(id);
+      if (i > -1) {
+        temp.splice(i, 1);
+      } else {
+        temp.push(id);
+      }
+      state.bookmarks = temp;
+    },
+    loadBookmarkedDocuments: (state, action) => {
+      state.bookmarks = action.payload;
+    },
     resetWorkspace: () => initialState,
     setColor: (state, action) => {
-      state.color = action.payload.color;
+      state.settings.color = action.payload.color;
     },
     setSettings: (state, action) => {
       state.settings = action.payload;
@@ -240,6 +263,9 @@ export const Windows = createSlice({
 });
 
 export const {
+  relabelSession,
+  bookmark,
+  loadBookmarkedDocuments,
   setColor,
   resetWorkspace,
   setSelection,

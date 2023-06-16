@@ -23,27 +23,12 @@ import { StompContext } from "@/components/Stomp";
 
 export default function TopBar(props) {
   const [cookies, setCookie] = useCookies(["userid"]);
-  const session_id = useSelector((state) => state.activeSessionID.value);
+  const settings = useSelector((state) => state.windows.settings);
   const userid = useSelector((state) => state.activeSessionID.userid);
   const dispatch = useDispatch();
   const client = useContext(StompContext);
   const swr = useContext(swrContext);
   const { user } = swr.useSWRAbstract("user", `users/${userid}`);
-
-  // useCallback(() => {
-  //   if (cookies.userid != -1) {
-  //     fetch(
-  //       `http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/users/${cookies.userid}`
-  //     )
-  //       .then((response) => response.json())
-  //       .then((user) => {
-  //         handleSignIn(user);
-  //       });
-  //   }
-  // }, [cookies.userid, userid]);
-
-  const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
-  const { users } = swr.useSWRAbstract("users", `users/`);
 
   const handleSignOut = () => {
     setCookie("userid", -1, {
@@ -64,24 +49,9 @@ export default function TopBar(props) {
     client.restart({userid: user._id, database: client.database})
   };
 
-  const get_color = () => (session ? session.history[0].color : "#4E5CBC");
-
-  const [open, toggleOpen] = React.useState(false);
-
   const AccountMenu = () => {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [openMenu, setOpenMenu] = React.useState(false);
-
-    const handleClickOpen = () => {
-      toggleOpen(true);
-    };
-
-    const handleClose = () => {
-      setDialogValue({
-        label: "",
-      });
-      toggleOpen(false);
-    };
 
     return (
       <Stack spacing={1} direction="row-reverse">
@@ -93,7 +63,7 @@ export default function TopBar(props) {
               setOpenMenu(true);
             }}
           >
-            <AccountCircle sx={{ color: get_color() }}></AccountCircle>
+            <AccountCircle sx={{ color: settings.color }}></AccountCircle>
           </IconButton>
 
           {props.compact ? (

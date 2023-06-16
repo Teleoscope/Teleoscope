@@ -1,16 +1,12 @@
 import { configureStore, getDefaultMiddleware } from "@reduxjs/toolkit";
 import ActiveSessionID from "@/actions/activeSessionID";
-import ActiveHistoryItem from "@/actions/activeHistoryItem";
-import Bookmark from "@/actions/bookmark";
 import Windows from "@/actions/windows";
-import Teleoscopes from "@/actions/teleoscopes";
-import { makeNode } from "@/actions/windows";
+import { makeNode, makeEdge, setColor, relabelSession } from "@/actions/windows";
 import crypto from 'crypto';
-import { ObjectId } from "bson";
 
 // Custom middleware function for makeNode action
 const makeNodeMiddleware = store => next => action => {
-  // Check if the specific action you're interested in has been dispatched
+  
   if (action.type === makeNode.type) {
     const uid = crypto.randomBytes(8).toString('hex');
 
@@ -33,14 +29,38 @@ const makeNodeMiddleware = store => next => action => {
     const updatedState = store.getState();
     
     action.payload.client.add_item(
-      modifiedAction.payload.session_id,
-      modifiedAction.payload.oid,      
+      updatedState.activeSessionID.value,
+      modifiedAction.payload.oid,
       modifiedAction.payload.uid,
       modifiedAction.payload.type,
       updatedState,
     );
     
     return result;
+  }
+
+  if (action.type === makeEdge.type) {
+    // Call the next middleware or the reducer with the modified action
+    const result = next(action);
+    const updatedState = store.getState();
+    action.payload.client.update_edges(
+      updatedState.activeSessionID.value,
+      action.payload.edges,
+      updatedState
+    )
+    return result
+  }
+  
+  if (action.type === setColor.type) {
+    const result = next(action);
+    action.payload.client.recolor_session(action.payload.color, action.payload.session_id);
+    return result
+  }
+
+  if (action.type === relabelSession.type) {
+    const result = next(action);
+    action.payload.client.relabel_session(action.payload.label, action.payload.session_id);
+    return result
   }
 
   // Call the next middleware or the reducer
@@ -51,10 +71,7 @@ const makeNodeMiddleware = store => next => action => {
 const store = configureStore({
   reducer: {
     activeSessionID: ActiveSessionID,
-    activeHistoryItem: ActiveHistoryItem,
-    bookmarker: Bookmark,
     windows: Windows,
-    teleoscopes: Teleoscopes,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

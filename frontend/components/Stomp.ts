@@ -203,11 +203,13 @@ export class Stomp {
   /**
    * Updates Teleoscopes
    */
-  update_edges(edges) {
+  update_edges(session_id: string, edges, state) {
     const body = {
       task: "update_edges",
       args: {
+        session_id,
         edges: edges,
+        state: state
       },
     };
     this.publish(body);

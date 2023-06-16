@@ -9,7 +9,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 
 // custom components
-import WindowDefinitions from "./WindowFolder/WindowDefinitions";
+import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import { useSelector } from "react-redux";
 
 // actions
@@ -20,14 +20,11 @@ import { swrContext } from "@/util/swr";
 
 // contexts
 import { StompContext } from "@/components/Stomp";
-import ColorPicker from "@/components/ColorPicker";
 import Typography from "@mui/material/Typography";
 
 export default function ContextMenu(props) {
 
   const client = useContext(StompContext);
-
-  const [colorPicker, setColorPicker] = React.useState(false);
 
   const dispatch = useAppDispatch();
 
@@ -41,7 +38,6 @@ export default function ContextMenu(props) {
   );
   const windowState = useSelector((state) => state.windows);
   const wdefs = WindowDefinitions(windowState);
-  const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const settings = useSelector((state) => state.windows.settings);
 
   // props.contextMenu.mouseX
@@ -78,42 +74,12 @@ export default function ContextMenu(props) {
     props.handleCloseContextMenu();
   };
 
-  const handleOpenColorPicker = () => {
-    setColorPicker(true);
-  };
-
   const handleClose = () => {
     props.handleCloseContextMenu();
-    setColorPicker(false);
-  };
-
-  const handleColorChange = (color) => {
-    client.recolor_session(color, session_id);
   };
 
   const handleStompPing = () => {
     client.ping();
-  }
-
-  if (colorPicker) {
-    return (
-      <Menu
-        sx={{ displayPrint: "none" }}
-        open={props.contextMenu !== null}
-        onClose={() => setColorPicker(false)}
-        anchorReference="anchorPosition"
-        anchorPosition={
-          props.contextMenu !== null
-            ? { top: props.contextMenu.mouseY, left: props.contextMenu.mouseX }
-            : undefined
-        }
-      >
-        <ColorPicker
-          defaultColor={session?.history[0].color}
-          onChange={handleColorChange}
-        ></ColorPicker>
-      </Menu>
-    );
   }
 
   return (

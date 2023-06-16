@@ -1,17 +1,17 @@
-//FABMenu.js
+//FABMenu.tsx
 import React, { useContext } from "react";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 
 // custom
-import WindowDefinitions from "./WindowFolder/WindowDefinitions";
+import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 
 // actions
 import { makeNode } from "@/actions/windows";
 import { useSelector, useDispatch } from "react-redux";
 import { swrContext } from "@/util/swr";
-import { StompContext } from "./Stomp";
+import { StompContext } from "@/components/Stomp";
 
 export default function FABMenu(props) {
   const [open, setOpen] = React.useState(false);
@@ -35,7 +35,6 @@ export default function FABMenu(props) {
     "Union",
   ]
 
-  const get_color = () => session ? session.history[0].color : "#4E5CBC";
   const handleAddNode = (type) => {
     dispatch(makeNode({
       client: client,
@@ -68,9 +67,9 @@ export default function FABMenu(props) {
       className="drag-handle"
       FabProps={{
         sx: {
-          bgcolor: get_color(),
+          bgcolor: settings.color,
           "&:hover": {
-            bgcolor: get_color(),
+            bgcolor: settings.color,
           },
         },
       }}
@@ -82,7 +81,7 @@ export default function FABMenu(props) {
     >
       {actions.map((action) => (
         <SpeedDialAction
-          sx={{ color: get_color() }}
+          sx={{ color: settings.color }}
           key={action}
           open={open}
           icon={wdefs[action].icon()}

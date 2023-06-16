@@ -12,11 +12,11 @@ import { StompContext } from "@/components/Stomp";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
 import ButtonActions from "@/components/ButtonActions";
 import GroupWorkIcon from "@mui/icons-material/GroupWork";
-import { loadBookmarkedDocuments } from "@/actions/bookmark";
+import { loadBookmarkedDocuments } from "@/actions/windows";
 
 export default function Bookmarks() {
   const bookmarks = useAppSelector(
-    (state: RootState) => state.bookmarker.value
+    (state: RootState) => state.windows.bookmarks
   );
 
   const MakeGroupFromBookmarks = () => {
@@ -26,7 +26,7 @@ export default function Bookmarks() {
       (state: RootState) => state.activeSessionID.value
     );
     const bookmarks = useAppSelector(
-      (state: RootState) => state.bookmarker.value
+      (state: RootState) => state.windows.bookmarks
     );
 
     const handleMakeGroupFromBookmarks = () => {
