@@ -14,12 +14,12 @@ export default function Cluster(props) {
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
       <DocumentList
-        data={data}
-        pagination={true}
-        showClusterIcon={false}
-        showOrientIcon={true}
-        showRemoveIcon={true}
-        cluster={cluster}
+        data            = {data}
+        pagination      = {true}
+        showClusterIcon = {false}
+        showOrientIcon  = {true}
+        showRemoveIcon  = {true}
+        cluster         = {cluster}
       ></DocumentList>
     </div>
   );

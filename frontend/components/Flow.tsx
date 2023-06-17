@@ -169,7 +169,7 @@ function Flow(props) {
       }
     }
 
-    if (node?.data?.type == "Document" || node?.data?.type == "Note") {
+    if (node?.data?.type == "Document" || node?.data?.type == "Note" || node?.data.type == "Group") {
       if (tempEdges.length == 1 && tempEdges[0] != null) {
         const connection = make_connection(tempEdges[0])
         create_edge(connection, edges)
@@ -222,12 +222,12 @@ function Flow(props) {
 
       dispatch(makeNode({
         client: client,
-        oid: id, 
-        type: type,
-        width: settings.default_document_width,
+        oid   : id,
+        type  : type,
+        width : settings.default_document_width,
         height: settings.default_document_height,
-        x: position.x, 
-        y: position.y
+        x     : position.x,
+        y     : position.y
       }));
     },
     [reactFlowInstance, settings]

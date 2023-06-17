@@ -1358,8 +1358,35 @@ def add_item(*args, **kwargs):
     oid  = kwargs["oid"]
     type = kwargs["type"]
 
-    if ObjectId.is_valid(oid):
-        return
+    match type:
+        case "Intersection":
+            docset = db.docsets.find_one({"_id" : oid})
+            if (docset):
+                return
+            obj = schemas.create_docset_object(type)
+            
+            with transaction_session.start_transaction():
+                res = db.docsets.insert_one(obj, session=transaction_session)
+                session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
+                history_item = session.history[0]
+
+                for node in history_item.nodes:
+                    if node.data.uid == uid:
+                        node.data["i"] = str(res.inserted_id)
+                        node.data["label"] = f"{res.inserted_id}%{uid}%{type}"
+                        node.id = f"{res.inserted_id}%{uid}%{type}"
+                
+                history_item["action"] = f"Create {type} node."
+                history_item["timestamp"] = datetime.datetime.utcnow()
+                history_item["userid"] = userid
+                history_item["logical_clock"] = history_item["logical_clock"] + 1
+
+                utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+                utils.commit_with_retry(transaction_session)
+
+
+    # if ObjectId.is_valid(oid):
+        # return
     
 
     
