@@ -15,7 +15,6 @@ import { minimizeWindow } from "@/actions/windows";
 
 export default function WindowTopBar({id, icon, title}) {
   const dispatch = useDispatch();
-  console.log("id", id)
   return (
     <Stack
       sx={{ cursor: "move" }}

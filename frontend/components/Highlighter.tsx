@@ -5,8 +5,8 @@ export default function Highlighter({ children }) {
     const nodes = useSelector((state) => state.windows.nodes);
     const query = nodes
         .filter(n => n.type == "Search" && n.data.query)
-        .map(n => n.data.query.replace("-", '').split(" "))
-        .reduce((acc, n) => acc.concat(n), [])
+        .map(n => n.data.query.replace("-", '').trim().split(" "))
+        .reduce((acc, n) => n.length > 0 ? acc.concat(n) : acc, [])
         
     const highlight = (text) => {
         if (query.length === 0) {
@@ -14,7 +14,8 @@ export default function Highlighter({ children }) {
             return text;
           }
       const regex = new RegExp(`\\b(${query.join('|')})\\b`, 'gi');
-      const parts = text.split(regex);
+      
+      const parts = text ? text.split(regex) : []
 
       return parts.map((part, index) => (
         regex.test(part) ? (
@@ -29,4 +30,4 @@ export default function Highlighter({ children }) {
       return (
         <>{highlight(children)}</>
       );
-};
+}

@@ -19,14 +19,15 @@ export default function Workspace(props) {
   
   if (cookies.userid != userid) {
     dispatch(setUserId(cookies.userid));
-
   }
 
   const options = {
     database: props.subdomain.split(".")[0],
     userid: userid,
   };
+
   const client = Stomp.getInstance(options);
+  
   const mySWR = new swr(props.subdomain.split(".")[0]);
 
   const { user } = mySWR.useSWRAbstract("user", `users/${userid}`);

@@ -45,23 +45,19 @@ export class Stomp {
    * @returns Stomp
    */
   public static getInstance(options): Stomp {
-    if (!Stomp.stomp) {
-      Stomp.stomp = new Stomp(options);
-      Stomp.stomp.client_init();
+    if (Stomp.stomp) {
+      const temp = Stomp.stomp.client;
+      temp.deactivate()
     }
-    return Stomp.stomp;
-  }
-
-  /**
-   * Restart the client.
-   * @returns Stomp
-   */
-  public async restart(options) {
-    // console.log(`Restarting client with options:`, options)
-    // await Stomp.stomp.client.deactivate();
+    
     Stomp.stomp = new Stomp(options);
     Stomp.stomp.client_init();
-    console.log(`Restarted client:`, Stomp.stomp)
+
+    return Stomp.stomp;
+  } 
+
+  public restart(options): Stomp {
+    return Stomp.getInstance(options)
   }
   
   public set userId(userid: string) {
@@ -108,6 +104,9 @@ export class Stomp {
     console.log(`Initializing Stomp client for user ${this.userId}`, this.client);
     
 
+    this.client.onDisconnect = (frame) => {
+      console.log("Disconnected");
+    }
   
 
     /**

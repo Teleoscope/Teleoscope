@@ -19,7 +19,7 @@ import { swrContext } from "@/util/swr";
 import { useCookies } from "react-cookie";
 
 // contexts
-import { StompContext } from "@/components/Stomp";
+import { Stomp, StompContext } from "@/components/Stomp";
 
 export default function TopBar(props) {
   const settings = useSelector((state) => state.windows.settings);
