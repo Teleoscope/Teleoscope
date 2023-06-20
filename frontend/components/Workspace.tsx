@@ -19,6 +19,7 @@ export default function Workspace(props) {
   
   if (cookies.userid != userid) {
     dispatch(setUserId(cookies.userid));
+
   }
 
   const options = {
