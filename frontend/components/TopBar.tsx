@@ -22,7 +22,6 @@ import { useCookies } from "react-cookie";
 import { StompContext } from "@/components/Stomp";
 
 export default function TopBar(props) {
-  const [cookies, setCookie] = useCookies(["userid"]);
   const settings = useSelector((state) => state.windows.settings);
   const userid = useSelector((state) => state.activeSessionID.userid);
   const dispatch = useDispatch();
@@ -30,14 +29,19 @@ export default function TopBar(props) {
   const swr = useContext(swrContext);
   const { user } = swr.useSWRAbstract("user", `users/${userid}`);
   
+  const inital_user_id = "000000000000000000000000";
+  const inital_session_id = "000000000000000000000000";
+  
+  const [cookies, setCookie] = useCookies(["userid"]);
+
   const handleSignOut = () => {
-    setCookie("userid", -1, {
+    setCookie("userid", inital_user_id, {
       path: "/",
     });
-    dispatch(sessionActivator(-1));
-    dispatch(setUserId(-1));
-    client.userId = -1;
-    dispatch(setDefault());
+    dispatch(sessionActivator(inital_session_id));
+    dispatch(setUserId(inital_user_id));
+    client.userId = inital_user_id;
+    dispatch(setDefault({}));
   };
 
   const handleSignIn = (user) => {
