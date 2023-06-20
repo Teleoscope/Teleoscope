@@ -88,7 +88,7 @@ class Clustering:
             # if projection already has clusters, delete them to prepare for new clusters
             self.clean_mongodb()
 
-            self.ping_stomp("MongoDB ready... 1/5")
+            # self.ping_stomp("MongoDB ready... 1/5")
             
             # get groups from mongodb
             group_ids = [ObjectId(str(id)) for id in self.group_id_strings]
@@ -98,7 +98,7 @@ class Clustering:
             self.learn_clusters()
 
             # iteratively add clusters (as groups) to database\
-            self.ping_stomp("Creating clusters... 4/5")
+            # self.ping_stomp("Creating clusters... 4/5")
             self.build_clusters()
 
             utils.commit_with_retry(self.transaction_session)
@@ -106,7 +106,7 @@ class Clustering:
         # report basic statistics
         total_time = time.time() - start
         
-        self.ping_stomp("Done... 5/5")
+        # self.ping_stomp("Done... 5/5")
         self.projection_action(total_time)
 
     def learn_clusters(self):
@@ -117,7 +117,7 @@ class Clustering:
         dm = self.document_ordering()
 
         logging.info("Running UMAP Reduction...")
-        self.ping_stomp("Running UMAP Reduction... 2/5")
+        # self.ping_stomp("Running UMAP Reduction... 2/5")
 
         umap_embeddings = umap.UMAP(
             verbose = True,         # for logging
@@ -130,7 +130,7 @@ class Clustering:
 
 
         logging.info("Clustering with HDBSCAN...")
-        self.ping_stomp("Clustering with HDBSCAN... 3/5')
+        # self.ping_stomp("Clustering with HDBSCAN... 3/5")
 
         self.hdbscan_labels = hdbscan.HDBSCAN(
             min_cluster_size = 15,              # num of neighbors needed to be considered a cluster (0~50, df=5)

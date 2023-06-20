@@ -7,7 +7,7 @@ import sys
 from dotenv import load_dotenv
 import os
 
-load_dotenv("../frontend/.env.local")
+load_dotenv("../../frontend/.env.local")
 os.getenv('')
 
 INSTANCE_IDS = [f'{os.getenv("INSTANCE_ID")}']
