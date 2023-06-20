@@ -156,7 +156,7 @@ export default function WindowDefinitions(windowState) {
       title: () => {
         return `Projections`;
       },
-      color: () => get_color(),
+      color: () => color,
       tag: "projectionpalette",
     },
     Search: {
@@ -246,7 +246,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <MdManageSearch fontSize="inherit" sx={sx} />,
+      icon:      (sx = style) => <MdManageSearch fontSize="inherit" />,
       component: (w, id, color) => <Filter id={id} windata={w} color={color} />,
     },
     Intersection: {
@@ -256,7 +256,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <CgPathIntersect fontSize="inherit" sx={sx} />,
+      icon:      (sx = style) => <CgPathIntersect fontSize="inherit" />,
       component: (w, id, color) => <Intersection id={id} windata={w} color={color} />,
     },
     Exclusion: {
@@ -266,7 +266,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <CgPathExclude fontSize="inherit" sx={sx} />,
+      icon:      (sx = style) => <CgPathExclude fontSize="inherit" />,
       component: (w, id, color) => <Exclusion id={id} windata={w} color={color} />,
     },
     Union: {
@@ -276,7 +276,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <CgPathIntersect fontSize="inherit" sx={sx} />,
+      icon:      (sx = style) => <CgPathIntersect fontSize="inherit" />,
       component: (w, id, color) => <Union id={id} windata={w} color={color} />,
     },
   };

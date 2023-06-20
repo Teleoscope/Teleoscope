@@ -44,7 +44,6 @@ export default function Account(props) {
       .then((response) => response.json())
       .then((user) => {
         if (user != null) {
-          console.log("user", user, url);
           props.handleSignIn(user);
         } else {
           props.client.register_account(value, "password", swr.database);

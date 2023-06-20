@@ -339,20 +339,19 @@ function Flow(props) {
       setTempEdges([closeEdge])
     }
 
-    const debouncedSave = useRef(
-      lodash.debounce((sessionId, bookmarks, nodes, edges) => {
+    const throttledSave = useRef(
+      lodash.throttle((client, sessionId, bookmarks, nodes, edges) => {
         client.save_UI_state(sessionId, bookmarks, nodes, edges);
       }, 5000)  // waits 5000 ms after the last call
     ).current;
     
     const handleOnClick = () => {
-      console.log("click")
-      debouncedSave(session_id, bookmarks, nodes, edges)
+      throttledSave(client, session_id, bookmarks, nodes, edges)
     }
 
     useEffect(() => {
       return () => {
-        debouncedSave.cancel();
+        throttledSave.cancel();
       };
     }, []);
 

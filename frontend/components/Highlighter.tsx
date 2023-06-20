@@ -9,11 +9,15 @@ export default function Highlighter({ children }) {
         .reduce((acc, n) => n.length > 0 ? acc.concat(n) : acc, [])
         
     const highlight = (text) => {
-        if (query.length === 0) {
-            // Return text without highlighting if query is empty
-            return text;
-          }
-      const regex = new RegExp(`\\b(${query.join('|')})\\b`, 'gi');
+      const regstring = `\\b(${query.join('|')})\\b`;
+      if (query.length === 0 || regstring == `/\b()\b/gi` || (query.length == 1 && query[0] == '') ) {
+        // Return text without highlighting if query is empty
+        return text;
+      }
+          
+
+    
+      const regex = new RegExp(regstring, 'gi');
       
       const parts = text ? text.split(regex) : []
 

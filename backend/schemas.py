@@ -164,7 +164,7 @@ def create_note_history_item(userid, label, action, content={}):
             "timestamp": datetime.datetime.utcnow()
     }
 
-def create_docset_object(type):
+def create_node(type):
     return {
         "creation_time": datetime.datetime.utcnow(),
         "type": type,
