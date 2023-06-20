@@ -8,10 +8,6 @@ import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import FolderIcon from "@mui/icons-material/Folder";
-import ButtonActions from "@/components/ButtonActions";
-import {
-  ClusterButtonAction,
-} from "@/components/GroupPaletteActions";
 import { StompContext } from "@/components/Stomp";
 import { IconButton, Tooltip } from "@mui/material";
 import {
@@ -27,7 +23,7 @@ import Divider from "@mui/material/Divider";
 
 export default function Clusters(props) {
   const p_id = props.data;
-  const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
+  const session_id = useAppSelector((state) => state.activeSessionID.value);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
 
   const swr = useContext(swrContext);
@@ -55,23 +51,24 @@ export default function Clusters(props) {
   };
 
   return (
-    <div style={{ overflow: "auto", height: "100%" }}>
     <>
-      <Stack
-        direction="row"
-        justifyContent="center"
-        alignItems="center"
-        style={{ margin: 0 }}
-      >
-        <Tooltip title="Cluster on connected groups...">
-        <IconButton onClick={runClusters}>
-          <Diversity2Icon fontSize="small" />
-        </IconButton>
-        </Tooltip>
-      </Stack>
-      <Divider />
-    </>
-      {clusters?.length !== 0 ? (
+      <>
+        <Stack
+          direction="row"
+          justifyContent="center"
+          alignItems="center"
+          style={{ margin: 0 }}
+        >
+          <Tooltip title="Cluster on exisitng groups...">
+          <IconButton onClick={runClusters}>
+            <Diversity2Icon fontSize="small" />
+          </IconButton>
+          </Tooltip>
+        </Stack>
+        <Divider />
+      </>
+      <div style={{ overflow: "auto", height: "100%" }}>
+        {clusters?.length !== 0 ? (
           <List>
             {clusters?.map((cluster) => {
               return (
@@ -101,10 +98,10 @@ export default function Clusters(props) {
               );
             })}
           </List>
-      ) : (
-        <p>Use button above to build clusters...</p>
-      )}
-
-    </div>
+        ) : (
+          <p>Use button above to build clusters...</p>
+        )}
+      </div>
+    </>
   );
 }

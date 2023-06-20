@@ -189,7 +189,7 @@ export default function Groups(props) {
           [SaveDocxAction, { fetchgroups, session }],
           [CopyJsonAction, { fetchgroups }],
           [CopyTextAction, { fetchgroups }],
-          [ClusterButtonAction, { runClusters }],
+          // [ClusterButtonAction, { runClusters }],
         ]}
       />
 
