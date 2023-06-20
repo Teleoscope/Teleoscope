@@ -32,6 +32,7 @@ export default function FABMenu(props) {
     "Projections",
     "Groups",
     "Notes",
+    "Filter",
     "Intersection",
     "Exclusion",
     "Union",
