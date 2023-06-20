@@ -141,7 +141,6 @@ export const Windows = createSlice({
         temp[index].data["query"] = action.payload.term;
         
       }
-      console.log("query", action.payload.term, action.payload.id, index, temp[index])
       state.nodes = temp;
     },
     updateWindows: (state, action) => {

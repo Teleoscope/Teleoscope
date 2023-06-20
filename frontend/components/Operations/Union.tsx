@@ -1,6 +1,6 @@
 // Union.tsx
 import React from "react";
 
-export default function Union() {
+export default function Union({id, windata, color}) {
     return <>Union</>
 }

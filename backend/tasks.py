@@ -1479,14 +1479,14 @@ def add_item(*args, **kwargs):
     type = kwargs["type"]
 
     match type:
-        case "Intersection":
-            docset = db.docsets.find_one({"_id" : oid})
+        case "Filter", "Intersection", "Exclusion", "Union":
+            docset = db.nodes.find_one({"_id" : oid})
             if (docset):
                 return
-            obj = schemas.create_docset_object(type)
+            obj = schemas.create_node(type)
             
             with transaction_session.start_transaction():
-                res = db.docsets.insert_one(obj, session=transaction_session)
+                res = db.nodes.insert_one(obj, session=transaction_session)
                 session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
                 history_item = session.history[0]
 

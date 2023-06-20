@@ -13,7 +13,7 @@ import { swrContext } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
 import { CopyJson, CopyText, SaveDocx } from "@/components/GroupActions";
 
-export default function Group({ id: winId, windata }) {
+export default function Group({ id: winId, windata, color }) {
   const id = winId.split("%")[0];
   const swr = useContext(swrContext);
   const { group } = windata.demo
