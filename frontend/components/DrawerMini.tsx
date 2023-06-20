@@ -16,8 +16,8 @@ import TopBar from "@/components/TopBar";
 import TeleoscopeLogo from "@/components/TeleoscopeLogo";
 
 const drawerWidth = 300;
-const breakpoint = 100;
-const minWidth = 75;
+const breakpoint  = 100;
+const minWidth    = 75;
 
 export default function PermanentDrawerRight() {
   const [width, setWidth] = useState(drawerWidth);

@@ -132,6 +132,8 @@ export default function Groups(props) {
   const swr = useContext(swrContext);
   const client = useContext(StompContext);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
+  const settings = useAppSelector((state) => state.windows.settings);
+
   const { groups } = props.demo
     ? props.demoGroups
     : swr.useSWRAbstract("groups", `sessions/${session_id}/groups`);
@@ -175,7 +177,9 @@ export default function Groups(props) {
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
-      <NewGroupForm color={props.color} keyChange={keyChange} />
+
+      <NewGroupForm color={settings.color} keyChange={keyChange} />
+
 
       <Divider />
 
@@ -199,7 +203,7 @@ export default function Groups(props) {
           client.recolor_group(color, id);
           setShowColorPicker(false);
         }}
-        color={props.color}
+        color={settings.color}
       />
     </div>
   );

@@ -30,6 +30,12 @@ export default function Teleoscopes(props) {
   const session_id = useAppSelector(
     (state: RootState) => state.activeSessionID.value
   );
+
+  const settings = useAppSelector(
+    (state: RootState) => state.windows.settings
+  );
+
+  
   const swr = useContext(swrContext);
   const { teleoscopes_raw } = swr.useSWRAbstract(
     "teleoscopes_raw",
@@ -79,7 +85,8 @@ export default function Teleoscopes(props) {
             InputLabelProps={{
               sx: {
                 "&.Mui-focused": {
-                  color: props.color,
+                  color: settings.color,
+
                 },
               },
             }}
@@ -87,7 +94,8 @@ export default function Teleoscopes(props) {
               width: "100%",
               margin: 1,
               // '& .MuiInput-underline:before': {borderBottomColor: props.color},
-              "& .MuiInput-underline:after": { borderBottomColor: props.color },
+              "& .MuiInput-underline:after": { borderBottomColor: settings.color },
+
               // '& .MuiInputLabel-root': {borderBottomColor: props.color},
             }}
           />

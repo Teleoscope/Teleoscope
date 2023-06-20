@@ -5,21 +5,29 @@ import { Stack, Box, Slider, Typography, Switch } from "@mui/material";
 
 // actions
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
-import { RootState } from "@/stores/store";
 
 // custom components
-import { setSettings } from "@/actions/windows";
+import { setSettings, setColor } from "@/actions/windows";
+import ColorPicker from "@/components/ColorPicker";
+import { StompContext } from "@/components/Stomp";
 
 export default function Settings(props) {
+  const client = useContext(StompContext);
+  const session_id = useAppSelector((state) => state.activeSessionID.value);
   const dispatch = useAppDispatch();
   const settings = useAppSelector((state) => state.windows.settings);
-  const color = useAppSelector((state) => state.windows.color);
+
 
   const handleChange = (event, value, setting) => {
     const temp = { ...settings };
     temp[setting] = value;
     dispatch(setSettings(temp));
   };
+
+  const handleColorChange = (color) => {
+    dispatch(setColor({client: client, color: color, session_id: session_id}))
+  };
+
 
   return (
     <Stack>
@@ -35,7 +43,8 @@ export default function Settings(props) {
         onChangeCommitted={(event, value) =>
           handleChange(event, value, "default_document_width")
         }
-        sx={{ color: color }}
+        sx={{ color: settings.color }}
+
       />
       <Typography>Dropped item height</Typography>
       <Slider
@@ -49,7 +58,7 @@ export default function Settings(props) {
         onChangeCommitted={(event, value) =>
           handleChange(event, value, "default_document_height")
         }
-        sx={{ color: color }}
+        sx={{ color: settings.color }}
       />
       <Typography>Automatically Expand Infopanel</Typography>
       <Switch
@@ -60,11 +69,16 @@ export default function Settings(props) {
         color="primary"
         sx={{
           "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-            backgroundColor: color,
+            backgroundColor: settings.color,
           },
-          ".MuiSwitch-colorPrimary": { color: color },
+          ".MuiSwitch-colorPrimary": { color: settings.color },
         }}
       />
+      <Typography>Automatically Expand Infopanel</Typography>
+      <ColorPicker
+        defaultColor={settings.color}
+        onChange={handleColorChange}
+      ></ColorPicker>
     </Stack>
   );
 }

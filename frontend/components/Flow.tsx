@@ -23,9 +23,8 @@ import "reactflow/dist/style.css";
 import styles from "@/styles/flow.module.css";
 import lodash from 'lodash';
 import { setNodes, setEdges, setColor } from "@/actions/windows";
-import { loadBookmarkedDocuments } from "@/actions/bookmark";
+import { loadBookmarkedDocuments } from "@/actions/windows";
 import WindowNode from "@/components/Nodes/WindowNode";
-
 
 
 function Flow(props) {
@@ -34,9 +33,7 @@ function Flow(props) {
   const nodeTypeDefs = Object.entries(wdefs).reduce((obj, [w, def]) => {
     obj[w] = def.nodetype;
     return obj;
-  }, {})  
-  
-  
+  }, {})
   
   const nodeTypes = useMemo(
     () => ({ 
@@ -61,7 +58,7 @@ function Flow(props) {
   const userid = useAppSelector((state) => state.activeSessionID.userid);
 
   const bookmarks = useAppSelector(
-    (state: RootState) => state.bookmarker.value
+    (state: RootState) => state.windows.bookmarks
   );
 
   const settings = useAppSelector((state) => state.windows.settings);
@@ -115,6 +112,8 @@ function Flow(props) {
     
         dispatch(
           setColor({
+            client: client,
+            session_id: session_id,
             color: session_history_item.color,
           })
         );
@@ -171,7 +170,7 @@ function Flow(props) {
       }
     }
 
-    if (node?.data?.type == "Document" || node?.data?.type == "Note") {
+    if (node?.data?.type == "Document" || node?.data?.type == "Note" || node?.data.type == "Group") {
       if (tempEdges.length == 1 && tempEdges[0] != null) {
         const connection = make_connection(tempEdges[0])
         create_edge(connection, edges)
@@ -224,12 +223,12 @@ function Flow(props) {
 
       dispatch(makeNode({
         client: client,
-        oid: id, 
-        type: type,
-        width: settings.default_document_width,
+        oid   : id,
+        type  : type,
+        width : settings.default_document_width,
         height: settings.default_document_height,
-        x: position.x, 
-        y: position.y
+        x     : position.x,
+        y     : position.y
       }));
     },
     [reactFlowInstance, settings]
@@ -279,10 +278,10 @@ function Flow(props) {
 
   const create_edge = (connection, curredges) => {
     const newEdges = addEdge(connection, []);
-    dispatch(makeEdge({ edges: newEdges }));
-
-    const alledges = addEdge(connection, curredges);
-    client.update_edges(alledges);
+    dispatch(makeEdge({
+      client: client,
+      edges: newEdges
+    }));
   }
 
   const onConnect = useCallback((connection, curredges) => {
@@ -339,7 +338,7 @@ function Flow(props) {
 
 
   const onNodeDrag =  useCallback((evt, node) => {
-    if (node?.data.type == "Document" || node?.data.type == "Note") {
+    if (node?.data.type == "Document" || node?.data.type == "Note" || node?.data.type == "Group") {
       handleTarget(node);
       handleTempEdge(evt, node);  
     }

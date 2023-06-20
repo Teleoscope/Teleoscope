@@ -122,3 +122,17 @@ def create_note_history_item(userid, label, action, content={}):
             "content": content,
             "timestamp": datetime.datetime.utcnow()
     }
+
+def create_docset_object(type):
+    return {
+        "creation_time": datetime.datetime.utcnow(),
+        "type": type,
+        "status": "loading",
+        "matrix": None,
+        "columns": [],
+        "doclists": [], 
+        "edges": {
+            "source": [],
+            "control": [],
+        }
+    }

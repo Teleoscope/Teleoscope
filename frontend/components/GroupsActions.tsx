@@ -6,15 +6,18 @@ import {
   CopyAll as CopyAllIcon,
   Diversity2 as Diversity2Icon,
 } from "@mui/icons-material";
+import { useSelector } from "react-redux";
+
 
 // Button Action Functions
 export const SaveDocxAction = (props) => {
   const { fetchgroups, session } = props;
+  const label = useSelector((state) => state.windows.label);
   const createDocx = async () => {
     const groups = await fetchgroups();
     MakeDocx({
       tag: "All Groups for Session",
-      title: session.history[0].label,
+      title: label,
       groups: groups,
     });
   };
