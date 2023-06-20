@@ -26,7 +26,9 @@ export default function Workspace(props) {
     database: props.subdomain.split(".")[0],
     userid: userid,
   };
+
   const client = Stomp.getInstance(options);
+  
   const mySWR = new swr(props.subdomain.split(".")[0]);
 
   const { user } = mySWR.useSWRAbstract("user", `users/${userid}`);

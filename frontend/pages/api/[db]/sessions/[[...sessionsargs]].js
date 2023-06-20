@@ -97,7 +97,7 @@ export default async (req, res) => {
     session = await db
       .collection("sessions")
       .findOne({ _id: objid }, { projection: { history: { $slice: 1 } } });
-    var session_projections = session?.history[0].projections.map((p_id) => {
+    var session_projections = session?.history[0].projections?.map((p_id) => {
       return p_id.toString();
     });
     var filtered_projections = projections.filter((proj) => {

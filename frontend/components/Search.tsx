@@ -16,7 +16,7 @@ import { swrContext } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
 
 export default function Search(props) {
-  const [query, setQuery] = useState(" ");
+  const [query, setQuery] = useState(props.windata?.query);
   const swr = useContext(swrContext);
   const { documents, documents_loading } = swr.useSWRAbstract(
     "documents",
@@ -56,7 +56,7 @@ export default function Search(props) {
         />
         <TextField
           fullWidth
-          placeholder="Search..."
+          placeholder={query ? query : "Search..."}
           sx={{
             // '& .MuiInput-underline:before': { borderBottomColor: props.color },
             "& .MuiInput-underline:after": { borderBottomColor: props.color },
