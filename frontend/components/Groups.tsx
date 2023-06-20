@@ -177,7 +177,9 @@ export default function Groups(props) {
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
+
       <NewGroupForm color={settings.color} keyChange={keyChange} />
+
 
       <Divider />
 

@@ -17,12 +17,12 @@ export default function Settings(props) {
   const dispatch = useAppDispatch();
   const settings = useAppSelector((state) => state.windows.settings);
 
+
   const handleChange = (event, value, setting) => {
     const temp = { ...settings };
     temp[setting] = value;
     dispatch(setSettings(temp));
   };
-
 
   const handleColorChange = (color) => {
     dispatch(setColor({client: client, color: color, session_id: session_id}))
@@ -44,6 +44,7 @@ export default function Settings(props) {
           handleChange(event, value, "default_document_width")
         }
         sx={{ color: settings.color }}
+
       />
       <Typography>Dropped item height</Typography>
       <Slider

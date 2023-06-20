@@ -86,6 +86,7 @@ export default function Teleoscopes(props) {
               sx: {
                 "&.Mui-focused": {
                   color: settings.color,
+
                 },
               },
             }}
@@ -94,6 +95,7 @@ export default function Teleoscopes(props) {
               margin: 1,
               // '& .MuiInput-underline:before': {borderBottomColor: props.color},
               "& .MuiInput-underline:after": { borderBottomColor: settings.color },
+
               // '& .MuiInputLabel-root': {borderBottomColor: props.color},
             }}
           />

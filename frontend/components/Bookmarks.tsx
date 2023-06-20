@@ -17,17 +17,14 @@ import { loadBookmarkedDocuments } from "@/actions/windows";
 export default function Bookmarks() {
   const bookmarks = useAppSelector(
     (state: RootState) => state.windows.bookmarks
+
   );
 
   const MakeGroupFromBookmarks = () => {
     const dispatch = useAppDispatch();
     const client = useContext(StompContext);
-    const session_id = useAppSelector(
-      (state: RootState) => state.activeSessionID.value
-    );
-    const bookmarks = useAppSelector(
-      (state: RootState) => state.windows.bookmarks
-    );
+    const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
+    const bookmarks = useAppSelector((state: RootState) => state.windows.bookmarks);
 
     const handleMakeGroupFromBookmarks = () => {
       client.add_group(

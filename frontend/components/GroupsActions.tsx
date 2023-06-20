@@ -8,11 +8,11 @@ import {
 } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 
+
 // Button Action Functions
 export const SaveDocxAction = (props) => {
   const { fetchgroups, session } = props;
   const label = useSelector((state) => state.windows.label);
-
   const createDocx = async () => {
     const groups = await fetchgroups();
     MakeDocx({

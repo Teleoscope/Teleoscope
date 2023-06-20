@@ -1,4 +1,5 @@
 //FABMenu.tsx
+
 import React, { useContext } from "react";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
@@ -19,6 +20,7 @@ export default function FABMenu(props) {
   const session_id = useSelector((state) => state.activeSessionID.value);
   const swr = useContext(swrContext);
   const client = useContext(StompContext);
+  
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const windowState = useSelector((state) => state.windows);
   const wdefs = WindowDefinitions(windowState);
@@ -70,6 +72,7 @@ export default function FABMenu(props) {
           bgcolor: settings.color,
           "&:hover": {
             bgcolor: settings.color,
+
           },
         },
       }}

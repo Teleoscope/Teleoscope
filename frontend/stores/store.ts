@@ -6,7 +6,6 @@ import crypto from 'crypto';
 
 // Custom middleware function for makeNode action
 const makeNodeMiddleware = store => next => action => {
-  
   if (action.type === makeNode.type) {
     const uid = crypto.randomBytes(8).toString('hex');
 

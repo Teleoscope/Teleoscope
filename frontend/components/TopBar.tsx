@@ -29,7 +29,7 @@ export default function TopBar(props) {
   const client = useContext(StompContext);
   const swr = useContext(swrContext);
   const { user } = swr.useSWRAbstract("user", `users/${userid}`);
-
+  
   const handleSignOut = () => {
     setCookie("userid", -1, {
       path: "/",
@@ -64,6 +64,7 @@ export default function TopBar(props) {
             }}
           >
             <AccountCircle sx={{ color: settings.color }}></AccountCircle>
+
           </IconButton>
 
           {props.compact ? (

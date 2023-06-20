@@ -26,13 +26,14 @@ import { setNodes, setEdges, setColor } from "@/actions/windows";
 import { loadBookmarkedDocuments } from "@/actions/windows";
 import WindowNode from "@/components/Nodes/WindowNode";
 
+
 function Flow(props) {
   const windowState = useAppSelector((state) => state.windows);
   const wdefs = WindowDefinitions(windowState);
   const nodeTypeDefs = Object.entries(wdefs).reduce((obj, [w, def]) => {
     obj[w] = def.nodetype;
     return obj;
-  }, {})  
+  }, {})
   
   const nodeTypes = useMemo(
     () => ({ 

@@ -34,6 +34,7 @@ export default function Workflows(props) {
   const dispatch = useAppDispatch();
   const swr = useContext(swrContext);
   const color = useAppSelector((state) => state.windows.settings.color);
+
   const userid = useAppSelector((state) => state.activeSessionID.userid);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const { sessions } = swr.useSWRAbstract(

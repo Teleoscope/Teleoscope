@@ -25,7 +25,6 @@ import Typography from "@mui/material/Typography";
 export default function ContextMenu(props) {
 
   const client = useContext(StompContext);
-
   const dispatch = useAppDispatch();
 
   const session_id = useAppSelector(
@@ -39,8 +38,6 @@ export default function ContextMenu(props) {
   const windowState = useSelector((state) => state.windows);
   const wdefs = WindowDefinitions(windowState);
   const settings = useSelector((state) => state.windows.settings);
-
-  // props.contextMenu.mouseX
 
   const handleAddNode = (id, type) => {    
     dispatch(makeNode({
@@ -76,6 +73,7 @@ export default function ContextMenu(props) {
 
   const handleClose = () => {
     props.handleCloseContextMenu();
+
   };
 
   const handleStompPing = () => {
