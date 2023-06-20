@@ -7,7 +7,7 @@ import { Stack } from "@mui/material";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 
 export default function TeleoscopeLogo(props) {
-  const color = useAppSelector((state) => state.windows.color);
+  const color = useAppSelector((state) => state.windows.settings.color);
 
   return (
     <Stack direction={props.compact ? "column" : "row"} alignItems="center">

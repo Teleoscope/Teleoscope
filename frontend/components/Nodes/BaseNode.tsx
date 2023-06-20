@@ -26,7 +26,7 @@ function BaseNode({ data, id, selected }) {
           minWidth={windata.minWidth}
           minHeight={windata.minHeight}
         />
-        <WindowFactory size={size} windata={windata} />
+        <WindowFactory size={size} windata={windata} id={id} />
       </>
   );
 }

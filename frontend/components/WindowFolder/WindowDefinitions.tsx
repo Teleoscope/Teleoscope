@@ -41,7 +41,7 @@ import Union from "@/components/Operations/Union";
 import { PreprocessTitle } from "@/util/Preprocessers";
 
 export default function WindowDefinitions(windowState) {
-  const color = windowState.color;
+  const color = windowState.settings.color;
 
   const style = [
     { color: color },

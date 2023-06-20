@@ -38,6 +38,9 @@ export default function WindowFactory(props) {
   const type = w.type;
   const oid = w.data?.id ? w.data.id : w.i.split("%")[0];
 
+  const uid = w.data?.uid ? w.data.uid : "000000"
+  const id = props?.id ? props.id : `${oid}%${uid}%${type}`;
+
   const key = keymap[type];
   const swr = useContext(swrContext);
   const { data } = w?.demo
@@ -45,15 +48,16 @@ export default function WindowFactory(props) {
     : swr.useSWRAbstract("data", `${key}/${oid}`);
 
   if (w.type == "FABMenu") {
-    return <div>{wdefs[w.type].component(w, w.label, "#FFFFFF")}</div>;
+    return <div>{wdefs[w.type].component(w, id, "#FFFFFF")}</div>;
+
   }
 
   return (
     <Window
       {...props}
-      id={w.label}
+      id={id}
       icon={wdefs[w.type].icon(data)}
-      inner={wdefs[w.type].component(w, w.label, wdefs[w.type].color(data))}
+      inner={wdefs[w.type].component(w, id, wdefs[w.type].color(data))}
       showWindow={wdefs[w.type].showWindow || w.showWindow}
       data={data}
       title={wdefs[w.type].title(data)}

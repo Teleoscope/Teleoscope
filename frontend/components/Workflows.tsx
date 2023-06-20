@@ -14,7 +14,7 @@ import PeopleIcon from "@mui/icons-material/People";
 
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { sessionActivator } from "@/actions/activeSessionID";
-import { resetWorkspace } from "@/actions/windows";
+import { resetWorkspace, relabelSession } from "@/actions/windows";
 
 import EditableText from "@/components/EditableText";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
@@ -33,7 +33,8 @@ export default function Workflows(props) {
 
   const dispatch = useAppDispatch();
   const swr = useContext(swrContext);
-  const color = useAppSelector((state) => state.windows.color);
+  const color = useAppSelector((state) => state.windows.settings.color);
+
   const userid = useAppSelector((state) => state.activeSessionID.userid);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const { sessions } = swr.useSWRAbstract(
@@ -72,12 +73,12 @@ export default function Workflows(props) {
             onKeyDown={keyChange}
             onChange={(e) => setValue(e.target.value)}
             InputLabelProps={{
-              sx: { "&.Mui-focused": { color: props.color } },
+              sx: { "&.Mui-focused": { color: color } },
             }}
             sx={{
               width: "100%",
               margin: 1,
-              "& .MuiInput-underline:after": { borderBottomColor: props.color },
+              "& .MuiInput-underline:after": { borderBottomColor: color },
             }}
           />
         </Stack>
@@ -90,7 +91,7 @@ export default function Workflows(props) {
                 key={session._id}
                 sx={{
                   border:
-                    session._id === session_id ? `1px solid ${color}` : "",
+                    session._id === session_id ? `1px solid ${session.history[0].color}` : "",
                   "&:hover": {},
                 }}
               >
@@ -123,7 +124,7 @@ export default function Workflows(props) {
                     <EditableText
                       initialValue={session.history[0].label}
                       callback={(label) =>
-                        client.relabel_session(label, session._id)
+                        dispatch(relabelSession({client: client, session_id: session_id, label: label}))
                       }
                     />
                   </Stack>
@@ -139,7 +140,7 @@ export default function Workflows(props) {
                           </IconButton>
                           <Menu {...bindMenu(popupState)}>
                             <CompactPicker
-                              color={session.history[0].color}
+                              color={color}
                               onChangeComplete={(color) =>
                                 handleColorChange(color, session._id)
                               }
