@@ -25,10 +25,11 @@ export default function WindowFactory(props) {
     teleoscope: "teleoscopes",
     teleoscopes: "teleoscopes",
     teleoscopepalette: "teleoscopes",
+    projection: "projections",
+    projectionpalette: "projectionpalette",
     search: "search",
     groups: "groups",
-    clusters: "clusters",
-    cluster: "cluster",
+    cluster: "clusters",
     operation: "operation",
     intersection: "intersection",
     ...paths

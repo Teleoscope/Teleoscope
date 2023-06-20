@@ -88,6 +88,27 @@ export default async (req, res) => {
       }
     });
     ret = filtered_teleoscopes;
+  } else if (sessionsargs.length === 2 && sessionsargs[1] === "projections") {
+    // returns projections
+    var projections = await db
+      .collection("projections")
+      .find({}, { projection: { history: { $slice: 1 } } })
+      .toArray();
+    session = await db
+      .collection("sessions")
+      .findOne({ _id: objid }, { projection: { history: { $slice: 1 } } });
+    var session_projections = session?.history[0].projections.map((p_id) => {
+      return p_id.toString();
+    });
+    var filtered_projections = projections.filter((proj) => {
+      var p = proj._id.toString();
+      if (session_projections?.includes(p)) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+    ret = filtered_projections;
   } else if (sessionsargs.length === 2 && sessionsargs[1] === "notes") {
     // returns notes
     var notes = await db

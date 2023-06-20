@@ -1,5 +1,5 @@
 # boilerplate
-import tqdm, numpy as np, pickle
+import tqdm, numpy as np, pickle, auth
 import matplotlib.pyplot as plt
 import logging, pickle
 from bson.objectid import ObjectId
@@ -8,6 +8,8 @@ from pathlib import Path
 import time
 import gridfs
 import datetime
+import schemas
+import pika
 
 # ml dependencies
 import umap
@@ -26,7 +28,7 @@ class Clustering:
     by the limit param plus the documents in the provided human clusters/groups.
     """
 
-    def __init__(self, user_id, group_id_strings, session_id, db, limit=10000, topic_label_length=2):
+    def __init__(self, user_id, group_id_strings, projection_id, session_id, db, limit=10000, topic_label_length=2):
         """Initializes the instance 
 
         Args:
@@ -34,6 +36,8 @@ class Clustering:
                 An ObjectID representing the user who made the API call
             group_id_strings:
                 A list of strings representing the ObjectID of each group to be clustered
+            projection_id:
+                A string that represents the ObjectID of the current projection
             session_id:
                 A string that represents the ObjectID of the current session
             db: 
@@ -45,8 +49,10 @@ class Clustering:
         """
 
         self.dbstring = db
+        self.transaction_session = None
         self.user_id = user_id
         self.group_id_strings = group_id_strings
+        self.projection_id = projection_id
         self.session_id = session_id
         self.limit = limit
         self.topic_label_length = topic_label_length
@@ -60,8 +66,14 @@ class Clustering:
         self.document_ids = None    
         self.hdbscan_labels = None
 
-        # TODO - can we set this up as a transaction session so it dies if we dont succeed
-        self.clustering_task()
+    def ping_stomp(self, message):
+
+        credentials = pika.PlainCredentials(auth.rabbitmq["username"], auth.rabbitmq["password"])
+        parameters = pika.ConnectionParameters(host='localhost', port=5672, virtual_host='teleoscope', credentials=credentials)
+        connection = pika.BlockingConnection(parameters)
+        channel = connection.channel()
+        queue_name = str(self.user_id)
+        channel.basic_publish(exchange='', routing_key=queue_name, body=message)
 
     def clustering_task(self):
         """Cluster documents using user-defined groups.
@@ -69,22 +81,33 @@ class Clustering:
 
         start = time.time()
 
-        # if user already has clusters, delete them to prepare for new clusters
-        self.clean_mongodb()
-        
-        # get groups from mongodb
-        group_ids = [ObjectId(str(id)) for id in self.group_id_strings]
-        self.groups = list(self.db.groups.find({"_id":{"$in" : group_ids}}))
+        self.transaction_session, self.db = utils.create_transaction_session(db=self.dbstring)
 
-        # build distance matrix, run dimensionality reduction, run clustering
-        self.learn_clusters()
+        with self.transaction_session.start_transaction():
 
-        # iteratively add clusters (as groups) to database
-        self.build_clusters()
+            # if projection already has clusters, delete them to prepare for new clusters
+            self.clean_mongodb()
+
+            self.ping_stomp("MongoDB ready... 1/5")
+            
+            # get groups from mongodb
+            group_ids = [ObjectId(str(id)) for id in self.group_id_strings]
+            self.groups = list(self.db.groups.find({"_id":{"$in" : group_ids}}))
+
+            # build distance matrix, run dimensionality reduction, run clustering
+            self.learn_clusters()
+
+            # iteratively add clusters (as groups) to database\
+            self.ping_stomp("Creating clusters... 4/5")
+            self.build_clusters()
+
+            utils.commit_with_retry(self.transaction_session)
 
         # report basic statistics
         total_time = time.time() - start
-        self.session_action(total_time)
+        
+        self.ping_stomp("Done... 5/5")
+        self.projection_action(total_time)
 
     def learn_clusters(self):
         """ Learn cluster labels: build distance matrix, run dimensionality reduction, run clustering
@@ -94,24 +117,27 @@ class Clustering:
         dm = self.document_ordering()
 
         logging.info("Running UMAP Reduction...")
+        self.ping_stomp("Running UMAP Reduction... 2/5")
+
         umap_embeddings = umap.UMAP(
             verbose = True,         # for logging
             metric = "precomputed", # use distance matrix
-            n_components = 30,      # reduce to n_components dimensions (2~100)
+            n_components = 10,      # reduce to n_components dimensions (2~100)
             # n_neighbors = 10,     # local (small n ~2) vs. global (large n ~100) structure 
             min_dist = 1e-5,        # minimum distance apart that points are allowed (0.0~0.99)
         ).fit_transform(dm)
         logging.info(f"Shape after reduction: {umap_embeddings.shape}")
-        
+
+
         logging.info("Clustering with HDBSCAN...")
+        self.ping_stomp("Clustering with HDBSCAN... 3/5')
+
         self.hdbscan_labels = hdbscan.HDBSCAN(
-            min_cluster_size = 10,              # num of neighbors needed to be considered a cluster (0~50, df=5)
+            min_cluster_size = 15,              # num of neighbors needed to be considered a cluster (0~50, df=5)
             # min_samples = 5,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
             cluster_selection_epsilon = 0.2,    # have large clusters in dense regions while leaving smaller clusters small
                                                 # merge clusters if inter cluster distance is less than thres (df=0)
         ).fit_predict(umap_embeddings)
-        
-        logging.info(f'Num Clusters = {max(self.hdbscan_labels)+1} + outliers')
 
     def build_clusters(self):
         """ Iteratively builds groups in mongoDB relative to clustering
@@ -149,16 +175,7 @@ class Clustering:
 
             logging.info(f'There are {len(documents)} documents for Machine Cluster "{_label}".')
             
-            tasks.add_group(
-                userid=self.user_id,
-                label=_label,
-                color=_color,
-                session_id=self.session_id, 
-                human=False, 
-                included_documents=documents, 
-                description=self.description,
-                db=self.dbstring
-            )
+            self.add_cluster(documents, _label, _color)
         
     def get_given_labels(self):
         """ Build the given_labels dictionary
@@ -437,86 +454,52 @@ class Clustering:
     def clean_mongodb(self):
         """Cleans up MongoDB objects
 
-        Check to see if user has already built clusters.
-        If so, need to delete clusters and associated teleoscope items
+        Check to see if the projection has already built clusters.
+        If so, need to delete clusters 
         """
 
         db = self.db
-        session_id = ObjectId(str(self.session_id))
+        projection_id = ObjectId(str(self.projection_id))
 
         # check to see user has any clusters
         if db.clusters.count_documents(
-            {"session" : session_id}, 
+            {"projection" : projection_id}, 
             limit=1,
         ):
             
             logging.info(f'Clusters for user exists. Delete all.')
 
             # get session's clustering data
-            session = db.sessions.find_one({'_id': session_id})
-            history_item = session["history"][0]
-            
-            # # teleoscopes no longer auto generated. 
-            # teleoscopes = history_item["teleoscopes"] 
-            # namespace = "teleoscopes" # teleoscopes.chunks, teleoscopes.files
-            # fs = gridfs.GridFS(db, namespace)
+            projection = db.projections.find_one({'_id': projection_id})
+            history_item = projection["history"][0]
 
             # cursor to find all existing clusters
             cursor = db.clusters.find(
-                {"session" : session_id}, 
+                {"projection" : projection_id}, 
                 projection = {'_id': 1, 'teleoscope': 1},
             )    
 
             # tidy up all existing clusters
             for cluster in tqdm.tqdm(cursor):
 
-                # NOTE - teleoscopes are no longer auto generated per group. much of below is now redundant. 
-                #        leaving for now b/c the trick below to remove teleoscope.chunks & .files was kinda tricky
-
-                # # cluster teleoscope
-                # teleo_oid = cluster["teleoscope"]
-                # teleo = db.teleoscopes.find_one({"_id": teleo_oid}) 
-
-                # # remove cluster teleoscope from session's teleoscope list
-                # teleoscopes.remove(teleo_oid)
-
-                # # associated teleoscope.files
-                # teleo_file = teleo["history"][0]["ranked_document_ids"]
-
-                # # delete telescopes.chunks and teleoscopes.files
-                # fs.delete(teleo_file)
-
-                # # delete teleoscope 
-                # db.teleoscopes.delete_one({"_id": teleo_oid})
-
                 # delete cluster
                 db.clusters.delete_one({"_id": cluster["_id"]})
             
-            # reset session's association to previous clustering
+            # reset projections's association to previous clustering
             history_item["clusters"] = []
-
-            # history_item["teleoscopes"] = teleoscopes # teleoscopes no longer auto generated
+            history_item["source_groups"] = []
+            history_item["action"] = "reset clusters"
             
-            db.sessions.update_one(
-                {"_id": session_id}, 
-                {
-                    '$push': {
-                        "history": {
-                            '$each': [history_item],
-                            '$position': 0
-                        }
-                    }
-                },
-            )  
+            utils.push_history(self.db, self.transaction_session, "projections", projection_id, history_item)
         
         logging.info(f'No clusters for user. Ready to populate.')
 
         pass
 
-    def session_action(self, total_time):
+    def projection_action(self, total_time):
         """Clustering action history update
 
-        Push an update to the session object to document the state of clustering 
+        Push an update to the projection object to document the state of clustering 
 
         Args:
             total_time:
@@ -524,11 +507,11 @@ class Clustering:
         """
 
         logging.info(f'Clustering action history update.')
-        transaction_session, db = utils.create_transaction_session(db=self.dbstring)
-        session_id = ObjectId(str(self.session_id))
-        session = db.sessions.find_one({"_id": session_id}, {"history": { "$slice": 1}})  
 
-        history_item = session["history"][0]
+        projection_id = ObjectId(str(self.projection_id))
+        projection = self.db.projections.find_one({"_id": projection_id}, {"history": { "$slice": 1}})  
+
+        history_item = projection["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
         
         num_clusters = max(self.hdbscan_labels) + 2 # largest group label + outlier group (-1) + first group (0)
@@ -536,26 +519,46 @@ class Clustering:
         history_item["action"] = copy
 
         # record the groups and their associated documents used for clustering
-        history_item["clustered_groups"] = []
+        history_item["source_groups"] = []
         for group in self.groups:
 
             # documents used for clustering are denoting using the length of the groups history item.
             # the index of said documents are at [current history length - denoted history length]
-            history_item["clustered_groups"].append({
+            history_item["source_groups"].append({
                 "group_id": group["_id"],
                 "position": len(group["history"])
             })
-
-        with transaction_session.start_transaction():
-            db.sessions.update_one({"_id": session_id},
-                {
-                    '$push': {
-                        "history": {
-                            "$each": [history_item],
-                            "$position": 0
-                        }
-                    }
-                }, session=transaction_session)
-            utils.commit_with_retry(transaction_session)
+        
+        utils.push_history(self.db, self.transaction_session, "projections", projection_id, history_item)
 
         return 200 
+    
+    def add_cluster(self, documents, label, color):
+        """
+        Adds a cluster to projection
+        """
+        projection_id = ObjectId(str(self.projection_id))
+
+        obj = schemas.create_cluster_object(
+            color, 
+            projection_id, 
+            documents, 
+            label, 
+            self.user_id, 
+            self.description)
+            
+        cluster_id = self.db.clusters.insert_one(obj, session=self.transaction_session)
+
+        projection = self.db.projections.find_one({'_id': projection_id}, session=self.transaction_session)
+
+        clusters = projection["history"][0]["clusters"]
+        clusters.append(cluster_id.inserted_id)
+
+        history_item = projection["history"][0]
+        history_item["timestamp"] = datetime.datetime.utcnow()
+        history_item["clusters"] = clusters
+        history_item["action"] = f"Initialize new cluster: {label}"
+        history_item["user"] = self.user_id
+
+        utils.push_history(self.db, self.transaction_session, "projections", projection_id, history_item)
+        

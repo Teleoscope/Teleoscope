@@ -576,11 +576,12 @@ export class Stomp {
   /**
    * Create MLGroups using the UMAP and HBDSCAN with the given groups' documents as seeds.
    */
-  cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {
+  cluster_by_groups(group_id_strings: Array<string>, projection_id: string, session_oid: string) {
     const body = {
       task: "cluster_by_groups",
       args: {
         group_id_strings: group_id_strings,
+        projection_id: projection_id,
         session_oid: session_oid,
       },
     };
@@ -660,4 +661,53 @@ export class Stomp {
 
 
 
+
+  /**
+   * Requests to create a projection object in MongoDB.
+   */
+  initialize_projection(session_id: string, label: string) {
+    const body = {
+      task: "initialize_projection",
+      args: {
+        session_id: session_id,
+        label: label,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+  /**
+   * Deletes a projection
+   *
+   * @param projection_id
+   * @param session_id
+   * @returns
+   */
+  remove_projection(projection_id: string, session_id: string) {
+    const body = {
+      task: "remove_projection",
+      args: {
+        projection_id: projection_id,
+        session_id: session_id,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+  /**
+  * Relabel the projection.
+  */
+  relabel_projection(label: string, projection_id: string) {
+    const body = {
+      task: "relabel_projection",
+      args: {
+        label: label,
+        projection_id: projection_id,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
 }

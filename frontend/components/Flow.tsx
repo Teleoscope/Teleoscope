@@ -298,7 +298,7 @@ function Flow(props) {
     const X_MIN_DISTANCE = 50;
     const Y_MIN_DISTANCE = 100;
     
-    const closestNode = nodes.filter(n => n.data.type == "Teleoscope").reduce(
+    const closestNode = nodes.filter(n => n.data.type == "Teleoscope" || n.data.type === "Projection").reduce(
       (res, n) => {
         if (n.id !== node.id) {
           edges.forEach((e) => {

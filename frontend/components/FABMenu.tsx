@@ -28,9 +28,9 @@ export default function FABMenu(props) {
   
   const actions = [
     "Search",
-    "Teleoscopes" ,
+    "Teleoscopes",
+    "Projections",
     "Groups",
-    "Clusters",
     "Notes",
     "Intersection",
     "Exclusion",

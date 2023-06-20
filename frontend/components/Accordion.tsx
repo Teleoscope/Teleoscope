@@ -10,9 +10,10 @@ import Bookmarks from "@/components/Bookmarks";
 import Setttings from "@/components/Settings";
 import AccordionSection from "@/components/AccordionSection";
 import SelectionViewer from "@/components/SelectionViewer";
-
-import Clusters from "@/components/Cluster/Clusters";
+import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
 import Workflows from "@/components/Workflows";
+
+
 export default function SimpleAccordion(props) {
   const windowState = useSelector((state) => state.windows);
   const wdefs = WindowDefinitions(windowState);
@@ -48,10 +49,10 @@ export default function SimpleAccordion(props) {
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={wdefs["Clusters"].icon()}
-          text="Clusters"
+          icon={wdefs["Projection Palette"].icon()}
+          text="Projections"
         >
-          <Clusters />
+          <ProjectionPalette />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}

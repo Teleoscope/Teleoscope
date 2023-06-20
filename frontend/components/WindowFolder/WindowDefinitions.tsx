@@ -31,6 +31,8 @@ import Search from "@/components/Search";
 import Groups from "@/components/Groups";
 import Clusters from "@/components/Cluster/Clusters";
 import Cluster from "@/components/Cluster/Cluster";
+import Projection from "@/components/Cluster/Projection";
+import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
 import Notes from "@/components/Notes";
 import Intersection from "@/components/Operations/Intersection";
 import Exclusion from "@/components/Operations/Exclusion";
@@ -116,6 +118,40 @@ export default function WindowDefinitions(windowState) {
       color:     () => color,
       icon:      () => <FlareIcon fontSize="inherit" sx={style} />,
       component: (w, id, color) => <Teleoscopes id={id} windata={w} color={color} />,
+    },
+    Projection: {
+      tag:       "projection",
+      type:      "Projection",
+      apipath:   "projections",
+      nodetype:  TargetNode,      
+      title:     (d) => `Projection: ${d?.history[0].label}`,
+      color:     (d) => d?.history[0].color,
+      icon:      (d) => <Diversity2Icon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
+      component: (w, id, color) => <Projection id={id} windata={w} color={color} />,
+    },
+    Projections: {
+      tag:       "projectionpalette", // projections?
+      type:      "Projections",
+      apipath:   "projections",
+      nodetype:  WindowNode,      
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      () => <Diversity2Icon fontSize="inherit" sx={style} />,
+      component: (w, id, color) => <ProjectionPalette id={id} windata={w} color={color} />,
+    },
+    "Projection Palette": { // TODO REFACTOR
+      icon: () => {
+        return <Diversity2Icon fontSize="inherit" sx={style} />;
+      },
+      component: (w, id, color) => {
+        return <ProjectionPalette id={id} windata={w} color={color} />;
+      },
+      showWindow: false,
+      title: () => {
+        return `Projections`;
+      },
+      color: () => get_color(),
+      tag: "projectionpalette",
     },
     Search: {
       tag:       "search",
