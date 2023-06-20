@@ -72,12 +72,12 @@ export default function Workflows(props) {
             onKeyDown={keyChange}
             onChange={(e) => setValue(e.target.value)}
             InputLabelProps={{
-              sx: { "&.Mui-focused": { color: props.color } },
+              sx: { "&.Mui-focused": { color: color } },
             }}
             sx={{
               width: "100%",
               margin: 1,
-              "& .MuiInput-underline:after": { borderBottomColor: props.color },
+              "& .MuiInput-underline:after": { borderBottomColor: color },
             }}
           />
         </Stack>
@@ -90,7 +90,7 @@ export default function Workflows(props) {
                 key={session._id}
                 sx={{
                   border:
-                    session._id === session_id ? `1px solid ${color}` : "",
+                    session._id === session_id ? `1px solid ${session.history[0].color}` : "",
                   "&:hover": {},
                 }}
               >
@@ -111,10 +111,10 @@ export default function Workflows(props) {
                         onClick={() => handleWorkflowChoice(session._id)}
                       >
                         {wdefs["Workflows"].icon([
-                          { color: color },
+                          { color: session.history[0].color },
                           {
                             "& .MuiChip-icon": {
-                              color: color,
+                              color: session.history[0].color,
                             },
                           },
                         ])}
