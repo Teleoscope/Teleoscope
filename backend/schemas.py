@@ -171,7 +171,7 @@ def create_docset_object(type):
         "status": "loading",
         "matrix": None,
         "columns": [],
-        "doclists": [], 
+        "doclists": [],
         "edges": {
             "source": [],
             "control": [],

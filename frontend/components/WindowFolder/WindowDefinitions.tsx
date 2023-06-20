@@ -14,11 +14,15 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 
 import { CgPathIntersect, CgPathExclude, CgPathUnite } from 'react-icons/cg';
+import { MdManageSearch } from 'react-icons/md';
+import { HiOutlineDatabase } from 'react-icons/hi';
+
 
 import WindowNode from "@/components/Nodes/WindowNode";
 import OperationNode from "@/components/Nodes/OperationNode";
 import SourceNode from "@/components/Nodes/SourceNode";
 import TargetNode from "@/components/Nodes/TargetNode";
+
 
 // custom
 import Note from "@/components/Note";
@@ -34,6 +38,8 @@ import Cluster from "@/components/Cluster/Cluster";
 import Projection from "@/components/Cluster/Projection";
 import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
 import Notes from "@/components/Notes";
+
+import Filter from "@/components/Operations/Filter";
 import Intersection from "@/components/Operations/Intersection";
 import Exclusion from "@/components/Operations/Exclusion";
 import Union from "@/components/Operations/Union";
@@ -157,7 +163,7 @@ export default function WindowDefinitions(windowState) {
       tag:       "search",
       type:      "Search",
       apipath:   "search",
-      nodetype:  SourceNode,      
+      nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
       icon:      () => <SearchIcon fontSize="inherit" sx={style} />,
@@ -233,6 +239,16 @@ export default function WindowDefinitions(windowState) {
       icon:      (sx = style) => <AccountTreeIcon fontSize="inherit" sx={sx} />,
       component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
     },
+    Filter: {
+      tag:       "filter",
+      type:      "Filter",
+      apipath:   "filter",
+      nodetype: OperationNode,
+      title:     function () {return this.type},
+      color:     () => color,
+      icon:      (sx = style) => <MdManageSearch fontSize="inherit" sx={sx} />,
+      component: (w, id, color) => <Filter id={id} windata={w} color={color} />,
+    },
     Intersection: {
       tag:       "intersection",
       type:      "Intersection",
@@ -260,7 +276,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <CgPathUnite fontSize="inherit" sx={sx} />,
+      icon:      (sx = style) => <CgPathIntersect fontSize="inherit" sx={sx} />,
       component: (w, id, color) => <Union id={id} windata={w} color={color} />,
     },
   };

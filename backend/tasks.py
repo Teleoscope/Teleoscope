@@ -936,11 +936,46 @@ def cluster_by_groups(*args, **kwargs):
 @app.task
 def update_edges(*arg, **kwargs):
     """
-    Updates a Teleoscope according to edges.
-    """
+    Updates the graph according to updated edges.
+    
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
+    
     edges = kwargs["edges"]
+    source_node = kwargs["source_node"]
+    target_node = kwargs["target_node"]
+
+    
+    docid_pipeline = [
+        { '$project': { '_id': 1 } },  # Include only the _id field
+        { '$sort': { '_id': 1 } }  # Sort by _id field in ascending order
+    ]
+
+    result = db.documents.aggregate(docid_pipeline)
+    document_ids = [doc['_id'] for doc in result]
+
+    pipeline = [
+        {
+            '$graphLookup': {
+                'from': 'your_collection_name',  # Replace with the same collection name
+                'startWith': target_docset_oid,
+                'connectFromField': 'edges.source',  # Replace with the field representing the parent relationship
+                'connectToField': '_id',
+                'as': 'connected_elements',
+                'maxDepth': 10  # Specify the maximum depth of the recursive search
+            }
+        },
+        {
+            '$project': {
+                '_id': 1,
+                'connected_elements': 1
+            }
+        }
+    ]
+    """
+    pass
+    
+    
     
     
 
@@ -1468,8 +1503,8 @@ def add_item(*args, **kwargs):
 
                 utils.push_history(db, transaction_session, "sessions", session_id, history_item)
                 utils.commit_with_retry(transaction_session)
-    # message()
 
+    # message()
 
 def message(userid: ObjectId, msg):
     import pika

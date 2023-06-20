@@ -11,7 +11,6 @@ import {
   removeWindow,
   setSelection,
 } from "@/actions/windows";
-import { sessionActivator } from "@/actions/activeSessionID";
 import { StompContext } from "@/components/Stomp";
 import FlowProviderWrapper from "@/components/FlowProviderWrapper";
 import FlowWrapper from "@/components/FlowWrapper";
@@ -56,32 +55,20 @@ function Flow(props) {
   );
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
-
-  const bookmarks = useAppSelector(
-    (state: RootState) => state.windows.bookmarks
-  );
+  const bookmarks = useAppSelector((state: RootState) => state.windows.bookmarks);
 
   const settings = useAppSelector((state) => state.windows.settings);
 
-  const { nodes, edges, logical_clock } = useAppSelector(
-    (state) => state.windows
-  );
+  const { nodes, edges, logical_clock } = useAppSelector((state) => state.windows);
 
-
-  const { session, session_loading, session_error } = swr.useSWRAbstract(
-    "session",
-    `sessions/${session_id}`
-  );
-  const { user } = swr.useSWRAbstract("user", `users/${userid}`);
-
+  const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const session_history_item = session?.history[0];
+
   const dispatch = useAppDispatch();
 
-  if (user && session_error) {
-    dispatch(sessionActivator(user.sessions[0]));
-  }
 
   useEffect(() => {
+    
     if (session_history_item) {
       if (session_history_item.logical_clock > logical_clock) {
         let incomingNodes = [];
@@ -121,7 +108,7 @@ function Flow(props) {
         dispatch(loadBookmarkedDocuments(session_history_item.bookmarks));
       }
     }
-  }, [session_history_item, logical_clock]);
+  }, [session, session_history_item, logical_clock, userid]);
   
 
 
