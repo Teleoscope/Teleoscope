@@ -163,6 +163,20 @@ def rank_document_ids_by_similarity(documents_ids, scores):
     '''
     return sorted([document_id for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
 
+
+def cscUpload(db, namespace, csc):
+    import gridfs
+    from scipy.sparse import save_npz
+    from io import BytesIO
+
+    data = BytesIO()
+    save_npz(data, csc)
+    data.seek(0)
+
+    fs = gridfs.GridFS(db, namespace)
+    oid = fs.put(data)
+    return oid
+
 def gridfsUpload(db, namespace, data, encoding='utf-8'):
     '''Uploads data to GridFS under a particular namespace.
 

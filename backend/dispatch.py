@@ -42,7 +42,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         ]
 
     def handle_message(self, body, message):
-        print("Received message: {0!r}".format(body))
+        logging.debug("Received message: {0!r}".format(body))
         message.ack()
         msg = json.loads(body)
         task = msg["task"]

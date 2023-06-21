@@ -626,7 +626,7 @@ export class Stomp {
   /**
    * Add a workspace item to the interface.
    */
-  add_item(session_id: string, oid: string, uid: string, type: string, state) {
+  add_item(session_id: string, oid: string, uid: string, type: string, options = {}, state = {}) {
     const body = {
       task: "add_item",
       args: {
@@ -634,6 +634,7 @@ export class Stomp {
         oid: oid,
         uid: uid,
         type: type,
+        options: options,
         state: state
       },
     };
