@@ -1506,12 +1506,12 @@ def add_item(*args, **kwargs):
                 session = db.sessions.find_one({"_id": session_id})
                 history_item = session["history"][0]
 
-                for node in history_item.nodes:
-                    if node.data.uid == uid:
-                        node.data["i"] = str(res.inserted_id)
-                        node.data["label"] = label
-                        node.id = label
-                
+                for node in history_item["windows"]:
+                    if node["data"]["uid"] == uid:
+                        node["data"]["i"] = str(res.inserted_id)
+                        node["data"]["label"] = label
+                        node["id"] = label
+
                 history_item["action"] = f"Create {type} node."
                 history_item["timestamp"] = datetime.datetime.utcnow()
                 history_item["userid"] = userid
