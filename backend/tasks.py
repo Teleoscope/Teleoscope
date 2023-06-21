@@ -1492,11 +1492,11 @@ def add_item(*args, **kwargs):
         case "Filter" | "Intersection" | "Exclusion" | "Union":
             with transaction_session.start_transaction():
                 obj = schemas.create_node(type)
-                res = db.graph.insert_one(obj, session=transaction_session)
                 count = db.documents.count_documents({})
                 csc = csc_matrix((count, 2), dtype=np.float32)
                 csc_id = utils.gridfsUpload(db, "graph", csc)
                 obj["matrix"] = csc_id
+                res = db.graph.insert_one(obj, session=transaction_session)
 
                 label = f"{res.inserted_id}%{uid}%{type.lower()}"
 
