@@ -2,7 +2,11 @@ import { MongoClient } from "mongodb";
 console.log("Loading mongodb.js");
 
 const uri = process.env.MONGODB_URI;
-const options = {};
+const options = {
+  // useNewUrlParser: true,
+  // useUnifiedTopology: true,
+  charset: 'utf8', // or 'utf8mb4' for extended characters
+};;
 
 let client;
 let clientPromise;
