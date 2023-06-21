@@ -1,4 +1,5 @@
 import logging, pickle, utils, json, auth, numpy as np
+from scipy.sparse import csc_matrix
 import clustering
 from warnings import simplefilter
 from celery import Celery, Task, chain
@@ -1475,26 +1476,36 @@ def add_item(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
 
     uid  = kwargs["uid"]
-    oid  = kwargs["oid"]
     type = kwargs["type"]
+    oid  = kwargs["oid"]
+
+    # If this already exists in the database, we can skip intitalization
+    if ObjectId.is_valid(oid):
+        docset = db.graph.find_one({"_id" : oid})
+        if docset:
+            print(f"{type} with {oid} already in DB.")
+            return # perhaps do something else before return like save?
 
     match type:
         case "Filter", "Intersection", "Exclusion", "Union":
-            docset = db.nodes.find_one({"_id" : oid})
-            if (docset):
-                return
-            obj = schemas.create_node(type)
-            
             with transaction_session.start_transaction():
-                res = db.nodes.insert_one(obj, session=transaction_session)
-                session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
-                history_item = session.history[0]
+                obj = schemas.create_node(type)
+                res = db.graph.insert_one(obj, session=transaction_session)
+                count = db.documents.count_documents({})
+                csc = csc_matrix((count, 2), dtype=np.float32)
+                csc_id = utils.gridfsUpload(db, "graph", csc)
+                obj["matrix"] = csc_id
+
+                label = f"{res.inserted_id}%{uid}%{type.lower()}"
+
+                session = db.sessions.find_one({"_id": session_id})
+                history_item = session["history"][0]
 
                 for node in history_item.nodes:
                     if node.data.uid == uid:
                         node.data["i"] = str(res.inserted_id)
-                        node.data["label"] = f"{res.inserted_id}%{uid}%{type}"
-                        node.id = f"{res.inserted_id}%{uid}%{type}"
+                        node.data["label"] = label
+                        node.id = label
                 
                 history_item["action"] = f"Create {type} node."
                 history_item["timestamp"] = datetime.datetime.utcnow()
@@ -1503,8 +1514,9 @@ def add_item(*args, **kwargs):
 
                 utils.push_history(db, transaction_session, "sessions", session_id, history_item)
                 utils.commit_with_retry(transaction_session)
-
     # message()
+
+
 
 def message(userid: ObjectId, msg):
     import pika
