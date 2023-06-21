@@ -1494,8 +1494,11 @@ def add_item(*args, **kwargs):
                 obj = schemas.create_node(type)
                 count = db.documents.count_documents({})
                 csc = csc_matrix((count, 2), dtype=np.float32)
-                csc_id = utils.gridfsUpload(db, "graph", csc)
+                
+                csc_id = utils.cscUpload(db, "graph", csc)
+
                 obj["matrix"] = csc_id
+                
                 res = db.graph.insert_one(obj, session=transaction_session)
 
                 label = f"{res.inserted_id}%{uid}%{type.lower()}"
