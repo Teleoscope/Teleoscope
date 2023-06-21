@@ -166,10 +166,10 @@ def rank_document_ids_by_similarity(documents_ids, scores):
 
 def cscUpload(db, namespace, csc):
     import gridfs
+    from scipy.sparse import save_npz
     fs = gridfs.GridFS(db, namespace)
     with fs.new_file(filename="matrix.npz") as fp:
-        csc.save_npz(fp, csc)
-
+        save_npz(fp, csc)
 
 def gridfsUpload(db, namespace, data, encoding='utf-8'):
     '''Uploads data to GridFS under a particular namespace.
