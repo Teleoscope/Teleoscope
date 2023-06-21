@@ -1489,7 +1489,7 @@ def add_item(*args, **kwargs):
     logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
     match type:
-        case "Filter", "Intersection", "Exclusion", "Union":
+        case "Filter" | "Intersection" | "Exclusion" | "Union":
             with transaction_session.start_transaction():
                 obj = schemas.create_node(type)
                 res = db.graph.insert_one(obj, session=transaction_session)
