@@ -1,45 +1,32 @@
+export function extractSpecialCharacters(text) {
+    // Matches Emoji and other special Unicode characters
+    const specialCharactersRegex = /(\p{Emoji})|([\u0080-\uFFFF])/gu;
+    return [...text.matchAll(specialCharactersRegex)].map(match => match[0]);
+}
 
-export function containsEmoji(text) {
-    const emojiRegex = /\p{Emoji}/u;
-    return emojiRegex.test(text);
-  }
-  
-export function extractEmojis(text) {
-    const emojiRegex = /\p{Emoji_Presentation}/gu;
-    return [...text.matchAll(emojiRegex)].map(match => match[0]);
-  }
-  
 export function stripEmojis(text) {
-    return text.replace(/\p{Emoji_Presentation}/gu, '');
-  }
+    const specialCharactersRegex = /(\p{Emoji})|([\u0080-\uFFFF])/gu;
+    return text.replace(specialCharactersRegex, '');
+}
   
-export function emojiRegex(emojis) {
-    const pattern = emojis.join('|');
-    return new RegExp(`(${pattern})`, 'gu');
+export function makeQuery(text) {
+  const buffer = text.replace(/"/g, '\\"').trim();
+  const regex = extractSpecialCharacters(buffer);
+
+  if (regex.length == 0) {
+    return { $text: { $search: buffer} };
   }
 
-export  function makeQuery(text) {
-    if (containsEmoji(text)) {
-        const regex = emojiRegex(extractEmojis(text))
-        const cleantext = stripEmojis(text.replace(/"/g, '\\"').trim())
-  
-        if (cleantext.length == 0) {
-          return {
-            text: { $regex: regex }
-          }
-        }
-  
-        return {
-            $and: [
-                { $text: { $search: cleantext} },
-                { text: { $regex: regex } }
-            ]
-        };
-    }
-  
-    return {
-        $text: {
-            $search: text.replace(/"/g, '\\"')
-        }
-    };
+  if (stripEmojis(buffer).length == 0) {
+    return { text: { $regex: regex.join('|') } }
   }
+
+  console.log("text:", buffer, regex, regex.join('|'))
+
+  return {
+      $and: [
+          { $text: { $search: buffer} },
+          {  text: { $regex: regex.join('|') } }
+      ]
+  };
+}
