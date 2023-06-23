@@ -1,34 +1,8 @@
 // NewGroupForm.js
 import React from "react";
-import { TextField, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
 
-export const NewGroupForm = ({ color, keyChange }) => (
-  <Stack
-    direction="row"
-    justifyContent="space-between"
-    alignItems="center"
-    style={{ margin: 0 }}
-  >
-    <TextField
-      label="Create new group..."
-      placeholder="Type label and press enter."
-      variant="standard"
-      onKeyDown={keyChange}
-      InputLabelProps={{
-        sx: {
-          "&.Mui-focused": {
-            color: color,
-          },
-        },
-      }}
-      sx={{
-        width: "100%",
-        margin: 1,
-        "& .MuiInput-underline:after": { borderBottomColor: color },
-      }}
-    />
-  </Stack>
-);
+
 
 // GroupItem.js
 
@@ -125,8 +99,8 @@ import {
   SaveDocxAction,
   CopyJsonAction,
   CopyTextAction,
-  ClusterButtonAction,
 } from "@/components/GroupsActions";
+import { NewItemForm } from "./NewItemForm";
 
 export default function Groups(props) {
   const swr = useContext(swrContext);
@@ -139,20 +113,6 @@ export default function Groups(props) {
     : swr.useSWRAbstract("groups", `sessions/${session_id}/groups`);
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const [showColorPicker, setShowColorPicker] = useState(false);
-
-  const runClusters = () => {
-    client.cluster_by_groups(
-      groups.map((g) => g._id),
-      "6477f784a74fad35f333b607", // projection: work?
-      session_id
-    );
-  };
-
-  const keyChange = (e) => {
-    if (e.code == "Enter") {
-      client.add_group(e.target.value, randomColor(), session_id);
-    }
-  };
 
   const onDragStart = (event, id, type, typetag) => {
     event.dataTransfer.setData("application/reactflow/type", type);
@@ -179,8 +139,10 @@ export default function Groups(props) {
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
 
-      <NewGroupForm color={settings.color} keyChange={keyChange} />
-
+      <NewItemForm 
+        label={"Create new group..."} 
+        HandleSubmit={(e) => client.add_group(e.target.value, randomColor(), session_id)} 
+      />
 
       <Divider />
 

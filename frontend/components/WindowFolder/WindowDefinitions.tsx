@@ -16,7 +16,10 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import { CgPathIntersect, CgPathExclude, CgPathUnite } from 'react-icons/cg';
 import { MdManageSearch } from 'react-icons/md';
 import { HiOutlineDatabase } from 'react-icons/hi';
+import { RiBookmark3Line } from 'react-icons/ri';
+import { BsStickies, BsSticky } from 'react-icons/bs'; 
 
+import { IconContext } from "react-icons";
 
 import WindowNode from "@/components/Nodes/WindowNode";
 import OperationNode from "@/components/Nodes/OperationNode";
@@ -38,6 +41,7 @@ import Cluster from "@/components/Cluster/Cluster";
 import Projection from "@/components/Cluster/Projection";
 import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
 import Notes from "@/components/Notes";
+
 
 import Filter from "@/components/Operations/Filter";
 import Intersection from "@/components/Operations/Intersection";
@@ -62,7 +66,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  SourceNode,      
       title:     (d) => `${d?.history[0].label}`,
       color:     () => color,
-      icon:      () => <CommentIcon fontSize="inherit" />,
+      icon:      () => <IconContext.Provider value={{ color: color}}><BsSticky /></IconContext.Provider>,
       component: (w, id, color) => <Note id={id} windata={w} color={color} />,
     },
     Notes: {
@@ -72,7 +76,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      () => <CommentIcon fontSize="inherit" sx={style} />,
+      icon:      () => <IconContext.Provider value={{ color: color}}><BsStickies /></IconContext.Provider>,
       component: (w, id, color) => <Notes id={id} windata={w} color={color} />,
     },
     FABMenu: {
@@ -206,7 +210,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
-      icon:      () => <StarIcon fontSize="inherit" sx={style} />,
+      icon:      () => <IconContext.Provider value={{ color: color}}><RiBookmark3Line /></IconContext.Provider>,
       component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
     },
     Settings: {
@@ -256,7 +260,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <CgPathIntersect fontSize="inherit" />,
+      icon:      (sx = style) => <IconContext.Provider value={{ color: color}}><CgPathIntersect /></IconContext.Provider>,
       component: (w, id, color) => <Intersection id={id} windata={w} color={color} />,
     },
     Exclusion: {
@@ -266,7 +270,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <CgPathExclude fontSize="inherit" />,
+      icon:      (sx = style) => <IconContext.Provider value={{ color: color}}><CgPathExclude /></IconContext.Provider>,
       component: (w, id, color) => <Exclusion id={id} windata={w} color={color} />,
     },
     Union: {
@@ -276,7 +280,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <CgPathIntersect fontSize="inherit" />,
+      icon:      (sx = style) => <IconContext.Provider value={{ color: color}}><CgPathIntersect /></IconContext.Provider>,
       component: (w, id, color) => <Union id={id} windata={w} color={color} />,
     },
   };
