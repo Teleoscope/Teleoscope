@@ -232,7 +232,7 @@ export const Windows = createSlice({
         },
         data: { 
           label: id,
-          i: oid.split("%")[0],
+          oid: oid.split("%")[0],
           type: type,
           uid: uid
         },

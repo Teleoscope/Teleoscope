@@ -36,9 +36,9 @@ export default function WindowFactory(props) {
   };
   
   const type = w.type;
-  const oid = w.data?.id ? w.data.id : w.i.split("%")[0];
+  const oid = w?.oid ? w.oid : w.i.split("%")[0];
 
-  const uid = w.data?.uid ? w.data.uid : "000000"
+  const uid = w?.uid ? w.uid : "000000"
   const id = props?.id ? props.id : `${oid}%${uid}%${type}`;
 
   const key = keymap[type];
