@@ -1,9 +1,9 @@
 import { Client } from "@stomp/stompjs";
 import crypto from 'crypto';
 import React, { createContext } from "react";
-
+import store from "@/stores/store";
 export const StompContext = createContext(null);
-
+import { OID_UID_SYNC } from "@/actions/windows";
 import { WebsocketBuilder } from "websocket-ts";
 Object.assign(global, WebsocketBuilder);
 
@@ -118,9 +118,15 @@ export class Stomp {
       // This is needed because this will be executed after a (re)connect
       this.client.subscribe(`/queue/${this.userId}`, (message) => {
         // Parse the message body
-        const body = message.body;
+        const body = JSON.parse(message.body);
         
-        console.log("Received: " + body);
+        console.log("Received: ", body);
+
+        if (body.action == "OID_UID_SYNC") {
+          store.dispatch(OID_UID_SYNC(body));
+        }
+
+        console.log(`Associated UID ${body.uid} with OID ${body.oid}`)
 
       });
       

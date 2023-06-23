@@ -33,6 +33,7 @@ export default function Window(props) {
           >{props.title}
           </Box>
         }
+        // variant="filled"
         avatar={<span style={{width: "1em", padding: "0.425em"}}>{props.icon}</span>}
         onDoubleClick={() => dispatch(maximizeWindow({ id: props.id }))}
         onDelete={handleDelete}
