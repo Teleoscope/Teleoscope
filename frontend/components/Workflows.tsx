@@ -13,7 +13,7 @@ import PaletteIcon from "@mui/icons-material/Palette";
 import PeopleIcon from "@mui/icons-material/People";
 
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
-import { sessionActivator, resetWorkspace, relabelSession } from "@/actions/windows";
+import { resetWorkspace, relabelSession } from "@/actions/windows";
 
 import EditableText from "@/components/EditableText";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
@@ -25,6 +25,7 @@ import randomColor from "randomcolor";
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
 import { MenuUnstyled } from '@mui/core';
+import { sessionActivator } from "@/actions/activeSessionID";
 
 const styles = {
   overflow: "auto",
