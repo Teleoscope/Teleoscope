@@ -1489,6 +1489,18 @@ def add_item(*args, **kwargs):
     logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
     match type:
+        case "Group":
+            import random
+            r = lambda: random.randint(0, 255)
+            color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
+            res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id)
+            message(userid, {
+                "oid": res.inserted_id,
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })
+    
         case "Filter" | "Intersection" | "Exclusion" | "Union":
             with transaction_session.start_transaction():
                 obj = schemas.create_node(type)
