@@ -18,6 +18,9 @@ export default function DocViewer(props) {
     return [p, 1.0];
   });
 
+  const windowState = useAppSelector((state) => state.windows);
+  const wdefs = WindowDefinitions(windowState);
+
   return (
     <Accordion
       defaultExpanded={settings.defaultExpanded}
@@ -30,7 +33,7 @@ export default function DocViewer(props) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {WindowDefinitions()["Group"].icon(group)}
+          {wdefs["Group"].icon(group)}
           {`${group?.history[0].label}`}
         </Typography>
       </AccordionSummary>

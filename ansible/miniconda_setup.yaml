@@ -40,3 +40,6 @@
 
     - name: Add everything in the miniconda install to the new anaconda group
       ansible.builtin.shell: sudo chgrp anaconda -R "{{ conda_prefix }}"
+
+    - name: Update conda
+      ansible.builtin.shell: conda update -n base -c defaults conda

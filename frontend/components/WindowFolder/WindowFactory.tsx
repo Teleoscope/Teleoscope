@@ -2,43 +2,62 @@ import React, { useContext } from "react";
 import Window from "@/components/WindowFolder/Window";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import { swrContext } from "@/util/swr";
+import { useSelector } from "react-redux";
 
 export default function WindowFactory(props) {
   const w = props.windata;
 
-  const wdefs = WindowDefinitions();
-
+  const windowState = useSelector((state) => state.windows);
+  const wdefs = WindowDefinitions(windowState);
+  const paths = Object.entries(wdefs).reduce((obj, [w, def]) => {
+    obj[w] = def.apipath;
+    return obj;
+  }, {})  
+  
   const keymap = {
     note: "note",
+    notes: "notes",
     notepalette: "notes",
     fabmenu: "fabmenu",
     group: "groups",
+    grouppalette: "groups",
     document: "document",
     teleoscope: "teleoscopes",
-    teleoscopepalette: "teleoscopepalette",
+    teleoscopes: "teleoscopes",
+    teleoscopepalette: "teleoscopes",
+    projection: "projections",
+    projectionpalette: "projectionpalette",
     search: "search",
-    grouppalette: "grouppalette",
-    clusters: "clusters",
-    cluster: "cluster",
+    groups: "groups",
+    cluster: "clusters",
+    operation: "operation",
+    intersection: "intersection",
+    ...paths
   };
-  const type = w.i.split("%")[1];
-  const id = w.i.split("%")[0];
+  
+  const type = w.type;
+  const oid = w.data?.id ? w.data.id : w.i.split("%")[0];
+
+  const uid = w.data?.uid ? w.data.uid : "000000"
+  const id = props?.id ? props.id : `${oid}%${uid}%${type}`;
 
   const key = keymap[type];
   const swr = useContext(swrContext);
   const { data } = w?.demo
     ? w.demodata
-    : swr.useSWRAbstract("data", `${key}/${id}`);
+    : swr.useSWRAbstract("data", `${key}/${oid}`);
 
   if (w.type == "FABMenu") {
-    return <div>{wdefs[w.type].component(w, props.id, "#FFFFFF")}</div>;
+    return <div>{wdefs[w.type].component(w, id, "#FFFFFF")}</div>;
+
   }
 
   return (
     <Window
       {...props}
+      id={id}
       icon={wdefs[w.type].icon(data)}
-      inner={wdefs[w.type].component(w, props.id, wdefs[w.type].color(data))}
+      inner={wdefs[w.type].component(w, id, wdefs[w.type].color(data))}
       showWindow={wdefs[w.type].showWindow || w.showWindow}
       data={data}
       title={wdefs[w.type].title(data)}

@@ -42,7 +42,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         ]
 
     def handle_message(self, body, message):
-        print("Received message: {0!r}".format(body))
+        logging.debug("Received message: {0!r}".format(body))
         message.ack()
         msg = json.loads(body)
         task = msg["task"]
@@ -71,6 +71,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "initialize_teleoscope":
                 res = tasks.initialize_teleoscope.signature(args=(), kwargs=kwargs)
 
+            case "initialize_projection":
+                res = tasks.initialize_projection.signature(args=(), kwargs=kwargs)
+
             case "recolor_session":
                 res = tasks.recolor_session.signature(args=(), kwargs=kwargs)
 
@@ -83,11 +86,17 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "relabel_teleoscope":
                 res = tasks.relabel_teleoscope.signature(args=(), kwargs=kwargs)
 
+            case "relabel_projection":
+                res = tasks.relabel_projection.signature(args=(), kwargs=kwargs)
+
             case "relabel_session":
                 res = tasks.relabel_session.signature(args=(), kwargs=kwargs)
 
             case "remove_group":
                 res = tasks.remove_group.signature(args=(), kwargs=kwargs)
+            
+            case "remove_projection":
+                res = tasks.remove_projection.signature(args=(), kwargs=kwargs)
 
             case "remove_teleoscope":
                 res = tasks.remove_teleoscope.signature(args=(), kwargs=kwargs)
@@ -122,6 +131,15 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "register_account":
                 res = tasks.register_account.signature(args=(), kwargs=kwargs)
 
+            case "snippet":
+                res = tasks.snippet.signature(args=(), kwargs=kwargs)
+
+            case "add_item":
+                res = tasks.add_item.signature(args=(), kwargs=kwargs)
+
+            case "ping":
+                res = tasks.ping.signature(args=(), kwargs=kwargs)
+
             # TODO: refactor to be like above syntax when we're sure that everything
             # has all arguments
             case "add_group":
@@ -138,6 +156,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 )
 
             case "update_edges":
+                # res = tasks.update_edges.signature(args=(), kwargs=kwargs)
+
                 res = chain(
                     robj.s(
                         edges=kwargs["edges"], userid=kwargs["userid"], db=kwargs["db"]

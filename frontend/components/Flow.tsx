@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext, useRef } from "react";
+import React, { useMemo, useState, useCallback, useContext, useRef, useEffect } from "react";
 import { addEdge } from "reactflow";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { RootState } from "@/stores/store";
@@ -11,22 +11,34 @@ import {
   removeWindow,
   setSelection,
 } from "@/actions/windows";
-import { sessionActivator } from "@/actions/activeSessionID";
 import { StompContext } from "@/components/Stomp";
-import { SessionLoader } from "@/components/SessionLoader";
 import FlowProviderWrapper from "@/components/FlowProviderWrapper";
 import FlowWrapper from "@/components/FlowWrapper";
 import FlowUIComponents from "@/components/FlowUIComponents";
 import ContextMenuHandler from "@/components/ContextMenuHandler";
-import WindowNode from "@/components/Nodes/WindowNode";
+import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import FlowFABWrapper from "@/components/FlowFABWrapper";
-
 import "reactflow/dist/style.css";
 import styles from "@/styles/flow.module.css";
+import lodash from 'lodash';
+import { setNodes, setEdges, setColor } from "@/actions/windows";
+import { loadBookmarkedDocuments } from "@/actions/windows";
+import WindowNode from "@/components/Nodes/WindowNode";
 
-const nodeTypes = { windowNode: WindowNode };
 
 function Flow(props) {
+  const windowState = useAppSelector((state) => state.windows);
+  const wdefs = WindowDefinitions(windowState);
+  const nodeTypeDefs = Object.entries(wdefs).reduce((obj, [w, def]) => {
+    obj[w] = def.nodetype;
+    return obj;
+  }, {})
+  
+  const nodeTypes = useMemo(
+    () => ({ 
+    windowNode: WindowNode,
+    ...nodeTypeDefs  
+  }),[]);
 
   const client = useContext(StompContext);
   const swr = useContext(swrContext);
@@ -43,34 +55,61 @@ function Flow(props) {
   );
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
-
-  const bookmarks = useAppSelector(
-    (state: RootState) => state.bookmarker.value
-  );
+  const bookmarks = useAppSelector((state: RootState) => state.windows.bookmarks);
 
   const settings = useAppSelector((state) => state.windows.settings);
 
-  const { nodes, edges, logical_clock } = useAppSelector(
-    (state) => state.windows
-  );
+  const { nodes, edges, logical_clock } = useAppSelector((state) => state.windows);
 
-
-  const { session, session_loading, session_error } = swr.useSWRAbstract(
-    "session",
-    `sessions/${session_id}`
-  );
-  const { user } = swr.useSWRAbstract("user", `users/${userid}`);
-
+  const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const session_history_item = session?.history[0];
+
   const dispatch = useAppDispatch();
 
-  if (user && session_error) {
-    dispatch(sessionActivator(user.sessions[0]));
-  }
 
-  if (session_history_item) {
-    SessionLoader(session_history_item, logical_clock);
-  }
+  useEffect(() => {
+    
+    if (session_history_item) {
+      if (session_history_item.logical_clock > logical_clock) {
+        let incomingNodes = [];
+        if (session_history_item.nodes) {
+          incomingNodes = session_history_item.nodes;
+        } else if (session_history_item.windows) {
+          incomingNodes = session_history_item.windows;
+        }
+    
+        let incomingEdges = [];
+        if (session_history_item.edges) {
+          incomingEdges = session_history_item.edges;
+        }
+    
+        dispatch(
+          setNodes({
+            nodes: incomingNodes,
+            logical_clock: session_history_item.logical_clock,
+          })
+        );
+    
+        dispatch(
+          setEdges({
+            edges: incomingEdges,
+            logical_clock: session_history_item.logical_clock,
+          })
+        );
+    
+        dispatch(
+          setColor({
+            client: client,
+            session_id: session_id,
+            color: session_history_item.color,
+          })
+        );
+    
+        dispatch(loadBookmarkedDocuments(session_history_item.bookmarks));
+      }
+    }
+  }, [session, session_history_item, logical_clock, userid]);
+  
 
 
 
@@ -116,17 +155,19 @@ function Flow(props) {
           dispatch(removeWindow(node.id));
         }
       }
+    }
+
+    if (node?.data?.type == "Document" || node?.data?.type == "Note" || node?.data.type == "Group") {
       if (tempEdges.length == 1 && tempEdges[0] != null) {
         const connection = make_connection(tempEdges[0])
         create_edge(connection, edges)
         setTempEdges([])
       }
-
     }
 
     if (node?.data?.type == "Cluster") {
       if (target) {
-        if (target.data.type == "Group Palette") {
+        if (target.data.type == "Groups") {
           client.copy_cluster(node.id.split("%")[0], session_id);
           dispatch(removeWindow(node.id));
         }
@@ -166,19 +207,16 @@ function Flow(props) {
         x: event.clientX - reactFlowBounds.left,
         y: event.clientY - reactFlowBounds.top,
       });
-      const newNode = {
-        id: id,
-        // type: id.type,
-        type: "windowNode",
-        position: position,
-        positionAbsolute: position,
-        style: {
-          width: settings.default_document_width,
-          height: settings.default_document_height,
-        },
-        data: { label: `${id} node`, i: id, type: type },
-      };
-      dispatch(makeNode({ node: newNode }));
+
+      dispatch(makeNode({
+        client: client,
+        oid   : id,
+        type  : type,
+        width : settings.default_document_width,
+        height: settings.default_document_height,
+        x     : position.x,
+        y     : position.y
+      }));
     },
     [reactFlowInstance, settings]
   );
@@ -227,10 +265,10 @@ function Flow(props) {
 
   const create_edge = (connection, curredges) => {
     const newEdges = addEdge(connection, []);
-    dispatch(makeEdge({ edges: newEdges }));
-
-    const alledges = addEdge(connection, curredges);
-    client.update_edges(alledges);
+    dispatch(makeEdge({
+      client: client,
+      edges: newEdges
+    }));
   }
 
   const onConnect = useCallback((connection, curredges) => {
@@ -247,7 +285,7 @@ function Flow(props) {
     const X_MIN_DISTANCE = 50;
     const Y_MIN_DISTANCE = 100;
     
-    const closestNode = nodes.filter(n => n.data.type == "Teleoscope").reduce(
+    const closestNode = nodes.filter(n => n.data.type == "Teleoscope" || n.data.type === "Projection").reduce(
       (res, n) => {
         if (n.id !== node.id) {
           edges.forEach((e) => {
@@ -260,8 +298,6 @@ function Flow(props) {
           
           const dx = Math.sqrt(_dx * _dx);
           const dy = Math.sqrt(_dy * _dy);
-
-          // console.log("dist", dx, dy)
 
           if (dx < res.distance && dx < X_MIN_DISTANCE && dy < Y_MIN_DISTANCE) {
             res.distance = dx;
@@ -289,7 +325,7 @@ function Flow(props) {
 
 
   const onNodeDrag =  useCallback((evt, node) => {
-    if (node?.data.type == "Document") {
+    if (node?.data.type == "Document" || node?.data.type == "Note" || node?.data.type == "Group") {
       handleTarget(node);
       handleTempEdge(evt, node);  
     }
@@ -302,8 +338,23 @@ function Flow(props) {
       }
       setTempEdges([closeEdge])
     }
+
+    const throttledSave = useRef(
+      lodash.throttle((client, sessionId, bookmarks, nodes, edges) => {
+        client.save_UI_state(sessionId, bookmarks, nodes, edges);
+      }, 5000)  // waits 5000 ms after the last call
+    ).current;
     
-  
+    const handleOnClick = () => {
+      throttledSave(client, session_id, bookmarks, nodes, edges)
+    }
+
+    useEffect(() => {
+      return () => {
+        throttledSave.cancel();
+      };
+    }, []);
+
 
   return (
     <div className="providerflow">
@@ -324,9 +375,7 @@ function Flow(props) {
             onDrop={onDrop}
             onConnect={onConnect}
             onInit={setReactFlowInstance}
-            onClick={() =>
-              client.save_UI_state(session_id, bookmarks, nodes, edges)
-            }
+            onClick={handleOnClick}
             onNodeDrag={onNodeDrag}
             onNodeDragStart={onNodeDragStart}
             onNodeDragStop={onNodeDragStop}

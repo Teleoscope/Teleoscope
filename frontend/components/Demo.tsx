@@ -1,29 +1,24 @@
-import React, { createContext, useRef, useState, useCallback } from "react";
-import Head from "next/head";
+import React, { useRef, useState, useCallback } from "react";
 
 import { Provider } from "react-redux";
-import { CookiesProvider } from "react-cookie";
 import { SWRConfig } from "swr";
 import "reactflow/dist/style.css";
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
-import { Box, Stack, List, ListItem, Typography, Divider } from "@mui/material";
+import { useAppDispatch } from "@/util/hooks";
+import { Box, Stack, Typography } from "@mui/material";
 // store
 import store from "@/stores/store";
 
 // custom components
 import Flow from "@/components/Flow";
-import BookmarkPalette from "@/components/BookmarkPalette";
+import Bookmarks from "@/components/Bookmarks";
 
 import { swr, swrContext } from "@/util/swr";
 import { Stomp, StompContext } from "@/components/Stomp";
 import ReactFlow, {
   MiniMap,
-  ReactFlowProvider,
   Controls,
   Background,
   addEdge,
-  Panel,
-  useViewport,
   applyEdgeChanges,
   applyNodeChanges,
 } from "reactflow";
@@ -160,7 +155,6 @@ export default function Demo(props) {
         if (props.onConnectCallback) {
           props.onConnectCallback(newedges);
         }
-        console.log("nodes", nodes);
       },
       [edges]
     );
@@ -269,7 +263,7 @@ export default function Demo(props) {
                 overflow: "auto",
               }}
             >
-              <BookmarkPalette></BookmarkPalette>
+              <Bookmarks></Bookmarks>
             </Box>
           </Stack>
         </Stack>
@@ -368,7 +362,7 @@ export default function Demo(props) {
   }
 
   if (props.type == "Workspace") {
-    var dragNode = groupNode;
+    const dragNode = groupNode;
     dragNode.draggable = true;
     const nodes = [dragNode];
     return (
@@ -516,8 +510,7 @@ export default function Demo(props) {
 
   const handleConnection = (edges) => {
     const sources = edges.map((edge) => edge.source);
-    console.log("sources", edges);
-    var update = {
+    let update = {
       data: {
         ...teleoscopeNode.data,
 

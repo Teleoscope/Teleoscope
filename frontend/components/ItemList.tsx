@@ -1,9 +1,8 @@
 import { Virtuoso } from "react-virtuoso";
 import React from "react";
 // actions
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
-import { RootState } from "@/stores/store";
-import { mark } from "@/actions/bookmark";
+import { useAppDispatch } from "@/util/hooks";
+import { bookmark } from "@/actions/windows";
 
 export default function Itemlist(props) {
   const ref = React.useRef(null);
@@ -20,7 +19,7 @@ export default function Itemlist(props) {
       } else if (e.code === "ArrowDown") {
         nextIndex = Math.min(props.data.length - 1, currentItemIndex + 1);
       } else if (e.code === "Enter") {
-        dispatch(mark(props.data[currentItemIndex][0]));
+        dispatch(bookmark(props.data[currentItemIndex][0]));
       }
 
       if (nextIndex !== null) {

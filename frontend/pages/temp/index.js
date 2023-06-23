@@ -1,11 +1,9 @@
-import React, { createContext } from "react";
+import React from "react";
 import Head from "next/head";
 
 import { Provider } from "react-redux";
 import { CookiesProvider } from "react-cookie";
 import { SWRConfig } from "swr";
-
-import { useRouter } from "next/router";
 
 // store
 import store from "@/stores/store";
@@ -19,8 +17,8 @@ import clientPromise from "@/util/mongodb";
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 export default function Home({ isConnected }) {
-  const router = useRouter();
-  const subdomain = router.query.site;
+  // const router = useRouter();
+  // const subdomain = router.query.site;
 
   return (
     <SWRConfig

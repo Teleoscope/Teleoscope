@@ -1,4 +1,5 @@
 import clientPromise from "@/util/mongodb";
+import { makeQuery } from "@/util/emoji";
 
 export default async (req, res) => {
   const client = await clientPromise;
@@ -11,11 +12,11 @@ export default async (req, res) => {
   } else if (args.length == 1) {
     count = await db
       .collection("documents")
-      .count({ $text: { $search: args[0].replace('"', '\\"') } });
+      .count(makeQuery(args[0]));
   } else if (args.length == 2) {
     count = await db
       .collection("documents")
-      .count({ $text: { $search: args[0].replace('"', '\\"') } });
+      .count(makeQuery(args[0]));
   }
   res.json(count);
 };

@@ -1,5 +1,5 @@
-import React, { useContext, useState } from "react";
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import React, { useContext } from "react";
+import { useAppSelector } from "@/util/hooks";
 
 // material ui
 import Stack from "@mui/material/Stack";
@@ -27,7 +27,7 @@ export default function DocumentListItem(props) {
   const title = document ? PreprocessTitle(document.title) : false;
   const session_id = useAppSelector((state) => state.activeSessionID.value);
 
-  const handleRemove = (e) => {
+  const handleRemove = () => {
     client.remove_document_from_group(props.group._id, props.id);
   };
 
@@ -94,7 +94,7 @@ export default function DocumentListItem(props) {
         {props.ShowDeleteIcon ? (
           <IconButton
             sx={{ width: 20, height: 20 }}
-            onClick={(e) => handleRemove(e)}
+            onClick={(e) => handleRemove()}
           >
             <DeleteIcon
               sx={{ "&:hover": { color: "blue" }, width: 20, height: 20 }}

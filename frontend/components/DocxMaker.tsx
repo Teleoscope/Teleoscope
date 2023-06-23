@@ -57,7 +57,6 @@ export function MakeDocx({ tag, title, groups }) {
         })
       : new TextRun("");
 
-    console.log("docs", docs);
     return {
       properties: {},
       children: [

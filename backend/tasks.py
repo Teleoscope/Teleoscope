@@ -1,10 +1,13 @@
 import logging, pickle, utils, json, auth, numpy as np
+from scipy.sparse import csc_matrix
+import clustering
 from warnings import simplefilter
 from celery import Celery, Task, chain
 from bson.objectid import ObjectId
 from kombu import Consumer, Exchange, Queue
 import datetime
 import schemas
+
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
@@ -75,6 +78,33 @@ def initialize_session(*args, **kwargs):
     return 200 # success
 
 @app.task
+def snippet(*args, **kwargs):
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+
+    session_id = ObjectId(str(kwargs["session_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
+    document_id =  ObjectId(str(kwargs["document_id"]))
+    text = kwargs["text"]
+    
+    snip = {
+        "document_id": document_id,
+        "userid": userid,
+        "text": text,
+        "vector": vectorize_text([text])
+    }
+    session = db.sessions.find_one({"_id": session_id})
+    history_item = session["history"][0]
+    history_item["user"] = userid
+    history_item["action"] = f"Add snippet for session {session_id} and document {document_id}."
+
+    with transaction_session.start_transaction():
+        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        db.snippets.insert_one(snip, session=transaction_session)
+        utils.commit_with_retry(transaction_session)
+
+
+@app.task
 def recolor_session(*args, **kwargs):
     """
     Recolors a session.
@@ -87,11 +117,12 @@ def recolor_session(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
 
-    session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
+    session = db.sessions.find_one({"_id": session_id})
 
     history_item = session["history"][0]
     history_item["color"] = color
     history_item["user"] = userid    
+    history_item["action"] = "Recolor session."
 
     with transaction_session.start_transaction():
         utils.push_history(db, transaction_session, "sessions", session_id, history_item)
@@ -424,7 +455,7 @@ def initialize_teleoscope(*args, **kwargs):
             }, session=transaction_session)
         logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
   
-        ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))})
+        ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))}, session=transaction_session)
         history_item = ui_session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
         history_item["teleoscopes"].append(ObjectId(teleoscope_result.inserted_id))
@@ -438,12 +469,11 @@ def initialize_teleoscope(*args, **kwargs):
 
 
 @app.task 
-def add_group(*args, human=True, description="A group", documents=[], **kwargs):
+def add_group(*args, description="A group", documents=[], **kwargs):
     """
     Adds a group to the group collection and links newly created group to corresponding session.
     
     args: 
-        human: check if this call is from clustering or not
         description: topic label for cluster
         included documents: documents included in group
 
@@ -474,30 +504,21 @@ def add_group(*args, human=True, description="A group", documents=[], **kwargs):
     
     # call needs to be transactional due to groups & sessions collections being updated
 
-    collection = db.groups
-    if not human:
-        collection = db.clusters
-
     with transaction_session.start_transaction():
-        groups_res = collection.insert_one(obj, session=transaction_session)
+        groups_res = db.groups.insert_one(obj, session=transaction_session)
         logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
         # add created groups document to the correct session
         session = db.sessions.find_one({'_id': _id}, session=transaction_session)
         if not session:
             logging.info(f"Warning: session with id {_id} not found.")
             raise Exception(f"session with id {_id} not found")
-        clusters = session["history"][0]["clusters"]
-        groups = session["history"][0]["groups"]
 
-        if human:
-            groups.append(groups_res.inserted_id)
-        else:
-            clusters.append(groups_res.inserted_id)
+        groups = session["history"][0]["groups"]
+        groups.append(groups_res.inserted_id)
 
         history_item = session["history"][0]
         history_item["timestamp"] = datetime.datetime.utcnow()
         history_item["groups"] = groups
-        history_item["clusters"] = clusters
         history_item["action"] = f"Initialize new group: {label}"
         history_item["user"] = user_id
 
@@ -506,7 +527,7 @@ def add_group(*args, human=True, description="A group", documents=[], **kwargs):
         logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
         return groups_res.inserted_id
-
+        
 @app.task
 def copy_cluster(*args, **kwargs):
     """
@@ -766,6 +787,11 @@ def update_note(*args, **kwargs):
     userid = ObjectId(str(kwargs["userid"]))
     note_id = ObjectId(str(kwargs["note_id"]))
     content = kwargs["content"]
+
+    text = " ".join([block["text"] for block in content["blocks"]])
+    vector = vectorize_text(text)
+    logging.info(f"Vectorized note with {text}.")
+
     note = db.notes.find_one({"_id": note_id})
     history_item = note["history"][0]
     history_item["content"] = content
@@ -774,6 +800,7 @@ def update_note(*args, **kwargs):
 
     with transaction_session.start_transaction():
         res = utils.push_history(db, transaction_session, "notes", note_id, history_item)
+        db.notes.update_one({"_id": note_id}, {"$set": {"textVector": vector}}, session=transaction_session)
         utils.commit_with_retry(transaction_session)
         logging.info(f"Updated note {note_id} with {res}.")
 
@@ -846,9 +873,14 @@ def add_note(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
     label = kwargs["label"]
+    content = kwargs["content"]
     session_id = ObjectId(str(kwargs["session_id"]))
     userid = ObjectId(str(kwargs["userid"]))
-    note = schemas.create_note_object(userid, label)
+
+    text = " ".join([block["text"] for block in content["blocks"]])
+    vector = vectorize_text(text)
+
+    note = schemas.create_note_object(userid, label, content, vector)
     with transaction_session.start_transaction():
         res = db.notes.insert_one(note, session=transaction_session)
         session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
@@ -898,18 +930,53 @@ def cluster_by_groups(*args, **kwargs):
         group_id_strings: list(string) where the strings are MongoDB ObjectID format
         session_oid: string OID for session to add clusters to
     """
-    import clustering
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
-    clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["session_oid"], kwargs["db"])
+    cluster = clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["projection_id"], kwargs["session_oid"], kwargs["db"])
+    cluster.clustering_task()
 
 @app.task
 def update_edges(*arg, **kwargs):
     """
-    Updates a Teleoscope according to edges.
-    """
+    Updates the graph according to updated edges.
+    
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
+    
     edges = kwargs["edges"]
+    source_node = kwargs["source_node"]
+    target_node = kwargs["target_node"]
+
+    
+    docid_pipeline = [
+        { '$project': { '_id': 1 } },  # Include only the _id field
+        { '$sort': { '_id': 1 } }  # Sort by _id field in ascending order
+    ]
+
+    result = db.documents.aggregate(docid_pipeline)
+    document_ids = [doc['_id'] for doc in result]
+
+    pipeline = [
+        {
+            '$graphLookup': {
+                'from': 'your_collection_name',  # Replace with the same collection name
+                'startWith': target_docset_oid,
+                'connectFromField': 'edges.source',  # Replace with the field representing the parent relationship
+                'connectToField': '_id',
+                'as': 'connected_elements',
+                'maxDepth': 10  # Specify the maximum depth of the recursive search
+            }
+        },
+        {
+            '$project': {
+                '_id': 1,
+                'connected_elements': 1
+            }
+        }
+    ]
+    """
+    pass
+    
+    
     
     
 
@@ -1052,8 +1119,30 @@ class reorient(Task):
         document_vectors = []
         for doc_id in documents:
             print(f'Finding doc {doc_id}')
-            doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
-            document_vectors.append(doc["textVector"])
+            # Define the aggregation pipeline
+            pipeline = [
+                { '$match': { "_id" : ObjectId(str(doc_id)) } },
+                {
+                    '$unionWith': {
+                        'coll': 'notes',
+                        'pipeline': [
+                            { '$match': { "_id" : ObjectId(str(doc_id)) } }
+                        ]
+                    }
+                }
+            ]
+
+            # Execute the aggregation query
+            result = list(self.db.documents.aggregate(pipeline))
+            print("result", result)
+
+            # # Process the result
+            # for document in result:
+            #     # Process each document
+            #     print(document)
+
+            # doc = self.db.documents.find_one({"_id": ObjectId(str(doc_id))})
+            document_vectors.append(result[0]["textVector"])
         vec = np.average(document_vectors, axis=0)
         return vec
     
@@ -1085,7 +1174,7 @@ class reorient(Task):
                 res = self.db.groups.find_one({"_id": ObjectId(str(source))})
                 sources = [id for id in res["history"][0]["included_documents"]]
 
-            if edge["source"].split("%")[-1] == "document":
+            if edge["source"].split("%")[-1] == "document" or edge["source"].split("%")[-1] == "note":
                 sources.append(source)
 
             teleoscopes[target] = [*sources, *teleoscopes[target]]
@@ -1265,15 +1354,15 @@ def add_multiple_documents_to_database(documents, **kwargs):
             utils.commit_with_retry(transaction_session)
     
 @app.task
-def mark(**kwargs):
+def mark(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    userid = ObjectId(str(kwargs["userid"]))
+    userid      = ObjectId(str(kwargs["userid"]))
     document_id = ObjectId(str(kwargs["document_id"]))
-    session_id = ObjectId(str(kwargs["session_id"]))
-    read = kwargs["read"]
-    session = db.sessions.find_one({"_id": session_id})
+    session_id  = ObjectId(str(kwargs["session_id"]))
+    read        = kwargs["read"]
+    session     = db.sessions.find_one({"_id": session_id})
     history_item = session["history"][0]
     history_item["userid"] = userid
     history_item["action"] = f"Mark document read set to {read}."
@@ -1283,4 +1372,170 @@ def mark(**kwargs):
         utils.push_history(db, transaction_session, "teleoscopes", session_id, history_item)
         utils.commit_with_retry(transaction_session)
 
+@app.task 
+def initialize_projection(*args, **kwargs):
+    """
+    initialize a projection object
+    """
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle kwargs
+    label = kwargs["label"]
+    session_id = ObjectId(str(kwargs["session_id"]))
+    userid = kwargs["userid"]
+    
+    user = db.users.find_one({"_id": ObjectId(str(userid))})
+    user_id = "1"
+    if user != None:
+        user_id = user['_id']
 
+    obj = schemas.create_projection_object(session_id, label, user_id)
+
+    with transaction_session.start_transaction():
+
+        projection_res = db.projections.insert_one(obj, session=transaction_session)
+        logging.info(f"Added projection {obj['history'][0]['label']} with result {projection_res}.")
+        
+        session = db.sessions.find_one({'_id': session_id}, session=transaction_session)
+        if not session:
+            logging.info(f"Warning: session with id {session_id} not found.")
+            raise Exception(f"session with id {session_id} not found")
+
+        history_item = session["history"][0]
+        history_item["timestamp"] = datetime.datetime.utcnow()
+        history_item["projections"].append(projection_res.inserted_id)
+        history_item["action"] = f"Initialize new projection: {label}"
+        history_item["user"] = user_id
+
+        sessions_res = utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        
+        logging.info(f"Associated projection {obj['history'][0]['label']} with session {session_id} and result {sessions_res}.")
+        utils.commit_with_retry(transaction_session)
+        return projection_res.inserted_id
+    
+@app.task
+def remove_projection(*args, **kwargs):
+    """
+    Delete a projection and associated clusters
+    """
+    projection_id = ObjectId(str(kwargs["projection_id"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+    user_id = ObjectId(str(kwargs["userid"]))
+
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    session = db.sessions.find_one({'_id': session_id}, session=transaction_session)        
+    history_item = session["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()        
+    history_item["projections"].remove(projection_id)
+    history_item["action"] = f"Remove projection from session"
+    history_item["user"] = user_id
+
+    with transaction_session.start_transaction():
+        
+        cluster = clustering.Clustering(kwargs["userid"], [], kwargs["projection_id"], kwargs["session_id"], kwargs["db"])
+        cluster.clean_mongodb() # cleans up clusters associate with projection
+        db.projections.delete_one({'_id': projection_id}, session=transaction_session) 
+
+        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.commit_with_retry(transaction_session)
+
+@app.task
+def relabel_projection(*args, **kwargs):
+    """
+    Relabels a projection.
+    """
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+
+    projection_id = ObjectId(str(kwargs["projection_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
+    label = kwargs["label"]
+
+    projection = db.projections.find_one({"_id": projection_id}, session=transaction_session)
+    history_item = projection["history"][0]
+    history_item["label"] = label
+    history_item["action"] = "update label"
+    history_item["user"] = userid
+
+    with transaction_session.start_transaction():
+        utils.push_history(db, transaction_session, "projections", projection_id, history_item)
+        utils.commit_with_retry(transaction_session)
+
+    return 200
+
+
+@app.task
+def add_item(*args, **kwargs):
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+
+    userid = ObjectId(str(kwargs["userid"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+
+    uid  = kwargs["uid"]
+    type = kwargs["type"]
+    oid  = kwargs["oid"]
+
+    # If this already exists in the database, we can skip intitalization
+    if ObjectId.is_valid(oid):
+        docset = db.graph.find_one({"_id" : oid})
+        if docset:
+            print(f"{type} with {oid} already in DB.")
+            return # perhaps do something else before return like save?
+    
+    logging.info(f"Received {type} with OID {oid} and UID {uid}.")
+
+    match type:
+        case "Filter" | "Intersection" | "Exclusion" | "Union":
+            with transaction_session.start_transaction():
+                obj = schemas.create_node(type)
+                count = db.documents.count_documents({})
+                csc = csc_matrix((count, 2), dtype=np.float32)
+                
+                csc_id = utils.cscUpload(db, "graph", csc)
+
+                obj["matrix"] = csc_id
+                
+                res = db.graph.insert_one(obj, session=transaction_session)
+
+                label = f"{res.inserted_id}%{uid}%{type.lower()}"
+
+                session = db.sessions.find_one({"_id": session_id})
+                history_item = session["history"][0]
+
+                for node in history_item["windows"]:
+                    if node["data"]["uid"] == uid:
+                        node["data"]["i"] = str(res.inserted_id)
+                        node["data"]["label"] = label
+                        node["id"] = label
+
+                history_item["action"] = f"Create {type} node."
+                history_item["timestamp"] = datetime.datetime.utcnow()
+                history_item["userid"] = userid
+                history_item["logical_clock"] = history_item["logical_clock"] + 1
+
+                utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+                utils.commit_with_retry(transaction_session)
+    return "Help"
+
+
+
+def message(userid: ObjectId, msg):
+    import pika
+    credentials = pika.PlainCredentials(auth.rabbitmq["username"], auth.rabbitmq["password"])
+    parameters = pika.ConnectionParameters(host='localhost', port=5672, virtual_host='teleoscope', credentials=credentials)
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    queue_name = str(userid)
+    message = msg
+    channel.basic_publish(exchange='', routing_key=queue_name, body=message)
+
+@app.task
+def ping(*args, **kwargs):
+    msg = f"ping {userid}"
+    userid = ObjectId(str(kwargs["userid"]))
+    message(userid, msg)
+    

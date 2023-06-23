@@ -1,35 +1,57 @@
 // windows.js
 import { createSlice } from "@reduxjs/toolkit";
 import _ from "lodash";
-import { getDefaultWindow } from "../components/WindowFolder/WindowDefault";
 import { applyNodeChanges, applyEdgeChanges } from "reactflow";
 
 const initialState = {
   nodes: [],
   edges: [],
+  bookmarks: [],
   logical_clock: -1,
-  color: "#D3D3D3",
-  windows: [],
+  label: "default",
   selection: {
     nodes: [],
     edges: [],
   },
-  dragged: { id: "default", type: "Default" },
-  collision: true,
   settings: {
     default_document_width: 200,
     default_document_height: 34,
     defaultExpanded: true,
+    color: "#D3D3D3",
   },
+  // deprecated but in for legacy
+  windows: [],
 };
 
 export const Windows = createSlice({
   name: "windows",
   initialState: initialState,
   reducers: {
+    relabelSession: (state, action) => {
+      state.label = action.payload.label;
+    },
+    bookmark: (state, action) => {
+      // Redux Toolkit allows us to write "mutating" logic in reducers. It
+      // doesn't actually mutate the state because it uses the Immer library,
+      // which detects changes to a "draft state" and produces a brand new
+      // immutable state based off those changes
+      var id = action.payload; // value of documentid
+      var temp = [...state.bookmarks];
+      // add to workspace
+      var i = temp.indexOf(id);
+      if (i > -1) {
+        temp.splice(i, 1);
+      } else {
+        temp.push(id);
+      }
+      state.bookmarks = temp;
+    },
+    loadBookmarkedDocuments: (state, action) => {
+      state.bookmarks = action.payload;
+    },
     resetWorkspace: () => initialState,
     setColor: (state, action) => {
-      state.color = action.payload.color;
+      state.settings.color = action.payload.color;
     },
     setSettings: (state, action) => {
       state.settings = action.payload;
@@ -48,20 +70,6 @@ export const Windows = createSlice({
     },
     collision: (state, action) => {
       state.collision = action.payload;
-    },
-    addWindow: (state, action) => {
-      var item = getDefaultWindow();
-      // make sure that each default option that is being overridden
-      // is set in the final object that gets sent to the window store
-      Object.keys(action.payload).forEach((opt) => {
-        item[opt] = action.payload[opt];
-      });
-      var temp = [...state.windows];
-
-      if (!temp.find((item) => item.i === action.payload.i)) {
-        temp.push(item);
-        state.windows = temp;
-      }
     },
     removeWindow: (state, action) => {
       var temp_nodes = [...state.nodes];
@@ -126,13 +134,14 @@ export const Windows = createSlice({
       }
       state.windows = temp;
     },
-    updateWindow: (state, action) => {
-      var temp = [...state.windows];
-      var index = temp.findIndex((w) => w.i == action.payload.i);
-      if (index > 0) {
-        temp[index].i = action.payload.term + "%search";
+    updateSearch: (state, action) => {
+      var temp = [...state.nodes];
+      var index = temp.findIndex(n => n.id === action.payload.id);
+      if (index > -1) {
+        temp[index].data["query"] = action.payload.term;
+        
       }
-      state.windows = temp;
+      state.nodes = temp;
     },
     updateWindows: (state, action) => {
       var temp = [...state.windows];
@@ -203,7 +212,33 @@ export const Windows = createSlice({
     },
     makeNode: (state, action) => {
       var temp = [...state.nodes];
-      temp.push(action.payload.node);
+      const { oid, uid, type, width, height, x, y } = action.payload;
+      const id = `${oid.split("%")[0]}%${uid}%${type.toLowerCase()}`
+
+      const newNode = {
+        id: id,
+        type: type,
+        position: {
+          x: x,
+          y: y,
+        },
+        positionAbsolute: {
+          x: x,
+          y: y
+        },
+        style: {
+          width: width,
+          height: height,
+        },
+        data: { 
+          label: id,
+          i: oid.split("%")[0],
+          type: type,
+          uid: uid
+        },
+      };
+
+      temp.push(newNode);
       state.logical_clock = state.logical_clock + 1;
       state.nodes = temp;
     },
@@ -227,6 +262,9 @@ export const Windows = createSlice({
 });
 
 export const {
+  relabelSession,
+  bookmark,
+  loadBookmarkedDocuments,
   setColor,
   resetWorkspace,
   setSelection,
@@ -239,11 +277,10 @@ export const {
   updateEdges,
   setNodes,
   setDefault,
-  addWindow,
   removeWindow,
   loadWindows,
   dragged,
-  updateWindow,
+  updateSearch,
   updateWindows,
   minimizeWindow,
   maximizeWindow,

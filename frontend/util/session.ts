@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useContext, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
-import { loadBookmarkedDocuments } from "@/actions/bookmark";
+import { loadBookmarkedDocuments } from "@/actions/windows";
 
 import { setNodes, setEdges, setColor } from "@/actions/windows";
 

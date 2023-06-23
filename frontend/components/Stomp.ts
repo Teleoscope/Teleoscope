@@ -1,19 +1,12 @@
 import { Client } from "@stomp/stompjs";
+import crypto from 'crypto';
 import React, { createContext } from "react";
 
 export const StompContext = createContext(null);
 
-// TODO: look at websocket example code here and replicate
-// anywhere that needs to route a request to the server
-// possibly best to move this into an action? I'm unsure
-
 import { WebsocketBuilder } from "websocket-ts";
 Object.assign(global, WebsocketBuilder);
-//Object.assign(global, { WebSocket: require('websocket').w3cwebsocket });
 
-// custom imports
-import bcrypt from "bcryptjs";
-// let client: Client;
 
 /**
  * Type definition for Body
@@ -36,6 +29,7 @@ export class Stomp {
     this.loaded = false;
     this.database = options.database;
     this._userid = options.userid;
+    this.client = null;
   }
 
   public static getFakeClient(): Stomp {
@@ -48,16 +42,24 @@ export class Stomp {
 
   /**
    * Ensure that there is only one copy of the Stomp class.
-   * @returns
+   * @returns Stomp
    */
   public static getInstance(options): Stomp {
-    if (!Stomp.stomp) {
-      Stomp.stomp = new Stomp(options);
-      Stomp.stomp.client_init();
+    if (Stomp.stomp) {
+      const temp = Stomp.stomp.client;
+      temp.deactivate()
     }
-    return Stomp.stomp;
-  }
+    
+    Stomp.stomp = new Stomp(options);
+    Stomp.stomp.client_init();
 
+    return Stomp.stomp;
+  } 
+
+  public restart(options): Stomp {
+    return Stomp.getInstance(options)
+  }
+  
   public set userId(userid: string) {
     this._userid = userid;
   }
@@ -84,7 +86,7 @@ export class Stomp {
    * Initializes the client (there should only be one)
    */
   client_init() {
-    console.log("Initializing Stomp client...");
+    console.log(`Initializing Stomp client for user ${this.userId}`);
     this.client = new Client({
       brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:15674/ws`,
       connectHeaders: {
@@ -99,14 +101,29 @@ export class Stomp {
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,
     });
+    console.log(`Initializing Stomp client for user ${this.userId}`, this.client);
+    
+
+    this.client.onDisconnect = (frame) => {
+      console.log("Disconnected");
+    }
+  
 
     /**
      * Called when the client connects to RabbitMQ.
      */
-    this.client.onConnect = function (frame) {
+    this.client.onConnect = (frame) => {
       Stomp.stomp.loaded = true;
       // Do something, all subscribes must be done is this callback
       // This is needed because this will be executed after a (re)connect
+      this.client.subscribe(`/queue/${this.userId}`, (message) => {
+        // Parse the message body
+        const body = message.body;
+        
+        console.log("Received: " + body);
+
+      });
+      
       console.log("Connected to RabbitMQ webSTOMP server.", frame);
     };
 
@@ -135,12 +152,17 @@ export class Stomp {
     };
     body["args"]["userid"] = this.userId;
     body["args"]["db"] = this.database;
-    this.client.publish({
-      destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,
-      headers: headers,
-      body: JSON.stringify(body),
-    });
-    console.log("Sent from Stomp: ", body);
+    body["message_id"] = crypto.randomBytes(8).toString('hex');
+    try {
+      this.client.publish({
+        destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,
+        headers: headers,
+        body: JSON.stringify(body),
+      });
+      console.log("Sent from Stomp: ", body);
+    } catch(err) {
+      console.log("Error in sending:", err, body);
+    }
     return body;
   }
 
@@ -180,11 +202,13 @@ export class Stomp {
   /**
    * Updates Teleoscopes
    */
-  update_edges(edges) {
+  update_edges(session_id: string, edges, state) {
     const body = {
       task: "update_edges",
       args: {
+        session_id,
         edges: edges,
+        state: state
       },
     };
     this.publish(body);
@@ -386,12 +410,13 @@ export class Stomp {
   /**
    * Request to add a note for a particular interface object.
    */
-  add_note(session_id: string, label: string = "new note") {
+  add_note(session_id: string, label = "new note", content = {}) {
     const body = {
       task: "add_note",
       args: {
         session_id: session_id,
         label: label,
+        content: content
       },
     };
     this.publish(body);
@@ -550,11 +575,12 @@ export class Stomp {
   /**
    * Create MLGroups using the UMAP and HBDSCAN with the given groups' documents as seeds.
    */
-  cluster_by_groups(group_id_strings: Array<string>, session_oid: string) {
+  cluster_by_groups(group_id_strings: Array<string>, projection_id: string, session_oid: string) {
     const body = {
       task: "cluster_by_groups",
       args: {
         group_id_strings: group_id_strings,
+        projection_id: projection_id,
         session_oid: session_oid,
       },
     };
@@ -575,6 +601,110 @@ export class Stomp {
         document_id: document_id,
         session_id: session_id,
         read: read
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+  /**
+   * Create Snippet
+   */
+  snippet(document_id: string, session_id: string, text: string ) {
+    const body = {
+      task: "mark",
+      args: {
+        document_id: document_id,
+        session_id: session_id,
+        text: text
+      },
+    };
+    this.publish(body);
+    return body;
+  } 
+
+  /**
+   * Add a workspace item to the interface.
+   */
+  add_item(session_id: string, oid: string, uid: string, type: string, options = {}, state = {}) {
+    const body = {
+      task: "add_item",
+      args: {
+        session_id: session_id,
+        oid: oid,
+        uid: uid,
+        type: type,
+        options: options,
+        state: state
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+
+  /**
+   * Ping temporary queue.
+   */
+  ping(args) {
+    const body = {
+      task: "ping",
+      args: {
+        message: "ping",
+        ...args,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+
+
+
+
+  /**
+   * Requests to create a projection object in MongoDB.
+   */
+  initialize_projection(session_id: string, label: string) {
+    const body = {
+      task: "initialize_projection",
+      args: {
+        session_id: session_id,
+        label: label,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+  /**
+   * Deletes a projection
+   *
+   * @param projection_id
+   * @param session_id
+   * @returns
+   */
+  remove_projection(projection_id: string, session_id: string) {
+    const body = {
+      task: "remove_projection",
+      args: {
+        projection_id: projection_id,
+        session_id: session_id,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+  /**
+  * Relabel the projection.
+  */
+  relabel_projection(label: string, projection_id: string) {
+    const body = {
+      task: "relabel_projection",
+      args: {
+        label: label,
+        projection_id: projection_id,
       },
     };
     this.publish(body);
