@@ -32,11 +32,10 @@ export default function Bookmarks() {
     };
   return (
     <Stack direction="column">
-      <NewItemForm 
-        label={"Create group from bookmarks..."} 
-        color={settings.color} 
-        HandleSubmit={handleMakeGroupFromBookmarks}
-      />
+      {bookmarks.length > 0 ? 
+        <NewItemForm label={"Create group from bookmarks..."} HandleSubmit={handleMakeGroupFromBookmarks}/> : <></>
+      }
+      
       <Box>
         {bookmarks.map((docid) => (
           <DocumentListItem key={docid} id={docid}>
