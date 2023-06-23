@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 // custom components
 import DrawerMini from "@/components/DrawerMini";
@@ -9,6 +9,7 @@ import { swr, swrContext } from "@/util/swr";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { useCookies } from "react-cookie";
 import { sessionActivator, setUserId } from "@/actions/activeSessionID";
+import HelpMenu from "@/components/HelpMenu";
 
 export default function Workspace(props) {
   const [cookies, setCookie] = useCookies(["userid"]);
@@ -41,6 +42,7 @@ export default function Workspace(props) {
   return (
     <swrContext.Provider value={mySWR}>
       <StompContext.Provider value={client}>
+        <HelpMenu />
         <DrawerMini />
       </StompContext.Provider>
     </swrContext.Provider>

@@ -56,6 +56,7 @@ export default function GroupSelector(props) {
   };
 
   const GroupIconHandler = (props) => {
+
     if (props.groups.length >= 1) {
       const g = props.groups[0].history[0];
       return (
@@ -81,6 +82,7 @@ export default function GroupSelector(props) {
   return (
     <div>
       {GroupIconHandler({ groups: groups_this_document_belongs_to })}
+      {groups?.length == 0 ? <></> :
       <Menu anchorEl={anchorEl} onClose={handleClose} open={open}>
         {groups ? (
           groups.map((g) => {
@@ -99,7 +101,7 @@ export default function GroupSelector(props) {
         ) : (
           <MenuItem>No groups added yet...</MenuItem>
         )}
-      </Menu>
+      </Menu>}
     </div>
   );
 }

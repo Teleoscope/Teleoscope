@@ -74,7 +74,7 @@ export default function Settings(props) {
           ".MuiSwitch-colorPrimary": { color: settings.color },
         }}
       />
-      <Typography>Automatically Expand Infopanel</Typography>
+      <Typography>Workflow Color</Typography>
       <ColorPicker
         defaultColor={settings.color}
         onChange={handleColorChange}
