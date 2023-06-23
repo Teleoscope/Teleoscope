@@ -4,7 +4,6 @@ import React from "react";
 // MUI
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
 
 // custom
 import CloseButton from "@/components/CloseButton";
@@ -23,9 +22,9 @@ export default function WindowTopBar({id, icon, title}) {
       justifyContent="space-between"
       onDoubleClick={() => dispatch(minimizeWindow({ id: id }))}
     >
-      <IconButton size="small">{icon}</IconButton>
-      <Typography variant="body1" component="div" sx={{ pt: 0.6 }}>
-        {title}
+      
+      <Typography variant="body1" component="div" sx={{ padding: 0.6 }}>
+        {icon} {title}
       </Typography>
       <CloseButton id={id} size="small" />
     </Stack>

@@ -113,10 +113,10 @@ export const Windows = createSlice({
       });
       var index = ids.indexOf(action.payload.id);
       if (index > -1) {
-        temp[index].width = 60;
-        temp[index].height = 34;
-        temp[index].style.width = 60;
-        temp[index].style.height = 34;
+        temp[index].width = state.settings.default_document_width;
+        temp[index].height = state.settings.default_document_height;
+        temp[index].style.width = state.settings.default_document_width;
+        temp[index].style.height = state.settings.default_document_height;
       }
       state.windows = temp;
     },

@@ -19,39 +19,13 @@ export default function Window(props) {
     dispatch(removeWindow(props.id));
   };
 
-  if (props.size.width < props.size.minWidth + 1) {
+  if (props.size.width < props.size.minWidth + 1 || props.size.height < props.size.minHeight + 1) {
     return (
       <Chip
-        windata={w}
-        icon={props.icon}
-        onDoubleClick={() => dispatch(maximizeWindow({ id: props.id }))}
-        sx={{
-          border: w.isChecked
-            ? `2px solid ${props.color}`
-            : "1px solid #DDDDDD",
-          boxShadow: "1",
-          cursor: "move",
-          backgroundColor: "white",
-          [`& .MuiChip-icon`]: {
-            color: props.color,
-            fontSize: "1.5em",
-            marginLeft: "1em",
-          },
-        }}
-      />
-    );
-  }
-
-  if (props.size.height < props.size.minHeight + 1) {
-    return (
-      <Chip
-        windata={w}
         label={props.title}
         icon={props.icon}
         onDoubleClick={() => dispatch(maximizeWindow({ id: props.id }))}
-        clickable
         onDelete={handleDelete}
-        className="drag-handle"
         sx={{
           border: w.isChecked
             ? `2px solid ${props.color}`
@@ -59,9 +33,10 @@ export default function Window(props) {
           boxShadow: "1",
           cursor: "move",
           backgroundColor: "white",
-          width: props.size.width,
           [`& .MuiChip-icon`]: {
             color: props.color,
+            // fontSize: "1.5em",
+            // marginLeft: "1em",
           },
         }}
       />
@@ -74,6 +49,7 @@ export default function Window(props) {
       style={{
         height: props.size.height,
         width: props.size.width,
+        overflow: "hidden",
       }}
       sx={{
         boxShadow: "1",
@@ -89,7 +65,6 @@ export default function Window(props) {
           title={props.title}
           id={props.id}
           icon={props.icon}
-          isChecked={w.isChecked}
         />
         <Divider />
         <Box
