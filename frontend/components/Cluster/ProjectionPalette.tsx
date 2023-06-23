@@ -4,17 +4,13 @@ import React, { useContext } from "react";
 import {
   IconButton,
   Stack,
-  TextField,
   List,
   ListItem,
-  ListItemText,
   ListItemIcon,
 } from "@mui/material";
 
 import {
-  Flare as FlareIcon,
   Delete as DeleteIcon,
-  Folder as FolderIcon,
   Diversity2 as Diversity2Icon,
 } from "@mui/icons-material";
 
@@ -22,20 +18,20 @@ import {
 import EditableText from "@/components/EditableText";
 
 // actions
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 
 // utils
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
+import { NewItemForm } from "../NewItemForm";
 
 export default function Clusters(props) {
   const client = useContext(StompContext);
-
-  const session_id = useAppSelector(
-    (state: RootState) => state.activeSessionID.value
-  );
+  const settings = useAppSelector((state: RootState) => state.windows.settings);
+  const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
   const swr = useContext(swrContext);
+  
   const { projections_raw } = swr.useSWRAbstract(
     "projections_raw",
     `sessions/${session_id}/projections`
@@ -49,13 +45,6 @@ export default function Clusters(props) {
     return ret;
   });
 
-  const [value, setValue] = React.useState(null);
-
-  const keyChange = (e) => {
-    if (e.code == "Enter") {
-      client.initialize_projection(session_id, value);
-    }
-  };
   const onDragStart = (event, id, type, typetag) => {
     event.dataTransfer.setData("application/reactflow/type", type);
     event.dataTransfer.setData("application/reactflow/id", `${id}%${typetag}`);
@@ -64,35 +53,12 @@ export default function Clusters(props) {
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
-      <Stack>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          style={{ margin: 0 }}
-        >
-          <TextField
-            label="Create new Projection..."
-            placeholder="Type label and press enter."
-            variant="standard"
-            onKeyDown={(e) => keyChange(e)}
-            onChange={(e) => setValue(e.target.value)}
-            InputLabelProps={{
-              sx: {
-                "&.Mui-focused": {
-                  color: props.color,
-                },
-              },
-            }}
-            sx={{
-              width: "100%",
-              margin: 1,
-              // '& .MuiInput-underline:before': {borderBottomColor: props.color},
-              "& .MuiInput-underline:after": { borderBottomColor: props.color },
-              // '& .MuiInputLabel-root': {borderBottomColor: props.color},
-            }}
-          />
-        </Stack>
+            <Stack>
+
+      <NewItemForm 
+        label="Create new Projection"
+        HandleSubmit={(e) => client.initialize_projection(session_id, e.target.value)}      
+      />
         <List>
           {projections?.map((p) => {
             return (
@@ -146,7 +112,7 @@ export default function Clusters(props) {
             );
           })}
         </List>
-      </Stack>
+        </Stack>
     </div>
   );
 }

@@ -26,13 +26,17 @@ import { RootState } from "@/stores/store";
 // utils
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
+import WindowDefinitions from "./WindowFolder/WindowDefinitions";
+import { NewItemForm } from "./NewItemForm";
 
 export default function Notes(props) {
   const client = useContext(StompContext);
+  const windows = useAppSelector((state: RootState) => state.windows);
+  const wdefs = WindowDefinitions(windows);
+  const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
 
-  const session_id = useAppSelector(
-    (state: RootState) => state.activeSessionID.value
-  );
+  const settings = useAppSelector((state) => state.windows.settings);
+
   const swr = useContext(swrContext);
   const { notes_raw } = swr.useSWRAbstract(
     "notes_raw",
@@ -48,35 +52,26 @@ export default function Notes(props) {
     return ret;
   });
 
-  const [value, setValue] = React.useState(null);
-
   const onDragStart = (event, id, type, typetag) => {
     event.dataTransfer.setData("application/reactflow/type", type);
     event.dataTransfer.setData("application/reactflow/id", `${id}%${typetag}`);
     event.dataTransfer.effectAllowed = "move";
   };
 
-  const NewNote = () => {
-    const client = useContext(StompContext);
-    const session_id = useAppSelector((state) => state.activeSessionID.value);
 
-    const handleNewNote = () => {
+
+    const handleNewNote = (e) => {
       const content = convertToRaw(ContentState.createFromText(" "));
-      client.add_note(session_id, "new note", content);
+      client.add_note(session_id, e.target.value, content);
     };
 
-    return (
-      <Tooltip title="Create new note" key="Create new note">
-        <IconButton onClick={handleNewNote}>
-          <CreateIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    );
-  };
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
-      <ButtonActions inner={[[NewNote, {}]]}></ButtonActions>
+      <NewItemForm 
+        label="Create new note" 
+        HandleSubmit={handleNewNote}      
+      />
       <List>
         {notes?.map((n) => (
           <div
@@ -96,9 +91,7 @@ export default function Notes(props) {
               >
                 <Stack direction="row" alignItems="center">
                   <ListItemIcon>
-                    <IconButton>
-                      <CreateIcon />
-                    </IconButton>
+                      {wdefs["Note"].icon()}
                   </ListItemIcon>
 
                   <EditableText

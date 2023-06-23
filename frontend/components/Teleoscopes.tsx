@@ -23,6 +23,7 @@ import { RootState } from "@/stores/store";
 // utils
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
+import { NewItemForm } from "./NewItemForm";
 
 export default function Teleoscopes(props) {
   const client = useContext(StompContext);
@@ -51,15 +52,7 @@ export default function Teleoscopes(props) {
     return ret;
   });
 
-  const [value, setValue] = React.useState(null);
-
-  const keyChange = (e) => {
-    if (e.code == "Enter") {
-      client.initialize_teleoscope(session_id, value);
-      // const mid = msg["message_id"]
-    }
-      
-  };
+  const keyChange = (e) => client.initialize_teleoscope(session_id, e.target.value);
 
   const onDragStart = (event, id, type, typetag) => {
     event.dataTransfer.setData("application/reactflow/type", type);
@@ -70,36 +63,7 @@ export default function Teleoscopes(props) {
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
       <Stack>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          style={{ margin: 0 }}
-        >
-          <TextField
-            label="Create new Teleoscope..."
-            placeholder="Type label and press enter."
-            variant="standard"
-            onKeyDown={(e) => keyChange(e)}
-            onChange={(e) => setValue(e.target.value)}
-            InputLabelProps={{
-              sx: {
-                "&.Mui-focused": {
-                  color: settings.color,
-
-                },
-              },
-            }}
-            sx={{
-              width: "100%",
-              margin: 1,
-              // '& .MuiInput-underline:before': {borderBottomColor: props.color},
-              "& .MuiInput-underline:after": { borderBottomColor: settings.color },
-
-              // '& .MuiInputLabel-root': {borderBottomColor: props.color},
-            }}
-          />
-        </Stack>
+        <NewItemForm label="Create new Teleoscope..."  HandleSubmit={keyChange} /> 
         <List>
           {teleoscopes?.map((t) => (
             <div
