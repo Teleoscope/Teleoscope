@@ -1,11 +1,11 @@
-
+// HelpMenu.tsx
 import { Divider, Snackbar, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useKeyPress } from "reactflow";
 import PanToolIcon from "@mui/icons-material/PanTool";
 import ControlCameraIcon from "@mui/icons-material/ControlCamera";
 import { GiResize } from 'react-icons/gi';
-import { CgScrollV } from 'react-icons/Cg';
+import { CgScrollV } from 'react-icons/cg';
 import ReadMoreIcon from "@mui/icons-material/ReadMore";
 
 export default function HelpMenu(props) {
