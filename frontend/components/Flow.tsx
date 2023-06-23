@@ -24,6 +24,7 @@ import lodash from 'lodash';
 import { setNodes, setEdges, setColor } from "@/actions/windows";
 import { loadBookmarkedDocuments } from "@/actions/windows";
 import WindowNode from "@/components/Nodes/WindowNode";
+import ButtonEdge from "@/components/ButtonEdge";
 
 
 function Flow(props) {
@@ -37,8 +38,14 @@ function Flow(props) {
   const nodeTypes = useMemo(
     () => ({ 
     windowNode: WindowNode,
-    ...nodeTypeDefs  
-  }),[]);
+    ...nodeTypeDefs
+  }), []);
+
+  const edgeTypes = useMemo(
+    () => ({
+      default: ButtonEdge
+    }), []);
+
 
   const client = useContext(StompContext);
   const swr = useContext(swrContext);
@@ -369,6 +376,7 @@ function Flow(props) {
             edges={edges}
             tempEdges={tempEdges}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onDragOver={onDragOver}
