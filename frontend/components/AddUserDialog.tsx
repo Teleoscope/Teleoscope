@@ -32,7 +32,7 @@ export default function AddUserDialogue(props) {
           onChange={(event) => setDialogValue({ label: event.target.value })}
         >
           <MenuItem value="">None</MenuItem>
-          {users.map((u) => (
+          {users?.map((u) => (
             <MenuItem key={u._id} value={u}>
               {u.username}
             </MenuItem>

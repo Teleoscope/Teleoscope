@@ -13,12 +13,13 @@ export default function BookmarkSelector(props) {
   const dispatch = useDispatch();
   const bookmarks = useSelector((state) => state.windows.bookmarks);
   const marked = bookmarks.includes(props.id);
+  const settings = useSelector((state) => state.windows.settings);
 
   return (
     <IconButton onClick={() => dispatch(bookmark(props.id))}>
 
       {marked ? (
-        <StarOutlinedIcon color="secondary" sx={{ fontSize: 15 }} />
+        <StarOutlinedIcon sx={{ color: settings.color, fontSize: 15 }} />
       ) : (
         <StarOutlineOutlinedIcon sx={{ fontSize: 15 }} />
       )}

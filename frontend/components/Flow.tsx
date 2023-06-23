@@ -25,7 +25,7 @@ import { setNodes, setEdges, setColor } from "@/actions/windows";
 import { loadBookmarkedDocuments } from "@/actions/windows";
 import WindowNode from "@/components/Nodes/WindowNode";
 import ButtonEdge from "@/components/ButtonEdge";
-
+import Keylogger from "./Keylogger";
 
 function Flow(props) {
   const windowState = useAppSelector((state) => state.windows);
@@ -34,6 +34,8 @@ function Flow(props) {
     obj[w] = def.nodetype;
     return obj;
   }, {})
+
+  
   
   const nodeTypes = useMemo(
     () => ({ 
@@ -361,6 +363,9 @@ function Flow(props) {
         throttledSave.cancel();
       };
     }, []);
+
+  
+
 
 
   return (
