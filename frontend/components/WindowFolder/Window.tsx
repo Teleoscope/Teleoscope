@@ -22,8 +22,18 @@ export default function Window(props) {
   if (props.size.width < props.size.minWidth + 1 || props.size.height < props.size.minHeight + 1) {
     return (
       <Chip
-        label={props.title}
-        icon={props.icon}
+        label={
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexShrink: 2, 
+              width: props.size.width,
+              paddingLeft: "2px"
+            }}
+          >{props.title}
+          </Box>
+        }
+        avatar={<span style={{width: "1em", padding: "0.425em"}}>{props.icon}</span>}
         onDoubleClick={() => dispatch(maximizeWindow({ id: props.id }))}
         onDelete={handleDelete}
         sx={{
@@ -32,6 +42,7 @@ export default function Window(props) {
             : "1px solid #DDDDDD",
           boxShadow: "1",
           cursor: "move",
+          
           backgroundColor: "white",
           [`& .MuiChip-icon`]: {
             color: props.color,

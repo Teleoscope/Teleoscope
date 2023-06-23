@@ -66,7 +66,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  SourceNode,      
       title:     (d) => `${d?.history[0].label}`,
       color:     () => color,
-      icon:      () => <IconContext.Provider value={{ color: color}}><BsSticky /></IconContext.Provider>,
+      icon:      () => <IconContext.Provider value={{size: "2em", color: color}}><BsSticky /></IconContext.Provider>,
       component: (w, id, color) => <Note id={id} windata={w} color={color} />,
     },
     Notes: {
@@ -76,7 +76,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      () => <IconContext.Provider value={{ color: color}}><BsStickies /></IconContext.Provider>,
+      icon:      () => <IconContext.Provider value={{size: "2em", color: color}}><BsStickies /></IconContext.Provider>,
       component: (w, id, color) => <Notes id={id} windata={w} color={color} />,
     },
     FABMenu: {
@@ -86,7 +86,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
-      icon:      () => <AddIcon fontSize="inherit" />,
+      icon:      () => <AddIcon />,
       component: (w, id, color) => <FABMenu id={id} windata={w} color={color} />,
     },
     Group: {
@@ -96,7 +96,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  SourceNode,      
       title:     (d) => `Group: ${d?.history[0].label}`,
       color:     (d) => d?.history[0].color,
-      icon:      (d) => <TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
+      icon:      (d) => <TopicIcon sx={{ color: d?.history[0].color }} />,
       component: (w, id, color) => <Group id={id} windata={w} color={color} />,
     },
     Document: {
@@ -106,7 +106,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  SourceNode,      
       title:     (d) => PreprocessTitle(d?.title),
       color:     () => color,
-      icon:      () => <ShortTextIcon fontSize="inherit" />,
+      icon:      () => <ShortTextIcon />,
       component: (w, id, color) => <Document id={id} windata={w} color={color} />,
     },
     Teleoscope: {
@@ -116,7 +116,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  TargetNode,      
       title:     (d) => `Teleoscope: ${d?.history[0].label}`,
       color:     (d) => d?.history[0].color,
-      icon:      (d) => <FlareIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
+      icon:      (d) => <FlareIcon sx={{ color: d?.history[0].color }} />,
       component: (w, id, color) => <Teleoscope id={id} windata={w} color={color} />,
     },
     Teleoscopes: {
@@ -126,7 +126,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
-      icon:      () => <FlareIcon fontSize="inherit" sx={style} />,
+      icon:      () => <FlareIcon sx={style} />,
       component: (w, id, color) => <Teleoscopes id={id} windata={w} color={color} />,
     },
     Projection: {
@@ -136,7 +136,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  TargetNode,      
       title:     (d) => `Projection: ${d?.history[0].label}`,
       color:     (d) => d?.history[0].color,
-      icon:      (d) => <Diversity2Icon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
+      icon:      (d) => <Diversity2Icon sx={{ color: d?.history[0].color }} />,
       component: (w, id, color) => <Projection id={id} windata={w} color={color} />,
     },
     Projections: {
@@ -146,12 +146,12 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
-      icon:      () => <Diversity2Icon fontSize="inherit" sx={style} />,
+      icon:      () => <Diversity2Icon sx={style} />,
       component: (w, id, color) => <ProjectionPalette id={id} windata={w} color={color} />,
     },
     "Projection Palette": { // TODO REFACTOR
       icon: () => {
-        return <Diversity2Icon fontSize="inherit" sx={style} />;
+        return <Diversity2Icon sx={style} />;
       },
       component: (w, id, color) => {
         return <ProjectionPalette id={id} windata={w} color={color} />;
@@ -170,7 +170,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
-      icon:      () => <SearchIcon fontSize="inherit" sx={style} />,
+      icon:      () => <SearchIcon sx={style} />,
       component: (w, id, color) => <Search id={id} windata={w} color={color} />,
     },
     Groups: {
@@ -180,7 +180,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
-      icon:      () => <FolderCopyIcon fontSize="inherit" sx={style} />,
+      icon:      () => <FolderCopyIcon sx={style} />,
       component: (w, id, color) => <Groups id={id} windata={w} color={color} />,
     },
     Clusters: {
@@ -190,7 +190,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
-      icon:      () => <Diversity2Icon fontSize="inherit" sx={style} />,
+      icon:      () => <Diversity2Icon sx={style} />,
       component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
     },
     Cluster: {
@@ -200,7 +200,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,      
       title:     (d) => d?.history[0].label,
       color:     (d) => d?.history[0].color,
-      icon:      (d) => <TopicIcon fontSize="inherit" sx={{ color: d?.history[0].color }} />,
+      icon:      (d) => <TopicIcon sx={{ color: d?.history[0].color }} />,
       component: (w, id, color) => <Cluster id={id} windata={w} color={color} />,
     },
     Bookmarks: {
@@ -210,7 +210,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
-      icon:      () => <IconContext.Provider value={{ color: color}}><RiBookmark3Line /></IconContext.Provider>,
+      icon:      () => <IconContext.Provider value={{size: "2em", color: color}}><RiBookmark3Line /></IconContext.Provider>,
       component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
     },
     Settings: {
@@ -220,7 +220,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,      
       title:     function () {return this.type},
       color:     () => color,
-      icon:      () => <SettingsIcon fontSize="inherit" sx={style} />,
+      icon:      () => <SettingsIcon sx={style} />,
       component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
     },
     Workflows: {
@@ -230,7 +230,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  WindowNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <AccountTreeIcon fontSize="inherit" sx={sx} />,
+      icon:      (sx = style) => <AccountTreeIcon sx={sx} />,
       component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
     },
     Operation: {
@@ -240,7 +240,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <AccountTreeIcon fontSize="inherit" sx={sx} />,
+      icon:      (sx = style) => <AccountTreeIcon sx={sx} />,
       component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
     },
     Filter: {
@@ -250,7 +250,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <MdManageSearch fontSize="inherit" />,
+      icon:      (sx = style) => <MdManageSearch />,
       component: (w, id, color) => <Filter id={id} windata={w} color={color} />,
     },
     Intersection: {
@@ -260,7 +260,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <IconContext.Provider value={{ color: color}}><CgPathIntersect /></IconContext.Provider>,
+      icon:      (sx = style) => <IconContext.Provider value={{size: "2em", color: color}}><CgPathIntersect /></IconContext.Provider>,
       component: (w, id, color) => <Intersection id={id} windata={w} color={color} />,
     },
     Exclusion: {
@@ -270,7 +270,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <IconContext.Provider value={{ color: color}}><CgPathExclude /></IconContext.Provider>,
+      icon:      (sx = style) => <IconContext.Provider value={{size: "2em", color: color}}><CgPathExclude /></IconContext.Provider>,
       component: (w, id, color) => <Exclusion id={id} windata={w} color={color} />,
     },
     Union: {
@@ -280,7 +280,7 @@ export default function WindowDefinitions(windowState) {
       nodetype: OperationNode,
       title:     function () {return this.type},
       color:     () => color,
-      icon:      (sx = style) => <IconContext.Provider value={{ color: color}}><CgPathIntersect /></IconContext.Provider>,
+      icon:      (sx = style) => <IconContext.Provider value={{size: "2em", color: color}}><CgPathIntersect /></IconContext.Provider>,
       component: (w, id, color) => <Union id={id} windata={w} color={color} />,
     },
   };
