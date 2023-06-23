@@ -1,6 +1,7 @@
 // FlowWrapper.jsx
 import React from 'react';
 import ReactFlow from 'reactflow';
+import ConnectionLine from './ConnectionLine';
 
 const FlowWrapper = ({
   nodes, 
@@ -19,12 +20,16 @@ const FlowWrapper = ({
   onNodeDragStop,
   onPaneContextMenu,
   onSelectionChange,
+  edgeTypes,
   children
 }) => {
+
+
   return (
     <ReactFlow
       nodes={nodes}
       edges={edges.concat(tempEdges)}
+      edgeTypes={edgeTypes}
       nodeTypes={nodeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
@@ -43,6 +48,7 @@ const FlowWrapper = ({
       onNodeDragStop={onNodeDragStop}
       onPaneContextMenu={onPaneContextMenu}
       onSelectionChange={onSelectionChange}
+      connectionLineComponent={ConnectionLine}
     >
       {children}
     </ReactFlow>

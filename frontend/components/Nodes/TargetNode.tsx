@@ -1,6 +1,7 @@
 import { memo } from "react";
-import { Handle, Position } from "reactflow";
+import { Position } from "reactflow";
 import BaseNode from "@/components/Nodes/BaseNode";
+import Handle from "@/components/Nodes/Handle";
 
 function TargetNode({ data, id, selected }) {
   return (
