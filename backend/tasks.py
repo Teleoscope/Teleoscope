@@ -1495,7 +1495,7 @@ def add_item(*args, **kwargs):
             color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
             res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id)
             message(userid, {
-                "oid": res.inserted_id,
+                "oid": str(res.inserted_id),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
                 "description": "Associate OID with UID."
@@ -1544,6 +1544,7 @@ def message(userid: ObjectId, msg):
     queue_name = str(userid)
     message = msg
     channel.basic_publish(exchange='', routing_key=queue_name, body=message)
+    logging.info(f"Sent to queue for userid {userid} and with message {msg}.")
 
 @app.task
 def ping(*args, **kwargs):

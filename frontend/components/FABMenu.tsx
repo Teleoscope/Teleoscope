@@ -30,7 +30,7 @@ export default function FABMenu(props) {
     "Search",
     "Teleoscopes",
     "Projections",
-    "Groups",
+    "Group",
     "Notes",
     "Filter",
     "Intersection",
