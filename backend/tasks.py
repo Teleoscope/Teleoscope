@@ -1542,9 +1542,8 @@ def message(userid: ObjectId, msg):
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     queue_name = str(userid)
-    message = json.dumps(msg)
-    channel.basic_publish(exchange='', routing_key=queue_name, body=message)
-    logging.info(f"Sent to queue for userid {userid} and with message {str(msg)}.")
+    channel.basic_publish(exchange='', routing_key=queue_name, body=json.dumps(msg))
+    logging.info(f"Sent to queue for userid {userid} and with message {json.dumps(msg)}.")
 
 @app.task
 def ping(*args, **kwargs):

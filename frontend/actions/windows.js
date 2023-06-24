@@ -259,6 +259,7 @@ export const Windows = createSlice({
       }
     },
     OID_UID_SYNC: (state, action) => {
+      console.log("Received OID UID SYNC for", action)
       var temp = [...state.nodes];
       var index = state.nodes.map((n) => {
         return n.uid;
