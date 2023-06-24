@@ -485,7 +485,7 @@ def add_group(*args, description="A group", documents=[], **kwargs):
     # handle kwargs
     color = kwargs["color"]
     label = kwargs["label"]
-    _id = ObjectId(str(kwargs["session_id"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
     userid = kwargs["userid"]
     
     user = db.users.find_one({"_id": ObjectId(str(userid))})
@@ -493,34 +493,31 @@ def add_group(*args, description="A group", documents=[], **kwargs):
     if user != None:
         user_id = user['_id']
 
-    # teleoscope_result = initialize_teleoscope(userid=userid, session_id=_id, label=label)
-
     # Creating document to be inserted into mongoDB
-
-    obj = schemas.create_group_object(color, documents, label, "Initialize group", user_id, description)
+    obj = schemas.create_group_object(
+        color, 
+        documents, 
+        label, 
+        "Initialize group", 
+        user_id, 
+        description, 
+        session_id
+    )
     
-    # call needs to be transactional due to groups & sessions collections being updated
-
-
     groups_res = db.groups.insert_one(obj)
     logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
+    
     # add created groups document to the correct session
-    session = db.sessions.find_one({'_id': _id})
-    if not session:
-        logging.info(f"Warning: session with id {_id} not found.")
-        raise Exception(f"session with id {_id} not found")
-
-    groups = session["history"][0]["groups"]
-    groups.append(groups_res.inserted_id)
+    session = db.sessions.find_one({'_id': session_id})
 
     history_item = session["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
-    history_item["groups"] = groups
     history_item["action"] = f"Initialize new group: {label}"
     history_item["user"] = user_id
+    history_item["oid"] = groups_res.inserted_id
 
-    sessions_res = utils.push_history(db, "sessions", _id, history_item)    
-    logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
+    sessions_res = utils.push_history(db, "sessions", session_id, history_item)    
+    logging.info(f"Associated group {obj['history'][0]['label']} with session {session_id} and result {sessions_res}.")
     return groups_res.inserted_id
     
 @app.task
@@ -551,7 +548,7 @@ def copy_cluster(*args, **kwargs):
         cluster["history"][0]["label"], 
         "Copy cluster", 
         user_id, 
-        cluster["history"][0]["description"])
+        cluster["history"][0]["description"], session_id)
 
     with transaction_session.start_transaction():
         group_res = db.groups.insert_one(obj, session=transaction_session)

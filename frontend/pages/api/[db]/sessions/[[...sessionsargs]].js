@@ -6,14 +6,14 @@ export default async (req, res) => {
   const db = await client.db(req.query.db);
   const { sessionsargs } = req.query;
   var ret;
-  var objid;
+  var session_id;
   var session;
 
   if (sessionsargs?.length > 0 && sessionsargs[0] != "users") {
     if (sessionsargs[0] != "-1") {
-      objid = new ObjectId(sessionsargs[0]);
+      session_id = new ObjectId(sessionsargs[0]);
     } else {
-      objid = -1;
+      session_id = -1;
     }
   }
 
@@ -25,28 +25,14 @@ export default async (req, res) => {
   } else if (sessionsargs.length === 1) {
     ret = await db
       .collection("sessions")
-      .findOne({ _id: objid }, { projection: { history: { $slice: 1 } } });
+      .findOne({ _id: session_id }, { projection: { history: { $slice: 1 } } });
   } else if (sessionsargs.length === 2 && sessionsargs[1] === "groups") {
     // returns groups
     var groups = await db
       .collection("groups")
-      .find({}, { projection: { history: { $slice: 1 } } })
+      .find({ sessions: session_id }, { projection: { history: { $slice: 1 } } })
       .toArray();
-    session = await db
-      .collection("sessions")
-      .findOne({ _id: objid }, { projection: { history: { $slice: 1 } } });
-    var sessionGroups = session?.history[0].groups.map((group) => {
-      return group.toString();
-    });
-    var filteredGroups = groups.filter((group) => {
-      var g = group._id.toString();
-      if (sessionGroups?.includes(g)) {
-        return true;
-      } else {
-        return false;
-      }
-    });
-    ret = filteredGroups;
+    ret = groups;
   } else if (sessionsargs.length === 2 && sessionsargs[1] === "clusters") {
     var clusters = await db
       .collection("clusters")
@@ -54,7 +40,7 @@ export default async (req, res) => {
       .toArray();
     session = await db
       .collection("sessions")
-      .findOne({ _id: objid }, { projection: { history: { $slice: 1 } } });
+      .findOne({ _id: session_id }, { projection: { history: { $slice: 1 } } });
     var sessionClusters = session?.history[0].clusters.map((cluster) => {
       return cluster.toString();
     });
@@ -75,7 +61,7 @@ export default async (req, res) => {
       .toArray();
     session = await db
       .collection("sessions")
-      .findOne({ _id: objid }, { projection: { history: { $slice: 1 } } });
+      .findOne({ _id: session_id }, { projection: { history: { $slice: 1 } } });
     var session_teleoscopes = session?.history[0].teleoscopes.map((t_id) => {
       return t_id.toString();
     });
@@ -96,7 +82,7 @@ export default async (req, res) => {
       .toArray();
     session = await db
       .collection("sessions")
-      .findOne({ _id: objid }, { projection: { history: { $slice: 1 } } });
+      .findOne({ _id: session_id }, { projection: { history: { $slice: 1 } } });
     var session_projections = session?.history[0].projections?.map((p_id) => {
       return p_id.toString();
     });
@@ -117,7 +103,7 @@ export default async (req, res) => {
       .toArray();
     session = await db
       .collection("sessions")
-      .findOne({ _id: objid }, { projection: { history: { $slice: 1 } } });
+      .findOne({ _id: session_id }, { projection: { history: { $slice: 1 } } });
     var session_notes = session?.history[0].notes.map((note_id) => {
       return note_id.toString();
     });
