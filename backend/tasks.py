@@ -1493,7 +1493,7 @@ def add_item(*args, **kwargs):
             import random
             r = lambda: random.randint(0, 255)
             color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
-            res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id)
+            res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
             message(userid, {
                 "oid": str(res),
                 "uid": uid,
@@ -1542,9 +1542,9 @@ def message(userid: ObjectId, msg):
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     queue_name = str(userid)
-    message = msg
+    message = json.dumps(msg)
     channel.basic_publish(exchange='', routing_key=queue_name, body=message)
-    logging.info(f"Sent to queue for userid {userid} and with message {msg}.")
+    logging.info(f"Sent to queue for userid {userid} and with message {str(msg)}.")
 
 @app.task
 def ping(*args, **kwargs):
