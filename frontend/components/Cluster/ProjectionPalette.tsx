@@ -25,6 +25,7 @@ import { RootState } from "@/stores/store";
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
 import { NewItemForm } from "../NewItemForm";
+import { onDragStart } from "@/util/drag";
 
 export default function Clusters(props) {
   const client = useContext(StompContext);
@@ -45,11 +46,6 @@ export default function Clusters(props) {
     return ret;
   });
 
-  const onDragStart = (event, id, type, typetag) => {
-    event.dataTransfer.setData("application/reactflow/type", type);
-    event.dataTransfer.setData("application/reactflow/id", `${id}%${typetag}`);
-    event.dataTransfer.effectAllowed = "move";
-  };
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
@@ -66,13 +62,7 @@ export default function Clusters(props) {
                 key={p._id}
                 style={{ overflow: "auto", height: "100%" }}
                 draggable={true}
-                onDragStart={(e) =>
-                  onDragStart(
-                    e, 
-                    p._id + "%projection", 
-                    "Projection", 
-                    "projection")
-                }
+                onDragStart={(e) => onDragStart(e, p._id, "Projection")}
               >
                 <ListItem key={p._id}>
                   <Stack

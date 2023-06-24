@@ -41,6 +41,7 @@ import { useCookies } from "react-cookie";
 import ColorPicker from "@/components/ColorPicker";
 import EditableText from "@/components/EditableText";
 import ButtonActions from "@/components/ButtonActions";
+import { onDragStart } from "@/util/drag";
 
 // custom components
 export default function GroupsDemo(props) {
@@ -226,12 +227,6 @@ export default function GroupsDemo(props) {
     );
   };
 
-  const onDragStart = (event, id, type, typetag) => {
-    event.dataTransfer.setData("application/reactflow/type", type);
-    event.dataTransfer.setData("application/reactflow/id", `${id}%${typetag}`);
-    event.dataTransfer.effectAllowed = "move";
-  };
-
   const CopyGroup = () => {
     return (
       <Dialog open={open} onClose={handleClose}>
@@ -398,7 +393,7 @@ export default function GroupsDemo(props) {
               draggable={true}
               style={{ position: "relative" }}
               onDragStart={(e) =>
-                onDragStart(e, g._id + "%" + "group", "Group", "group")
+                onDragStart(e, g._id, "Group")
               }
             >
               <ListItem>

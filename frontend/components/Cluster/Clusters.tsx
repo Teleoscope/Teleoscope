@@ -18,6 +18,7 @@ import {
 } from "@mui/icons-material";
 import Stack from "@mui/material/Stack";
 import Divider from "@mui/material/Divider";
+import { onDragStart } from "@/util/drag";
 
 
 
@@ -36,11 +37,6 @@ export default function Clusters(props) {
 
   const { groups } = swr.useSWRAbstract("groups", `sessions/${session_id}/groups`);
 
-  const onDragStart = (event, id, type, typetag) => {
-    event.dataTransfer.setData("application/reactflow/type", type);
-    event.dataTransfer.setData("application/reactflow/id", `${id}%${typetag}`);
-    event.dataTransfer.effectAllowed = "move";
-  };
 
   const runClusters = () => {
     client.cluster_by_groups(
@@ -76,14 +72,7 @@ export default function Clusters(props) {
                   key={cluster._id}
                   style={{ overflow: "auto", height: "100%" }}
                   draggable={true}
-                  onDragStart={(e) =>
-                    onDragStart(
-                      e, 
-                      cluster._id + "%cluster", 
-                      "Cluster", 
-                      "cluster"
-                    )
-                  }
+                  onDragStart={(e) => onDragStart(e, cluster._id, "Cluster")}
                 >
                   <ListItem>
                     <ListItemIcon>

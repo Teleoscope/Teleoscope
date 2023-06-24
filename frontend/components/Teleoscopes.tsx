@@ -24,6 +24,7 @@ import { RootState } from "@/stores/store";
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
 import { NewItemForm } from "./NewItemForm";
+import { onDragStart } from "@/util/drag";
 
 export default function Teleoscopes(props) {
   const client = useContext(StompContext);
@@ -54,12 +55,6 @@ export default function Teleoscopes(props) {
 
   const keyChange = (e) => client.initialize_teleoscope(session_id, e.target.value);
 
-  const onDragStart = (event, id, type, typetag) => {
-    event.dataTransfer.setData("application/reactflow/type", type);
-    event.dataTransfer.setData("application/reactflow/id", `${id}%${typetag}`);
-    event.dataTransfer.effectAllowed = "move";
-  };
-
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
       <Stack>
@@ -70,14 +65,7 @@ export default function Teleoscopes(props) {
               key={t._id}
               draggable={true}
               style={{ position: "relative" }}
-              onDragStart={(e) =>
-                onDragStart(
-                  e,
-                  t._id + "%" + "teleoscope",
-                  "Teleoscope",
-                  "teleoscope"
-                )
-              }
+              onDragStart={(e) => onDragStart(e, t._id, "Teleoscope",)}
             >
               <ListItem key={t._id}>
                 <Stack

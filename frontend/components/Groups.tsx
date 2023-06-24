@@ -30,7 +30,7 @@ return (
     key={g._id}
     draggable={true}
     style={{ position: "relative" }}
-    onDragStart={(e) => onDragStart(e, g._id + "%" + "group", "Group", "group")}
+    onDragStart={(e) => onDragStart(e, g._id, "Group")}
   >
     <ListItem>
       <Stack
@@ -104,6 +104,7 @@ import {
 } from "@/components/GroupsActions";
 import { NewItemForm } from "./NewItemForm";
 import WindowDefinitions from "./WindowFolder/WindowDefinitions";
+import { onDragStart } from "@/util/drag";
 
 export default function Groups(props) {
   const swr = useContext(swrContext);
@@ -117,11 +118,7 @@ export default function Groups(props) {
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
   const [showColorPicker, setShowColorPicker] = useState(false);
 
-  const onDragStart = (event, id, type, typetag) => {
-    event.dataTransfer.setData("application/reactflow/type", type);
-    event.dataTransfer.setData("application/reactflow/id", `${id}%${typetag}`);
-    event.dataTransfer.effectAllowed = "move";
-  };
+  
 
   const fetchgroups = async () => {
     const out = [];
