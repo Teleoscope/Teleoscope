@@ -1479,6 +1479,8 @@ def add_item(*args, **kwargs):
         if docset:
             print(f"{type} with {oid} already in DB.")
             return # perhaps do something else before return like save?
+        # return anyways for now
+        return
     
     logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
