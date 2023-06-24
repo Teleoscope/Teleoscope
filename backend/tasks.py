@@ -1495,7 +1495,7 @@ def add_item(*args, **kwargs):
             color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
             res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id)
             message(userid, {
-                "oid": str(res.inserted_id),
+                "oid": str(res),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
                 "description": "Associate OID with UID."
