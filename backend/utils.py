@@ -61,7 +61,7 @@ def commit_with_retry(session, max_retries=10, retry_delay = 0.1):
         print("Error during commit ...")
 
 
-def push_history(db, transaction_session, collection_name, item_id, history_item):
+def push_history(db, collection_name, item_id, history_item, transaction_session = None):
     """
     Update one document and push a history item.
     """
