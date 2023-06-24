@@ -43,25 +43,25 @@ def create_transaction_session(db=db):
     database = client[db]
     return session, database
 
-def commit_with_retry(session):
-    while True:
+def commit_with_retry(session, max_retries=10, retry_delay = 0.1):
+    import time
+    try_count = 0
+    success = False
+
+    while try_count < max_retries and not success:
         try:
-            # Commit uses write concern set at transaction start.
             session.commit_transaction()
-            print("Transaction committed.")
-            break
-        except (pymongo.errors.ConnectionFailure, pymongo.errors.OperationFailure) as exc:
-            # Can retry commit
-            if exc.has_error_label("UnknownTransactionCommitResult"):
-                print("UnknownTransactionCommitResult, retrying "
-                      "commit operation ...")
-                continue
-            else:
-                print("Error during commit ...")
-                raise
+            success = True
+            logging.info("Transaction committed.")
+        except:
+            try_count += 1
+            time.sleep(retry_delay)
+
+    if not success:
+        print("Error during commit ...")
 
 
-def push_history(db, transaction_session, collection_name, item_id, history_item):
+def push_history(db, collection_name, item_id, history_item, transaction_session = None):
     """
     Update one document and push a history item.
     """

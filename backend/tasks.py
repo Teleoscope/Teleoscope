@@ -99,7 +99,7 @@ def snippet(*args, **kwargs):
     history_item["action"] = f"Add snippet for session {session_id} and document {document_id}."
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         db.snippets.insert_one(snip, session=transaction_session)
         utils.commit_with_retry(transaction_session)
 
@@ -125,7 +125,7 @@ def recolor_session(*args, **kwargs):
     history_item["action"] = "Recolor session."
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
     return 200
 
@@ -151,7 +151,6 @@ def save_UI_state(*args, **kwargs):
         raise Exception("Session not found")
 
     userid = ObjectId(str(kwargs["userid"]))
-    user = db.users.find_one({"_id": userid})
 
     history_item = session["history"][0]
     history_item["bookmarks"] = kwargs["bookmarks"]
@@ -161,9 +160,7 @@ def save_UI_state(*args, **kwargs):
     history_item["action"] = "Save UI state"
     history_item["user"] = userid
 
-    with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
-        utils.commit_with_retry(transaction_session)
+    utils.push_history(db, "sessions", session_id, history_item)
 
     return 200 # success
 
@@ -186,7 +183,7 @@ def relabel_session(*args, **kwargs):
     history_item["action"] = "Relabeled session"
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "sessions", relabeled_session_id, history_item)
+        utils.push_history(db, "sessions", relabeled_session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
     return 200
 
@@ -210,7 +207,7 @@ def relabel_group(*args, **kwargs):
     history_item["action"] = "Relabeled group"
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "groups", group_id, history_item)
+        utils.push_history(db, "groups", group_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
     return 200
 
@@ -232,7 +229,7 @@ def relabel_teleoscope(*args, **kwargs):
     history_item["user"] = userid
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "teleoscopes", teleoscope_id, history_item)
+        utils.push_history(db, "teleoscopes", teleoscope_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
     return 200
 
@@ -265,7 +262,7 @@ def save_teleoscope_state(*args, **kwargs):
     history_item["action"] = "Save Teleoscope state"
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "teleoscopes", obj_id, history_item)
+        utils.push_history(db, "teleoscopes", obj_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
     
@@ -287,7 +284,7 @@ def recolor_group(*args, **kwargs):
     history_item["user"] = userid
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "groups", group_id, history_item)
+        utils.push_history(db, "groups", group_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
     return 200
 
@@ -463,7 +460,7 @@ def initialize_teleoscope(*args, **kwargs):
         history_item["user"] = user_id
 
         # associate the newly created teleoscope with correct session
-        utils.push_history(db, transaction_session, "sessions", ObjectId(str(session_id)), history_item)
+        utils.push_history(db, "sessions", ObjectId(str(session_id)), history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
     return teleoscope_result
 
@@ -504,30 +501,28 @@ def add_group(*args, description="A group", documents=[], **kwargs):
     
     # call needs to be transactional due to groups & sessions collections being updated
 
-    with transaction_session.start_transaction():
-        groups_res = db.groups.insert_one(obj, session=transaction_session)
-        logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
-        # add created groups document to the correct session
-        session = db.sessions.find_one({'_id': _id}, session=transaction_session)
-        if not session:
-            logging.info(f"Warning: session with id {_id} not found.")
-            raise Exception(f"session with id {_id} not found")
 
-        groups = session["history"][0]["groups"]
-        groups.append(groups_res.inserted_id)
+    groups_res = db.groups.insert_one(obj)
+    logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
+    # add created groups document to the correct session
+    session = db.sessions.find_one({'_id': _id})
+    if not session:
+        logging.info(f"Warning: session with id {_id} not found.")
+        raise Exception(f"session with id {_id} not found")
 
-        history_item = session["history"][0]
-        history_item["timestamp"] = datetime.datetime.utcnow()
-        history_item["groups"] = groups
-        history_item["action"] = f"Initialize new group: {label}"
-        history_item["user"] = user_id
+    groups = session["history"][0]["groups"]
+    groups.append(groups_res.inserted_id)
 
-        sessions_res = utils.push_history(db, transaction_session, "sessions", _id, history_item)
-        
-        logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
-        utils.commit_with_retry(transaction_session)
-        return groups_res.inserted_id
-        
+    history_item = session["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["groups"] = groups
+    history_item["action"] = f"Initialize new group: {label}"
+    history_item["user"] = user_id
+
+    sessions_res = utils.push_history(db, "sessions", _id, history_item)    
+    logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
+    return groups_res.inserted_id
+    
 @app.task
 def copy_cluster(*args, **kwargs):
     """
@@ -562,7 +557,7 @@ def copy_cluster(*args, **kwargs):
         group_res = db.groups.insert_one(obj, session=transaction_session)
         history_item = session["history"][0]
         history_item["groups"] = [*history_item["groups"], group_res.inserted_id]
-        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
 
@@ -615,7 +610,7 @@ def copy_group(*args, **kwargs):
     history_item["user"] = user_id
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "groups", group_new_id, history_item)
+        utils.push_history(db, "groups", group_new_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
     res = chain(
@@ -667,7 +662,7 @@ def add_document_to_group(*args, **kwargs):
     history_item["action"] = "Add document to group"
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "groups", group_id, history_item)
+        utils.push_history(db, "groups", group_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
     logging.info(f'Reorienting teleoscope {group["teleoscope"]} for group {group["history"][0]["label"]} for document {document_id}.')
     res = chain(
@@ -704,7 +699,7 @@ def remove_teleoscope(*args, **kwargs):
     history_item["user"] = user_id
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
 
@@ -732,7 +727,7 @@ def remove_group(*args, **kwargs):
     history_item["user"] = user_id
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
         logging.info(f"Removed group {group_id} from session {session_id}.")
 
@@ -766,7 +761,7 @@ def remove_document_from_group(*args, **kwargs):
     history_item["action"] = "Remove document from group"
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "groups", group_id, history_item)
+        utils.push_history(db, "groups", group_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
 
@@ -799,7 +794,7 @@ def update_note(*args, **kwargs):
     history_item["userid"] = userid
 
     with transaction_session.start_transaction():
-        res = utils.push_history(db, transaction_session, "notes", note_id, history_item)
+        res = utils.push_history(db, "notes", note_id, history_item, transaction_session)
         db.notes.update_one({"_id": note_id}, {"$set": {"textVector": vector}}, session=transaction_session)
         utils.commit_with_retry(transaction_session)
         logging.info(f"Updated note {note_id} with {res}.")
@@ -828,7 +823,7 @@ def relabel_note(*args, **kwargs):
     history_item["userid"] = userid
 
     with transaction_session.start_transaction():
-        res = utils.push_history(db, transaction_session, "notes", note_id, history_item)
+        res = utils.push_history(db, "notes", note_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
         logging.info(f"Updated note {note_id} with {res} and label {label}.")
 
@@ -857,7 +852,7 @@ def update_group_label(*args, **kwargs):
     history_item["action"] = "Update group label"
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "groups", group_id, history_item)
+        utils.push_history(db, "groups", group_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
 
@@ -888,7 +883,7 @@ def add_note(*args, **kwargs):
         history_item["user"] = userid,
         history_item["action"] = "Add note"
         history_item["notes"].append(res.inserted_id) 
-        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         logging.info(f"Added note with result {res}.")
         utils.commit_with_retry(transaction_session)
 
@@ -915,7 +910,7 @@ def remove_note(*args, **kwargs):
     history_item["notes"].remove(note_id) 
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
         logging.info(f"Removed note {note_id} from session {session_id}.")
 
@@ -1369,7 +1364,7 @@ def mark(*args, **kwargs):
 
     with transaction_session.start_transaction():
         db.documents.update_one({"_id": document_id}, {"$set": {"state.read": read}})        
-        utils.push_history(db, transaction_session, "teleoscopes", session_id, history_item)
+        utils.push_history(db, "teleoscopes", session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
 @app.task 
@@ -1408,7 +1403,7 @@ def initialize_projection(*args, **kwargs):
         history_item["action"] = f"Initialize new projection: {label}"
         history_item["user"] = user_id
 
-        sessions_res = utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        sessions_res = utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         
         logging.info(f"Associated projection {obj['history'][0]['label']} with session {session_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
@@ -1439,7 +1434,7 @@ def remove_projection(*args, **kwargs):
         cluster.clean_mongodb() # cleans up clusters associate with projection
         db.projections.delete_one({'_id': projection_id}, session=transaction_session) 
 
-        utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
 @app.task
@@ -1461,7 +1456,7 @@ def relabel_projection(*args, **kwargs):
     history_item["user"] = userid
 
     with transaction_session.start_transaction():
-        utils.push_history(db, transaction_session, "projections", projection_id, history_item)
+        utils.push_history(db, "projections", projection_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
     return 200
@@ -1489,6 +1484,18 @@ def add_item(*args, **kwargs):
     logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
     match type:
+        case "Group":
+            import random
+            r = lambda: random.randint(0, 255)
+            color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
+            res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+            message(userid, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })
+    
         case "Filter" | "Intersection" | "Exclusion" | "Union":
             with transaction_session.start_transaction():
                 obj = schemas.create_node(type)
@@ -1517,7 +1524,7 @@ def add_item(*args, **kwargs):
                 history_item["userid"] = userid
                 history_item["logical_clock"] = history_item["logical_clock"] + 1
 
-                utils.push_history(db, transaction_session, "sessions", session_id, history_item)
+                utils.push_history(db, "sessions", session_id, history_item, transaction_session)
                 utils.commit_with_retry(transaction_session)
     return "Help"
 
@@ -1530,8 +1537,8 @@ def message(userid: ObjectId, msg):
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     queue_name = str(userid)
-    message = msg
-    channel.basic_publish(exchange='', routing_key=queue_name, body=message)
+    channel.basic_publish(exchange='', routing_key=queue_name, body=json.dumps(msg))
+    logging.info(f"Sent to queue for userid {userid} and with message {json.dumps(msg)}.")
 
 @app.task
 def ping(*args, **kwargs):

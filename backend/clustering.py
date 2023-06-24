@@ -490,7 +490,7 @@ class Clustering:
             history_item["source_groups"] = []
             history_item["action"] = "reset clusters"
             
-            utils.push_history(self.db, self.transaction_session, "projections", projection_id, history_item)
+            utils.push_history(self.db, "projections", projection_id, history_item, self.transaction_session)
         
         logging.info(f'No clusters for user. Ready to populate.')
 
@@ -529,7 +529,7 @@ class Clustering:
                 "position": len(group["history"])
             })
         
-        utils.push_history(self.db, self.transaction_session, "projections", projection_id, history_item)
+        utils.push_history(self.db, "projections", projection_id, history_item, self.transaction_session)
 
         return 200 
     
@@ -560,5 +560,5 @@ class Clustering:
         history_item["action"] = f"Initialize new cluster: {label}"
         history_item["user"] = self.user_id
 
-        utils.push_history(self.db, self.transaction_session, "projections", projection_id, history_item)
+        utils.push_history(self.db, "projections", projection_id, history_item, self.transaction_session)
         
