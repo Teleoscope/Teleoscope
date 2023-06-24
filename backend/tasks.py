@@ -518,6 +518,7 @@ def add_group(*args, description="A group", documents=[], **kwargs):
 
     sessions_res = utils.push_history(db, "sessions", session_id, history_item)    
     logging.info(f"Associated group {obj['history'][0]['label']} with session {session_id} and result {sessions_res}.")
+
     return groups_res.inserted_id
     
 @app.task
