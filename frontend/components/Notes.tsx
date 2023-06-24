@@ -28,6 +28,7 @@ import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
 import WindowDefinitions from "./WindowFolder/WindowDefinitions";
 import { NewItemForm } from "./NewItemForm";
+import { onDragStart } from "@/util/drag";
 
 export default function Notes(props) {
   const client = useContext(StompContext);
@@ -52,12 +53,6 @@ export default function Notes(props) {
     return ret;
   });
 
-  const onDragStart = (event, id, type, typetag) => {
-    event.dataTransfer.setData("application/reactflow/type", type);
-    event.dataTransfer.setData("application/reactflow/id", `${id}%${typetag}`);
-    event.dataTransfer.effectAllowed = "move";
-  };
-
 
 
     const handleNewNote = (e) => {
@@ -79,7 +74,7 @@ export default function Notes(props) {
             draggable={true}
             style={{ position: "relative" }}
             onDragStart={(e) =>
-              onDragStart(e, n._id + "%" + "note", "Note", "note")
+              onDragStart(e, n._id, "Note")
             }
           >
             <ListItem key={n._id}>

@@ -19,6 +19,7 @@ import { PreprocessTitle } from "@/util/Preprocessers";
 
 // contexts
 import { StompContext } from "@/components/Stomp";
+import { onDragStart } from "@/util/drag";
 
 export default function DocumentListItem(props) {
   const client = useContext(StompContext);
@@ -29,12 +30,6 @@ export default function DocumentListItem(props) {
 
   const handleRemove = () => {
     client.remove_document_from_group(props.group._id, props.id);
-  };
-
-  const onDragStart = (event, id, type, typetag) => {
-    event.dataTransfer.setData("application/reactflow/type", type);
-    event.dataTransfer.setData("application/reactflow/id", `${id}%${typetag}`);
-    event.dataTransfer.effectAllowed = "move";
   };
 
   const handleSetIndex = () => {
@@ -49,9 +44,7 @@ export default function DocumentListItem(props) {
     <div
       draggable={true}
       onClick={handleSetIndex}
-      onDragStart={(e) =>
-        onDragStart(e, props.id + "%" + "document", "Document", "document")
-      }
+      onDragStart={(e) => onDragStart(e, props.id, "Document")}
       style={{
         ...props.style,
         position: "relative",
