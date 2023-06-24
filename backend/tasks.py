@@ -501,30 +501,28 @@ def add_group(*args, description="A group", documents=[], **kwargs):
     
     # call needs to be transactional due to groups & sessions collections being updated
 
-    with transaction_session.start_transaction():
-        groups_res = db.groups.insert_one(obj, session=transaction_session)
-        logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
-        # add created groups document to the correct session
-        session = db.sessions.find_one({'_id': _id}, session=transaction_session)
-        if not session:
-            logging.info(f"Warning: session with id {_id} not found.")
-            raise Exception(f"session with id {_id} not found")
 
-        groups = session["history"][0]["groups"]
-        groups.append(groups_res.inserted_id)
+    groups_res = db.groups.insert_one(obj)
+    logging.info(f"Added group {obj['history'][0]['label']} with result {groups_res}.")
+    # add created groups document to the correct session
+    session = db.sessions.find_one({'_id': _id})
+    if not session:
+        logging.info(f"Warning: session with id {_id} not found.")
+        raise Exception(f"session with id {_id} not found")
 
-        history_item = session["history"][0]
-        history_item["timestamp"] = datetime.datetime.utcnow()
-        history_item["groups"] = groups
-        history_item["action"] = f"Initialize new group: {label}"
-        history_item["user"] = user_id
+    groups = session["history"][0]["groups"]
+    groups.append(groups_res.inserted_id)
 
-        sessions_res = utils.push_history(db, "sessions", _id, history_item, transaction_session)
-        
-        logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
-        utils.commit_with_retry(transaction_session)
-        return groups_res.inserted_id
-        
+    history_item = session["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["groups"] = groups
+    history_item["action"] = f"Initialize new group: {label}"
+    history_item["user"] = user_id
+
+    sessions_res = utils.push_history(db, "sessions", _id, history_item)    
+    logging.info(f"Associated group {obj['history'][0]['label']} with session {_id} and result {sessions_res}.")
+    return groups_res.inserted_id
+    
 @app.task
 def copy_cluster(*args, **kwargs):
     """
