@@ -123,6 +123,7 @@ export class Stomp {
         console.log("Received: ", body);
 
         if (body.action == "OID_UID_SYNC") {
+          console.log("Received and dispatching OID_UID_SYNC", body)
           store.dispatch(OID_UID_SYNC(body));
         }
 

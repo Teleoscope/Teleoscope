@@ -262,11 +262,11 @@ export const Windows = createSlice({
       console.log("Received OID UID SYNC for", action)
       var temp = [...state.nodes];
       var index = state.nodes.map((n) => {
-        return n.uid;
+        return n.data.uid;
       }).indexOf(action.payload.uid);
       
       if (index > -1) {
-        const id = `${oid}%${uid}${temp[index].data.type.toLowerCase()}`
+        const id = `${action.payload.oid}%${action.payload.uid}${temp[index].data.type.toLowerCase()}`
         temp[index].data.oid = action.payload.oid;
         temp[index].data.label = id
         temp[index].id = id
