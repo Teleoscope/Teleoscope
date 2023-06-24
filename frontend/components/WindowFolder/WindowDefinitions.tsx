@@ -12,6 +12,8 @@ import CommentIcon from "@mui/icons-material/Comment";
 import StarIcon from "@mui/icons-material/Star";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import FolderIcon from "@mui/icons-material/Folder";
+
 
 import { CgPathIntersect, CgPathExclude, CgPathUnite } from 'react-icons/cg';
 import { MdManageSearch } from 'react-icons/md';
@@ -96,7 +98,7 @@ export default function WindowDefinitions(windowState) {
       nodetype:  SourceNode,      
       title:     (d) => `Group: ${d?.history[0].label}`,
       color:     (d) => d?.history[0].color,
-      icon:      (d) => <TopicIcon sx={{ color: d?.history[0].color }} fontSize="inherit"  />,
+      icon:      (d) => <FolderIcon sx={{ color: d?.history[0].color }} fontSize="inherit"  />,
       component: (w, id, color) => <Group id={id} windata={w} color={color} />,
     },
     Document: {
