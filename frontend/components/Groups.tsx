@@ -8,7 +8,6 @@ import { Stack } from "@mui/material";
 
 import { ListItem, ListItemIcon, IconButton } from "@mui/material";
 import {
-  Folder as FolderIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import EditableText from "@/components/EditableText";
@@ -23,7 +22,10 @@ export const GroupItem = ({
   relabelGroup,
   recolorGroup,
   color,
-}) => (
+}) => {
+const windows = useAppSelector((state) => state.windows);
+const wdefs = WindowDefinitions(windows);
+return (
   <div
     key={g._id}
     draggable={true}
@@ -40,7 +42,7 @@ export const GroupItem = ({
         <Stack direction="row" alignItems="center">
           <ListItemIcon>
             <IconButton onClick={() => setShowColorPicker(!showColorPicker)}>
-              <FolderIcon sx={{ color: g.history[0].color }} />
+              {wdefs["Group"].icon(g)}
             </IconButton>
           </ListItemIcon>
 
@@ -74,7 +76,7 @@ export const GroupItem = ({
       <span></span>
     )}
   </div>
-);
+)};
 
 // GroupList.js
 
@@ -101,6 +103,7 @@ import {
   CopyTextAction,
 } from "@/components/GroupsActions";
 import { NewItemForm } from "./NewItemForm";
+import WindowDefinitions from "./WindowFolder/WindowDefinitions";
 
 export default function Groups(props) {
   const swr = useContext(swrContext);
