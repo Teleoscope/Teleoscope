@@ -730,7 +730,8 @@ def remove_group(*args, **kwargs):
     history_item["oid"] = group_id
 
     with transaction_session.start_transaction():
-        db.groups.update_one({"_id": group_id}, {"$pull": {"sessions": session_id}}, {"$push": {"cluster": None}})
+        db.groups.update_one({"_id": group_id}, {"$pull": {"sessions": session_id}})
+        db.groups.update_one({"_id": group_id}, {"$push": {"cluster": None}})
         utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
         logging.info(f"Removed group {group_id} from session {session_id}.")
