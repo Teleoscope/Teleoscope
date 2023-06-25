@@ -29,7 +29,7 @@ export default function WindowFactory(props) {
     projectionpalette: "projectionpalette",
     search: "search",
     groups: "groups",
-    cluster: "clusters",
+    cluster: "groups",
     operation: "operation",
     intersection: "intersection",
     ...paths

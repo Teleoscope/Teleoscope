@@ -55,7 +55,7 @@ export default function Clusters(props) {
           alignItems="center"
           style={{ margin: 0 }}
         >
-          <Tooltip title="Cluster on exisitng groups...">
+          <Tooltip title="Cluster on existing groups...">
           <IconButton onClick={runClusters}>
             <Diversity2Icon fontSize="small" />
           </IconButton>

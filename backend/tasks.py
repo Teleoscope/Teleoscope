@@ -558,6 +558,8 @@ def copy_cluster(*args, **kwargs):
         utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
+    return group_res.inserted_id
+
 
 @app.task
 def copy_group(*args, **kwargs):
@@ -1486,11 +1488,16 @@ def add_item(*args, **kwargs):
     logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
     match type:
-        case "Group":
+        case "Group" | "Cluster":
             import random
             r = lambda: random.randint(0, 255)
             color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
-            res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+            
+            if type == "Group":
+                res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+            if type == "Cluster":
+                res = copy_cluster(db=database, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
+            
             message(userid, {
                 "oid": str(res),
                 "uid": uid,

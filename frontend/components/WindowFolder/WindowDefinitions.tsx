@@ -151,20 +151,6 @@ export default function WindowDefinitions(windowState) {
       icon:      () => <Diversity2Icon sx={style} fontSize="inherit" />,
       component: (w, id, color) => <ProjectionPalette id={id} windata={w} color={color} />,
     },
-    "Projection Palette": { // TODO REFACTOR
-      icon: () => {
-        return <Diversity2Icon sx={style} fontSize="inherit" />;
-      },
-      component: (w, id, color) => {
-        return <ProjectionPalette id={id} windata={w} color={color} />;
-      },
-      showWindow: false,
-      title: () => {
-        return `Projections`;
-      },
-      color: () => color,
-      tag: "projectionpalette",
-    },
     Search: {
       tag:       "search",
       type:      "Search",
@@ -196,14 +182,14 @@ export default function WindowDefinitions(windowState) {
       component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
     },
     Cluster: {
-      tag:       "cluster",
-      type:      "Cluster",
-      apipath:   "cluster",
-      nodetype:  WindowNode,      
-      title:     (d) => d?.history[0].label,
+      tag:       "group",
+      type:      "Group",
+      apipath:   "groups",
+      nodetype:  SourceNode,      
+      title:     (d) => `Group: ${d?.history[0].label}`,
       color:     (d) => d?.history[0].color,
-      icon:      (d) => <TopicIcon sx={{ color: d?.history[0].color }} fontSize="inherit"  />,
-      component: (w, id, color) => <Cluster id={id} windata={w} color={color} />,
+      icon:      (d) => <FolderIcon sx={{ color: d?.history[0].color }} fontSize="inherit"  />,
+      component: (w, id, color) => <Group id={id} windata={w} color={color} />,
     },
     Bookmarks: {
       tag:       "bookmarks",
