@@ -1508,30 +1508,39 @@ def add_item(*args, **kwargs):
     type = kwargs["type"]
     oid  = kwargs["oid"]
 
-    # If this already exists in the database, we can skip intitalization
-    # Ignore this if type is cluster. Hacky solution to ignore copy_cluster
-    if ObjectId.is_valid(oid) & (type != "Cluster"):
-
-        docset = db.graph.find_one({"_id" : oid})
-        if docset:
-            logging.info(f"{type} with {oid} already in DB.")
-            return # perhaps do something else before return like save?
-        
-        logging.info(f"return anyways for now")
-        return
-    
-    logging.info(f"Received {type} with OID {oid} and UID {uid}.")
-
     match type:
-        case "Group" | "Cluster":
+
+        case "Group":
+
+            # If this already exists in the database, we can skip intitalization
+            if ObjectId.is_valid(oid):
+
+                docset = db.graph.find_one({"_id" : oid})
+                if docset:
+                    logging.info(f"{type} with {oid} already in DB.")
+                    return # perhaps do something else before return like save?
+                
+                logging.info(f"return anyways for now")
+                return
+            
+            logging.info(f"Received {type} with OID {oid} and UID {uid}.")
+
             import random
             r = lambda: random.randint(0, 255)
             color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
             
-            if type == "Group":
-                res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
-            if type == "Cluster":
-                res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
+            res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+
+            message(userid, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })
+
+        case "Cluster":
+
+            res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
             
             message(userid, {
                 "oid": str(res),
