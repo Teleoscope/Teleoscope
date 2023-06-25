@@ -735,6 +735,38 @@ def remove_group(*args, **kwargs):
 
     return session_id
 
+@app.task
+def remove_cluster(*args, **kwargs):
+    """
+    Delete a cluster (not the documents within) from the projection.
+    kwargs:
+        cluster_id: ObjectId
+        projection_id: ObjectId
+        user_id: ObjectId
+    """
+    c_id = ObjectId(str(kwargs["cluster_id"]))
+    p_id = ObjectId(str(kwargs["projection_id"]))
+    user_id = ObjectId(str(kwargs["userid"]))
+
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    projection = db.projections.find_one({'_id': p_id}, session=transaction_session)        
+    history_item = projection["history"][0]
+    
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["action"] = f"Remove cluster from projection"
+    history_item["user"] = user_id
+    history_item["clusters"].remove(c_id)
+
+    with transaction_session.start_transaction():
+        db.clusters.delete_one({"_id": c_id})
+        utils.push_history(db, "projections", p_id, history_item, transaction_session)
+        utils.commit_with_retry(transaction_session)
+        logging.info(f"Removed cluster {c_id} from projection {p_id}.")
+
+    return p_id
+
 
 @app.task
 def remove_document_from_group(*args, **kwargs):

@@ -39,7 +39,7 @@ export default function Clusters(props) {
 
   const { groups } = swr.useSWRAbstract("groups", `sessions/${session_id}/groups`);
 
-
+  // TODO - cluster on flow inputs not all groups. 
   const runClusters = () => {
     client.cluster_by_groups(
       groups.map((g) => g._id),
@@ -48,7 +48,7 @@ export default function Clusters(props) {
     );
   };
 
-  const removeCluster = (c_id) => {client.remove_cluster(c_id)}
+  const removeCluster = (c_id) => {client.remove_cluster(c_id, p_id)}
 
   return (
     <>

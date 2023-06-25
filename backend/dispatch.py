@@ -94,6 +94,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
             case "remove_group":
                 res = tasks.remove_group.signature(args=(), kwargs=kwargs)
+
+            case "remove_cluster":
+                res = tasks.remove_cluster.signature(args=(), kwargs=kwargs)
             
             case "remove_projection":
                 res = tasks.remove_projection.signature(args=(), kwargs=kwargs)
