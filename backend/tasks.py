@@ -1478,7 +1478,7 @@ def add_item(*args, **kwargs):
 
     # If this already exists in the database, we can skip intitalization
     # Ignore this if type is cluster. Hacky solution to ignore copy_cluster
-    if ObjectId.is_valid(oid) & type != "Cluster":
+    if ObjectId.is_valid(oid) & (type != "Cluster"):
 
         docset = db.graph.find_one({"_id" : oid})
         if docset:
