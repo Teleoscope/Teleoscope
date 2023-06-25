@@ -1482,10 +1482,10 @@ def add_item(*args, **kwargs):
         if docset:
             logging.info(f"{type} with {oid} already in DB.")
             return # perhaps do something else before return like save?
+        
+        logging.info(f"keep going for now")
         # return anyways for now
-        logging.info(f"return anyways for now")
-
-        return
+        # return
     
     logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
