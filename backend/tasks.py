@@ -1545,9 +1545,10 @@ def add_item(*args, **kwargs):
             # If this already exists in the database, we can skip intitalization
             docset = db.groups.find_one({"cluster" : ObjectId(str(oid))})
             if docset:
-                logging.info(f"{type} with {oid} already in DB.")
-                res = docset
+                logging.info(f"Cluster has already been copied.")
+                res = docset.inserted_id
             else:
+                logging.info(f"Cluster has NOT been copied.")
                 res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
             
             message(userid, {
