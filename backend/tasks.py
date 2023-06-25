@@ -1480,9 +1480,11 @@ def add_item(*args, **kwargs):
     if ObjectId.is_valid(oid):
         docset = db.graph.find_one({"_id" : oid})
         if docset:
-            print(f"{type} with {oid} already in DB.")
+            logging.info(f"{type} with {oid} already in DB.")
             return # perhaps do something else before return like save?
         # return anyways for now
+        logging.info(f"return anyways for now")
+
         return
     
     logging.info(f"Received {type} with OID {oid} and UID {uid}.")
