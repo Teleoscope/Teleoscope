@@ -1477,11 +1477,8 @@ def add_item(*args, **kwargs):
     oid  = kwargs["oid"]
 
     # If this already exists in the database, we can skip intitalization
-    if ObjectId.is_valid(oid):
-        
-        if type == "Cluster": 
-            logging.info(f"Continue for clusters")
-            pass
+    # Ignore this if type is cluster. Hacky solution to ignore copy_cluster
+    if ObjectId.is_valid(oid) & type != "Cluster":
 
         docset = db.graph.find_one({"_id" : oid})
         if docset:
