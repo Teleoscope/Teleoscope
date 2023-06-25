@@ -549,7 +549,9 @@ def copy_cluster(*args, **kwargs):
         cluster["history"][0]["label"], 
         "Copy cluster", 
         user_id, 
-        cluster["history"][0]["description"], session_id)
+        cluster["history"][0]["description"], 
+        session_id,
+        cluster_id=cluster_id)
 
     with transaction_session.start_transaction():
         group_res = db.groups.insert_one(obj, session=transaction_session)
