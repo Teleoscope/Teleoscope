@@ -2,7 +2,7 @@ import datetime
 from bson.objectid import ObjectId
 
 
-def create_group_object(color, included_documents, label, action, user_id, description, session_id, cluster_id=ObjectId(str("-1"))):
+def create_group_object(color, included_documents, label, action, user_id, description, session_id, cluster_id=ObjectId(str("0000"))):
     obj = {
         "creation_time": datetime.datetime.utcnow(),
         "sessions": [session_id],
