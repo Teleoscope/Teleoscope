@@ -1478,14 +1478,18 @@ def add_item(*args, **kwargs):
 
     # If this already exists in the database, we can skip intitalization
     if ObjectId.is_valid(oid):
+        
+        if type == "Cluster": 
+            logging.info(f"Continue for clusters")
+            pass
+
         docset = db.graph.find_one({"_id" : oid})
         if docset:
             logging.info(f"{type} with {oid} already in DB.")
             return # perhaps do something else before return like save?
         
-        logging.info(f"keep going for now")
-        # return anyways for now
-        # return
+        logging.info(f"return anyways for now")
+        return
     
     logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
