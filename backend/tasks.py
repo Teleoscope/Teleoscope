@@ -1498,7 +1498,7 @@ def add_item(*args, **kwargs):
             if type == "Group":
                 res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
             if type == "Cluster":
-                res = copy_cluster(db=database, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
+                res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
             
             message(userid, {
                 "oid": str(res),
