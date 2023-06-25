@@ -551,7 +551,7 @@ def copy_cluster(*args, **kwargs):
         user_id, 
         cluster["history"][0]["description"], 
         session_id,
-        cluster_id=cluster_id)
+        cluster_id=[cluster_id])
 
     with transaction_session.start_transaction():
         group_res = db.groups.insert_one(obj, session=transaction_session)
@@ -731,8 +731,8 @@ def remove_group(*args, **kwargs):
 
     with transaction_session.start_transaction():
         db.groups.update_one({"_id": group_id}, {"$pull": {"sessions": session_id}})
-        db.groups.update_one({"_id": group_id}, {"$push": {"cluster": None}})
-        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
+        db.groups.update_one({"_id": group_id}, {"$push": {"cluster": []}})
+        utils.push_history(db, "sessions", session_id, history_item, transaction_session) 
         utils.commit_with_retry(transaction_session)
         logging.info(f"Removed group {group_id} from session {session_id}.")
 
@@ -1544,7 +1544,7 @@ def add_item(*args, **kwargs):
         case "Cluster":
 
             # If this already exists in the database, we can skip intitalization
-            docset = db.groups.find_one({"cluster" : ObjectId(str(oid))})
+            docset = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
             if docset:
                 logging.info(f"Cluster has already been copied.")
                 res = docset["_id"]
