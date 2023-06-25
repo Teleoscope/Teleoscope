@@ -12,6 +12,7 @@ import { StompContext } from "@/components/Stomp";
 import { IconButton, Tooltip } from "@mui/material";
 import {
   Download as DownloadIcon,
+  Delete as DeleteIcon,
   ContentCopy as ContentCopyIcon,
   CopyAll as CopyAllIcon,
   Diversity2 as Diversity2Icon,
@@ -26,6 +27,7 @@ export default function Clusters(props) {
   const p_id = props.data;
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
+  const settings = useAppSelector((state) => state.windows.settings);
 
   const swr = useContext(swrContext);
   const client = useContext(StompContext);
@@ -45,6 +47,8 @@ export default function Clusters(props) {
       session_id
     );
   };
+
+  const removeCluster = (c_id) => {client.remove_cluster(c_id)}
 
   return (
     <>
@@ -74,15 +78,27 @@ export default function Clusters(props) {
                   draggable={true}
                   onDragStart={(e) => onDragStart(e, cluster._id, "Cluster")}
                 >
-                  <ListItem>
-                    <ListItemIcon>
-                      <FolderIcon sx={{ color: cluster.history[0].color }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={cluster.history[0].label}
-                      secondary={cluster.history[0].description}
-                    />
-                  </ListItem>
+                  <Stack
+                    sx={{ width: "100%" }}
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <ListItem>
+                      <ListItemIcon>
+                        <FolderIcon sx={{ color: cluster.history[0].color }} />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={cluster.history[0].label}
+                        secondary={cluster.history[0].description}
+                      />
+                    </ListItem>
+                    <IconButton onClick={() => removeCluster(cluster._id)}>
+                      <DeleteIcon
+                        sx={[{"&:hover": {color: settings.color}}]}
+                      ></DeleteIcon>
+                    </IconButton>
+                  </Stack>
                 </div>
               );
             })}
