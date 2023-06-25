@@ -1545,7 +1545,7 @@ def add_item(*args, **kwargs):
             # If this already exists in the database, we can skip intitalization
             if ObjectId.is_valid(oid):
 
-                docset = db.groups.find_one({"cluster" : oid})
+                docset = db.groups.find_one({"cluster" : ObjectId(str(oid))})
                 if docset:
                     logging.info(f"{type} with {oid} already in DB.")
                     return # perhaps do something else before return like save?
