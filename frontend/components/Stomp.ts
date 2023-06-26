@@ -127,8 +127,6 @@ export class Stomp {
           store.dispatch(OID_UID_SYNC(body));
         }
 
-        console.log(`Associated UID ${body.uid} with OID ${body.oid}`)
-
       });
       
       console.log("Connected to RabbitMQ webSTOMP server.", frame);

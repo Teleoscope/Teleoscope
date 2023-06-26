@@ -1,7 +1,8 @@
 import { useStore } from "reactflow";
 import WindowFactory from "@/components/WindowFolder/WindowFactory";
 import { NodeResizer } from "@reactflow/node-resizer";
-import { useAppSelector } from "@/util/hooks";
+import useGlobalMousePosition, { useAppSelector } from "@/util/hooks";
+import { useState, useRef } from "react";
 
 const defaultSize = (s, id) => {
   const node = s.nodeInternals.get(id);
@@ -25,6 +26,7 @@ function BaseNode({ data, id, selected }) {
   const size = useStore(s => defaultSize(s, id) );
   const windata = { ...data, ...size };
   const settings = useAppSelector((state) => state.windows.settings);
+  
 
   return (
       <>
@@ -35,8 +37,12 @@ function BaseNode({ data, id, selected }) {
           minHeight={windata.minHeight}
           handleStyle={handleCSS}
         />
-        <WindowFactory size={size} windata={windata} id={id} />
-      </>
+        <WindowFactory 
+          size={size} windata={windata} id={id} />
+        </>
+
+
+      
   );
 }
 

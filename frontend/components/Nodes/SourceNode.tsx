@@ -9,7 +9,7 @@ function TargetNode({ data, id, selected }) {
     <>
       <BaseNode data={data} id={id} selected={selected} />
       
-      <Handle type="source" variant="output" position={Position.Right} id={`${id}_output`} />
+      <Handle type="source" variant="output" position={Position.Right} nodeid={id} id={`${id}_output`} />
     </>
   );
 }
