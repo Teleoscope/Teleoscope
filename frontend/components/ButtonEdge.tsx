@@ -1,6 +1,6 @@
 import React from 'react';
-import { BaseEdge, EdgeLabelRenderer, EdgeProps, getBezierPath } from 'reactflow';
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { BaseEdge, EdgeLabelRenderer, EdgeProps, getBezierPath, Position } from 'reactflow';
+import { useAppSelector } from "@/util/hooks";
 
 const onEdgeClick = (evt, id) => {
   evt.stopPropagation();
@@ -28,10 +28,11 @@ export default function ButtonEdge({
   targetPosition,
   style = {
     strokeWidth: 1.5
+  }, markerEnd, }: EdgeProps)
+{
+  
+  const curvature = 0.15;
 
-  },
-  markerEnd,
-}: EdgeProps) {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -39,6 +40,7 @@ export default function ButtonEdge({
     targetX,
     targetY,
     targetPosition,
+    curvature
   });
 
   const settings = useAppSelector((state) => state.windows.settings);

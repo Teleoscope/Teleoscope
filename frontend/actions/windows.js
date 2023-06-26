@@ -1,7 +1,7 @@
 // windows.js
 import { createSlice } from "@reduxjs/toolkit";
 import _ from "lodash";
-import { applyNodeChanges, applyEdgeChanges } from "reactflow";
+import { applyNodeChanges, applyEdgeChanges, Position } from "reactflow";
 
 const initialState = {
   nodes: [],
@@ -266,10 +266,14 @@ export const Windows = createSlice({
       }).indexOf(action.payload.uid);
       
       if (index > -1) {
-        const id = `${action.payload.oid}%${action.payload.uid}${temp[index].data.type.toLowerCase()}`
+        const id = `${action.payload.oid}%${action.payload.uid}%${temp[index].data.type.toLowerCase()}`
         temp[index].data.oid = action.payload.oid;
         temp[index].data.label = id
         temp[index].id = id
+        console.log(`Associated UID ${temp[index].data.uid} with OID ${temp[index].data.oid}`)
+
+      } else {
+        console.log(`Failed to associated UID ${temp[index].data.uid} with OID ${action.payload.oid}`)
       }
       
       state.nodes = temp;
