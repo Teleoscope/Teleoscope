@@ -19,7 +19,6 @@ const handleCSS = {
   width: "10px",
   height: "10px",
   borderRadius: "100%",
-
 }
 
 function BaseNode({ data, id, selected }) {

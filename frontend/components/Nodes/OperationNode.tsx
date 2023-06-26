@@ -8,9 +8,9 @@ function SourceNode({ data, id, selected }) {
     <>
       <BaseNode data={data} id={id} selected={selected} />
       
-      <Handle type="target" position={Position.Top}    id={`${id}_source`}  />
-      <Handle type="target" position={Position.Bottom} id={`${id}_control`} />
-      <Handle type="source" position={Position.Right}  id={`${id}_output`}  />
+      <Handle type="target" variant="source" position={Position.Left}  id={`${id}_source`}  />
+      <Handle type="target" variant="control" position={Position.Left} id={`${id}_control`} />
+      <Handle type="source" variant="output" position={Position.Right} id={`${id}_output`}  />
     </>
   );
 }

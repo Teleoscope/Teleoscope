@@ -8,8 +8,6 @@ import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import FolderCopyIcon from "@mui/icons-material/FolderCopy";
 import Diversity2Icon from "@mui/icons-material/Diversity2";
-import CommentIcon from "@mui/icons-material/Comment";
-import StarIcon from "@mui/icons-material/Star";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import FolderIcon from "@mui/icons-material/Folder";
