@@ -143,7 +143,7 @@ def create_teleoscope_history_item(
         ranked_document_ids = None,
         rank_slice = [],
         action = "Initialize Teleoscope",
-        user = None):
+        user = None, **kwargs):
     history_item = {
         'timestamp': datetime.datetime.utcnow(),
         'label': label,
