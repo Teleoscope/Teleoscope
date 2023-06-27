@@ -11,7 +11,7 @@ import { useCookies } from "react-cookie";
 import { sessionActivator, setUserId } from "@/actions/activeSessionID";
 import HelpMenu from "@/components/HelpMenu";
 
-export default function Workspace(props) {
+export default function Workspace({subdomain}) {
   const [cookies, setCookie] = useCookies(["userid"]);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
@@ -24,13 +24,13 @@ export default function Workspace(props) {
   }
 
   const options = {
-    database: props.subdomain.split(".")[0],
+    database: subdomain?.split(".")[0],
     userid: userid,
   };
 
   const client = Stomp.getInstance(options);
   
-  const mySWR = new swr(props.subdomain.split(".")[0]);
+  const mySWR = new swr(subdomain?.split(".")[0]);
 
   const { user } = mySWR.useSWRAbstract("user", `users/${userid}`);
 

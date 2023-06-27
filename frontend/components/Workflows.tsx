@@ -19,7 +19,6 @@ import EditableText from "@/components/EditableText";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import AddUserDialogue from "@/components/AddUserDialog";
 
-import { CompactPicker } from "react-color";
 import randomColor from "randomcolor";
 
 import { swrContext } from "@/util/swr";
@@ -129,14 +128,6 @@ export default function Workflows(props) {
                     />
                   </Stack>
                   <Stack direction="row">
-                      {renderPopupButton(
-                        "color-picker-popup-menu",
-                        <PaletteIcon fontSize="small" />,
-                        <CompactPicker
-                          color={color}
-                          onChangeComplete={(color) => handleColorChange(color, session._id)}
-                        />
-                      )}
                       {renderPopupButton(
                         "add-user-popup-menu",
                         <PeopleIcon fontSize="small" />,
