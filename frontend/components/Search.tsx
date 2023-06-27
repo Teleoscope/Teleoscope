@@ -16,7 +16,7 @@ import { swrContext } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
 
 export default function Search(props) {
-  const [query, setQuery] = useState(props.windata?.query);
+  const [query, setQuery] = useState(props.windata?.query ? props.windata.query : "");
   const swr = useContext(swrContext);
   const { documents, documents_loading } = swr.useSWRAbstract(
     "documents",
