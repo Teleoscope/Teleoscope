@@ -14,7 +14,7 @@ const defaultSize = (s, id) => {
       height: node.height,
       minHeight: 35,
       minWidth: 60,
-    };
+    }
   }
 
 function calculateDistanceToEdges(mouse, box) {
@@ -26,7 +26,7 @@ function calculateDistanceToEdges(mouse, box) {
     const dy = Math.max(boxTop - mouse.y, 0, mouse.y - boxBottom);
     const dx = Math.max(boxLeft - mouse.x, 0, mouse.x - boxRight);
   
-    return Math.sqrt(dx * dx + dy * dy);
+    return Math.sqrt(dx * dx + dy * dy)
 }
 
 export default function HandleWrapper({ type, id, nodeid, position, variant }) {
