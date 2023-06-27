@@ -549,7 +549,9 @@ def copy_cluster(*args, **kwargs):
         cluster["history"][0]["label"], 
         "Copy cluster", 
         user_id, 
-        cluster["history"][0]["description"], session_id)
+        cluster["history"][0]["description"], 
+        session_id,
+        cluster_id=[cluster_id])
 
     with transaction_session.start_transaction():
         group_res = db.groups.insert_one(obj, session=transaction_session)
@@ -557,6 +559,8 @@ def copy_cluster(*args, **kwargs):
         history_item["groups"] = [*history_item["groups"], group_res.inserted_id]
         utils.push_history(db, "sessions", session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
+
+    return group_res.inserted_id
 
 
 @app.task
@@ -726,12 +730,44 @@ def remove_group(*args, **kwargs):
     history_item["oid"] = group_id
 
     with transaction_session.start_transaction():
-        db.groups.update_one({"_id": group_id}, {"$pull": {"sessions": session_id}})
-        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
+        db.groups.update_one({"_id": group_id}, {"$pull": {"sessions": session_id},})
+        db.groups.update_one({"_id": group_id}, {"$set": {"cluster": []}})
+        utils.push_history(db, "sessions", session_id, history_item, transaction_session) 
         utils.commit_with_retry(transaction_session)
         logging.info(f"Removed group {group_id} from session {session_id}.")
 
     return session_id
+
+@app.task
+def remove_cluster(*args, **kwargs):
+    """
+    Delete a cluster (not the documents within) from the projection.
+    kwargs:
+        cluster_id: ObjectId
+        projection_id: ObjectId
+        user_id: ObjectId
+    """
+    c_id = ObjectId(str(kwargs["cluster_id"]))
+    p_id = ObjectId(str(kwargs["projection_id"]))
+    user_id = ObjectId(str(kwargs["userid"]))
+
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    projection = db.projections.find_one({'_id': p_id}, session=transaction_session)        
+    history_item = projection["history"][0]
+    
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["action"] = f"Remove cluster from projection"
+    history_item["user"] = user_id
+    history_item["clusters"].remove(c_id)
+
+    db.clusters.delete_one({"_id": c_id})
+    utils.push_history(db, "projections", p_id, history_item, transaction_session)
+    utils.commit_with_retry(transaction_session)
+    logging.info(f"Removed cluster {c_id} from projection {p_id}.")
+
+    return p_id
 
 
 @app.task
@@ -1474,23 +1510,47 @@ def add_item(*args, **kwargs):
     type = kwargs["type"]
     oid  = kwargs["oid"]
 
-    # If this already exists in the database, we can skip intitalization
-    if ObjectId.is_valid(oid):
-        docset = db.graph.find_one({"_id" : oid})
-        if docset:
-            print(f"{type} with {oid} already in DB.")
-            return # perhaps do something else before return like save?
-        # return anyways for now
-        return
-    
-    logging.info(f"Received {type} with OID {oid} and UID {uid}.")
-
     match type:
+
         case "Group":
+
+            # If this already exists in the database, we can skip intitalization
+            if ObjectId.is_valid(oid):
+
+                docset = db.graph.find_one({"_id" : oid})
+                if docset:
+                    logging.info(f"{type} with {oid} already in DB.")
+                    return # perhaps do something else before return like save?
+                
+                logging.info(f"return anyways for now")
+                return
+            
+            logging.info(f"Received {type} with OID {oid} and UID {uid}.")
+
             import random
             r = lambda: random.randint(0, 255)
             color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
+            
             res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+
+            message(userid, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })
+
+        case "Cluster":
+
+            # If this already exists in the database, we can skip intitalization
+            docset = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
+            if docset:
+                logging.info(f"Cluster has already been copied.")
+                res = docset["_id"]
+            else:
+                logging.info(f"Cluster has NOT been copied.")
+                res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
+            
             message(userid, {
                 "oid": str(res),
                 "uid": uid,

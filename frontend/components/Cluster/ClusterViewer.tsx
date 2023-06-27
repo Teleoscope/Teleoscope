@@ -1,26 +1,17 @@
-import React, { useState, useContext } from "react";
-import {
-  Stack,
-  Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Divider,
-  List,
-} from "@mui/material";
+import React, { useContext } from "react";
 import { swrContext } from "@/util/swr";
-
-import { useAppSelector } from "@/util/hooks";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import DocumentListItem from "@/components/Documents/DocumentListItem";
+import { Typography, Stack, List, Divider } from "@mui/material";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
+import { useAppSelector } from "@/util/hooks";
+import DocumentListItem from "@/components/Documents/DocumentListItem";
 
-export default function TeleoscopeViewer(props) {
+export default function DocViewer(props) {
   const swr = useContext(swrContext);
-  const { teleoscope } = swr.useSWRAbstract(
-    "teleoscope",
-    `teleoscopes/${props.id}`
-  );
+  const { cluster } = swr.useSWRAbstract("cluster", `clusters/${props.id}`);
   const settings = useAppSelector((state) => state.windows.settings);
   const windowState = useAppSelector((state) => state.windows);
   const wdefs = WindowDefinitions(windowState);
@@ -37,21 +28,16 @@ export default function TeleoscopeViewer(props) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {wdefs["Teleoscope"].icon(teleoscope)}
-          {`${teleoscope?.history[0].label}`}
+          {wdefs["Group"].icon(cluster)}
+          {`${cluster?.history[0].label}`}
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
-        {/* <Stack direction="column">
-          {teleoscope?.history[0].rank_slice.map(([docid, rank]) => (
-            <DocumentListItem key={docid} id={docid}></DocumentListItem>
-          ))}
-        </Stack> */}
         <Stack spacing={1} sx={{ margin: "1em" }}>
-          <Typography variant="h5">{teleoscope?.history[0].label}</Typography>
+          <Typography variant="h5">{cluster?.history[0].label}</Typography>
           <Divider></Divider>
           <List>
-            {teleoscope?.history[0].rank_slice.map(([docid, rank]) => (
+            {cluster?.history[0].included_documents.map((docid) => (
               <DocumentListItem key={docid} id={docid}></DocumentListItem>
             ))}
           </List>

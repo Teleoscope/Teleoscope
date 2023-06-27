@@ -349,6 +349,25 @@ export class Stomp {
   }
 
   /**
+   * Removes a cluster from a projection in MongoDB. 
+   *
+   * @param cluster_id
+   * @param projection_id
+   * @returns
+   */
+  remove_cluster(cluster_id: string, projection_id: string) {
+    const body = {
+      task: "remove_cluster",
+      args: {
+        cluster_id: cluster_id,
+        projection_id: projection_id,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+  /**
    * Removes a group from a session in MongoDB. Does not delete the group.
    *
    * @param teleoscope_id

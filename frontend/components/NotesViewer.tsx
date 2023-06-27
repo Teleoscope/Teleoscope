@@ -5,10 +5,10 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Divider
 } from "@mui/material";
 import { swrContext } from "@/util/swr";
-
-import Notes from "@/components/Note";
+import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import { useAppSelector } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
@@ -16,6 +16,8 @@ export default function NotesViewer(props) {
   const swr = useContext(swrContext);
   const { note } = swr.useSWRAbstract("note", `note/${props.id}`);
   const settings = useAppSelector((state) => state.windows.settings);
+  const windowState = useAppSelector((state) => state.windows);
+  const wdefs = WindowDefinitions(windowState);
 
   return (
     <Accordion
@@ -28,13 +30,19 @@ export default function NotesViewer(props) {
         aria-controls="panel3a-content"
         id="panel3a-header"
       >
-        <Typography variant="h5">{note?.history[0].label}</Typography>
+        <Typography noWrap align="left">
+          {wdefs["Note"].icon()}
+          {`${note?.history[0].label}`}
+        </Typography>
       </AccordionSummary>
       <AccordionDetails>
-        <Stack direction="column">
-          <Notes id={props.id}></Notes>
+        <Stack spacing={1} sx={{ margin: "1em" }}>
+          <Typography variant="h5">{note?.history[0].label}</Typography>
+          <Divider></Divider>
+          <Typography variant="small">{note?.history[0].content.blocks[0].text}</Typography>
         </Stack>
       </AccordionDetails>
     </Accordion>
+    
   );
 }

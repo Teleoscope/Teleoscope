@@ -19,7 +19,7 @@ export default function Cluster(props) {
         showClusterIcon = {false}
         showOrientIcon  = {true}
         showRemoveIcon  = {true}
-        cluster         = {cluster}
+        group           = {cluster}
       ></DocumentList>
     </div>
   );

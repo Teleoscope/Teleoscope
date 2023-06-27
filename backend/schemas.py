@@ -2,10 +2,11 @@ import datetime
 from bson.objectid import ObjectId
 
 
-def create_group_object(color, included_documents, label, action, user_id, description, session_id):
+def create_group_object(color, included_documents, label, action, user_id, description, session_id, cluster_id=[]):
     obj = {
         "creation_time": datetime.datetime.utcnow(),
         "sessions": [session_id],
+        "cluster": cluster_id,
         "history": [
             {
                 "timestamp": datetime.datetime.utcnow(),

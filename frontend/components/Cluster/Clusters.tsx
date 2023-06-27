@@ -1,7 +1,6 @@
-import { useContext } from "react";
+import React, { useState, useContext } from "react";
 
-import { useAppSelector } from "@/util/hooks";
-import { RootState } from "@/stores/store";
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { swrContext } from "@/util/swr";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -11,33 +10,40 @@ import FolderIcon from "@mui/icons-material/Folder";
 import { StompContext } from "@/components/Stomp";
 import { IconButton, Tooltip } from "@mui/material";
 import {
-  Download as DownloadIcon,
-  ContentCopy as ContentCopyIcon,
-  CopyAll as CopyAllIcon,
+  Delete as DeleteIcon,
   Diversity2 as Diversity2Icon,
 } from "@mui/icons-material";
 import Stack from "@mui/material/Stack";
 import Divider from "@mui/material/Divider";
 import { onDragStart } from "@/util/drag";
-
+import { setSelection } from "@/actions/windows";
 
 
 export default function Clusters(props) {
   const p_id = props.data;
   const session_id = useAppSelector((state) => state.activeSessionID.value);
-  const userid = useAppSelector((state) => state.activeSessionID.userid);
+  const settings = useAppSelector((state) => state.windows.settings);
 
   const swr = useContext(swrContext);
   const client = useContext(StompContext);
+  const dispatch = useAppDispatch();
 
-  const { clusters } = swr.useSWRAbstract(
-    "clusters",
-    `projections/${p_id}/clusters`
-  );
-
+  const { clusters } = swr.useSWRAbstract("clusters", `projections/${p_id}/clusters`);
   const { groups } = swr.useSWRAbstract("groups", `sessions/${session_id}/groups`);
 
+  const [highlightedItem, setHighlightedItem] = useState(null);
+  
+  const handleItemClick = (c_id) => {
+    setHighlightedItem(c_id);
+    dispatch(
+      setSelection({
+        nodes: [{ id: c_id, data: { type: "Cluster" } }],
+        edges: [],
+      })
+    );
+  };
 
+  // TODO - cluster on flow inputs not all groups. 
   const runClusters = () => {
     client.cluster_by_groups(
       groups.map((g) => g._id),
@@ -45,6 +51,8 @@ export default function Clusters(props) {
       session_id
     );
   };
+
+  const removeCluster = (c_id) => {client.remove_cluster(c_id, p_id)}
 
   return (
     <>
@@ -55,7 +63,7 @@ export default function Clusters(props) {
           alignItems="center"
           style={{ margin: 0 }}
         >
-          <Tooltip title="Cluster on exisitng groups...">
+          <Tooltip title="Cluster on existing groups...">
           <IconButton onClick={runClusters}>
             <Diversity2Icon fontSize="small" />
           </IconButton>
@@ -67,22 +75,45 @@ export default function Clusters(props) {
         {clusters?.length !== 0 ? (
           <List>
             {clusters?.map((cluster) => {
+              const isHighlighted = cluster._id === highlightedItem;
               return (
                 <div
                   key={cluster._id}
-                  style={{ overflow: "auto", height: "100%" }}
+                  style={{
+                    overflow: "auto",
+                    position: "relative",
+                    borderBottom: "1px solid  #eceeee",
+                    paddingTop: "2px",
+                    paddingBottom: "3px",
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: isHighlighted ? "#EEEEEE" : "white",
+                  }}
                   draggable={true}
                   onDragStart={(e) => onDragStart(e, cluster._id, "Cluster")}
-                >
-                  <ListItem>
-                    <ListItemIcon>
-                      <FolderIcon sx={{ color: cluster.history[0].color }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={cluster.history[0].label}
-                      secondary={cluster.history[0].description}
-                    />
-                  </ListItem>
+                  onClick={() => handleItemClick(cluster._id)}
+                  >
+                  <Stack
+                    sx={{ width: "100%", }}
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <ListItem>
+                      <ListItemIcon>
+                        <FolderIcon sx={{ color: cluster.history[0].color }} />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={cluster.history[0].label}
+                        secondary={cluster.history[0].description}
+                      />
+                    </ListItem>
+                    <IconButton onClick={() => removeCluster(cluster._id)}>
+                      <DeleteIcon
+                        sx={[{"&:hover": {color: settings.color}}]}
+                      ></DeleteIcon>
+                    </IconButton>
+                  </Stack>
                 </div>
               );
             })}
