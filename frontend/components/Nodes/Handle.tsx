@@ -18,13 +18,13 @@ const defaultSize = (s, id) => {
   }
 
 function calculateDistanceToEdges(mouse, box) {
-    var boxLeft = box.x;
-    var boxTop = box.y;
-    var boxRight = box.x + box.width;
-    var boxBottom = box.y + box.height;
+    const boxLeft = box.x;
+    const boxTop = box.y;
+    const boxRight = box.x + box.width;
+    const boxBottom = box.y + box.height;
   
-    var dx = Math.max(boxLeft - mouse.x, 0, mouse.x - boxRight);
-    var dy = Math.max(boxTop - mouse.y, 0, mouse.y - boxBottom);
+    const dy = Math.max(boxTop - mouse.y, 0, mouse.y - boxBottom);
+    const dx = Math.max(boxLeft - mouse.x, 0, mouse.x - boxRight);
   
     return Math.sqrt(dx * dx + dy * dy);
 }
