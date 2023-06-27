@@ -420,6 +420,8 @@ def initialize_teleoscope(*args, **kwargs):
     # handle kwargs
     session_id = ObjectId(str(kwargs["session_id"]))
     userid = ObjectId(str(kwargs["userid"]))
+    del kwargs["session_id"]
+    del kwargs["userid"]
 
     teleoscope = schemas.create_teleoscope_object(session_id, userid, **kwargs)
     
