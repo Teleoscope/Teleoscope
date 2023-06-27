@@ -1531,7 +1531,8 @@ def add_item(*args, **kwargs):
             logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
             # res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
-            res = initialize_teleoscope(database, session_id=session_id, userid=userid)
+            res = initialize_teleoscope(db=database, session_id=session_id, userid=userid)
+
             
             message(userid, {
                 "oid": str(res),
