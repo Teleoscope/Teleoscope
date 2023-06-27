@@ -15,7 +15,7 @@ import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
 
 export default function FABMenu(props) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(true);
   const dispatch = useDispatch();
   const session_id = useSelector((state) => state.activeSessionID.value);
   const swr = useContext(swrContext);
@@ -50,16 +50,9 @@ export default function FABMenu(props) {
     }));
   };
 
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
 
   const handleClick = () => {
-    setOpen((prevOpen) => !prevOpen);
+    setOpen(!open);
   };
 
   return (
@@ -68,6 +61,8 @@ export default function FABMenu(props) {
       direction="down"
       icon={<SpeedDialIcon />}
       className="drag-handle"
+      onClose={() => console.log("close") }
+      onOpen={() => console.log("open")}
       FabProps={{
         sx: {
           bgcolor: settings.color,
@@ -78,16 +73,14 @@ export default function FABMenu(props) {
         },
       }}
       onClick={handleClick}
-      onMouseEnter={handleOpen}
-      onMouseLeave={handleClose}
-      open={open || props.alwaysOpen}
-      transitionDuration={0}
+   
+      open={open}
+      transitionDuration={10}
     >
       {actions.map((action) => (
         <SpeedDialAction
           sx={{ color: settings.color }}
           key={action}
-          open={open}
           icon={wdefs[action].icon()}
           tooltipTitle={action}
           onClick={() =>

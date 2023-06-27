@@ -18,6 +18,26 @@ const buttonStyle = {
   lineHeight: "1",
 }
 
+// this is a little helper component to render the actual edge label
+function EdgeLabel({ transform, label }: { transform: string; label: string }) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        background: 'transparent',
+        padding: 10,
+        color: '#ff5050',
+        fontSize: 12,
+        fontWeight: 700,
+        transform,
+      }}
+      className="nodrag nopan"
+    >
+      {label}
+    </div>
+  );
+}
+
 export default function ButtonEdge({
   id,
   sourceX,
@@ -44,6 +64,7 @@ export default function ButtonEdge({
   });
 
   const settings = useAppSelector((state) => state.windows.settings);
+  
 
   return (
     <>
@@ -64,6 +85,10 @@ export default function ButtonEdge({
             ×
           </button>
         </div> */}
+        {/* <EdgeLabel
+            transform={`translate(-50%, 0) translate(${targetX}px,${targetY}px)`}
+            label={`control`}
+          /> */}
       </EdgeLabelRenderer>
     </>
   );

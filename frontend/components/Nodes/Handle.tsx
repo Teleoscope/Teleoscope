@@ -40,25 +40,22 @@ export default function HandleWrapper({ type, id, nodeid, position, variant }) {
     const connected = edges.reduce((acc, e) => e.sourceHandle == id || e.targetHandle == id || acc, false)
 
     const showHandles = distance < 100 || connected ? true : false;
-    
 
     const svgString = renderToString(
-        <FaArrowRight />
+        <FaArrowRight color="#FFFFFF"/>
     );
-
+    
     const size = 6;
 
     const stylebase = {
         width: `${size * 2}px`,
         height: `${size * 2}px`,
-        position: "fixed",
         border: `2px solid ${settings.color}`,
         borderRadius: `2px`,
         paddingLeft: `2px`,
-        backgroundColor: settings.color,
         backgroundImage: `url('data:image/svg+xml,${encodeURIComponent(svgString)}')`,
         backgroundSize: "contain",
-        filter: `invert(1) hue-rotate(180deg)`,
+        backgroundColor: settings.color,
         transition: `opacity 0.3s ease`,
         opacity: showHandles ? 1 : 0
     }
@@ -67,8 +64,6 @@ export default function HandleWrapper({ type, id, nodeid, position, variant }) {
         if (variant == "source") {
             return {
                 transform: `translate(-100%, -125%)`,
-                // left: `-${size * 2}px`,
-                // top: `${size}px`,
                 ...stylebase,
             }
         }
@@ -76,14 +71,12 @@ export default function HandleWrapper({ type, id, nodeid, position, variant }) {
         if (variant == "control") {
             return {
                 transform: `translate(-100%, 25%)`,
-                // bottom: `${size}px`,
                 ...stylebase,
             }
         }
         
         if (variant == "output") {
             return {
-                // transform: `translate(100%, 0)`,
                 right: `-${size * 3}px`,
                 ...stylebase,
             }

@@ -24,7 +24,7 @@ import lodash from 'lodash';
 import { setNodes, setEdges, setColor } from "@/actions/windows";
 import { loadBookmarkedDocuments } from "@/actions/windows";
 import WindowNode from "@/components/Nodes/WindowNode";
-import ButtonEdge from "@/components/ButtonEdge";
+import ButtonEdge from "@/components/Nodes/ButtonEdge";
 
 function Flow(props) {
   const windowState = useAppSelector((state) => state.windows);
