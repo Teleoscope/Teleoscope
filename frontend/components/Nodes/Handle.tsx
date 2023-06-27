@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 
 const defaultSize = (s, id) => {
     const node = s.nodeInternals.get(id);
-    if (!node) { return };
+    if (!node) { return }
     return {
       x: node.positionAbsolute.x,
       y: node.positionAbsolute.y,
