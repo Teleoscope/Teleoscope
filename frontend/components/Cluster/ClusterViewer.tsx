@@ -8,6 +8,9 @@ import { Typography, Stack, List, Divider } from "@mui/material";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import { useAppSelector } from "@/util/hooks";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
+import DocumentList from "@/components/Documents/DocumentList";
+import { Virtuoso } from "react-virtuoso";
+import ItemList from "@/components/ItemList";
 
 export default function DocViewer(props) {
   const swr = useContext(swrContext);
@@ -15,6 +18,11 @@ export default function DocViewer(props) {
   const settings = useAppSelector((state) => state.windows.settings);
   const windowState = useAppSelector((state) => state.windows);
   const wdefs = WindowDefinitions(windowState);
+  
+  const data = cluster?.history[0].included_documents.map((p) => {
+    return [p, 1.0];
+  });
+
 
   return (
     <Accordion
@@ -36,11 +44,18 @@ export default function DocViewer(props) {
         <Stack spacing={1} sx={{ margin: "1em" }}>
           <Typography variant="h5">{cluster?.history[0].label}</Typography>
           <Divider></Divider>
-          <List>
+          {/* <List>
             {cluster?.history[0].included_documents.map((docid) => (
               <DocumentListItem key={docid} id={docid}></DocumentListItem>
             ))}
-          </List>
+          </List> */}
+          {/* TODO - do above as Virtuoso component like ItemList.tsx */}
+          <Virtuoso
+            data={data}
+            itemContent={(index, item) => {
+              return <DocumentListItem key={item[0]} id={item[0]} />;            
+            }}
+          />
         </Stack>
       </AccordionDetails>
     </Accordion>

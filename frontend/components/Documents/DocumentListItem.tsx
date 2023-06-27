@@ -27,6 +27,7 @@ export default function DocumentListItem(props) {
   const { document } = swr.useSWRAbstract("document", `document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;
   const session_id = useAppSelector((state) => state.activeSessionID.value);
+  const settings = useAppSelector((state) => state.windows.settings);
 
   const handleRemove = () => {
     client.remove_document_from_group(props.group._id, props.id);
@@ -90,7 +91,7 @@ export default function DocumentListItem(props) {
             onClick={(e) => handleRemove()}
           >
             <DeleteIcon
-              sx={{ "&:hover": { color: "blue" }, width: 20, height: 20 }}
+              sx={{ "&:hover": {color: settings.color}, width: 20, height: 20 }}
             ></DeleteIcon>
           </IconButton>
         ) : (

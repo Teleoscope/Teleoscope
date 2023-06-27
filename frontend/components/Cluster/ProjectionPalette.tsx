@@ -90,7 +90,7 @@ export default function Clusters(props) {
                         sx={[
                           {
                             "&:hover": {
-                              color: props.color,
+                              color: settings.color,
                             },
                           },
                         ]}

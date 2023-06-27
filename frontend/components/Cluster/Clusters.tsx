@@ -8,15 +8,14 @@ import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import FolderIcon from "@mui/icons-material/Folder";
 import { StompContext } from "@/components/Stomp";
-import { IconButton, Tooltip } from "@mui/material";
+import { IconButton, Tooltip, Typography } from "@mui/material";
 import {
   Delete as DeleteIcon,
   Diversity2 as Diversity2Icon,
 } from "@mui/icons-material";
-import Stack from "@mui/material/Stack";
-import Divider from "@mui/material/Divider";
 import { onDragStart } from "@/util/drag";
 import { setSelection } from "@/actions/windows";
+import { Stack, Divider, Box } from "@mui/material";
 
 
 export default function Clusters(props) {
@@ -59,10 +58,10 @@ export default function Clusters(props) {
       <>
         <Stack
           direction="row"
-          justifyContent="center"
+          justifyContent="right"
           alignItems="center"
           style={{ margin: 0 }}
-        >
+        >        
           <Tooltip title="Cluster on existing groups...">
           <IconButton onClick={runClusters}>
             <Diversity2Icon fontSize="small" />
@@ -79,6 +78,9 @@ export default function Clusters(props) {
               return (
                 <div
                   key={cluster._id}
+                  draggable={true}
+                  onDragStart={(e) => onDragStart(e, cluster._id, "Cluster")}
+                  onClick={() => handleItemClick(cluster._id)}
                   style={{
                     overflow: "auto",
                     position: "relative",
@@ -89,12 +91,9 @@ export default function Clusters(props) {
                     height: "100%",
                     backgroundColor: isHighlighted ? "#EEEEEE" : "white",
                   }}
-                  draggable={true}
-                  onDragStart={(e) => onDragStart(e, cluster._id, "Cluster")}
-                  onClick={() => handleItemClick(cluster._id)}
-                  >
+                >
                   <Stack
-                    sx={{ width: "100%", }}
+                    // sx={{ width: "100%", }}
                     direction="row"
                     alignItems="center"
                     justifyContent="space-between"
@@ -119,7 +118,9 @@ export default function Clusters(props) {
             })}
           </List>
         ) : (
-          <p>Use button above to build clusters...</p>
+          <Typography sx={{ width: "100%" }} align="center" variant="h6">
+            Use button above to build clusters...
+          </Typography>
         )}
       </div>
     </>

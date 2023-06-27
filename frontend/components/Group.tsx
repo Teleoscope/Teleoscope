@@ -31,7 +31,6 @@ export default function Group({ id: winId, windata, color }) {
 
   return (
     <Stack direction="column" sx={{ height: "100%" }}>
-      <Box sx={{ flexGrow: 1, flexDirection: "column", margin: "2px" }}>
         <ButtonActions
           inner={[
             [SaveDocx, ButtonActionsConfig],
@@ -39,6 +38,7 @@ export default function Group({ id: winId, windata, color }) {
             [CopyText, ButtonActionsConfig],
           ]}
         ></ButtonActions>
+      <Box sx={{ flexGrow: 1, flexDirection: "column" }}>
         <DocumentList
           data={data}
           pagination={true}
