@@ -130,7 +130,7 @@ def create_teleoscope_object(session_id, userid, label="New Teleoscope", **kwarg
         "creation_time": datetime.datetime.utcnow(),
         "sessions": [session_id],
         "history": [
-            *create_teleoscope_history_item(userid)
+            create_teleoscope_history_item(userid, label)
         ]
     }
 
