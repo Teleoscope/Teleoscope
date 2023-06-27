@@ -669,17 +669,18 @@ def remove_teleoscope(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    session = db.sessions.find_one({'_id': session_id}, session=transaction_session)        
+    session = db.sessions.find_one({'_id': session_id})        
     history_item = session["history"][0]
+
     history_item["timestamp"] = datetime.datetime.utcnow()        
-    history_item["teleoscopes"].remove(teleoscope_id)
     history_item["action"] = f"Remove teleoscope from session"
     history_item["user"] = user_id
+    history_item["oid"] = teleoscope_id
 
-    with transaction_session.start_transaction():
-        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
-
+    db.teleoscopes.update_one({"_id": teleoscope_id}, {"$pull": {"sessions": session_id}})
+    
+    utils.push_history(db, "sessions", session_id, history_item)
+    return teleoscope_id
 
 @app.task
 def remove_group(*args, **kwargs):
@@ -706,7 +707,7 @@ def remove_group(*args, **kwargs):
     history_item["oid"] = group_id
 
     with transaction_session.start_transaction():
-        db.groups.update_one({"_id": group_id}, {"$pull": {"sessions": session_id},})
+        db.groups.update_one({"_id": group_id}, {"$pull": {"sessions": session_id}})
         db.groups.update_one({"_id": group_id}, {"$set": {"cluster": []}})
         utils.push_history(db, "sessions", session_id, history_item, transaction_session) 
         utils.commit_with_retry(transaction_session)
