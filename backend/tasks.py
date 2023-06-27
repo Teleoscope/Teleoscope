@@ -762,11 +762,10 @@ def remove_cluster(*args, **kwargs):
     history_item["user"] = user_id
     history_item["clusters"].remove(c_id)
 
-    with transaction_session.start_transaction():
-        db.clusters.delete_one({"_id": c_id})
-        utils.push_history(db, "projections", p_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
-        logging.info(f"Removed cluster {c_id} from projection {p_id}.")
+    db.clusters.delete_one({"_id": c_id})
+    utils.push_history(db, "projections", p_id, history_item, transaction_session)
+    utils.commit_with_retry(transaction_session)
+    logging.info(f"Removed cluster {c_id} from projection {p_id}.")
 
     return p_id
 

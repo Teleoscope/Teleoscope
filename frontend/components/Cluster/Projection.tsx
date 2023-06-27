@@ -5,7 +5,6 @@ import React, { useState, useContext } from "react";
 import LoadingButton from "@mui/lab/LoadingButton";
 
 // custom components
-import DocumentList from "@/components/Documents/DocumentList";
 import Clusters from "@/components/Cluster/Clusters";
 
 // util

@@ -37,7 +37,6 @@ import Teleoscope from "@/components/Teleoscope";
 import Search from "@/components/Search";
 import Groups from "@/components/Groups";
 import Clusters from "@/components/Cluster/Clusters";
-import Cluster from "@/components/Cluster/Cluster";
 import Projection from "@/components/Cluster/Projection";
 import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
 import Notes from "@/components/Notes";
@@ -178,16 +177,6 @@ export default function WindowDefinitions(windowState) {
       color:     () => color,
       icon:      () => <Diversity2Icon sx={style} fontSize="inherit" />,
       component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
-    },
-    Cluster: {
-      tag:       "group",
-      type:      "Group",
-      apipath:   "groups",
-      nodetype:  SourceNode,      
-      title:     (d) => `Group: ${d?.history[0].label}`,
-      color:     (d) => d?.history[0].color,
-      icon:      (d) => <FolderIcon sx={{ color: d?.history[0].color }} fontSize="inherit"  />,
-      component: (w, id, color) => <Group id={id} windata={w} color={color} />,
     },
     Bookmarks: {
       tag:       "bookmarks",
