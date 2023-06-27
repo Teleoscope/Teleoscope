@@ -1,8 +1,5 @@
 import React from "react";
 import Stack from "@mui/material/Stack";
-import { useSelector } from "react-redux";
-import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
-
 import Groups from "@/components/Groups";
 import Teleoscopes from "@/components/Teleoscopes";
 import Notes from "@/components/Notes";
@@ -12,11 +9,11 @@ import AccordionSection from "@/components/AccordionSection";
 import SelectionViewer from "@/components/SelectionViewer";
 import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
 import Workflows from "@/components/Workflows";
+import { useWindowDefinitions } from "@/util/hooks";
 
 
 export default function SimpleAccordion(props) {
-  const windowState = useSelector((state) => state.windows);
-  const wdefs = WindowDefinitions(windowState);
+  const wdefs = useWindowDefinitions();
   return (
     <Stack
       sx={{ height: "100%", width: "100%" }}
@@ -28,49 +25,49 @@ export default function SimpleAccordion(props) {
       <div>
         <AccordionSection
           compact={props.compact}
-          icon={wdefs["Workflows"].icon()}
+          icon={wdefs.definitions()["Workflows"].icon()}
           text="Workflows"
         >
           <Workflows />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={wdefs["Teleoscopes"].icon()}
+          icon={wdefs.definitions()["Teleoscopes"].icon()}
           text="Teleoscopes"
         >
           <Teleoscopes />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={wdefs["Groups"].icon()}
+          icon={wdefs.definitions()["Groups"].icon()}
           text="Groups"
         >
           <Groups />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={wdefs["Projections"].icon()}
+          icon={wdefs.definitions()["Projections"].icon()}
           text="Projections"
         >
           <ProjectionPalette />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={wdefs["Notes"].icon()}
+          icon={wdefs.definitions()["Notes"].icon()}
           text="Notes"
         >
           <Notes />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={wdefs["Bookmarks"].icon()}
+          icon={wdefs.definitions()["Bookmarks"].icon()}
           text="Bookmarks"
         >
           <Bookmarks />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
-          icon={wdefs["Settings"].icon()}
+          icon={wdefs.definitions()["Settings"].icon()}
           text="Settings"
         >
           <Setttings />

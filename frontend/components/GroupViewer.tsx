@@ -5,8 +5,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Typography, Stack, List, ListItem, Divider } from "@mui/material";
-import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
 import { CopyJson, CopyText, SaveDocx } from "@/components/GroupActions";
 import ButtonActions from "@/components/ButtonActions";
@@ -18,8 +17,7 @@ export default function DocViewer(props) {
     return [p, 1.0];
   });
 
-  const windowState = useAppSelector((state) => state.windows);
-  const wdefs = WindowDefinitions(windowState);
+  const wdefs = useWindowDefinitions();
 
   return (
     <Accordion
@@ -33,7 +31,7 @@ export default function DocViewer(props) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {wdefs["Group"].icon(group)}
+          {wdefs.definitions()["Group"].icon(group)}
           {`${group?.history[0].label}`}
         </Typography>
       </AccordionSummary>

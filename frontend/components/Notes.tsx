@@ -4,36 +4,30 @@ import React, { useContext } from "react";
 import {
   IconButton,
   Stack,
-  TextField,
   List,
   ListItem,
   ListItemIcon,
-  Tooltip,
 } from "@mui/material";
 
 import DeleteIcon from "@mui/icons-material/Delete";
-import CreateIcon from "@mui/icons-material/Create";
 import { ContentState, convertToRaw } from "draft-js";
 
 // custom
 import EditableText from "@/components/EditableText";
-import ButtonActions from "@/components/ButtonActions";
 
 // actions
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 
 // utils
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
-import WindowDefinitions from "./WindowFolder/WindowDefinitions";
 import { NewItemForm } from "./NewItemForm";
 import { onDragStart } from "@/util/drag";
 
 export default function Notes(props) {
   const client = useContext(StompContext);
-  const windows = useAppSelector((state: RootState) => state.windows);
-  const wdefs = WindowDefinitions(windows);
+  const wdefs = useWindowDefinitions();
   const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
 
   const settings = useAppSelector((state) => state.windows.settings);
@@ -86,7 +80,7 @@ export default function Notes(props) {
               >
                 <Stack direction="row" alignItems="center">
                   <ListItemIcon>
-                      {wdefs["Note"].icon()}
+                      {wdefs.definitions()["Note"].icon()}
                   </ListItemIcon>
 
                   <EditableText

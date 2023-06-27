@@ -5,16 +5,14 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Typography, Stack, List, Divider } from "@mui/material";
-import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
-import { useAppSelector } from "@/util/hooks";
+import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
 
 export default function DocViewer(props) {
   const swr = useContext(swrContext);
   const { cluster } = swr.useSWRAbstract("cluster", `clusters/${props.id}`);
   const settings = useAppSelector((state) => state.windows.settings);
-  const windowState = useAppSelector((state) => state.windows);
-  const wdefs = WindowDefinitions(windowState);
+  const wdefs = useWindowDefinitions();
 
   return (
     <Accordion
@@ -28,7 +26,7 @@ export default function DocViewer(props) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {wdefs["Group"].icon(cluster)}
+          {wdefs.definitions()["Group"].icon(cluster)}
           {`${cluster?.history[0].label}`}
         </Typography>
       </AccordionSummary>

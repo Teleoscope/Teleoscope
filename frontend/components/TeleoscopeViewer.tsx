@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { swrContext } from "@/util/swr";
 
-import { useAppSelector } from "@/util/hooks";
+import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
 import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
@@ -22,8 +22,7 @@ export default function TeleoscopeViewer(props) {
     `teleoscopes/${props.id}`
   );
   const settings = useAppSelector((state) => state.windows.settings);
-  const windowState = useAppSelector((state) => state.windows);
-  const wdefs = WindowDefinitions(windowState);
+  const wdefs = useWindowDefinitions();
 
   return (
     <Accordion
@@ -37,7 +36,7 @@ export default function TeleoscopeViewer(props) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {wdefs["Teleoscope"].icon(teleoscope)}
+          {wdefs.definitions()["Teleoscope"].icon(teleoscope)}
           {`${teleoscope?.history[0].label}`}
         </Typography>
       </AccordionSummary>

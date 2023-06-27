@@ -7,10 +7,8 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { Typography, Stack, List, ListItem, Divider } from "@mui/material";
-import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
-import { useAppSelector } from "@/util/hooks";
+import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import { DocumentActions } from "@/components/Documents/DocumentActions";
-import { useSelector } from "react-redux";
 import Highlighter from "@/components/Highlighter";
 
 export default function DocViewer(props) {
@@ -19,8 +17,7 @@ export default function DocViewer(props) {
     ? props.windata.demodata
     : swr.useSWRAbstract("document", `document/${props.id}`);
   const settings = useAppSelector((state) => state.windows.settings);
-  const windowState = useSelector((state) => state.windows);
-  const wdefs = WindowDefinitions(windowState);
+  const wdefs = useWindowDefinitions();
   return (
     <Accordion
       defaultExpanded={settings.defaultExpanded}
@@ -33,7 +30,7 @@ export default function DocViewer(props) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {wdefs["Document"].icon()}
+          {wdefs.definitions()["Document"].icon()}
           {`${document?.title.slice(0, 20)}...`}
         </Typography>
       </AccordionSummary>

@@ -418,51 +418,25 @@ def initialize_teleoscope(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs
-    session_id = kwargs["session_id"]
-    label = "default"
-    if "label" in kwargs:
-        label = kwargs["label"]
+    session_id = ObjectId(str(kwargs["session_id"]))
+    userid = ObjectId(str(kwargs["userid"]))
 
-    ret = None
+    teleoscope = schemas.create_teleoscope_object(session_id, userid, **kwargs)
+    
+    teleoscope_result = db.teleoscopes.insert_one(teleoscope)
 
-    userid = kwargs["userid"]
-    user = db.users.find_one({"_id": userid})
-    user_id = "1"
-    if user != None:
-        user_id = user['_id']
+    logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
 
-    # create a new query document
-    with transaction_session.start_transaction():
-        teleoscope_result = db.teleoscopes.insert_one({
-                "creation_time": datetime.datetime.utcnow(),
-                "history": [
-                    {
-                        "timestamp": datetime.datetime.utcnow(),
-                        "label": label,
-                        "rank_slice": [],
-                        "reddit_ids": [],
-                        "positive_docs": [],
-                        "negative_docs": [],
-                        "stateVector": [],
-                        "ranked_document_ids": None,
-                        "action": "Initialize Teleoscope",
-                        "user": user_id,
-                    }
-                ]
-            }, session=transaction_session)
-        logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
-  
-        ui_session = db.sessions.find_one({'_id': ObjectId(str(session_id))}, session=transaction_session)
-        history_item = ui_session["history"][0]
-        history_item["timestamp"] = datetime.datetime.utcnow()
-        history_item["teleoscopes"].append(ObjectId(teleoscope_result.inserted_id))
-        history_item["action"] = "Initialize Teleoscope"
-        history_item["user"] = user_id
+    ui_session = db.sessions.find_one({'_id': session_id})
+    history_item = ui_session["history"][0]
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["action"] = "Initialize Teleoscope"
+    history_item["oid"] = teleoscope_result.inserted_id
+    history_item["user"] = userid
 
-        # associate the newly created teleoscope with correct session
-        utils.push_history(db, "sessions", ObjectId(str(session_id)), history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
-    return teleoscope_result
+    # associate the newly created teleoscope with correct session
+    utils.push_history(db, "sessions", ObjectId(str(session_id)), history_item)
+    return teleoscope_result.inserted_id
 
 
 @app.task 
@@ -905,6 +879,7 @@ def add_note(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session(db=database)
     label = kwargs["label"]
     content = kwargs["content"]
+
     session_id = ObjectId(str(kwargs["session_id"]))
     userid = ObjectId(str(kwargs["userid"]))
 
@@ -912,16 +887,17 @@ def add_note(*args, **kwargs):
     vector = vectorize_text(text)
 
     note = schemas.create_note_object(userid, label, content, vector)
-    with transaction_session.start_transaction():
-        res = db.notes.insert_one(note, session=transaction_session)
-        session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
-        history_item = session["history"][0]
-        history_item["user"] = userid,
-        history_item["action"] = "Add note"
-        history_item["notes"].append(res.inserted_id) 
-        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
-        logging.info(f"Added note with result {res}.")
-        utils.commit_with_retry(transaction_session)
+    
+    res = db.notes.insert_one(note)
+
+    session = db.sessions.find_one({"_id": session_id})
+    history_item = session["history"][0]
+    history_item["user"] = userid,
+    history_item["action"] = "Add note"
+    history_item["notes"].append(res.inserted_id)
+    utils.push_history(db, "sessions", session_id, history_item)
+    logging.info(f"Added note with result {res}.")
+    return res.inserted_id
 
 @app.task
 def remove_note(*args, **kwargs):
@@ -1223,15 +1199,15 @@ class reorient(Task):
             logging.info(f'new rank slice has length {len(rank_slice)}.')
 
             history_item = schemas.create_teleoscope_history_item(
-                teleoscope['history'][0]['label'],
-                teleoscope['history'][0]['reddit_ids'],
-                documents,
-                [],
-                vec.tolist(),
-                ObjectId(str(gridfs_id)),
-                rank_slice,
-                "Reorient teleoscope",
-                ObjectId(str(userid))
+                label = teleoscope['history'][0]['label'],
+                reddit_ids=teleoscope['history'][0]['reddit_ids'],
+                positive_docs=documents,
+                negative_docs=[],
+                stateVector=vec.tolist(),
+                ranked_document_ids=ObjectId(str(gridfs_id)),
+                rank_slice=rank_slice,
+                action="Reorient teleoscope",
+                user=ObjectId(str(userid))
             )
 
             # transaction_session, db = utils.create_transaction_session(db=self.dbstring)
@@ -1540,8 +1516,33 @@ def add_item(*args, **kwargs):
                 "description": "Associate OID with UID."
             })
 
-        case "Cluster":
+        case "Teleoscope":
+            # If this already exists in the database, we can skip intitalization
+            if ObjectId.is_valid(oid):
 
+                docset = db.graph.find_one({"_id" : oid})
+                if docset:
+                    logging.info(f"{type} with {oid} already in DB.")
+                    return # perhaps do something else before return like save?
+                
+                logging.info(f"return anyways for now")
+                return
+            
+            logging.info(f"Received {type} with OID {oid} and UID {uid}.")
+
+            # res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+            res = initialize_teleoscope(database, session_id=session_id, userid=userid)
+            
+            message(userid, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })
+
+            
+
+        case "Cluster":
             # If this already exists in the database, we can skip intitalization
             docset = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
             if docset:
@@ -1557,7 +1558,7 @@ def add_item(*args, **kwargs):
                 "action": "OID_UID_SYNC",
                 "description": "Associate OID with UID."
             })
-    
+
         case "Filter" | "Intersection" | "Exclusion" | "Union":
             with transaction_session.start_transaction():
                 obj = schemas.create_node(type)

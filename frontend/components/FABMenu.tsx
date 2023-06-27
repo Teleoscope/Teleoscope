@@ -5,14 +5,12 @@ import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
 
-// custom
-import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
-
 // actions
 import { makeNode } from "@/actions/windows";
 import { useSelector, useDispatch } from "react-redux";
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
+import { useWindowDefinitions } from "@/util/hooks";
 
 export default function FABMenu(props) {
   const [open, setOpen] = React.useState(true);
@@ -22,15 +20,15 @@ export default function FABMenu(props) {
   const client = useContext(StompContext);
   
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
-  const windowState = useSelector((state) => state.windows);
-  const wdefs = WindowDefinitions(windowState);
+  
+  const wdefs = useWindowDefinitions();
   const settings = useSelector((state) => state.windows.settings);
   
   const actions = [
     "Search",
-    "Teleoscopes",
-    "Projections",
     "Group",
+    "Teleoscope",
+    "Projections",
     "Notes",
     "Filter",
     "Intersection",
@@ -81,11 +79,11 @@ export default function FABMenu(props) {
         <SpeedDialAction
           sx={{ color: settings.color }}
           key={action}
-          icon={wdefs[action].icon()}
+          icon={wdefs.definitions()[action].icon()}
           tooltipTitle={action}
           onClick={() =>
             handleAddNode(
-              wdefs[action].type
+              wdefs.definitions()[action].type
             )
           }
         />
