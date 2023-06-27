@@ -12,7 +12,7 @@ import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import PaletteIcon from "@mui/icons-material/Palette";
 import PeopleIcon from "@mui/icons-material/People";
 
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import { resetWorkspace, relabelSession } from "@/actions/windows";
 
 import EditableText from "@/components/EditableText";
@@ -23,7 +23,6 @@ import randomColor from "randomcolor";
 
 import { swrContext } from "@/util/swr";
 import { StompContext } from "@/components/Stomp";
-import { MenuUnstyled } from '@mui/core';
 import { sessionActivator } from "@/actions/activeSessionID";
 
 const styles = {
@@ -54,8 +53,7 @@ const renderPopupButton = (popupId, icon, children) => (
 
 export default function Workflows(props) {
   const client = useContext(StompContext);
-  const windowState = useAppSelector((state) => state.windows);
-  const wdefs = WindowDefinitions(windowState);
+  const wdefs = useWindowDefinitions();
 
   const dispatch = useAppDispatch();
   const swr = useContext(swrContext);
@@ -114,7 +112,7 @@ export default function Workflows(props) {
                   <Stack direction="row" alignItems="center">
                     <ListItemIcon>
                       <IconButton onClick={() => handleWorkflowChoice(session._id)}>
-                        {wdefs["Workflows"].icon([
+                        {wdefs.definitions()["Workflows"].icon([
                           { color: session.history[0].color },
                           { "& .MuiChip-icon": { color: session.history[0].color } },
                         ])}

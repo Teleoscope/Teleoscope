@@ -23,8 +23,7 @@ export const GroupItem = ({
   recolorGroup,
   color,
 }) => {
-const windows = useAppSelector((state) => state.windows);
-const wdefs = WindowDefinitions(windows);
+const wdefs = useWindowDefinitions();
 return (
   <div
     key={g._id}
@@ -42,7 +41,7 @@ return (
         <Stack direction="row" alignItems="center">
           <ListItemIcon>
             <IconButton onClick={() => setShowColorPicker(!showColorPicker)}>
-              {wdefs["Group"].icon(g)}
+              {wdefs.definitions()["Group"].icon(g)}
             </IconButton>
           </ListItemIcon>
 
@@ -93,7 +92,7 @@ export const GroupList = ({ groups, ...props }) => (
 import { useContext, useState } from "react";
 import { Divider } from "@mui/material";
 import { swrContext } from "@/util/swr";
-import { useAppSelector } from "@/util/hooks";
+import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import { StompContext } from "@/components/Stomp";
 import randomColor from "randomcolor";
 import ButtonActions from "@/components/ButtonActions";
@@ -103,7 +102,6 @@ import {
   CopyTextAction,
 } from "@/components/GroupsActions";
 import { NewItemForm } from "./NewItemForm";
-import WindowDefinitions from "./WindowFolder/WindowDefinitions";
 import { onDragStart } from "@/util/drag";
 
 export default function Groups(props) {

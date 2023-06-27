@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 
 // mui
@@ -9,7 +9,6 @@ import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 
 // custom components
-import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import { useSelector } from "react-redux";
 
 // actions
@@ -35,8 +34,8 @@ export default function ContextMenu(props) {
     "teleoscopes_raw",
     `sessions/${session_id}/teleoscopes`
   );
-  const windowState = useSelector((state) => state.windows);
-  const wdefs = WindowDefinitions(windowState);
+  
+  const wdefs = useWindowDefinitions();
   const settings = useSelector((state) => state.windows.settings);
 
   const handleAddNode = (id, type) => {    
@@ -60,13 +59,13 @@ export default function ContextMenu(props) {
   });
 
   const handleOpenNewWindow = (menu_action) => {
-    const w = { ...wdefs[menu_action] };
+    const w = { ...wdefs.definitions()[menu_action] };
     handleAddNode(w.tag, w.type);
     props.handleCloseContextMenu();
   };
 
   const handleExistingTeleoscope = (t) => {
-    const w = { ...wdefs["Teleoscope"] };
+    const w = { ...wdefs.definitions()["Teleoscope"] };
     handleAddNode(t, w.type);
     props.handleCloseContextMenu();
   };

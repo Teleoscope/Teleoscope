@@ -125,16 +125,25 @@ def create_document_object(title, textVector, text, relationships={}, metadata={
         }
     }
 
+def create_teleoscope_object(session_id, userid, label="New Teleoscope", **kwargs):
+    return {
+        "creation_time": datetime.datetime.utcnow(),
+        "sessions": [session_id],
+        "history": [
+            *create_teleoscope_history_item()
+        ]
+    }
+
 def create_teleoscope_history_item(
-        label: str,
-        reddit_ids: list,
-        positive_docs: list, 
-        negative_docs: list, 
-        stateVector: list, 
-        ranked_document_ids: ObjectId, 
-        rank_slice: list,
-        action: str,
-        user: ObjectId):
+        label = "New Teleoscope",
+        reddit_ids = [],
+        positive_docs = [], 
+        negative_docs = [], 
+        stateVector = [], 
+        ranked_document_ids = None,
+        rank_slice = [],
+        action = "Initialize Teleoscope",
+        user = None):
     history_item = {
         'timestamp': datetime.datetime.utcnow(),
         'label': label,
