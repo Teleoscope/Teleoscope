@@ -1532,6 +1532,7 @@ def add_item(*args, **kwargs):
 
             # res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
             res = initialize_teleoscope(db=database, session_id=session_id, userid=userid)
+
             
             message(userid, {
                 "oid": str(res),
