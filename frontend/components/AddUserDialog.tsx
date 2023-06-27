@@ -12,9 +12,9 @@ import { Button } from "@mui/material";
 import { swrContext } from "@/util/swr";
 
 // contexts
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 export default function AddUserDialogue(props) {
-  const client = useContext(StompContext);
+  const client = useStomp();
   const swr = useContext(swrContext);
   const { users } = swr.useSWRAbstract("users", `users/`);
 

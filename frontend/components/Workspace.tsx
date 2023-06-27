@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 // custom components
 import DrawerMini from "@/components/DrawerMini";
@@ -15,20 +15,19 @@ export default function Workspace({subdomain}) {
   const [cookies, setCookie] = useCookies(["userid"]);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
+  const [client, setClient] = useState<Stomp | null>(null);
   
   const dispatch = useAppDispatch();
   
-  if (cookies.userid != userid) {
+  useEffect(() => {
     dispatch(setUserId(cookies.userid));
+    const options = {
+      database: subdomain?.split(".")[0],
+      userid: userid,
+    };
+    setClient(Stomp.getInstance(options));
+  }, [userid])
 
-  }
-
-  const options = {
-    database: subdomain?.split(".")[0],
-    userid: userid,
-  };
-
-  const client = Stomp.getInstance(options);
   
   const mySWR = new swr(subdomain?.split(".")[0]);
 

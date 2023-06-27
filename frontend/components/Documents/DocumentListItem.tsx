@@ -18,11 +18,11 @@ import { swrContext } from "@/util/swr";
 import { PreprocessTitle } from "@/util/Preprocessers";
 
 // contexts
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 import { onDragStart } from "@/util/drag";
 
 export default function DocumentListItem(props) {
-  const client = useContext(StompContext);
+  const client = useStomp();
   const swr = useContext(swrContext);
   const { document } = swr.useSWRAbstract("document", `document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;

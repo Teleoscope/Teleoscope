@@ -11,7 +11,7 @@ import {
   removeWindow,
   setSelection,
 } from "@/actions/windows";
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 import FlowProviderWrapper from "@/components/FlowProviderWrapper";
 import FlowWrapper from "@/components/FlowWrapper";
 import FlowUIComponents from "@/components/FlowUIComponents";
@@ -38,7 +38,7 @@ function Flow(props) {
   const nodeTypes = useMemo(() => ({ windowNode: WindowNode, ...wdefs.nodeTypeDefs()}), []);
   const edgeTypes = useMemo(() => ({default: ButtonEdge}), []);
 
-  const client = useContext(StompContext);
+  const client = useStomp();
   const swr = useContext(swrContext);
   
   // this ref stores the current reactflow ref in the DOM
@@ -112,9 +112,6 @@ function Flow(props) {
     }
   }, [session, session_history_item, logical_clock, userid]);
   
-
-
-
   const handleTarget = node => {
     setTarget(findTargetNode(node, nodes));
   }
@@ -246,6 +243,7 @@ function Flow(props) {
     const newEdges = addEdge(connection, []);
     dispatch(makeEdge({
       client: client,
+      connection: connection,
       edges: newEdges
     }));
   }

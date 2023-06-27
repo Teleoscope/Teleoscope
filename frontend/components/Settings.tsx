@@ -9,10 +9,10 @@ import { useAppSelector, useAppDispatch } from "@/util/hooks";
 // custom components
 import { setSettings, setColor } from "@/actions/windows";
 import ColorPicker from "@/components/ColorPicker";
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 
 export default function Settings(props) {
-  const client = useContext(StompContext);
+  const client = useStomp();
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const dispatch = useAppDispatch();
   const settings = useAppSelector((state) => state.windows.settings);

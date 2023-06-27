@@ -23,12 +23,12 @@ import { RootState } from "@/stores/store";
 
 // utils
 import { swrContext } from "@/util/swr";
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 import { NewItemForm } from "../NewItemForm";
 import { onDragStart } from "@/util/drag";
 
 export default function Clusters(props) {
-  const client = useContext(StompContext);
+  const client = useStomp();
   const settings = useAppSelector((state: RootState) => state.windows.settings);
   const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
   const swr = useContext(swrContext);

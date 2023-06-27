@@ -1595,6 +1595,26 @@ def add_item(*args, **kwargs):
                 utils.commit_with_retry(transaction_session)
     return "Help"
 
+@app.task
+def make_edge(*args, **kwargs):
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle kwargs
+    userid = ObjectId(str(kwargs["userid"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+    
+    source_node = kwargs["source_node"]
+    target_node = kwargs["target_node"]
+    handle_type = kwargs["handle_type"]
+
+    connection = kwargs["connection"]
+    ui_state = kwargs["ui_state"]
+
+    if target_node["type"] == "Teleoscope":
+        
+
+
 
 
 def message(userid: ObjectId, msg):

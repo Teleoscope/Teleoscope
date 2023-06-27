@@ -15,7 +15,7 @@ import { RootState } from "@/stores/store";
 import { swrContext } from "@/util/swr";
 
 // contexts
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 
 export default function Note(props) {
   const id = props.id.split("%")[0];
@@ -24,7 +24,7 @@ export default function Note(props) {
   const userid = useAppSelector(
     (state: RootState) => state.activeSessionID.userid
   ); //value was userid
-  const client = useContext(StompContext);
+  const client = useStomp();
   const editor = React.useRef(null);
 
   const debouncedSave = useRef(

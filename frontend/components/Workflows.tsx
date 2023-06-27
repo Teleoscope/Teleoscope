@@ -22,7 +22,7 @@ import AddUserDialogue from "@/components/AddUserDialog";
 import randomColor from "randomcolor";
 
 import { swrContext } from "@/util/swr";
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 import { sessionActivator } from "@/actions/activeSessionID";
 
 const styles = {
@@ -52,7 +52,7 @@ const renderPopupButton = (popupId, icon, children) => (
 );
 
 export default function Workflows(props) {
-  const client = useContext(StompContext);
+  const client = useStomp();
   const wdefs = useWindowDefinitions();
 
   const dispatch = useAppDispatch();

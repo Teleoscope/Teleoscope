@@ -1,12 +1,13 @@
 import { Client } from "@stomp/stompjs";
 import crypto from 'crypto';
-import React, { createContext } from "react";
+import { createContext, useContext } from "react";
 import store from "@/stores/store";
-export const StompContext = createContext(null);
 import { OID_UID_SYNC } from "@/actions/windows";
 import { WebsocketBuilder } from "websocket-ts";
 Object.assign(global, WebsocketBuilder);
 
+export const StompContext = createContext(null);
+export const useStomp = () => useContext(StompContext);
 
 /**
  * Type definition for Body
@@ -45,6 +46,7 @@ export class Stomp {
    * @returns Stomp
    */
   public static getInstance(options): Stomp {
+    console.log("Stomp getInstance called", options, Stomp.stomp)
     if (Stomp.stomp) {
       const temp = Stomp.stomp.client;
       temp.deactivate()
@@ -57,6 +59,7 @@ export class Stomp {
   } 
 
   public restart(options): Stomp {
+    console.log("Restarted client...", options)
     return Stomp.getInstance(options)
   }
   
@@ -216,6 +219,26 @@ export class Stomp {
         state: state
       },
     };
+    this.publish(body);
+    return body;
+  }
+
+  /**
+   * Single edge update.
+   */
+  make_edge({session_id, source_node, target_node, handle_type, connection, ui_state}) {
+    const body = {
+      task: "make_edge",
+      args: {
+        session_id: session_id,
+        source_node: source_node,
+        target_node: target_node,
+        handle_type: handle_type,
+        connection: connection,
+        ui_state: ui_state
+      },
+    };
+    console.log("makeEdge stomp", body, this)
     this.publish(body);
     return body;
   }
@@ -681,9 +704,6 @@ export class Stomp {
     this.publish(body);
     return body;
   }
-
-
-
 
 
   /**

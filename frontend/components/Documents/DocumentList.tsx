@@ -8,12 +8,12 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
 import ItemList from "@/components/ItemList";
 import { setSelection } from "@/actions/windows";
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 
 export default function DocumentList(props) {
   const data = props.data;
   const dispatch = useAppDispatch();
-  const client = useContext(StompContext);
+  const client = useStomp();
   const session_id = useAppSelector(
     (state) => state.activeSessionID.value
   );

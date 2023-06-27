@@ -18,12 +18,12 @@ import { makeNode } from "@/actions/windows";
 import { swrContext } from "@/util/swr";
 
 // contexts
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 import Typography from "@mui/material/Typography";
 
 export default function ContextMenu(props) {
 
-  const client = useContext(StompContext);
+  const client = useStomp();
   const dispatch = useAppDispatch();
 
   const session_id = useAppSelector(

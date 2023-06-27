@@ -14,14 +14,14 @@ import FolderCopyIcon from "@mui/icons-material/FolderCopy";
 import { useAppSelector } from "@/util/hooks";
 
 // contexts
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 
 //utils
 import { swrContext } from "@/util/swr";
 
 export default function GroupSelector(props) {
   const userid = useAppSelector((state) => state.activeSessionID.userid);
-  const client = useContext(StompContext);
+  const client = useStomp();
 
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const swr = useContext(swrContext);

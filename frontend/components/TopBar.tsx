@@ -19,13 +19,13 @@ import { swrContext } from "@/util/swr";
 import { useCookies } from "react-cookie";
 
 // contexts
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 
 export default function TopBar(props) {
   const settings = useSelector((state) => state.windows.settings);
   const userid = useSelector((state) => state.activeSessionID.userid);
   const dispatch = useDispatch();
-  const client = useContext(StompContext);
+  const client = useStomp();
   const swr = useContext(swrContext);
   const { user } = swr.useSWRAbstract("user", `users/${userid}`);
   
