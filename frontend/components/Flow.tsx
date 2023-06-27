@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback, useContext, useRef, useEffect } from "react";
 import { addEdge } from "reactflow";
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 import { swrContext } from "@/util/swr";
 import {
@@ -16,7 +16,6 @@ import FlowProviderWrapper from "@/components/FlowProviderWrapper";
 import FlowWrapper from "@/components/FlowWrapper";
 import FlowUIComponents from "@/components/FlowUIComponents";
 import ContextMenuHandler from "@/components/ContextMenuHandler";
-import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import FlowFABWrapper from "@/components/FlowFABWrapper";
 import "reactflow/dist/style.css";
 import styles from "@/styles/flow.module.css";
@@ -25,32 +24,29 @@ import { setNodes, setEdges, setColor } from "@/actions/windows";
 import { loadBookmarkedDocuments } from "@/actions/windows";
 import WindowNode from "@/components/Nodes/WindowNode";
 import ButtonEdge from "@/components/Nodes/ButtonEdge";
+import { findTargetNode, getClosestEdge } from "@/util/drag";
+
+interface MouseCoords {
+  mouseX: number;
+  mouseY: number;
+  worldX: number;
+  worldY: number;
+}
 
 function Flow(props) {
-  const windowState = useAppSelector((state) => state.windows);
-  const wdefs = WindowDefinitions(windowState);
-  const nodeTypeDefs = Object.entries(wdefs).reduce((obj, [w, def]) => {
-    obj[w] = def.nodetype;
-    return obj;
-  }, {})
-  
-  const nodeTypes = useMemo(
-    () => ({ 
-    windowNode: WindowNode,
-    ...nodeTypeDefs
-  }), []);
-
-  const edgeTypes = useMemo(
-    () => ({
-      default: ButtonEdge
-    }), []);
-
+  const wdefs = useWindowDefinitions();
+  const nodeTypes = useMemo(() => ({ windowNode: WindowNode, ...wdefs.nodeTypeDefs()}), []);
+  const edgeTypes = useMemo(() => ({default: ButtonEdge}), []);
 
   const client = useContext(StompContext);
   const swr = useContext(swrContext);
+  
+  // this ref stores the current reactflow ref in the DOM
   const reactFlowWrapper = useRef(null);
+  
   // this ref stores the current dragged node
   const dragRef = useRef(null);
+  
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [tempEdges, setTempEdges] = useState([]);
 
@@ -119,26 +115,9 @@ function Flow(props) {
 
 
 
-  const onNodeDragStart = (evt, node) => {
-    dragRef.current = node;
-  };
-
-  const handleTarget = (node) => {
-    // calculate the center point of the node from position and dimensions
-    const centerX = node.position.x + node.width / 2;
-    const centerY = node.position.y + node.height / 2;
-
-    // find a node where the center point is inside
-    const targetNode = nodes.find(
-      (n) =>
-        centerX > n.position.x &&
-        centerX < n.position.x + n.width &&
-        centerY > n.position.y &&
-        centerY < n.position.y + n.height &&
-        n.id !== node.id // this is needed, otherwise we would always find the dragged node
-    );
-    setTarget(targetNode);
-  };
+  const handleTarget = node => {
+    setTarget(findTargetNode(node, nodes));
+  }
 
   const make_connection = (edge) => {
     return {
@@ -197,6 +176,9 @@ function Flow(props) {
     event.dataTransfer.dropEffect = "move";
   }, []);
 
+  const onNodeDragStart = (evt, node) => { dragRef.current = node };
+
+
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
@@ -227,12 +209,7 @@ function Flow(props) {
     [reactFlowInstance, settings]
   );
 
-  interface MouseCoords {
-    mouseX: number;
-    mouseY: number;
-    worldX: number;
-    worldY: number;
-  }
+  
 
   const handleOpenContextMenu = (event) => {
     const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
@@ -262,12 +239,8 @@ function Flow(props) {
 
   const onPaneContextMenu = (e) => {
     event.preventDefault();
-
     handleOpenContextMenu(e);
-  };
-
-
-  
+  };  
 
   const create_edge = (connection, curredges) => {
     const newEdges = addEdge(connection, []);
@@ -279,66 +252,25 @@ function Flow(props) {
 
   const onConnect = useCallback((connection, curredges) => {
       create_edge(connection, curredges)
-  
   }, []);
 
   const onSelectionChange = useCallback(({ nodes, edges }) => {
     dispatch(setSelection({ nodes: nodes, edges: edges }));
   }, []);
 
-
-  const getClosestEdge = (node) => {
-    const X_MIN_DISTANCE = 50;
-    const Y_MIN_DISTANCE = 100;
-    
-    const closestNode = nodes.filter(n => n.data.type == "Teleoscope" || n.data.type === "Projection").reduce(
-      (res, n) => {
-        if (n.id !== node.id) {
-          edges.forEach((e) => {
-            if (e.source == node.id && e.target == n.id) {
-              return;
-            }
-          })
-          const _dx = (n.positionAbsolute.x) - (node.positionAbsolute.x + node.width);
-          const _dy = (n.positionAbsolute.y + n.height/2) - (node.positionAbsolute.y + node.height/2);
-          
-          const dx = Math.sqrt(_dx * _dx);
-          const dy = Math.sqrt(_dy * _dy);
-
-          if (dx < res.distance && dx < X_MIN_DISTANCE && dy < Y_MIN_DISTANCE) {
-            res.distance = dx;
-            res.node = n;
-          }
-        }
-        return res;
-      },
-      {
-        distance: Number.MAX_VALUE,
-        node: null,
-      }
-    );
-
-    if (!closestNode.node) {
-      return null
-    }
-
-    return {
-      id: `${node.id}-${closestNode.node.id}`,
-      source: node.id,
-      target: closestNode.node.id,
-    };
-  }
-
-
   const onNodeDrag =  useCallback((evt, node) => {
-    if (node?.data.type == "Document" || node?.data.type == "Note" || node?.data.type == "Group") {
+    if (
+        node?.data.type == "Document" || 
+        node?.data.type == "Note"     || 
+        node?.data.type == "Group"
+      ) {
       handleTarget(node);
       handleTempEdge(evt, node);  
     }
   }, [getClosestEdge, setTempEdges]);
 
   const handleTempEdge = (_, node) => {
-      const closeEdge = getClosestEdge(node);
+      const closeEdge = getClosestEdge(node, nodes, edges);
       if (closeEdge) {
         closeEdge.className = styles.temp
       }
@@ -362,8 +294,7 @@ function Flow(props) {
     }, []);
 
   
-
-
+  
 
   return (
     <div className="providerflow">

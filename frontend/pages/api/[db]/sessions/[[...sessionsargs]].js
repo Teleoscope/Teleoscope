@@ -57,23 +57,9 @@ export default async (req, res) => {
     // returns teleoscopes
     var teleoscopes = await db
       .collection("teleoscopes")
-      .find({}, { projection: { history: { $slice: 1 } } })
+      .find({ sessions: session_id }, { projection: { history: { $slice: 1 } } })
       .toArray();
-    session = await db
-      .collection("sessions")
-      .findOne({ _id: session_id }, { projection: { history: { $slice: 1 } } });
-    var session_teleoscopes = session?.history[0].teleoscopes.map((t_id) => {
-      return t_id.toString();
-    });
-    var filtered_teleoscopes = teleoscopes.filter((teleoscope) => {
-      var t = teleoscope._id.toString();
-      if (session_teleoscopes?.includes(t)) {
-        return true;
-      } else {
-        return false;
-      }
-    });
-    ret = filtered_teleoscopes;
+    ret = teleoscopes;
   } else if (sessionsargs.length === 2 && sessionsargs[1] === "projections") {
     // returns projections
     var projections = await db
