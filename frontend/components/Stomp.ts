@@ -25,17 +25,17 @@ export class Stomp {
   private creationTime: Date;
   private _loaded: boolean;
 
-  private constructor(options) {
+  private constructor({userid, subdomain}) {
     this.creationTime = new Date();
     this.loaded = false;
-    this.database = options.database;
-    this._userid = options.userid;
+    this.database = subdomain;
+    this._userid = userid;
     this.client = null;
   }
 
   public static getFakeClient(): Stomp {
     if (!Stomp.stomp) {
-      Stomp.stomp = new Stomp({ database: "aita", userid: "0" });
+      Stomp.stomp = new Stomp({ subdomain: "aita", userid: "0" });
       Stomp.stomp.fake_client_init();
     }
     return Stomp.stomp;
@@ -45,14 +45,16 @@ export class Stomp {
    * Ensure that there is only one copy of the Stomp class.
    * @returns Stomp
    */
-  public static getInstance(options): Stomp {
-    console.log("Stomp getInstance called", options, Stomp.stomp)
+  public static getInstance({userid, subdomain}): Stomp {
     if (Stomp.stomp) {
+      if (userid == Stomp.stomp?.userId && subdomain == Stomp.stomp?.database) {
+        return Stomp.stomp;
+      }
       const temp = Stomp.stomp.client;
       temp.deactivate()
     }
     
-    Stomp.stomp = new Stomp(options);
+    Stomp.stomp = new Stomp({userid: userid, subdomain: subdomain});
     Stomp.stomp.client_init();
 
     return Stomp.stomp;
@@ -89,7 +91,12 @@ export class Stomp {
    * Initializes the client (there should only be one)
    */
   client_init() {
-    console.log(`Initializing Stomp client for user ${this.userId}`);
+    console.log(`Initializing Stomp client for user ${this.userId} and database ${this.database}.`);
+    if (this.userId == null || this.database == null) {
+      console.log(`Failed to initialize Stomp client for user ${this.userId} and database ${this.database}.`);
+      return;
+    }
+
     this.client = new Client({
       brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:15674/ws`,
       connectHeaders: {
@@ -103,9 +110,7 @@ export class Stomp {
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,
-    });
-    console.log(`Initializing Stomp client for user ${this.userId}`, this.client);
-    
+    });    
 
     this.client.onDisconnect = (frame) => {
       console.log("Disconnected");

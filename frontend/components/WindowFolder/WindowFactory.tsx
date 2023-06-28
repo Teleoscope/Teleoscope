@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import Window from "@/components/WindowFolder/Window";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import { useWindowDefinitions } from "@/util/hooks";
 
 export default function WindowFactory(props) {
@@ -13,14 +13,13 @@ export default function WindowFactory(props) {
   const id = props?.id ? props.id : `${oid}%${uid}%${type}`;
 
   const key = wdefs.apikeymap()[type];
-  const swr = useContext(swrContext);
-  const { data } = w?.demo
+  const swr = useSWRHook();
+  const { data } = w?.demo 
     ? w.demodata
     : swr.useSWRAbstract("data", `${key}/${oid}`);
 
   if (w.type == "FABMenu") {
     return <div>{wdefs.definitions()[w.type].component(w, id, "#FFFFFF")}</div>;
-
   }
 
   return (

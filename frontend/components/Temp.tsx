@@ -28,8 +28,8 @@ import {
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 
-// actions
-import { swrContext } from "@/util/swr";
+// actions 
+import { useSWRHook } from "@/util/swr";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 
 // contexts
@@ -43,7 +43,7 @@ import withDroppable from "@/components/DropItem";
 
 // custom components
 export default function Groups(props) {
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
   const { users } = swr.useSWRAbstract("users", `users/`);
   const client = useStomp();

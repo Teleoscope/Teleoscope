@@ -2,12 +2,12 @@ import React, { useContext } from "react";
 import { Button, Stack, TextField } from "@mui/material";
 import { InputAdornment } from "@mui/material";
 import { alpha } from "@mui/material";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import { AccountCircle } from "@mui/icons-material";
 import { useStomp } from "@/components/Stomp";
-
+ 
 export default function Account(props) {
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const client = useStomp();
 
   const [value, setValue] = React.useState("");

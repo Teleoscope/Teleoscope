@@ -7,12 +7,12 @@ import {
   AccordionDetails,
   Divider
 } from "@mui/material";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export default function NotesViewer(props) {
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { note } = swr.useSWRAbstract("note", `note/${props.id}`);
   const settings = useAppSelector((state) => state.windows.settings);
   const wdefs = useWindowDefinitions();

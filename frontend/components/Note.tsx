@@ -12,14 +12,14 @@ import { useAppSelector } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 
 //utils
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 
 // contexts
 import { useStomp } from "@/components/Stomp";
 
 export default function Note(props) {
   const id = props.id.split("%")[0];
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { note } = swr.useSWRAbstract("note", `note/${id}`);
   const userid = useAppSelector(
     (state: RootState) => state.activeSessionID.userid

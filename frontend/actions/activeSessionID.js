@@ -1,12 +1,9 @@
 // actions.js
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 export const ActiveSessionID = createSlice({
   name: "activeSessionID",
-  initialState: {
-    value: "000000000000000000000000",
-    userid: "000000000000000000000000",
-  },
+  initialState: { data: null, loading: false, error: null },
   reducers: {
     sessionActivator: (state, action) => {
       var id = action.payload; // value of documentid
@@ -21,6 +18,20 @@ export const ActiveSessionID = createSlice({
       state.userid = action.payload;
     },
   },
+  // extraReducers: (builder) => {
+  //   builder
+  //     .addCase(fetchInitialState.pending, (state) => {
+  //       state.loading = true;
+  //     })
+  //     .addCase(fetchInitialState.fulfilled, (state, action) => {
+  //       state.loading = false;
+  //       state.data = action.payload;
+  //     })
+  //     .addCase(fetchInitialState.rejected, (state, action) => {
+  //       state.loading = false;
+  //       state.error = action.error.message;
+  //     });
+  // },
 });
 
 // Action creators are generated for each case reducer function

@@ -8,15 +8,15 @@ import SpeedDialAction from "@mui/material/SpeedDialAction";
 // actions
 import { makeNode } from "@/actions/windows";
 import { useSelector, useDispatch } from "react-redux";
-import { swrContext } from "@/util/swr";
-import { useStomp } from "@/components/Stomp";
+import { useSWRHook } from "@/util/swr";
+import { useStomp } from "@/components/Stomp"; 
 import { useWindowDefinitions } from "@/util/hooks";
 
 export default function FABMenu(props) {
   const [open, setOpen] = React.useState(true);
   const dispatch = useDispatch();
   const session_id = useSelector((state) => state.activeSessionID.value);
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const client = useStomp();
   
   const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);

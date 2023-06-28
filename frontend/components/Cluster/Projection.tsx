@@ -8,16 +8,16 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import Clusters from "@/components/Cluster/Clusters";
 
 // util
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 
 export default function Projection(props) {
   const [projection_id] = useState(props.id.split("%")[0]);
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { projection } = swr.useSWRAbstract(
     "projection", 
     `projections/${projection_id}`
   );
-
+ 
   return (
     <>
       {projection ? (

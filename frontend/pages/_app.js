@@ -10,8 +10,6 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
   const [authorized, setAuthorized] = useState(false);  
   useEffect(() => {setAuthorized(true);}, []);
 
-  console.log("session", session, pageProps)
-
   return (
     <>
       <Head>

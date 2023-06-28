@@ -3,6 +3,8 @@ import ActiveSessionID from "@/actions/activeSessionID";
 import Windows from "@/actions/windows";
 import { makeNode, makeEdge, setColor, relabelSession } from "@/actions/windows";
 import crypto from 'crypto';
+import { useStomp } from "@/components/Stomp";
+
 
 // Custom middleware function for makeNode action
 const makeNodeMiddleware = store => next => action => {

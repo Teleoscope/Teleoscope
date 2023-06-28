@@ -31,7 +31,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
 
 // actions
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import { useAppSelector } from "@/util/hooks";
 
 // contexts
@@ -45,7 +45,7 @@ import { onDragStart } from "@/util/drag";
 
 // custom components
 export default function GroupsDemo(props) {
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
   const { users } = swr.useSWRAbstract("users", `users/`);
   const client = useStomp();

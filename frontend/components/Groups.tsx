@@ -91,7 +91,7 @@ export const GroupList = ({ groups, ...props }) => (
 
 import { useContext, useState } from "react";
 import { Divider } from "@mui/material";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import { useStomp } from "@/components/Stomp";
 import randomColor from "randomcolor";
@@ -105,7 +105,7 @@ import { NewItemForm } from "./NewItemForm";
 import { onDragStart } from "@/util/drag";
 
 export default function Groups(props) {
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const client = useStomp();
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const settings = useAppSelector((state) => state.windows.settings);

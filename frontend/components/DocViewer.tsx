@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -12,7 +12,7 @@ import { DocumentActions } from "@/components/Documents/DocumentActions";
 import Highlighter from "@/components/Highlighter";
 
 export default function DocViewer(props) {
-  const swr = useContext(swrContext);
+  const swr = useSWRHook(); 
   const { document } = props.windata?.demo
     ? props.windata.demodata
     : swr.useSWRAbstract("document", `document/${props.id}`);

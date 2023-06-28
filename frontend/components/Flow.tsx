@@ -2,7 +2,7 @@ import React, { useMemo, useState, useCallback, useContext, useRef, useEffect } 
 import { addEdge } from "reactflow";
 import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import { RootState } from "@/stores/store";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import {
   updateNodes,
   updateEdges,
@@ -31,7 +31,7 @@ interface MouseCoords {
   mouseY: number;
   worldX: number;
   worldY: number;
-}
+} 
 
 function Flow(props) {
   const wdefs = useWindowDefinitions();
@@ -39,7 +39,8 @@ function Flow(props) {
   const edgeTypes = useMemo(() => ({default: ButtonEdge}), []);
 
   const client = useStomp();
-  const swr = useContext(swrContext);
+
+  const swr = useSWRHook();
   
   // this ref stores the current reactflow ref in the DOM
   const reactFlowWrapper = useRef(null);
@@ -250,7 +251,7 @@ function Flow(props) {
 
   const onConnect = useCallback((connection, curredges) => {
       create_edge(connection, curredges)
-  }, []);
+  }, [client]);
 
   const onSelectionChange = useCallback(({ nodes, edges }) => {
     dispatch(setSelection({ nodes: nodes, edges: edges }));

@@ -17,14 +17,14 @@ import { useAppSelector } from "@/util/hooks";
 import { useStomp } from "@/components/Stomp";
 
 //utils
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 
 export default function GroupSelector(props) {
   const userid = useAppSelector((state) => state.activeSessionID.userid);
   const client = useStomp();
 
   const session_id = useAppSelector((state) => state.activeSessionID.value);
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { groups } = swr.useSWRAbstract(
     "groups",
     `sessions/${session_id}/groups`

@@ -9,7 +9,7 @@ import {
   ListItemIcon,
 } from "@mui/material";
 
-import {
+import { 
   Delete as DeleteIcon,
   Diversity2 as Diversity2Icon,
 } from "@mui/icons-material";
@@ -22,7 +22,7 @@ import { useAppSelector } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 
 // utils
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import { useStomp } from "@/components/Stomp";
 import { NewItemForm } from "../NewItemForm";
 import { onDragStart } from "@/util/drag";
@@ -31,7 +31,7 @@ export default function Clusters(props) {
   const client = useStomp();
   const settings = useAppSelector((state: RootState) => state.windows.settings);
   const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   
   const { projections_raw } = swr.useSWRAbstract(
     "projections_raw",

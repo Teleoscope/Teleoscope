@@ -9,24 +9,22 @@ import {
   Menu,
 } from "@mui/material";
 import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
-import PaletteIcon from "@mui/icons-material/Palette";
 import PeopleIcon from "@mui/icons-material/People";
-
+ 
 import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import { resetWorkspace, relabelSession } from "@/actions/windows";
 
 import EditableText from "@/components/EditableText";
-import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 import AddUserDialogue from "@/components/AddUserDialog";
 
 import randomColor from "randomcolor";
 
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import { useStomp } from "@/components/Stomp";
 import { sessionActivator } from "@/actions/activeSessionID";
 
 const styles = {
-  overflow: "auto",
+  overflow: "auto", 
   height: "100%",
   position: "relative",
 };
@@ -56,7 +54,7 @@ export default function Workflows(props) {
   const wdefs = useWindowDefinitions();
 
   const dispatch = useAppDispatch();
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const color = useAppSelector((state) => state.windows.settings.color);
 
   const userid = useAppSelector((state) => state.activeSessionID.userid);
