@@ -48,7 +48,7 @@ const makeNodeMiddleware = store => next => action => {
     const nodes = updatedState.windows.nodes
     const source_node = nodes.find(n => n.id === action.payload.connection.source)
     const target_node = nodes.find(n => n.id === action.payload.connection.target)
-    const handle_type = action.payload.connection.targetHandle.split("_").slice(-1)
+    const handle_type = action.payload.connection.targetHandle.split("_").slice(-1)[0]
 
     console.log("makeEdge", action)
     action.payload.client.make_edge({

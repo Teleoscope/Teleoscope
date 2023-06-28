@@ -1600,7 +1600,7 @@ def find_node(oid, db):
 def graph(oid, db):
     query = db.graph.aggregate(pipeline = [{
         "$graphLookup": {
-            "from": db.graph,
+            "from": "graph",
             "startWith": {
                 "$concatArrays": ["$edges.source.id", "$edges.control.id"]
             },
@@ -1664,7 +1664,7 @@ def make_edge(*args, **kwargs):
         r = db.graph.insert_one(n)
         db.get_collection(collectionMap[source_node["type"]]).update_one(
             {
-                "_id": target_oid
+                "_id": source_oid
             },
             {
                 "$set" : {
