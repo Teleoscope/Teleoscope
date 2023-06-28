@@ -1483,16 +1483,14 @@ def add_item(*args, **kwargs):
             if ObjectId.is_valid(str(oid)):
                 group = db.groups.find_one({"_id" : ObjectId(str(oid))})
                 if group:
+                    logging.info(f"Group already exists.")
+                    res = group["_id"]
+                else:
                     cluster = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
                     if cluster:
                         logging.info(f"Cluster has already been copied.")
                         res = cluster["_id"]
                     else:
-                        logging.info(f"Group already exists.")
-                        res = group["_id"]
-                else:
-                    cluster = db.clusters.find_one({"_id" : ObjectId(str(oid))})
-                    if cluster:
                         logging.info(f"Cluster has NOT been copied.")
                         res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
             else:
