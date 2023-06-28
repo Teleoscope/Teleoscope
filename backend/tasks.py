@@ -1640,13 +1640,13 @@ def make_edge(*args, **kwargs):
         "Union": "nodes"
     }
 
-    target_item = db.get_collection(collectionMap[target_node[type]]).find_one({"_id": target_oid})
-    source_item = db.get_collection(collectionMap[source_node[type]]).find_one({"_id": source_oid})
+    target_item = db.get_collection(collectionMap[target_node["type"]]).find_one({"_id": target_oid})
+    source_item = db.get_collection(collectionMap[source_node["type"]]).find_one({"_id": source_oid})
 
     if not target_item:
         n = schemas.create_node(target_node["type"])
         r = db.graph.insert_one(n)
-        db.get_collection(collectionMap[target_node[type]]).update_one(
+        db.get_collection(collectionMap[target_node["type"]]).update_one(
             {
                 "_id": target_oid
             },
@@ -1656,13 +1656,13 @@ def make_edge(*args, **kwargs):
                 }
             }
         )
-        target_item = db.get_collection(collectionMap[target_node[type]]).find_one({"_id": target_oid})
+        target_item = db.get_collection(collectionMap[target_node["type"]]).find_one({"_id": target_oid})
 
 
     if not source_item:
         n = schemas.create_node(source_node["type"])
         r = db.graph.insert_one(n)
-        db.get_collection(collectionMap[source_node[type]]).update_one(
+        db.get_collection(collectionMap[source_node["type"]]).update_one(
             {
                 "_id": target_oid
             },
@@ -1672,7 +1672,7 @@ def make_edge(*args, **kwargs):
                 }
             }
         )
-        source_item = db.get_collection(collectionMap[source_node[type]]).find_one({"_id": source_oid})
+        source_item = db.get_collection(collectionMap[source_node["type"]]).find_one({"_id": source_oid})
 
     edge_add_result = db.graph.update_one(
         {
