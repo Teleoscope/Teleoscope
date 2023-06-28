@@ -617,8 +617,8 @@ def add_document_to_group(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs
-    group_id = ObjectId(kwargs["group_id"])
-    document_id = kwargs["document_id"]
+    group_id = ObjectId(str(kwargs["group_id"]))
+    document_id = ObjectId(str(kwargs["document_id"]))
 
     group = db.groups.find_one({'_id': group_id})
     # Check if group exists
@@ -626,14 +626,9 @@ def add_document_to_group(*args, **kwargs):
         logging.info(f"Warning: group with id {group_id} not found.")
         raise Exception(f"group with id {group_id} not found")
 
-    # check if document has already been added
-    if document_id in group:
-        logging.info(f'Document {document_id} is already in group')
-        raise Exception(f'Document {document_id} is already in group')
-
     history_item = group["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
-    if document_id in history_item["included_documents"]:
+    if document_id in history_item["included_documents"] or str(document_id) in history_item["included_documents"]:
         logging.info(f'Document {document_id} already in group {group["history"][0]["label"]}.')
         return
     history_item["included_documents"].append(document_id)
@@ -1712,30 +1707,31 @@ def make_edge(*args, **kwargs):
                 group = db.groups.find_one({"_id": input["id"]})
                 gdocs = group["history"][0]["included_documents"]
                 for gdoc in gdocs:
-                    doc = db.documents.find_one({"_id": gdoc})
+                    doc = db.documents.find_one({"_id": ObjectId(str(gdoc))})
                     if doc:
                         docs.append(doc)
-        
-        vec = np.average([d["textVector"] for d in docs], axis=0)
-        ids, vecs = utils.cacheDocumentsData(database)
-        scores = utils.calculateSimilarity(vecs, vec)
-        newRanks = utils.rankDocumentsBySimilarity(ids, scores)
-        rank_slice = newRanks[0:1000]
-        teleoscope = db.teleoscopes.find_one({"_id": target_item["_id"]})
-        history_item = schemas.create_teleoscope_history_item(
-                label = teleoscope['history'][0]['label'],
-                reddit_ids=teleoscope['history'][0]['reddit_ids'],
-                positive_docs=docs,
-                negative_docs=[],
-                stateVector=vec.tolist(),
-                ranked_document_ids=target_item["node"],
-                rank_slice=rank_slice,
-                action="Reorient teleoscope",
-                user=ObjectId(str(userid))
-            )
 
-        # transaction_session, db = utils.create_transaction_session(db=self.dbstring)
-        utils.push_history(db, "teleoscopes", target_item["_id"], history_item)
+        if len(docs) != 0:        
+            vec = np.average([d["textVector"] for d in docs], axis=0)
+            ids, vecs = utils.cacheDocumentsData(database)
+            scores = utils.calculateSimilarity(vecs, vec)
+            newRanks = utils.rankDocumentsBySimilarity(ids, scores)
+            rank_slice = newRanks[0:1000]
+            teleoscope = db.teleoscopes.find_one({"_id": target_item["_id"]})
+            history_item = schemas.create_teleoscope_history_item(
+                    label = teleoscope['history'][0]['label'],
+                    reddit_ids=teleoscope['history'][0]['reddit_ids'],
+                    positive_docs=docs,
+                    negative_docs=[],
+                    stateVector=vec.tolist(),
+                    ranked_document_ids=target_item["node"],
+                    rank_slice=rank_slice,
+                    action="Reorient teleoscope",
+                    user=ObjectId(str(userid))
+                )
+
+            # transaction_session, db = utils.create_transaction_session(db=self.dbstring)
+            utils.push_history(db, "teleoscopes", target_item["_id"], history_item)
 
     return edge_add_result
 
