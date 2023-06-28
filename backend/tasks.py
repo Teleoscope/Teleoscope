@@ -1602,7 +1602,22 @@ def graph(oid, db):
         "$graphLookup": {
             "from": "graph",
             "startWith": {
-                "$concatArrays": ["$edges.source.id", "$edges.control.id"]
+                "$concatArrays": [
+                    {
+                        "$map": {
+                            input: "$edges.source",
+                            as: "sourceElem",
+                            in: "$$sourceElem.nodeid"
+                        }
+                    },
+                    {
+                        "$map": {
+                            input: "$edges.control",
+                            as: "controlElem",
+                            in: "$$controlElem.nodeid"
+                        }
+                    }
+                ]
             },
             "connectFromField": "edges.source.nodeid",
             "connectToField": "_id",
