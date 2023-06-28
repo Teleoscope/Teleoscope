@@ -169,13 +169,23 @@ def cscUpload(db, namespace, csc):
     from scipy.sparse import save_npz
     from io import BytesIO
 
+    fs = gridfs.GridFS(db, namespace)
+    
     data = BytesIO()
     save_npz(data, csc)
     data.seek(0)
-
-    fs = gridfs.GridFS(db, namespace)
+    
     oid = fs.put(data)
     return oid
+
+def cscDownload(db, namespace, oid):
+    import gridfs
+    from scipy.sparse import load_npz
+
+    fs = gridfs.GridFS(db, namespace)
+    csc = load_npz(fs.get(oid))
+    return csc
+
 
 def gridfsUpload(db, namespace, data, encoding='utf-8'):
     '''Uploads data to GridFS under a particular namespace.
@@ -290,9 +300,7 @@ def update_ids():
             history_item['negative_docs'] = oid_arr
         db.teleoscopes.update_one({"_id": teleoscope["_id"]}, { "$set": { "history": teleoscope["history"] } })
 
-
-
-def cacheDocumentsData(dbstring):
+def get_documents(dbstring, rebuild=False):
         # cache embeddings
         from pathlib import Path
         import pickle
@@ -301,27 +309,41 @@ def cacheDocumentsData(dbstring):
         npzpath = Path(f'~/embeddings/{dbstring}/embeddings.npz').expanduser()
         pklpath = Path(f'~/embeddings/{dbstring}/ids.pkl').expanduser()
         
-        allDocumentIDs = []
-        allDocumentVectors = []
+        ids = []
+        vectors = []
 
-        if npzpath.exists() and pklpath.exists():
-            logging.info("Documents have been cached, retrieving now.")
+        if npzpath.exists() and pklpath.exists() and not rebuild:
+            logging.info(f"Retrieving cached documents for {dbstring}.")
+            
             loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
             with open(pklpath.as_posix(), 'rb') as handle:
-                allDocumentIDs = pickle.load(handle)
-            allDocumentVectors = loadDocuments['documents']
+                ids = pickle.load(handle)
+            vectors = loadDocuments['documents']
+        
         else:
-            logging.info("Documents are not cached, building cache now.")
+            logging.info(f"Building cache now for {dbstring} where rebuild is {rebuild}.")
+            
             db = connect(db=dbstring)
-            allDocuments = getAllDocuments(db, projection={'textVector':1, '_id':1}, batching=True, batchSize=10000)
+
+            allDocuments = db.documents.aggregate(
+                [
+                    # Only get IDs and vectors
+                    { "$project": { "textVector": 1, "_id": 1 }},
+                    # Ensure they're always in the same order
+                    { "$sort" : { "_id" : 1 } }
+                 ]
+            )
+
             ids = [str(x['_id']) for x in allDocuments]
+            
             logging.info(f'There are {len(ids)} ids in documents.')
+            
             vecs = np.array([x['textVector'] for x in allDocuments])
 
             np.savez(npzpath.as_posix(), documents=vecs)
             with open(pklpath.as_posix(), 'wb') as handle:
                 pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            allDocumentIDs = ids
-            allDocumentVectors = vecs
+            ids = ids
+            vectors = vecs
         
-        return allDocumentIDs, allDocumentVectors
+        return ids, vectors
