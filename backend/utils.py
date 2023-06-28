@@ -334,12 +334,14 @@ def get_documents(dbstring, rebuild=False):
                  ]
             )
 
-            ids = []
+            _ids = []
             _vecs = []
             for doc in documents:
-                ids.append(doc["_id"])
+                _ids.append(doc["_id"])
                 _vecs.append(doc["textVector"])
             vecs = np.array(_vecs)
+            ids = _ids
+            vectors = _vecs
 
        
             logging.info(f'There are {len(ids)} ids and {len(vecs)} vectors in {dbstring} documents.')
