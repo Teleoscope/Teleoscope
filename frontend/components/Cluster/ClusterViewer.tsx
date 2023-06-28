@@ -21,6 +21,7 @@ export default function DocViewer(props) {
     return [p, 1.0];
   });
 
+  const handleLoadMore = () => { console.log("stub") }
 
   return (
     <Accordion
@@ -42,18 +43,9 @@ export default function DocViewer(props) {
         <Stack spacing={1} sx={{ margin: "1em" }}>
           <Typography variant="h5">{cluster?.history[0].label}</Typography>
           <Divider></Divider>
-          {/* <List>
-            {cluster?.history[0].included_documents.map((docid) => (
-              <DocumentListItem key={docid} id={docid}></DocumentListItem>
-            ))}
-          </List> */}
-          {/* TODO - do above as Virtuoso component like ItemList.tsx */}
-          <Virtuoso
-            data={data}
-            itemContent={(index, item) => {
-              return <DocumentListItem key={item[0]} id={item[0]} />;            
-            }}
-          />
+          <div style={{height: "25vh"}}>
+            <DocumentList data={data} pagination={true} loadMore={handleLoadMore}></DocumentList>
+          </div>
         </Stack>
       </AccordionDetails>
     </Accordion>

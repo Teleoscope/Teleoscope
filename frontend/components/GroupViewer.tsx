@@ -6,7 +6,7 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Typography, Stack, List, ListItem, Divider } from "@mui/material";
 import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
-import DocumentListItem from "@/components/Documents/DocumentListItem";
+import DocumentList from "./Documents/DocumentList";
 import { CopyJson, CopyText, SaveDocx } from "@/components/GroupActions";
 import ButtonActions from "@/components/ButtonActions";
 export default function DocViewer(props) {
@@ -17,6 +17,7 @@ export default function DocViewer(props) {
     return [p, 1.0];
   });
 
+  const handleLoadMore = () => { console.log("stub") }
   const wdefs = useWindowDefinitions();
 
   return (
@@ -67,11 +68,14 @@ export default function DocViewer(props) {
               ],
             ]}
           ></ButtonActions>
-          <List>
+          {/* <List>
             {group?.history[0].included_documents.map((docid) => (
               <DocumentListItem key={docid} id={docid}></DocumentListItem>
             ))}
-          </List>
+          </List> */}
+          <div style={{height: "25vh"}}>
+            <DocumentList data={data} pagination={true} loadMore={handleLoadMore}></DocumentList>
+          </div>
         </Stack>
       </AccordionDetails>
     </Accordion>

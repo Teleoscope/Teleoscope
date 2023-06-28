@@ -12,6 +12,7 @@ import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined";
 import GroupSelector from "@/components/GroupSelector";
 import BookmarkSelector from "@/components/BookmarkSelector";
 import DocumentTitle from "@/components/Documents/DocumentTitle";
+import Deleter from "@/components/Deleter";
 
 //utils
 import { useSWRHook } from "@/util/swr";
@@ -28,10 +29,6 @@ export default function DocumentListItem(props) {
   const title = document ? PreprocessTitle(document.title) : false;
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const settings = useAppSelector((state) => state.windows.settings);
-
-  const handleRemove = () => {
-    client.remove_document_from_group(props.group._id, props.id);
-  };
 
   const handleSetIndex = () => {
     if (props.setIndex) {
@@ -86,14 +83,10 @@ export default function DocumentListItem(props) {
         </Stack>
 
         {props.ShowDeleteIcon ? (
-          <IconButton
-            sx={{ width: 20, height: 20 }}
-            onClick={(e) => handleRemove()}
-          >
-            <DeleteIcon
-              sx={{ "&:hover": {color: settings.color}, width: 20, height: 20 }}
-            ></DeleteIcon>
-          </IconButton>
+          <Deleter 
+            callback={() => client.remove_document_from_group(props.group._id, props.id)} 
+            color={settings.color}
+          />    
         ) : (
           <></>
         )}

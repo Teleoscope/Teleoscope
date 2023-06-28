@@ -16,7 +16,7 @@ import {
 import { onDragStart } from "@/util/drag";
 import { setSelection } from "@/actions/windows";
 import { Stack, Divider, Box } from "@mui/material";
-
+import Deleter from "@/components/Deleter";
 
 export default function Clusters(props) {
   const p_id = props.data;
@@ -50,8 +50,6 @@ export default function Clusters(props) {
       session_id
     );
   };
-
-  const removeCluster = (c_id) => {client.remove_cluster(c_id, p_id)}
 
   return (
     <>
@@ -107,11 +105,10 @@ export default function Clusters(props) {
                         secondary={cluster.history[0].description}
                       />
                     </ListItem>
-                    <IconButton onClick={() => removeCluster(cluster._id)}>
-                      <DeleteIcon
-                        sx={[{"&:hover": {color: settings.color}}]}
-                      ></DeleteIcon>
-                    </IconButton>
+                    <Deleter 
+                      callback={() => client.remove_cluster(cluster._id, p_id)} 
+                      color={settings.color}
+                    />                    
                   </Stack>
                 </div>
               );

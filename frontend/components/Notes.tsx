@@ -14,6 +14,7 @@ import { ContentState, convertToRaw } from "draft-js";
 
 // custom
 import EditableText from "@/components/EditableText";
+import Deleter from "@/components/Deleter";
 
 // actions
 import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
@@ -88,19 +89,10 @@ export default function Notes(props) {
                     callback={(label) => client.relabel_note(n._id, label)}
                   />
                 </Stack>
-                <IconButton
-                  onClick={() => client.remove_note(n._id, session_id)}
-                >
-                  <DeleteIcon
-                    sx={[
-                      {
-                        "&:hover": {
-                          color: props.color,
-                        },
-                      },
-                    ]}
-                  ></DeleteIcon>
-                </IconButton>
+                <Deleter 
+                  callback={() => client.remove_note(n._id, session_id)} 
+                  color={settings.color}
+                />    
               </Stack>
             </ListItem>
           </div>
