@@ -1,7 +1,7 @@
 # builtin modules
 import json
 import numpy as np
-import tqdm
+from tqdm import tqdm
 
 # installed modules
 from pymongo import MongoClient
