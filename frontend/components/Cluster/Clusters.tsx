@@ -8,16 +8,16 @@ import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import FolderIcon from "@mui/icons-material/Folder";
 import { useStomp } from "@/components/Stomp";
-import { IconButton, Tooltip } from "@mui/material";
+import { IconButton, Tooltip, Typography } from "@mui/material";
 import {
   Delete as DeleteIcon,
   Diversity2 as Diversity2Icon,
 } from "@mui/icons-material";
-import Stack from "@mui/material/Stack";
-import Divider from "@mui/material/Divider";
+import LoadingButton from "@mui/lab/LoadingButton";
 import { onDragStart } from "@/util/drag";
 import { setSelection } from "@/actions/windows";
-
+import { Stack, Divider, Box } from "@mui/material";
+import Deleter from "@/components/Deleter";
 
 export default function Clusters(props) {
   const p_id = props.data;
@@ -43,6 +43,23 @@ export default function Clusters(props) {
     );
   };
 
+  const [loading, setLoading] = useState(false);
+  const handleClusters = () => {
+    setLoading(true);
+    runClusters()
+  }
+
+  if (loading) {
+    return (
+      <Stack
+        justifyContent="center"
+        style={{ margin: 0, paddingTop: "5px" }}
+      >   
+        <LoadingButton loading={true}></LoadingButton>
+      </Stack>
+    )
+  }
+
   // TODO - cluster on flow inputs not all groups. 
   const runClusters = () => {
     client.cluster_by_groups(
@@ -52,19 +69,17 @@ export default function Clusters(props) {
     );
   };
 
-  const removeCluster = (c_id) => {client.remove_cluster(c_id, p_id)}
-
   return (
     <>
       <>
         <Stack
           direction="row"
-          justifyContent="center"
+          justifyContent="right"
           alignItems="center"
           style={{ margin: 0 }}
-        >
+        >        
           <Tooltip title="Cluster on existing groups...">
-          <IconButton onClick={runClusters}>
+          <IconButton onClick={handleClusters}>
             <Diversity2Icon fontSize="small" />
           </IconButton>
           </Tooltip>
@@ -79,6 +94,9 @@ export default function Clusters(props) {
               return (
                 <div
                   key={cluster._id}
+                  draggable={true}
+                  onDragStart={(e) => onDragStart(e, cluster._id, "Group")}
+                  onClick={() => handleItemClick(cluster._id)}
                   style={{
                     overflow: "auto",
                     position: "relative",
@@ -89,12 +107,9 @@ export default function Clusters(props) {
                     height: "100%",
                     backgroundColor: isHighlighted ? "#EEEEEE" : "white",
                   }}
-                  draggable={true}
-                  onDragStart={(e) => onDragStart(e, cluster._id, "Cluster")}
-                  onClick={() => handleItemClick(cluster._id)}
-                  >
+                >
                   <Stack
-                    sx={{ width: "100%", }}
+                    // sx={{ width: "100%", }}
                     direction="row"
                     alignItems="center"
                     justifyContent="space-between"
@@ -108,18 +123,19 @@ export default function Clusters(props) {
                         secondary={cluster.history[0].description}
                       />
                     </ListItem>
-                    <IconButton onClick={() => removeCluster(cluster._id)}>
-                      <DeleteIcon
-                        sx={[{"&:hover": {color: settings.color}}]}
-                      ></DeleteIcon>
-                    </IconButton>
+                    <Deleter 
+                      callback={() => client.remove_cluster(cluster._id, p_id)} 
+                      color={settings.color}
+                    />                    
                   </Stack>
                 </div>
               );
             })}
           </List>
         ) : (
-          <p>Use button above to build clusters...</p>
+          <Typography sx={{ width: "100%" }} align="center" variant="h6">
+            Use button above to build clusters...
+          </Typography>
         )}
       </div>
     </>

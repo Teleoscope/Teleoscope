@@ -66,7 +66,6 @@ export default function Search(props) {
         />
       </Stack>
       <ButtonActions inner={[[Count, {}]]}></ButtonActions>
-
       <Box sx={{ flexGrow: 1, flexDirection: "column" }}>
         <DocumentList
           loading={documents_loading}

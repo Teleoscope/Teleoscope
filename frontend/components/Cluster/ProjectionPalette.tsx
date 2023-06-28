@@ -14,6 +14,7 @@ import {
 
 // custom
 import EditableText from "@/components/EditableText";
+import Deleter from "@/components/Deleter";
 
 // actions
 import { useAppSelector } from "@/util/hooks";
@@ -81,19 +82,10 @@ export default function Clusters(props) {
                         }
                       />
                     </Stack>
-                    <IconButton
-                      onClick={() => client.remove_projection(p._id, session_id)}
-                    >
-                      <DeleteIcon
-                        sx={[
-                          {
-                            "&:hover": {
-                              color: props.color,
-                            },
-                          },
-                        ]}
-                      ></DeleteIcon>
-                    </IconButton>
+                    <Deleter 
+                      callback={() => client.remove_projection(p._id, session_id)} 
+                      color={settings.color}
+                    />
                   </Stack>
                 </ListItem>
               </div>

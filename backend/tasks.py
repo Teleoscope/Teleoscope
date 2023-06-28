@@ -1469,24 +1469,32 @@ def add_item(*args, **kwargs):
 
         case "Group":
 
-            # If this already exists in the database, we can skip intitalization
-            if ObjectId.is_valid(oid):
-
-                docset = db.graph.find_one({"_id" : oid})
-                if docset:
-                    logging.info(f"{type} with {oid} already in DB.")
-                    return # perhaps do something else before return like save?
+            # check to see if oid is valid 
+            if ObjectId.is_valid(str(oid)): 
+                group = db.groups.find_one({"_id" : ObjectId(str(oid))})  
                 
-                logging.info(f"return anyways for now")
-                return
-            
-            logging.info(f"Received {type} with OID {oid} and UID {uid}.")
-
-            import random
-            r = lambda: random.randint(0, 255)
-            color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
-
-            res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+                if group: # oid is a group
+                    logging.info(f"Group already exists.")
+                    res = group["_id"]
+                
+                else: # oid is a cluster
+                    cluster = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
+                    
+                    if cluster:
+                        # oid is a cluster thats already copied as a group
+                        logging.info(f"Cluster has already been copied.")
+                        res = cluster["_id"]
+                    else:
+                        # oid is a cluster that has yet to be copied as a group
+                        logging.info(f"Cluster has NOT been copied.")
+                        res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
+            else:
+                # need to create a group
+                logging.info(f"Group is new.")
+                import random
+                r = lambda: random.randint(0, 255)
+                color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r()) 
+                res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
 
             message(userid, {
                 "oid": str(res),
@@ -1517,24 +1525,7 @@ def add_item(*args, **kwargs):
                 "uid": uid,
                 "action": "OID_UID_SYNC",
                 "description": "Associate OID with UID."
-            })
-
-        case "Cluster":
-            # If this already exists in the database, we can skip intitalization
-            docset = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
-            if docset:
-                logging.info(f"Cluster has already been copied.")
-                res = docset["_id"]
-            else:
-                logging.info(f"Cluster has NOT been copied.")
-                res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
-            
-            message(userid, {
-                "oid": str(res),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": "Associate OID with UID."
-            })
+            })            
 
         case "Filter" | "Intersection" | "Exclusion" | "Union":
             with transaction_session.start_transaction():
@@ -1764,7 +1755,6 @@ def ping(*args, **kwargs):
     msg = f"ping {userid}"
     userid = ObjectId(str(kwargs["userid"]))
     message(userid, msg)
-
 
 msg = {
     "session_id": "6426212a7848802aee0f9e83",

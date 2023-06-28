@@ -19,17 +19,17 @@ export default function Deleter({callback, color}) {
   
     return (
       <IconButton
-                    onClick={handleDelete}
-                  >
-                    <DeleteIcon
-                      sx={[
-                        {
-                          "&:hover": {
-                            color: color,
-                          },
-                        },
-                      ]}
-                    ></DeleteIcon>
-                  </IconButton>
+        onClick={handleDelete}
+      >
+        <DeleteIcon
+          sx={[
+            {
+              "&:hover": {
+                color: color,
+              },
+            },
+          ]}
+        ></DeleteIcon>
+      </IconButton>
     )
   } 
