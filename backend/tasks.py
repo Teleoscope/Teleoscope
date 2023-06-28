@@ -1688,7 +1688,7 @@ def make_edge(*args, **kwargs):
         }
     )
 
-    g = graph(target_node["_id"], db)
+    g = graph(edge_add_result.upserted_id, db)
     print(g)
     return edge_add_result
 
