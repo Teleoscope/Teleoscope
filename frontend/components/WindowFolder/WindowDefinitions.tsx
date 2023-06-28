@@ -161,7 +161,7 @@ export default class WindowDefinitions {
         tag:       "search",
         type:      "Search",
         apipath:   "search",
-        nodetype:  SourceNode,      
+        nodetype:  WindowNode,  
         title:     function () {return this.type},
         color:     () => this.color,
         icon:      () => <SearchIcon sx={this.style()} fontSize="inherit" />,

@@ -10,7 +10,6 @@ export const findTargetNode = (node, nodes) => {
   // calculate the center point of the node from position and dimensions
   const centerX = node.position.x + node.width / 2;
   const centerY = node.position.y + node.height / 2;
-
   // find a node where the center point is inside
   const targetNode = nodes.find(
     (n) =>

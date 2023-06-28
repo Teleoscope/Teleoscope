@@ -617,8 +617,8 @@ def add_document_to_group(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs
-    group_id = ObjectId(kwargs["group_id"])
-    document_id = kwargs["document_id"]
+    group_id = ObjectId(str(kwargs["group_id"]))
+    document_id = ObjectId(str(kwargs["document_id"]))
 
     group = db.groups.find_one({'_id': group_id})
     # Check if group exists
@@ -626,14 +626,9 @@ def add_document_to_group(*args, **kwargs):
         logging.info(f"Warning: group with id {group_id} not found.")
         raise Exception(f"group with id {group_id} not found")
 
-    # check if document has already been added
-    if document_id in group:
-        logging.info(f'Document {document_id} is already in group')
-        raise Exception(f'Document {document_id} is already in group')
-
     history_item = group["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
-    if document_id in history_item["included_documents"]:
+    if document_id in history_item["included_documents"] or str(document_id) in history_item["included_documents"]:
         logging.info(f'Document {document_id} already in group {group["history"][0]["label"]}.')
         return
     history_item["included_documents"].append(document_id)
@@ -1171,25 +1166,6 @@ class reorient(Task):
 
         self.connect()
 
-        teleoscopes = {}
-        for edge in edges:
-            source = edge["source"].split("%")[0]
-            target = edge["target"].split("%")[0]
-            sources = []
-
-            if target not in teleoscopes:
-                teleoscopes[target] = []
-
-            if edge["source"].split("%")[-1] == "group":
-                res = self.db.groups.find_one({"_id": ObjectId(str(source))})
-                sources = [id for id in res["history"][0]["included_documents"]]
-
-            if edge["source"].split("%")[-1] == "document" or edge["source"].split("%")[-1] == "note":
-                sources.append(source)
-
-            teleoscopes[target] = [*sources, *teleoscopes[target]]
-
-        print(f'Telescope graph: {teleoscopes}')
         for teleoscope_id, documents in teleoscopes.items():
             vec = self.average(documents)
             teleoscope = self.db.teleoscopes.find_one({"_id": ObjectId(str(teleoscope_id))})
@@ -1602,9 +1578,24 @@ def graph(oid, db):
         "$graphLookup": {
             "from": "graph",
             "startWith": {
-                "$concatArrays": ["$edges.source.id", "$edges.control.id"]
+                "$concatArrays": [
+                    {
+                        "$map": {
+                            "input": "$edges.source",
+                            "as": "sourceElem",
+                            "in": "$$sourceElem.nodeid"
+                        }
+                    },
+                    {
+                        "$map": {
+                            "input": "$edges.control",
+                            "as": "controlElem",
+                            "in": "$$controlElem.nodeid"
+                        }
+                    }
+                ]
             },
-            "connectFromField": "edges.source.id",
+            "connectFromField": "edges.source.nodeid",
             "connectToField": "_id",
             "as": "connected_nodes",
             "maxDepth": 10,
@@ -1645,6 +1636,12 @@ def make_edge(*args, **kwargs):
 
     if "node" not in target_item:
         n = schemas.create_node(target_node["type"])
+
+        count = db.documents.count_documents({})
+        csc = csc_matrix((count, 2), dtype=np.float32)
+        csc_id = utils.cscUpload(db, "graph", csc)
+        n["matrix"] = csc_id
+
         r = db.graph.insert_one(n)
         db.get_collection(collectionMap[target_node["type"]]).update_one(
             {
@@ -1661,6 +1658,12 @@ def make_edge(*args, **kwargs):
 
     if "node" not in source_item:
         n = schemas.create_node(source_node["type"])
+
+        count = db.documents.count_documents({})
+        csc = csc_matrix((count, 2), dtype=np.float32)
+        csc_id = utils.cscUpload(db, "graph", csc)
+        n["matrix"] = csc_id
+
         r = db.graph.insert_one(n)
         db.get_collection(collectionMap[source_node["type"]]).update_one(
             {
@@ -1682,6 +1685,7 @@ def make_edge(*args, **kwargs):
             "$addToSet": {
                 f'edges.{handle_type}': {
                     "id": source_oid,
+                    "nodeid": source_item["node"],
                     "type": source_node["type"]
                 }
             }
@@ -1690,6 +1694,45 @@ def make_edge(*args, **kwargs):
 
     g = graph(edge_add_result.upserted_id, db)
     print(list(g))
+
+    if target_node["type"] == "Teleoscope":
+        docs = []
+        n = db.graph.find_one({"_id": target_item["node"]})
+        for input in n["edges"]["control"]:
+            if input["type"] == "Document":
+                doc = db.documents.find_one({"_id": input["id"]})
+                if doc:
+                    docs.append(doc)
+            if input["type"] == "Group":
+                group = db.groups.find_one({"_id": input["id"]})
+                gdocs = group["history"][0]["included_documents"]
+                for gdoc in gdocs:
+                    doc = db.documents.find_one({"_id": ObjectId(str(gdoc))})
+                    if doc:
+                        docs.append(doc)
+
+        if len(docs) != 0:        
+            vec = np.average([d["textVector"] for d in docs], axis=0)
+            ids, vecs = utils.cacheDocumentsData(database)
+            scores = utils.calculateSimilarity(vecs, vec)
+            newRanks = utils.rankDocumentsBySimilarity(ids, scores)
+            rank_slice = newRanks[0:1000]
+            teleoscope = db.teleoscopes.find_one({"_id": target_item["_id"]})
+            history_item = schemas.create_teleoscope_history_item(
+                    label = teleoscope['history'][0]['label'],
+                    reddit_ids=teleoscope['history'][0]['reddit_ids'],
+                    positive_docs=docs,
+                    negative_docs=[],
+                    stateVector=vec.tolist(),
+                    ranked_document_ids=target_item["node"],
+                    rank_slice=rank_slice,
+                    action="Reorient teleoscope",
+                    user=ObjectId(str(userid))
+                )
+
+            # transaction_session, db = utils.create_transaction_session(db=self.dbstring)
+            utils.push_history(db, "teleoscopes", target_item["_id"], history_item)
+
     return edge_add_result
 
 def message(userid: ObjectId, msg):

@@ -38,9 +38,6 @@ export default function Workspace({subdomain}) {
   
   if (user && !session_id) {
     dispatch(sessionActivator(user.sessions[0]));
-    console.log("Loading default session.")
-  } else {
-    console.log("Either session already loaded or unable to load.", user, session_id)
   }
 
 

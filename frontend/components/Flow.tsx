@@ -113,9 +113,7 @@ function Flow(props) {
     }
   }, [session, session_history_item, logical_clock, userid]);
   
-  const handleTarget = node => {
-    setTarget(findTargetNode(node, nodes));
-  }
+  
 
   const make_connection = (edge) => {
     return {
@@ -257,16 +255,17 @@ function Flow(props) {
     dispatch(setSelection({ nodes: nodes, edges: edges }));
   }, []);
 
-  const onNodeDrag =  useCallback((evt, node) => {
+  const onNodeDrag = useCallback((evt, node) => {
     if (
         node?.data.type == "Document" || 
         node?.data.type == "Note"     || 
         node?.data.type == "Group"
       ) {
-      handleTarget(node);
-      handleTempEdge(evt, node);  
+      setTarget(findTargetNode(node, nodes))
+      handleTempEdge(evt, node); 
     }
-  }, [getClosestEdge, setTempEdges]);
+    
+  }, [getClosestEdge, setTempEdges, nodes]);
 
   const handleTempEdge = (_, node) => {
       const closeEdge = getClosestEdge(node, nodes, edges);

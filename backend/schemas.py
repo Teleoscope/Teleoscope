@@ -125,7 +125,7 @@ def create_document_object(title, textVector, text, relationships={}, metadata={
         }
     }
 
-def create_teleoscope_object(session_id, userid, label="New Teleoscope", **kwargs):
+def create_teleoscope_object(session_id, userid, **kwargs):
     return {
         "creation_time": datetime.datetime.utcnow(),
         "sessions": [session_id],
