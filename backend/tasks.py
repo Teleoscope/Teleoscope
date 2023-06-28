@@ -1679,7 +1679,7 @@ def make_edge(*args, **kwargs):
             "_id" : target_item["node"]
         },
         {
-            "$push": {
+            "$addToSet": {
                 f'edges.{handle_type}': {
                     "id": source_oid,
                     "type": source_node["type"]
@@ -1689,7 +1689,7 @@ def make_edge(*args, **kwargs):
     )
 
     g = graph(edge_add_result.upserted_id, db)
-    print(g)
+    print(list(g))
     return edge_add_result
 
 def message(userid: ObjectId, msg):
