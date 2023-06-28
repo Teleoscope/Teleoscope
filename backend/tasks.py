@@ -1480,26 +1480,27 @@ def add_item(*args, **kwargs):
             # else
                 # copy cluster
 
-            try:
+            if ObjectId.is_valid(str(oid)):
                 group = db.groups.find_one({"_id" : ObjectId(str(oid))})
-                cluster = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
-                if cluster:
-                    logging.info(f"Cluster has already been copied.")
-                    res = cluster["_id"]
+                if group:
+                    cluster = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
+                    if cluster:
+                        logging.info(f"Cluster has already been copied.")
+                        res = cluster["_id"]
+                    else:
+                        logging.info(f"Group already exists.")
+                        res = group["_id"]
                 else:
-                    logging.info(f"Group already exists.")
-                    res = group["_id"]
-            except:
-                cluster = db.clusters.find_one({"_id" : ObjectId(str(oid))})
-                if cluster:
-                    logging.info(f"Cluster has NOT been copied.")
-                    res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
-                else:
-                    logging.info(f"Group is new.")
-                    import random
-                    r = lambda: random.randint(0, 255)
-                    color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r()) 
-                    res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+                    cluster = db.clusters.find_one({"_id" : ObjectId(str(oid))})
+                    if cluster:
+                        logging.info(f"Cluster has NOT been copied.")
+                        res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
+            else:
+                logging.info(f"Group is new.")
+                import random
+                r = lambda: random.randint(0, 255)
+                color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r()) 
+                res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
 
 
             # If this already exists in the database, we can skip intitalization
