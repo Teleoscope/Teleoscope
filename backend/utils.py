@@ -289,3 +289,39 @@ def update_ids():
                 oid_arr.append(oid)
             history_item['negative_docs'] = oid_arr
         db.teleoscopes.update_one({"_id": teleoscope["_id"]}, { "$set": { "history": teleoscope["history"] } })
+
+
+
+def cacheDocumentsData(dbstring):
+        # cache embeddings
+        from pathlib import Path
+        import pickle
+        dir = Path(f'~/embeddings/{dbstring}/').expanduser()
+        dir.mkdir(parents=True, exist_ok=True)
+        npzpath = Path(f'~/embeddings/{dbstring}/embeddings.npz').expanduser()
+        pklpath = Path(f'~/embeddings/{dbstring}/ids.pkl').expanduser()
+        
+        allDocumentIDs = []
+        allDocumentVectors = []
+
+        if npzpath.exists() and pklpath.exists():
+            logging.info("Documents have been cached, retrieving now.")
+            loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
+            with open(pklpath.as_posix(), 'rb') as handle:
+                allDocumentIDs = pickle.load(handle)
+            allDocumentVectors = loadDocuments['documents']
+        else:
+            logging.info("Documents are not cached, building cache now.")
+            db = connect(db=dbstring)
+            allDocuments = getAllDocuments(db, projection={'textVector':1, '_id':1}, batching=True, batchSize=10000)
+            ids = [str(x['_id']) for x in allDocuments]
+            logging.info(f'There are {len(ids)} ids in documents.')
+            vecs = np.array([x['textVector'] for x in allDocuments])
+
+            np.savez(npzpath.as_posix(), documents=vecs)
+            with open(pklpath.as_posix(), 'wb') as handle:
+                pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
+            allDocumentIDs = ids
+            allDocumentVectors = vecs
+        
+        return allDocumentIDs, allDocumentVectors
