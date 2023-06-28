@@ -1605,16 +1605,16 @@ def graph(oid, db):
                 "$concatArrays": [
                     {
                         "$map": {
-                            input: "$edges.source",
-                            as: "sourceElem",
-                            in: "$$sourceElem.nodeid"
+                            "input": "$edges.source",
+                            "as": "sourceElem",
+                            "in": "$$sourceElem.nodeid"
                         }
                     },
                     {
                         "$map": {
-                            input: "$edges.control",
-                            as: "controlElem",
-                            in: "$$controlElem.nodeid"
+                            "input": "$edges.control",
+                            "as": "controlElem",
+                            "in": "$$controlElem.nodeid"
                         }
                     }
                 ]
