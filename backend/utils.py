@@ -1,6 +1,7 @@
 # builtin modules
 import json
 import numpy as np
+import tqdm
 
 # installed modules
 from pymongo import MongoClient
@@ -325,6 +326,8 @@ def get_documents(dbstring, rebuild=False):
             
             db = connect(db=dbstring)
 
+            count = db.documents.count_documents({})
+
             documents = db.documents.aggregate(
                 [
                     # Only get IDs and vectors
@@ -336,13 +339,13 @@ def get_documents(dbstring, rebuild=False):
 
             _ids = []
             _vecs = []
-            for doc in documents:
+
+            for doc in tqdm(documents, total=count):
                 _ids.append(doc["_id"])
                 _vecs.append(doc["textVector"])
             vecs = np.array(_vecs)
             ids = _ids
             vectors = _vecs
-
        
             logging.info(f'There are {len(ids)} ids and {len(vecs)} vectors in {dbstring} documents.')
             
