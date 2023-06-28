@@ -8,28 +8,28 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 
-// custom components
+// custom components 
 import { useSelector } from "react-redux";
 
 // actions
 import { makeNode } from "@/actions/windows";
 
 // util
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 
 // contexts
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 import Typography from "@mui/material/Typography";
 
 export default function ContextMenu(props) {
 
-  const client = useContext(StompContext);
+  const client = useStomp();
   const dispatch = useAppDispatch();
 
   const session_id = useAppSelector(
     (state: RootState) => state.activeSessionID.value
   );
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { teleoscopes_raw } = swr.useSWRAbstract(
     "teleoscopes_raw",
     `sessions/${session_id}/teleoscopes`

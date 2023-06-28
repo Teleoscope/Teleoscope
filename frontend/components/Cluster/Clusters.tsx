@@ -1,13 +1,13 @@
 import React, { useState, useContext } from "react";
 
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import FolderIcon from "@mui/icons-material/Folder";
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 import { IconButton, Tooltip } from "@mui/material";
 import {
   Delete as DeleteIcon,
@@ -23,9 +23,9 @@ export default function Clusters(props) {
   const p_id = props.data;
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const settings = useAppSelector((state) => state.windows.settings);
-
-  const swr = useContext(swrContext);
-  const client = useContext(StompContext);
+ 
+  const swr = useSWRHook();
+  const client = useStomp();
   const dispatch = useAppDispatch();
 
   const { clusters } = swr.useSWRAbstract("clusters", `projections/${p_id}/clusters`);

@@ -21,13 +21,13 @@ import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 
 // utils
-import { swrContext } from "@/util/swr";
-import { StompContext } from "@/components/Stomp";
+import { useSWRHook } from "@/util/swr";
+import { useStomp } from "@/components/Stomp";
 import { NewItemForm } from "./NewItemForm";
 import { onDragStart } from "@/util/drag";
 
 export default function Teleoscopes(props) {
-  const client = useContext(StompContext);
+  const client = useStomp();
 
   const session_id = useAppSelector(
     (state: RootState) => state.activeSessionID.value
@@ -36,9 +36,9 @@ export default function Teleoscopes(props) {
   const settings = useAppSelector(
     (state: RootState) => state.windows.settings
   );
-
+ 
   
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { teleoscopes_raw } = swr.useSWRAbstract(
     "teleoscopes_raw",
     `sessions/${session_id}/teleoscopes`

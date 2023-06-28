@@ -3,6 +3,8 @@ import ActiveSessionID from "@/actions/activeSessionID";
 import Windows from "@/actions/windows";
 import { makeNode, makeEdge, setColor, relabelSession } from "@/actions/windows";
 import crypto from 'crypto';
+import { useStomp } from "@/components/Stomp";
+
 
 // Custom middleware function for makeNode action
 const makeNodeMiddleware = store => next => action => {
@@ -42,11 +44,21 @@ const makeNodeMiddleware = store => next => action => {
     // Call the next middleware or the reducer with the modified action
     const result = next(action);
     const updatedState = store.getState();
-    action.payload.client.update_edges(
-      updatedState.activeSessionID.value,
-      action.payload.edges,
-      updatedState
-    )
+
+    const nodes = updatedState.windows.nodes
+    const source_node = nodes.find(n => n.id === action.payload.connection.source)
+    const target_node = nodes.find(n => n.id === action.payload.connection.target)
+    const handle_type = action.payload.connection.targetHandle.split("_").slice(-1)
+
+    console.log("makeEdge", action)
+    action.payload.client.make_edge({
+      session_id: updatedState.activeSessionID.value,
+      source_node: source_node,
+      target_node: target_node,
+      handle_type: handle_type,
+      connection: action.payload.connection,
+      ui_state: updatedState
+    })
     return result
   }
   

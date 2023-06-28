@@ -8,17 +8,16 @@ import {
   Divider,
   List,
 } from "@mui/material";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 
 import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
-import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 
 export default function TeleoscopeViewer(props) {
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { teleoscope } = swr.useSWRAbstract(
-    "teleoscope",
+    "teleoscope", 
     `teleoscopes/${props.id}`
   );
   const settings = useAppSelector((state) => state.windows.settings);

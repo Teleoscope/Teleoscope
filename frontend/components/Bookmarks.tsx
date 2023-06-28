@@ -6,7 +6,7 @@ import { Stack, Box } from "@mui/material";
 // actions
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { RootState } from "@/stores/store";
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 
 // custom components
 import DocumentListItem from "@/components/Documents/DocumentListItem";
@@ -18,7 +18,7 @@ export default function Bookmarks() {
   const bookmarks = useAppSelector((state: RootState) => state.windows.bookmarks);
   const settings = useAppSelector((state: RootState) => state.windows.settings);
     const dispatch = useAppDispatch();
-    const client = useContext(StompContext);
+    const client = useStomp();
     const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
 
     const handleMakeGroupFromBookmarks = (e) => {

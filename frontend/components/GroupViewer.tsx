@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -10,7 +10,7 @@ import DocumentListItem from "@/components/Documents/DocumentListItem";
 import { CopyJson, CopyText, SaveDocx } from "@/components/GroupActions";
 import ButtonActions from "@/components/ButtonActions";
 export default function DocViewer(props) {
-  const swr = useContext(swrContext);
+  const swr = useSWRHook(); 
   const { group } = swr.useSWRAbstract("group", `groups/${props.id}`);
   const settings = useAppSelector((state) => state.windows.settings);
   const data = group?.history[0].included_documents.map((p) => {
