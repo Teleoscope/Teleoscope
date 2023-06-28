@@ -24,7 +24,7 @@ export default function Teleoscope(props) {
   const data = teleoscope?.history[0]["rank_slice"];
 
   const handleLoadMore = () => {
-    
+    console.log("stub")
   }
 
   return (

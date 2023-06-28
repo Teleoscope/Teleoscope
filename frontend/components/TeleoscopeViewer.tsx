@@ -24,7 +24,7 @@ export default function TeleoscopeViewer(props) {
   const settings = useAppSelector((state) => state.windows.settings);
   const wdefs = useWindowDefinitions();
 
-  const handleLoadMore = () => {}
+  const handleLoadMore = () => { console.log("stub") }
 
   const data = teleoscope?.history[0].rank_slice
 
