@@ -1604,7 +1604,7 @@ def graph(oid, db):
             "startWith": {
                 "$concatArrays": ["$edges.source.id", "$edges.control.id"]
             },
-            "connectFromField": "edges.source.id",
+            "connectFromField": "edges.source.nodeid",
             "connectToField": "_id",
             "as": "connected_nodes",
             "maxDepth": 10,
@@ -1682,6 +1682,7 @@ def make_edge(*args, **kwargs):
             "$addToSet": {
                 f'edges.{handle_type}': {
                     "id": source_oid,
+                    "nodeid": source_item["node"],
                     "type": source_node["type"]
                 }
             }
