@@ -1,5 +1,4 @@
 import { onDragStart } from "@/util/drag";
-import React from "react";
 
 const withDroppable = (DragItem) => {
   return function DroppableComponent(props) {

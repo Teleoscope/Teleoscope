@@ -1,8 +1,7 @@
 import { useStore } from "reactflow";
 import WindowFactory from "@/components/WindowFolder/WindowFactory";
 import { NodeResizer } from "@reactflow/node-resizer";
-import useGlobalMousePosition, { useAppSelector } from "@/util/hooks";
-import { useState, useRef } from "react";
+import { useAppSelector } from "@/util/hooks";
 
 const defaultSize = (s, id) => {
   const node = s.nodeInternals.get(id);

@@ -1,18 +1,8 @@
-import React, { useState, useContext } from "react";
-import {
-  Stack,
-  Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Divider,
-  List,
-} from "@mui/material";
+import { Stack, Typography, Accordion, AccordionSummary, AccordionDetails, Divider } from "@mui/material";
 import { useSWRHook } from "@/util/swr";
 
 import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import DocumentListItem from "@/components/Documents/DocumentListItem";
 import DocumentList from "./Documents/DocumentList";
 
 export default function TeleoscopeViewer(props) {

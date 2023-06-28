@@ -1,5 +1,3 @@
-// FlowUIComponents.tsx
-import React from 'react';
 import { MiniMap, Controls, Background, Panel } from 'reactflow';
 
 const FlowUIComponents = ({fabWrapper}) => {

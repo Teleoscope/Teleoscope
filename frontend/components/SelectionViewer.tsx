@@ -1,6 +1,4 @@
-import React, { useState } from "react";
-
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector } from "@/util/hooks";
 import DocViewer from "@/components/DocViewer";
 import GroupViewer from "@/components/GroupViewer";
 import NotesViewer from "@/components/NotesViewer";

@@ -1,11 +1,10 @@
-import React, { useContext } from "react";
 import { useSWRHook } from "@/util/swr";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Typography, Stack, List, ListItem, Divider } from "@mui/material";
-import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
+import { Typography, Stack, List, Divider } from "@mui/material";
+import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
 import { CopyJson, CopyText, SaveDocx } from "@/components/GroupActions";
 import ButtonActions from "@/components/ButtonActions";

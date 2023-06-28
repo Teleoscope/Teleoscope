@@ -1,6 +1,3 @@
-// Window.js
-import React from "react";
-
 // custom
 import WindowTopBar from "@/components/WindowFolder/WindowTopBar";
 

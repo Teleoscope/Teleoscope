@@ -1,5 +1,4 @@
 import React from "react";
-import { useOnSelectionChange } from "reactflow";
 
 import { styled, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -10,7 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import DocViewer from "@/components/DocViewer";
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector } from "@/util/hooks";
 
 const drawerWidth = 400;
 

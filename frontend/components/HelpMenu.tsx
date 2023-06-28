@@ -1,6 +1,6 @@
 // HelpMenu.tsx
 import { Divider, Snackbar, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useKeyPress } from "reactflow";
 import PanToolIcon from "@mui/icons-material/PanTool";
 import ControlCameraIcon from "@mui/icons-material/ControlCamera";

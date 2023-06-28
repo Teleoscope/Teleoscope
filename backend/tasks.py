@@ -1485,7 +1485,7 @@ def add_item(*args, **kwargs):
             import random
             r = lambda: random.randint(0, 255)
             color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
-            
+
             res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
 
             message(userid, {
@@ -1503,22 +1503,21 @@ def add_item(*args, **kwargs):
                 if docset:
                     logging.info(f"{type} with {oid} already in DB.")
                     return # perhaps do something else before return like save?
-                
+
                 logging.info(f"return anyways for now")
                 return
-            
+
             logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
             # res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
             res = initialize_teleoscope(db=database, session_id=session_id, userid=userid)
-            
+
             message(userid, {
                 "oid": str(res),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
                 "description": "Associate OID with UID."
-            })            
-            
+            })
 
         case "Cluster":
             # If this already exists in the database, we can skip intitalization
@@ -1604,7 +1603,8 @@ def graph(oid, db):
     node = db.graph.find_one({"_id": oid})
     edges = node["edges"]
 
-
+    # going wrong direction right now 
+    # TODO: make sure this goes "right"
     query = db.graph.aggregate(pipeline = [{
         "$graphLookup": {
             "from": "graph",
@@ -1616,7 +1616,26 @@ def graph(oid, db):
     }])
     return query
 
+'''
+list_of_docsets:
+    {
+        {
+            docset_p1: [(doc, rank)]
+        },
+        {
+            docset_p2: [(doc, rank)]
+        }
+    }
 
+
+    id    |    rank   p1 p2 ...
+    ----- |          
+    oid_1 |    0.01   0  1  ...
+    oid_2 |    0.99   1  0  ...
+
+    ...
+
+'''
 
 def construct_matrix(count, item, item_type):
     return csc_matrix((count, 2), dtype=np.float32)

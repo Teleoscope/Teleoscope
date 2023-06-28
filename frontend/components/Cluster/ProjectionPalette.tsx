@@ -1,5 +1,3 @@
-import React, { useContext } from "react";
-
 // mui
 import {
   IconButton,
@@ -9,7 +7,7 @@ import {
   ListItemIcon,
 } from "@mui/material";
 
-import { 
+import {
   Delete as DeleteIcon,
   Diversity2 as Diversity2Icon,
 } from "@mui/icons-material";

@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { Editor, EditorState, convertFromRaw, convertToRaw } from "draft-js";
 import "draft-js/dist/Draft.css";
 import lodash from 'lodash';

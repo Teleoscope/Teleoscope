@@ -1,5 +1,5 @@
 // Groups.js
-import React, { useContext } from "react";
+import React from "react";
 
 // MUI
 import TextField from "@mui/material/TextField";

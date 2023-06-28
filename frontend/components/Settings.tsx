@@ -1,7 +1,5 @@
-import React, { useState, useContext } from "react";
-
 // mui
-import { Stack, Box, Slider, Typography, Switch } from "@mui/material";
+import { Stack, Slider, Typography, Switch } from "@mui/material";
 
 // actions
 import { useAppSelector, useAppDispatch } from "@/util/hooks";

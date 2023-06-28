@@ -1,8 +1,7 @@
 import { Handle, useStore } from "reactflow";
-import { useAppSelector, useAppDispatch, useGlobalMousePosition } from "@/util/hooks";
+import { useAppSelector, useGlobalMousePosition } from "@/util/hooks";
 import { renderToString } from 'react-dom/server';
 import { FaArrowRight } from "react-icons/fa";
-import { useSelector } from "react-redux";
 
 const defaultSize = (s, id) => {
     const node = s.nodeInternals.get(id);
