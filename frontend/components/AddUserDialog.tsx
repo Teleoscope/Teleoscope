@@ -9,13 +9,13 @@ import { FormHelperText } from "@mui/material";
 import { InputLabel } from "@mui/material";
 import { Select } from "@mui/material";
 import { Button } from "@mui/material";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 
-// contexts
-import { StompContext } from "@/components/Stomp";
+// contexts 
+import { useStomp } from "@/components/Stomp";
 export default function AddUserDialogue(props) {
-  const client = useContext(StompContext);
-  const swr = useContext(swrContext);
+  const client = useStomp();
+  const swr = useSWRHook();
   const { users } = swr.useSWRAbstract("users", `users/`);
 
   const [dialogValue, setDialogValue] = React.useState({ label: "" });

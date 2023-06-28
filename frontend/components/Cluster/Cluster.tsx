@@ -1,11 +1,11 @@
 import DocumentList from "@/components/Documents/DocumentList";
 import { useContext } from "react";
 
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 
 export default function Cluster(props) {
   const id = props.id.split("%")[0];
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { cluster } = swr.useSWRAbstract("cluster", `clusters/${id}`);
   const data = cluster?.history[0].included_documents.map((p) => {
     return [p, 1.0];
@@ -20,7 +20,7 @@ export default function Cluster(props) {
         showOrientIcon  = {true}
         showRemoveIcon  = {true}
         group           = {cluster}
-      ></DocumentList>
+      ></DocumentList> 
     </div>
   );
 }

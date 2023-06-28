@@ -20,19 +20,19 @@ import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hoo
 import { RootState } from "@/stores/store";
 
 // utils
-import { swrContext } from "@/util/swr";
-import { StompContext } from "@/components/Stomp";
+import { useSWRHook } from "@/util/swr";
+import { useStomp } from "@/components/Stomp";
 import { NewItemForm } from "./NewItemForm";
 import { onDragStart } from "@/util/drag";
 
 export default function Notes(props) {
-  const client = useContext(StompContext);
+  const client = useStomp();
   const wdefs = useWindowDefinitions();
   const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
 
   const settings = useAppSelector((state) => state.windows.settings);
 
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { notes_raw } = swr.useSWRAbstract(
     "notes_raw",
     `sessions/${session_id}/notes`

@@ -2,14 +2,14 @@ import React, { useState, useContext } from "react";
 
 // mui
 import { Typography, Box, IconButton } from "@mui/material";
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { ContentState, convertToRaw } from "draft-js";
 
 export default function Snippet({text, id}) {
     const session_id = useAppSelector((state) => state.activeSessionID.value);
-    const client = useContext(StompContext);
+    const client = useStomp();
     const createSnippet = () => {
         const content = convertToRaw(ContentState.createFromText(text));
         client.snippet(id, session_id, content)

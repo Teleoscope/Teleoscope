@@ -2,7 +2,7 @@ import React, { useMemo, useState, useCallback, useContext, useRef, useEffect } 
 import { addEdge } from "reactflow";
 import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import { RootState } from "@/stores/store";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import {
   updateNodes,
   updateEdges,
@@ -11,7 +11,7 @@ import {
   removeWindow,
   setSelection,
 } from "@/actions/windows";
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 import FlowProviderWrapper from "@/components/FlowProviderWrapper";
 import FlowWrapper from "@/components/FlowWrapper";
 import FlowUIComponents from "@/components/FlowUIComponents";
@@ -31,15 +31,16 @@ interface MouseCoords {
   mouseY: number;
   worldX: number;
   worldY: number;
-}
+} 
 
 function Flow(props) {
   const wdefs = useWindowDefinitions();
   const nodeTypes = useMemo(() => ({ windowNode: WindowNode, ...wdefs.nodeTypeDefs()}), []);
   const edgeTypes = useMemo(() => ({default: ButtonEdge}), []);
 
-  const client = useContext(StompContext);
-  const swr = useContext(swrContext);
+  const client = useStomp();
+
+  const swr = useSWRHook();
   
   // this ref stores the current reactflow ref in the DOM
   const reactFlowWrapper = useRef(null);
@@ -112,9 +113,6 @@ function Flow(props) {
     }
   }, [session, session_history_item, logical_clock, userid]);
   
-
-
-
   const handleTarget = node => {
     setTarget(findTargetNode(node, nodes));
   }
@@ -246,13 +244,14 @@ function Flow(props) {
     const newEdges = addEdge(connection, []);
     dispatch(makeEdge({
       client: client,
+      connection: connection,
       edges: newEdges
     }));
   }
 
   const onConnect = useCallback((connection, curredges) => {
       create_edge(connection, curredges)
-  }, []);
+  }, [client]);
 
   const onSelectionChange = useCallback(({ nodes, edges }) => {
     dispatch(setSelection({ nodes: nodes, edges: edges }));

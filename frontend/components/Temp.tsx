@@ -28,12 +28,12 @@ import {
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 
-// actions
-import { swrContext } from "@/util/swr";
+// actions 
+import { useSWRHook } from "@/util/swr";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 
 // contexts
-import { StompContext } from "@/components/Stomp";
+import { useStomp } from "@/components/Stomp";
 import randomColor from "randomcolor";
 import { useCookies } from "react-cookie";
 import ConnectingAirportsIcon from "@mui/icons-material/ConnectingAirports";
@@ -43,10 +43,10 @@ import withDroppable from "@/components/DropItem";
 
 // custom components
 export default function Groups(props) {
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
   const { users } = swr.useSWRAbstract("users", `users/`);
-  const client = useContext(StompContext);
+  const client = useStomp();
 
   const [value, setValue] = React.useState(null);
   const [sessionValue, setSessionValue] = React.useState({ label: "" });

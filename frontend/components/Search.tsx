@@ -12,12 +12,12 @@ import { updateSearch } from "@/actions/windows";
 import DocumentList from "@/components/Documents/DocumentList";
 
 // util
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
 
 export default function Search(props) {
   const [query, setQuery] = useState(props.windata?.query ? props.windata.query : "");
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { documents, documents_loading } = swr.useSWRAbstract(
     "documents",
     `search/${query}`

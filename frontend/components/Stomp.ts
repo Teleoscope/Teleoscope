@@ -1,12 +1,13 @@
 import { Client } from "@stomp/stompjs";
 import crypto from 'crypto';
-import React, { createContext } from "react";
+import { createContext, useContext } from "react";
 import store from "@/stores/store";
-export const StompContext = createContext(null);
 import { OID_UID_SYNC } from "@/actions/windows";
 import { WebsocketBuilder } from "websocket-ts";
 Object.assign(global, WebsocketBuilder);
 
+export const StompContext = createContext(null);
+export const useStomp = () => useContext(StompContext);
 
 /**
  * Type definition for Body
@@ -24,17 +25,17 @@ export class Stomp {
   private creationTime: Date;
   private _loaded: boolean;
 
-  private constructor(options) {
+  private constructor({userid, subdomain}) {
     this.creationTime = new Date();
     this.loaded = false;
-    this.database = options.database;
-    this._userid = options.userid;
+    this.database = subdomain;
+    this._userid = userid;
     this.client = null;
   }
 
   public static getFakeClient(): Stomp {
     if (!Stomp.stomp) {
-      Stomp.stomp = new Stomp({ database: "aita", userid: "0" });
+      Stomp.stomp = new Stomp({ subdomain: "aita", userid: "0" });
       Stomp.stomp.fake_client_init();
     }
     return Stomp.stomp;
@@ -44,19 +45,23 @@ export class Stomp {
    * Ensure that there is only one copy of the Stomp class.
    * @returns Stomp
    */
-  public static getInstance(options): Stomp {
+  public static getInstance({userid, subdomain}): Stomp {
     if (Stomp.stomp) {
+      if (userid == Stomp.stomp?.userId && subdomain == Stomp.stomp?.database) {
+        return Stomp.stomp;
+      }
       const temp = Stomp.stomp.client;
       temp.deactivate()
     }
     
-    Stomp.stomp = new Stomp(options);
+    Stomp.stomp = new Stomp({userid: userid, subdomain: subdomain});
     Stomp.stomp.client_init();
 
     return Stomp.stomp;
   } 
 
   public restart(options): Stomp {
+    console.log("Restarted client...", options)
     return Stomp.getInstance(options)
   }
   
@@ -86,7 +91,12 @@ export class Stomp {
    * Initializes the client (there should only be one)
    */
   client_init() {
-    console.log(`Initializing Stomp client for user ${this.userId}`);
+    console.log(`Initializing Stomp client for user ${this.userId} and database ${this.database}.`);
+    if (this.userId == null || this.database == null) {
+      console.log(`Failed to initialize Stomp client for user ${this.userId} and database ${this.database}.`);
+      return;
+    }
+
     this.client = new Client({
       brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:15674/ws`,
       connectHeaders: {
@@ -100,9 +110,7 @@ export class Stomp {
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
       heartbeatOutgoing: 10000,
-    });
-    console.log(`Initializing Stomp client for user ${this.userId}`, this.client);
-    
+    });    
 
     this.client.onDisconnect = (frame) => {
       console.log("Disconnected");
@@ -216,6 +224,26 @@ export class Stomp {
         state: state
       },
     };
+    this.publish(body);
+    return body;
+  }
+
+  /**
+   * Single edge update.
+   */
+  make_edge({session_id, source_node, target_node, handle_type, connection, ui_state}) {
+    const body = {
+      task: "make_edge",
+      args: {
+        session_id: session_id,
+        source_node: source_node,
+        target_node: target_node,
+        handle_type: handle_type,
+        connection: connection,
+        ui_state: ui_state
+      },
+    };
+    console.log("makeEdge stomp", body, this)
     this.publish(body);
     return body;
   }
@@ -681,9 +709,6 @@ export class Stomp {
     this.publish(body);
     return body;
   }
-
-
-
 
 
   /**

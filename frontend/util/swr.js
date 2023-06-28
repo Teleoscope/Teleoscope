@@ -3,8 +3,9 @@ import useSWR from "swr";
 import React, { useContext, createContext } from "react";
 
 export const swrContext = createContext(null);
+export const useSWRHook = () => useContext(swrContext);
 
-export class swr {
+export class SWR {
   constructor(subdomain) {
     this.subdomain = subdomain;
   }
@@ -18,4 +19,4 @@ export class swr {
     ret[datakey + "_mutate"] = mutate;
     return ret;
   };
-}
+} 

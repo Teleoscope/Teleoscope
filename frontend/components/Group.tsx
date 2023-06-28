@@ -9,16 +9,16 @@ import Stack from "@mui/material/Stack";
 import DocumentList from "@/components/Documents/DocumentList";
 
 //utils
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
 import { CopyJson, CopyText, SaveDocx } from "@/components/GroupActions";
 
 export default function Group({ id: winId, windata, color }) {
   const id = winId.split("%")[0];
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { group } = windata.demo
     ? windata.demodata
-    : swr.useSWRAbstract("group", `groups/${id}`);
+    : swr.useSWRAbstract("group", `groups/${id}`); 
   const data = group?.history[0].included_documents.map((p) => {
     return [p, 1.0];
   });

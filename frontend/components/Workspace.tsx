@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 // custom components
 import DrawerMini from "@/components/DrawerMini";
 
 import { Stomp, StompContext } from "@/components/Stomp";
 
-import { swr, swrContext } from "@/util/swr";
+import { SWR, swrContext } from "@/util/swr";
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { useCookies } from "react-cookie";
 import { sessionActivator, setUserId } from "@/actions/activeSessionID";
@@ -15,27 +15,32 @@ export default function Workspace({subdomain}) {
   const [cookies, setCookie] = useCookies(["userid"]);
   const userid = useAppSelector((state) => state.activeSessionID.userid);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
+  const [client, setClient] = useState<Stomp | null>(null);
   
   const dispatch = useAppDispatch();
+
+
   
-  if (cookies.userid != userid) {
-    dispatch(setUserId(cookies.userid));
+  useEffect(() => {
+    if (cookies.userid) {
+      dispatch(setUserId(cookies.userid))
+    }
+    setClient(Stomp.getInstance({
+      userid: cookies.userid, 
+      subdomain: subdomain?.split(".")[0]
+    }));
+  }, [userid])
 
-  }
-
-  const options = {
-    database: subdomain?.split(".")[0],
-    userid: userid,
-  };
-
-  const client = Stomp.getInstance(options);
   
-  const mySWR = new swr(subdomain?.split(".")[0]);
+  const mySWR = new SWR(subdomain?.split(".")[0]);
 
   const { user } = mySWR.useSWRAbstract("user", `users/${userid}`);
-
-  if (user && session_id == "000000000000000000000000") {
+  
+  if (user && !session_id) {
     dispatch(sessionActivator(user.sessions[0]));
+    console.log("Loading default session.")
+  } else {
+    console.log("Either session already loaded or unable to load.", user, session_id)
   }
 
 

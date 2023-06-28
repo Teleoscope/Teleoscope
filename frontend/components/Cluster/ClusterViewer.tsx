@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { swrContext } from "@/util/swr";
+import { useSWRHook } from "@/util/swr";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -12,7 +12,7 @@ import { Virtuoso } from "react-virtuoso";
 import ItemList from "@/components/ItemList";
 
 export default function DocViewer(props) {
-  const swr = useContext(swrContext);
+  const swr = useSWRHook();
   const { cluster } = swr.useSWRAbstract("cluster", `clusters/${props.id}`);
   const settings = useAppSelector((state) => state.windows.settings);
   const wdefs = useWindowDefinitions();
@@ -26,7 +26,7 @@ export default function DocViewer(props) {
     <Accordion
       defaultExpanded={settings.defaultExpanded}
       disableGutters={true}
-      square={true}
+      square={true} 
     >
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}

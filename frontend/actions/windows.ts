@@ -243,14 +243,15 @@ export const Windows = createSlice({
       state.nodes = temp;
     },
     makeEdge: (state, action) => {
+      const { edges } = action.payload;
       var temp = [...state.edges];
       var duplicateEdge = false;
-      temp.forEach(se => action.payload.edges.forEach(ae => {
+      temp.forEach(se => edges.forEach(ae => {
         if (se.id == ae.id) {
           duplicateEdge = true;
         }
       }))
-      var combine = [...state.edges, ...action.payload.edges];
+      var combine = [...state.edges, ...edges];
       state.logical_clock = state.logical_clock + 1;
       if (!duplicateEdge) {
         state.edges = combine;        
@@ -273,7 +274,7 @@ export const Windows = createSlice({
         console.log(`Associated UID ${temp[index].data.uid} with OID ${temp[index].data.oid}`)
 
       } else {
-        console.log(`Failed to associated UID ${temp[index].data.uid} with OID ${action.payload.oid}`)
+        console.log(`Failed to associated UID ${action.payload.uid} with OID ${action.payload.oid}`)
       }
       
       state.nodes = temp;

@@ -1535,15 +1535,13 @@ def add_item(*args, **kwargs):
 
             # res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
             res = initialize_teleoscope(db=database, session_id=session_id, userid=userid)
-
             
             message(userid, {
                 "oid": str(res),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
                 "description": "Associate OID with UID."
-            })
-
+            })            
             
 
         case "Cluster":
@@ -1575,27 +1573,124 @@ def add_item(*args, **kwargs):
                 
                 res = db.graph.insert_one(obj, session=transaction_session)
 
-                label = f"{res.inserted_id}%{uid}%{type.lower()}"
 
-                session = db.sessions.find_one({"_id": session_id})
-                history_item = session["history"][0]
-
-                for node in history_item["windows"]:
-                    if node["data"]["uid"] == uid:
-                        node["data"]["i"] = str(res.inserted_id)
-                        node["data"]["label"] = label
-                        node["id"] = label
-
-                history_item["action"] = f"Create {type} node."
-                history_item["timestamp"] = datetime.datetime.utcnow()
-                history_item["userid"] = userid
-                history_item["logical_clock"] = history_item["logical_clock"] + 1
-
-                utils.push_history(db, "sessions", session_id, history_item, transaction_session)
-                utils.commit_with_retry(transaction_session)
     return "Help"
 
 
+def find_node(oid, db):
+    _id = ObjectId(str(oid))
+    doc = db.documents.find_one({"_id": _id})
+    if doc:
+        return doc
+    
+    group = db.groups.find_one({"_id": _id})
+    if group:
+        return group
+
+    teleoscope = db.teleoscopes.find_one({"_id": _id})
+    if teleoscope:
+        return teleoscope
+    
+    projection = db.projections.find_one({"_id": _id})
+    if projection:
+        return projection
+    
+    return None
+
+def graph(oid, db):
+    query = db.graph.aggregate(pipeline = [{
+        "$graphLookup": {
+            "from": "graph",
+            "startWith": {
+                "$concatArrays": ["$edges.source.id", "$edges.control.id"]
+            },
+            "connectFromField": "edges.source.id",
+            "connectToField": "_id",
+            "as": "connected_nodes",
+            "maxDepth": 10,
+        }
+    }])
+    return query
+
+@app.task
+def make_edge(*args, **kwargs):
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle kwargs
+    userid = ObjectId(str(kwargs["userid"]))
+    session_id = ObjectId(str(kwargs["session_id"]))
+    
+    source_node = kwargs["source_node"]
+    source_oid  = ObjectId(str(source_node["data"]["oid"]))
+    target_node = kwargs["target_node"]
+    target_oid  = ObjectId(str(target_node["data"]["oid"]))
+    handle_type = kwargs["handle_type"]
+
+    connection = kwargs["connection"]
+    ui_state = kwargs["ui_state"]
+
+    collectionMap = {
+        "Teleoscope": "teleoscopes",
+        "Group": "groups",
+        "Document": "documents",
+        "Projection": "projections",
+        "Intersection": "nodes",
+        "Exclusion": "nodes",
+        "Union": "nodes"
+    }
+
+    target_item = db.get_collection(collectionMap[target_node["type"]]).find_one({"_id": target_oid})
+    source_item = db.get_collection(collectionMap[source_node["type"]]).find_one({"_id": source_oid})
+
+    if "node" not in target_item:
+        n = schemas.create_node(target_node["type"])
+        r = db.graph.insert_one(n)
+        db.get_collection(collectionMap[target_node["type"]]).update_one(
+            {
+                "_id": target_oid
+            },
+            {
+                "$set" : {
+                    "node" : r.inserted_id
+                }
+            }
+        )
+        target_item = db.get_collection(collectionMap[target_node["type"]]).find_one({"_id": target_oid})
+
+
+    if "node" not in source_item:
+        n = schemas.create_node(source_node["type"])
+        r = db.graph.insert_one(n)
+        db.get_collection(collectionMap[source_node["type"]]).update_one(
+            {
+                "_id": source_oid
+            },
+            {
+                "$set" : {
+                    "node" : r.inserted_id
+                }
+            }
+        )
+        source_item = db.get_collection(collectionMap[source_node["type"]]).find_one({"_id": source_oid})
+
+    edge_add_result = db.graph.update_one(
+        {
+            "_id" : target_item["node"]
+        },
+        {
+            "$addToSet": {
+                f'edges.{handle_type}': {
+                    "id": source_oid,
+                    "type": source_node["type"]
+                }
+            }
+        }
+    )
+
+    g = graph(edge_add_result.upserted_id, db)
+    print(list(g))
+    return edge_add_result
 
 def message(userid: ObjectId, msg):
     import pika
