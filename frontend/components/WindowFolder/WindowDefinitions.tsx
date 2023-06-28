@@ -107,16 +107,6 @@ export default class WindowDefinitions {
         icon:      (d) => <FolderIcon sx={{ color: d?.history[0].color }} fontSize="inherit"  />,
         component: (w, id, color) => <Group id={id} windata={w} color={color} />,
       },
-      Cluster: {
-        tag:       "group",
-        type:      "Group",
-        apipath:   "groups",
-        nodetype:  SourceNode,      
-        title:     (d) => `Group: ${d?.history[0].label}`,
-        color:     (d) => d?.history[0].color,
-        icon:      (d) => <FolderIcon sx={{ color: d?.history[0].color }} fontSize="inherit"  />,
-        component: (w, id, color) => <Group id={id} windata={w} color={color} />,
-      },
       Document: {
         tag:       "document",
         type:      "Document",
