@@ -3,6 +3,10 @@ import { useAppSelector, useGlobalMousePosition } from "@/util/hooks";
 import { renderToString } from 'react-dom/server';
 import { FaArrowRight } from "react-icons/fa";
 
+import ReactFlow, { useReactFlow } from 'reactflow';
+
+
+
 const defaultSize = (s, id) => {
     const node = s.nodeInternals.get(id);
     if (!node) { return }
@@ -29,11 +33,16 @@ function calculateDistanceToEdges(mouse, box) {
 }
 
 export default function HandleWrapper({ type, id, nodeid, position, variant }) {
+    const flow = useReactFlow()
+
     const edges = useAppSelector((state) => state.windows.edges);
     const settings = useAppSelector((state) => state.windows.settings);
     
     const nodesize = useStore(s => defaultSize(s, nodeid) );
-    const mousePosition = useGlobalMousePosition();
+    const mousePosition = flow.project(useGlobalMousePosition());
+
+    
+    
     const distance = calculateDistanceToEdges(mousePosition, nodesize);
 
     const connected = edges.reduce((acc, e) => e.sourceHandle == id || e.targetHandle == id || acc, false)

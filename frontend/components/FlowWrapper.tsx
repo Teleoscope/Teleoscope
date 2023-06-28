@@ -20,6 +20,7 @@ const FlowWrapper = ({
   onSelectionChange,
   edgeTypes,
   children
+
 }) => {
 
 
@@ -47,6 +48,7 @@ const FlowWrapper = ({
       onPaneContextMenu={onPaneContextMenu}
       onSelectionChange={onSelectionChange}
       connectionLineComponent={ConnectionLine}
+
     >
       {children}
     </ReactFlow>
