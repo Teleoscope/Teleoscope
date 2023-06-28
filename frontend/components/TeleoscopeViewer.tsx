@@ -13,6 +13,7 @@ import { useSWRHook } from "@/util/swr";
 import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
+import DocumentList from "./Documents/DocumentList";
 
 export default function TeleoscopeViewer(props) {
   const swr = useSWRHook();
@@ -22,6 +23,10 @@ export default function TeleoscopeViewer(props) {
   );
   const settings = useAppSelector((state) => state.windows.settings);
   const wdefs = useWindowDefinitions();
+
+  const handleLoadMore = () => {}
+
+  const data = teleoscope?.history[0].rank_slice
 
   return (
     <Accordion
@@ -48,11 +53,9 @@ export default function TeleoscopeViewer(props) {
         <Stack spacing={1} sx={{ margin: "1em" }}>
           <Typography variant="h5">{teleoscope?.history[0].label}</Typography>
           <Divider></Divider>
-          <List>
-            {teleoscope?.history[0].rank_slice.map(([docid, rank]) => (
-              <DocumentListItem key={docid} id={docid}></DocumentListItem>
-            ))}
-          </List>
+          <div style={{height: "25vh"}}>
+            <DocumentList data={data} pagination={true} loadMore={handleLoadMore}></DocumentList>
+          </div>
         </Stack>
       </AccordionDetails>
     </Accordion>

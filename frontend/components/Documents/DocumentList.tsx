@@ -50,7 +50,13 @@ export default function DocumentList(props) {
     }
   };
 
+  const handleLoadMore = () => {
+    if (props.loadMore) {
+      props.loadMore()
+    }
+  }
+
   return (
-    <ItemList data={data} render={renderItem} onSelect={onSelect}></ItemList>
+    <ItemList data={data} render={renderItem} loadMore={handleLoadMore} onSelect={onSelect}></ItemList>
   );
 }

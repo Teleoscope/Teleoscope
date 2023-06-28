@@ -54,10 +54,13 @@ export default function Itemlist(props) {
     props.onSelect(props.data[index]);
   };
 
+
+
   return (
     <Virtuoso
       ref={ref}
       data={props.data}
+      endReached={props.loadMore}
       itemContent={(index, item) =>
         props.render(index, item, currentItemIndex, handleSetCurrentItemIndex)
       }
