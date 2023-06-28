@@ -1611,8 +1611,8 @@ def make_edge(*args, **kwargs):
     connection = kwargs["connection"]
     ui_state = kwargs["ui_state"]
 
-    if target_node["type"] == "Teleoscope":
-        
+    # if target_node["type"] == "Teleoscope":
+    pass
 
 
 
