@@ -1480,8 +1480,8 @@ def add_item(*args, **kwargs):
             # else
                 # copy cluster
 
-            group = db.groups.find_one({"_id" : ObjectId(str(oid))})
-            if group:
+            try:
+                group = db.groups.find_one({"_id" : ObjectId(str(oid))})
                 cluster = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
                 if cluster:
                     logging.info(f"Cluster has already been copied.")
@@ -1489,7 +1489,7 @@ def add_item(*args, **kwargs):
                 else:
                     logging.info(f"Group already exists.")
                     res = group["_id"]
-            else:
+            except:
                 cluster = db.clusters.find_one({"_id" : ObjectId(str(oid))})
                 if cluster:
                     logging.info(f"Cluster has NOT been copied.")
