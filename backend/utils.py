@@ -325,7 +325,7 @@ def get_documents(dbstring, rebuild=False):
             
             db = connect(db=dbstring)
 
-            allDocuments = db.documents.aggregate(
+            documents = db.documents.aggregate(
                 [
                     # Only get IDs and vectors
                     { "$project": { "textVector": 1, "_id": 1 }},
@@ -334,16 +334,18 @@ def get_documents(dbstring, rebuild=False):
                  ]
             )
 
-            ids = [str(x['_id']) for x in allDocuments]
-            
-            logging.info(f'There are {len(ids)} ids in documents.')
-            
-            vecs = np.array([x['textVector'] for x in allDocuments])
+            ids = []
+            _vecs = []
+            for doc in documents:
+                ids.append(doc["_id"])
+                _vecs.append(doc["textVector"])
+            vecs = np.array(_vecs)
 
+       
+            logging.info(f'There are {len(ids)} ids and {len(vecs)} vectors in {dbstring} documents.')
+            
             np.savez(npzpath.as_posix(), documents=vecs)
             with open(pklpath.as_posix(), 'wb') as handle:
                 pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            ids = ids
-            vectors = vecs
-        
+            
         return ids, vectors
