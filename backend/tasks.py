@@ -1706,13 +1706,15 @@ def make_edge(*args, **kwargs):
         for input in n["edges"]["control"]:
             if input["type"] == "Document":
                 doc = db.documents.find_one({"_id": input["id"]})
-                docs.append(doc)
+                if doc:
+                    docs.append(doc)
             if input["type"] == "Group":
                 group = db.groups.find_one({"_id": input["id"]})
                 gdocs = group["history"][0]["included_documents"]
                 for gdoc in gdocs:
                     doc = db.documents.find_one({"_id": gdoc})
-                    docs.append(doc)
+                    if doc:
+                        docs.append(doc)
         
         vec = np.average([d["textVector"] for d in docs], axis=0)
         ids, vecs = utils.cacheDocumentsData(database)
