@@ -1,20 +1,18 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 
 // mui
 import {
-  IconButton,
   Stack,
-  TextField,
   List,
   ListItem,
   ListItemIcon,
 } from "@mui/material";
 
 import FlareIcon from "@mui/icons-material/Flare";
-import DeleteIcon from "@mui/icons-material/Delete";
 
 // custom
 import EditableText from "@/components/EditableText";
+import Deleter from "@/components/Deleter";
 
 // actions
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
@@ -26,6 +24,7 @@ import { useStomp } from "@/components/Stomp";
 import { NewItemForm } from "./NewItemForm";
 import { onDragStart } from "@/util/drag";
 
+
 export default function Teleoscopes(props) {
   const client = useStomp();
 
@@ -33,9 +32,6 @@ export default function Teleoscopes(props) {
     (state: RootState) => state.activeSessionID.value
   );
 
-  const settings = useAppSelector(
-    (state: RootState) => state.windows.settings
-  );
  
   
   const swr = useSWRHook();
@@ -43,7 +39,6 @@ export default function Teleoscopes(props) {
     "teleoscopes_raw",
     `sessions/${session_id}/teleoscopes`
   );
-  const dispatch = useAppDispatch();
 
   const teleoscopes = teleoscopes_raw?.map((t) => {
     const ret = {
@@ -86,19 +81,7 @@ export default function Teleoscopes(props) {
                       }
                     />
                   </Stack>
-                  <IconButton
-                    onClick={() => client.remove_teleoscope(t._id, session_id)}
-                  >
-                    <DeleteIcon
-                      sx={[
-                        {
-                          "&:hover": {
-                            color: props.color,
-                          },
-                        },
-                      ]}
-                    ></DeleteIcon>
-                  </IconButton>
+                  <Deleter callback={() => client.remove_teleoscope(t._id, session_id)} color={props.color}></Deleter>
                 </Stack>
               </ListItem>
             </div>

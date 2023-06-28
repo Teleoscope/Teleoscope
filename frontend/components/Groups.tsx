@@ -50,17 +50,9 @@ return (
             callback={(label) => relabelGroup(label, g._id)}
           />
         </Stack>
-        <IconButton onClick={() => removeGroup(g._id)}>
-          <DeleteIcon
-            sx={[
-              {
-                "&:hover": {
-                  color: color,
-                },
-              },
-            ]}
-          ></DeleteIcon>
-        </IconButton>
+        
+        <Deleter callback={() => removeGroup(g._id)} color={color} />
+        
       </Stack>
     </ListItem>
     {showColorPicker ? (
@@ -103,6 +95,7 @@ import {
 } from "@/components/GroupsActions";
 import { NewItemForm } from "./NewItemForm";
 import { onDragStart } from "@/util/drag";
+import Deleter from "./Deleter";
 
 export default function Groups(props) {
   const swr = useSWRHook();
