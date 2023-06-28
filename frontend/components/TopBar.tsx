@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React from "react";
 
 // material ui
 import { Menu, MenuItem, Stack, Typography } from "@mui/material";
@@ -19,7 +19,7 @@ import { useSWRHook } from "@/util/swr";
 import { useCookies } from "react-cookie";
 
 // contexts
-import { useStomp } from "@/components/Stomp"; 
+import { useStomp } from "@/components/Stomp";
 
 export default function TopBar(props) {
   const settings = useSelector((state) => state.windows.settings);

@@ -1485,7 +1485,7 @@ def add_item(*args, **kwargs):
             import random
             r = lambda: random.randint(0, 255)
             color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
-            
+
             res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
 
             message(userid, {
@@ -1503,22 +1503,21 @@ def add_item(*args, **kwargs):
                 if docset:
                     logging.info(f"{type} with {oid} already in DB.")
                     return # perhaps do something else before return like save?
-                
+
                 logging.info(f"return anyways for now")
                 return
-            
+
             logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
             # res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
             res = initialize_teleoscope(db=database, session_id=session_id, userid=userid)
-            
+
             message(userid, {
                 "oid": str(res),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
                 "description": "Associate OID with UID."
-            })            
-            
+            })
 
         case "Cluster":
             # If this already exists in the database, we can skip intitalization
@@ -1574,34 +1573,88 @@ def find_node(oid, db):
     return None
 
 def graph(oid, db):
+    # all_graph_items = db.graph.aggregate(pipeline = [{
+    #     "$graphLookup": {
+    #         "from": "graph",
+    #         "startWith": {
+    #             "$concatArrays": [
+    #                 {
+    #                     "$map": {
+    #                         "input": "$edges.source",
+    #                         "as": "sourceElem",
+    #                         "in": "$$sourceElem.nodeid"
+    #                     }
+    #                 },
+    #                 {
+    #                     "$map": {
+    #                         "input": "$edges.control",
+    #                         "as": "controlElem",
+    #                         "in": "$$controlElem.nodeid"
+    #                     }
+    #                 }
+    #             ]
+    #         },
+    #         "connectFromField": "edges.source.nodeid",
+    #         "connectToField": "_id",
+    #         "as": "connected_nodes",
+    #     }
+    # }])
+    
+    node = db.graph.find_one({"_id": oid})
+    edges = node["edges"]
+
+    # going wrong direction right now 
+    # TODO: make sure this goes "right"
     query = db.graph.aggregate(pipeline = [{
         "$graphLookup": {
             "from": "graph",
-            "startWith": {
-                "$concatArrays": [
-                    {
-                        "$map": {
-                            "input": "$edges.source",
-                            "as": "sourceElem",
-                            "in": "$$sourceElem.nodeid"
-                        }
-                    },
-                    {
-                        "$map": {
-                            "input": "$edges.control",
-                            "as": "controlElem",
-                            "in": "$$controlElem.nodeid"
-                        }
-                    }
-                ]
-            },
+            "startWith": [oid],
             "connectFromField": "edges.source.nodeid",
             "connectToField": "_id",
             "as": "connected_nodes",
-            "maxDepth": 10,
         }
     }])
     return query
+
+'''
+list_of_docsets:
+    {
+        {
+            docset_p1: [(doc, rank)]
+        },
+        {
+            docset_p2: [(doc, rank)]
+        }
+    }
+
+
+    id    |    rank   p1 p2 ...
+    ----- |          
+    oid_1 |    0.01   0  1  ...
+    oid_2 |    0.99   1  0  ...
+
+    ...
+
+'''
+
+def construct_matrix(count, item, item_type):
+    return csc_matrix((count, 2), dtype=np.float32)
+
+def ensure_node_exists(db, item_oid, item_type, collection_map):
+    item = db.get_collection(collection_map[item_type]).find_one({"_id": item_oid})
+    if "node" not in item:
+        n = schemas.create_node(item_type)
+        count = db.documents.count_documents({})
+        csc = construct_matrix(count, item, item_type)
+        csc_id = utils.cscUpload(db, "graph", csc)
+        n["matrix"] = csc_id
+        r = db.graph.insert_one(n)
+        db.get_collection(collection_map[item_type]).update_one(
+            {"_id": item_oid},
+            {"$set": {"node": r.inserted_id}}
+        )
+        return db.get_collection(collection_map[item_type]).find_one({"_id": item_oid})
+    return item
 
 @app.task
 def make_edge(*args, **kwargs):
@@ -1631,52 +1684,9 @@ def make_edge(*args, **kwargs):
         "Union": "nodes"
     }
 
-    target_item = db.get_collection(collectionMap[target_node["type"]]).find_one({"_id": target_oid})
-    source_item = db.get_collection(collectionMap[source_node["type"]]).find_one({"_id": source_oid})
-
-    if "node" not in target_item:
-        n = schemas.create_node(target_node["type"])
-
-        count = db.documents.count_documents({})
-        csc = csc_matrix((count, 2), dtype=np.float32)
-        csc_id = utils.cscUpload(db, "graph", csc)
-        n["matrix"] = csc_id
-
-        r = db.graph.insert_one(n)
-        db.get_collection(collectionMap[target_node["type"]]).update_one(
-            {
-                "_id": target_oid
-            },
-            {
-                "$set" : {
-                    "node" : r.inserted_id
-                }
-            }
-        )
-        target_item = db.get_collection(collectionMap[target_node["type"]]).find_one({"_id": target_oid})
-
-
-    if "node" not in source_item:
-        n = schemas.create_node(source_node["type"])
-
-        count = db.documents.count_documents({})
-        csc = csc_matrix((count, 2), dtype=np.float32)
-        csc_id = utils.cscUpload(db, "graph", csc)
-        n["matrix"] = csc_id
-
-        r = db.graph.insert_one(n)
-        db.get_collection(collectionMap[source_node["type"]]).update_one(
-            {
-                "_id": source_oid
-            },
-            {
-                "$set" : {
-                    "node" : r.inserted_id
-                }
-            }
-        )
-        source_item = db.get_collection(collectionMap[source_node["type"]]).find_one({"_id": source_oid})
-
+    target_item = ensure_node_exists(db, target_item, target_oid, target_node["type"], collectionMap)
+    source_item = ensure_node_exists(db, source_item, source_oid, source_node["type"], collectionMap)
+    
     edge_add_result = db.graph.update_one(
         {
             "_id" : target_item["node"]
@@ -1713,9 +1723,11 @@ def make_edge(*args, **kwargs):
 
         if len(docs) != 0:        
             vec = np.average([d["textVector"] for d in docs], axis=0)
-            ids, vecs = utils.cacheDocumentsData(database)
+            ids, vecs = utils.get_documents(database)
             scores = utils.calculateSimilarity(vecs, vec)
+            
             newRanks = utils.rankDocumentsBySimilarity(ids, scores)
+
             rank_slice = newRanks[0:1000]
             teleoscope = db.teleoscopes.find_one({"_id": target_item["_id"]})
             history_item = schemas.create_teleoscope_history_item(
@@ -1729,8 +1741,10 @@ def make_edge(*args, **kwargs):
                     action="Reorient teleoscope",
                     user=ObjectId(str(userid))
                 )
-
-            # transaction_session, db = utils.create_transaction_session(db=self.dbstring)
+            
+            csc = utils.cscDownload(teleoscope['node'])
+            logging.info(f'Number of ids: {len(ids)} and shape of csc: {csc.shape}')
+            
             utils.push_history(db, "teleoscopes", target_item["_id"], history_item)
 
     return edge_add_result
@@ -1750,4 +1764,279 @@ def ping(*args, **kwargs):
     msg = f"ping {userid}"
     userid = ObjectId(str(kwargs["userid"]))
     message(userid, msg)
-    
+
+
+msg = {
+    "session_id": "6426212a7848802aee0f9e83",
+    "source_node": {
+        "id": "649c95a518a407264b76e65f%a813324af17be2eb%group",
+        "type": "Group",
+        "position": {
+            "x": 267,
+            "y": 177
+        },
+        "positionAbsolute": {
+            "x": 267,
+            "y": 177
+        },
+        "style": {
+            "width": 200,
+            "height": 34
+        },
+        "data": {
+            "label": "649c95a518a407264b76e65f%a813324af17be2eb%group",
+            "oid": "649c95a518a407264b76e65f",
+            "type": "Group",
+            "uid": "a813324af17be2eb"
+        },
+        "width": 200,
+        "height": 34,
+        "selected": False,
+        "dragging": False
+    },
+    "target_node": {
+        "id": "649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope",
+        "type": "Teleoscope",
+        "position": {
+            "x": 529,
+            "y": 198
+        },
+        "positionAbsolute": {
+            "x": 529,
+            "y": 198
+        },
+        "style": {
+            "width": 200,
+            "height": 34
+        },
+        "data": {
+            "label": "649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope",
+            "oid": "649c95aa18a407264b76e662",
+            "type": "Teleoscope",
+            "uid": "4b672ff00e0078be"
+        },
+        "width": 200,
+        "height": 34,
+        "selected": True,
+        "dragging": False
+    },
+    "handle_type": "source",
+    "connection": {
+        "source": "649c95a518a407264b76e65f%a813324af17be2eb%group",
+        "sourceHandle": "649c95a518a407264b76e65f%a813324af17be2eb%group_output",
+        "target": "649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope",
+        "targetHandle": "649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope_source"
+    },
+    "ui_state": {
+        "activeSessionID": {
+            "data": None,
+            "loading": False,
+            "error": None,
+            "userid": "637ee569d1259b1565f7e97e",
+            "value": "6426212a7848802aee0f9e83"
+        },
+        "windows": {
+            "nodes": [
+                {
+                    "id": "649c95a518a407264b76e65f%a813324af17be2eb%group",
+                    "type": "Group",
+                    "position": {
+                        "x": 267,
+                        "y": 177
+                    },
+                    "positionAbsolute": {
+                        "x": 267,
+                        "y": 177
+                    },
+                    "style": {
+                        "width": 200,
+                        "height": 34
+                    },
+                    "data": {
+                        "label": "649c95a518a407264b76e65f%a813324af17be2eb%group",
+                        "oid": "649c95a518a407264b76e65f",
+                        "type": "Group",
+                        "uid": "a813324af17be2eb"
+                    },
+                    "width": 200,
+                    "height": 34,
+                    "selected": False,
+                    "dragging": False
+                },
+                {
+                    "id": "649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope",
+                    "type": "Teleoscope",
+                    "position": {
+                        "x": 529,
+                        "y": 198
+                    },
+                    "positionAbsolute": {
+                        "x": 529,
+                        "y": 198
+                    },
+                    "style": {
+                        "width": 200,
+                        "height": 34
+                    },
+                    "data": {
+                        "label": "649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope",
+                        "oid": "649c95aa18a407264b76e662",
+                        "type": "Teleoscope",
+                        "uid": "4b672ff00e0078be"
+                    },
+                    "width": 200,
+                    "height": 34,
+                    "selected": True,
+                    "dragging": False
+                }
+            ],
+            "edges": [
+                {
+                    "source": "64640311d858c97771df504c%0c3b021edc1cbecc%group",
+                    "sourceHandle": "64640311d858c97771df504c%0c3b021edc1cbecc%group",
+                    "target": "646403260eac97d6f003a766%37623d286b64f2d0%teleoscope",
+                    "targetHandle": "646403260eac97d6f003a766%37623d286b64f2d0%teleoscope",
+                    "id": "reactflow__edge-64640311d858c97771df504c%0c3b021edc1cbecc%group64640311d858c97771df504c%0c3b021edc1cbecc%group-646403260eac97d6f003a766%37623d286b64f2d0%teleoscope646403260eac97d6f003a766%37623d286b64f2d0%teleoscope",
+                    "selected": False
+                },
+                {
+                    "source": "64640311d858c97771df504c%0c3b021edc1cbecc%group",
+                    "sourceHandle": "64640311d858c97771df504c%0c3b021edc1cbecc%group",
+                    "target": "649626bb56bff79bc8da2c42%37450c40a7f4c6fe%teleoscope",
+                    "targetHandle": "649626bb56bff79bc8da2c42%37450c40a7f4c6fe%teleoscope",
+                    "id": "reactflow__edge-64640311d858c97771df504c%0c3b021edc1cbecc%group64640311d858c97771df504c%0c3b021edc1cbecc%group-649626bb56bff79bc8da2c42%37450c40a7f4c6fe%teleoscope649626bb56bff79bc8da2c42%37450c40a7f4c6fe%teleoscope",
+                    "selected": False
+                },
+                {
+                    "source": "649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group",
+                    "sourceHandle": "649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group_output",
+                    "target": "Exclusion%ec8ddca785beea6a%exclusion",
+                    "targetHandle": "Exclusion%ec8ddca785beea6a%exclusion_control",
+                    "id": "reactflow__edge-649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group_output-Exclusion%ec8ddca785beea6a%exclusionExclusion%ec8ddca785beea6a%exclusion_control",
+                    "selected": False
+                },
+                {
+                    "source": "649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group",
+                    "sourceHandle": "649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group_output",
+                    "target": "Union%3c78904ebca9d0c2%union",
+                    "targetHandle": "Union%3c78904ebca9d0c2%union_control",
+                    "id": "reactflow__edge-649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group_output-Union%3c78904ebca9d0c2%unionUnion%3c78904ebca9d0c2%union_control",
+                    "selected": False
+                },
+                {
+                    "source": "649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group",
+                    "sourceHandle": "649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group_output",
+                    "target": "Intersection%dfc3269edab4043b%intersection",
+                    "targetHandle": "Intersection%dfc3269edab4043b%intersection_control",
+                    "id": "reactflow__edge-649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group_output-Intersection%dfc3269edab4043b%intersectionIntersection%dfc3269edab4043b%intersection_control",
+                    "selected": False
+                },
+                {
+                    "source": "649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group",
+                    "sourceHandle": "649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group_output",
+                    "target": "Intersection%dfc3269edab4043b%intersection",
+                    "targetHandle": "Intersection%dfc3269edab4043b%intersection_source",
+                    "id": "reactflow__edge-649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group649723173d4cc5b5de6b3c1d%bdfe59746d2c07f2%group_output-Intersection%dfc3269edab4043b%intersectionIntersection%dfc3269edab4043b%intersection_source",
+                    "selected": False
+                },
+                {
+                    "source": "649b3cfb96c2d01a5fd1c6b4%de304d22a881524f%group",
+                    "sourceHandle": "649b3cfb96c2d01a5fd1c6b4%de304d22a881524f%group_output",
+                    "target": "649b3d5437d8522daa9ca1f2%8a7a224fd3e367e1%teleoscope",
+                    "targetHandle": "649b3d5437d8522daa9ca1f2%8a7a224fd3e367e1%teleoscope_source",
+                    "id": "reactflow__edge-649b3cfb96c2d01a5fd1c6b4%de304d22a881524f%group649b3cfb96c2d01a5fd1c6b4%de304d22a881524f%group_output-649b3d5437d8522daa9ca1f2%8a7a224fd3e367e1%teleoscope649b3d5437d8522daa9ca1f2%8a7a224fd3e367e1%teleoscope_source",
+                    "selected": False
+                },
+                {
+                    "source": "649b3f0b96c2d01a5fd1c6c8%3c25861d068e8859%group",
+                    "sourceHandle": "649b3f0b96c2d01a5fd1c6c8%3c25861d068e8859%group_output",
+                    "target": "646403260eac97d6f003a766%929d02cbb6986a8d%teleoscope",
+                    "targetHandle": "646403260eac97d6f003a766%929d02cbb6986a8d%teleoscope_control",
+                    "id": "reactflow__edge-649b3f0b96c2d01a5fd1c6c8%3c25861d068e8859%group649b3f0b96c2d01a5fd1c6c8%3c25861d068e8859%group_output-646403260eac97d6f003a766%929d02cbb6986a8d%teleoscope646403260eac97d6f003a766%929d02cbb6986a8d%teleoscope_control",
+                    "selected": False
+                },
+                {
+                    "source": "649b99d237d8522daa9ca26f%77af6272b27680c5%group",
+                    "sourceHandle": "649b99d237d8522daa9ca26f%77af6272b27680c5%group_output",
+                    "target": "649b99ae96c2d01a5fd1c740%5451102e21f2cf35%teleoscope",
+                    "targetHandle": "649b99ae96c2d01a5fd1c740%5451102e21f2cf35%teleoscope_control",
+                    "id": "reactflow__edge-649b99d237d8522daa9ca26f%77af6272b27680c5%group649b99d237d8522daa9ca26f%77af6272b27680c5%group_output-649b99ae96c2d01a5fd1c740%5451102e21f2cf35%teleoscope649b99ae96c2d01a5fd1c740%5451102e21f2cf35%teleoscope_control",
+                    "selected": False
+                },
+                {
+                    "source": "637eabe7f0a9482a337a11d5%f323aa5c110973a5%document",
+                    "sourceHandle": "637eabe7f0a9482a337a11d5%f323aa5c110973a5%document",
+                    "target": "649c4a5fb60009cf233b7d20%561be49f851ac0dd%teleoscope",
+                    "targetHandle": "649c4a5fb60009cf233b7d20%561be49f851ac0dd%teleoscope",
+                    "id": "reactflow__edge-637eabe7f0a9482a337a11d5%f323aa5c110973a5%document637eabe7f0a9482a337a11d5%f323aa5c110973a5%document-649c4a5fb60009cf233b7d20%561be49f851ac0dd%teleoscope649c4a5fb60009cf233b7d20%561be49f851ac0dd%teleoscope",
+                    "selected": False
+                },
+                {
+                    "source": "649c4a50b79396de653e93bd%51214ac7fb2d1bab%group",
+                    "sourceHandle": "649c4a50b79396de653e93bd%51214ac7fb2d1bab%group_output",
+                    "target": "649c4e4841bdc46071c1e0cf%6d0d72a56b097620%teleoscope",
+                    "targetHandle": "649c4e4841bdc46071c1e0cf%6d0d72a56b097620%teleoscope_control",
+                    "id": "reactflow__edge-649c4a50b79396de653e93bd%51214ac7fb2d1bab%group649c4a50b79396de653e93bd%51214ac7fb2d1bab%group_output-649c4e4841bdc46071c1e0cf%6d0d72a56b097620%teleoscope649c4e4841bdc46071c1e0cf%6d0d72a56b097620%teleoscope_control"
+                },
+                {
+                    "source": "637f2e3d460aea988a461bc8%1077ac2a76966f85%document",
+                    "sourceHandle": "637f2e3d460aea988a461bc8%1077ac2a76966f85%document_output",
+                    "target": "649c52471b5e10f2a185c577%f5b9ea699071d8c5%teleoscope",
+                    "targetHandle": "649c52471b5e10f2a185c577%f5b9ea699071d8c5%teleoscope_control",
+                    "id": "reactflow__edge-637f2e3d460aea988a461bc8%1077ac2a76966f85%document637f2e3d460aea988a461bc8%1077ac2a76966f85%document_output-649c52471b5e10f2a185c577%f5b9ea699071d8c5%teleoscope649c52471b5e10f2a185c577%f5b9ea699071d8c5%teleoscope_control"
+                },
+                {
+                    "source": "649c95a518a407264b76e65f%a813324af17be2eb%group",
+                    "sourceHandle": "649c95a518a407264b76e65f%a813324af17be2eb%group_output",
+                    "target": "649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope",
+                    "targetHandle": "649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope_source",
+                    "id": "reactflow__edge-649c95a518a407264b76e65f%a813324af17be2eb%group649c95a518a407264b76e65f%a813324af17be2eb%group_output-649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope_source"
+                }
+            ],
+            "bookmarks": [
+                "637f5f318881e51b8d886696"
+            ],
+            "logical_clock": 82,
+            "label": "default",
+            "selection": {
+                "nodes": [
+                    {
+                        "width": 200,
+                        "height": 34,
+                        "id": "649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope",
+                        "type": "Teleoscope",
+                        "position": {
+                            "x": 111,
+                            "y": 100
+                        },
+                        "positionAbsolute": {
+                            "x": 111,
+                            "y": 100
+                        },
+                        "style": {
+                            "width": 200,
+                            "height": 34
+                        },
+                        "data": {
+                            "label": "649c95aa18a407264b76e662%4b672ff00e0078be%teleoscope",
+                            "oid": "649c95aa18a407264b76e662",
+                            "type": "Teleoscope",
+                            "uid": "4b672ff00e0078be"
+                        },
+                        "selected": True
+                    }
+                ],
+                "edges": []
+            },
+            "settings": {
+                "default_document_width": 200,
+                "default_document_height": 34,
+                "defaultExpanded": True,
+                "color": "#f44e3b"
+            },
+            "windows": []
+        }
+    },
+    "userid": "637ee569d1259b1565f7e97e",
+    "db": "aita"
+}

@@ -1,5 +1,3 @@
-// FlowWrapper.jsx
-import React from 'react';
 import ReactFlow from 'reactflow';
 import ConnectionLine from './Nodes/ConnectionLine';
 

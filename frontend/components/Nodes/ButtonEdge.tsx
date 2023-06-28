@@ -1,5 +1,4 @@
-import React from 'react';
-import { BaseEdge, EdgeLabelRenderer, EdgeProps, getBezierPath, Position } from 'reactflow';
+import { BaseEdge, EdgeLabelRenderer, EdgeProps, getBezierPath } from 'reactflow';
 import { useAppSelector } from "@/util/hooks";
 
 const onEdgeClick = (evt, id) => {

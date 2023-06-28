@@ -1,5 +1,5 @@
 // Groups.js
-import React, { useContext } from "react";
+import React from "react";
 
 // MUI
 import TextField from "@mui/material/TextField";
@@ -30,7 +30,7 @@ import CheckIcon from "@mui/icons-material/Check";
 
 // actions 
 import { useSWRHook } from "@/util/swr";
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector } from "@/util/hooks";
 
 // contexts
 import { useStomp } from "@/components/Stomp";

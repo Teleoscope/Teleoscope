@@ -1,5 +1,5 @@
 
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector } from "@/util/hooks";
 
 export default ({
     fromX,

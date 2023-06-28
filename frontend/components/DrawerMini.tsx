@@ -1,13 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 // mui
-import {
-  Box,
-  Drawer,
-  CssBaseline,
-  Toolbar,
-  Divider,
-  Stack,
-} from "@mui/material";
+import { Box, Drawer, CssBaseline, Divider, Stack } from "@mui/material";
 
 // custom
 import Flow from "@/components/Flow";

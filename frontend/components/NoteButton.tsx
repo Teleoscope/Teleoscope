@@ -1,6 +1,3 @@
-// NoteButton.js
-import React, { useContext } from "react";
-
 // mui
 import IconButton from "@mui/material/IconButton";
 import CommentIcon from "@mui/icons-material/Comment";
