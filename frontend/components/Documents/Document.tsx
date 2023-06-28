@@ -1,6 +1,3 @@
-// Window.js
-import React, { useContext } from "react";
-
 // custom
 import DocumentText from "@/components/Documents/DocumentText";
 
@@ -14,7 +11,7 @@ import ButtonActions from "@/components/ButtonActions";
 import {
   SaveDocx,
   CopyJson,
-  CopyText, 
+  CopyText,
   Link,
   Group,
 } from "@/components/Documents/DocumentActions";

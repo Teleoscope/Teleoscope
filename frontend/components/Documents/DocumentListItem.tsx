@@ -1,4 +1,3 @@
-import React, { useContext } from "react";
 import { useAppSelector } from "@/util/hooks";
 
 // material ui
@@ -17,7 +16,7 @@ import Deleter from "@/components/Deleter";
 //utils
 import { useSWRHook } from "@/util/swr";
 import { PreprocessTitle } from "@/util/Preprocessers";
- 
+
 // contexts
 import { useStomp } from "@/components/Stomp";
 import { onDragStart } from "@/util/drag";

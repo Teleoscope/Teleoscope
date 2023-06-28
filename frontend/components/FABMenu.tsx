@@ -1,6 +1,6 @@
 //FABMenu.tsx
 
-import React, { useContext } from "react";
+import React from "react";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
@@ -9,7 +9,7 @@ import SpeedDialAction from "@mui/material/SpeedDialAction";
 import { makeNode } from "@/actions/windows";
 import { useSelector, useDispatch } from "react-redux";
 import { useSWRHook } from "@/util/swr";
-import { useStomp } from "@/components/Stomp"; 
+import { useStomp } from "@/components/Stomp";
 import { useWindowDefinitions } from "@/util/hooks";
 
 export default function FABMenu(props) {

@@ -1,5 +1,3 @@
-import React, { useContext, useState } from "react";
-
 // mui
 import {
   Stack,
@@ -15,7 +13,7 @@ import EditableText from "@/components/EditableText";
 import Deleter from "@/components/Deleter";
 
 // actions
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 
 // utils

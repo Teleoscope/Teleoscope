@@ -1,10 +1,8 @@
-import React, { useState, useContext } from "react";
-
 // mui
 import { Typography, Box, IconButton } from "@mui/material";
 import { useStomp } from "@/components/Stomp";
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector } from "@/util/hooks";
 import { ContentState, convertToRaw } from "draft-js";
 
 export default function Snippet({text, id}) {

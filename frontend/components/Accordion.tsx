@@ -1,4 +1,3 @@
-import React from "react";
 import Stack from "@mui/material/Stack";
 import Groups from "@/components/Groups";
 import Teleoscopes from "@/components/Teleoscopes";

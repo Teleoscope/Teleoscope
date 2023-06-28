@@ -8,8 +8,6 @@ import { Box, Stack, Typography } from "@mui/material";
 // store
 import store from "@/stores/store";
 
-// custom components
-import Flow from "@/components/Flow";
 import Bookmarks from "@/components/Bookmarks";
 
 import { swr, swrContext } from "@/util/swr";

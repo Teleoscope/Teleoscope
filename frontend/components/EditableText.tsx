@@ -1,7 +1,4 @@
-// EditableText.tsx
-
-import clientPromise from "@/util/mongodb";
-import React, { useContext } from "react";
+import React from "react";
 
 // Creat an EditableText component
 function EditableText(props) {

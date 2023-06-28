@@ -1,8 +1,5 @@
-import React from "react";
-
 // mui
 import ShortTextIcon from "@mui/icons-material/ShortText";
-import TopicIcon from "@mui/icons-material/Topic";
 import FlareIcon from "@mui/icons-material/Flare";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
@@ -13,11 +10,10 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import FolderIcon from "@mui/icons-material/Folder";
 
 
-import { CgPathIntersect, CgPathExclude, CgPathUnite } from 'react-icons/cg';
+import { CgPathIntersect, CgPathExclude } from 'react-icons/cg';
 import { MdManageSearch } from 'react-icons/md';
-import { HiOutlineDatabase } from 'react-icons/hi';
 import { RiBookmark3Line } from 'react-icons/ri';
-import { BsStickies, BsSticky } from 'react-icons/bs'; 
+import { BsStickies, BsSticky } from 'react-icons/bs';
 
 import { IconContext } from "react-icons";
 

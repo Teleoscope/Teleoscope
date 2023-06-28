@@ -1,5 +1,4 @@
 import DocumentList from "@/components/Documents/DocumentList";
-import { useContext } from "react";
 
 import { useSWRHook } from "@/util/swr";
 

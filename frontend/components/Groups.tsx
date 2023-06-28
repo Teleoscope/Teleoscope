@@ -1,5 +1,3 @@
-// NewGroupForm.js
-import React from "react";
 import { Stack } from "@mui/material";
 
 
@@ -7,9 +5,6 @@ import { Stack } from "@mui/material";
 // GroupItem.js
 
 import { ListItem, ListItemIcon, IconButton } from "@mui/material";
-import {
-  Delete as DeleteIcon,
-} from "@mui/icons-material";
 import EditableText from "@/components/EditableText";
 import ColorPicker from "@/components/ColorPicker";
 
@@ -81,7 +76,7 @@ export const GroupList = ({ groups, ...props }) => (
   </List>
 );
 
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { Divider } from "@mui/material";
 import { useSWRHook } from "@/util/swr";
 import { useAppSelector, useWindowDefinitions } from "@/util/hooks";

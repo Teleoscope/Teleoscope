@@ -1,10 +1,8 @@
-import React, { useContext } from "react";
-
 // MUI
 import { Link } from "@mui/material";
 import { Flare } from "@mui/icons-material";
 import { Stack } from "@mui/material";
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector } from "@/util/hooks";
 
 export default function TeleoscopeLogo(props) {
   const color = useAppSelector((state) => state.windows.settings.color);

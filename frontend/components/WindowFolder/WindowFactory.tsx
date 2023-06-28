@@ -1,4 +1,3 @@
-import React, { useContext } from "react";
 import Window from "@/components/WindowFolder/Window";
 import { useSWRHook } from "@/util/swr";
 import { useWindowDefinitions } from "@/util/hooks";
