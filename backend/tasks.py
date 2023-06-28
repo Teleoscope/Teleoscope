@@ -1714,7 +1714,7 @@ def make_edge(*args, **kwargs):
                     doc = db.documents.find_one({"_id": gdoc})
                     docs.append(doc)
         
-        vec = np.average([d["stateVector"] for d in docs], axis=0)
+        vec = np.average([d["textVector"] for d in docs], axis=0)
         ids, vecs = utils.cacheDocumentsData(database)
         scores = utils.calculateSimilarity(vecs, vec)
         newRanks = utils.rankDocumentsBySimilarity(ids, scores)
