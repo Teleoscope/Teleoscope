@@ -13,6 +13,7 @@ import {
   Delete as DeleteIcon,
   Diversity2 as Diversity2Icon,
 } from "@mui/icons-material";
+import LoadingButton from "@mui/lab/LoadingButton";
 import { onDragStart } from "@/util/drag";
 import { setSelection } from "@/actions/windows";
 import { Stack, Divider, Box } from "@mui/material";
@@ -42,6 +43,23 @@ export default function Clusters(props) {
     );
   };
 
+  const [loading, setLoading] = useState(false);
+  const handleClusters = () => {
+    setLoading(true);
+    runClusters()
+  }
+
+  if (loading) {
+    return (
+      <Stack
+        justifyContent="center"
+        style={{ margin: 0, paddingTop: "5px" }}
+      >   
+        <LoadingButton loading={true}></LoadingButton>
+      </Stack>
+    )
+  }
+
   // TODO - cluster on flow inputs not all groups. 
   const runClusters = () => {
     client.cluster_by_groups(
@@ -61,7 +79,7 @@ export default function Clusters(props) {
           style={{ margin: 0 }}
         >        
           <Tooltip title="Cluster on existing groups...">
-          <IconButton onClick={runClusters}>
+          <IconButton onClick={handleClusters}>
             <Diversity2Icon fontSize="small" />
           </IconButton>
           </Tooltip>
@@ -77,7 +95,7 @@ export default function Clusters(props) {
                 <div
                   key={cluster._id}
                   draggable={true}
-                  onDragStart={(e) => onDragStart(e, cluster._id, "Cluster")}
+                  onDragStart={(e) => onDragStart(e, cluster._id, "Group")}
                   onClick={() => handleItemClick(cluster._id)}
                   style={{
                     overflow: "auto",

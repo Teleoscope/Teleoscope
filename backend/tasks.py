@@ -1469,24 +1469,59 @@ def add_item(*args, **kwargs):
 
         case "Group":
 
-            # If this already exists in the database, we can skip intitalization
-            if ObjectId.is_valid(oid):
+            # oid is either group or cluster
+            # if oid is valid group
+                # return group
+            # else
+                # add group
 
-                docset = db.graph.find_one({"_id" : oid})
-                if docset:
-                    logging.info(f"{type} with {oid} already in DB.")
-                    return # perhaps do something else before return like save?
+            # if oid is attached to group
+                # return group
+            # else
+                # copy cluster
+
+            group = db.groups.find_one({"_id" : [ObjectId(str(oid))]})
+            if group:
+                cluster = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
+                if cluster:
+                    logging.info(f"Cluster has already been copied.")
+                    res = cluster["_id"]
+                else:
+                    logging.info(f"Group already exists.")
+                    res = group["_id"]
+            else:
+                cluster = db.clusters.find_one({"_id" : [ObjectId(str(oid))]})
+                if cluster:
+                    logging.info(f"Cluster has NOT been copied.")
+                    res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
+                else:
+                    logging.info(f"Group is new.")
+                    import random
+                    r = lambda: random.randint(0, 255)
+                    color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r()) 
+                    res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+
+
+            # If this already exists in the database, we can skip intitalization
+            # if ObjectId.is_valid(oid):
+
+            #     docset = db.graph.find_one({"_id" : oid})
+            #     if docset:
+            #         logging.info(f"{type} with {oid} already in DB.")
+            #         return # perhaps do something else before return like save?
                 
-                logging.info(f"return anyways for now")
-                return
+            #     logging.info(f"return anyways for now")
+            #     return
             
+            # If this already exists in the database, we can skip intitalization
+
             logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
-            import random
-            r = lambda: random.randint(0, 255)
-            color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
+            # import random
+            # r = lambda: random.randint(0, 255)
+            # color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
             
-            res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+            # res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
 
             message(userid, {
                 "oid": str(res),
