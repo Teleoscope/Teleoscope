@@ -182,8 +182,18 @@ def create_node(type):
         "matrix": None,
         "columns": [],
         "doclists": [],
+        "parameters": {},
         "edges": {
             "source": [],
             "control": [],
+            "target": []
         }
+    }
+
+
+def create_edge(id: ObjectId, nodeid: ObjectId, edgetype: str):
+    return {
+        "id": id,
+        "nodeid": nodeid,
+        "type": edgetype
     }
