@@ -1500,7 +1500,7 @@ def add_item(*args, **kwargs):
                 import random
                 r = lambda: random.randint(0, 255)
                 color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r()) 
-                res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+                res = add_group(db=database, color=color, label="New Group", userid=userid, session_id=session_id, transaction_session=transaction_session)
 
             message(userid, {
                 "oid": str(res),
