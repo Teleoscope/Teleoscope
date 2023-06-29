@@ -92,7 +92,6 @@ def remove_session(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session(db=database)
        
     res = db.users.update_one({"_id": user_id}, {"$pull": {"sessions": session_id}})
-    # db.teleoscopes.update_one({"_id": teleoscope_id}, {"$pull": {"sessions": session_id}})
 
     return res
 
