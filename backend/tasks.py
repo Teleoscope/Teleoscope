@@ -1717,8 +1717,8 @@ def make_edge(*args, **kwargs):
         "Union": "nodes"
     }
 
-    target_item = ensure_node_exists(db, target_item, target_oid, target_node["type"], collectionMap)
-    source_item = ensure_node_exists(db, source_item, source_oid, source_node["type"], collectionMap)
+    target_item = ensure_node_exists(db, target_oid, target_node["type"], collectionMap)
+    source_item = ensure_node_exists(db, source_oid, source_node["type"], collectionMap)
     
     edge_add_result = db.graph.update_one(
         {
