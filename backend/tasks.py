@@ -1529,7 +1529,8 @@ def add_item(*args, **kwargs):
                 case "Projection": 
                     res = initialize_projection(db=database, session_id=session_id, label="New Projection", userid=userid)
                 case "Note":
-                    res = add_note(db=database, session_id=session_id, label="New Note", content={}, userid=userid)
+                    content = { "blocks": [], "entityMap": None }
+                    res = add_note(db=database, session_id=session_id, label="New Note", content=content, userid=userid)
 
             message(userid, {
                 "oid": str(res),
