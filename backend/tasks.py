@@ -1391,9 +1391,9 @@ def initialize_projection(*args, **kwargs):
 
         history_item = session["history"][0]
 
-        if history_item["projections"]:
+        try:
             history_item["projections"].append(projection_res.inserted_id)
-        else:
+        except:
             history_item["projections"] = [projection_res.inserted_id] 
 
         history_item["timestamp"] = datetime.datetime.utcnow()
