@@ -1634,7 +1634,7 @@ def graph(oid, db):
     # }])
     
     node = db.graph.find_one({"_id": oid})
-    edges = node["edges"]
+    # edges = node["edges"]
 
     # going wrong direction right now 
     # TODO: make sure this goes "right"
