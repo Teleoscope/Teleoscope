@@ -28,7 +28,7 @@ export default function FABMenu(props) {
     "Search",
     "Group",
     "Teleoscope",
-    "Projections",
+    "Projection",
     "Notes",
     "Filter",
     "Intersection",

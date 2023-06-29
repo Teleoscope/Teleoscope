@@ -1533,6 +1533,30 @@ def add_item(*args, **kwargs):
                 "description": "Associate OID with UID."
             })            
 
+        case "Projection":
+            # If this already exists in the database, we can skip intitalization
+            if ObjectId.is_valid(oid):
+
+                docset = db.graph.find_one({"_id" : oid})
+                if docset:
+                    logging.info(f"{type} with {oid} already in DB.")
+                    return # perhaps do something else before return like save?
+
+                logging.info(f"return anyways for now")
+                return
+
+            logging.info(f"Received {type} with OID {oid} and UID {uid}.")
+
+            # res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+            res = initialize_projection(db=database, session_id=session_id, label="New Projection", userid=userid)
+
+            message(userid, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })
+
         case "Filter" | "Intersection" | "Exclusion" | "Union":
             with transaction_session.start_transaction():
                 obj = schemas.create_node(type)
