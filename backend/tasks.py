@@ -1776,7 +1776,7 @@ def make_edge(*args, **kwargs):
                 )
             
             # csc = utils.cscDownload(teleoscope['node'])
-            logging.info(f'Number of ids: {len(ids)} and shape of csc: {csc.shape}')
+            logging.info(f'Number of ids: {len(ids)} and shape of csc:')
             
             utils.push_history(db, "teleoscopes", target_item["_id"], history_item)
 
