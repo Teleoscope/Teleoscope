@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import PeopleIcon from "@mui/icons-material/People";
+import Deleter from "@/components/Deleter";
  
 import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import { resetWorkspace, relabelSession } from "@/actions/windows";
@@ -129,6 +130,7 @@ export default function Workflows(props) {
                         <PeopleIcon fontSize="small" />,
                         <AddUserDialogue session_id={session._id} />
                       )}
+                    <Deleter callback={() => client.remove_session(session_id)} color={props.color}></Deleter>
                   </Stack>
                 </Stack>
               </ListItem>

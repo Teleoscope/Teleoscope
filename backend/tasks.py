@@ -78,6 +78,26 @@ def initialize_session(*args, **kwargs):
     return 200 # success
 
 @app.task
+def remove_session(*args, **kwargs):
+    """
+    Delete a session from the user. Session is not deleted from the whole system, just the user.
+    kwargs:
+        session_id: ObjectId
+        user_id: ObjectId
+    """
+    session_id = ObjectId(str(kwargs["session_id"]))
+    user_id = ObjectId(str(kwargs["userid"]))
+    
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+       
+    res = db.users.update_one({"_id": user_id}, {"$pull": {"sessions": session_id}})
+    # db.teleoscopes.update_one({"_id": teleoscope_id}, {"$pull": {"sessions": session_id}})
+
+    return res
+
+
+@app.task
 def snippet(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)

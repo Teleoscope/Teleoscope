@@ -61,6 +61,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
             case "initialize_session":
                 res = tasks.initialize_session.signature(args=(), kwargs=kwargs)
+                
+            case "remove_session":
+                res = tasks.remove_session.signature(args=(), kwargs=kwargs)
 
             case "save_UI_state":
                 res = tasks.save_UI_state.signature(args=(), kwargs=kwargs)
