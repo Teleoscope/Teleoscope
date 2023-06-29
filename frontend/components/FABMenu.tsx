@@ -81,6 +81,8 @@ export default function FABMenu(props) {
           key={action}
           icon={wdefs.definitions()[action].icon()}
           tooltipTitle={action}
+          tooltipPlacement="right"
+          tooltipOpen={settings.showFABToolTip}
           onClick={() =>
             handleAddNode(
               wdefs.definitions()[action].type
