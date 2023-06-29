@@ -78,6 +78,25 @@ def initialize_session(*args, **kwargs):
     return 200 # success
 
 @app.task
+def remove_session(*args, **kwargs):
+    """
+    Delete a session from the user. Session is not deleted from the whole system, just the user.
+    kwargs:
+        session_id: ObjectId
+        user_id: ObjectId
+    """
+    session_id = ObjectId(str(kwargs["session_id"]))
+    user_id = ObjectId(str(kwargs["userid"]))
+    
+    database = kwargs["db"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+       
+    res = db.users.update_one({"_id": user_id}, {"$pull": {"sessions": session_id}})
+
+    return res
+
+
+@app.task
 def snippet(*args, **kwargs):
     database = kwargs["db"]
     transaction_session, db = utils.create_transaction_session(db=database)
@@ -1476,7 +1495,7 @@ def add_item(*args, **kwargs):
         case "Group":
 
             # check to see if oid is valid 
-            if ObjectId.is_valid(str(oid)): 
+            if ObjectId.is_valid(oid): 
                 group = db.groups.find_one({"_id" : ObjectId(str(oid))})  
                 
                 if group: # oid is a group
@@ -1500,7 +1519,7 @@ def add_item(*args, **kwargs):
                 import random
                 r = lambda: random.randint(0, 255)
                 color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r()) 
-                res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+                res = add_group(db=database, color=color, label="New Group", userid=userid, session_id=session_id, transaction_session=transaction_session)
 
             message(userid, {
                 "oid": str(res),
@@ -1509,7 +1528,7 @@ def add_item(*args, **kwargs):
                 "description": "Associate OID with UID."
             })
 
-        case "Teleoscope":
+        case "Teleoscope" | "Projection" | "Note":
             # If this already exists in the database, we can skip intitalization
             if ObjectId.is_valid(oid):
 
@@ -1523,8 +1542,25 @@ def add_item(*args, **kwargs):
 
             logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
-            # res = add_group(db=database, color=color, label="new group", userid=userid, session_id=session_id, transaction_session=transaction_session)
-            res = initialize_teleoscope(db=database, session_id=session_id, userid=userid)
+            match type:
+                case "Teleoscope":
+                    res = initialize_teleoscope(db=database, session_id=session_id, userid=userid)
+                case "Projection": 
+                    res = initialize_projection(db=database, session_id=session_id, label="New Projection", userid=userid)
+                case "Note":
+                    content = {
+                        "blocks": [{
+                            "key": "835r3",
+                            "text": " ",
+                            "type": "unstyled",
+                            "depth": 0,
+                            "inlineStyleRanges": [],
+                            "entityRanges": [],
+                            "data": {}
+                        }],
+                        "entityMap": {}
+                    }         
+                    res = add_note(db=database, session_id=session_id, label="New Note", content=content, userid=userid)
 
             message(userid, {
                 "oid": str(res),

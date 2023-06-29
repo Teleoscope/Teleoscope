@@ -476,6 +476,20 @@ export class Stomp {
   }
 
   /**
+     * Removes a session from a user in MongoDB. Does not delete the session.
+    */
+  remove_session(session_id: string) {
+    const body = {
+      task: "remove_session",
+      args: {
+        session_id: session_id,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+  /**
    * Request to add a note for a particular interface object.
    */
   remove_note(note_id: string, session_id: string) {

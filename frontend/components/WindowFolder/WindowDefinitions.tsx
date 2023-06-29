@@ -68,7 +68,7 @@ export default class WindowDefinitions {
         type:      "Note",
         apipath:   "note",
         nodetype:  SourceNode,      
-        title:     (d) => `${d?.history[0].label}`,
+        title:     (d) => `Note: ${d?.history[0].label}`,
         color:     () => this.color,
         icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><BsSticky /></IconContext.Provider>,
         component: (w, id, color) => <Note id={id} windata={w} color={color} />,
