@@ -60,7 +60,9 @@ export default function Workflows(props) {
 
   const userid = useAppSelector((state) => state.activeSessionID.userid);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
-  const { sessions } = swr.useSWRAbstract("sessions", `sessions/users/${userid}`);
+  // const { sessions } = swr.useSWRAbstract("sessions", `sessions/users/${userid}`);
+  const { sessions } = swr.useSWRAbstract("sessions", `user/sessions/${userid}`);
+
   const [value, setValue] = useState(null);
 
   const keyChange = (e) => {
@@ -130,7 +132,7 @@ export default function Workflows(props) {
                         <PeopleIcon fontSize="small" />,
                         <AddUserDialogue session_id={session._id} />
                       )}
-                    <Deleter callback={() => client.remove_session(session_id)} color={props.color}></Deleter>
+                    <Deleter callback={() => client.remove_session(session._id)} color={props.color}></Deleter>
                   </Stack>
                 </Stack>
               </ListItem>
