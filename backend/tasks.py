@@ -1387,10 +1387,16 @@ def initialize_projection(*args, **kwargs):
         if not session:
             logging.info(f"Warning: session with id {session_id} not found.")
             raise Exception(f"session with id {session_id} not found")
+        
 
         history_item = session["history"][0]
+
+        try:
+            history_item["projections"].append(projection_res.inserted_id)
+        except:
+            history_item["projections"] = [projection_res.inserted_id] 
+
         history_item["timestamp"] = datetime.datetime.utcnow()
-        history_item["projections"].append(projection_res.inserted_id)
         history_item["action"] = f"Initialize new projection: {label}"
         history_item["user"] = user_id
 
