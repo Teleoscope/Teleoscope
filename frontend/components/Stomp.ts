@@ -164,7 +164,7 @@ export class Stomp {
       content_encoding: "utf-8",
     };
     body["args"]["userid"] = this.userId;
-    body["args"]["db"] = this.database;
+    body["args"]["database"] = this.database;
     body["message_id"] = crypto.randomBytes(8).toString('hex');
     try {
       this.client.publish({
@@ -205,6 +205,7 @@ export class Stomp {
         session_id: session_id,
         bookmarks: bookmarks,
         windows: windows,
+        nodes: windows,
         edges: edges,
       },
     };
@@ -251,11 +252,11 @@ export class Stomp {
   /**
    * adds user to userlist of a session in MongoDB.
    */
-  add_user_to_session(contributor: string, session_id: string) {
+  add_user_to_session(contributor_id: string, session_id: string) {
     const body = {
       task: "add_user_to_session",
       args: {
-        contributor: contributor,
+        contributor_id: contributor_id,
         session_id: session_id,
       },
     };
@@ -302,7 +303,6 @@ export class Stomp {
       args: {
         password: password,
         username: username,
-        db: database,
       },
     };
     this.publish(body);
@@ -610,12 +610,12 @@ export class Stomp {
    * Relabel the session.
    */
 
-  relabel_session(label: string, relabeled_session_id: string) {
+  relabel_workflow(label: string, relabeled_workflow_id: string) {
     const body = {
-      task: "relabel_session",
+      task: "relabel_workflow",
       args: {
         label: label,
-        relabeled_session_id: relabeled_session_id,
+        relabeled_workflow_id: relabeled_workflow_id,
       },
     };
     this.publish(body);

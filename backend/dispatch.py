@@ -9,8 +9,8 @@ from celery import bootsteps
 from kombu import Consumer, Exchange, Queue
 
 # local files
-import auth
-import tasks
+from . import auth
+from . import tasks
 
 from tasks import robj, app
 
@@ -59,11 +59,11 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "copy_cluster":
                 res = tasks.copy_cluster.signature(args=(), kwargs=kwargs)
 
-            case "initialize_session":
-                res = tasks.initialize_session.signature(args=(), kwargs=kwargs)
+            case "initialize_workflow":
+                res = tasks.initialize_workflow.signature(args=(), kwargs=kwargs)
                 
-            case "remove_session":
-                res = tasks.remove_session.signature(args=(), kwargs=kwargs)
+            case "remove_workflow":
+                res = tasks.remove_workflow.signature(args=(), kwargs=kwargs)
 
             case "save_UI_state":
                 res = tasks.save_UI_state.signature(args=(), kwargs=kwargs)
@@ -77,8 +77,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "initialize_projection":
                 res = tasks.initialize_projection.signature(args=(), kwargs=kwargs)
 
-            case "recolor_session":
-                res = tasks.recolor_session.signature(args=(), kwargs=kwargs)
+            case "recolor_workflow":
+                res = tasks.recolor_workflow.signature(args=(), kwargs=kwargs)
 
             case "recolor_group":
                 res = tasks.recolor_group.signature(args=(), kwargs=kwargs)

@@ -9,9 +9,11 @@ import pymongo.errors
 import logging 
 from bson.objectid import ObjectId
 from json import JSONEncoder
+from typing import List
+import datetime
 
 # local files
-import auth
+from . import auth
 
 db = "test"
 
@@ -61,6 +63,12 @@ def commit_with_retry(session, max_retries=10, retry_delay = 0.1):
     if not success:
         print("Error during commit ...")
 
+
+def update_history(item, *args, **kwargs):
+    item["timestamp"] = datetime.datetime.utcnow()
+    for k in kwargs:
+        item[k] = kwargs[k]
+    return item
 
 def push_history(db, collection_name, item_id, history_item, transaction_session = None):
     """

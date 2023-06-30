@@ -1,7 +1,7 @@
 from bson.objectid import ObjectId
 from pymongo import MongoClient, database
 from typing import List
-import schemas
+from . import schemas
 
 ################################################################################
 # Graph API
@@ -157,12 +157,13 @@ def graph(db: database.Database, node_oid: ObjectId):
         case "Filter":
             node = update_filter(node, sources, controls, parameters)
 
-    db.graph.replace_one({"_id": node_oid}, node)
+    res = db.graph.replace_one({"_id": node_oid}, node)
 
+    # Calculate each node downstream to the right.
     for oid in outputs:
         graph(db, oid)
-
-    return None
+    
+    return res
 
 ################################################################################
 # Helpers

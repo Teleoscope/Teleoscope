@@ -1,10 +1,11 @@
 import datetime
 from bson.objectid import ObjectId
-
-
+from typing import NewType
 from typing import Literal
+
 EdgeType = Literal["source", "control", "output"]
 NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Filter", "Union", "Intersection", "Exclusion"]
+HexStr = NewType('HexStr', str)
 
 def create_group_object(color, included_documents, label, action, user_id, description, session_id, cluster_id=[]):
     obj = {
@@ -66,6 +67,7 @@ def create_projection_object(session_id, label, user_id, action=f"initialize pro
     return obj
 
 def create_session_object(
+        *args,
         userid, 
         label, 
         color, 
@@ -104,11 +106,9 @@ def create_session_object(
         ],
     }
 
-def create_user_object(first_name, last_name, password, username):
+def create_user_object(*args, username, password):
     return {
         "creation_time": datetime.datetime.utcnow(),
-        "firstName": first_name,
-        "lastName": last_name,
         "password": password,
         "username": username,
         "sessions":[],
@@ -195,7 +195,7 @@ def create_node(type):
     }
 
 
-def create_edge(id: ObjectId, nodeid: ObjectId, edgetype: Edge):
+def create_edge(id: ObjectId, nodeid: ObjectId, edgetype: EdgeType):
     return {
         "id": id,
         "nodeid": nodeid,
