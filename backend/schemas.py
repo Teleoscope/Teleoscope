@@ -2,6 +2,10 @@ import datetime
 from bson.objectid import ObjectId
 
 
+from typing import Literal
+EdgeType = Literal["source", "control", "output"]
+NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Filter", "Union", "Intersection", "Exclusion"]
+
 def create_group_object(color, included_documents, label, action, user_id, description, session_id, cluster_id=[]):
     obj = {
         "creation_time": datetime.datetime.utcnow(),
@@ -191,7 +195,7 @@ def create_node(type):
     }
 
 
-def create_edge(id: ObjectId, nodeid: ObjectId, edgetype: str):
+def create_edge(id: ObjectId, nodeid: ObjectId, edgetype: Edge):
     return {
         "id": id,
         "nodeid": nodeid,
