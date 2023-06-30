@@ -474,10 +474,12 @@ def add_document_to_group(
     if document_id in documents or str(document_id) in documents:
         logging.info(f'Document {document_id} already in group {group["history"][0]["label"]}.')
         return
-    
+    else:
+        documents.append(document_id),
+
     history_item = utils.update_history(
         item=group["history"][0],
-        included_documents=documents.append(document_id),
+        included_documents=documents,
         oid=document_id,
         action="Add document to group",
         user=userid

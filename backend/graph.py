@@ -34,7 +34,7 @@ def make_node(db: database.Database,
         # If a workspace item can only be a source, check to make sure it has a 
         # corresponding node in the graph and make one if it does not exist.
         # If it does exist, update the matrix just in case.
-        case ["Document" | "Group" | "Search"]:
+        case "Document" | "Group" | "Search":
             obj = get_collection(db, node_type).find_one({"_id": oid})
             if obj:
                 if "node" not in obj:
@@ -55,7 +55,7 @@ def make_node(db: database.Database,
         # or a target. In that case, every instance on the workspace corresponds
         # to only one graph node, which is created new. Note that there's no point
         # in updating the matrix because there's no input to the matrix yet.
-        case ["Teleoscope" | "Union" | "Intersection" | "Exclusion" | "Minus"]:
+        case "Teleoscope" | "Union" | "Intersection" | "Exclusion" | "Minus":
             res = db.graph.insert_one(node)
             node = db.graph.find_one({"_id": res.inserted_id})
     return node
@@ -100,7 +100,7 @@ def make_edge(db: database.Database,
     
     # Ensure the source is from the graph. Target should always be.
     match source_type:
-        case ["Group" | "Document" | "Search"]:
+        case "Group" | "Document" | "Search":
             if "node" in source:
                 source = db.graph.find_one({"_id": source["node"]})
             else:
@@ -181,7 +181,7 @@ def get_collection(db: database.Database, node_type: schemas.NodeType):
         "Teleoscope": "graph",
     }
 
-    return db.get_collection(collection_map(node_type))
+    return db.get_collection(collection_map[node_type])
 
 def make_matrix(node_type: schemas.NodeType, oid: ObjectId):
     return []

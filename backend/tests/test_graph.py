@@ -78,11 +78,22 @@ def test_add_documents_to_group():
     global group
     assert len(group["history"][0]["included_documents"]) > 0
 
-
-
 ###############################################################################
-# Setup tests
+# Graph tests
 ###############################################################################
 
+def test_make_node_document():
+    global db, documents
+    document_id = documents[0]["_id"]
+    
+    # make a new node from a document
+    node = graph.make_node(db, document_id, "Document")
+    assert node != None
+    print("Node is: ", node)
+    
+    # document should have a node field matching above
+    doc = db.documents.find_one({"_id": document_id})
 
-
+    assert "node" in doc
+    assert doc["node"] == node["_id"]
+    
