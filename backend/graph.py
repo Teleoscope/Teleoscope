@@ -18,6 +18,13 @@ def make_node(db: database.Database,
     Every pure source has only one corresponding graph item.
     Every operation can have as many graph items as nodes on graph.
     You can convert any graph item into a group.
+
+    Args:
+        oid: The OID for the workspace item.
+        node_type: the type of node to create for the workspace item.
+    
+    Returns:
+        The inserted graph node.
     """
     
     # make a default node
@@ -56,11 +63,36 @@ def make_node(db: database.Database,
 
 def make_edge(db: database.Database,
         source_oid: ObjectId, 
-        source_type: str, 
+        source_type: schemas.NodeType, 
         target_oid: ObjectId, 
-        target_type: str, 
+        target_type: schemas.NodeType, 
         edge_type: schemas.EdgeType):
     """Makes a new edge in the graph.
+    
+    Args:
+        source_oid: 
+            The OID for the workspace item that is being connected from. Can 
+            be either direct a graph node or a workspace item that doesn't 
+            yet have a graph node.
+        
+        source_type:
+            Type of the source workspace item or node.
+
+        target_oid:
+            The OID for the workspace item that is being connected to. All
+            targets must already exist as nodes in the graph.
+
+        target_type:
+            Type of the target node.
+
+        edge_type:
+            Type of the edge to create.
+    
+    Effects:
+        Creates edges in the database between nodes.
+    
+    Returns:
+        None
     """
     
     source = get_collection(db, source_type).find_one(source_oid)
@@ -73,6 +105,9 @@ def make_edge(db: database.Database,
                 source = db.graph.find_one({"_id": source["node"]})
             else:
                 source = make_node(db, source_oid, source_type)
+
+    if (source == None or target == None):
+        raise Exception("Source or target node is None.")
     
     # Update source to include outgoing edge to target.
     db.graph.update_one(
@@ -158,28 +193,27 @@ def update_teleoscope(node,
     controls: List[ObjectId], 
     parameters):
     return node # stub
-    
+
 def update_union(node, 
     sources: List[ObjectId], 
     controls: List[ObjectId], 
     parameters):
     return node # stub
-    
+
 def update_intersection(node, 
     sources: List[ObjectId], 
     controls: List[ObjectId], 
     parameters):
     return node # stub
-    
+
 def update_exclusion(node, 
     sources: List[ObjectId], 
     controls: List[ObjectId], 
     parameters):
     return node # stub
-    
+
 def update_filter(node, 
     sources: List[ObjectId], 
     controls: List[ObjectId], 
     parameters):
     return node # stub
-    
