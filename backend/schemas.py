@@ -4,7 +4,7 @@ from typing import NewType
 from typing import Literal
 
 EdgeType = Literal["source", "control", "output"]
-NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Filter", "Union", "Intersection", "Exclusion"]
+NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Union", "Intersection", "Exclusion", "Subtraction"]
 HexStr = NewType('HexStr', str)
 
 def create_group_object(color, included_documents, label, action, user_id, description, session_id, cluster_id=[]):
@@ -190,14 +190,14 @@ def create_node(type):
         "edges": {
             "source": [],
             "control": [],
-            "target": []
+            "output": []
         }
     }
 
 
-def create_edge(id: ObjectId, nodeid: ObjectId, edgetype: EdgeType):
+def create_edge(id: ObjectId, nodeid: ObjectId, node_type: NodeType):
     return {
         "id": id,
         "nodeid": nodeid,
-        "type": edgetype
+        "type": node_type
     }

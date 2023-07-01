@@ -1,7 +1,9 @@
 from bson.objectid import ObjectId
 from pymongo import MongoClient, database
 from typing import List
+import numpy as np
 from . import schemas
+from . import utils
 
 ################################################################################
 # Graph API
@@ -45,6 +47,7 @@ def make_node(db: database.Database,
                         {"$set": {"node": res.inserted_id}}
                     )
                     node = db.graph.find_one({"_id": res.inserted_id})
+                    update_matrix(oid, node_type, node["_id"])
                 else:
                     node = db.graph.find_one({"_id": obj["node"]})
                     update_matrix(oid, node_type, obj["node"])
@@ -55,7 +58,8 @@ def make_node(db: database.Database,
         # or a target. In that case, every instance on the workspace corresponds
         # to only one graph node, which is created new. Note that there's no point
         # in updating the matrix because there's no input to the matrix yet.
-        case "Teleoscope" | "Union" | "Intersection" | "Exclusion" | "Minus":
+        case "Teleoscope" | "Union" | "Intersection" | "Exclusion" | "Subtraction":
+            node["matrix"] = make_matrix(oid, node_type)
             res = db.graph.insert_one(node)
             node = db.graph.find_one({"_id": res.inserted_id})
     return node
@@ -147,15 +151,15 @@ def graph(db: database.Database, node_oid: ObjectId):
 
     match node_type:
         case "Teleoscope":
-            node = update_teleoscope(node, sources, controls, parameters)
+            node = update_teleoscope(db, node, sources, controls, parameters)
         case "Union":
-            node = update_union(node, sources, controls, parameters)
+            node = update_union(db, node, sources, controls, parameters)
         case "Intersection":
-            node = update_intersection(node, sources, controls, parameters)
+            node = update_intersection(db, node, sources, controls, parameters)
         case "Exclusion":
-            node = update_exclusion(node, sources, controls, parameters)
+            node = update_exclusion(db, node, sources, controls, parameters)
         case "Filter":
-            node = update_filter(node, sources, controls, parameters)
+            node = update_filter(db, node, sources, controls, parameters)
 
     res = db.graph.replace_one({"_id": node_oid}, node)
 
@@ -189,32 +193,56 @@ def make_matrix(node_type: schemas.NodeType, oid: ObjectId):
 def update_matrix(oid: ObjectId, node_type: schemas.NodeType, graph_oid: ObjectId):
     return []
 
-def update_teleoscope(node, 
-    sources: List[ObjectId], 
-    controls: List[ObjectId], 
-    parameters):
+def update_union(db, node, sources: List, controls: List, parameters):
     return node # stub
 
-def update_union(node, 
-    sources: List[ObjectId], 
-    controls: List[ObjectId], 
-    parameters):
+def update_intersection(db, node, sources: List, controls: List, parameters):
     return node # stub
 
-def update_intersection(node, 
-    sources: List[ObjectId], 
-    controls: List[ObjectId], 
-    parameters):
+def update_exclusion(db, node, sources: List, controls: List, parameters):
     return node # stub
 
-def update_exclusion(node, 
-    sources: List[ObjectId], 
-    controls: List[ObjectId], 
-    parameters):
+def update_filter(db, node, sources: List, controls: List, parameters):
     return node # stub
 
-def update_filter(node, 
-    sources: List[ObjectId], 
-    controls: List[ObjectId], 
-    parameters):
-    return node # stub
+
+################################################################################
+# Update Teleoscope
+################################################################################
+
+def update_teleoscope(db: database.Database, node, sources: List, controls: List, parameters):
+    ids, all_vectors = utils.get_documents(db.name)
+    control_vecs = get_text_vectors(db, controls, ids, all_vectors)
+    vec = np.average(control_vecs, axis=0)
+    scores = utils.calculateSimilarity(all_vectors, vec)
+    newRanks = utils.rankDocumentsBySimilarity(ids, scores)
+    rank_slice = newRanks[0:1000]
+    doc_lists = [[rank_slice]]
+    db.graph.update_one(
+        {"_id": node["_id"]},
+        {
+            "$set": {
+                "doclists": doc_lists
+            }
+        }
+    )
+    # TODO: matrix
+    return node
+
+
+def get_text_vectors(db: database.Database, controls, ids, all_vectors):
+    oids = []
+    for c in controls:
+        match c["type"]:
+            case "Document":
+                oids.append(c["id"])
+            case "Group":
+                group = db.groups.find_one({"_id": id})
+                oids = oids + group["history"][0]["included_documents"]
+            case "Search":
+                pass
+    vecs = [all_vectors[ids.index(oid)] for oid in oids]
+    return vecs
+    
+
+
