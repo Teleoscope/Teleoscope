@@ -187,4 +187,4 @@ tasks.app.steps["consumer"].add(WebTaskConsumer)
 
 
 if __name__ == '__main__':
-    tasks.app.worker_main(['worker', '--loglevel=INFO', f"--name=dispatch.{os.getlogin()}@%h" ])
+    tasks.app.worker_main(['worker', '--loglevel=INFO', f"--hostname=dispatch.{os.getlogin()}@%h" ])

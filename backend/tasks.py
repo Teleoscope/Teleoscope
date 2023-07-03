@@ -1738,4 +1738,4 @@ def ping(*args, **kwargs):
 "dispatch.${userInfo.username}@%h"
 
 if __name__ == '__main__':
-    app.worker_main(['worker', '--loglevel=INFO', f"--name=tasks.{os.getlogin()}@%h" ])
+    app.worker_main(['worker', '--loglevel=INFO', f"--hostname=tasks.{os.getlogin()}@%h" ])
