@@ -1,5 +1,5 @@
 # boilerplate
-import tqdm, numpy as np, pickle, auth
+import tqdm, numpy as np, pickle
 import matplotlib.pyplot as plt
 import logging, pickle
 from bson.objectid import ObjectId
@@ -8,7 +8,6 @@ from pathlib import Path
 import time
 import gridfs
 import datetime
-import schemas
 import pika
 
 # ml dependencies
@@ -18,8 +17,10 @@ from sklearn.metrics.pairwise import euclidean_distances
 import spacy
 
 # local files
-import utils
-import tasks
+from . import utils
+from . import tasks
+from . import auth
+from . import schemas
 
 class Clustering:
     """Semi-supervised Clustering 

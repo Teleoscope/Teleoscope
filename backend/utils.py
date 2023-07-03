@@ -4,14 +4,16 @@ import numpy as np
 from tqdm import tqdm
 
 # installed modules
-from pymongo import MongoClient
+from pymongo import MongoClient, database
 import pymongo.errors
 import logging 
 from bson.objectid import ObjectId
 from json import JSONEncoder
+from typing import List
+import datetime
 
 # local files
-import auth
+from . import auth
 
 db = "test"
 
@@ -61,6 +63,12 @@ def commit_with_retry(session, max_retries=10, retry_delay = 0.1):
     if not success:
         print("Error during commit ...")
 
+
+def update_history(item, *args, **kwargs):
+    item["timestamp"] = datetime.datetime.utcnow()
+    for k in kwargs:
+        item[k] = kwargs[k]
+    return item
 
 def push_history(db, collection_name, item_id, history_item, transaction_session = None):
     """
@@ -302,55 +310,55 @@ def update_ids():
         db.teleoscopes.update_one({"_id": teleoscope["_id"]}, { "$set": { "history": teleoscope["history"] } })
 
 def get_documents(dbstring, rebuild=False):
-        # cache embeddings
-        from pathlib import Path
-        import pickle
-        dir = Path(f'~/embeddings/{dbstring}/').expanduser()
-        dir.mkdir(parents=True, exist_ok=True)
-        npzpath = Path(f'~/embeddings/{dbstring}/embeddings.npz').expanduser()
-        pklpath = Path(f'~/embeddings/{dbstring}/ids.pkl').expanduser()
+    # cache embeddings
+    from pathlib import Path
+    import pickle
+    dir = Path(f'~/embeddings/{dbstring}/').expanduser()
+    dir.mkdir(parents=True, exist_ok=True)
+    npzpath = Path(f'~/embeddings/{dbstring}/embeddings.npz').expanduser()
+    pklpath = Path(f'~/embeddings/{dbstring}/ids.pkl').expanduser()
+
+    ids = []
+    vectors = []
+
+    if npzpath.exists() and pklpath.exists() and not rebuild:
+        logging.info(f"Retrieving cached documents for {dbstring}.")
         
-        ids = []
-        vectors = []
+        loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
+        with open(pklpath.as_posix(), 'rb') as handle:
+            ids = pickle.load(handle)
+        vectors = loadDocuments['documents']
 
-        if npzpath.exists() and pklpath.exists() and not rebuild:
-            logging.info(f"Retrieving cached documents for {dbstring}.")
-            
-            loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
-            with open(pklpath.as_posix(), 'rb') as handle:
-                ids = pickle.load(handle)
-            vectors = loadDocuments['documents']
+    else:
+        logging.info(f"Building cache now for {dbstring} where rebuild is {rebuild}.")
         
-        else:
-            logging.info(f"Building cache now for {dbstring} where rebuild is {rebuild}.")
-            
-            db = connect(db=dbstring)
+        db = connect(db=dbstring)
 
-            count = db.documents.count_documents({})
+        count = db.documents.count_documents({})
 
-            documents = db.documents.aggregate(
-                [
-                    # Only get IDs and vectors
-                    { "$project": { "textVector": 1, "_id": 1 }},
-                    # Ensure they're always in the same order
-                    { "$sort" : { "_id" : 1 } }
-                 ]
-            )
+        documents = db.documents.aggregate(
+            [
+                # Only get IDs and vectors
+                { "$project": { "textVector": 1, "_id": 1 }},
+                # Ensure they're always in the same order
+                { "$sort" : { "_id" : 1 } }
+                ]
+        )
 
-            _ids = []
-            _vecs = []
+        _ids = []
+        _vecs = []
 
-            for doc in tqdm(documents, total=count):
-                _ids.append(doc["_id"])
-                _vecs.append(doc["textVector"])
-            vecs = np.array(_vecs)
-            ids = _ids
-            vectors = _vecs
-       
-            logging.info(f'There are {len(ids)} ids and {len(vecs)} vectors in {dbstring} documents.')
-            
-            np.savez(npzpath.as_posix(), documents=vecs)
-            with open(pklpath.as_posix(), 'wb') as handle:
-                pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            
-        return ids, vectors
+        for doc in tqdm(documents, total=count):
+            _ids.append(doc["_id"])
+            _vecs.append(doc["textVector"])
+        vecs = np.array(_vecs)
+        ids = _ids
+        vectors = _vecs
+
+        logging.info(f'There are {len(ids)} ids and {len(vecs)} vectors in {dbstring} documents.')
+        
+        np.savez(npzpath.as_posix(), documents=vecs)
+        with open(pklpath.as_posix(), 'wb') as handle:
+            pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        
+    return ids, vectors

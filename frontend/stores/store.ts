@@ -1,9 +1,8 @@
-import { configureStore, getDefaultMiddleware } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
 import ActiveSessionID from "@/actions/activeSessionID";
 import Windows from "@/actions/windows";
 import { makeNode, makeEdge, setColor, relabelSession } from "@/actions/windows";
 import crypto from 'crypto';
-import { useStomp } from "@/components/Stomp";
 
 
 // Custom middleware function for makeNode action
@@ -70,7 +69,7 @@ const makeNodeMiddleware = store => next => action => {
 
   if (action.type === relabelSession.type) {
     const result = next(action);
-    action.payload.client.relabel_session(action.payload.label, action.payload.session_id);
+    action.payload.client.relabel_workflow(action.payload.label, action.payload.session_id);
     return result
   }
 
