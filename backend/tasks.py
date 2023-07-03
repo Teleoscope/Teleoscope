@@ -7,6 +7,7 @@ from kombu import Consumer, Exchange, Queue
 import datetime
 from typing import List
 from pymongo import client_session, database
+import os
 
 # local imports
 from . import utils
@@ -1734,7 +1735,7 @@ def ping(*args, **kwargs):
     userid = ObjectId(str(kwargs["userid"]))
     message(userid, msg)
 
-
+"dispatch.${userInfo.username}@%h"
 
 if __name__ == '__main__':
-    app.worker_main(['worker', '--loglevel=INFO'])
+    app.worker_main(['worker', '--loglevel=INFO', f"--name=tasks.{os.getlogin()}@%h" ])

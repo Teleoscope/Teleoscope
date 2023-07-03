@@ -2,6 +2,7 @@
 from warnings import simplefilter
 import json
 import logging
+import os
 
 # installed modules
 from celery import chain
@@ -186,4 +187,4 @@ tasks.app.steps["consumer"].add(WebTaskConsumer)
 
 
 if __name__ == '__main__':
-    tasks.app.worker_main(['worker', '--loglevel=INFO'])
+    tasks.app.worker_main(['worker', '--loglevel=INFO', f"--name=dispatch.{os.getlogin()}@%h" ])
