@@ -12,8 +12,6 @@ from kombu import Consumer, Exchange, Queue
 from . import auth
 from . import tasks
 
-from tasks import robj, app
-
 # ignore all future warnings
 simplefilter(action="ignore", category=FutureWarning)
 
@@ -168,7 +166,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 # res = tasks.update_edges.signature(args=(), kwargs=kwargs)
 
                 res = chain(
-                    robj.s(
+                    tasks.robj.s(
                         edges=kwargs["edges"], userid=kwargs["userid"], db=kwargs["database"]
                     ).set(queue=auth.rabbitmq["task_queue"])
                 )
@@ -184,4 +182,4 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         return
 
 
-app.steps["consumer"].add(WebTaskConsumer)
+tasks.app.steps["consumer"].add(WebTaskConsumer)

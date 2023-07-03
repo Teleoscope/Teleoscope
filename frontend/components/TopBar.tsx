@@ -45,12 +45,13 @@ export default function TopBar(props) {
   };
 
   const handleSignIn = (user) => {
+    console.log("signing in user: ", user)
     setCookie("userid", user._id, {
       path: "/",
     });
     dispatch(setUserId(user._id));
     dispatch(sessionActivator(user.sessions[0]));
-    client.restart({userid: user._id, database: client.database})
+    client.restart({userid: user._id, database: client.database}) 
   };
 
   const AccountMenu = () => {
