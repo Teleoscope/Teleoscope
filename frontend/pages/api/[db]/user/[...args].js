@@ -21,7 +21,7 @@ export default async (req, res) => {
   } 
   
   else if (args.length === 1) {
-    ret = await db.collection("users").findOne({ _id: new ObjectId(args[0]) });
+    ret = await db.collection("users").findOne({ "username": args[0] });
   } 
   
   else if (args.length === 2 && args[0] === "sessions") {

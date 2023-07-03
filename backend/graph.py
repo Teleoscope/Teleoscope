@@ -212,25 +212,57 @@ def update_filter(db, node, sources: List, controls: List, parameters):
 
 def update_teleoscope(db: database.Database, node, sources: List, controls: List, parameters):
     ids, all_vectors = utils.get_documents(db.name)
-    control_vecs = get_text_vectors(db, controls, ids, all_vectors)
-    vec = np.average(control_vecs, axis=0)
-    scores = utils.calculateSimilarity(all_vectors, vec)
-    newRanks = utils.rankDocumentsBySimilarity(ids, scores)
-    rank_slice = newRanks[0:1000]
-    doc_lists = [[rank_slice]]
+
+    control_vecs = get_control_vectors(db, controls, ids, all_vectors)
+
+    doclist = {}
+
+    if len(sources) == 0:
+        ranks = rank(control_vecs, ids, all_vectors)
+        doclist["all"] = ranks[0:1000]
+    else:
+        source_map = []
+        for source in sources:
+            match source["type"]:
+                case "Document":
+                    oids = [source["id"]]
+                    vecs = filter_vectors_by_oid(oids, ids, all_vectors)
+                    source_map.append((source["id"], vecs, oids))
+                case "Group":
+                    group = db.groups.find_one({"_id": id})
+                    oids = group["history"][0]["included_documents"]
+                    vecs = filter_vectors_by_oid(oids, ids, all_vectors)
+                    source_map.append((source["id"], vecs, oids))
+                case "Search":
+                    pass
+    
+    for source, vecs, oids in source_map:
+        ranks = rank(control_vecs, ids, all_vectors)
+        doclist[source["id"]] = ranks[0:1000]    
+    
     db.graph.update_one(
         {"_id": node["_id"]},
         {
             "$set": {
-                "doclists": doc_lists
+                "doclists": doclist
             }
         }
     )
     # TODO: matrix
     return node
 
+def rank(control_vecs, ids, vecs):
+    vec = np.average(control_vecs, axis=0)
+    scores = utils.calculateSimilarity(vecs, vec)
+    ranks = utils.rankDocumentsBySimilarity(ids, scores)
+    return ranks
 
-def get_text_vectors(db: database.Database, controls, ids, all_vectors):
+def filter_vectors_by_oid(oids, ids, vectors):
+    # ids and vecs must correspond
+    vecs = [vectors[ids.index(oid)] for oid in oids]
+    return vecs
+
+def get_control_vectors(db: database.Database, controls, ids, all_vectors):
     oids = []
     for c in controls:
         match c["type"]:
@@ -241,8 +273,15 @@ def get_text_vectors(db: database.Database, controls, ids, all_vectors):
                 oids = oids + group["history"][0]["included_documents"]
             case "Search":
                 pass
-    vecs = [all_vectors[ids.index(oid)] for oid in oids]
-    return vecs
+    return filter_vectors_by_oid(oids, ids, all_vectors)
     
 
+def get_source_vectors(db: database.Database, sources, ids, all_vectors):
+    oids = []
+    for s in sources:
+        match c["type"]:
+            case "Document":
+                oids.append(s["id"])
+            case "Group":
+                
 
