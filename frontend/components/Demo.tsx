@@ -10,7 +10,7 @@ import store from "@/stores/store";
 
 import Bookmarks from "@/components/Bookmarks";
 
-import { swr, swrContext } from "@/util/swr";
+import { SWR, swrContext } from "@/util/swr";
 import { Stomp, StompContext } from "@/components/Stomp";
 import ReactFlow, {
   MiniMap,
@@ -36,7 +36,7 @@ const fetcher = (...args) => fetch(...args).then((res) => res.json());
 const nodeTypes = { windowNode: WindowNode };
 
 export default function Demo(props) {
-  const mySWR = new swr("aita");
+  const mySWR = new SWR("aita");
   const client = Stomp.getFakeClient();
   const reactFlowWrapper = useRef(null);
   const exampleHeight = "450px";

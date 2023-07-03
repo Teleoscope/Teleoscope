@@ -19,7 +19,7 @@ test("Getting one session from a list of sessions.", () => {
     ],
     teleoscopes: [],
   };
-  return fetch("http://localhost:3000/api/sessions")
+  return fetch("https://localhost:3000/api/sessions")
     .then((res) => res.json())
     .then((data) => expect(data[0]).toMatchObject(session_example));
 });
@@ -42,7 +42,7 @@ test("Getting a single session by ID.", () => {
     ],
     teleoscopes: [],
   };
-  return fetch("http://localhost:3000/api/sessions/633f65ba72256b4c3e78a573")
+  return fetch("https://localhost:3000/api/sessions/633f65ba72256b4c3e78a573")
     .then((res) => res.json())
     .then((data) => expect(data).toMatchObject(session_example));
 });

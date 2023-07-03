@@ -19,7 +19,7 @@ export default function TeleoscopeLogo(props) {
         }}
       />
       <Link
-        href="http://github.com/Teleoscope/Teleoscope"
+        href="https://github.com/Teleoscope/Teleoscope"
         underline="hover"
         sx={{
           fontWeight: "fontWeightLight",
