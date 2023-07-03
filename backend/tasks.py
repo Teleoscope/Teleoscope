@@ -9,10 +9,10 @@ from typing import List
 from pymongo import client_session, database
 
 # local imports
-from . import utils
-from . import auth
-from . import schemas
-from . import clustering
+fromt . import utils
+fromt . import auth
+fromt . import schemas
+
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
@@ -805,6 +805,7 @@ def remove_projection(*args, **kwargs):
     """
     Delete a projection and associated clusters
     """
+    import clustering
     projection_id = ObjectId(str(kwargs["projection_id"]))
     session_id = ObjectId(str(kwargs["session_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
@@ -865,6 +866,7 @@ def cluster_by_groups(*args, **kwargs):
         group_id_strings: list(string) where the strings are MongoDB ObjectID format
         session_oid: string OID for session to add clusters to
     """
+    import clustering
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
     cluster = clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["projection_id"], kwargs["session_oid"], kwargs["database"])
     cluster.clustering_task()
@@ -1214,6 +1216,7 @@ def vectorize_document(document): #(text) -> Vector
             (Ignores dictionaries containing error keys)
     '''
     ## Call vectorize_text in this function - based on the text that you're getting from the document - second step after vectorize_text works
+    print("is this here")
     import tensorflow_hub as hub
     if 'error' not in document:
         document['vector'] = vectorize_text([document['title']])
@@ -1232,6 +1235,8 @@ def vectorize_text(text): #(text) -> Vector
     purpose: This function is used to return a vectorized version of the text
             (Assumes the text is error free)
     '''
+    print("is this here 2")
+
     import tensorflow_hub as hub 
     embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
     vector = embed([text]).numpy()[0].tolist()

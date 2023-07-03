@@ -1,7 +1,7 @@
 from bson.objectid import ObjectId
 from pymongo import MongoClient, database
 from typing import List
-import numpy as np
+from . import numpy as np
 from . import schemas
 from . import utils
 
@@ -283,5 +283,4 @@ def get_source_vectors(db: database.Database, sources, ids, all_vectors):
             case "Document":
                 oids.append(s["id"])
             case "Group":
-                
-
+                pass
