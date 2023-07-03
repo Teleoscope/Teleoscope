@@ -19,11 +19,10 @@ export default function Account(props) {
     }
   };
 
-  // http://nursing.localhost:3000/api/nursing/user/paul
 
   const handleTimeOut = (username) => {
     fetch(
-      `http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/user/${username}`
+      `https://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/user/${username}`
     )
       .then((response) => response.json())
       .then((user) => {
@@ -40,7 +39,7 @@ export default function Account(props) {
     if (!username) {
       return;
     }
-    const url = `http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/user/${username}`;
+    const url = `https://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/user/${username}`;
 
     fetch(url)
       .then((response) => response.json())
