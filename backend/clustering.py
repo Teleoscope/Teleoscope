@@ -17,10 +17,10 @@ from sklearn.metrics.pairwise import euclidean_distances
 import spacy
 
 # local files
-fromt . import utils
-fromt . import tasks
-fromt . import auth
-fromt . import schemas
+from . import utils
+from . import tasks
+from . import auth
+from . import schemas
 
 class Clustering:
     """Semi-supervised Clustering 
