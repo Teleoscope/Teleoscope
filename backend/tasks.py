@@ -9,9 +9,9 @@ from typing import List
 from pymongo import client_session, database
 
 # local imports
-fromt . import utils
-fromt . import auth
-fromt . import schemas
+from . import utils
+from . import auth
+from . import schemas
 
 
 # ignore all future warnings
