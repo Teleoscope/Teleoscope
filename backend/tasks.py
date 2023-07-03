@@ -1733,3 +1733,8 @@ def ping(*args, **kwargs):
     msg = f"ping {userid}"
     userid = ObjectId(str(kwargs["userid"]))
     message(userid, msg)
+
+
+
+if __name__ == '__main__':
+    app.worker_main(['worker', '--loglevel=INFO'])
