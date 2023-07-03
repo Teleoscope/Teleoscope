@@ -496,7 +496,7 @@ def relabel_group(*args, **kwargs):
     """
     Relabels a group.
     """
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
 
     group_id = ObjectId(str(kwargs["group_id"]))
@@ -526,7 +526,7 @@ def copy_group(*args, **kwargs):
         session_id:  (int, represent ObjectId for current session)
         group_id: (int, represent ObjectId for a group to be copies(
     """
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs
@@ -593,7 +593,7 @@ def remove_group(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
 
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     session = db.sessions.find_one({'_id': session_id}, session=transaction_session)        
@@ -623,7 +623,7 @@ def remove_document_from_group(*args, **kwargs):
         group_id (int, represents ObjectId for a group)
         document_id (string, arbitrary)
     """
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs
@@ -654,7 +654,7 @@ def update_group_label(*args, **kwargs):
         group_id: (int, represents ObjectId for a group)
         label: (string, arbitrary)
     """    
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs
@@ -694,7 +694,7 @@ def copy_cluster(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
     
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     cluster = db.clusters.find_one({"_id": cluster_id })
@@ -733,7 +733,7 @@ def remove_cluster(*args, **kwargs):
     p_id = ObjectId(str(kwargs["projection_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
 
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     projection = db.projections.find_one({'_id': p_id}, session=transaction_session)        
@@ -757,7 +757,7 @@ def initialize_projection(*args, **kwargs):
     """
     initialize a projection object
     """
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs
@@ -809,7 +809,7 @@ def remove_projection(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
 
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     session = db.sessions.find_one({'_id': session_id}, session=transaction_session)        
@@ -821,7 +821,7 @@ def remove_projection(*args, **kwargs):
 
     with transaction_session.start_transaction():
         
-        cluster = clustering.Clustering(kwargs["userid"], [], kwargs["projection_id"], kwargs["session_id"], kwargs["db"])
+        cluster = clustering.Clustering(kwargs["userid"], [], kwargs["projection_id"], kwargs["session_id"], kwargs["database"])
         cluster.clean_mongodb() # cleans up clusters associate with projection
         db.projections.delete_one({'_id': projection_id}, session=transaction_session) 
 
@@ -833,7 +833,7 @@ def relabel_projection(*args, **kwargs):
     """
     Relabels a projection.
     """
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
 
     projection_id = ObjectId(str(kwargs["projection_id"]))
@@ -866,7 +866,7 @@ def cluster_by_groups(*args, **kwargs):
         session_oid: string OID for session to add clusters to
     """
     logging.info(f'Starting clustering for groups {kwargs["group_id_strings"]} in session {kwargs["session_oid"]}.')
-    cluster = clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["projection_id"], kwargs["session_oid"], kwargs["db"])
+    cluster = clustering.Clustering(kwargs["userid"], kwargs["group_id_strings"], kwargs["projection_id"], kwargs["session_oid"], kwargs["database"])
     cluster.clustering_task()
 
 
@@ -891,7 +891,7 @@ def initialize_teleoscope(*args, **kwargs):
         session_id: string
         label: string (optional)
     """
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs
@@ -923,7 +923,7 @@ def relabel_teleoscope(*args, **kwargs):
     """
     Relabels a teleoscope.
     """
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
 
     teleoscope_id = ObjectId(str(kwargs["teleoscope_id"]))
@@ -950,7 +950,7 @@ def save_teleoscope_state(*args, **kwargs):
         _id (int, represents ObjectId for a teleoscope)
         history_item (Dict)
     """
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle args
@@ -987,7 +987,7 @@ def remove_teleoscope(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
 
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     session = db.sessions.find_one({'_id': session_id})        
@@ -1022,7 +1022,7 @@ def update_note(*args, **kwargs):
 
         content: string 
     """
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     userid = ObjectId(str(kwargs["userid"]))
     note_id = ObjectId(str(kwargs["note_id"]))
@@ -1056,7 +1056,7 @@ def relabel_note(*args, **kwargs):
 
         label: string 
     """
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     userid = ObjectId(str(kwargs["userid"]))
     note_id = ObjectId(str(kwargs["note_id"]))
@@ -1082,7 +1082,7 @@ def add_note(*args, **kwargs):
         id: document_id (string) 
     """    
     # Try finding document
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     label = kwargs["label"]
     content = kwargs["content"]
@@ -1115,7 +1115,7 @@ def remove_note(*args, **kwargs):
         id: document_id (string) 
     """    
     # Try finding document
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     userid = ObjectId(str(kwargs["userid"]))
 
@@ -1248,7 +1248,7 @@ def add_single_document_to_database(document, **kwargs):
     purpose: This function adds a single document to the database
             (Ignores dictionaries containing error keys)
     '''
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     with transaction_session.start_transaction():
         # Insert document into database
@@ -1268,7 +1268,7 @@ def add_multiple_documents_to_database(documents, **kwargs):
     '''
     documents = (list (filter (lambda x: 'error' not in x, documents)))
     # Create session
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     if len(documents) > 0:
         target = db.documents
@@ -1286,7 +1286,7 @@ def add_multiple_documents_to_database(documents, **kwargs):
 
 @app.task
 def snippet(*args, **kwargs):
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
 
     session_id = ObjectId(str(kwargs["session_id"]))
@@ -1319,7 +1319,7 @@ def create_child(*args, **kwargs):
         end_index: (int, represents index from which you end slicing of the parent document)
         document_id: (int, represents ObjectId in int)
     """
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
         # When you do transaction, you want to do it inside this transaction session
     with transaction_session.start_transaction(): 
@@ -1350,7 +1350,7 @@ def update_edges(*arg, **kwargs):
     """
     Updates the graph according to updated edges.
     
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     edges = kwargs["edges"]
@@ -1392,7 +1392,7 @@ def update_edges(*arg, **kwargs):
     
 @app.task
 def mark(*args, **kwargs):
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     userid      = ObjectId(str(kwargs["userid"]))
@@ -1411,7 +1411,7 @@ def mark(*args, **kwargs):
 
 @app.task
 def add_item(*args, **kwargs):
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
 
     userid = ObjectId(str(kwargs["userid"]))
@@ -1622,7 +1622,7 @@ def ensure_node_exists(db, item_oid, item_type, collection_map):
 
 @app.task
 def make_edge(*args, **kwargs):
-    database = kwargs["db"]
+    database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs

@@ -50,8 +50,8 @@ export class Stomp {
       if (userid == Stomp.stomp?.userId && subdomain == Stomp.stomp?.database) {
         return Stomp.stomp;
       }
-      const temp = Stomp.stomp.client;
-      temp.deactivate()
+      // const temp = Stomp.stomp.client;
+      // temp.deactivate()
     }
     
     Stomp.stomp = new Stomp({userid: userid, subdomain: subdomain});
@@ -98,7 +98,7 @@ export class Stomp {
     }
 
     this.client = new Client({
-      brokerURL: `ws://${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:15674/ws`,
+      brokerURL: `wss://${process.env.NEXT_PUBLIC_WEBSOCKET_HOST}/ws`,
       connectHeaders: {
         login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME!,
         passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD!,

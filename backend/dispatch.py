@@ -169,7 +169,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
                 res = chain(
                     robj.s(
-                        edges=kwargs["edges"], userid=kwargs["userid"], db=kwargs["db"]
+                        edges=kwargs["edges"], userid=kwargs["userid"], db=kwargs["database"]
                     ).set(queue=auth.rabbitmq["task_queue"])
                 )
                 res.apply_async()
