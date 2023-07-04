@@ -1481,9 +1481,9 @@ def add_item(*args, **kwargs):
 
             match type:
                 case "Teleoscope":
-                    res = initialize_teleoscope(db=database, session_id=session_id, userid=userid)
+                    res = initialize_teleoscope(database=database, session_id=session_id, userid=userid)
                 case "Projection": 
-                    res = initialize_projection(db=database, session_id=session_id, label="New Projection", userid=userid)
+                    res = initialize_projection(database=database, session_id=session_id, label="New Projection", userid=userid)
                 case "Note":
                     content = {
                         "blocks": [{
@@ -1497,7 +1497,7 @@ def add_item(*args, **kwargs):
                         }],
                         "entityMap": {}
                     }         
-                    res = add_note(db=database, session_id=session_id, label="New Note", content=content, userid=userid)
+                    res = add_note(database=database, session_id=session_id, label="New Note", content=content, userid=userid)
 
             message(userid, {
                 "oid": str(res),
