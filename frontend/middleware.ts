@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+
+
 export const config = {
   matcher: [
     /*
@@ -14,6 +16,8 @@ export const config = {
 };
 
 export default async function middleware(req: NextRequest) {
+
+
   const url = req.nextUrl;
 
   // Get hostname of request (e.g. demo.vercel.pub, demo.localhost:3000)
