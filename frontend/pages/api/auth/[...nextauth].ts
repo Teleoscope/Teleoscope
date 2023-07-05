@@ -2,9 +2,9 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-const useSecureCookies = process.env.NEXTAUTH_URL.startsWith("https://");
+const useSecureCookies = process.env.NEXT_PUBLIC_NEXTAUTH_URL.startsWith("https://");
 const cookiePrefix = useSecureCookies ? "__Secure-" : ""; 
-const domain = process.env.NEXTAUTH_URL.split("//")[1].split(":")[0]
+const domain = process.env.NEXT_PUBLIC_NEXTAUTH_URL.split("//")[1].split(":")[0]
 
 console.log("domain", domain)
 export const authOptions = {
