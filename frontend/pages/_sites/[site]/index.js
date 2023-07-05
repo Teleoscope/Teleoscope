@@ -5,12 +5,19 @@ import { SWRConfig } from 'swr';
 import { useRouter } from "next/router";
 import store from "@/stores/store";
 import Workspace from "@/components/Workspace";
-import { useSession } from "next-auth/react";
 
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "pages/api/auth/[...nextauth]";
+import { redirect } from 'next/navigation';
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
-export default function Home() {
+export default async function Home() {
+  const session = await getServerSession(authOptions)
+  if (session == null){
+    return redirect("api/auth/signin")
+  }
+
   const router = useRouter();
   const subdomain = router.query.site;
 
@@ -20,11 +27,7 @@ export default function Home() {
     )
   }
 
-  const { data: session, status } = useSession()
 
-  if (status != "authenticated") {
-    // return <div>Not signed in.</div>
-  }
 
   const swrConfig = {
     fetcher: fetcher,
