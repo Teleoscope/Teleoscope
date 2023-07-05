@@ -22,9 +22,8 @@ export default function Home() {
 
   const { data: session, status } = useSession()
 
-  console.log("session", session, status)
   if (status != "authenticated") {
-    return <div>Not signed in.</div>
+    // return <div>Not signed in.</div>
   }
 
   const swrConfig = {
