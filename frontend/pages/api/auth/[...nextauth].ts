@@ -58,6 +58,7 @@ export const authOptions = {
 
         // If no error and we have user data, return it
         if (res.ok && user) {
+          console.log("user", res, user)
           return user
         }
 
