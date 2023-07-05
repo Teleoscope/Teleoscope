@@ -14,19 +14,19 @@ export default function Home() {
   const subdomain = router.query.site;
 
   const { data: session, status } = useSession()  
-if (status === "loading") {
+  if (status === "loading") {
     return <p>Loading...</p>
   }
 
-  if (status === "unauthenticated") {
-    return (
-      <p> 
-        <a href={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/auth/signin`}> 
-        Not signed in. Sign in here. 
-        </a>
-      </p>
-      )
-  }
+  // if (status === "unauthenticated") {
+  //   return (
+  //     <p> 
+  //       <a href={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/auth/signin`}> 
+  //       Not signed in. Sign in here. 
+  //       </a>
+  //     </p>
+  //     )
+  // }
 
   if (!subdomain) {
     return (
