@@ -1,11 +1,25 @@
-import NextAuth from "next-auth"
-import GithubProvider from "next-auth/providers/github"
-import EmailProvider from "next-auth/providers/email"
-import CredentialsProvider from "next-auth/providers/credentials"
+import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import type { NextApiRequest, NextApiResponse } from "next"
+import type { NextApiRequest, NextApiResponse } from "next";
 
+const useSecureCookies = process.env.NEXTAUTH_URL.startsWith("https://");
+const cookiePrefix = useSecureCookies ? "__Secure-" : ""; 
+const domain = process.env.NEXTAUTH_URL.split("//")[1].split(":")[0]
+
+console.log("domain", domain)
 export const authOptions = {
+  cookies: {
+    sessionToken: {
+      name: `${cookiePrefix}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        domain: domain,
+        secure: useSecureCookies,
+      },
+    },
+    },
   // Configure one or more authentication providers
   providers: [  
     GoogleProvider({
@@ -14,7 +28,19 @@ export const authOptions = {
     }),
     // ...add more providers here
   ],
-  
+  callbacks: {
+    async jwt({ token }) {
+      console.log("token", token)
+      token.userRole = "admin"
+      return token
+    },
+    async session({ session, token, user }) {
+      // Send properties to the client, like an access_token from a provider.
+      session.accessToken = token.accessToken
+      console.log("session", session, token)
+      return session
+    }
+  },
 }
 
 

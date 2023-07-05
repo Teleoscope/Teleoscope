@@ -2,7 +2,7 @@ import Head from "next/head";
 import { useState, useEffect } from "react";
 import "@/styles/global.css";
 import { StrictMode } from "react";
-import { SessionProvider } from 'next-auth/react'
+import { SessionProvider } from 'next-auth/react';
 
 export default App;
 function App({ Component, pageProps: { session, ...pageProps } }) {

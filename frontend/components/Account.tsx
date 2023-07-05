@@ -19,11 +19,12 @@ export default function Account(props) {
     }
   };
 
+  const url = (username) => process.env.NEXT_PUBLIC_FRONTEND_HOST == "localhost:3000" ? 
+  `http://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/user/${username}` :
+  `https://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/user/${username}`
 
   const handleTimeOut = (username) => {
-    fetch(
-      `https://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/user/${username}`
-    )
+    fetch(url(username))
       .then((response) => response.json())
       .then((user) => {
         if (user != null) {
@@ -39,9 +40,7 @@ export default function Account(props) {
     if (!username) {
       return;
     }
-    const url = `https://${swr.subdomain}.${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${swr.subdomain}/user/${username}`;
-
-    fetch(url)
+    fetch(url(username))
       .then((response) => response.json())
       .then((user) => {
         if (user != null) {

@@ -10,6 +10,9 @@ import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { useCookies } from "react-cookie";
 import { sessionActivator, setUserId } from "@/actions/activeSessionID";
 import HelpMenu from "@/components/HelpMenu";
+import { useSession } from "next-auth/react";
+
+
 
 export default function Workspace({subdomain}) {
   const [cookies, setCookie] = useCookies(["userid"]);
@@ -18,8 +21,9 @@ export default function Workspace({subdomain}) {
   const [client, setClient] = useState<Stomp | null>(null);
   
   const dispatch = useAppDispatch();
+  const { data: session, status } = useSession()
 
-
+  console.log("session", session, status)
   
   useEffect(() => {
     if (cookies.userid) {

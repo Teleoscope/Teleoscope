@@ -45,7 +45,7 @@
     "material-ui-popup-state": "^5.0.8",
     "mongodb": "^5.5.0",
     "mui-nested-menu": "^3.2.1",
-    "next": "^13.4.4",
+    "next": "^13.4.8",
     "next-auth": "^4.22.1",
     "nextra": "^2.6.2",
     "nextra-theme-docs": "^2.6.2",
