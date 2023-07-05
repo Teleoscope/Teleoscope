@@ -47,7 +47,7 @@ export const authOptions = {
         // (i.e., the request IP address)
         
         const res = {ok: "ok"}
-        const user = {username: "Paul", uid: "1"}
+        const user = {username: "Paul", id: "1"}
 
         // const res = await fetch("/your/endpoint", {
         //   method: 'POST',
@@ -71,7 +71,6 @@ export const authOptions = {
   ],
   callbacks: {
     async jwt({ token, user, account, profile, isNewUser }) {
-      token.userRole = "admin"
       token.id = user.id
       console.log("token", token, user, account, profile, isNewUser)
       return token
