@@ -70,16 +70,17 @@ export const authOptions = {
     // ...add more providers here
   ],
   callbacks: {
-    async jwt({ token }) {
-      console.log("token", token)
+    async jwt({ token, user, account, profile, isNewUser }) {
       token.userRole = "admin"
+      token.id = user.id
+      console.log("token", token, user, account, profile, isNewUser)
       return token
     },
     async session({ session, token, user }) {
       // Send properties to the client, like an access_token from a provider.
       session.accessToken = token.accessToken
       session.user = user
-      console.log("session", session, token)
+      console.log("session", session, token, user)
       return session
     }
   },
