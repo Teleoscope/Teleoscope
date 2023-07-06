@@ -2,5 +2,9 @@
   "index": {
     "title": "Teleoscope",
     "href": "/"
+  },
+  "signin": {
+    "title": "Sign in",
+    "href": "/signin"
   }
 }

@@ -29,7 +29,7 @@
     "**/*.ts",
     "**/*.tsx",
     "**/*.js",
-    "**/*.jsx"
-  ],
+    "**/*.jsx", 
+    "pages/signin/index.mdx"],
   "exclude": ["node_modules", ".yarn", ".vscode", "build"]
 }
