@@ -159,13 +159,16 @@ export class Stomp {
    * Publishes a message to RabbitMQ.
    */
   publish(body: Body) {
-    const headers = {
-      content_type: "application/json",
-      content_encoding: "utf-8",
-    };
     body["args"]["userid"] = this.userId;
     body["args"]["database"] = this.database;
     body["message_id"] = crypto.randomBytes(8).toString('hex');
+    
+    const headers = {
+      "content_type": "application/json",
+      "content_encoding": "utf-8",
+      "reply-to": `${body["message_id"]}`
+    };
+    
     try {
       this.client.publish({
         destination: `/queue/${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`,

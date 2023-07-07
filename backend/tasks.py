@@ -34,6 +34,7 @@ queue = Queue(
     auth.rabbitmq["task_queue"])
 
 app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
+
 app.conf.update(
     task_serializer='pickle',
     accept_content=['pickle'],  # Ignore other content
@@ -48,8 +49,7 @@ app.conf.update(
 
 @app.task
 def register_account(
-    *args, database: str, 
-    password: str, username: str, 
+    *args, password: str, username: str, 
     **kwargs) -> ObjectId:
     """
     Adds a newly registered user to users collection
@@ -61,22 +61,16 @@ def register_account(
     """
     #---------------------------------------------------------------------------  
     # connect to database
-    transaction_session, db = utils.create_transaction_session(db=database)
+    transaction_session, db = utils.create_transaction_session(db="users")
     
     # log action to stdout
-    logging.info(f"Adding user {username} to {database}.")
+    logging.info(f"Adding user {username} to users.")
     #---------------------------------------------------------------------------
     
     # creating document to be inserted into mongoDB
     obj = schemas.create_user_object(username=username, password=password)
     users_res = db.users.insert_one(obj)
 
-    initialize_workflow(
-        database=database,
-        userid=users_res.inserted_id,
-        label="default", 
-        color="#e76029"
-    )
     return users_res.inserted_id
 
 

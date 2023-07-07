@@ -7,10 +7,6 @@ import lodash from 'lodash';
 import Stack from "@mui/material/Stack";
 import Card from "@mui/material/Card";
 
-// actions
-import { useAppSelector } from "@/util/hooks";
-import { RootState } from "@/stores/store";
-
 //utils
 import { useSWRHook } from "@/util/swr";
 
@@ -21,9 +17,7 @@ export default function Note(props) {
   const id = props.id.split("%")[0];
   const swr = useSWRHook();
   const { note } = swr.useSWRAbstract("note", `note/${id}`);
-  const userid = useAppSelector(
-    (state: RootState) => state.activeSessionID.userid
-  ); //value was userid
+
   const client = useStomp();
   const editor = React.useRef(null);
 

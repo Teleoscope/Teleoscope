@@ -18,15 +18,15 @@ export default function Home() {
     return <p>Loading...</p>
   }
 
-  if (status === "unauthenticated") {
-    return (
-      <p> 
-        <a href={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/auth/signin`}> 
-        Not signed in. Sign in here.
-        </a>
-      </p>
-      )
-  }
+  // if (status === "unauthenticated") {
+  //   return (
+  //     <p> 
+  //       <a href={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/auth/signin`}> 
+  //       Not signed in. Sign in here.
+  //       </a>
+  //     </p>
+  //     )
+  // }
 
   if (!subdomain) {
     return (

@@ -20,7 +20,6 @@ import { useStomp } from "@/components/Stomp";
 import { useSWRHook } from "@/util/swr";
 
 export default function GroupSelector(props) {
-  const userid = useAppSelector((state) => state.activeSessionID.userid);
   const client = useStomp();
 
   const session_id = useAppSelector((state) => state.activeSessionID.value);
