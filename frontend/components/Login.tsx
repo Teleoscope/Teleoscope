@@ -7,23 +7,15 @@ const LoginForm = () => {
   const [password, setPassword] = useState('');
 
   const [exists, setExists] = useState(false);
-  const [checked, setChecked] = useState(false);
 
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
     
-    fetch(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${username}`)
+    fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${username}`)
     .then(resp => {
-        if (event.target.value.length == 0) {
-            setChecked(false);    
-            setExists(false);
-        }
         console.log("username", event.target.value, resp)
-        setChecked(true);
-        setExists(resp);
+        setExists(resp.found);
     })
-
-    
   };
 
   const handlePasswordChange = (event) => {
@@ -45,8 +37,7 @@ const LoginForm = () => {
     <form onSubmit={handleSubmit}>
         <Stack spacing={2}>
         <InputLabel id="username-label">
-            Username {
-                !checked ? <></> : exists ? <span>Username already exists...</span> : <></>}
+            Username {exists ? <span>Username already exists...</span> : <></>}
         </InputLabel>
 
       <TextField

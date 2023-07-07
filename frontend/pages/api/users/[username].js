@@ -11,8 +11,8 @@ export default async (req, res) => {
     .findOne({ username: username });
 
   if (user) {
-    res.json(true);
+    res.json({found: true});
   } else {
-    res.json(false);
+    res.json({found: false});
   }
 };

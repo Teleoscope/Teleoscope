@@ -1,8 +1,9 @@
 import clientPromise from "@/util/mongodb";
 import amqplib from 'amqplib';
+import bcrypt from 'bcrypt';
 
 async function send(body, mid) {
-  const rabbitmqServerUrl = `amqp://${process.env.NEXT_PUBLIC_RABBITMQ_USERNAME}:${process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD}@${process.env.NEXT_PUBLIC_RABBITMQ_HOST}/teleoscope`;
+  const rabbitmqServerUrl = `amqp://${process.env.NEXT_PUBLIC_RABBITMQ_USERNAME}:${process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD}@${process.env.NEXT_PUBLIC_RABBITMQ_HOST}:/teleoscope`;
   const dispatchQueue = 'dispatch_queue';
   const responseQueue = mid;
 
@@ -38,7 +39,6 @@ async function send(body, mid) {
 export default async (req, res) => {
 
 
-  const bcrypt = require('bcrypt');
   const saltRounds = 10;
   
   const client = await clientPromise;
