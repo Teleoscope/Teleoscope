@@ -11,7 +11,7 @@ const LoginForm = () => {
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
     
-    fetch(`http://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${username}`)
+    fetch(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${username}`)
     .then(resp => {
         console.log("username", event.target.value, resp)
         setExists(resp.found);
