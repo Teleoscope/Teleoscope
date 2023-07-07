@@ -50,6 +50,7 @@ export const authOptions = {
           body: JSON.stringify(credentials),
           headers: { "Content-Type": "application/json" }
         })
+        
         const user = await res.json()
 
         console.log("authenticate", user)

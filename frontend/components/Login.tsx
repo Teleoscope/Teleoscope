@@ -22,14 +22,20 @@ const LoginForm = () => {
     setPassword(event.target.value);
   };
 
-
-
   const handleSubmit = (event) => {
     event.preventDefault();
     // Handle form submission here, e.g., send data to backend
     // console.log('Username:', username);
     // console.log('Password:', password);
   };
+
+  const handleSignIn = () => {
+    signIn("credentials", {
+      callbackUrl:`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/dashboard`,
+      username: username,
+      password: password
+    })
+  }
 
   return (
     <Stack>
@@ -61,11 +67,7 @@ const LoginForm = () => {
       </Stack>
 
       <Button 
-      onClick={() => signIn("credentials", {
-        callbackUrl:`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/dashboard`,
-        username: username,
-        password: password,
-    })}
+      onClick={() => handleSignIn()}
       type="submit" variant="contained" color="primary">
         Submit
       </Button>
