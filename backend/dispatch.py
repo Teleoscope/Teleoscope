@@ -28,7 +28,6 @@ task_queue = Queue(
     auth.rabbitmq["task_queue"],
 )
 
-
 class WebTaskConsumer(bootsteps.ConsumerStep):
     def get_consumers(self, channel):
         return [
@@ -52,6 +51,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # Make sure they look like Stomp
 
         match task:
+            case "register_account":
+                res = tasks.register_account.signature(args=(), kwargs=kwargs)
+
             case "mark":
                 res = tasks.mark.signature(args=(), kwargs=kwargs)
 
@@ -133,9 +135,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "cluster_by_groups":
                 res = tasks.cluster_by_groups.signature(args=(), kwargs=kwargs)
 
-            case "register_account":
-                res = tasks.register_account.signature(args=(), kwargs=kwargs)
-
             case "snippet":
                 res = tasks.snippet.signature(args=(), kwargs=kwargs)
 
@@ -173,8 +172,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 )
                 res.apply_async()
                 return
-
-
 
         try:
             res.apply_async(queue=auth.rabbitmq["task_queue"])

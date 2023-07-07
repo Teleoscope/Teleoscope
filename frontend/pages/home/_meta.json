@@ -2,5 +2,17 @@
   "index": {
     "title": "Teleoscope",
     "href": "/"
+  },
+  "signin": {
+    "title": "Sign in",
+    "href": "/signin",
+    "theme": {
+      "breadcrumb": true,
+      "footer": true,
+      "sidebar": true,
+      "toc": true,
+      "navigation": false
+    }
   }
 }
+

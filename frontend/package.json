@@ -32,6 +32,8 @@
     "@types/bson": "^4.2.0",
     "@types/draft-js": "^0.11.11",
     "@typescript-eslint/parser": "^5.59.8",
+    "amqplib": "^0.10.3",
+    "bcrypt": "^5.1.0",
     "bcryptjs": "^2.4.3",
     "bson": "^5.3.0",
     "color-space": "^2.0.0",

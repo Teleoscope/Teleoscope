@@ -1,10 +1,9 @@
 import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import type { NextApiRequest, NextApiResponse } from "next";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 const useSecureCookies = process.env.NEXT_PUBLIC_NEXTAUTH_URL.startsWith("https://");
-const cookiePrefix = useSecureCookies ? "__Secure-" : ""; 
+const cookiePrefix = useSecureCookies ? "__Secure-" : "";
 const domain = process.env.NEXT_PUBLIC_NEXTAUTH_URL.split("//")[1].split(":")[0]
 
 console.log("domain", domain)
@@ -20,22 +19,23 @@ export const authOptions = {
         secure: useSecureCookies,
       },
     },
-    },
+  },
   // Configure one or more authentication providers
   providers: [  
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET
-    }),
+    // GoogleProvider({
+    //   clientId: process.env.GOOGLE_CLIENT_ID,
+    //   clientSecret: process.env.GOOGLE_CLIENT_SECRET
+    // }),
     CredentialsProvider({
       // The name to display on the sign in form (e.g. 'Sign in with...')
-      name: 'Credentials',
+      name: 'your credentials.',
       // The credentials is used to generate a suitable form on the sign in page.
       // You can specify whatever fields you are expecting to be submitted.
       // e.g. domain, username, password, 2FA token, etc.
       // You can pass any HTML attribute to the <input> tag through the object.
       credentials: {
         username: { label: "Username", type: "text", placeholder: "jsmith" },
+        database: { label: "Database", type: "text", placeholder: "aita" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials, req) {
@@ -45,42 +45,35 @@ export const authOptions = {
         // e.g. return { id: 1, name: 'J Smith', email: 'jsmith@example.com' }
         // You can also use the `req` object to obtain additional parameters
         // (i.e., the request IP address)
-        
-        const res = {ok: "ok"}
-        const user = {username: "Paul", id: "1"}
+        const res = await fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/credentials`, {
+          method: 'POST',
+          body: JSON.stringify(credentials),
+          headers: { "Content-Type": "application/json" }
+        })
+        const user = await res.json()
 
-        // const res = await fetch("/your/endpoint", {
-        //   method: 'POST',
-        //   body: JSON.stringify(credentials),
-        //   headers: { "Content-Type": "application/json" }
-        // })
-        // const user = await res.json()
-
+        console.log("authenticate", user)
         // If no error and we have user data, return it
         if (res.ok && user) {
-          console.log("user", res, user)
           return user
         }
-
-        
         
         // Return null if user data could not be retrieved
         return null
-      }
+      } 
     })
     // ...add more providers here
   ],
   callbacks: {
     async jwt({ token, user, account, profile, isNewUser }) {
-      token.id = user.id
-      console.log("token", token, user, account, profile, isNewUser)
+      if (user) {
+        token.user = user
+      }
       return token
     },
     async session({ session, token, user }) {
       // Send properties to the client, like an access_token from a provider.
-      session.accessToken = token.accessToken
-      session.user = user
-      console.log("session", session, token, user)
+      session.user = token.user
       return session
     }
   },
@@ -89,10 +82,9 @@ export const authOptions = {
   },
 }
 
-
 export default async function auth(req: NextApiRequest, res: NextApiResponse) {
   // Do whatever you want here, before the request is passed down to `NextAuth`
-  console.log("nextAuth", req.url)
+  // console.log("nextAuth", req.url)
   return await NextAuth(req, res, authOptions)
 }
 // export default NextAuth(authOptions)

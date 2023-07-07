@@ -28,7 +28,6 @@ export { default as TopBar } from '@/components/TopBar';
 export { default as Search } from '@/components/Search';
 export { default as NoteButton } from '@/components/NoteButton';
 export { default as Teleoscopes } from '@/components/Teleoscopes';
-export { default as Temp } from '@/components/Temp';
 export { default as Settingss } from '@/components/Settings';
 export { default as Drawer } from '@/components/Drawer';
 export { default as DropItem } from '@/components/DropItem';

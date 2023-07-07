@@ -13,7 +13,7 @@ export default function Home() {
   const router = useRouter();
   const subdomain = router.query.site;
 
-  const { data: session, status } = useSession()  
+  const { data: session, status } = useSession()
   if (status === "loading") {
     return <p>Loading...</p>
   }
@@ -22,7 +22,7 @@ export default function Home() {
   //   return (
   //     <p> 
   //       <a href={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/auth/signin`}> 
-  //       Not signed in. Sign in here. 
+  //       Not signed in. Sign in here.
   //       </a>
   //     </p>
   //     )
