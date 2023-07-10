@@ -1,7 +1,20 @@
+
+import { Flare } from "@mui/icons-material";
+import { BsDiscord } from "react-icons/bs";
+
 export default {
   logo: <span>Teleoscope</span>,
   project: {
-    link: "https://github.com/Teleoscope/Teleoscope",
+    link: "https://teleoscope.ca",
+    icon: <Flare />,
+    docsRepositoryBase: "https://github.com/Teleoscope/Teleoscope/"
   },
+  chat: {
+    link: "https://discord.gg/3PyFEybpr9",
+    icon: <BsDiscord />
+  }
+  // feedback: {
+    
+  // }
   // ...
 };

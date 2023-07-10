@@ -3,7 +3,6 @@ import { useAppSelector } from "@/util/hooks";
 // material ui
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
-import DeleteIcon from "@mui/icons-material/Delete";
 import CircleIcon from "@mui/icons-material/Circle";
 import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined";
 
@@ -18,7 +17,7 @@ import { useSWRHook } from "@/util/swr";
 import { PreprocessTitle } from "@/util/Preprocessers";
 
 // contexts
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 import { onDragStart } from "@/util/drag";
 
 export default function DocumentListItem(props) {

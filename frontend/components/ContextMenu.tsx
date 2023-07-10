@@ -16,7 +16,7 @@ import { makeNode } from "@/actions/windows";
 import { useSWRHook } from "@/util/swr";
 
 // contexts
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 import Typography from "@mui/material/Typography";
 
 export default function ContextMenu(props) {

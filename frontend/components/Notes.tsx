@@ -1,13 +1,11 @@
 // mui
 import {
-  IconButton,
   Stack,
   List,
   ListItem,
-  ListItemIcon,
+  ListItemIcon
 } from "@mui/material";
 
-import DeleteIcon from "@mui/icons-material/Delete";
 import { ContentState, convertToRaw } from "draft-js";
 
 // custom
@@ -20,7 +18,7 @@ import { RootState } from "@/stores/store";
 
 // utils
 import { useSWRHook } from "@/util/swr";
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 import { NewItemForm } from "./NewItemForm";
 import { onDragStart } from "@/util/drag";
 

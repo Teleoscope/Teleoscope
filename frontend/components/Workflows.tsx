@@ -21,8 +21,9 @@ import AddUserDialogue from "@/components/AddUserDialog";
 import randomColor from "randomcolor";
 
 import { useSWRHook } from "@/util/swr";
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 import { sessionActivator } from "@/actions/activeSessionID";
+import { useSession } from "next-auth/react";
 
 const styles = {
   overflow: "auto", 
@@ -58,7 +59,8 @@ export default function Workflows(props) {
   const swr = useSWRHook();
   const color = useAppSelector((state) => state.windows.settings.color);
 
-  const userid = useAppSelector((state) => state.activeSessionID.userid);
+  const { data, status } = useSession();
+  const userid = data?.user?.id;
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const { sessions } = swr.useSWRAbstract("sessions", `user/sessions/${userid}`);
 

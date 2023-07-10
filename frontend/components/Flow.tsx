@@ -11,7 +11,7 @@ import {
   removeWindow,
   setSelection,
 } from "@/actions/windows";
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 import FlowProviderWrapper from "@/components/FlowProviderWrapper";
 import FlowWrapper from "@/components/FlowWrapper";
 import FlowUIComponents from "@/components/FlowUIComponents";
@@ -25,6 +25,7 @@ import { loadBookmarkedDocuments } from "@/actions/windows";
 import WindowNode from "@/components/Nodes/WindowNode";
 import ButtonEdge from "@/components/Nodes/ButtonEdge";
 import { findTargetNode, getClosestEdge } from "@/util/drag";
+import { useSession } from "next-auth/react";
 
 interface MouseCoords {
   mouseX: number;
@@ -57,7 +58,11 @@ function Flow(props) {
     null
   );
   const session_id = useAppSelector((state) => state.activeSessionID.value);
-  const userid = useAppSelector((state) => state.activeSessionID.userid);
+  
+  const { data, status } = useSession();
+  const userid = data?.user?.id;
+  
+
   const bookmarks = useAppSelector((state: RootState) => state.windows.bookmarks);
 
   const settings = useAppSelector((state) => state.windows.settings);

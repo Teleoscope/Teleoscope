@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -16,20 +20,45 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@/components/*": ["components/*"],
-      "@/util/*": ["util/*"],
-      "@/styles/*": ["styles/*"],
-      "@/stores/*": ["stores/*"],
-      "@/actions/*": ["actions/*"],
-      "@/tests/*": ["tests/*"]
-    }
+      "@/components/*": [
+        "components/*"
+      ],
+      "@/util/*": [
+        "util/*"
+      ],
+      "@/styles/*": [
+        "styles/*"
+      ],
+      "@/stores/*": [
+        "stores/*"
+      ],
+      "@/actions/*": [
+        "actions/*"
+      ],
+      "@/tests/*": [
+        "tests/*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "strictNullChecks": true
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     "**/*.js",
-    "**/*.jsx", 
-    "pages/signin/index.mdx"],
-  "exclude": ["node_modules", ".yarn", ".vscode", "build"]
+    "**/*.jsx",
+    "pages/signin/index.mdx",
+    "build/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".yarn",
+    ".vscode",
+    "build"
+  ]
 }

@@ -3,7 +3,7 @@ import IconButton from "@mui/material/IconButton";
 import CommentIcon from "@mui/icons-material/Comment";
 
 // contexts
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 
 export default function NoteButton(props) {
   const client = useStomp();

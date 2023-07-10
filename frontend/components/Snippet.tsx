@@ -1,6 +1,6 @@
 // mui
 import { Typography, Box, IconButton } from "@mui/material";
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import { useAppSelector } from "@/util/hooks";
 import { ContentState, convertToRaw } from "draft-js";

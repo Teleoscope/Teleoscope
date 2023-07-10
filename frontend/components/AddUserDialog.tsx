@@ -12,7 +12,7 @@ import { Button } from "@mui/material";
 import { useSWRHook } from "@/util/swr";
 
 // contexts 
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 export default function AddUserDialogue(props) {
   const client = useStomp();
   const swr = useSWRHook();

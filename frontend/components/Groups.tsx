@@ -80,7 +80,7 @@ import { useState } from "react";
 import { Divider } from "@mui/material";
 import { useSWRHook } from "@/util/swr";
 import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 import randomColor from "randomcolor";
 import ButtonActions from "@/components/ButtonActions";
 import {

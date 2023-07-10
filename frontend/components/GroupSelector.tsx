@@ -14,7 +14,7 @@ import FolderCopyIcon from "@mui/icons-material/FolderCopy";
 import { useAppSelector } from "@/util/hooks";
 
 // contexts
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 
 //utils
 import { useSWRHook } from "@/util/swr";
