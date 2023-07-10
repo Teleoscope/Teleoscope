@@ -1,8 +1,17 @@
 import { useState } from 'react';
-import { TextField, Button, FormControl, InputLabel, Stack } from '@mui/material';
-import { signIn } from "next-auth/react";
+import { TextField, Button, InputLabel, Stack } from '@mui/material';
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from 'next/router';
 
 const LoginForm = () => {
+  const router = useRouter()
+
+  const { data: session, status } = useSession()
+  
+  if (session && status === "authenticated") {
+    router.push('/dashboard')
+  }
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -11,10 +20,11 @@ const LoginForm = () => {
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
     
-    fetch(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${username}`)
+    fetch(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${event.target.value}`)
     .then(resp => {
-        console.log("username", event.target.value, resp)
-        setExists(resp.found);
+        return resp.json()  
+    }).then(data => {
+      setExists(data.found);
     })
   };
 
@@ -23,27 +33,26 @@ const LoginForm = () => {
   };
 
   const handleSubmit = (event) => {
-    event.preventDefault();
-    // Handle form submission here, e.g., send data to backend
-    // console.log('Username:', username);
-    // console.log('Password:', password);
-  };
-
-  const handleSignIn = () => {
     signIn("credentials", {
-      callbackUrl:`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/dashboard`,
+      redirect: false,
       username: username,
       password: password
+    }).then(response => {
+      console.log("response", response)
+      if (response.ok) {
+        router.push('/dashboard')
+      }
     })
-  }
+    
+  };
+
+
 
   return (
-    <Stack>
-
-    <form onSubmit={handleSubmit}>
+<form>
         <Stack spacing={2}>
         <InputLabel id="username-label">
-            Username {exists ? <span>Username already exists...</span> : <></>}
+            Username
         </InputLabel>
 
       <TextField
@@ -62,17 +71,11 @@ const LoginForm = () => {
         required
       />
 
-      <FormControl fullWidth>
-      </FormControl>
+      <Button onClick={handleSubmit} color="primary">
+        {exists ? "Sign in" : "Create new user"}
+      </Button> 
       </Stack>
-
-      <Button 
-      onClick={() => handleSignIn()}
-      type="submit" variant="contained" color="primary">
-        Submit
-      </Button>
-    </form>
-    </Stack>
+      </form>
   );
 };
 

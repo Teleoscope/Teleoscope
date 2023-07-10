@@ -35,7 +35,7 @@ import { useSWRHook } from "@/util/swr";
 import { useAppSelector } from "@/util/hooks";
 
 // contexts
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 import randomColor from "randomcolor";
 import { useCookies } from "react-cookie";
 import ColorPicker from "@/components/ColorPicker";

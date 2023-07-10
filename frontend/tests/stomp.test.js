@@ -1,5 +1,4 @@
 import {
-  client_init,
   publish,
   initialize_session,
   save_UI_state,
@@ -13,8 +12,8 @@ import {
   update_note,
   reorient,
   cluster_by_groups,
-  add_user_to_session,
-} from "../components/Stomp.ts";
+  add_user_to_session
+} from "../util/Stomp.js";
 
 class DummyClient {
   publish(msg) {

@@ -19,23 +19,24 @@ interface Body {
 
 export class Stomp {
   private _userid: string;
-  private database: string;
-  private client: Client;
+  private _database: string;
+  private client: Client | null;
   private static stomp: Stomp;
   private creationTime: Date;
   private _loaded: boolean;
 
-  private constructor({userid, subdomain}) {
+  private constructor({userid = undefined}) {
     this.creationTime = new Date();
     this.loaded = false;
-    this.database = subdomain;
-    this._userid = userid;
     this.client = null;
+    if (userid) {
+      this._userid = userid;
+    }
   }
 
   public static getFakeClient(): Stomp {
     if (!Stomp.stomp) {
-      Stomp.stomp = new Stomp({ subdomain: "aita", userid: "0" });
+      Stomp.stomp = new Stomp();
       Stomp.stomp.fake_client_init();
     }
     return Stomp.stomp;
@@ -45,28 +46,24 @@ export class Stomp {
    * Ensure that there is only one copy of the Stomp class.
    * @returns Stomp
    */
-  public static getInstance({userid, subdomain}): Stomp {
-    if (Stomp.stomp) {
-      if (userid == Stomp.stomp?.userId && subdomain == Stomp.stomp?.database) {
-        return Stomp.stomp;
-      }
-      // const temp = Stomp.stomp.client;
-      // temp.deactivate()
+  public static getInstance({userid = undefined}): Stomp {
+    console.log(`New instance of stomp requested with userid ${userid}.`)
+    if (!Stomp.stomp) {
+      console.log(`Creating new Stomp object. This should only be called once.`)
+      Stomp.stomp = new Stomp({userid: userid});
     }
-    
-    Stomp.stomp = new Stomp({userid: userid, subdomain: subdomain});
-    Stomp.stomp.client_init();
-
     return Stomp.stomp;
   } 
 
-  public restart(options): Stomp {
-    console.log("Restarted client...", options)
-    return Stomp.getInstance(options)
+  public restart(): Stomp {
+    return Stomp.getInstance({})
   }
   
   public set userId(userid: string) {
-    this._userid = userid;
+    if (!this._userid && userid) {
+      this._userid = userid;
+      this.client_init()
+    }
   }
 
   public get userId() {
@@ -81,6 +78,14 @@ export class Stomp {
     return this._loaded;
   }
 
+  public set database(db: string) {
+    this._database = db;
+  }
+
+  public get database() {
+    return this._database;
+  }
+
   fake_client_init() {
     this.client = {
       publish: (...args) => console.log(args),
@@ -91,9 +96,9 @@ export class Stomp {
    * Initializes the client (there should only be one)
    */
   client_init() {
-    console.log(`Initializing Stomp client for user ${this.userId} and database ${this.database}.`);
-    if (this.userId == null || this.database == null) {
-      console.log(`Failed to initialize Stomp client for user ${this.userId} and database ${this.database}.`);
+    console.log(`Initializing Stomp client for user ${this.userId}.`);
+    if (this.userId == null || this.client) {
+      console.log(`Failed to initialize Stomp client for user ${this.userId}.`);
       return;
     }
 
@@ -105,7 +110,7 @@ export class Stomp {
         host: process.env.NEXT_PUBLIC_RABBITMQ_VHOST!,
       },
       debug: function (str) {
-        console.log(str);
+        console.log("STOMP Debug:", str);
       },
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
@@ -113,9 +118,20 @@ export class Stomp {
     });    
 
     this.client.onDisconnect = (frame) => {
-      console.log("Disconnected");
+      console.log("Disconnected", frame);
+    }
+
+    this.client.onWebSocketClose = (event) => {
+      console.log("Connection closed.", event)
     }
   
+    this.client.onWebSocketError = (event) => {
+      console.log("Websocket error.", event)
+    }
+
+    this.client.onUnhandledFrame = (frame) => {
+      console.log("Unhandled frame.", frame)
+    }
 
     /**
      * Called when the client connects to RabbitMQ.
@@ -159,6 +175,8 @@ export class Stomp {
    * Publishes a message to RabbitMQ.
    */
   publish(body: Body) {
+    
+    
     body["args"]["userid"] = this.userId;
     body["args"]["database"] = this.database;
     body["message_id"] = crypto.randomBytes(8).toString('hex');
@@ -168,6 +186,10 @@ export class Stomp {
       "content_encoding": "utf-8",
       "reply-to": `${body["message_id"]}`
     };
+
+    if (!this.client && this._userid) {
+      this.client_init()
+    }
     
     try {
       this.client.publish({
@@ -180,6 +202,7 @@ export class Stomp {
       console.log("Error in sending:", err, body);
     }
     return body;
+  
   }
 
   /**

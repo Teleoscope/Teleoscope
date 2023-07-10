@@ -7,7 +7,7 @@ import { useAppSelector, useAppDispatch } from "@/util/hooks";
 // custom components
 import { setSettings, setColor } from "@/actions/windows";
 import ColorPicker from "@/components/ColorPicker";
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 
 export default function Settings(props) {
   const client = useStomp();

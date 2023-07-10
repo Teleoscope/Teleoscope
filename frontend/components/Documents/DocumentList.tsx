@@ -7,7 +7,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import DocumentListItem from "@/components/Documents/DocumentListItem";
 import ItemList from "@/components/ItemList";
 import { setSelection } from "@/actions/windows";
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 
 export default function DocumentList(props) {
   const data = props.data;

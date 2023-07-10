@@ -11,7 +11,7 @@ import store from "@/stores/store";
 import Bookmarks from "@/components/Bookmarks";
 
 import { SWR, swrContext } from "@/util/swr";
-import { Stomp, StompContext } from "@/components/Stomp";
+import { Stomp, StompContext } from "@/util/Stomp";
 import ReactFlow, {
   MiniMap,
   Controls,

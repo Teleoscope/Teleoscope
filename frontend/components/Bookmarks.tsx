@@ -4,7 +4,7 @@ import { Stack, Box } from "@mui/material";
 // actions
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { RootState } from "@/stores/store";
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 
 // custom components
 import DocumentListItem from "@/components/Documents/DocumentListItem";

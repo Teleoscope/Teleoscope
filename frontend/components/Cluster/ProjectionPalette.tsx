@@ -1,15 +1,13 @@
 // mui
 import {
-  IconButton,
   Stack,
   List,
   ListItem,
-  ListItemIcon,
+  ListItemIcon
 } from "@mui/material";
 
 import {
-  Delete as DeleteIcon,
-  Diversity2 as Diversity2Icon,
+  Diversity2 as Diversity2Icon
 } from "@mui/icons-material";
 
 // custom
@@ -22,7 +20,7 @@ import { RootState } from "@/stores/store";
 
 // utils
 import { useSWRHook } from "@/util/swr";
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 import { NewItemForm } from "../NewItemForm";
 import { onDragStart } from "@/util/drag";
 

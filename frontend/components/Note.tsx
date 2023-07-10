@@ -11,7 +11,7 @@ import Card from "@mui/material/Card";
 import { useSWRHook } from "@/util/swr";
 
 // contexts
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 
 export default function Note(props) {
   const id = props.id.split("%")[0];

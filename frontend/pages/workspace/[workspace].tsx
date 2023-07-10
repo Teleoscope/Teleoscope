@@ -9,11 +9,13 @@ const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 export default function Home() {
   const router = useRouter();
-  const subdomain = router.query.site;
+  const workspace = router.query.workspace
+  const subdomain = workspace;
 
   const { data: session, status } = useSession()
+  
   if (status === "loading") {
-    return <p>Loading...</p>
+    return <p>Loading {subdomain}...</p>
   }
 
   // if (status === "unauthenticated") {
@@ -43,7 +45,7 @@ export default function Home() {
       <CookiesProvider>
         <div>
           <Head>
-            <title>Explore Documents</title>
+            <title>Teleoscope</title>
             <link rel="icon" href="/favicon.ico" />
           </Head>
           <main>

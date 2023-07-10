@@ -17,6 +17,14 @@ export default async (req, res) => {
     }
   }
 
+  if (sessionsargs?.length > 0) {
+    sessionsargs.map(arg => {
+      if (!arg) {
+        return res.json({})
+      }
+    })
+  }
+
   if (!sessionsargs) {
     ret = await db
       .collection("sessions")

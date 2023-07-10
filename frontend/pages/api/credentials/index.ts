@@ -12,36 +12,37 @@ export default async (req, res) => {
   const saltRounds = 10;  
   const salt = bcrypt.genSaltSync(saltRounds);
   const hash = bcrypt.hashSync(credentials.password, salt);
-
-  console.log("authenticating...", credentials, credentials.password, salt, hash)
-
-  let ret = { "nothing": "nothing"}
   
   if (user) {
-    const compare = bcrypt.compareSync(credentials.password, user.hash);
+    const compare = bcrypt.compareSync(credentials.password, user.password);
     if (compare) {
-      ret = {
+      client.close()
+      return res.json({
         "username": user.username,
         "id": user._id,
-      }
+      })
+    } else {
+      client.close()
+      return res.status(401)
     }
-  } else {
+
+  }
+  
+  else {
      try {
-      
       const newUser = await db.collection("users").insertOne({ 
         username: credentials.username,
         password: hash
-
       })
-      ret = {
+      client.close()
+      return res.json({
         "username": credentials.username,
         "id": newUser.insertedId.toString(),
-      }
+      })
     } catch (error) {
-      console.log('Failed to send.', error);
-      res.json(ret);
+      
+      client.close()
+      return res.status(401)
     }
   }
-
-  res.json(ret);
 };

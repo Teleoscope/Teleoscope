@@ -9,7 +9,7 @@ import SpeedDialAction from "@mui/material/SpeedDialAction";
 import { makeNode } from "@/actions/windows";
 import { useSelector, useDispatch } from "react-redux";
 import { useSWRHook } from "@/util/swr";
-import { useStomp } from "@/components/Stomp";
+import { useStomp } from "@/util/Stomp";
 import { useWindowDefinitions } from "@/util/hooks";
 
 export default function FABMenu(props) {
