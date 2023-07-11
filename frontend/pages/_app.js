@@ -20,11 +20,9 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
         <StrictMode>
           <div className={`app-container`}>
             <SessionProvider session={session} >
-            <StompContext.Provider value={client}>
-
+              <StompContext.Provider value={client}>
                 <Component {...pageProps} />
               </StompContext.Provider>
-
             </SessionProvider>
           </div>
         </StrictMode>

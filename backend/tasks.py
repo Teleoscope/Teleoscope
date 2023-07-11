@@ -176,9 +176,11 @@ def recolor_workflow(
     #---------------------------------------------------------------------------
     
     session = db.sessions.find_one({"_id": session_id})
+    settings = session["history"][0]["settings"]
+    settings["color"] = color
     history_item = utils.update_history(
         item=session["history"][0],
-        color=color,
+        settings=settings,
         userid=userid,
         action="Recolor session."
     )

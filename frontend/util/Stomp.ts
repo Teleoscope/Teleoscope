@@ -588,9 +588,9 @@ export class Stomp {
    * Recolor the session.
    */
 
-  recolor_session(color: string, session_oid: string) {
+  recolor_workflow(color: string, session_oid: string) {
     const body = {
-      task: "recolor_session",
+      task: "recolor_workflow",
       args: {
         color: color,
         session_id: session_oid,

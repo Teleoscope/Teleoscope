@@ -63,7 +63,7 @@ const makeNodeMiddleware = store => next => action => {
   
   if (action.type === setColor.type) {
     const result = next(action);
-    action.payload.client.recolor_session(action.payload.color, action.payload.session_id);
+    action.payload.client.recolor_workflow(action.payload.color, action.payload.session_id);
     return result
   }
 
@@ -78,12 +78,80 @@ const makeNodeMiddleware = store => next => action => {
   return result;
 };
 
-const store = (preloadedState) => configureStore({
+
+// let store;
+// const createStore = (preloadedState) => {
+//   if (typeof window === 'undefined') {
+//     return configureStore({
+//       reducer: { ... },
+//       preloadedState,
+//     });
+//   }
+
+//   if (!store) {
+//     store = configureStore({
+//       reducer: { ... },
+//       preloadedState,
+//     });
+//   }
+
+//   return store;
+// };
+
+let store;
+const createStore = (preloadedState) => {
+  if (typeof window === 'undefined') {
+    return configureStore({
+      reducer: {
+        activeSessionID: ActiveSessionID,
+        windows: Windows,
+      },
+      preloadedState: preloadedState,
+      middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+          serializableCheck: {
+            // Ignore these action types
+            ignoredActions: ["your/action/type"],
+            // Ignore these field paths in all actions
+            ignoredActionPaths: ["payload.client"],
+            // Ignore these paths in the state
+            ignoredPaths: ["items.dates"],
+          },
+        }).concat(makeNodeMiddleware),
+    });
+  }
+
+  if (!store) {
+    store = configureStore({
+      reducer: {
+        activeSessionID: ActiveSessionID,
+        windows: Windows,
+      },
+      preloadedState: preloadedState,
+      middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+          serializableCheck: {
+            // Ignore these action types
+            ignoredActions: ["your/action/type"],
+            // Ignore these field paths in all actions
+            ignoredActionPaths: ["payload.client"],
+            // Ignore these paths in the state
+            ignoredPaths: ["items.dates"],
+          },
+        }).concat(makeNodeMiddleware),
+    });
+  }
+  return store
+}
+
+
+
+
+export const demoStore = configureStore({
   reducer: {
     activeSessionID: ActiveSessionID,
     windows: Windows,
   },
-  preloadedState: preloadedState,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
@@ -102,4 +170,5 @@ export type RootState = ReturnType<typeof store.getState>;
 // Inferred type: {documents: DocumentsState, comments: CommentsState, users: UsersState}
 export type AppDispatch = typeof store.dispatch;
 
-export default store;
+export default createStore;
+

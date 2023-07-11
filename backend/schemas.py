@@ -102,10 +102,6 @@ def create_session_object(
                 "action": action,
                 "user": userid,
                 "notes": notes,
-                "selection": {
-                    "nodes": [],
-                    "edges": [],
-                },
                 "settings": {
                     "default_document_width": 200,
                     "default_document_height": 34,

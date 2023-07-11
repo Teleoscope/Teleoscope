@@ -1,53 +1,96 @@
 import Head from "next/head";
-import { CookiesProvider } from "react-cookie";
 import { SWRConfig } from 'swr';
-import { useRouter } from "next/router";
 import Workspace from "@/components/Workspace";
 import { useSession } from "next-auth/react";
-import useSWR from "swr";
-import store from "@/stores/store";
+import createStore from "@/stores/store";
 import { Provider as StoreProvider } from "react-redux";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../api/auth/[...nextauth]";
+import { MongoClient } from "mongodb";
+import { ObjectId } from "bson";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
-export default function Home() {
-  const router = useRouter();
-  const { data: workspace } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/workspaces/${router.query.workspace}`, fetcher)
+export async function getServerSideProps(context) {
+  const session = await getServerSession(
+    context.req,
+    context.res,
+    authOptions
+  )
 
-  const database = workspace?.database;
-  const workflow_id = workspace?.workflows[0]
+  let client = await new MongoClient(process.env.MONGODB_URI).connect();
+  let db = await client.db("users");
+
+  const workspace = await db
+    .collection("workspaces")
+    .findOne({ owner: new ObjectId(session.user.id), _id: new ObjectId(context.query.workspace)});
+  client.close()
+
+  const database = workspace.database;
+  const workflow_id = workspace.workflows[0]
+
+  db = await client.db(database);
+  const workflow = await db.collection("sessions").findOne(
+    {_id: new ObjectId(workflow_id)},
+    {projection: { projection: { history: { $slice: 1 } } }}
+  )
   
-  const { data: workflow, error } =  useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/${database}/workflows/${workflow_id}`, fetcher)
+  
 
-  const initial_state = !workflow ? null : {
-    "windows": workflow.history[0],
-    "activeSessionID": {
-      value: `${workflow["_id"]}`,
-      workspace: `${router.query.workspace}`
+  const outflow = {
+      nodes: workflow.history[0].nodes,
+      edges: workflow.history[0].edges,
+      bookmarks: workflow.history[0].bookmarks,
+      logical_clock: workflow.history[0].logical_clock,
+      label: workflow.history[0].label,
+      selection: workflow.history[0].selection,
+      settings: workflow.history[0].settings,
+  }
+  console.log("outflow", outflow)
+
+  client.close()
+
+  return {
+    props: {
+      database: database,
+      session: session,
+      workflow: outflow,
+      session_id: workflow_id.toString()
     }
   }
 
+}
+
+
+export default function Home({database, workflow, session_id}) {
+  
+
   const { data: session, status } = useSession()
 
-  if (status === "loading") {
-    return <p>Loading {database}...</p>
+  const preloaded = {
+    "activeSessionID": session_id,
+    "windows": workflow,
+  }
+  const store = createStore(preloaded)
+
+ 
+  if (status === "unauthenticated") {
+    return (
+      <p> 
+        <a href={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/auth/signin`}> 
+        Not signed in. Sign in here.
+        </a>
+      </p>
+      )
   }
 
-  // if (status === "unauthenticated") {
-  //   return (
-  //     <p> 
-  //       <a href={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/auth/signin`}> 
-  //       Not signed in. Sign in here.
-  //       </a>
-  //     </p>
-  //     )
-  // }
-
-  if (!database || !workflow) {
+  if (!database || status === "loading") {
     return (
       <div>Loading...</div>
     )
   }
+
+  
   
   const swrConfig = {
     fetcher: fetcher,
@@ -56,21 +99,18 @@ export default function Home() {
   };
 
   return (
-    <StoreProvider store={store(initial_state)}>
-
-    <SWRConfig value={swrConfig}>
-      <CookiesProvider>
-        <div>
-          <Head>
-            <title>Teleoscope</title>
-            <link rel="icon" href="/favicon.ico" />
-          </Head>
-          <main>
-              <Workspace subdomain={database} />
-          </main>
-        </div>
-      </CookiesProvider>
-    </SWRConfig>
+    <StoreProvider store={store}>
+      <SWRConfig value={swrConfig}>
+          <div>
+            <Head>
+              <title>Teleoscope</title>
+              <link rel="icon" href="/favicon.ico" />
+            </Head>
+            <main>
+                <Workspace subdomain={database} />
+            </main>
+          </div>
+      </SWRConfig>
     </StoreProvider>
 
   );

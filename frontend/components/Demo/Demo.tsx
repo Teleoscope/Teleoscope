@@ -6,7 +6,7 @@ import "reactflow/dist/style.css";
 import { useAppDispatch } from "@/util/hooks";
 import { Box, Stack, Typography } from "@mui/material";
 // store
-import store from "@/stores/store";
+import { demoStore } from "@/stores/store";
 
 import Bookmarks from "@/components/Bookmarks";
 
@@ -78,7 +78,7 @@ export default function Demo(props) {
           refreshInterval: 250,
         }}
       >
-        <Provider store={store}>
+        <Provider store={demoStore}>
           <swrContext.Provider value={mySWR}>
             <StompContext.Provider value={client}>
               {props.children}
