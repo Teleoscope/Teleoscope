@@ -9,6 +9,7 @@ export default {
     icon: <Flare />,
     docsRepositoryBase: "https://github.com/Teleoscope/Teleoscope/"
   },
+  primaryHue: 268,
   chat: {
     link: "https://discord.gg/3PyFEybpr9",
     icon: <BsDiscord />

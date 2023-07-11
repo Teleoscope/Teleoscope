@@ -80,7 +80,7 @@ def push_history(db, collection_name, item_id, history_item, transaction_session
                     "$each": [history_item],
                     "$position": 0
                 }
-            }}, session=transaction_session 
+            }}, session=transaction_session
     )
     return res
 
@@ -362,3 +362,10 @@ def get_documents(dbstring, rebuild=False):
             pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
         
     return ids, vectors
+
+
+def random_color():
+    import random
+    r = lambda: random.randint(0, 255)
+    color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
+    return color

@@ -18,7 +18,6 @@ export default async function handler(req, res) {
     .collection("workspaces")
     .find({ owner: new ObjectId(session.user.id)}).toArray();
 
-  console.log("workspaces", workspaces)
 
 
   return res.json(workspaces)

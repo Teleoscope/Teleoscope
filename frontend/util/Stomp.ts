@@ -1,7 +1,7 @@
 import { Client } from "@stomp/stompjs";
 import crypto from 'crypto';
 import { createContext, useContext } from "react";
-import store from "@/stores/store";
+import { store } from "@/stores/store";
 import { OID_UID_SYNC } from "@/actions/windows";
 import { WebsocketBuilder } from "websocket-ts";
 Object.assign(global, WebsocketBuilder);
@@ -204,6 +204,24 @@ export class Stomp {
     return body;
   
   }
+
+
+  /**
+   * Initializes a workspace.
+   */
+  initialize_workspace(label: string, datasource: string) {
+    const body = {
+      task: "initialize_workspace",
+      args: {
+        label: label,
+        datasource: datasource,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+
 
   /**
    * Requests to create a new session object in MongoDB.

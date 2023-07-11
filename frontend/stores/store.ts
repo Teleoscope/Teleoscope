@@ -98,7 +98,7 @@ const makeNodeMiddleware = store => next => action => {
 //   return store;
 // };
 
-let store;
+export let store;
 const createStore = (preloadedState) => {
   if (typeof window === 'undefined') {
     return configureStore({
@@ -169,6 +169,7 @@ export const demoStore = configureStore({
 export type RootState = ReturnType<typeof store.getState>;
 // Inferred type: {documents: DocumentsState, comments: CommentsState, users: UsersState}
 export type AppDispatch = typeof store.dispatch;
+
 
 export default createStore;
 

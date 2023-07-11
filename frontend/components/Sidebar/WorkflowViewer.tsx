@@ -74,7 +74,6 @@ export default function Workflows(props) {
     }
   };
 
-  console.log("workflows", workflows)
 
 
   return (
