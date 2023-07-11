@@ -1,3 +1,10 @@
+/**
+ * /api/workspaces/[workspace]
+ * workspace: ObjectID string
+ * requires: authenticated user with avaiable session token cookie
+ * returns: workspace object from MongoDB
+ */
+
 import { authOptions } from 'pages/api/auth/[...nextauth]';
 import { getServerSession } from "next-auth/next";
 import { MongoClient } from "mongodb";

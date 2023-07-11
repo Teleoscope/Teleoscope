@@ -87,7 +87,7 @@ import {
   SaveDocxAction,
   CopyJsonAction,
   CopyTextAction,
-} from "@/components/GroupsActions";
+} from "@/components/Groups/GroupsActions";
 import { NewItemForm } from "@/components/NewItemForm";
 import { onDragStart } from "@/util/drag";
 import Deleter from "@/components/Deleter";

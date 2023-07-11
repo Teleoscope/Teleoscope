@@ -3,7 +3,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
 // custom
-import CloseButton from "@/components/CloseButton";
+import CloseButton from "@/components/WindowFolder/CloseButton";
 
 // actions
 import { useDispatch } from "react-redux";

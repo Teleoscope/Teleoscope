@@ -3,7 +3,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
 import DownloadIcon from "@mui/icons-material/Download";
 import Tooltip from "@mui/material/Tooltip";
-import GroupSelector from "@/components/GroupSelector";
+import GroupSelector from "@/components/Groups/GroupSelector";
 import { MakeDocx } from "@/util/DocxMaker";
 import { IconButton } from "@mui/material";
 import ButtonActions from "../ButtonActions";

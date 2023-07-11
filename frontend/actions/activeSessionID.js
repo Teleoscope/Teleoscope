@@ -1,9 +1,12 @@
 // actions.js
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 
 export const ActiveSessionID = createSlice({
   name: "activeSessionID",
-  initialState: { data: null, loading: false, error: null },
+  initialState: {
+    value: -1,
+    workspace: -1,
+  },
   reducers: {
     sessionActivator: (state, action) => {
       var id = action.payload; // value of documentid

@@ -3,7 +3,7 @@ import DocViewer from "@/components/Sidebar/DocViewer";
 import GroupViewer from "@/components/Sidebar/GroupViewer";
 import NotesViewer from "@/components/Sidebar/NotesViewer";
 import TeleoscopeViewer from "@/components/Sidebar/TeleoscopeViewer";
-import ClusterViewer from "@/components/Cluster/ClusterViewer";
+import ClusterViewer from "@/components/Sidebar/ClusterViewer";
 
 export default function SelectionViewer(props) {
   const selection = useAppSelector((state) => state.windows.selection);

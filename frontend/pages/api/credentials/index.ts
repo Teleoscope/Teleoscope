@@ -1,3 +1,10 @@
+/**
+ * /api/credentials/
+ * credentials.username: string
+ * credentials.password: cleartext password
+ * effects: if user doesn't exist, register user
+ * returns: returns username and OID
+ */
 import bcrypt from 'bcrypt';
 import { MongoClient } from "mongodb";
 

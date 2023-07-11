@@ -1,6 +1,10 @@
+/**
+ * Entrypoint for workspaces.
+ */
+
 import Head from "next/head";
 import { SWRConfig } from 'swr';
-import Workspace from "@/components/Workspace";
+import Workspace from "@/components/Roots/Workspace";
 import { useSession } from "next-auth/react";
 import createStore from "@/stores/store";
 import { Provider as StoreProvider } from "react-redux";
@@ -11,6 +15,7 @@ import { ObjectId } from "bson";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
+// Supposedly this renders server-side only, so OK to use credentials
 export async function getServerSideProps(context) {
   const session = await getServerSession(
     context.req,
@@ -18,40 +23,41 @@ export async function getServerSideProps(context) {
     authOptions
   )
 
+  const workspace_id = context.query.args[0]
+
   let client = await new MongoClient(process.env.MONGODB_URI).connect();
   let db = await client.db("users");
 
   const workspace = await db
     .collection("workspaces")
-    .findOne({ owner: new ObjectId(session.user.id), _id: new ObjectId(context.query.workspace)});
+    .findOne({ owner: new ObjectId(session.user.id), _id: new ObjectId(workspace_id)});
   client.close()
 
   const database = workspace.database;
-  const workflow_id = workspace.workflows[0]
+  const workflow_id = context.query.args.length == 2 ? context.query.args[1] : workspace.workflows[0]
 
   db = await client.db(database);
+  
   const workflow = await db.collection("sessions").findOne(
     {_id: new ObjectId(workflow_id)},
     {projection: { projection: { history: { $slice: 1 } } }}
   )
-  
-  
 
   const outflow = {
-      nodes: workflow.history[0].nodes,
-      edges: workflow.history[0].edges,
-      bookmarks: workflow.history[0].bookmarks,
+      nodes: workflow.history[0].nodes ? workflow.history[0].nodes : [],
+      edges: workflow.history[0].edges ? workflow.history[0].edges : [],
+      bookmarks: workflow.history[0].bookmarks ? workflow.history[0].bookmarks : [],
       logical_clock: workflow.history[0].logical_clock,
       label: workflow.history[0].label,
-      selection: workflow.history[0].selection,
-      settings: workflow.history[0].settings,
+      selection: workflow.history[0].selection ? workflow.history[0].selection : { nodes: [], edges: []},
+      settings: workflow.history[0].settings ? workflow.history[0].settings : {} ,
   }
-  console.log("outflow", outflow)
 
   client.close()
 
   return {
     props: {
+      workspace: workspace_id,
       database: database,
       session: session,
       workflow: outflow,
@@ -62,13 +68,16 @@ export async function getServerSideProps(context) {
 }
 
 
-export default function Home({database, workflow, session_id}) {
+export default function Home({workspace, database, workflow, session_id}) {
   
 
   const { data: session, status } = useSession()
 
   const preloaded = {
-    "activeSessionID": session_id,
+    "activeSessionID": {
+      value: session_id,
+      workspace: workspace
+    },
     "windows": workflow,
   }
   const store = createStore(preloaded)
@@ -89,8 +98,6 @@ export default function Home({database, workflow, session_id}) {
       <div>Loading...</div>
     )
   }
-
-  
   
   const swrConfig = {
     fetcher: fetcher,
@@ -107,7 +114,7 @@ export default function Home({database, workflow, session_id}) {
               <link rel="icon" href="/favicon.ico" />
             </Head>
             <main>
-                <Workspace subdomain={database} />
+                <Workspace database={database} />
             </main>
           </div>
       </SWRConfig>

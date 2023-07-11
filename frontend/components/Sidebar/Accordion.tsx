@@ -1,5 +1,5 @@
 import Stack from "@mui/material/Stack";
-import Groups from "@/components/Groups";
+import Groups from "@/components/Groups/Groups";
 import Teleoscopes from "@/components/Teleoscopes";
 import Notes from "@/components/Notes";
 import Bookmarks from "@/components/Bookmarks";
@@ -7,7 +7,7 @@ import Setttings from "@/components/Settings";
 import AccordionSection from "@/components/Sidebar/AccordionSection";
 import SelectionViewer from "@/components/Sidebar/SelectionViewer";
 import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
-import Workflows from "@/components/Workflows";
+import Workflows from "@/components/Sidebar/WorkflowViewer";
 import { useWindowDefinitions } from "@/util/hooks";
 
 

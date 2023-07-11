@@ -8,15 +8,15 @@ export default async function handler(req, res) {
     const workspace = await users_db.collection("workspaces").findOne({
         _id: new ObjectId(req.query.workspace)
     });
-    const workflows = workspace?.workflows.map(wf => new ObjectId(wf))
-
-    
 
     if (workspace) {
         const db = await client.db(req.query.db);
+        
         const sessions = await db.collection("sessions").find({
-            _id: { "$in": workflows }
-        }).toArray()
+            _id: { "$in": workspace.workflows }
+        }, { projection: { history: { $slice: 1 } } }).toArray()
+
+        console.log("sessions", sessions, workspace)
         
         res.json(sessions)
     }
