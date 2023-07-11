@@ -19,7 +19,7 @@ import { RootState } from "@/stores/store";
 // utils
 import { useSWRHook } from "@/util/swr";
 import { useStomp } from "@/util/Stomp";
-import { NewItemForm } from "./NewItemForm";
+import { NewItemForm } from "@/components/NewItemForm";
 import { onDragStart } from "@/util/drag";
 
 

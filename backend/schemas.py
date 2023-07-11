@@ -7,6 +7,23 @@ EdgeType = Literal["source", "control", "output"]
 NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Union", "Intersection", "Exclusion", "Subtraction"]
 HexStr = NewType('HexStr', str)
 
+def create_workspace_object(*args, owner: ObjectId, label: str, database: str, workflow: ObjectId):
+    obj = {
+        "owner": owner,
+        "collaborators": [],
+        "label": label,
+        "database": database,
+        "workflows": [ workflow ],
+        "history": [
+            {
+                "timestamp": datetime.datetime.utcnow(),
+                "action": "Initialize workspace.",
+                "user": owner
+            }
+        ]
+    }
+    return obj
+
 def create_group_object(color, included_documents, label, action, user_id, description, session_id, cluster_id=[]):
     obj = {
         "creation_time": datetime.datetime.utcnow(),
@@ -101,7 +118,13 @@ def create_session_object(
                 "color": color,
                 "action": action,
                 "user": userid,
-                "notes": notes
+                "notes": notes,
+                "settings": {
+                    "default_document_width": 200,
+                    "default_document_height": 34,
+                    "defaultExpanded": True,
+                    "color": "#D3D3D3",
+                }
             }
         ],
     }

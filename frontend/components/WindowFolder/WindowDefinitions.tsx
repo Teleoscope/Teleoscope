@@ -26,12 +26,12 @@ import TargetNode from "@/components/Nodes/TargetNode";
 // custom
 import Note from "@/components/Note";
 import FABMenu from "@/components/FABMenu";
-import Group from "@/components/Group";
+import Group from "@/components/Groups/Group";
 import Document from "@/components/Documents/Document";
 import Teleoscopes from "@/components/Teleoscopes";
 import Teleoscope from "@/components/Teleoscope";
 import Search from "@/components/Search";
-import Groups from "@/components/Groups";
+import Groups from "@/components/Groups/Groups";
 import Clusters from "@/components/Cluster/Clusters";
 import Projection from "@/components/Cluster/Projection";
 import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
@@ -98,7 +98,7 @@ export default class WindowDefinitions {
         type:      "Group",
         apipath:   "groups",
         nodetype:  SourceNode,      
-        title:     (d) => `Group: ${d?.history[0].label}`,
+        title:     (d) => `Group: ${d?.history[0].label ? d?.history[0].label : "loading..."}`,
         color:     (d) => d?.history[0].color,
         icon:      (d) => <FolderIcon sx={{ color: d?.history[0].color }} fontSize="inherit"  />,
         component: (w, id, color) => <Group id={id} windata={w} color={color} />,

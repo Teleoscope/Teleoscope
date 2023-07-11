@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Box, Drawer, CssBaseline, Divider, Stack } from "@mui/material";
 
 // custom
-import Flow from "@/components/Flow";
-import Accordion from "@/components/Accordion";
+import Flow from "@/components/Flow/Flow";
+import Accordion from "@/components/Sidebar/Accordion";
 import TopBar from "@/components/TopBar";
 import TeleoscopeLogo from "@/components/TeleoscopeLogo";
 

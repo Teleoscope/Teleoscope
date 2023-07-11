@@ -6,7 +6,7 @@ import "reactflow/dist/style.css";
 import { useAppDispatch } from "@/util/hooks";
 import { Box, Stack, Typography } from "@mui/material";
 // store
-import store from "@/stores/store";
+import { demoStore } from "@/stores/store";
 
 import Bookmarks from "@/components/Bookmarks";
 
@@ -22,14 +22,14 @@ import ReactFlow, {
 } from "reactflow";
 import { setSelection } from "@/actions/windows";
 import WindowNode from "@/components/Nodes/WindowNode";
-import SelectionViewer from "@/components/SelectionViewer";
+import SelectionViewer from "@/components/Sidebar/SelectionViewer";
 import {
   account_fights_teleoscope,
   blocking_doc,
   blocking_teleoscope,
   taking_doc,
   taking_teleoscope,
-} from "@/components/demoTeleoscopes";
+} from "@/components/Demo/demoTeleoscopes";
 // API fetcher for SWR global config
 //const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
@@ -78,7 +78,7 @@ export default function Demo(props) {
           refreshInterval: 250,
         }}
       >
-        <Provider store={store}>
+        <Provider store={demoStore}>
           <swrContext.Provider value={mySWR}>
             <StompContext.Provider value={client}>
               {props.children}

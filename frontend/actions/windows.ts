@@ -1,7 +1,15 @@
 // windows.js
 import { createSlice } from "@reduxjs/toolkit";
-import _ from "lodash";
-import { applyNodeChanges, applyEdgeChanges, Position } from "reactflow";
+import { applyNodeChanges, applyEdgeChanges } from "reactflow";
+
+// First, create the thunk
+// const fetchInitialSessionState = createAsyncThunk(
+//   'users/fetchByIdStatus',
+//   async (userId: number, thunkAPI) => {
+//     const response = await userAPI.fetchById(userId)
+//     return response.data
+//   }
+// )
 
 const initialState = {
   nodes: [],
@@ -19,8 +27,6 @@ const initialState = {
     defaultExpanded: true,
     color: "#D3D3D3",
   },
-  // deprecated but in for legacy
-  windows: [],
 };
 
 export const Windows = createSlice({

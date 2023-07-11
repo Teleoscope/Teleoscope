@@ -1,3 +1,9 @@
+/** 
+ * /api/users/[username]
+ * username: string
+ * returns {found: boolean} depending on whether username exists
+*/
+
 import { MongoClient } from "mongodb";
 
 export default async (req, res) => {

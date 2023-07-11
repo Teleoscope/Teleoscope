@@ -87,10 +87,10 @@ import {
   SaveDocxAction,
   CopyJsonAction,
   CopyTextAction,
-} from "@/components/GroupsActions";
-import { NewItemForm } from "./NewItemForm";
+} from "@/components/Groups/GroupsActions";
+import { NewItemForm } from "@/components/NewItemForm";
 import { onDragStart } from "@/util/drag";
-import Deleter from "./Deleter";
+import Deleter from "@/components/Deleter";
 
 export default function Groups(props) {
   const swr = useSWRHook();

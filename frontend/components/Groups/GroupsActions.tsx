@@ -1,4 +1,4 @@
-import { MakeDocx } from "@/components/DocxMaker";
+import { MakeDocx } from "@/util/DocxMaker";
 import { IconButton, Tooltip } from "@mui/material";
 import {
   Download as DownloadIcon,

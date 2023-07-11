@@ -73,6 +73,91 @@ def register_account(
 
     return users_res.inserted_id
 
+################################################################################
+# Workspace tasks
+################################################################################
+@app.task
+def initialize_workspace(
+    *args, userid: str, label: str, datasource: str,
+    **kwargs) -> ObjectId:
+    """
+    Initializes a workflow with userid as owner.
+    """
+    #---------------------------------------------------------------------------  
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db="users")
+     
+    # handle ObjectID kwargs
+    userid = ObjectId(str(userid))
+
+    # log action to stdout
+    logging.info(f"Initializing workflow for user {userid}.")
+    #---------------------------------------------------------------------------
+
+    # Every workspace should be initialized with one workflow
+    color = utils.random_color()
+    workflow_id = initialize_workflow(database=datasource, userid=userid, label=label, color=color)
+    
+    obj = schemas.create_workspace_object(owner=userid, label=label, database=datasource, workflow=workflow_id)
+    res = db.workflows.insert_one(obj)
+    
+    return res.inserted_id
+
+
+
+@app.task
+def add_user_to_workspace(
+    *args, workspace_id: str, userid: str, contributor_id: str,
+    **kwargs) -> ObjectId:
+    """
+    Add new user to workspace's userlist. Provide read/write access.
+    kwargs:
+        contributor_id: OID of contributor to be added
+    
+    Returns:
+        contributor_id
+    """
+    #---------------------------------------------------------------------------
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db="users")
+    
+    # handle ObjectID kwargs
+    workspace_id = ObjectId(str(workspace_id))
+    userid = ObjectId(str(userid))
+    contributor_id = ObjectId(str(contributor_id))
+    
+    # log action to stdout
+    logging.info(f'Adding contributor {contributor_id} by '
+                 f'user {userid} to workspace {workspace_id}.')
+    #---------------------------------------------------------------------------
+
+    workspace = db.workspaces.find_one({"_id": workspace_id})    
+    contributors = workspace["contributors"]
+
+    # check if user has already been added
+    if contributor_id in contributors:
+        logging.info(f'User {contributor_id} is already on userlist')
+        raise Exception(f'User {contributor_id} is already on userlist')
+
+    history_item = utils.update_history(
+        item=workspace["history"][0],
+        oid=contributor_id,
+        action=f"Add {contributor_id} to contributors.",
+        user=userid,
+    )
+
+    # add contributor to session's userlist
+    db.workspaces.update_one(
+        {"_id": workspace_id}, 
+        {"$push": { 
+            "contributors": contributor_id
+        }, 
+    })
+
+    utils.push_history(db, "workspaces", workspace_id, history_item)
+
+    return contributor_id
+
 
 ################################################################################
 # Workflow tasks
@@ -105,17 +190,9 @@ def initialize_workflow(
         color=color
     )
 
-    with transaction_session.start_transaction():
-        result = db.sessions.insert_one(obj, session=transaction_session)
-        db.users.update_one(
-            {"_id": userid},
-            {
-                "$push": {
-                    "sessions": result.inserted_id
-                }
-            }, session=transaction_session)
-        utils.commit_with_retry(transaction_session)
-        return result.inserted_id
+    result = db.sessions.insert_one(obj)
+    
+    return result.inserted_id
 
 
 @app.task
@@ -176,11 +253,13 @@ def recolor_workflow(
     #---------------------------------------------------------------------------
     
     session = db.sessions.find_one({"_id": session_id})
+    settings = session["history"][0]["settings"]
+    settings["color"] = color
     history_item = utils.update_history(
         item=session["history"][0],
-        color=color,
+        settings=settings,
         userid=userid,
-        action="Recolor session."
+        action="Recolor workflow."
     )
 
     with transaction_session.start_transaction():
@@ -267,76 +346,6 @@ def save_UI_state(
     utils.push_history(db, "sessions", session_id, history_item)
 
     return session_id
-
-
-@app.task
-def add_user_to_session(
-    *args, database: str, session_id: str, userid: str, 
-    contributor_id: str,
-    **kwargs) -> ObjectId:
-    """
-    Add new user to session's userlist. Provide read/write access.
-    kwargs:
-        contributor_id: OID of contributor to be added
-    
-    Returns:
-        contributor_id
-    """
-    #---------------------------------------------------------------------------
-    # connect to database
-    transaction_session, db = utils.create_transaction_session(db=database)
-    
-    # handle ObjectID kwargs
-    session_id = ObjectId(str(session_id))
-    userid = ObjectId(str(userid))
-    contributor_id = ObjectId(str(contributor_id))
-    
-    # log action to stdout
-    logging.info(f'Adding contributor {contributor_id} by '
-                 f'user {userid} to workflow {session_id}.')
-    #---------------------------------------------------------------------------
-
-    session = db.sessions.find_one({"_id": session_id})    
-    userlist = session["userlist"]
-
-    # check if user has already been added
-    if contributor_id in userlist:
-        logging.info(f'User {contributor_id} is already on userlist')
-        raise Exception(f'User {contributor_id} is already on userlist')
-
-    # add contributor to session's userlist
-    userlist["contributors"].append(contributor_id)
-
-    history_item = utils.update_history(
-        item=session["history"][0],
-        oid=contributor_id,
-        action=f"Add {contributor_id} to userlist",
-        user=userid,
-    )
-
-    # update session with new userlist that includes contributor
-    with transaction_session.start_transaction():
-        utils.push_history(
-            db, "sessions", session_id, history_item, transaction_session)
-        db.sessions.update_one(
-            {"_id": session_id},
-            {
-                '$set': {
-                    "userlist": userlist,
-                }
-            }, session=transaction_session)
-
-        db.users.update_one(
-            {"_id": contributor_id},
-            {
-                "$push": {
-                    "sessions": session_id
-                }
-            }, session=transaction_session)
-
-        utils.commit_with_retry(transaction_session)
-
-    return contributor_id
 
 
 ################################################################################
@@ -1447,9 +1456,7 @@ def add_item(*args, **kwargs):
             else:
                 # need to create a group
                 logging.info(f"Group is new.")
-                import random
-                r = lambda: random.randint(0, 255)
-                color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r()) 
+                color = utils.random_color()
                 res = add_group(database=database, color=color, label="New Group", userid=userid, session_id=session_id, transaction_session=transaction_session)
 
             message(userid, {

@@ -3,7 +3,7 @@ import { useSWRHook } from "@/util/swr";
 
 import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import DocumentList from "./Documents/DocumentList";
+import DocumentList from "../Documents/DocumentList";
 
 export default function TeleoscopeViewer(props) {
   const swr = useSWRHook();

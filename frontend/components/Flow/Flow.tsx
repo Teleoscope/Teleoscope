@@ -12,11 +12,11 @@ import {
   setSelection,
 } from "@/actions/windows";
 import { useStomp } from "@/util/Stomp";
-import FlowProviderWrapper from "@/components/FlowProviderWrapper";
-import FlowWrapper from "@/components/FlowWrapper";
-import FlowUIComponents from "@/components/FlowUIComponents";
+import FlowProviderWrapper from "@/components/Flow/FlowProviderWrapper";
+import FlowWrapper from "@/components/Flow/FlowWrapper";
+import FlowUIComponents from "@/components/Flow/FlowUIComponents";
 import ContextMenuHandler from "@/components/ContextMenuHandler";
-import FlowFABWrapper from "@/components/FlowFABWrapper";
+import FlowFABWrapper from "@/components/Flow/FlowFABWrapper";
 import "reactflow/dist/style.css";
 import styles from "@/styles/flow.module.css";
 import lodash from 'lodash';
@@ -61,6 +61,7 @@ function Flow(props) {
   
   const { data, status } = useSession();
   const userid = data?.user?.id;
+  
   
 
   const bookmarks = useAppSelector((state: RootState) => state.windows.bookmarks);

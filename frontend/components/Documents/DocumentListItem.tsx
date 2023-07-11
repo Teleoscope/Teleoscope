@@ -7,7 +7,7 @@ import CircleIcon from "@mui/icons-material/Circle";
 import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined";
 
 // custom
-import GroupSelector from "@/components/GroupSelector";
+import GroupSelector from "@/components/Groups/GroupSelector";
 import BookmarkSelector from "@/components/BookmarkSelector";
 import DocumentTitle from "@/components/Documents/DocumentTitle";
 import Deleter from "@/components/Deleter";

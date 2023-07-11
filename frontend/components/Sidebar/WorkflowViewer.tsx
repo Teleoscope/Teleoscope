@@ -9,20 +9,17 @@ import {
   Menu,
 } from "@mui/material";
 import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
-import PeopleIcon from "@mui/icons-material/People";
 import Deleter from "@/components/Deleter";
- 
+
 import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
-import { resetWorkspace, relabelSession } from "@/actions/windows";
+import { relabelSession } from "@/actions/windows";
 
 import EditableText from "@/components/EditableText";
-import AddUserDialogue from "@/components/AddUserDialog";
 
 import randomColor from "randomcolor";
 
 import { useSWRHook } from "@/util/swr";
 import { useStomp } from "@/util/Stomp";
-import { sessionActivator } from "@/actions/activeSessionID";
 import { useSession } from "next-auth/react";
 
 const styles = {
@@ -51,6 +48,7 @@ const renderPopupButton = (popupId, icon, children) => (
   </PopupState>
 );
 
+
 export default function Workflows(props) {
   const client = useStomp();
   const wdefs = useWindowDefinitions();
@@ -61,8 +59,12 @@ export default function Workflows(props) {
 
   const { data, status } = useSession();
   const userid = data?.user?.id;
+  
   const session_id = useAppSelector((state) => state.activeSessionID.value);
-  const { sessions } = swr.useSWRAbstract("sessions", `user/sessions/${userid}`);
+  const workspace_id = useAppSelector((state) => state.activeSessionID.workspace);
+  
+  const { workflows } = swr.useSWRAbstract("workflows", `/workflows/${workspace_id}`)
+  
 
   const [value, setValue] = useState(null);
 
@@ -72,14 +74,7 @@ export default function Workflows(props) {
     }
   };
 
-  const handleWorkflowChoice = (sid) => {
-    dispatch(resetWorkspace());
-    dispatch(sessionActivator(sid));
-  };
 
-  const handleColorChange = (color, sid) => {
-    client.recolor_session(color.hex, sid);
-  };
 
   return (
     <div style={styles}>
@@ -103,7 +98,7 @@ export default function Workflows(props) {
         </Stack>
 
         <List>
-          {sessions?.map((session) => (
+          {workflows?.map((session) => (
             <div key={session._id} style={styles}>
               <ListItem
                 sx={{
@@ -113,12 +108,13 @@ export default function Workflows(props) {
                 <Stack sx={{ width: "100%" }} direction="row" alignItems="center" justifyContent="space-between">
                   <Stack direction="row" alignItems="center">
                     <ListItemIcon>
-                      <IconButton onClick={() => handleWorkflowChoice(session._id)}>
+                      <a href={`/workspace/${workspace_id}/${session._id}`}>
+                      
                         {wdefs.definitions()["Workflows"].icon([
                           { color: session.history[0].color },
                           { "& .MuiChip-icon": { color: session.history[0].color } },
                         ])}
-                      </IconButton>
+                      </a>
                     </ListItemIcon>
                     <EditableText
                       initialValue={session.history[0].label}
@@ -128,11 +124,6 @@ export default function Workflows(props) {
                     />
                   </Stack>
                   <Stack direction="row">
-                      {renderPopupButton(
-                        "add-user-popup-menu",
-                        <PeopleIcon fontSize="small" />,
-                        <AddUserDialogue session_id={session._id} />
-                      )}
                     <Deleter callback={() => client.remove_session(session._id)} color={props.color}></Deleter>
                   </Stack>
                 </Stack>

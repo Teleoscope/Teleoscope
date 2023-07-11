@@ -13,7 +13,7 @@ import {
   reorient,
   cluster_by_groups,
   add_user_to_session
-} from "../util/Stomp.js";
+} from "@/util/Stomp.js";
 
 class DummyClient {
   publish(msg) {

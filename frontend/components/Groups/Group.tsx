@@ -9,7 +9,7 @@ import DocumentList from "@/components/Documents/DocumentList";
 //utils
 import { useSWRHook } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
-import { CopyJson, CopyText, SaveDocx } from "@/components/GroupActions";
+import { CopyJson, CopyText, SaveDocx } from "@/components/Groups/GroupActions";
 
 export default function Group({ id: winId, windata, color }) {
   const id = winId.split("%")[0];

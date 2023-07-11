@@ -1,3 +1,10 @@
+
+/**
+ * /api/user/[user]
+ * user: ObjectId string
+ * requires: authenticated user and user exists
+ * returns: user object without hashed password
+ */
 import { authOptions } from 'pages/api/auth/[...nextauth]';
 import { getServerSession } from "next-auth/next";
 import clientPromise from "@/util/mongodb";
