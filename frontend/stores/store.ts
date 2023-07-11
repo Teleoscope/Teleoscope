@@ -78,11 +78,12 @@ const makeNodeMiddleware = store => next => action => {
   return result;
 };
 
-const store = configureStore({
+const store = (preloadedState) => configureStore({
   reducer: {
     activeSessionID: ActiveSessionID,
     windows: Windows,
   },
+  preloadedState: preloadedState,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

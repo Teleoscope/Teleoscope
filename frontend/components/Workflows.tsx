@@ -11,7 +11,7 @@ import {
 import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import PeopleIcon from "@mui/icons-material/People";
 import Deleter from "@/components/Deleter";
- 
+
 import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import { resetWorkspace, relabelSession } from "@/actions/windows";
 
@@ -51,6 +51,7 @@ const renderPopupButton = (popupId, icon, children) => (
   </PopupState>
 );
 
+
 export default function Workflows(props) {
   const client = useStomp();
   const wdefs = useWindowDefinitions();
@@ -62,7 +63,10 @@ export default function Workflows(props) {
   const { data, status } = useSession();
   const userid = data?.user?.id;
   const session_id = useAppSelector((state) => state.activeSessionID.value);
-  const { sessions } = swr.useSWRAbstract("sessions", `user/sessions/${userid}`);
+  const workspace_id = useAppSelector((state) => state.activeSessionID.workspace);
+  
+  const { workflows } = swr.useSWRAbstract("workflows", `/workspace/${workspace_id}`)
+  
 
   const [value, setValue] = useState(null);
 
@@ -103,7 +107,7 @@ export default function Workflows(props) {
         </Stack>
 
         <List>
-          {sessions?.map((session) => (
+          {workflows?.map((session) => (
             <div key={session._id} style={styles}>
               <ListItem
                 sx={{

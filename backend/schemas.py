@@ -101,7 +101,17 @@ def create_session_object(
                 "color": color,
                 "action": action,
                 "user": userid,
-                "notes": notes
+                "notes": notes,
+                "selection": {
+                    "nodes": [],
+                    "edges": [],
+                },
+                "settings": {
+                    "default_document_width": 200,
+                    "default_document_height": 34,
+                    "defaultExpanded": True,
+                    "color": "#D3D3D3",
+                }
             }
         ],
     }

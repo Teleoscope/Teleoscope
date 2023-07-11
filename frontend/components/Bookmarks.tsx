@@ -9,7 +9,7 @@ import { useStomp } from "@/util/Stomp";
 // custom components
 import DocumentListItem from "@/components/Documents/DocumentListItem";
 import { loadBookmarkedDocuments } from "@/actions/windows";
-import { NewItemForm } from "./NewItemForm";
+import { NewItemForm } from "@/components/NewItemForm";
 import randomColor from "randomcolor";
 
 export default function Bookmarks() {

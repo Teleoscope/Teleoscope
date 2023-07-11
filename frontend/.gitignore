@@ -33,3 +33,7 @@ yarn-error.log*
 /.idea/
 
 */yarn.lock
+
+
+# .pem files
+*.pem

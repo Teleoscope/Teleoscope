@@ -1,5 +1,5 @@
 import ReactFlow from 'reactflow';
-import ConnectionLine from './Nodes/ConnectionLine';
+import ConnectionLine from '@/components/Nodes/ConnectionLine';
 
 const FlowWrapper = ({
   nodes, 

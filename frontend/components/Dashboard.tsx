@@ -36,7 +36,7 @@ const ExistingWorkspace = ({workspace, client}) => {
                 color={coll?.found ? "success" : "primary"}
             />
         </FormControl>
-            <Link href={`/workspaces/${workspace._id}`} >Select workspace</Link>
+            <Link href={`/workspace/${workspace._id}`} >Select workspace</Link>
         </Stack>
     </Paper>
     )
@@ -46,6 +46,7 @@ const ExistingWorkspace = ({workspace, client}) => {
 const Workspaces = ({workspaces, client}) => {
     const [newWorkspaceSource, setNewWorkspaceSource] = useState("aita");
     const [label, setLabel] = useState("");
+    
     
     const handleChange = (event) => {
         setNewWorkspaceSource(event?.target.value)
@@ -91,23 +92,12 @@ const Workspaces = ({workspaces, client}) => {
 
 }
 
-const example_workspace = {
-    id: "user?.workspaces", 
-    database: "nursing", 
-    label: "my workspace",
-    collaborators: [
-        {_id: 1234, username: "not paul"},
-        {_id: 1234, username: "antipaul"},
-        {_id: 1234, username: "megapaul"},
-    ],
-    workflows: [
-        "lkasjdf"
-    ]
-}
 
 export default function Dashboard() {
     const { data: session, status } = useSession();
     const { data: user, error } = useSWR(`/api/user/${session?.user?.id}`, fetcher);
+    
+    const { data: workspaces } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/workspaces`, fetcher)
 
     const client = useStomp()
 
@@ -123,7 +113,7 @@ export default function Dashboard() {
     
     return (
         <Stack spacing={2}>
-            <Typography variant="h4">Weclome, {user?.username}.</Typography>
+            <Typography variant="h4">Welcome, {user?.username}.</Typography>
             <Typography variant="h5">Start by creating a new workspace or accessing a previous one. </Typography>
             <Typography>For now, we have two data sources from <Link href={"https://reddit.com"}>Reddit</Link> that are loaded and open to use: <Link href={"https://reddit.com/r/nursing"}>r/nursing</Link> and 
             <Link href={"https://reddit.com/r/AmITheAsshole"}>r/AmITheAsshole</Link>. When you create a new workspace, you 
@@ -133,7 +123,7 @@ export default function Dashboard() {
             your request. Subreddits are provided courtesy of <Link href="https://pushshift.io/">pushshift.io/</Link> and are up 
             to date on their schedule, which is roughly within two months.</Typography>
             
-            <Workspaces workspaces={[example_workspace ]} client={client}/>
+            <Workspaces workspaces={workspaces} client={client}/>
         </Stack>
         
     )

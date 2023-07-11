@@ -1,9 +1,9 @@
 // windows.js
 import { createSlice } from "@reduxjs/toolkit";
-import _ from "lodash";
-import { applyNodeChanges, applyEdgeChanges, Position } from "reactflow";
+import { applyNodeChanges, applyEdgeChanges } from "reactflow";
 
 const initialState = {
+  workflow_id: -1,
   nodes: [],
   edges: [],
   bookmarks: [],

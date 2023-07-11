@@ -1,8 +1,8 @@
 import { useAppSelector } from "@/util/hooks";
-import DocViewer from "@/components/DocViewer";
-import GroupViewer from "@/components/GroupViewer";
-import NotesViewer from "@/components/NotesViewer";
-import TeleoscopeViewer from "@/components/TeleoscopeViewer";
+import DocViewer from "@/components/Sidebar/DocViewer";
+import GroupViewer from "@/components/Sidebar/GroupViewer";
+import NotesViewer from "@/components/Sidebar/NotesViewer";
+import TeleoscopeViewer from "@/components/Sidebar/TeleoscopeViewer";
 import ClusterViewer from "@/components/Cluster/ClusterViewer";
 
 export default function SelectionViewer(props) {

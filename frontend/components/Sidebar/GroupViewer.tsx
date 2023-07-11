@@ -5,7 +5,7 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Typography, Stack, Divider } from "@mui/material";
 import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
-import DocumentList from "./Documents/DocumentList";
+import DocumentList from "@/components/Documents/DocumentList";
 import { CopyJson, CopyText, SaveDocx } from "@/components/GroupActions";
 import ButtonActions from "@/components/ButtonActions";
 export default function DocViewer(props) {

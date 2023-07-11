@@ -22,14 +22,14 @@ import ReactFlow, {
 } from "reactflow";
 import { setSelection } from "@/actions/windows";
 import WindowNode from "@/components/Nodes/WindowNode";
-import SelectionViewer from "@/components/SelectionViewer";
+import SelectionViewer from "@/components/Sidebar/SelectionViewer";
 import {
   account_fights_teleoscope,
   blocking_doc,
   blocking_teleoscope,
   taking_doc,
   taking_teleoscope,
-} from "@/components/demoTeleoscopes";
+} from "@/components/Demo/demoTeleoscopes";
 // API fetcher for SWR global config
 //const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
