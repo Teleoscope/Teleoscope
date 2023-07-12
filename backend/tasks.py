@@ -1465,6 +1465,26 @@ def add_item(*args, **kwargs):
                 "action": "OID_UID_SYNC",
                 "description": "Associate OID with UID."
             })
+        
+        case "Search":
+            if ObjectId.is_valid(oid): 
+                search = db.searches.find_one({"_id" : ObjectId(str(oid))})  
+                
+                if search: # oid is a search
+                    logging.info(f"Search already exists.")
+                    res = search["_id"]
+            else:
+                # need to create a group
+                logging.info(f"Search is new.")
+                res = add_search(database=database, userid=userid, session_id=session_id, query="", transaction_session=transaction_session)
+
+            message(userid, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })
+
 
         case "Note":
             content = {
@@ -1520,6 +1540,7 @@ def add_item(*args, **kwargs):
                 "description": f"Associated OID for {node_type} with UID."
             })
     return 
+
 
 @app.task
 def make_edge(*args, **kwargs):
