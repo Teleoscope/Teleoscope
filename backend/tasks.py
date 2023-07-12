@@ -13,6 +13,7 @@ import os
 from . import utils
 from . import auth
 from . import schemas
+from . import graph
 
 
 # ignore all future warnings
@@ -1382,45 +1383,9 @@ def create_child(*args, **kwargs):
 @app.task
 def update_edges(*arg, **kwargs):
     """
-    Updates the graph according to updated edges.
-    
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    
-    edges = kwargs["edges"]
-    source_node = kwargs["source_node"]
-    target_node = kwargs["target_node"]
-
-    
-    docid_pipeline = [
-        { '$project': { '_id': 1 } },  # Include only the _id field
-        { '$sort': { '_id': 1 } }  # Sort by _id field in ascending order
-    ]
-
-    result = db.documents.aggregate(docid_pipeline)
-    document_ids = [doc['_id'] for doc in result]
-
-    pipeline = [
-        {
-            '$graphLookup': {
-                'from': 'your_collection_name',  # Replace with the same collection name
-                'startWith': target_docset_oid,
-                'connectFromField': 'edges.source',  # Replace with the field representing the parent relationship
-                'connectToField': '_id',
-                'as': 'connected_elements',
-                'maxDepth': 10  # Specify the maximum depth of the recursive search
-            }
-        },
-        {
-            '$project': {
-                '_id': 1,
-                'connected_elements': 1
-            }
-        }
-    ]
+    Deprecated.
     """
     pass
-    
     
     
 @app.task
@@ -1452,10 +1417,10 @@ def add_item(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
 
     uid  = kwargs["uid"]
-    type = kwargs["type"]
+    node_type = kwargs["type"]
     oid  = kwargs["oid"]
 
-    match type:
+    match node_type:
 
         case "Group":
             # check to see if oid is valid 
@@ -1483,7 +1448,7 @@ def add_item(*args, **kwargs):
                 color = utils.random_color()
                 res = add_group(database=database, color=color, label="New Group", userid=userid, session_id=session_id, transaction_session=transaction_session)
 
-            message(userid, {
+            utils.message(userid, {
                 "oid": str(res),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
@@ -1498,19 +1463,45 @@ def add_item(*args, **kwargs):
                     logging.info(f"Search already exists.")
                     res = search["_id"]
             else:
-                # need to create a group
+                # need to create a search
                 logging.info(f"Search is new.")
-                res = add_search(database=database, userid=userid, session_id=session_id, query="", transaction_session=transaction_session)
+                res = add_search(
+                    database=database, 
+                    userid=userid, 
+                    session_id=session_id, 
+                    query="", 
+                    transaction_session=transaction_session
+                )
 
-            message(userid, {
+            utils.message(userid, {
                 "oid": str(res),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
                 "description": "Associate OID with UID."
             })
 
+        case "Note":
+            content = {
+                "blocks": [{
+                    "key": "835r3",
+                    "text": " ",
+                    "type": "unstyled",
+                    "depth": 0,
+                    "inlineStyleRanges": [],
+                    "entityRanges": [],
+                    "data": {}
+                }],
+                "entityMap": {}
+            }         
+            res = add_note(
+                database=database, 
+                session_id=session_id, 
+                label="New Note", 
+                content=content, 
+                userid=userid
+            )
 
-        case "Teleoscope" | "Projection" | "Note":
+        case "Projection":
             # If this already exists in the database, we can skip intitalization
             if ObjectId.is_valid(oid):
 
@@ -1524,106 +1515,20 @@ def add_item(*args, **kwargs):
 
             logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
-            match type:
-                case "Teleoscope":
-                    res = initialize_teleoscope(database=database, session_id=session_id, userid=userid)
-                case "Projection": 
-                    res = initialize_projection(database=database, session_id=session_id, label="New Projection", userid=userid)
-                case "Note":
-                    content = {
-                        "blocks": [{
-                            "key": "835r3",
-                            "text": " ",
-                            "type": "unstyled",
-                            "depth": 0,
-                            "inlineStyleRanges": [],
-                            "entityRanges": [],
-                            "data": {}
-                        }],
-                        "entityMap": {}
-                    }         
-                    res = add_note(database=database, session_id=session_id, label="New Note", content=content, userid=userid)
+            res = initialize_projection(database=database, session_id=session_id, label="New Projection", userid=userid)
 
-            message(userid, {
+            utils.message(userid, {
                 "oid": str(res),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
                 "description": "Associate OID with UID."
             })            
 
-        case "Filter" | "Intersection" | "Exclusion" | "Union":
+        case "Teleoscope" | "Filter" | "Intersection" | "Exclusion" | "Union":
             with transaction_session.start_transaction():
-                obj = schemas.create_node(type)
-                count = db.documents.count_documents({})
-                csc = csc_matrix((count, 2), dtype=np.float32)
                 
-                csc_id = utils.cscUpload(db, "graph", csc)
-
-                obj["matrix"] = csc_id
-                
-                res = db.graph.insert_one(obj, session=transaction_session)
-
-
+                graph.make_node(db, None, node_type)
     return 
-
-
-def find_node(oid, db):
-    _id = ObjectId(str(oid))
-    doc = db.documents.find_one({"_id": _id})
-    if doc:
-        return doc
-    
-    group = db.groups.find_one({"_id": _id})
-    if group:
-        return group
-
-    teleoscope = db.teleoscopes.find_one({"_id": _id})
-    if teleoscope:
-        return teleoscope
-    
-    projection = db.projections.find_one({"_id": _id})
-    if projection:
-        return projection
-    
-    return None
-
-def graph(oid, db):
-    node = db.graph.find_one({"_id": oid})
-    # edges = node["edges"]
-
-    # going wrong direction right now 
-    # TODO: make sure this goes "right"
-    query = db.graph.aggregate(pipeline = [{
-        "$graphLookup": {
-            "from": "graph",
-            "startWith": [oid],
-            "connectFromField": "edges.source.nodeid",
-            "connectToField": "_id",
-            "as": "connected_nodes",
-        }
-    }])
-    return query
-
-
-def construct_matrix(count, item, item_type):
-    return csc_matrix((count, 2), dtype=np.float32)
-
-
-def ensure_node_exists(db, item_oid, item_type, collection_map):
-    item = db.get_collection(collection_map[item_type]).find_one({"_id": item_oid})
-    if "node" not in item:
-        n = schemas.create_node(item_type)
-        count = db.documents.count_documents({})
-        csc = construct_matrix(count, item, item_type)
-        csc_id = utils.cscUpload(db, "graph", csc)
-        n["matrix"] = csc_id
-        r = db.graph.insert_one(n)
-        db.get_collection(collection_map[item_type]).update_one(
-            {"_id": item_oid},
-            {"$set": {"node": r.inserted_id}}
-        )
-        return db.get_collection(collection_map[item_type]).find_one({"_id": item_oid})
-    return item
 
 @app.task
 def make_edge(*args, **kwargs):
@@ -1635,104 +1540,23 @@ def make_edge(*args, **kwargs):
     session_id = ObjectId(str(kwargs["session_id"]))
     
     source_node = kwargs["source_node"]
+    source_type = source_node["type"]
     source_oid  = ObjectId(str(source_node["data"]["oid"]))
     target_node = kwargs["target_node"]
+    target_type = target_node["type"]
     target_oid  = ObjectId(str(target_node["data"]["oid"]))
-    handle_type = kwargs["handle_type"]
+    edge_type = kwargs["handle_type"] # source or control
 
-    connection = kwargs["connection"]
-    ui_state = kwargs["ui_state"]
-
-    collectionMap = {
-        "Teleoscope": "teleoscopes",
-        "Group": "groups",
-        "Document": "documents",
-        "Projection": "projections",
-        "Intersection": "nodes",
-        "Exclusion": "nodes",
-        "Union": "nodes"
-    }
-
-    target_item = ensure_node_exists(db, target_oid, target_node["type"], collectionMap)
-    source_item = ensure_node_exists(db, source_oid, source_node["type"], collectionMap)
+    graph.make_edge(db, source_oid, source_type, target_oid, target_type, edge_type)
     
-    edge_add_result = db.graph.update_one(
-        {
-            "_id" : target_item["node"]
-        },
-        {
-            "$addToSet": {
-                f'edges.{handle_type}': {
-                    "id": source_oid,
-                    "nodeid": source_item["node"],
-                    "type": source_node["type"]
-                }
-            }
-        }
-    )
+    return 200
 
-    g = graph(edge_add_result.upserted_id, db)
-    print(list(g))
-
-    if target_node["type"] == "Teleoscope":
-        docs = []
-        n = db.graph.find_one({"_id": target_item["node"]})
-        for input in n["edges"]["control"]:
-            if input["type"] == "Document":
-                doc = db.documents.find_one({"_id": input["id"]})
-                if doc:
-                    docs.append(doc)
-            if input["type"] == "Group":
-                group = db.groups.find_one({"_id": input["id"]})
-                gdocs = group["history"][0]["included_documents"]
-                for gdoc in gdocs:
-                    doc = db.documents.find_one({"_id": ObjectId(str(gdoc))})
-                    if doc:
-                        docs.append(doc)
-
-        if len(docs) != 0:        
-            vec = np.average([d["textVector"] for d in docs], axis=0)
-            ids, vecs = utils.get_documents(database)
-            scores = utils.calculateSimilarity(vecs, vec)
-            
-            newRanks = utils.rankDocumentsBySimilarity(ids, scores)
-
-            rank_slice = newRanks[0:1000]
-            teleoscope = db.teleoscopes.find_one({"_id": target_item["_id"]})
-            history_item = schemas.create_teleoscope_history_item(
-                    label = teleoscope['history'][0]['label'],
-                    reddit_ids=teleoscope['history'][0]['reddit_ids'],
-                    positive_docs=docs,
-                    negative_docs=[],
-                    stateVector=vec.tolist(),
-                    ranked_document_ids=target_item["node"],
-                    rank_slice=rank_slice,
-                    action="Reorient teleoscope",
-                    user=ObjectId(str(userid))
-                )
-            
-            # csc = utils.cscDownload(teleoscope['node'])
-            logging.info(f'Number of ids: {len(ids)} and shape of csc:')
-            
-            utils.push_history(db, "teleoscopes", target_item["_id"], history_item)
-
-    return edge_add_result
-
-def message(userid: ObjectId, msg):
-    import pika
-    credentials = pika.PlainCredentials(auth.rabbitmq["username"], auth.rabbitmq["password"])
-    parameters = pika.ConnectionParameters(host='localhost', port=5672, virtual_host='teleoscope', credentials=credentials)
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-    queue_name = str(userid)
-    channel.basic_publish(exchange='', routing_key=queue_name, body=json.dumps(msg))
-    logging.info(f"Sent to queue for userid {userid} and with message {json.dumps(msg)}.")
 
 @app.task
 def ping(*args, **kwargs):
     msg = f"ping {userid}"
     userid = ObjectId(str(kwargs["userid"]))
-    message(userid, msg)
+    utils.message(userid, msg)
 
 "dispatch.${userInfo.username}@%h"
 
