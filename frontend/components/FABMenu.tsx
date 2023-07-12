@@ -59,8 +59,8 @@ export default function FABMenu(props) {
       direction="down"
       icon={<SpeedDialIcon />}
       className="drag-handle"
-      onClose={() => console.log("close") }
-      onOpen={() => console.log("open")}
+      // onClose={() => console.log("close") }
+      // onOpen={() => console.log("open")}
       FabProps={{
         sx: {
           bgcolor: settings.color,
