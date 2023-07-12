@@ -8,15 +8,15 @@ export default async (req, res) => {
 
   var count = 0;
   if (!args) {
-    count = await db.collection("documents").count({});
+    count = await db.collection("documents").countDocuments({});
   } else if (args.length == 1) {
     count = await db
       .collection("documents")
-      .count(makeQuery(args[0]));
+      .countDocuments(makeQuery(args[0]));
   } else if (args.length == 2) {
     count = await db
       .collection("documents")
-      .count(makeQuery(args[0]));
+      .countDocuments(makeQuery(args[0]));
   }
   res.json(count);
 };

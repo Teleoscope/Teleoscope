@@ -347,6 +347,31 @@ def save_UI_state(
 
     return session_id
 
+################################################################################
+# Search tasks
+################################################################################
+@app.task
+def add_search(
+    *args, database: str, userid: str, session_id: str, query: str,
+    **kwargs) -> ObjectId:
+    #---------------------------------------------------------------------------
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle ObjectID kwargs
+    session_id = ObjectId(str(session_id))
+    userid = ObjectId(str(userid))
+    
+    # log action to stdout
+    logging.info(f'Adding search {query} for'
+                 f'workflow {session_id} and user {userid}.')
+    #---------------------------------------------------------------------------
+    obj = schemas.create_search_object(userid=userid, query=query)
+
+    res = db.searches.insert_one(obj)
+    
+    return res.inserted_id
+
 
 ################################################################################
 # Group tasks
@@ -1397,7 +1422,6 @@ def update_edges(*arg, **kwargs):
     pass
     
     
-
     
 @app.task
 def mark(*args, **kwargs):
@@ -1418,6 +1442,7 @@ def mark(*args, **kwargs):
         utils.push_history(db, "teleoscopes", session_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
+
 @app.task
 def add_item(*args, **kwargs):
     database = kwargs["database"]
@@ -1433,7 +1458,6 @@ def add_item(*args, **kwargs):
     match type:
 
         case "Group":
-
             # check to see if oid is valid 
             if ObjectId.is_valid(oid): 
                 group = db.groups.find_one({"_id" : ObjectId(str(oid))})  
@@ -1465,6 +1489,26 @@ def add_item(*args, **kwargs):
                 "action": "OID_UID_SYNC",
                 "description": "Associate OID with UID."
             })
+        
+        case "Search":
+            if ObjectId.is_valid(oid): 
+                search = db.searches.find_one({"_id" : ObjectId(str(oid))})  
+                
+                if search: # oid is a search
+                    logging.info(f"Search already exists.")
+                    res = search["_id"]
+            else:
+                # need to create a group
+                logging.info(f"Search is new.")
+                res = add_search(database=database, userid=userid, session_id=session_id, query="", transaction_session=transaction_session)
+
+            message(userid, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })
+
 
         case "Teleoscope" | "Projection" | "Note":
             # If this already exists in the database, we can skip intitalization
@@ -1520,7 +1564,7 @@ def add_item(*args, **kwargs):
                 res = db.graph.insert_one(obj, session=transaction_session)
 
 
-    return "Help"
+    return 
 
 
 def find_node(oid, db):
@@ -1544,33 +1588,6 @@ def find_node(oid, db):
     return None
 
 def graph(oid, db):
-    # all_graph_items = db.graph.aggregate(pipeline = [{
-    #     "$graphLookup": {
-    #         "from": "graph",
-    #         "startWith": {
-    #             "$concatArrays": [
-    #                 {
-    #                     "$map": {
-    #                         "input": "$edges.source",
-    #                         "as": "sourceElem",
-    #                         "in": "$$sourceElem.nodeid"
-    #                     }
-    #                 },
-    #                 {
-    #                     "$map": {
-    #                         "input": "$edges.control",
-    #                         "as": "controlElem",
-    #                         "in": "$$controlElem.nodeid"
-    #                     }
-    #                 }
-    #             ]
-    #         },
-    #         "connectFromField": "edges.source.nodeid",
-    #         "connectToField": "_id",
-    #         "as": "connected_nodes",
-    #     }
-    # }])
-    
     node = db.graph.find_one({"_id": oid})
     # edges = node["edges"]
 
@@ -1587,29 +1604,10 @@ def graph(oid, db):
     }])
     return query
 
-'''
-list_of_docsets:
-    {
-        {
-            docset_p1: [(doc, rank)]
-        },
-        {
-            docset_p2: [(doc, rank)]
-        }
-    }
-
-
-    id    |    rank   p1 p2 ...
-    ----- |          
-    oid_1 |    0.01   0  1  ...
-    oid_2 |    0.99   1  0  ...
-
-    ...
-
-'''
 
 def construct_matrix(count, item, item_type):
     return csc_matrix((count, 2), dtype=np.float32)
+
 
 def ensure_node_exists(db, item_oid, item_type, collection_map):
     item = db.get_collection(collection_map[item_type]).find_one({"_id": item_oid})
