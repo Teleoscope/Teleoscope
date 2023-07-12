@@ -163,7 +163,6 @@ def graph(db: database.Database, node_oid: ObjectId):
         case "Filter":
             node = update_filter(db, node, sources, controls, parameters)
 
-    logging.info(f"Is this the culprit node {node}")
     res = db.graph.replace_one({"_id": node_oid}, node)
 
     # Calculate each node downstream to the right.
@@ -228,7 +227,7 @@ def update_parameters(db, node, parameters):
 ################################################################################
 
 def update_teleoscope(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
-    rank_slice_length = 10
+    rank_slice_length = 2
     if "rank_slice_length" in parameters:
         rank_slice_length = parameters["rank_slice_length"]
     
@@ -236,6 +235,10 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
         f"Updating Teleoscope for database {db.name} and node {teleoscope_node} with "
         f"sources {sources} and controls {controls} and paramaters {parameters}."
     )
+
+    if len(controls) == 0:
+        logging.info(f"No controls included. Returning original teleoscope node.")
+        return teleoscope_node
     
     ids, all_vectors = utils.get_documents(db.name)
 
@@ -257,25 +260,25 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
             match source["type"]:
                 case "Document":
                     oids = [source["id"]]
-                    vecs = filter_vectors_by_oid(oids, ids, all_vectors)
+                    vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
                     source_map.append((source["id"], vecs, oids))
                 case "Group":
                     group = db.groups.find_one({"_id": source["id"]})
                     oids = group["history"][0]["included_documents"]
-                    vecs = filter_vectors_by_oid(oids, ids, all_vectors)
+                    vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
                     source_map.append((source["id"], vecs, oids))
                 case "Search":
                     search = db.searches.find_one({"_id": source["id"]})
                     cursor = db.documents.find(utils.make_query(search["query"]),projection={ "_id": 1})
                     oids = [d["_id"] for d in list(cursor)]
-                    vecs = filter_vectors_by_oid(oids, ids, all_vectors)
+                    vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
                     source_map.append((source["id"], vecs, oids))
     
-    for source, vecs, oids in source_map:
-        ranks = rank(control_vecs, ids, all_vectors)
-        doclist[source["id"]] = ranks[0:rank_slice_length]
+    for source_id, source_vecs, source_oids in source_map:
+        ranks = rank(control_vecs, source_oids, source_vecs)
+        doclist[source_id] = ranks[0:rank_slice_length]
     
-    teleoscope_node["doclists"] = doclist
+    teleoscope_node["doclists"] = dict((str(key), value) for (key, value) in doclist.items())
     
     # TODO: matrix
     return teleoscope_node
@@ -305,15 +308,5 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
                 search = db.searches.find_one({"_id": c["id"]})
                 cursor = db.documents.find(utils.make_query(search["query"]),projection={ "_id": 1})
                 oids = oids + [d["_id"] for d in list(cursor)]
-    logging.debug(f"Got {oids} as control vectors for controls {controls}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
+    logging.debug(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
     return filter_vectors_by_oid(oids, ids, all_vectors)
-    
-
-def get_source_vectors(db: database.Database, sources, ids, all_vectors):
-    oids = []
-    for s in sources:
-        match c["type"]:
-            case "Document":
-                oids.append(s["id"])
-            case "Group":
-                pass

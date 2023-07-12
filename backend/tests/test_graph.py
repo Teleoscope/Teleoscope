@@ -108,6 +108,7 @@ def test_add_search():
     global search
     assert search != None
 
+
 ###############################################################################
 # Make node tests
 ###############################################################################
@@ -219,7 +220,7 @@ def test_make_edge_from_group_to_teleoscope():
     target_node = graph.make_node(db, None, "Teleoscope")
 
     graph.make_edge(
-        db=db, 
+        db=db,
         source_oid=group_id,
         source_type="Group",
         target_oid=target_node["_id"],
@@ -280,6 +281,61 @@ def test_make_edge_from_search_to_teleoscope():
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) > 0
+
+
+def test_search_as_source_group_as_control_teleoscope():
+    global db, group, search
+    search_id = search["_id"]
+    group_id = group["_id"]
+
+    target_node = graph.make_node(db, None, "Teleoscope")
+
+    graph.make_edge(
+        db=db, 
+        source_oid=search_id,
+        source_type="Search",
+        target_oid=target_node["_id"],
+        target_type="Teleoscope",
+        edge_type="source"
+    )
+
+    graph.make_edge(
+        db=db,
+        source_oid=group_id,
+        source_type="Group",
+        target_oid=target_node["_id"],
+        target_type="Teleoscope",
+        edge_type="control"
+    )
+
+    # Grab the nodes for the documents we just made
+    search_updated = db.searches.find_one(search_id)
+    group_updated = db.groups.find_one(group_id)
+    
+    control_node_updated = db.graph.find_one(group_updated["node"])
+    source_node_updated = db.graph.find_one(search_updated["node"])
+    target_node_updated = db.graph.find_one(target_node["_id"])
+
+    # make sure the source contains a reference to the target
+    updated_source_edges = source_node_updated["edges"]
+    updated_control_edges = control_node_updated["edges"]
+    assert target_node["_id"] in [e["nodeid"] for e in updated_source_edges["output"]]
+    assert target_node["_id"] in [e["nodeid"] for e in updated_control_edges["output"]]
+
+    # make sure the target contains a reference to the source
+    updated_target_edges = target_node_updated["edges"]
+    assert source_node_updated["_id"] in [e["nodeid"] for e in updated_target_edges["source"]]
+    assert control_node_updated["_id"] in [e["nodeid"] for e in updated_target_edges["control"]]
+
+    # make sure the document list is non-zero
+    updated_target_docs = target_node_updated["doclists"]
+    assert len(updated_target_docs) > 0
+
+
+
+
+
+
 
 
     
