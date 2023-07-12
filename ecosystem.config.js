@@ -7,7 +7,7 @@ module.exports = {
   apps: [
     {
       name: "dispatch",
-      script: "/usr/share/miniconda3/envs/teleoscope/bin/celery",
+      script: "/usr/share/miniconda3/envs/teleoscope/bin/python",
       args: ["-m", "backend.dispatch"],
       watch: false,
       interpreter: ""
