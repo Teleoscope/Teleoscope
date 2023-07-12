@@ -53,8 +53,7 @@
     "**/*.js",
     "**/*.jsx",
     "pages/signin/index.mdx",
-    "build/types/**/*.ts"
-  ],
+    "build/types/**/*.ts"],
   "exclude": [
     "node_modules",
     ".yarn",

@@ -53,7 +53,6 @@ export const authOptions = {
         
         const user = await res.json()
 
-        console.log("authenticate", user)
         // If no error and we have user data, return it
         if (res.ok && user) {
           return user

@@ -25,7 +25,7 @@ export async function getServerSideProps(context) {
 
   const workspace_id = context.query.args[0]
 
-  let client = await new MongoClient(process.env.MONGODB_URI).connect();
+  const client = await new MongoClient(process.env.MONGODB_URI).connect();
   let db = await client.db("users");
 
   const workspace = await db

@@ -1,14 +1,14 @@
 import Head from "next/head";
 import "@/styles/global.css";
-import { StrictMode, useState } from "react";
+import { StrictMode } from "react";
 import { SessionProvider } from 'next-auth/react';
 import { Stomp, StompContext } from "@/util/Stomp";
 
-
+const client = Stomp.getInstance({})
 export default App;
 function App({ Component, pageProps: { session, ...pageProps } }) {
   
-  const [client, setClient] = useState(Stomp.getInstance({}));
+  
   
   return (
     <>
