@@ -1,5 +1,6 @@
 import datetime
 import pytest
+import logging
 
 # local files
 from .. import utils
@@ -102,7 +103,7 @@ def test_make_node_document():
     # make a new node from a document
     node = graph.make_node(db, document_id, "Document")
     assert node != None
-    print("Node is: ", node)
+    logging.info(f"Node is: {node}.")
     
     # document should have a node field matching above
     doc = db.documents.find_one({"_id": document_id})
@@ -180,18 +181,19 @@ def test_make_edge_document_teleoscope():
     source_node_updated = db.graph.find_one(document_updated["node"])
     target_node_updated = db.graph.find_one(target_node["_id"])
 
+    logging.info(f"Target node updated {target_node_updated}.")
+
     # make sure the source contains a reference to the target
     updated_source_edges = source_node_updated["edges"]
-    assert target_node["_id"] in updated_source_edges["output"]
+    assert target_node["_id"] in [e["nodeid"] for e in updated_source_edges["output"]]
     
     # make sure the target contains a reference to the source
     updated_target_edges = target_node_updated["edges"]
-    assert source_node_updated["_id"] in updated_target_edges["control"]
+    assert source_node_updated["_id"] in [e["nodeid"] for e in updated_target_edges["control"]]
 
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) > 0
-       
 
     
     

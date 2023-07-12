@@ -1544,33 +1544,6 @@ def find_node(oid, db):
     return None
 
 def graph(oid, db):
-    # all_graph_items = db.graph.aggregate(pipeline = [{
-    #     "$graphLookup": {
-    #         "from": "graph",
-    #         "startWith": {
-    #             "$concatArrays": [
-    #                 {
-    #                     "$map": {
-    #                         "input": "$edges.source",
-    #                         "as": "sourceElem",
-    #                         "in": "$$sourceElem.nodeid"
-    #                     }
-    #                 },
-    #                 {
-    #                     "$map": {
-    #                         "input": "$edges.control",
-    #                         "as": "controlElem",
-    #                         "in": "$$controlElem.nodeid"
-    #                     }
-    #                 }
-    #             ]
-    #         },
-    #         "connectFromField": "edges.source.nodeid",
-    #         "connectToField": "_id",
-    #         "as": "connected_nodes",
-    #     }
-    # }])
-    
     node = db.graph.find_one({"_id": oid})
     # edges = node["edges"]
 
@@ -1587,29 +1560,10 @@ def graph(oid, db):
     }])
     return query
 
-'''
-list_of_docsets:
-    {
-        {
-            docset_p1: [(doc, rank)]
-        },
-        {
-            docset_p2: [(doc, rank)]
-        }
-    }
-
-
-    id    |    rank   p1 p2 ...
-    ----- |          
-    oid_1 |    0.01   0  1  ...
-    oid_2 |    0.99   1  0  ...
-
-    ...
-
-'''
 
 def construct_matrix(count, item, item_type):
     return csc_matrix((count, 2), dtype=np.float32)
+
 
 def ensure_node_exists(db, item_oid, item_type, collection_map):
     item = db.get_collection(collection_map[item_type]).find_one({"_id": item_oid})

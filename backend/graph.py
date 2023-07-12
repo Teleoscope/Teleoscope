@@ -120,7 +120,7 @@ def make_edge(db: database.Database,
         {"_id": source["_id"]},
         {
             "$push": {
-                f"edges.output": schemas.create_edge(target_oid, target["_id"], edge_type)
+                f"edges.output": schemas.create_edge(target_oid, target["_id"], target_type)
             }
         }
     )
@@ -130,7 +130,7 @@ def make_edge(db: database.Database,
         {"_id": target["_id"]},
         {
             "$push": {
-                f"edges.{edge_type}": schemas.create_edge(source_oid, source["_id"], edge_type)
+                f"edges.{edge_type}": schemas.create_edge(source_oid, source["_id"], source_type)
             }
         }
     )
@@ -163,6 +163,7 @@ def graph(db: database.Database, node_oid: ObjectId):
         case "Filter":
             node = update_filter(db, node, sources, controls, parameters)
 
+    logging.info(f"Is this the culprit node {node}")
     res = db.graph.replace_one({"_id": node_oid}, node)
 
     # Calculate each node downstream to the right.
@@ -174,6 +175,7 @@ def graph(db: database.Database, node_oid: ObjectId):
 ################################################################################
 # Helpers
 ################################################################################
+
 def get_collection(db: database.Database, node_type: schemas.NodeType):
     """Return the collection for a node type.
     """
@@ -189,47 +191,67 @@ def get_collection(db: database.Database, node_type: schemas.NodeType):
 
     return db.get_collection(collection_map[node_type])
 
+
 def make_matrix(node_type: schemas.NodeType, oid: ObjectId):
     return []
+
 
 def update_matrix(oid: ObjectId, node_type: schemas.NodeType, graph_oid: ObjectId):
     return []
 
+
 def update_union(db, node, sources: List, controls: List, parameters):
     return node # stub
+
 
 def update_intersection(db, node, sources: List, controls: List, parameters):
     return node # stub
 
+
 def update_exclusion(db, node, sources: List, controls: List, parameters):
     return node # stub
 
+
 def update_filter(db, node, sources: List, controls: List, parameters):
     return node # stub
+
+
+def update_parameters(db, node, parameters):
+    collection = get_collection(db, node["type"])
+    res = collection.update_one(node["_id"], {"$set": {"parameters": parameters}})
+    return res
 
 
 ################################################################################
 # Update Teleoscope
 ################################################################################
 
-def update_teleoscope(db: database.Database, node, sources: List, controls: List, parameters):
+def update_teleoscope(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
+    rank_slice_length = 10
+    if "rank_slice_length" in parameters:
+        rank_slice_length = parameters["rank_slice_length"]
+    
     logging.debug(
-        f"Updating Teleoscope for database {db.name} and node {node} with "
+        f"Updating Teleoscope for database {db.name} and node {teleoscope_node} with "
         f"sources {sources} and controls {controls} and paramaters {parameters}."
     )
     
     ids, all_vectors = utils.get_documents(db.name)
+
     logging.debug(f"Found {len(ids)} IDs and {len(all_vectors)} vectors.")
+
+    if len(ids) == 0 or len(all_vectors) == 0:
+        raise Exception("Zero-length vector sources. Were vectors downloaded?")
     
     control_vecs = get_control_vectors(db, controls, ids, all_vectors)
 
     doclist = {}
-
+    source_map = []
+    
     if len(sources) == 0:
         ranks = rank(control_vecs, ids, all_vectors)
-        doclist["all"] = ranks[0:1000]
+        doclist["all"] = ranks[0:rank_slice_length]
     else:
-        source_map = []
         for source in sources:
             match source["type"]:
                 case "Document":
@@ -246,21 +268,15 @@ def update_teleoscope(db: database.Database, node, sources: List, controls: List
     
     for source, vecs, oids in source_map:
         ranks = rank(control_vecs, ids, all_vectors)
-        doclist[source["id"]] = ranks[0:1000]    
+        doclist[source["id"]] = ranks[0:rank_slice_length]
     
-    db.graph.update_one(
-        {"_id": node["_id"]},
-        {
-            "$set": {
-                "doclists": doclist
-            }
-        }
-    )
+    teleoscope_node["doclists"] = doclist
+    
     # TODO: matrix
-    return node
+    return teleoscope_node
 
 def rank(control_vecs, ids, vecs):
-    logging.debug(f"Control vecs {control_vecs}.")
+    logging.debug(f"There were {len(control_vecs)} control vecs.")
     vec = np.average(control_vecs, axis=0)
     scores = utils.calculateSimilarity(vecs, vec)
     ranks = utils.rankDocumentsBySimilarity(ids, scores)
@@ -282,6 +298,7 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
                 oids = oids + group["history"][0]["included_documents"]
             case "Search":
                 pass
+    logging.debug(f"Got {oids} as control vectors for controls {controls}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
     return filter_vectors_by_oid(oids, ids, all_vectors)
     
 

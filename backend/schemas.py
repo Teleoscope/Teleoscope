@@ -7,6 +7,7 @@ EdgeType = Literal["source", "control", "output"]
 NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Union", "Intersection", "Exclusion", "Subtraction"]
 HexStr = NewType('HexStr', str)
 
+
 def create_workspace_object(*args, owner: ObjectId, label: str, database: str, workflow: ObjectId):
     obj = {
         "owner": owner,
@@ -23,6 +24,7 @@ def create_workspace_object(*args, owner: ObjectId, label: str, database: str, w
         ]
     }
     return obj
+
 
 def create_group_object(color, included_documents, label, action, user_id, description, session_id, cluster_id=[]):
     obj = {
@@ -41,6 +43,7 @@ def create_group_object(color, included_documents, label, action, user_id, descr
             }]
     }
     return obj
+
 
 def create_cluster_object(
         color, 
@@ -67,6 +70,7 @@ def create_cluster_object(
     }
     return obj
 
+
 def create_projection_object(session_id, label, user_id, action=f"initialize projection"):
     obj = {
         "creation_time": datetime.datetime.utcnow(),
@@ -82,6 +86,7 @@ def create_projection_object(session_id, label, user_id, action=f"initialize pro
             }]
     }
     return obj
+
 
 def create_workflow_object(
         *args,
@@ -129,6 +134,7 @@ def create_workflow_object(
         ],
     }
 
+
 def create_user_object(*args, username, password):
     return {
         "creation_time": datetime.datetime.utcnow(),
@@ -137,6 +143,7 @@ def create_user_object(*args, username, password):
         "sessions":[],
         "action": "initialize a user"
     }
+
 
 def create_document_object(title, textVector, text, relationships={}, metadata={}):
     return {
@@ -152,6 +159,7 @@ def create_document_object(title, textVector, text, relationships={}, metadata={
         }
     }
 
+
 def create_teleoscope_object(session_id, userid, **kwargs):
     return {
         "creation_time": datetime.datetime.utcnow(),
@@ -160,6 +168,7 @@ def create_teleoscope_object(session_id, userid, **kwargs):
             create_teleoscope_history_item(user = userid, **kwargs)
         ]
     }
+
 
 def create_teleoscope_history_item(
         label = "New Teleoscope",
@@ -185,12 +194,14 @@ def create_teleoscope_history_item(
     }
     return history_item
 
+
 def create_note_object(userid, label, content, vector):
     return {
         "creation_time": datetime.datetime.utcnow(),
         "textVector": vector,
         "history": [create_note_history_item(userid, label, "Add note.", content=content)]
     }
+
 
 def create_note_history_item(userid, label, action, content={}):
     return {
@@ -201,6 +212,7 @@ def create_note_history_item(userid, label, action, content={}):
             "timestamp": datetime.datetime.utcnow()
     }
 
+
 def create_node(type):
     return {
         "creation_time": datetime.datetime.utcnow(),
@@ -208,7 +220,7 @@ def create_node(type):
         "status": "loading",
         "matrix": None,
         "columns": [],
-        "doclists": [],
+        "doclists": {},
         "parameters": {},
         "edges": {
             "source": [],

@@ -2,6 +2,7 @@
 import json
 import numpy as np
 from tqdm import tqdm
+import heapq
 
 # installed modules
 from pymongo import MongoClient, database
@@ -167,6 +168,24 @@ def rankDocumentsBySimilarity(documents_ids, scores):
     '''
     return sorted([(document_id, score) for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
 
+
+
+def rankDocumentsBySimilarity(document_ids, scores, n_top=1000):
+    '''Create and return a list a tuples of (document_id, similarity_score) sorted by similarity score, high to low, keeping only the top N documents.
+
+    Args:
+    document_ids (List): The list of document IDs. 
+    scores (List): The corresponding similarity scores for each document. 
+    n_top (int): The number of top documents to keep. Default is 1000.
+
+    Returns:
+    List[Tuple]: List of tuples, each containing a document_id and its corresponding similarity score, sorted in descending order by the similarity score, limited to the top N documents.
+    '''
+    scores_and_ids = zip(scores, document_ids)
+    top_n = heapq.nlargest(n_top, scores_and_ids)
+    top_n_sorted = sorted(top_n, key=lambda x: x[0], reverse=True)
+    return [(doc_id, score) for score, doc_id in top_n_sorted]
+
 def rank_document_ids_by_similarity(documents_ids, scores):
     '''Create and return a list a document ids sorted by similarity score, high to low
     '''
@@ -322,44 +341,51 @@ def get_documents(dbstring, rebuild=False):
     vectors = []
 
     if npzpath.exists() and pklpath.exists() and not rebuild:
-        logging.info(f"Retrieving cached documents for {dbstring}.")
+        logging.info(f"Attempting to retrieving cached documents for {dbstring}.")
         
         loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
         with open(pklpath.as_posix(), 'rb') as handle:
             ids = pickle.load(handle)
         vectors = loadDocuments['documents']
 
-    else:
-        logging.info(f"Building cache now for {dbstring} where rebuild is {rebuild}.")
-        
-        db = connect(db=dbstring)
+        if len(vectors) > 0 and len(ids) > 0 and len(vectors) == len(ids):
+            return ids, vectors
+        else:
+            logging.info(f"Retrieving cached documents for {dbstring} failed.")
 
-        count = db.documents.count_documents({})
+    logging.info(f"Building cache now for {dbstring} where rebuild is {rebuild}.")
+    
+    db = connect(db=dbstring)
 
-        documents = db.documents.aggregate(
-            [
-                # Only get IDs and vectors
-                { "$project": { "textVector": 1, "_id": 1 }},
-                # Ensure they're always in the same order
-                { "$sort" : { "_id" : 1 } }
-                ]
-        )
+    count = db.documents.count_documents({})
+    logging.info(f"Connected to database {dbstring}. There are {count} documents to retrieve.")
 
-        _ids = []
-        _vecs = []
+    logging.info(f"Aggregating documents...")
+    documents = db.documents.aggregate(
+        [
+            # Only get IDs and vectors
+            { "$project": { "textVector": 1, "_id": 1 }},
+            # Ensure they're always in the same order
+            { "$sort" : { "_id" : 1 } }
+            ]
+    )
 
-        for doc in tqdm(documents, total=count):
-            _ids.append(doc["_id"])
-            _vecs.append(doc["textVector"])
-        vecs = np.array(_vecs)
-        ids = _ids
-        vectors = _vecs
+    _ids = []
+    _vecs = []
 
-        logging.info(f'There are {len(ids)} ids and {len(vecs)} vectors in {dbstring} documents.')
-        
-        np.savez(npzpath.as_posix(), documents=vecs)
-        with open(pklpath.as_posix(), 'wb') as handle:
-            pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    logging.info(f"Retreiving documents...")
+    for doc in tqdm(documents, total=count):
+        _ids.append(doc["_id"])
+        _vecs.append(doc["textVector"])
+    vecs = np.array(_vecs)
+    ids = _ids
+    vectors = _vecs
+
+    logging.info(f'There are {len(ids)} ids and {len(vecs)} vectors in {dbstring} documents.')
+    
+    np.savez(npzpath.as_posix(), documents=vecs)
+    with open(pklpath.as_posix(), 'wb') as handle:
+        pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
         
     return ids, vectors
 
