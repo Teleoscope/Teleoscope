@@ -1,7 +1,9 @@
 from bson.objectid import ObjectId
 from pymongo import MongoClient, database
 from typing import List
-from . import numpy as np
+import numpy as np
+import logging
+
 from . import schemas
 from . import utils
 
@@ -211,8 +213,14 @@ def update_filter(db, node, sources: List, controls: List, parameters):
 ################################################################################
 
 def update_teleoscope(db: database.Database, node, sources: List, controls: List, parameters):
+    logging.debug(
+        f"Updating Teleoscope for database {db.name} and node {node} with "
+        f"sources {sources} and controls {controls} and paramaters {parameters}."
+    )
+    
     ids, all_vectors = utils.get_documents(db.name)
-
+    logging.debug(f"Found {len(ids)} IDs and {len(all_vectors)} vectors.")
+    
     control_vecs = get_control_vectors(db, controls, ids, all_vectors)
 
     doclist = {}
@@ -252,6 +260,7 @@ def update_teleoscope(db: database.Database, node, sources: List, controls: List
     return node
 
 def rank(control_vecs, ids, vecs):
+    logging.debug(f"Control vecs {control_vecs}.")
     vec = np.average(control_vecs, axis=0)
     scores = utils.calculateSimilarity(vecs, vec)
     ranks = utils.rankDocumentsBySimilarity(ids, scores)
