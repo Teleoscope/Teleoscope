@@ -208,7 +208,7 @@ export class Stomp {
     const headers = {
       "content_type": "application/json",
       "content_encoding": "utf-8",
-      "reply-to": `${body["message_id"]}`
+      // "reply-to": `${body["message_id"]}`
     };
 
     if (!this.client && this._userid) {
