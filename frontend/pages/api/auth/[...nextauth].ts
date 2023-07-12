@@ -6,7 +6,6 @@ const useSecureCookies = process.env.NEXT_PUBLIC_NEXTAUTH_URL.startsWith("https:
 const cookiePrefix = useSecureCookies ? "__Secure-" : "";
 const domain = process.env.NEXT_PUBLIC_NEXTAUTH_URL.split("//")[1].split(":")[0]
 
-console.log("domain", domain)
 export const authOptions = {
   cookies: {
     sessionToken: {

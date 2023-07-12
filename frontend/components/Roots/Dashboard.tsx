@@ -22,8 +22,6 @@ const ExistingWorkspace = ({workspace, client, color}) => {
         }
     }
 
-    console.log("color", color)
-
     return (
         <Paper elevation={1} sx={{width:"12em"}}>
             <Stack spacing={2} sx={{margin: "1em"}}>
@@ -125,7 +123,6 @@ export default function Dashboard() {
 
     useEffect(() => {
         client.userId = session?.user.id;
-        console.log("client", client)
     }, [session?.user])
     
 

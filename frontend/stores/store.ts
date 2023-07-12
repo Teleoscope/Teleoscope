@@ -49,7 +49,6 @@ const makeNodeMiddleware = store => next => action => {
     const target_node = nodes.find(n => n.id === action.payload.connection.target)
     const handle_type = action.payload.connection.targetHandle.split("_").slice(-1)[0]
 
-    console.log("makeEdge", action)
     action.payload.client.make_edge({
       session_id: updatedState.activeSessionID.value,
       source_node: source_node,

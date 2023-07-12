@@ -91,7 +91,7 @@ def initialize_workspace(
     userid = ObjectId(str(userid))
 
     # log action to stdout
-    logging.info(f"Initializing workflow for user {userid}.")
+    logging.info(f"Initializing workspace for user {userid}.")
     #---------------------------------------------------------------------------
 
     # Every workspace should be initialized with one workflow
@@ -99,7 +99,7 @@ def initialize_workspace(
     workflow_id = initialize_workflow(database=datasource, userid=userid, label=label, color=color)
     
     obj = schemas.create_workspace_object(owner=userid, label=label, database=datasource, workflow=workflow_id)
-    res = db.workflows.insert_one(obj)
+    res = db.workspaces.insert_one(obj)
     
     return res.inserted_id
 
@@ -181,10 +181,10 @@ def initialize_workflow(
     userid = ObjectId(str(userid))
     
     # log action to stdout
-    logging.info(f'Initializing sesssion for user {userid}.')
+    logging.info(f'Initializing workflow for user {userid}.')
     #---------------------------------------------------------------------------
     
-    obj = schemas.create_session_object(
+    obj = schemas.create_workflow_object(
         userid=userid,
         label=label,
         color=color

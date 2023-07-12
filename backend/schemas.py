@@ -83,7 +83,7 @@ def create_projection_object(session_id, label, user_id, action=f"initialize pro
     }
     return obj
 
-def create_session_object(
+def create_workflow_object(
         *args,
         userid, 
         label, 

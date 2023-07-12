@@ -113,7 +113,6 @@ export default function Dashboard() {
 
     useEffect(() => {
         client.userId = session?.user.id;
-        console.log("client", client)
     }, [session?.user])
     
 

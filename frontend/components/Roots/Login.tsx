@@ -38,7 +38,6 @@ const LoginForm = () => {
       username: username,
       password: password
     }).then(response => {
-      console.log("response", response)
       if (response.ok) {
         router.push('/dashboard')
       }

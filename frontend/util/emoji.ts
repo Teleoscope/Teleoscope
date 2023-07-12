@@ -21,8 +21,6 @@ export function makeQuery(text) {
     return { text: { $regex: regex.join('|') } }
   }
 
-  console.log("text:", buffer, regex, regex.join('|'))
-
   return {
       $and: [
           { $text: { $search: buffer} },
