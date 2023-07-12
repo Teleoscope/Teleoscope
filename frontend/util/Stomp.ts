@@ -20,6 +20,8 @@ interface Body {
 export class Stomp {
   private _userid: string;
   private _database: string;
+  private _workflow: string;
+  private _workspace: string;
   private client: Client | null;
   private static stomp: Stomp;
   private creationTime: Date;
@@ -84,6 +86,22 @@ export class Stomp {
 
   public get database() {
     return this._database;
+  }
+
+  public set workflow(db: string) {
+    this._workflow = db;
+  }
+
+  public get workflow() {
+    return this._workflow;
+  }
+
+  public set workspace(db: string) {
+    this._workspace = db;
+  }
+
+  public get workspace() {
+    return this._workspace;
   }
 
   fake_client_init() {
@@ -176,9 +194,15 @@ export class Stomp {
    */
   publish(body: Body) {
     
+    // Default arguments
     
+    // strictly required
     body["args"]["userid"] = this.userId;
+    // mostly required
     body["args"]["database"] = this.database;
+    body["args"]["workflow"] = this.workflow;
+    body["args"]["workspace"] = this.workspace;
+    
     body["message_id"] = crypto.randomBytes(8).toString('hex');
     
     const headers = {
@@ -341,7 +365,7 @@ export class Stomp {
   /*
   Pushes the user account information to create their account
 */
-  register_account(username: string, password, database: string) {
+  register_account(username: string, password) {
     const body = {
       task: "register_account",
       args: {

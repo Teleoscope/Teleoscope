@@ -61,21 +61,21 @@ export async function getServerSideProps(context) {
       database: database,
       session: session,
       workflow: outflow,
-      session_id: workflow_id.toString()
+      workflow_id: workflow_id.toString()
     }
   }
 
 }
 
 
-export default function Home({workspace, database, workflow, session_id}) {
+export default function Home({workspace, database, workflow, workflow_id}) {
   
 
   const { data: session, status } = useSession()
 
   const preloaded = {
     "activeSessionID": {
-      value: session_id,
+      value: workflow_id,
       workspace: workspace
     },
     "windows": workflow,
@@ -114,7 +114,7 @@ export default function Home({workspace, database, workflow, session_id}) {
               <link rel="icon" href="/favicon.ico" />
             </Head>
             <main>
-                <Workspace database={database} />
+                <Workspace database={database} workflow={workflow_id} workspace={workspace} />
             </main>
           </div>
       </SWRConfig>

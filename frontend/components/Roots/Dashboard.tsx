@@ -44,7 +44,6 @@ const ExistingWorkspace = ({workspace, client, color}) => {
             </Stack>
         </Paper>
     )
-
 }
 
 const Workspaces = ({workspaces, client, color}) => {
@@ -58,7 +57,6 @@ const Workspaces = ({workspaces, client, color}) => {
     const handleClick = () => {
         client.initialize_workspace(newWorkspaceSource, label)
     }
-
 
     const handleLabelChange = (event) => {
         setLabel(event.target.value)
