@@ -3,6 +3,7 @@ import json
 import numpy as np
 from tqdm import tqdm
 import heapq
+import re
 
 # installed modules
 from pymongo import MongoClient, database
@@ -12,6 +13,7 @@ from bson.objectid import ObjectId
 from json import JSONEncoder
 from typing import List
 import datetime
+import unicodedata
 
 # local files
 from . import auth
@@ -395,3 +397,30 @@ def random_color():
     r = lambda: random.randint(0, 255)
     color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
     return color
+
+
+def extract_special_characters(text):
+    # Matches Emoji and other special Unicode characters
+    return [c for c in text if not unicodedata.name(c).startswith(('LATIN', 'DIGIT', 'SPACE', 'PUNCTUATION'))]
+
+
+def strip_emojis(text):
+    return ''.join(c for c in text if unicodedata.name(c).startswith(('LATIN', 'DIGIT', 'SPACE', 'PUNCTUATION')))
+
+
+def make_query(text):
+    buffer = text.replace('"', '\\"').strip()
+    regex = extract_special_characters(buffer)
+
+    if len(regex) == 0:
+        return { "$text": { "$search": buffer} }
+
+    if len(strip_emojis(buffer)) == 0:
+        return { "text": { "$regex": '|'.join(regex) } }
+
+    return {
+        "$and": [
+            { "$text": { "$search": buffer } },
+            { "text": { "$regex": '|'.join(regex) } }
+        ]
+    }

@@ -7,6 +7,16 @@ EdgeType = Literal["source", "control", "output"]
 NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Union", "Intersection", "Exclusion", "Subtraction"]
 HexStr = NewType('HexStr', str)
 
+def create_search_object(*args, userid: ObjectId, query: str):
+    obj = {
+        "query": query,
+        "history": {
+            "timestamp": datetime.datetime.utcnow(),
+            "user": userid,
+            "action": "Initialize search.",
+        }
+    }
+    return obj
 
 def create_workspace_object(*args, owner: ObjectId, label: str, database: str, workflow: ObjectId):
     obj = {

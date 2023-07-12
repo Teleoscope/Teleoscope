@@ -45,7 +45,7 @@ def make_node(db: database.Database,
                     node["matrix"] = make_matrix(oid, node_type)
                     res = db.graph.insert_one(node)
                     get_collection(db, node_type).update_one(
-                        {"_id": oid}, 
+                        {"_id": oid},
                         {"$set": {"node": res.inserted_id}}
                     )
                     node = db.graph.find_one({"_id": res.inserted_id})
@@ -180,8 +180,9 @@ def get_collection(db: database.Database, node_type: schemas.NodeType):
     """Return the collection for a node type.
     """
     collection_map = {
-        "Group": "groups",
         "Document": "documents",
+        "Group": "groups",
+        "Search": "searches",
         "Projection": "projections",
         "Intersection": "graph",
         "Exclusion": "graph",
@@ -259,12 +260,16 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
                     vecs = filter_vectors_by_oid(oids, ids, all_vectors)
                     source_map.append((source["id"], vecs, oids))
                 case "Group":
-                    group = db.groups.find_one({"_id": id})
+                    group = db.groups.find_one({"_id": source["id"]})
                     oids = group["history"][0]["included_documents"]
                     vecs = filter_vectors_by_oid(oids, ids, all_vectors)
                     source_map.append((source["id"], vecs, oids))
                 case "Search":
-                    pass
+                    search = db.searches.find_one({"_id": source["id"]})
+                    cursor = db.documents.find(utils.make_query(search["query"]),projection={ "_id": 1})
+                    oids = [d["_id"] for d in list(cursor)]
+                    vecs = filter_vectors_by_oid(oids, ids, all_vectors)
+                    source_map.append((source["id"], vecs, oids))
     
     for source, vecs, oids in source_map:
         ranks = rank(control_vecs, ids, all_vectors)
@@ -294,10 +299,12 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
             case "Document":
                 oids.append(c["id"])
             case "Group":
-                group = db.groups.find_one({"_id": id})
+                group = db.groups.find_one({"_id": c["id"]})
                 oids = oids + group["history"][0]["included_documents"]
             case "Search":
-                pass
+                search = db.searches.find_one({"_id": c["id"]})
+                cursor = db.documents.find(utils.make_query(search["query"]),projection={ "_id": 1})
+                oids = oids + [d["_id"] for d in list(cursor)]
     logging.debug(f"Got {oids} as control vectors for controls {controls}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
     return filter_vectors_by_oid(oids, ids, all_vectors)
     
