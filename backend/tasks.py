@@ -597,14 +597,6 @@ def copy_group(*args, **kwargs):
         utils.push_history(db, "groups", group_new_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
-    res = chain(
-                robj.s(teleoscope_id=str(group_new["teleoscope"]),
-                       positive_docs=included_documents,
-                       negative_docs=[]).set(queue=auth.rabbitmq["task_queue"]),
-                save_teleoscope_state.s().set(queue=auth.rabbitmq["task_queue"])
-    )
-    res.apply_async()
-
     logging.info(f'Update new group data')
 
     return None
@@ -884,8 +876,6 @@ def relabel_projection(*args, **kwargs):
     return 200
 
 
-
-
 @app.task
 def cluster_by_groups(*args, **kwargs):
     """
@@ -902,13 +892,9 @@ def cluster_by_groups(*args, **kwargs):
     cluster.clustering_task()
 
 
-
-
-
 ################################################################################
 # Teleoscope tasks
 ################################################################################
-
 
 @app.task
 def initialize_teleoscope(*args, **kwargs):
@@ -1525,9 +1511,14 @@ def add_item(*args, **kwargs):
             })            
 
         case "Teleoscope" | "Filter" | "Intersection" | "Exclusion" | "Union":
-            with transaction_session.start_transaction():
-                
-                graph.make_node(db, None, node_type)
+            node = graph.make_node(db, None, node_type)
+
+            utils.message(userid, {
+                "oid": str(node["_id"]),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": f"Associated OID for {node_type} with UID."
+            })
     return 
 
 @app.task
