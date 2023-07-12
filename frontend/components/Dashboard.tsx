@@ -51,7 +51,7 @@ const Workspaces = ({workspaces, client}) => {
         setNewWorkspaceSource(event?.target.value)
     }
     const handleClick = () => {
-        client.initialize_workspace(newWorkspaceSource, label)
+        client.initialize_workspace(label, newWorkspaceSource)
     }
 
 
