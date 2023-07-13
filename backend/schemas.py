@@ -2,6 +2,7 @@ import datetime
 from bson.objectid import ObjectId
 from typing import NewType
 from typing import Literal
+from typing import List
 
 EdgeType = Literal["source", "control", "output"]
 NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Union", "Intersection", "Exclusion", "Subtraction"]
@@ -223,12 +224,13 @@ def create_note_history_item(userid, label, action, content={}):
     }
 
 
-def create_node(type):
+def create_node(node_type, oid):
     return {
         "creation_time": datetime.datetime.utcnow(),
-        "type": type,
+        "type": node_type,
         "status": "loading",
         "matrix": None,
+        "reference": oid,
         "columns": [],
         "doclists": {},
         "parameters": {},

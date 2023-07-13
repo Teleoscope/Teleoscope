@@ -351,6 +351,7 @@ def save_UI_state(
 ################################################################################
 # Search tasks
 ################################################################################
+
 @app.task
 def add_search(
     *args, database: str, userid: str, session_id: str, query: str,
@@ -372,6 +373,36 @@ def add_search(
     res = db.searches.insert_one(obj)
     
     return res.inserted_id
+
+
+@app.task
+def update_search(
+    *args, database: str, userid: str, session_id: str, search_id: str, 
+    query: str, **kwargs) -> ObjectId:
+    #---------------------------------------------------------------------------
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle ObjectID kwargs
+    session_id = ObjectId(str(session_id))
+    userid = ObjectId(str(userid))
+    search_id = ObjectId(str(search_id))
+    
+    # log action to stdout
+    logging.info(f'Updating search {query} for'
+                 f'workflow {session_id} and user {userid}.')
+    #---------------------------------------------------------------------------
+    search = db.searches.find_one(search_id)
+
+    history_item = utils.update_history(
+        item=search["history"][0],
+        action="Update query",
+        query=query,
+        user=userid
+    )
+    utils.push_history(db, "searches", search_id, history_item)
+
+    return search_id
 
 
 ################################################################################

@@ -9,10 +9,14 @@ export default function Workspace({ database, workflow, workspace }) {
   const { data: session, status } = useSession();
 
   const client = useStomp()
-  client.userId = session?.user.id;
-  client.database = database;
-  client.workflow = workflow;
-  client.workspace = workspace;
+  
+  if (client) {
+    client.userId = session?.user.id;
+    client.database = database;
+    client.workflow = workflow;
+    client.workspace = workspace;  
+  }
+
   const mySWR = new SWR(database);
 
   return (
