@@ -175,8 +175,8 @@ def graph(db: database.Database, node_oid: ObjectId):
     res = db.graph.replace_one({"_id": node_oid}, node)
 
     # Calculate each node downstream to the right.
-    for oid in outputs:
-        graph(db, oid)
+    for edge in outputs:
+        graph(db, edge["nodeid"])
     
     return res
 
