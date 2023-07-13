@@ -401,6 +401,10 @@ def update_search(
         user=userid
     )
     utils.push_history(db, "searches", search_id, history_item)
+    
+    # update graph
+    graph.graph(search["node"])
+
 
     return search_id
 
@@ -547,6 +551,10 @@ def add_document_to_group(
     )
 
     utils.push_history(db, "groups", group_id, history_item)
+    
+    # update graph
+    graph.graph(group["node"])
+
     return None
 
 
@@ -696,6 +704,10 @@ def remove_document_from_group(*args, **kwargs):
     with transaction_session.start_transaction():
         utils.push_history(db, "groups", group_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
+    
+    # update graph
+    graph.graph(group["node"])
+
 
 
 @app.task
