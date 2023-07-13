@@ -120,8 +120,11 @@ export default function Dashboard() {
     const client = useStomp()
 
     useEffect(() => {
-        client.userId = session?.user.id;
-    }, [session?.user])
+        if (client) {
+            client.userId = session?.user.id;
+        }
+        
+    }, [session?.user, client])
     
 
     if (error || status != "authenticated" || !session) {

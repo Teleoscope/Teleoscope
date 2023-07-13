@@ -19,9 +19,12 @@ export default function Teleoscope(props) {
 
   const { teleoscope } = props.windata?.demo
     ? props.windata.demodata
-    : swr.useSWRAbstract("teleoscope", `teleoscopes/${teleoscope_id}`);
+    : swr.useSWRAbstract("teleoscope", `graph/${teleoscope_id}`);
 
-  const data = teleoscope?.history[0]["rank_slice"];
+  const doclists = teleoscope?.doclists;
+  const data = doclists ? Object.entries(doclists)[0][1] : []
+
+  console.log("data", data, doclists)
 
   const handleLoadMore = () => {
     console.log("stub")

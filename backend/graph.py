@@ -32,7 +32,7 @@ def make_node(db: database.Database,
     """
     
     # make a default node
-    node = schemas.create_node(node_type)
+    node = schemas.create_node(node_type, oid)
 
     match node_type:
         # If a workspace item can only be a source, check to make sure it has a 
@@ -43,6 +43,8 @@ def make_node(db: database.Database,
             if obj:
                 if "node" not in obj:
                     node["matrix"] = make_matrix(oid, node_type)
+                    node["reference"] = oid
+
                     res = db.graph.insert_one(node)
                     get_collection(db, node_type).update_one(
                         {"_id": oid},
@@ -223,11 +225,18 @@ def update_parameters(db, node, parameters):
 
 
 ################################################################################
+# Update Search
+################################################################################
+def update_search(db: database.Database, search_node, parameters):
+
+
+
+################################################################################
 # Update Teleoscope
 ################################################################################
 
 def update_teleoscope(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
-    rank_slice_length = 2
+    rank_slice_length = 10000
     if "rank_slice_length" in parameters:
         rank_slice_length = parameters["rank_slice_length"]
     
@@ -249,36 +258,37 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     
     control_vecs = get_control_vectors(db, controls, ids, all_vectors)
 
-    doclist = {}
+    doclists = []
     source_map = []
     
     if len(sources) == 0:
         ranks = rank(control_vecs, ids, all_vectors)
-        doclist["all"] = ranks[0:rank_slice_length]
+        doclists.append({ "ranked_documents": ranks[0:rank_slice_length], "type": "All"})
     else:
         for source in sources:
             match source["type"]:
                 case "Document":
                     oids = [source["id"]]
                     vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
-                    source_map.append((source["id"], vecs, oids))
+                    source_map.append((source, vecs, oids))
                 case "Group":
                     group = db.groups.find_one({"_id": source["id"]})
                     oids = group["history"][0]["included_documents"]
                     vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
-                    source_map.append((source["id"], vecs, oids))
+                    source_map.append((source, vecs, oids))
                 case "Search":
                     search = db.searches.find_one({"_id": source["id"]})
                     cursor = db.documents.find(utils.make_query(search["query"]),projection={ "_id": 1})
                     oids = [d["_id"] for d in list(cursor)]
                     vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
-                    source_map.append((source["id"], vecs, oids))
+                    source_map.append((source, vecs, oids))
     
-    for source_id, source_vecs, source_oids in source_map:
+    for source, source_vecs, source_oids in source_map:
         ranks = rank(control_vecs, source_oids, source_vecs)
-        doclist[source_id] = ranks[0:rank_slice_length]
-    
-    teleoscope_node["doclists"] = dict((str(key), value) for (key, value) in doclist.items())
+        source["ranked_documents"] = ranks[0:rank_slice_length]
+        doclists.append(source)
+        
+    teleoscope_node["doclists"] = doclists
     
     # TODO: matrix
     return teleoscope_node
