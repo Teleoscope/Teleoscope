@@ -66,6 +66,7 @@ def make_node(db: database.Database,
             node["matrix"] = make_matrix(oid, node_type)
             res = db.graph.insert_one(node)
             node = db.graph.find_one({"_id": res.inserted_id})
+
     return node
 
 
@@ -144,7 +145,7 @@ def make_edge(db: database.Database,
 def graph(db: database.Database, node_oid: ObjectId):
     """Recalculates all nodes to the right of specified node.
     """
-    node = db.graph.find_one({"_id": node_oid})
+    node = db.graph.find_one({"_id": ObjectId(str(node_oid))})
 
     sources  = node["edges"]["source"]
     controls = node["edges"]["control"]
