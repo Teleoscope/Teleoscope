@@ -154,6 +154,12 @@ def graph(db: database.Database, node_oid: ObjectId):
     node_type = node["type"]
 
     match node_type:
+        case "Document":
+            node = update_document(db, node, parameters)
+        case "Group":
+            node = update_group(db, node, parameters)
+        case "Search":
+            node = update_search(db, node, parameters)
         case "Teleoscope":
             node = update_teleoscope(db, node, sources, controls, parameters)
         case "Union":
@@ -225,11 +231,61 @@ def update_parameters(db, node, parameters):
 
 
 ################################################################################
+# Update Document
+################################################################################
+
+def update_document(db: database.Database, document_node, parameters):
+    document_id = ObjectId(str(document_node["reference"]))
+    doclist = {
+        "id": document_id,
+        "nodeid": document_node["_id"],
+        "type": document_node["type"],
+        "ranked_documents": [(document_id, 1.0)]
+    }
+    document_node["doclists"] = [doclist]
+    return document_node
+
+
+################################################################################
+# Update Group
+################################################################################
+
+def update_group(db: database.Database, group_node, parameters):
+    group_id = ObjectId(str(group_node["reference"]))
+    group = db.groups.find_one(group_id)
+    documents = group["history"][0]["included_documents"]
+    
+    doclist = {
+        "id": group_id,
+        "nodeid": group_node["_id"],
+        "type": group_node["type"],
+        "ranked_documents": [(d, 1.0) for d in documents]
+    }
+    group_node["doclists"] = [doclist]
+    return group_node
+
+
+################################################################################
 # Update Search
 ################################################################################
+
 def update_search(db: database.Database, search_node, parameters):
-
-
+    search_id = ObjectId(str(search_node["reference"]))
+    search = db.searches.find_one(search_id)
+    documents = list(
+        db.documents.find(
+            utils.make_query(search["query"]), 
+            {"projection": { "_id": 1 }}
+        )
+    )
+    doclist = {
+        "id": search_id, 
+        "nodeid": search_node["_id"], 
+        "type": search_node["type"],
+        "ranked_documents": [(d["_id"], 1.0) for d in documents]
+    }
+    search_node["doclists"] = [doclist]
+    return search_node
 
 ################################################################################
 # Update Teleoscope
