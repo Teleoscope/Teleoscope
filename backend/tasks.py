@@ -1565,11 +1565,11 @@ def make_edge(*args, **kwargs):
 
 
 @app.task
-def ping(*args, database: str, session_id: str, userid: str, message: str, **kwargs):
+def ping(*args, database: str, userid: str, message: str, **kwargs):
     
     userid = ObjectId(str(userid))
                       
-    msg = f"ping queue for user {userid} and session {session_id} and database {database}"
+    msg = f"ping queue for user {userid} and database {database} with {kwargs}"
     logging.info(f"Received a ping: {message}")
 
     utils.message(userid, msg)
