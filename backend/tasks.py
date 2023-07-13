@@ -697,8 +697,8 @@ def remove_document_from_group(*args, **kwargs):
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs
-    group_id = ObjectId(kwargs["group_id"])
-    document_id = kwargs["document_id"]
+    group_id = ObjectId(str(kwargs["group_id"]))
+    document_id = ObjectId(str(kwargs["document_id"]))
 
     group = db.groups.find_one({'_id': group_id})
     if not group:
