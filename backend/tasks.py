@@ -404,8 +404,10 @@ def update_search(
     
     # update graph
     if "node" not in search:
-        graph.make_node(db, search_id, "Search")
-    graph.graph(search["node"])
+        node = graph.make_node(db, search_id, "Search")
+        graph.graph(node["_id"])
+    else:
+        graph.graph(search["node"])
 
     return search_id
 
@@ -555,8 +557,10 @@ def add_document_to_group(
     
     # update graph
     if "node" not in group:
-        graph.make_node(db, group_id, "Group")
-    graph.graph(group["node"])
+        node = graph.make_node(db, group_id, "Group")
+        graph.graph(node["_id"])
+    else:
+        graph.graph(group["node"])
     
     return None
 
@@ -710,8 +714,10 @@ def remove_document_from_group(*args, **kwargs):
     
     # update graph
     if "node" not in group:
-        graph.make_node(db, group_id, "Group")
-    graph.graph(group["node"])
+        node = graph.make_node(db, group_id, "Group")
+        graph.graph(node["_id"])
+    else:
+        graph.graph(group["node"])
 
 
 @app.task
