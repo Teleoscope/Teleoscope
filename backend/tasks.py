@@ -405,6 +405,7 @@ def update_search(
     # update graph
     graph.graph(search["node"])
 
+
     return search_id
 
 
