@@ -1,16 +1,18 @@
 import Head from "next/head";
 import "@/styles/global.css";
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import { SessionProvider } from 'next-auth/react';
 import { Stomp, StompContext } from "@/util/Stomp";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
-const client = Stomp.getInstance({})
+
 export default App;
 function App({ Component, pageProps: { session, ...pageProps } }) {
   const router = useRouter()
-  
+  const [client, setClient] = useState(null)
+
   useEffect(() => {
+    setClient(Stomp.getInstance({}))
     const handleWindowClose = (e) => {
       Stomp.stop()
     }
@@ -23,7 +25,7 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
       window.removeEventListener('beforeunload', handleWindowClose)
       router.events.off('routeChangeStart', handleBrowseAway)
     }
-  }, [])  
+  }, [router])
   
   return (
     <>

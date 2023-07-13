@@ -116,11 +116,11 @@ export default class WindowDefinitions {
       Teleoscope: {
         tag:       "teleoscope",
         type:      "Teleoscope",
-        apipath:   "teleoscopes",
+        apipath:   "graph",
         nodetype:  OperationNode,      
-        title:     (d) => `Teleoscope: ${d?.history[0].label}`,
-        color:     (d) => d?.history[0].color,
-        icon:      (d) => <FlareIcon sx={{ color: d?.history[0].color }} fontSize="inherit" />,
+        title:     (d) => d?.type,
+        color:     (d) => this.color,
+        icon:      (d) => <FlareIcon sx={{ color: this.color }} fontSize="inherit" />,
         component: (w, id, color) => <Teleoscope id={id} windata={w} color={color} />,
       },
       Teleoscopes: {

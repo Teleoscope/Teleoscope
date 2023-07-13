@@ -39,7 +39,7 @@ export class Stomp {
 
   public static getFakeClient(): Stomp {
     if (!Stomp.stomp) {
-      Stomp.stomp = new Stomp();
+      Stomp.stomp = new Stomp({});
       Stomp.stomp.fake_client_init();
     }
     return Stomp.stomp;

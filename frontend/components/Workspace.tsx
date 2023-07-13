@@ -9,10 +9,14 @@ import { useStomp } from "../util/Stomp";
 
 export default function Workspace({subdomain}) {
   const { data: session, status } = useSession();
+  
   const userid = session?.user?.id;
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const client = useStomp()
-  client.userId = session?.user.id;
+  
+  if (client) {
+    client.userId = session?.user.id;
+  }
 
   const dispatch = useAppDispatch();
   const mySWR = new SWR(subdomain?.split(".")[0]);
