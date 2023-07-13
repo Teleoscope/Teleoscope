@@ -403,6 +403,8 @@ def update_search(
     utils.push_history(db, "searches", search_id, history_item)
     
     # update graph
+    if "node" not in search:
+        graph.make_node(db, search_id, "Search")
     graph.graph(search["node"])
 
     return search_id
@@ -552,8 +554,10 @@ def add_document_to_group(
     utils.push_history(db, "groups", group_id, history_item)
     
     # update graph
+    if "node" not in group:
+        graph.make_node(db, group_id, "Group")
     graph.graph(group["node"])
-
+    
     return None
 
 
@@ -705,8 +709,9 @@ def remove_document_from_group(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
     
     # update graph
+    if "node" not in group:
+        graph.make_node(db, group_id, "Group")
     graph.graph(group["node"])
-
 
 
 @app.task
