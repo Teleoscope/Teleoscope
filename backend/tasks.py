@@ -409,6 +409,7 @@ def update_search(
     else:
         graph.graph(search["node"])
 
+
     return search_id
 
 
@@ -562,6 +563,7 @@ def add_document_to_group(
     else:
         graph.graph(group["node"])
     
+
     return None
 
 
@@ -718,6 +720,7 @@ def remove_document_from_group(*args, **kwargs):
         graph.graph(node["_id"])
     else:
         graph.graph(group["node"])
+
 
 
 @app.task

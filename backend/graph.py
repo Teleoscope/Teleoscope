@@ -287,6 +287,7 @@ def update_search(db: database.Database, search_node, parameters):
     search_node["doclists"] = [doclist]
     return search_node
 
+
 ################################################################################
 # Update Teleoscope
 ################################################################################
