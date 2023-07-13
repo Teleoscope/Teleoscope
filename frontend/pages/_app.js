@@ -3,12 +3,27 @@ import "@/styles/global.css";
 import { StrictMode } from "react";
 import { SessionProvider } from 'next-auth/react';
 import { Stomp, StompContext } from "@/util/Stomp";
-
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 const client = Stomp.getInstance({})
 export default App;
 function App({ Component, pageProps: { session, ...pageProps } }) {
+  const router = useRouter()
   
-  
+  useEffect(() => {
+    const handleWindowClose = (e) => {
+      Stomp.stop()
+    }
+    const handleBrowseAway = () => {
+      Stomp.stop()
+    }
+    window.addEventListener('beforeunload', handleWindowClose)
+    router.events.on('routeChangeStart', handleBrowseAway)
+    return () => {
+      window.removeEventListener('beforeunload', handleWindowClose)
+      router.events.off('routeChangeStart', handleBrowseAway)
+    }
+  }, [])  
   
   return (
     <>

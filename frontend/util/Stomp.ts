@@ -17,6 +17,7 @@ interface Body {
   args: any;
 }
 
+
 export class Stomp {
   private _userid: string;
   private _database: string;
@@ -56,6 +57,10 @@ export class Stomp {
     }
     return Stomp.stomp;
   } 
+
+  public static stop() {
+    this.client?.deactivate();
+  }
 
   public restart(): Stomp {
     return Stomp.getInstance({})
@@ -103,6 +108,8 @@ export class Stomp {
   public get workspace() {
     return this._workspace;
   }
+
+
 
   fake_client_init() {
     this.client = {
@@ -203,7 +210,7 @@ export class Stomp {
     body["args"]["workflow"] = this.workflow;
     body["args"]["workspace"] = this.workspace;
     
-    body["message_id"] = crypto.randomBytes(8).toString('hex');
+    body["args"]["message_id"] = crypto.randomBytes(8).toString('hex');
     
     const headers = {
       "content_type": "application/json",
@@ -843,3 +850,4 @@ export class Stomp {
   }
 
 }
+

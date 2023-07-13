@@ -15,8 +15,6 @@ export default function Workspace({subdomain}) {
   client.userId = session?.user.id;
 
   const dispatch = useAppDispatch();
-
-  
   const mySWR = new SWR(subdomain?.split(".")[0]);
 
   const { user } = mySWR.useSWRAbstract("user", `users/${userid}`);
