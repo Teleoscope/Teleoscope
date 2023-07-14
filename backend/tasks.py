@@ -134,7 +134,7 @@ def add_contributor(
     #---------------------------------------------------------------------------
 
     workspace = db.workspaces.find_one({"_id": workspace_id})    
-    contributors = workspace["contributors"]
+    contributors = [c["id"] for c in workspace["contributors"]]
 
     # check if user has already been added
     if contributor_id in contributors or contributor_id == userid:
