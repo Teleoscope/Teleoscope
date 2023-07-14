@@ -26,16 +26,16 @@ def create_workspace_object(*args, owner: ObjectId, label: str, database: str, w
         "label": label,
         "database": database,
         "workflows": [ workflow ],
-        "history": [
-            {
-                "timestamp": datetime.datetime.utcnow(),
-                "action": "Initialize workspace.",
-                "user": owner
-            }
-        ]
+        "history": [create_workspace_history_object(owner)]
     }
     return obj
 
+def create_workspace_history_object(user: ObjectId):
+    return {
+        "timestamp": datetime.datetime.utcnow(),
+        "action": "Initialize workspace.",
+        "user": user
+    }
 
 def create_group_object(color, included_documents, label, action, user_id, description, session_id, cluster_id=[]):
     obj = {
@@ -106,7 +106,7 @@ def create_workflow_object(
         color, 
         logical_clock=1, 
         contributors=[], 
-        action=f"initialize_session",
+        action=f"initialize workflow.",
         windows=[],
         edges=[],
         groups=[],

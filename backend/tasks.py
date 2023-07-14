@@ -191,7 +191,7 @@ def remove_contributor(
     history_item = utils.update_history(
         item=workspace["history"][0],
         oid=contributor_id,
-        action=f"Remove {contributor_id} to contributors.",
+        action=f"Remove {contributor_id} from contributors.",
         user=userid,
     )
 
@@ -213,8 +213,7 @@ def remove_contributor(
 
 @app.task
 def initialize_workflow(
-    *args, database: str, userid: str, 
-    label: str, color: str, 
+    *args, database: str, userid: str, workspace_id: str, label: str, color: str, 
     **kwargs) -> ObjectId:
     """Adds a workflow to the sessions collection.
     
@@ -227,6 +226,7 @@ def initialize_workflow(
   
     # handle ObjectID kwargs
     userid = ObjectId(str(userid))
+    workspace_id = ObjectId(str(workspace_id))
     
     # log action to stdout
     logging.info(f'Initializing workflow for user {userid}.')
@@ -239,13 +239,33 @@ def initialize_workflow(
     )
 
     result = db.sessions.insert_one(obj)
-    
+
+    user_db = utils.connect(db="users")
+
+    user_db.workspaces.update_one(
+        workspace_id,
+        {
+            "$push": {
+                "workflows": result.inserted_id
+            }
+        }
+    )
+
+    history_item = utils.update_history(
+        item=schemas.create_workspace_history_object(userid),
+        oid=result.inserted_id,
+        userid=userid,
+        action="Added session to workspace."
+    )
+
+    utils.push_history(user_db, "workspaces", workspace_id, history_item)
+
     return result.inserted_id
 
 
 @app.task
 def remove_workflow(
-    *args, database: str, session_id: str, userid: str, 
+    *args, database: str, workspace_id: str, session_id: str, userid: str, 
     **kwargs) -> ObjectId:
     """
     Delete a workflow from the user. Workflow is not deleted from the whole 
@@ -261,17 +281,30 @@ def remove_workflow(
     # handle ObjectID kwargs
     session_id = ObjectId(str(session_id))
     userid = ObjectId(str(userid))
+    workspace_id = ObjectId(str(workspace_id))
 
     # log action to stdout
     logging.info(f'Removing workflow {session_id} for {userid}.')
     #---------------------------------------------------------------------------
     
-    res = db.users.update_one(
-        {"_id": userid}, 
+    user_db = utils.connect(db="users")
+    user_db.workspaces.update_one(
+        workspace_id,
         {
-            "$pull": { "sessions": session_id}
+            "$pop": {
+                "workflows": session_id
+            }
         }
     )
+
+    history_item = utils.update_history(
+        item=schemas.create_workspace_history_object(userid),
+        oid=session_id,
+        userid=userid,
+        action="Remove session from workspace."
+    )
+
+    utils.push_history(user_db, "workspaces", workspace_id, history_item)
 
     return session_id
 

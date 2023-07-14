@@ -40,7 +40,7 @@ export default function Session(props) {
   };
 
   const handleNewSession = () => {
-    props.client.initialize_session(
+    props.client.initialize_workflow(
       randomName,
       randomColor({
         luminosity: "dark",

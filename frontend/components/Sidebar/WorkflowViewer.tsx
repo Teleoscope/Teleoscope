@@ -70,7 +70,7 @@ export default function Workflows(props) {
 
   const keyChange = (e) => {
     if (e.code === "Enter") {
-      client.initialize_session(value, randomColor());
+      client.initialize_workflow(value, randomColor());
     }
   };
 
@@ -111,8 +111,8 @@ export default function Workflows(props) {
                       <a href={`/workspace/${workspace_id}/${session._id}`}>
                       
                         {wdefs.definitions()["Workflows"].icon([
-                          { color: session.history[0].color },
-                          { "& .MuiChip-icon": { color: session.history[0].color } },
+                          { color: session.history[0].settings.color },
+                          { "& .MuiChip-icon": { color: session.history[0].settings.color } },
                         ])}
                       </a>
                     </ListItemIcon>

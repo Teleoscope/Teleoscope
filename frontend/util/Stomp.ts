@@ -241,23 +241,28 @@ export class Stomp {
    */
   publish(body: Body) {
     
+    ///////////////////////////////////////////////////////////////////////////
     // Default arguments
     
     // strictly required
-    body["args"]["userid"] = this.userId;
+    body.args.userid = this.userId;
     // mostly required
-    body["args"]["database"] = this.database;
-    body["args"]["workflow"] = this.workflow;
-    body["args"]["workspace"] = this.workspace;
-    body["args"]["message_id"] = crypto.randomBytes(8).toString('hex');
-    body["args"]["replyTo"] = this._replyToQueue;
+    body.args.database = this.database;
+    body.args.workflow_id = this.workflow;
+    body.args.workspace_id = body.args.workspace_id ? body.args.workspace_id : this.workspace;
+    body.args.message_id = crypto.randomBytes(8).toString('hex');
+    body.args.replyTo = this._replyToQueue;
     
+    ///////////////////////////////////////////////////////////////////////////
+    // Headers
     const headers = {
       "content_type": "application/json",
       "content_encoding": "utf-8",
       // "reply-to": `${body["message_id"]}`
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Logic
     if (!this.client && this._userid) {
       this.client_init()
     }
@@ -298,9 +303,9 @@ export class Stomp {
    * Requests to create a new session object in MongoDB.
    */
 
-  initialize_session(label: string, color: string) {
+  initialize_workflow(label: string, color: string) {
     const body = {
-      task: "initialize_session",
+      task: "initialize_workflow",
       args: {
         label: label,
         color: color,
