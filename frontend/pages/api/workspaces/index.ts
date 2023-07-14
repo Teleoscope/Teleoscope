@@ -18,7 +18,12 @@ export default async function handler(req, res) {
 
   const workspaces = await db
     .collection("workspaces")
-    .find({ owner: new ObjectId(session.user.id)}).toArray();
+    .find(
+      {"$or": [
+        {owner: new ObjectId(session.user.id)},
+        {contributors: {$elemMatch: {id: new ObjectId(session.user.id)}}}
+      ]}
+    ).toArray();
 
   return res.json(workspaces)
 }

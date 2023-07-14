@@ -48,32 +48,34 @@ const LoginForm = () => {
    
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
-    validateUsername()
-
-    
+    validateUsername()    
   };
 
-  const validatePassword = () => {
+  const validatePassword = (pw) => {
     // Password validation logic
-    if (password.length < 8) {
+    if (pw.length < 8) {
       setPasswordError('Password must be at least 8 characters long.');
     } 
-    else if (password.includes(' ')) {
-      setPasswordError('Password cannot contain spaces.');
+    else if (pw.includes(' ')) {
+        setPasswordError('Password cannot contain spaces.');
+      
     }
     else {
       setPasswordError('');
     }
   };
 
-  const handlePasswordChange = (event) => {
-    setPassword(event.target.value);
-    validatePassword()
-    
-    if ((event.key === 'Enter' || event.keyCode === 13) && !!passwordError ) {
+
+  const handleKeyDown = (event) => {
+    if ((event.key === 'Return' || event.key === 'Enter' || event.keyCode === 13) && !passwordError) {
       handleSubmit(event)
     }
+    console.log(password)
+  }
 
+  const handlePasswordChange = (event) => {
+    setPassword(event.target.value)
+    validatePassword(event.target.value)
     
   };
 
@@ -108,6 +110,7 @@ const LoginForm = () => {
         onBlur={validateUsername}
         error={!!usernameError}
         helperText={usernameError}
+        onKeyDown={handleKeyDown}
       />
 
     <InputLabel id="password-label">Password</InputLabel>
@@ -115,10 +118,11 @@ const LoginForm = () => {
         type="password"
         label="Password"
         value={password}
-        onChange={handlePasswordChange}
+        onInput={handlePasswordChange}
         onBlur={validatePassword}
         error={!!passwordError}
         helperText={passwordError}
+        onKeyDown={handleKeyDown}
         required
       />
 

@@ -911,7 +911,7 @@ export class Stomp {
     const body = {
       task: "remove_contributor",
       args: {
-        contributor: contributor_id,
+        contributor_id: contributor_id,
         workspace_id: workspace_id,
       },
     };

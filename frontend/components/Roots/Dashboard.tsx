@@ -14,11 +14,36 @@ const fetcher = (...args) => fetch(...args).then(res => res.json())
 const ExistingWorkspace = ({workspace, color}) => {
     const [contributor, setContributor] = useState("");    
     const { data: coll } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${contributor}`, fetcher)
-    
+    const [open, setOpen] = useState(false);
+
     const handleTextChange = (event, ws) => {
         setContributor(event.target.value)   
     }
 
+
+    const handleClose = (event: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+          return;
+        }
+    
+        setOpen(false);
+      };
+
+
+
+    const action = (
+        <>
+          <IconButton
+            size="small"
+            aria-label="close"
+            color="inherit"
+            onClick={handleClose}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </>
+      );
+    
     const handleDelete = (c) => {
         fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/contributors/remove`, {
             method: 'POST',
@@ -29,7 +54,7 @@ const ExistingWorkspace = ({workspace, color}) => {
 
     const handleKeyDown = (event) => {
         if ((event.key === 'Return' || event.key === 'Enter' || event.keyCode === 13) && coll?.found) {
-            console.log("adding contributor")
+            setOpen(true)
             fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/contributors/add`, {
                 method: 'POST',
                 body: JSON.stringify({contributor: contributor, workspace_id: workspace["_id"]}),
@@ -59,6 +84,13 @@ const ExistingWorkspace = ({workspace, color}) => {
             </FormControl>
             <Button sx={{color: color}}><a href={`/workspace/${workspace._id}`} >Select workspace</a></Button>
             </Stack>
+            <Snackbar
+            open={open}
+            autoHideDuration={6000}
+            onClose={handleClose}
+            message="Adding collaborator to workspace. This might take a few seconds."
+            action={action}
+        />
         </Paper>
     )
 }
