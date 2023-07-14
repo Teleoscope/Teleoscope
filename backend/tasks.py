@@ -107,8 +107,8 @@ def initialize_workspace(
 
 
 @app.task
-def add_user_to_workspace(
-    *args, workspace_id: str, userid: str, contributor_id: str,
+def add_collaborator(
+    *args, workspace_id: str, userid: str, contributor: str,
     **kwargs) -> ObjectId:
     """
     Add new user to workspace's userlist. Provide read/write access.
@@ -125,18 +125,19 @@ def add_user_to_workspace(
     # handle ObjectID kwargs
     workspace_id = ObjectId(str(workspace_id))
     userid = ObjectId(str(userid))
-    contributor_id = ObjectId(str(contributor_id))
     
     # log action to stdout
     logging.info(f'Adding contributor {contributor_id} by '
                  f'user {userid} to workspace {workspace_id}.')
     #---------------------------------------------------------------------------
 
+    contributor_id = db.users.find({"username": contributor})
+
     workspace = db.workspaces.find_one({"_id": workspace_id})    
     contributors = workspace["contributors"]
 
     # check if user has already been added
-    if contributor_id in contributors:
+    if contributor_id in contributors or contributor_id == userid:
         logging.info(f'User {contributor_id} is already on userlist')
         raise Exception(f'User {contributor_id} is already on userlist')
 

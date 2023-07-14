@@ -22,7 +22,7 @@ def create_search_object(*args, userid: ObjectId, query: str):
 def create_workspace_object(*args, owner: ObjectId, label: str, database: str, workflow: ObjectId):
     obj = {
         "owner": owner,
-        "collaborators": [],
+        "contributors": [],
         "label": label,
         "database": database,
         "workflows": [ workflow ],

@@ -1,6 +1,6 @@
 
 /**
- * /api/collaborators/
+ * /api/contributors/
  * requires: authenticated user with avaiable session token cookie
  * returns: workspace object from MongoDB
  */
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   const client = Stomp.getInstance({userid: session.user.id})
   await client.wait_for_client_connection()
-  client.add_collaborator(args.collaborator, args.workspace)
+  client.add_contributor(args.contributor, args.workspace)
   Stomp.stop()
 
   return res.json({"status": "success"})

@@ -12,15 +12,15 @@ import CloseIcon from '@mui/icons-material/Close';
 const fetcher = (...args) => fetch(...args).then(res => res.json())
 
 const ExistingWorkspace = ({workspace, color}) => {
-    const [collaborator, setCollaborator] = useState("");    
-    const { data: coll } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${collaborator}`, fetcher)
+    const [contributor, setContributor] = useState("");    
+    const { data: coll } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${contributor}`, fetcher)
 
     const handleTextChange = (event, ws) => {
-        setCollaborator(event.target.value)
-        if (event.key == 'enter' && coll?.found) {
-            fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/collaborator`, {
+        setContributor(event.target.value)
+        if (event.key == 'Enter' && coll?.found) {
+            fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/contributors`, {
                 method: 'POST',
-                body: JSON.stringify({collaborator: collaborator, workspace_id: workspace["_id"]}),
+                body: JSON.stringify({contributor: contributor, workspace_id: workspace["_id"]}),
                 headers: { "Content-Type": "application/json" }
             })
         }
@@ -34,13 +34,13 @@ const ExistingWorkspace = ({workspace, color}) => {
             <Typography variant="h6">{workspace.label}</Typography>
             <Divider></Divider>
             <Typography variant="subtitle2">Collaborators</Typography>
-            {workspace?.collaborators?.map(c => {
+            {workspace?.contributors?.map(c => {
                 return <Chip label={c.username} />
             })}
             <FormControl fullWidth>
                 <TextField 
                     id="outlined-basic" 
-                    label="Add collaborator" 
+                    label="Add contributor" 
                     variant="outlined"
                     size="small"
                     onChange={(event) => handleTextChange(event, workspace)}
@@ -210,7 +210,7 @@ export default function Dashboard() {
             </Stack>
             <Typography variant="h5">Start by creating a new workspace or accessing a previous one. </Typography>
             <Typography>For now, we have two data sources from <Link style={linkstyle} href={"https://reddit.com"}>Reddit</Link> that are loaded and open to use: <Link style={linkstyle} href={"https://reddit.com/r/nursing"}>r/nursing</Link> and <Link style={linkstyle} href={"https://reddit.com/r/AmITheAsshole"}>r/AmITheAsshole</Link>. When you create a new workspace, you 
-            will get to choose which you would like to use as your data source. You can also add collaborators by username below.</Typography>
+            will get to choose which you would like to use as your data source. You can also add contributors by username below.</Typography>
             <Typography variant="caption">If you'd like a different subreddit as a data source,
             please email us at <Link style={linkstyle} href="mailto:hello@teleoscope.ca">hello@teleoscope.ca</Link> and we may be able to accommodate 
             your request. Subreddits are provided courtesy of <Link style={linkstyle} href="https://pushshift.io/">pushshift.io</Link> and are up 

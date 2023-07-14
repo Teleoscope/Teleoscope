@@ -890,13 +890,13 @@ export class Stomp {
   }
 
   /**
-   * Add collaborator to workspace.
+   * Add contributor to workspace.
    */
-  add_collaborator(collaborator: string, workspace_id: string) {
+  add_contributor(contributor: string, workspace_id: string) {
     const body = {
       task: "relabel_projection",
       args: {
-        collaborator: collaborator,
+        contributor: contributor,
         workspace_id: workspace_id,
       },
     };
