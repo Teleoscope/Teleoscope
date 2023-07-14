@@ -70,7 +70,7 @@ const LoginForm = () => {
     setPassword(event.target.value);
     validatePassword()
     
-    if (event.key == 'enter' && !!passwordError ) {
+    if ((event.key === 'Enter' || event.keyCode === 13) && !!passwordError ) {
       handleSubmit(event)
     }
 

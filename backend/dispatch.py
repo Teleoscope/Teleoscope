@@ -57,6 +57,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "initialize_workspace":
                 res = tasks.initialize_workspace.signature(args=(), kwargs=kwargs)
 
+            case "add_contributor":
+                res = tasks.add_contributor.signature(args=(), kwargs=kwargs)
+
             case "mark":
                 res = tasks.mark.signature(args=(), kwargs=kwargs)
 

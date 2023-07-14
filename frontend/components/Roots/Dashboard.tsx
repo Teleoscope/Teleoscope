@@ -14,10 +14,15 @@ const fetcher = (...args) => fetch(...args).then(res => res.json())
 const ExistingWorkspace = ({workspace, color}) => {
     const [contributor, setContributor] = useState("");    
     const { data: coll } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${contributor}`, fetcher)
-
+    console.log("coll", coll)
     const handleTextChange = (event, ws) => {
         setContributor(event.target.value)
-        if (event.key == 'Enter' && coll?.found) {
+        
+    }
+
+    const handleKeyDown = (event) => {
+        if ((event.key === 'Return' || event.key === 'Enter' || event.keyCode === 13) && coll?.found) {
+            console.log("adding contributor")
             fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/contributors`, {
                 method: 'POST',
                 body: JSON.stringify({contributor: contributor, workspace_id: workspace["_id"]}),
@@ -25,8 +30,6 @@ const ExistingWorkspace = ({workspace, color}) => {
             })
         }
     }
-
-    
 
     return (
         <Paper elevation={1} sx={{width:"12em"}}>
@@ -43,6 +46,7 @@ const ExistingWorkspace = ({workspace, color}) => {
                     label="Add contributor" 
                     variant="outlined"
                     size="small"
+                    onKeyDown={handleKeyDown}
                     onChange={(event) => handleTextChange(event, workspace)}
                 />
             </FormControl>
@@ -168,7 +172,7 @@ const NewWorkspace = ({color}) => {
     
 }
 
-const Workspaces = ({workspaces, client, color}) => {
+const Workspaces = ({workspaces, color}) => {
     return (
         <Stack spacing={2} sx={{height: "100%", padding: "1em", overflow: "auto"}}>
             <Typography>Workspaces</Typography>
@@ -189,7 +193,7 @@ export default function Dashboard() {
     const { data: user, error } = useSWR(`/api/user/${session?.user?.id}`, fetcher);
     
     const { data: workspaces } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/workspaces`, fetcher)
-
+    console.log("error", user, error, session)
 
     if (error || status != "authenticated" || !session) {
         return <div>Looks like you forgot to sign in. <Link href="/">Click here to return to the home page.</Link></div>

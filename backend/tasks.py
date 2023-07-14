@@ -107,7 +107,7 @@ def initialize_workspace(
 
 
 @app.task
-def add_collaborator(
+def add_contributor(
     *args, workspace_id: str, userid: str, contributor: str,
     **kwargs) -> ObjectId:
     """

@@ -894,7 +894,7 @@ export class Stomp {
    */
   add_contributor(contributor: string, workspace_id: string) {
     const body = {
-      task: "relabel_projection",
+      task: "add_contributor",
       args: {
         contributor: contributor,
         workspace_id: workspace_id,
