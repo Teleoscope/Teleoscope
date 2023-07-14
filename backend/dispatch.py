@@ -60,6 +60,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "add_contributor":
                 res = tasks.add_contributor.signature(args=(), kwargs=kwargs)
 
+            case "remove_contributor":
+                res = tasks.remove_contributor.signature(args=(), kwargs=kwargs)
+
             case "mark":
                 res = tasks.mark.signature(args=(), kwargs=kwargs)
 

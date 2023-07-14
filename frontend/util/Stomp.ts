@@ -904,5 +904,20 @@ export class Stomp {
     return body;
   }
 
+  /**
+   * Remove contributor from workspace.
+   */
+  remove_contributor(contributor_id: string, workspace_id: string) {
+    const body = {
+      task: "remove_contributor",
+      args: {
+        contributor: contributor_id,
+        workspace_id: workspace_id,
+      },
+    };
+    this.publish(body);
+    return body;
+  }  
+
 }
 

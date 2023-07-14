@@ -16,14 +16,21 @@ const ExistingWorkspace = ({workspace, color}) => {
     const { data: coll } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${contributor}`, fetcher)
     
     const handleTextChange = (event, ws) => {
-        setContributor(event.target.value)
-        
+        setContributor(event.target.value)   
+    }
+
+    const handleDelete = (c) => {
+        fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/contributors/remove`, {
+            method: 'POST',
+            body: JSON.stringify({contributor_id: c, workspace_id: workspace["_id"]}),
+            headers: { "Content-Type": "application/json" }
+        })
     }
 
     const handleKeyDown = (event) => {
         if ((event.key === 'Return' || event.key === 'Enter' || event.keyCode === 13) && coll?.found) {
             console.log("adding contributor")
-            fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/contributors`, {
+            fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/contributors/add`, {
                 method: 'POST',
                 body: JSON.stringify({contributor: contributor, workspace_id: workspace["_id"]}),
                 headers: { "Content-Type": "application/json" }
@@ -38,7 +45,7 @@ const ExistingWorkspace = ({workspace, color}) => {
             <Divider></Divider>
             <Typography variant="subtitle2">Collaborators</Typography>
             {workspace?.contributors?.map(c => {
-                return <Chip label={c.username} />
+                return <Chip label={c.username} onDelete={() => handleDelete(c.id)}/>
             })}
             <FormControl fullWidth>
                 <TextField 

@@ -105,7 +105,6 @@ def initialize_workspace(
     return res.inserted_id
 
 
-
 @app.task
 def add_contributor(
     *args, workspace_id: str, userid: str, contributor: str,
@@ -144,7 +143,7 @@ def add_contributor(
     history_item = utils.update_history(
         item=workspace["history"][0],
         oid=contributor_id,
-        action=f"Add {contributor_id} to contributors.",
+        action=f"Add contributor {contributor_id} to contributors for workspace {workspace_id}.",
         user=userid,
     )
 
@@ -160,6 +159,53 @@ def add_contributor(
 
     return contributor_id
 
+
+@app.task
+def remove_contributor(
+    *args, workspace_id: str, userid: str, contributor_id: str,
+    **kwargs) -> ObjectId:
+    """
+    Add new user to workspace's userlist. Provide read/write access.
+    kwargs:
+        contributor_id: OID of contributor to be added
+    
+    Returns:
+        contributor_id
+    """
+    #---------------------------------------------------------------------------
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db="users")
+    
+    # handle ObjectID kwargs
+    workspace_id = ObjectId(str(workspace_id))
+    userid = ObjectId(str(userid))
+    contributor_id = ObjectId(str(contributor_id))
+    
+    # log action to stdout
+    logging.info(f'Removing contributor {contributor_id} by '
+                 f'user {userid} to workspace {workspace_id}.')
+    #---------------------------------------------------------------------------
+
+    workspace = db.workspaces.find_one({"_id": workspace_id})    
+    
+    history_item = utils.update_history(
+        item=workspace["history"][0],
+        oid=contributor_id,
+        action=f"Remove {contributor_id} to contributors.",
+        user=userid,
+    )
+
+    # add contributor to session's userlist
+    db.workspaces.update_one(
+        {"_id": workspace_id}, 
+        {"$pull": { 
+            "contributors": { "id": contributor_id }
+        }, 
+    })
+
+    utils.push_history(db, "workspaces", workspace_id, history_item)
+
+    return contributor_id
 
 ################################################################################
 # Workflow tasks
