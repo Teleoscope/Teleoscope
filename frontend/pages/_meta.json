@@ -6,9 +6,6 @@
   "signin": {
     "title": "Sign in",
     "href": "/signin"
-  },
-  "dashboard": {
-    "title": "Dashboard"
   }
 }
 

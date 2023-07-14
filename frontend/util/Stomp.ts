@@ -55,6 +55,9 @@ export class Stomp {
     if (!Stomp.stomp) {
       console.log(`Creating new Stomp object. This should only be called once.`)
       Stomp.stomp = new Stomp({userid: userid});
+      if (userid && !Stomp.stomp.client) {
+        Stomp.stomp.client_init()
+      }
     }
     return Stomp.stomp;
   } 
@@ -109,6 +112,34 @@ export class Stomp {
   public get workspace() {
     return this._workspace;
   }
+
+  async wait_for_client_connection(timeoutMs=2000) {
+    // A function that returns a promise which will resolve when client is activated
+    const checkConnection = () => {
+        return new Promise<void>((resolve, reject) => {
+            const intervalId = setInterval(() => {
+                if (this.client) {
+                  if (this.client.connected) {
+                    clearInterval(intervalId);
+                    resolve();
+                  }
+                }
+            }, 100);
+        });
+    };
+
+    const timeout = () => {
+      return new Promise<void>((resolve, reject) => {
+          setTimeout(() => {
+              reject(new Error('Timeout'));
+          }, timeoutMs);
+      });
+  };
+
+  await Promise.race([checkConnection(), timeout()]);
+    
+  
+}
 
 
 
@@ -167,14 +198,14 @@ export class Stomp {
       // Do something, all subscribes must be done is this callback
       // This is needed because this will be executed after a (re)connect
       const queuehash = crypto.randomBytes(8).toString('hex');
-      this._replyToQueue = `/queue/${this.userId}%${queuehash}`
+      this._replyToQueue = `${this.userId}%${queuehash}`
 
       const headers = {
         "auto-delete": "true",
         "exclusive": "true"
       }
 
-      this.client.subscribe(this._replyToQueue, (message) => {
+      this.client.subscribe(`/queue/${this._replyToQueue}`, (message) => {
         // Parse the message body
         const body = JSON.parse(message.body);
         

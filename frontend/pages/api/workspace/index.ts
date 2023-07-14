@@ -1,16 +1,23 @@
+
 /**
- * /api/workspaces/[workspace]
- * workspace: ObjectID string
+ * /api/workspace/[args]
+ * args[0]: label
+ * args[1]: datasource 
  * requires: authenticated user with avaiable session token cookie
  * returns: workspace object from MongoDB
  */
 
 import { authOptions } from 'pages/api/auth/[...nextauth]';
 import { getServerSession } from "next-auth/next";
-import { MongoClient } from "mongodb";
-import { ObjectId } from "bson";
+import { Stomp } from '@/util/Stomp';
 
 export default async function handler(req, res) {
+  const parameters = req.body;
+
+  if (req.method != "POST") {
+    return null
+  }
+  
   const session = await getServerSession(req, res, authOptions)
 
   if (!session) {
@@ -18,14 +25,10 @@ export default async function handler(req, res) {
     return;
   }
 
-  const client = await new MongoClient(process.env.MONGODB_REGISTRAR_URI).connect();
-  const db = await client.db("users");
+  const client = Stomp.getInstance({userid: session.user.id})
+  await client.wait_for_client_connection()
+  client.initialize_workspace(parameters.label, parameters.datasource)
+  Stomp.stop()
 
-  const workspace = await db
-    .collection("workspaces")
-    .findOne(new ObjectId(req.query.workspace));
-
-  client.close()
-
-  return res.json(workspace)
+  return res.json({"status": "success"})
 }

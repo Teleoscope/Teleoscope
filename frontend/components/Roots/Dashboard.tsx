@@ -1,24 +1,24 @@
-import { useStomp } from "@/util/Stomp";
-import { Button, Chip, Divider, FormControl, InputLabel, MenuItem, Paper, Select, TextField } from "@mui/material";
+import { Button, Chip, Divider, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, Snackbar, TextField } from "@mui/material";
 import { Stack, Typography } from "@mui/material";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useSWR from "swr";
 import space from 'color-space';
 import rgbHex from 'rgb-hex';
 import themeConfig from "theme.config";
+import CloseIcon from '@mui/icons-material/Close';
 
 const fetcher = (...args) => fetch(...args).then(res => res.json())
 
-const ExistingWorkspace = ({workspace, client, color}) => {
+const ExistingWorkspace = ({workspace, color}) => {
     const [collaborator, setCollaborator] = useState("");    
     const { data: coll } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${collaborator}`, fetcher)
 
     const handleTextChange = (event, ws) => {
         setCollaborator(event.target.value)
         if (event.key == 'enter' && coll?.found) {
-            client.set_collaborator(event.target.value, ws)
+            // client.set_collaborator(event.target.value, ws)
         }
     }
 
@@ -48,11 +48,12 @@ const ExistingWorkspace = ({workspace, client, color}) => {
     )
 }
 
-const NewWorkspace = ({color, client}) => {
+const NewWorkspace = ({color}) => {
     const [newWorkspaceSource, setNewWorkspaceSource] = useState("aita");
     const [label, setLabel] = useState("");
     const [labelError, setLabelError] = useState("");
-    
+    const [open, setOpen] = useState(false);
+
     const handleChange = (event) => {
         setNewWorkspaceSource(event?.target.value)
     }
@@ -60,13 +61,17 @@ const NewWorkspace = ({color, client}) => {
     const handleLabelChange = (event) => {
         validateLabel()
         setLabel(event.target.value)
-        
     }
 
-
     const handleClick = () => {
-        if (!labelError) {
-            client.initialize_workspace(newWorkspaceSource, label)
+        
+        if (!validateLabel()) {
+            fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/workspace`, {
+                method: 'POST',
+                body: JSON.stringify({label: label, datasource: newWorkspaceSource}),
+                headers: { "Content-Type": "application/json" }
+            })
+            setOpen(true)
         }
     }
 
@@ -74,11 +79,38 @@ const NewWorkspace = ({color, client}) => {
         const label_length = 3;
         if (label.length < label_length) {
             setLabelError(`Label must be at least ${label_length} characters long.`);
+            return true
           }
           else {
             setLabelError('');
+            return false
           }
     }
+
+    
+      const handleClose = (event: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+          return;
+        }
+    
+        setOpen(false);
+      };
+
+
+
+    const action = (
+        <>
+          <IconButton
+            size="small"
+            aria-label="close"
+            color="inherit"
+            onClick={handleClose}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </>
+      );
+    
 
     return (
 
@@ -119,7 +151,15 @@ const NewWorkspace = ({color, client}) => {
                     </FormControl>
                     <Button onClick={handleClick} sx={{color: color}}>Add new workspace</Button>
                     </Stack>
-                </Paper>
+                    {/* <Button onClick={handleClick}>Open simple snackbar</Button> */}
+        <Snackbar
+            open={open}
+            autoHideDuration={6000}
+            onClose={handleClose}
+            message="Creating new workspace. May take a few seconds."
+            action={action}
+        />
+    </Paper>
     )
     
 }
@@ -146,15 +186,6 @@ export default function Dashboard() {
     
     const { data: workspaces } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/workspaces`, fetcher)
 
-    const client = useStomp()
-
-    useEffect(() => {
-        if (client) {
-            client.userId = session?.user.id;
-        }
-        
-    }, [session?.user, client])
-    
 
     if (error || status != "authenticated" || !session) {
         return <div>Looks like you forgot to sign in. <Link href="/">Click here to return to the home page.</Link></div>
@@ -168,7 +199,7 @@ export default function Dashboard() {
 
         
     return (
-        <Stack spacing={2}>
+        <Stack spacing={2} sx={{margin: "2em"}}>
             <Stack direction="row" justifyContent="space-between" >
                 <Typography variant="h4">Welcome, {user?.username}.</Typography>
                 <Button onClick={() => signOut({ callbackUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}` })}>Sign out</Button>
@@ -181,7 +212,7 @@ export default function Dashboard() {
             your request. Subreddits are provided courtesy of <Link style={linkstyle} href="https://pushshift.io/">pushshift.io</Link> and are up 
             to date on their schedule, which is roughly within two months.</Typography>
             
-            <Workspaces workspaces={workspaces} color={color} client={client}/>
+            <Workspaces workspaces={workspaces} color={color} />
         </Stack>
         
     )

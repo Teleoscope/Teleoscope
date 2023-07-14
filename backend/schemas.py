@@ -232,7 +232,7 @@ def create_node(node_type, oid):
         "matrix": None,
         "reference": oid,
         "columns": [],
-        "doclists": {},
+        "doclists": [],
         "parameters": {},
         "edges": {
             "source": [],

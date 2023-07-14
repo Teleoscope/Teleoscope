@@ -12,7 +12,7 @@ export default async (req, res) => {
   const client = await new MongoClient(process.env.MONGODB_REGISTRAR_URI).connect();
   const db = await client.db("users");
 
-  const credentials = req.body;  
+  const credentials = req.body;
 
   const user = await db.collection("users").findOne({ username: credentials.username });
   

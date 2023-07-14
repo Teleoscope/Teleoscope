@@ -22,7 +22,7 @@ export default function Teleoscope(props) {
     : swr.useSWRAbstract("teleoscope", `graph/${teleoscope_id}`);
 
   const doclists = teleoscope?.doclists;
-  const data = doclists ? doclists[0]["ranked_documents"] : []
+  const data = doclists.length > 0 ? doclists[0]["ranked_documents"] : []
 
   const handleLoadMore = () => {
     console.log("stub")
