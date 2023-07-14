@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
   const client = Stomp.getInstance({userid: session.user.id})
   await client.wait_for_client_connection()
-  client.add_contributor(args.contributor, args.workspace)
+  client.add_contributor(args.contributor, args.workspace_id)
   Stomp.stop()
 
   return res.json({"status": "success"})

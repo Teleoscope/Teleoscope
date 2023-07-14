@@ -125,13 +125,12 @@ def add_contributor(
     # handle ObjectID kwargs
     workspace_id = ObjectId(str(workspace_id))
     userid = ObjectId(str(userid))
-    
+    contributor_id = db.users.find({"username": contributor})
+
     # log action to stdout
     logging.info(f'Adding contributor {contributor_id} by '
                  f'user {userid} to workspace {workspace_id}.')
     #---------------------------------------------------------------------------
-
-    contributor_id = db.users.find({"username": contributor})
 
     workspace = db.workspaces.find_one({"_id": workspace_id})    
     contributors = workspace["contributors"]
