@@ -27,6 +27,7 @@ export class Stomp {
   private static stomp: Stomp;
   private creationTime: Date;
   private _loaded: boolean;
+  private _replyToQueue: string;
 
   private constructor({userid = undefined}) {
     this.creationTime = new Date();
@@ -165,7 +166,15 @@ export class Stomp {
       Stomp.stomp.loaded = true;
       // Do something, all subscribes must be done is this callback
       // This is needed because this will be executed after a (re)connect
-      this.client.subscribe(`/queue/${this.userId}`, (message) => {
+      const queuehash = crypto.randomBytes(8).toString('hex');
+      this._replyToQueue = `/queue/${this.userId}%${queuehash}`
+
+      const headers = {
+        "auto-delete": "true",
+        "exclusive": "true"
+      }
+
+      this.client.subscribe(this._replyToQueue, (message) => {
         // Parse the message body
         const body = JSON.parse(message.body);
         
@@ -176,7 +185,7 @@ export class Stomp {
           store.dispatch(OID_UID_SYNC(body));
         }
 
-      });
+      }, headers);
       
       console.log("Connected to RabbitMQ webSTOMP server.", frame);
     };
@@ -209,8 +218,8 @@ export class Stomp {
     body["args"]["database"] = this.database;
     body["args"]["workflow"] = this.workflow;
     body["args"]["workspace"] = this.workspace;
-    
     body["args"]["message_id"] = crypto.randomBytes(8).toString('hex');
+    body["args"]["replyTo"] = this._replyToQueue;
     
     const headers = {
       "content_type": "application/json",

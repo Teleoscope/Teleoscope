@@ -7,10 +7,6 @@
     "title": "Sign in",
     "href": "/signin"
   },
-  "signout": {
-    "title": "Sign out",
-    "href": "/signout"
-  },
   "dashboard": {
     "title": "Dashboard"
   }

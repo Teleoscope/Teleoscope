@@ -1,7 +1,7 @@
 import { useStomp } from "@/util/Stomp";
 import { Button, Chip, Divider, FormControl, InputLabel, MenuItem, Paper, Select, TextField } from "@mui/material";
 import { Stack, Typography } from "@mui/material";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
@@ -14,13 +14,15 @@ const fetcher = (...args) => fetch(...args).then(res => res.json())
 const ExistingWorkspace = ({workspace, client, color}) => {
     const [collaborator, setCollaborator] = useState("");    
     const { data: coll } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${collaborator}`, fetcher)
-    
+
     const handleTextChange = (event, ws) => {
         setCollaborator(event.target.value)
         if (event.key == 'enter' && coll?.found) {
             client.set_collaborator(event.target.value, ws)
         }
     }
+
+    
 
     return (
         <Paper elevation={1} sx={{width:"12em"}}>
@@ -37,7 +39,7 @@ const ExistingWorkspace = ({workspace, client, color}) => {
                     label="Add collaborator" 
                     variant="outlined"
                     size="small"
-                    onChange={(event) => handleTextChange(event, workspace)}  
+                    onChange={(event) => handleTextChange(event, workspace)}
                 />
             </FormControl>
             <Button sx={{color: color}}><a href={`/workspace/${workspace._id}`} >Select workspace</a></Button>
@@ -46,29 +48,41 @@ const ExistingWorkspace = ({workspace, client, color}) => {
     )
 }
 
-const Workspaces = ({workspaces, client, color}) => {
+const NewWorkspace = ({color, client}) => {
     const [newWorkspaceSource, setNewWorkspaceSource] = useState("aita");
     const [label, setLabel] = useState("");
-    
+    const [labelError, setLabelError] = useState("");
     
     const handleChange = (event) => {
         setNewWorkspaceSource(event?.target.value)
     }
-    const handleClick = () => {
-        client.initialize_workspace(newWorkspaceSource, label)
-    }
 
     const handleLabelChange = (event) => {
+        validateLabel()
         setLabel(event.target.value)
+        
+    }
+
+
+    const handleClick = () => {
+        if (!labelError) {
+            client.initialize_workspace(newWorkspaceSource, label)
+        }
+    }
+
+    const validateLabel = () => {
+        const label_length = 3;
+        if (label.length < label_length) {
+            setLabelError(`Label must be at least ${label_length} characters long.`);
+          }
+          else {
+            setLabelError('');
+          }
     }
 
     return (
-        <Stack spacing={2} sx={{height: "100%", padding: "1em", overflow: "auto"}}>
-            <Typography>Workspaces</Typography>
-        
-            <Stack sx={{margin: "0.5em"}} spacing={2} direction="row">
-        
-                <Paper elevation={1} sx={{width:"12em"}}>
+
+    <Paper elevation={1} sx={{width:"12em"}}>
                 <Stack spacing={2} sx={{margin: "1em"}}>
                     <TextField 
                         id="outlined-basic" 
@@ -84,6 +98,9 @@ const Workspaces = ({workspaces, client, color}) => {
                             margin: 1,
                             "& .MuiInput-underline:after": { borderBottomColor: color },
                         }}
+                        onBlur={validateLabel}
+                        error={!!labelError}
+                        helperText={labelError}
                     />
                     <Divider></Divider>
                     <FormControl>
@@ -103,6 +120,18 @@ const Workspaces = ({workspaces, client, color}) => {
                     <Button onClick={handleClick} sx={{color: color}}>Add new workspace</Button>
                     </Stack>
                 </Paper>
+    )
+    
+}
+
+const Workspaces = ({workspaces, client, color}) => {
+    return (
+        <Stack spacing={2} sx={{height: "100%", padding: "1em", overflow: "auto"}}>
+            <Typography>Workspaces</Typography>
+        
+            <Stack sx={{margin: "0.5em"}} spacing={2} direction="row">
+
+                <NewWorkspace color={color} client={client} />
                 {workspaces?.map(ws => <ExistingWorkspace workspace={ws} color={color} client={client}></ExistingWorkspace>)}
             </Stack>
         </Stack>
@@ -136,10 +165,14 @@ export default function Dashboard() {
     const linkstyle = {
         color: color
     }
-    
+
+        
     return (
         <Stack spacing={2}>
-            <Typography variant="h4">Welcome, {user?.username}.</Typography>
+            <Stack direction="row" justifyContent="space-between" >
+                <Typography variant="h4">Welcome, {user?.username}.</Typography>
+                <Button onClick={() => signOut({ callbackUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}` })}>Sign out</Button>
+            </Stack>
             <Typography variant="h5">Start by creating a new workspace or accessing a previous one. </Typography>
             <Typography>For now, we have two data sources from <Link style={linkstyle} href={"https://reddit.com"}>Reddit</Link> that are loaded and open to use: <Link style={linkstyle} href={"https://reddit.com/r/nursing"}>r/nursing</Link> and <Link style={linkstyle} href={"https://reddit.com/r/AmITheAsshole"}>r/AmITheAsshole</Link>. When you create a new workspace, you 
             will get to choose which you would like to use as your data source. You can also add collaborators by username below.</Typography>

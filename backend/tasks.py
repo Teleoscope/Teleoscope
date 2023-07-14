@@ -1454,6 +1454,7 @@ def add_item(*args, **kwargs):
     database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
 
+    replyTo = kwargs["replyTo"]
     userid = ObjectId(str(kwargs["userid"]))
     session_id = ObjectId(str(kwargs["session_id"]))
 
@@ -1489,7 +1490,7 @@ def add_item(*args, **kwargs):
                 color = utils.random_color()
                 res = add_group(database=database, color=color, label="New Group", userid=userid, session_id=session_id, transaction_session=transaction_session)
 
-            utils.message(userid, {
+            utils.message(replyTo, {
                 "oid": str(res),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
@@ -1514,7 +1515,7 @@ def add_item(*args, **kwargs):
                     transaction_session=transaction_session
                 )
 
-            utils.message(userid, {
+            utils.message(replyTo, {
                 "oid": str(res),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
@@ -1533,7 +1534,7 @@ def add_item(*args, **kwargs):
                 logging.info(f"Search is new.")
                 res = add_search(database=database, userid=userid, session_id=session_id, query="", transaction_session=transaction_session)
 
-            message(userid, {
+            utils.message(replyTo, {
                 "oid": str(res),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
@@ -1578,7 +1579,7 @@ def add_item(*args, **kwargs):
 
             res = initialize_projection(database=database, session_id=session_id, label="New Projection", userid=userid)
 
-            utils.message(userid, {
+            utils.message(replyTo, {
                 "oid": str(res),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
@@ -1588,7 +1589,7 @@ def add_item(*args, **kwargs):
         case "Teleoscope" | "Filter" | "Intersection" | "Exclusion" | "Union":
             node = graph.make_node(db, None, node_type)
 
-            utils.message(userid, {
+            utils.message(replyTo, {
                 "oid": str(node["_id"]),
                 "uid": uid,
                 "action": "OID_UID_SYNC",
@@ -1620,14 +1621,14 @@ def make_edge(*args, **kwargs):
 
 
 @app.task
-def ping(*args, database: str, userid: str, message: str, **kwargs):
+def ping(*args, database: str, userid: str, message: str, replyTo: str, **kwargs):
     
     userid = ObjectId(str(userid))
                       
     msg = f"ping queue for user {userid} and database {database} with {kwargs}"
     logging.info(f"Received a ping: {message}")
 
-    utils.message(userid, msg)
+    utils.message(replyTo, msg)
 
 "dispatch.${userInfo.username}@%h"
 

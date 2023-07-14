@@ -82,6 +82,7 @@
     "unique-names-generator": "^4.7.1",
     "websocket": "^1.0.34",
     "websocket-ts": "^1.1.1",
+    "webstomp-client": "^1.2.6",
     "yup": "^1.2.0"
   },
   "devDependencies": {

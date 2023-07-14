@@ -6249,6 +6249,7 @@ __metadata:
     unique-names-generator: ^4.7.1
     websocket: ^1.0.34
     websocket-ts: ^1.1.1
+    webstomp-client: ^1.2.6
     yup: ^1.2.0
   languageName: unknown
   linkType: soft
@@ -12639,6 +12640,13 @@ react@latest:
     utf-8-validate: ^5.0.2
     yaeti: ^0.0.6
   checksum: 8a0ce6d79cc1334bb6ea0d607f0092f3d32700b4dd19e4d5540f2a85f3b50e1f8110da0e4716737056584dde70bbebcb40bbd94bbb437d7468c71abfbfa077d8
+  languageName: node
+  linkType: hard
+
+"webstomp-client@npm:^1.2.6":
+  version: 1.2.6
+  resolution: "webstomp-client@npm:1.2.6"
+  checksum: 142f23b279441120a65d65556e3bb6a52bad77c827770fa21584fd4fe9e71d617a1ee67457f91fa08a29e6ba77dd2e1314e79062d81821ea5f6721eeaefb4871
   languageName: node
   linkType: hard
 

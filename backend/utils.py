@@ -426,11 +426,10 @@ def make_query(text):
         ]
     }
 
-def message(userid: ObjectId, msg):
+def message(queue: str, msg):
     credentials = pika.PlainCredentials(auth.rabbitmq["username"], auth.rabbitmq["password"])
     parameters = pika.ConnectionParameters(host='localhost', port=5672, virtual_host='teleoscope', credentials=credentials)
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
-    queue_name = str(userid)
-    channel.basic_publish(exchange='', routing_key=queue_name, body=json.dumps(msg))
-    logging.info(f"Sent to queue for userid {userid} and with message {json.dumps(msg)}.")
+    channel.basic_publish(exchange='', routing_key=queue, body=json.dumps(msg))
+    logging.info(f"Sent to queue {queue} and with message {json.dumps(msg)}.")
