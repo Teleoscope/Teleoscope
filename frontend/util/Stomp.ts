@@ -889,5 +889,20 @@ export class Stomp {
     return body;
   }
 
+  /**
+   * Add collaborator to workspace.
+   */
+  add_collaborator(collaborator: string, workspace_id: string) {
+    const body = {
+      task: "relabel_projection",
+      args: {
+        collaborator: collaborator,
+        workspace_id: workspace_id,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
 }
 

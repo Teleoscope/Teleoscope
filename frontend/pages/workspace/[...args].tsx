@@ -23,6 +23,18 @@ export async function getServerSideProps(context) {
     authOptions
   )
 
+  if (!session) {
+    return {
+      props: {
+        workspace: null,
+        database: null,
+        session: null,
+        workflow: null,
+        workflow_id: null
+      }
+    }
+  }
+
   const workspace_id = context.query.args[0]
 
   const client = await new MongoClient(process.env.MONGODB_URI).connect();

@@ -131,7 +131,6 @@ def create_workflow_object(
                 "projections": projections,
                 "teleoscopes": teleoscopes,
                 "label": label,
-                "color": color,
                 "action": action,
                 "user": userid,
                 "notes": notes,
@@ -139,7 +138,7 @@ def create_workflow_object(
                     "default_document_width": 200,
                     "default_document_height": 34,
                     "defaultExpanded": True,
-                    "color": "#D3D3D3",
+                    "color": color,
                 }
             }
         ],

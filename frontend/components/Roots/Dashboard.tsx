@@ -18,7 +18,11 @@ const ExistingWorkspace = ({workspace, color}) => {
     const handleTextChange = (event, ws) => {
         setCollaborator(event.target.value)
         if (event.key == 'enter' && coll?.found) {
-            // client.set_collaborator(event.target.value, ws)
+            fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/collaborator`, {
+                method: 'POST',
+                body: JSON.stringify({collaborator: collaborator, workspace_id: workspace["_id"]}),
+                headers: { "Content-Type": "application/json" }
+            })
         }
     }
 
@@ -171,8 +175,8 @@ const Workspaces = ({workspaces, client, color}) => {
         
             <Stack sx={{margin: "0.5em"}} spacing={2} direction="row">
 
-                <NewWorkspace color={color} client={client} />
-                {workspaces?.map(ws => <ExistingWorkspace workspace={ws} color={color} client={client}></ExistingWorkspace>)}
+                <NewWorkspace color={color} />
+                {workspaces?.map(ws => <ExistingWorkspace workspace={ws} color={color} ></ExistingWorkspace>)}
             </Stack>
         </Stack>
     )
