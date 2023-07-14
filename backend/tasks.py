@@ -152,7 +152,7 @@ def add_contributor(
     db.workspaces.update_one(
         {"_id": workspace_id}, 
         {"$push": { 
-            "contributors": contributor_id
+            "contributors": {"id": contributor_id, "username": contributor}
         }, 
     })
 

@@ -14,7 +14,7 @@ const fetcher = (...args) => fetch(...args).then(res => res.json())
 const ExistingWorkspace = ({workspace, color}) => {
     const [contributor, setContributor] = useState("");    
     const { data: coll } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${contributor}`, fetcher)
-    console.log("coll", coll)
+    
     const handleTextChange = (event, ws) => {
         setContributor(event.target.value)
         
