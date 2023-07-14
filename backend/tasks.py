@@ -125,7 +125,8 @@ def add_contributor(
     # handle ObjectID kwargs
     workspace_id = ObjectId(str(workspace_id))
     userid = ObjectId(str(userid))
-    contributor_id = db.users.find_one({"username": contributor})
+    contributor = db.users.find_one({"username": contributor})
+    contributor_id = contributor["_id"]
 
     # log action to stdout
     logging.info(f'Adding contributor {contributor_id} by '
