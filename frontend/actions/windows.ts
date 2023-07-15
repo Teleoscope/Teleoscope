@@ -266,7 +266,6 @@ export const Windows = createSlice({
       }
     },
     OID_UID_SYNC: (state, action) => {
-      console.log("Received OID UID SYNC for", action)
       var temp = [...state.nodes];
       var index = state.nodes.map((n) => {
         return n.data.uid;
@@ -277,10 +276,6 @@ export const Windows = createSlice({
         temp[index].data.oid = action.payload.oid;
         temp[index].data.label = id
         temp[index].id = id
-        console.log(`Associated UID ${temp[index].data.uid} with OID ${temp[index].data.oid}`)
-
-      } else {
-        console.log(`Failed to associated UID ${action.payload.uid} with OID ${action.payload.oid}`)
       }
       
       state.nodes = temp;

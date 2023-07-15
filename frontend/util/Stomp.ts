@@ -135,12 +135,47 @@ export class Stomp {
           }, timeoutMs);
       });
   };
-
   await Promise.race([checkConnection(), timeout()]);
-    
-  
 }
 
+async wait_for_client_disconnection(timeoutMs=2000) {
+  // A function that returns a promise which will resolve when client is deactivated
+  if (this.client) {
+    this.client.deactivate()
+  }
+  if (Stomp.stomp.client) {
+    Stomp.stomp.client.deactivate()
+  }
+  const checkConnection = () => {
+      return new Promise<void>((resolve, reject) => {
+          const intervalId = setInterval(() => {
+              if (this.client) {
+                if (!this.client.connected) {
+                  clearInterval(intervalId);
+                  resolve();
+                }
+              }
+              if (Stomp.stomp.client) {
+                if (!Stomp.stomp.client.connected) {
+                  clearInterval(intervalId);
+                  resolve();
+                }
+              }
+
+          }, 100);
+      });
+  };
+
+  const timeout = () => {
+    return new Promise<void>((resolve, reject) => {
+        setTimeout(() => {
+            reject(new Error('Timeout'));
+        }, timeoutMs);
+    });
+};
+
+await Promise.race([checkConnection(), timeout()]);
+}
 
 
   fake_client_init() {
@@ -209,10 +244,7 @@ export class Stomp {
         // Parse the message body
         const body = JSON.parse(message.body);
         
-        console.log("Received: ", body);
-
         if (body.action == "OID_UID_SYNC") {
-          console.log("Received and dispatching OID_UID_SYNC", body)
           store.dispatch(OID_UID_SYNC(body));
         }
 
@@ -364,7 +396,6 @@ export class Stomp {
         ui_state: ui_state
       },
     };
-    console.log("makeEdge stomp", body, this)
     this.publish(body);
     return body;
   }

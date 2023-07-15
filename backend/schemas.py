@@ -19,13 +19,13 @@ def create_search_object(*args, userid: ObjectId, query: str):
     }
     return obj
 
-def create_workspace_object(*args, owner: ObjectId, label: str, database: str, workflow: ObjectId):
+def create_workspace_object(*args, owner: ObjectId, label: str, database: str):
     obj = {
         "owner": owner,
         "contributors": [],
         "label": label,
         "database": database,
-        "workflows": [ workflow ],
+        "workflows": [],
         "history": [create_workspace_history_object(owner)]
     }
     return obj

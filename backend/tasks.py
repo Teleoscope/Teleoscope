@@ -97,10 +97,18 @@ def initialize_workspace(
 
     # Every workspace should be initialized with one workflow
     color = utils.random_color()
-    workflow_id = initialize_workflow(database=datasource, userid=userid, label=label, color=color)
     
-    obj = schemas.create_workspace_object(owner=userid, label=label, database=datasource, workflow=workflow_id)
+    obj = schemas.create_workspace_object(owner=userid, label=label, database=datasource)
     res = db.workspaces.insert_one(obj)
+
+    workflow_id = initialize_workflow(
+        database=datasource, 
+        userid=userid, 
+        label=label, 
+        color=color, 
+        workspace_id=res.inserted_id
+    )
+    
     
     return res.inserted_id
 
@@ -243,7 +251,7 @@ def initialize_workflow(
     user_db = utils.connect(db="users")
 
     user_db.workspaces.update_one(
-        workspace_id,
+        {"_id": workspace_id},
         {
             "$push": {
                 "workflows": result.inserted_id

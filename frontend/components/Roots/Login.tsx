@@ -119,7 +119,7 @@ const LoginForm = () => {
         label="Password"
         value={password}
         onInput={handlePasswordChange}
-        onBlur={validatePassword}
+        onBlur={() => validatePassword(password)}
         error={!!passwordError}
         helperText={passwordError}
         onKeyDown={handleKeyDown}

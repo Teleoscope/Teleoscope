@@ -15,8 +15,6 @@ export default async function handler(req, res) {
         const sessions = await db.collection("sessions").find({
             _id: { "$in": workspace.workflows }
         }, { projection: { history: { $slice: 1 } } }).toArray()
-
-        console.log("sessions", sessions, workspace)
         
         res.json(sessions)
     }

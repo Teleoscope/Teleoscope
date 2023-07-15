@@ -12,7 +12,6 @@ import { MongoClient } from 'mongodb';
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions)
-  console.log("looking for user", req.query)
   
   const client = await new MongoClient(process.env.MONGODB_REGISTRAR_URI).connect();
   

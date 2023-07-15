@@ -1,5 +1,4 @@
 import { MongoClient } from "mongodb";
-console.log("Loading mongodb.js");
 
 const uri = process.env.MONGODB_URI;
 const options = {
