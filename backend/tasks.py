@@ -1247,7 +1247,7 @@ def update_note(*args, database: str, userid: str, workflow_id: str,
     
     text = " ".join([block["text"] for block in content["blocks"]])
     vector = vectorize_text(text)
-    logging.info(f"Vectorized note with {text}.")
+    logging.info(f"Vectorized note with text: {text}.")
     
     db.notes.update_one({"_id": note_id}, {"$set": { "textVector": vector, "text": text }})
     logging.info(f"Updated note {note_id} with {res}.")

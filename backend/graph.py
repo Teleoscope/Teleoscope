@@ -39,7 +39,7 @@ def make_node(db: database.Database,
         # If a workspace item can only be a source, check to make sure it has a 
         # corresponding node in the graph and make one if it does not exist.
         # If it does exist, update the matrix just in case.
-        case "Document" | "Group" | "Search":
+        case "Document" | "Group" | "Search" | "Note":
             obj = get_collection(db, node_type).find_one({"_id": oid})
             if obj:
                 if "node" not in obj:
@@ -110,7 +110,7 @@ def make_edge(db: database.Database,
     
     # Ensure the source is from the graph. Target should always be.
     match source_type:
-        case "Group" | "Document" | "Search":
+        case "Group" | "Document" | "Search" | "Note":
             if "node" in source:
                 source = db.graph.find_one({"_id": source["node"]})
             else:
@@ -162,6 +162,8 @@ def graph(db: database.Database, node_oid: ObjectId):
             node = update_group(db, node, parameters)
         case "Search":
             node = update_search(db, node, parameters)
+        case "Note":
+            node = update_note(db, node, parameters)
         case "Teleoscope":
             node = update_teleoscope(db, node, sources, controls, parameters)
         case "Union":
@@ -192,6 +194,7 @@ def get_collection(db: database.Database, node_type: schemas.NodeType):
         "Document": "documents",
         "Group": "groups",
         "Search": "searches",
+        "Note": "notes",
         "Projection": "projections",
         "Intersection": "graph",
         "Exclusion": "graph",
@@ -208,23 +211,6 @@ def make_matrix(node_type: schemas.NodeType, oid: ObjectId):
 
 def update_matrix(oid: ObjectId, node_type: schemas.NodeType, graph_oid: ObjectId):
     return []
-
-
-def update_union(db, node, sources: List, controls: List, parameters):
-    return node # stub
-
-
-def update_intersection(db, node, sources: List, controls: List, parameters):
-    return node # stub
-
-
-def update_exclusion(db, node, sources: List, controls: List, parameters):
-    return node # stub
-
-
-def update_filter(db, node, sources: List, controls: List, parameters):
-    return node # stub
-
 
 def update_parameters(db, node, parameters):
     collection = get_collection(db, node["type"])
@@ -265,6 +251,26 @@ def update_group(db: database.Database, group_node, parameters):
     }
     group_node["doclists"] = [doclist]
     return group_node
+
+
+################################################################################
+# Update Note
+################################################################################
+
+def update_note(db: database.Database, note_node, parameters):
+    note_id = ObjectId(str(note_node["reference"]))
+    note = db.notes.find_one(note_id)
+    documents = []
+    
+    doclist = {
+        "id": note_id,
+        "nodeid": note_node["_id"],
+        "type": note_node["type"],
+        "ranked_documents": []
+    }
+
+    note_node["doclists"] = [doclist]
+    return note_node
 
 
 ################################################################################
@@ -341,7 +347,9 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
                     oids = [d["_id"] for d in list(cursor)]
                     vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
                     source_map.append((source, vecs, oids))
-    
+                case "Note":
+                    pass
+
     for source, source_vecs, source_oids in source_map:
         ranks = rank(control_vecs, source_oids, source_vecs)
         source["ranked_documents"] = ranks[0:rank_slice_length]
@@ -366,6 +374,7 @@ def filter_vectors_by_oid(oids, ids, vectors):
 
 def get_control_vectors(db: database.Database, controls, ids, all_vectors):
     oids = []
+    notes = []
     for c in controls:
         match c["type"]:
             case "Document":
@@ -377,5 +386,31 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
                 search = db.searches.find_one({"_id": c["id"]})
                 cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
                 oids = oids + [d["_id"] for d in list(cursor)]
+            case "Note":
+                note = db.notes.find_one({"_id": c["id"]})
+                notes.append(note)
+    note_vecs = [np.array(note["vector"]) for note in notes]
+    filtered_vecs = filter_vectors_by_oid(oids, ids, all_vectors)
+    out_vecs = filtered_vecs + note_vecs
     logging.debug(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
-    return filter_vectors_by_oid(oids, ids, all_vectors)
+    return out_vecs
+
+
+################################################################################
+# Update Teleoscope
+################################################################################
+
+def update_union(db, node, sources: List, controls: List, parameters):
+    return node # stub
+
+
+def update_intersection(db, node, sources: List, controls: List, parameters):
+    return node # stub
+
+
+def update_exclusion(db, node, sources: List, controls: List, parameters):
+    return node # stub
+
+
+def update_filter(db, node, sources: List, controls: List, parameters):
+    return node # stub
