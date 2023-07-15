@@ -339,7 +339,7 @@ def update_search(db: database.Database, search_node, parameters):
         db.documents.find(
             utils.make_query(search["history"][0]["query"]), 
             {"projection": { "_id": 1 }}
-        )
+        ).limit(1000)
     )
     doclist = {
         "id": search_id, 
