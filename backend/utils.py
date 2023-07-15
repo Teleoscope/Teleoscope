@@ -410,7 +410,7 @@ def strip_emojis(text):
 
 
 def make_query(text):
-    if len(text).strip() == 0:
+    if len(text.strip()) == 0:
         return {}
     buffer = text.replace('"', '\\"').strip()
     regex = extract_special_characters(buffer)
