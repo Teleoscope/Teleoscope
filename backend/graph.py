@@ -356,7 +356,7 @@ def update_search(db: database.Database, search_node, parameters):
 ################################################################################
 
 def update_teleoscope(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
-    rank_slice_length = 10000
+    rank_slice_length = 1000
     if "rank_slice_length" in parameters:
         rank_slice_length = parameters["rank_slice_length"]
     
@@ -398,7 +398,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
                     source_map.append((source, vecs, oids))
                 case "Search":
                     search = db.searches.find_one({"_id": source["id"]})
-                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
+                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1}).limit(rank_slice_length)
                     oids = [d["_id"] for d in list(cursor)]
                     vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
                     source_map.append((source, vecs, oids))
