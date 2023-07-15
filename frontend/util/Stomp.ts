@@ -366,23 +366,7 @@ await Promise.race([checkConnection(), timeout()]);
   }
 
   /**
-   * Updates Teleoscopes
-   */
-  update_edges(workflow_id: string, edges, state) {
-    const body = {
-      task: "update_edges",
-      args: {
-        workflow_id,
-        edges: edges,
-        state: state
-      },
-    };
-    this.publish(body);
-    return body;
-  }
-
-  /**
-   * Single edge update.
+   * Add an edge.
    */
   make_edge({workflow_id, source_node, target_node, handle_type, connection, ui_state}) {
     const body = {
@@ -391,7 +375,7 @@ await Promise.race([checkConnection(), timeout()]);
         workflow_id: workflow_id,
         source_node: source_node,
         target_node: target_node,
-        handle_type: handle_type,
+        edge_type: handle_type,
         connection: connection,
         ui_state: ui_state
       },
@@ -416,6 +400,20 @@ await Promise.race([checkConnection(), timeout()]);
   }
 
   /**
+   * Remove an edge.
+   */
+  remove_edge(edge) {
+    const body = {
+      task: "remove_edge",
+      args: {
+        edge: edge
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+  /**
    * Requests to create a Teleoscope object in MongoDB.
    */
   initialize_teleoscope(workflow_id: string, label: string) {
@@ -430,9 +428,9 @@ await Promise.race([checkConnection(), timeout()]);
     return body;
   }
 
-  /*
-  Adds the users login credentials for verification
-*/
+  /**
+   * Adds the users login credentials for verification
+   */
   add_login(username: string, password: string) {
     const body = {
       task: "add_login",

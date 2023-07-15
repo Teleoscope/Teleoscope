@@ -155,6 +155,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             
             case "make_edge":
                 res = tasks.make_edge.signature(args=(), kwargs=kwargs)
+
+            case "remove_edge":
+                res = tasks.remove_edge.signature(args=(), kwargs=kwargs)
             
             case "update_search":
                 res = tasks.update_search.signature(args=(), kwargs=kwargs)
@@ -173,18 +176,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                         "documents": documents,
                     },
                 )
-
-            case "update_edges":
-                # res = tasks.update_edges.signature(args=(), kwargs=kwargs)
-
-                res = chain(
-                    tasks.robj.s(
-                        edges=kwargs["edges"], userid=kwargs["userid"], db=kwargs["database"]
-                    ).set(queue=auth.rabbitmq["task_queue"])
-                )
-                res.apply_async()
-                return
-
         try:
             res.apply_async(queue=auth.rabbitmq["task_queue"])
         except:

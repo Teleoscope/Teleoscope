@@ -1318,7 +1318,231 @@ def remove_note(*args, database: str, userid: str, workflow_id: str,
 
     logging.info(f"Removed note {note_id} from session {workflow_id}.")
 
+
+################################################################################
+# Graph tasks
+################################################################################
+
+@app.task
+def make_edge(*args, database: str, userid: str, workflow_id: str,
+    source_node, target_node, edge_type: str, **kwargs):
+    """
+    Makes an edge between two nodes.
+    """
+    #---------------------------------------------------------------------------
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db=database)
     
+    # handle ObjectID kwargs
+    workflow_id = ObjectId(str(workflow_id))
+    userid = ObjectId(str(userid))
+    
+    # log action to stdout
+    logging.info(f'Making edge type {edge_type} for'
+                 f'workflow {workflow_id} by user {userid}.')
+    #---------------------------------------------------------------------------
+    
+    source_type = source_node["type"]
+    source_oid  = ObjectId(str(source_node["data"]["oid"]))
+    
+    target_type = target_node["type"]
+    target_oid  = ObjectId(str(target_node["data"]["oid"]))
+    
+    graph.make_edge(db, source_oid, source_type, target_oid, target_type, edge_type)
+    
+    return 200
+
+
+@app.task
+def remove_edge(*args, database: str, userid: str, workflow_id: str, 
+    edge, **kwargs):
+    """
+    Removes an edge.
+    """
+    #---------------------------------------------------------------------------
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle ObjectID kwargs
+    workflow_id = ObjectId(str(workflow_id))
+    userid = ObjectId(str(userid))
+    
+    # log action to stdout
+    logging.info(f'Removing edge {edge} from'
+                 f'workflow {workflow_id} by user {userid}.')
+    #---------------------------------------------------------------------------
+
+    
+    source_oid = ObjectId(str(edge["source"].split("%")[0]))
+    source_type = edge["source"].split("%")[-1].capitalize()
+
+    target_oid = ObjectId(str(edge["target"].split("%")[0]))
+    target_type = edge["target"].split("%")[-1].capitalize()
+    
+    edge_type = edge["targetHandle"].split("_")[-1]
+    
+    graph.remove_edge(db, source_oid, source_type, target_oid, target_type, edge_type)
+    
+    return 200
+
+
+@app.task
+def add_item(*args, **kwargs):
+    database = kwargs["database"]
+    transaction_session, db = utils.create_transaction_session(db=database)
+
+    replyTo = kwargs["replyTo"]
+    userid = ObjectId(str(kwargs["userid"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
+
+    uid  = kwargs["uid"]
+    node_type = kwargs["type"]
+    oid  = kwargs["oid"]
+
+    match node_type:
+
+        case "Group":
+            # check to see if oid is valid 
+            if ObjectId.is_valid(oid): 
+                group = db.groups.find_one({"_id" : ObjectId(str(oid))})  
+                
+                if group: # oid is a group
+                    logging.info(f"Group already exists.")
+                    res = group["_id"]
+                
+                else: # oid is a cluster
+                    cluster = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
+                    
+                    if cluster:
+                        # oid is a cluster thats already copied as a group
+                        logging.info(f"Cluster has already been copied.")
+                        res = cluster["_id"]
+                    else:
+                        # oid is a cluster that has yet to be copied as a group
+                        logging.info(f"Cluster has NOT been copied.")
+                        res = copy_cluster(db=database, userid=userid, workflow_id=workflow_id, cluster_id=oid, transaction_session=transaction_session)
+            else:
+                # need to create a group
+                logging.info(f"Group is new.")
+                color = utils.random_color()
+                res = add_group(database=database, color=color, label="New Group", userid=userid, workflow_id=workflow_id, transaction_session=transaction_session)
+
+            utils.message(replyTo, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })
+        
+        case "Search":
+            if ObjectId.is_valid(oid): 
+                search = db.searches.find_one({"_id" : ObjectId(str(oid))})  
+                
+                if search: # oid is a search
+                    logging.info(f"Search already exists.")
+                    res = search["_id"]
+            else:
+                # need to create a search
+                logging.info(f"Search is new.")
+                res = add_search(
+                    database=database, 
+                    userid=userid, 
+                    workflow_id=workflow_id, 
+                    query="", 
+                    transaction_session=transaction_session
+                )
+
+            utils.message(replyTo, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })
+        
+        case "Search":
+            if ObjectId.is_valid(oid): 
+                search = db.searches.find_one({"_id" : ObjectId(str(oid))})  
+                
+                if search: # oid is a search
+                    logging.info(f"Search already exists.")
+                    res = search["_id"]
+            else:
+                # need to create a group
+                logging.info(f"Search is new.")
+                res = add_search(database=database, userid=userid, workflow_id=workflow_id, query="", transaction_session=transaction_session)
+
+            utils.message(replyTo, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })
+
+
+        case "Note":
+            content = {
+                "blocks": [{
+                    "key": "835r3",
+                    "text": " ",
+                    "type": "unstyled",
+                    "depth": 0,
+                    "inlineStyleRanges": [],
+                    "entityRanges": [],
+                    "data": {}
+                }],
+                "entityMap": {}
+            }         
+            res = add_note(
+                database=database, 
+                workflow_id=workflow_id, 
+                label="New Note", 
+                content=content, 
+                userid=userid
+            )
+
+            utils.message(replyTo, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": f"Associated OID for {node_type} with UID."
+            })
+
+        case "Projection":
+            # If this already exists in the database, we can skip intitalization
+            if ObjectId.is_valid(oid):
+
+                docset = db.graph.find_one({"_id" : oid})
+                if docset:
+                    logging.info(f"{type} with {oid} already in DB.")
+                    return # perhaps do something else before return like save?
+
+                logging.info(f"return anyways for now")
+                return
+
+            logging.info(f"Received {type} with OID {oid} and UID {uid}.")
+
+            res = initialize_projection(database=database, workflow_id=workflow_id, label="New Projection", userid=userid)
+
+            utils.message(replyTo, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": "Associate OID with UID."
+            })            
+
+        case "Teleoscope" | "Filter" | "Intersection" | "Exclusion" | "Union":
+            node = graph.make_node(db, None, node_type)
+
+            utils.message(replyTo, {
+                "oid": str(node["_id"]),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": f"Associated OID for {node_type} with UID."
+            })
+    return 
+
+
+
 ################################################################################
 # Document importing tasks
 ################################################################################
@@ -1530,15 +1754,6 @@ def create_child(*args, **kwargs):
         print(child_id)
         utils.commit_with_retry(transaction_session)
     return {child_id, new_id}
-
-
-
-@app.task
-def update_edges(*arg, **kwargs):
-    """
-    Deprecated.
-    """
-    pass
     
     
 @app.task
@@ -1561,182 +1776,10 @@ def mark(*args, **kwargs):
         utils.commit_with_retry(transaction_session)
 
 
-@app.task
-def add_item(*args, **kwargs):
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-
-    replyTo = kwargs["replyTo"]
-    userid = ObjectId(str(kwargs["userid"]))
-    workflow_id = ObjectId(str(kwargs["workflow_id"]))
-
-    uid  = kwargs["uid"]
-    node_type = kwargs["type"]
-    oid  = kwargs["oid"]
-
-    match node_type:
-
-        case "Group":
-            # check to see if oid is valid 
-            if ObjectId.is_valid(oid): 
-                group = db.groups.find_one({"_id" : ObjectId(str(oid))})  
-                
-                if group: # oid is a group
-                    logging.info(f"Group already exists.")
-                    res = group["_id"]
-                
-                else: # oid is a cluster
-                    cluster = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
-                    
-                    if cluster:
-                        # oid is a cluster thats already copied as a group
-                        logging.info(f"Cluster has already been copied.")
-                        res = cluster["_id"]
-                    else:
-                        # oid is a cluster that has yet to be copied as a group
-                        logging.info(f"Cluster has NOT been copied.")
-                        res = copy_cluster(db=database, userid=userid, workflow_id=workflow_id, cluster_id=oid, transaction_session=transaction_session)
-            else:
-                # need to create a group
-                logging.info(f"Group is new.")
-                color = utils.random_color()
-                res = add_group(database=database, color=color, label="New Group", userid=userid, workflow_id=workflow_id, transaction_session=transaction_session)
-
-            utils.message(replyTo, {
-                "oid": str(res),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": "Associate OID with UID."
-            })
-        
-        case "Search":
-            if ObjectId.is_valid(oid): 
-                search = db.searches.find_one({"_id" : ObjectId(str(oid))})  
-                
-                if search: # oid is a search
-                    logging.info(f"Search already exists.")
-                    res = search["_id"]
-            else:
-                # need to create a search
-                logging.info(f"Search is new.")
-                res = add_search(
-                    database=database, 
-                    userid=userid, 
-                    workflow_id=workflow_id, 
-                    query="", 
-                    transaction_session=transaction_session
-                )
-
-            utils.message(replyTo, {
-                "oid": str(res),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": "Associate OID with UID."
-            })
-        
-        case "Search":
-            if ObjectId.is_valid(oid): 
-                search = db.searches.find_one({"_id" : ObjectId(str(oid))})  
-                
-                if search: # oid is a search
-                    logging.info(f"Search already exists.")
-                    res = search["_id"]
-            else:
-                # need to create a group
-                logging.info(f"Search is new.")
-                res = add_search(database=database, userid=userid, workflow_id=workflow_id, query="", transaction_session=transaction_session)
-
-            utils.message(replyTo, {
-                "oid": str(res),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": "Associate OID with UID."
-            })
 
 
-        case "Note":
-            content = {
-                "blocks": [{
-                    "key": "835r3",
-                    "text": " ",
-                    "type": "unstyled",
-                    "depth": 0,
-                    "inlineStyleRanges": [],
-                    "entityRanges": [],
-                    "data": {}
-                }],
-                "entityMap": {}
-            }         
-            res = add_note(
-                database=database, 
-                workflow_id=workflow_id, 
-                label="New Note", 
-                content=content, 
-                userid=userid
-            )
-
-            utils.message(replyTo, {
-                "oid": str(res),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": f"Associated OID for {node_type} with UID."
-            })
-
-        case "Projection":
-            # If this already exists in the database, we can skip intitalization
-            if ObjectId.is_valid(oid):
-
-                docset = db.graph.find_one({"_id" : oid})
-                if docset:
-                    logging.info(f"{type} with {oid} already in DB.")
-                    return # perhaps do something else before return like save?
-
-                logging.info(f"return anyways for now")
-                return
-
-            logging.info(f"Received {type} with OID {oid} and UID {uid}.")
-
-            res = initialize_projection(database=database, workflow_id=workflow_id, label="New Projection", userid=userid)
-
-            utils.message(replyTo, {
-                "oid": str(res),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": "Associate OID with UID."
-            })            
-
-        case "Teleoscope" | "Filter" | "Intersection" | "Exclusion" | "Union":
-            node = graph.make_node(db, None, node_type)
-
-            utils.message(replyTo, {
-                "oid": str(node["_id"]),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": f"Associated OID for {node_type} with UID."
-            })
-    return 
 
 
-@app.task
-def make_edge(*args, **kwargs):
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    
-    # handle kwargs
-    userid = ObjectId(str(kwargs["userid"]))
-    workflow_id = ObjectId(str(kwargs["workflow_id"]))
-    
-    source_node = kwargs["source_node"]
-    source_type = source_node["type"]
-    source_oid  = ObjectId(str(source_node["data"]["oid"]))
-    target_node = kwargs["target_node"]
-    target_type = target_node["type"]
-    target_oid  = ObjectId(str(target_node["data"]["oid"]))
-    edge_type = kwargs["handle_type"] # source or control
-
-    graph.make_edge(db, source_oid, source_type, target_oid, target_type, edge_type)
-    
-    return 200
 
 
 @app.task

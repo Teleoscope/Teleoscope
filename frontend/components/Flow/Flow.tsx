@@ -170,8 +170,8 @@ function Flow(props) {
   }, []);
 
   const onEdgesChange = useCallback((changes) => {
-    dispatch(updateEdges(changes));
-  }, []);
+    dispatch(updateEdges({client: client, changes: changes}));
+  }, [client]);
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
@@ -179,7 +179,6 @@ function Flow(props) {
   }, []);
 
   const onNodeDragStart = (evt, node) => { dragRef.current = node };
-
 
   const onDrop = useCallback(
     (event) => {

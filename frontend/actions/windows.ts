@@ -2,15 +2,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { applyNodeChanges, applyEdgeChanges } from "reactflow";
 
-// First, create the thunk
-// const fetchInitialSessionState = createAsyncThunk(
-//   'users/fetchByIdStatus',
-//   async (userId: number, thunkAPI) => {
-//     const response = await userAPI.fetchById(userId)
-//     return response.data
-//   }
-// )
-
 const initialState = {
   nodes: [],
   edges: [],
@@ -203,7 +194,7 @@ export const Windows = createSlice({
       state.nodes = nodes;
     },
     updateEdges: (state, action) => {
-      const changes = action.payload;
+      const changes = action.payload.changes;
       const edges = applyEdgeChanges(changes, state.edges);
       state.logical_clock = state.logical_clock + 1;
       state.edges = edges;

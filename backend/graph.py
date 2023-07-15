@@ -143,6 +143,59 @@ def make_edge(db: database.Database,
     graph(db, target["_id"])
 
 
+def get_node(db, source_oid, source_type):
+    match source_type:
+        case "Document":
+            document = db.documents.find_one(source_oid)
+            return db.graph.find_one(document["node"])
+        
+        case "Group":
+            group = db.groups.find_one(source_oid)
+            return db.graph.find_one(group["node"])
+
+        case "Search":
+            search = db.searches.find_one(source_oid)
+            return db.graph.find_one(search["node"])
+
+        case "Note":
+            note = db.notes.find_one(source_oid)
+            return db.graph.find_one(note["node"])
+        case _:
+            return db.graph.find_one(source_oid)
+
+def remove_edge(db: database.Database,
+        source_oid: ObjectId, 
+        source_type: schemas.NodeType, 
+        target_oid: ObjectId, 
+        target_type: schemas.NodeType, 
+        edge_type: schemas.EdgeType):
+    """Removes an edge from the graph.
+    """
+    source = get_node(db, source_oid, source_type)
+    source_collection = get_collection(db, source_type)
+    source_collection.update_one(
+        {"_id": source["_id"]}, 
+        {
+            "$pull": {
+                "edges.output": {"nodeid": source["_id"]}
+            }
+        }
+    )
+
+    db.graph.update_one(
+        {"_id": target_oid},
+        {
+            "$pull": {
+                f"edges.{edge_type}": {"nodeid": target_oid}
+            }
+        }
+    )
+
+    graph(db, target_oid)
+
+    pass
+
+
 def graph(db: database.Database, node_oid: ObjectId):
     """Recalculates all nodes to the right of specified node.
     """
