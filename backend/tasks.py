@@ -483,8 +483,8 @@ def update_search(
     search = db.searches.find_one(search_id)
 
     history_item = utils.update_history(
-        item={}, # empty to not copy anything from before
-        action="Update query",
+        item=schemas.create_search_history_object(userid=userid, query=query),
+        action="Update search query.",
         query=query,
         user=userid
     )

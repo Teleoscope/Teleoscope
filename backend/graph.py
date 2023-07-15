@@ -275,7 +275,7 @@ def update_search(db: database.Database, search_node, parameters):
     search = db.searches.find_one(search_id)
     documents = list(
         db.documents.find(
-            utils.make_query(search["query"]), 
+            utils.make_query(search["history"][0]["query"]), 
             {"projection": { "_id": 1 }}
         )
     )
@@ -336,7 +336,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
                     source_map.append((source, vecs, oids))
                 case "Search":
                     search = db.searches.find_one({"_id": source["id"]})
-                    cursor = db.documents.find(utils.make_query(search["query"]),projection={ "_id": 1})
+                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
                     oids = [d["_id"] for d in list(cursor)]
                     vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
                     source_map.append((source, vecs, oids))
@@ -374,7 +374,7 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
                 oids = oids + group["history"][0]["included_documents"]
             case "Search":
                 search = db.searches.find_one({"_id": c["id"]})
-                cursor = db.documents.find(utils.make_query(search["query"]),projection={ "_id": 1})
+                cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
                 oids = oids + [d["_id"] for d in list(cursor)]
     logging.debug(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
     return filter_vectors_by_oid(oids, ids, all_vectors)

@@ -158,7 +158,7 @@ export default class WindowDefinitions {
         type:      "Search",
         apipath:   "searches",
         nodetype:  SourceNode,  
-        title:     (d) => d?.query ? `Search: ${d?.query}`: `Search`,
+        title:     (d) => d?.history[0].query ? `Search: ${d?.history[0].query}`: `Search`,
         color:     () => this.color,
         icon:      () => <SearchIcon sx={this.style()} fontSize="inherit" />,
         component: (w, id, color) => <Search id={id} windata={w} color={color} />,

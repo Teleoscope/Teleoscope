@@ -8,16 +8,22 @@ EdgeType = Literal["source", "control", "output"]
 NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Union", "Intersection", "Exclusion", "Subtraction"]
 HexStr = NewType('HexStr', str)
 
-def create_search_object(*args, userid: ObjectId, query: str):
+
+def create_search_object(*args, userid: ObjectId, query=""):
     obj = {
-        "query": query,
-        "history": {
+        "history": [create_search_history_object(userid, query)]
+    }
+    return obj
+
+
+def create_search_history_object(userid: ObjectId, query):
+    return {
             "timestamp": datetime.datetime.utcnow(),
             "user": userid,
             "action": "Initialize search.",
-        }
+            "query": query
     }
-    return obj
+
 
 def create_workspace_object(*args, owner: ObjectId, label: str, database: str):
     obj = {
@@ -30,12 +36,14 @@ def create_workspace_object(*args, owner: ObjectId, label: str, database: str):
     }
     return obj
 
+
 def create_workspace_history_object(user: ObjectId):
     return {
         "timestamp": datetime.datetime.utcnow(),
         "action": "Initialize workspace.",
         "user": user
     }
+
 
 def create_group_object(color, included_documents, label, action, user_id, description, session_id, cluster_id=[]):
     obj = {

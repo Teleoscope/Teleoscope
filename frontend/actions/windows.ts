@@ -142,7 +142,7 @@ export const Windows = createSlice({
     },
     updateSearch: (state, action) => {
       var temp = [...state.nodes];
-      var index = temp.findIndex(n => n.id === action.payload.search_id);
+      var index = temp.findIndex(n => n.data.oid === action.payload.search_id);
       if (index > -1) {
         temp[index].data["query"] = action.payload.query;
         
