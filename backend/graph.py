@@ -112,8 +112,10 @@ def make_edge(db: database.Database,
     match source_type:
         case "Group" | "Document" | "Search" | "Note":
             if "node" in source:
+                logging.info("Found node in source, retrieving node...")
                 source = db.graph.find_one({"_id": source["node"]})
             else:
+                logging.info("Did not find node in source, making node...")
                 source = make_node(db, source_oid, source_type)
 
     if (source == None or target == None):
