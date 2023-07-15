@@ -1195,7 +1195,7 @@ def add_note(*args, database: str, userid: str, workflow_id: str,
         label, 
         "", 
         content, 
-        np.zeros(512)
+        list(np.zeros(512))
     )
 
     res = db.notes.insert_one(note)
