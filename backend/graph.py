@@ -174,8 +174,8 @@ def remove_edge(db: database.Database,
     """Removes an edge from the graph.
     """
     source = get_node(db, source_oid, source_type)
-    source_collection = get_collection(db, source_type)
-    source_collection.update_one(
+    
+    db.graph.update_one(
         {"_id": source["_id"]},
         {
             "$pull": {
