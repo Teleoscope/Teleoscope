@@ -142,9 +142,9 @@ export const Windows = createSlice({
     },
     updateSearch: (state, action) => {
       var temp = [...state.nodes];
-      var index = temp.findIndex(n => n.id === action.payload.id);
+      var index = temp.findIndex(n => n.id === action.payload.search_id);
       if (index > -1) {
-        temp[index].data["query"] = action.payload.term;
+        temp[index].data["query"] = action.payload.query;
         
       }
       state.nodes = temp;
@@ -314,6 +314,5 @@ export const {
   deselectAll,
   moveWindowToFront,
   setLogicalClock,
-  setWindows,
 } = Windows.actions;
 export default Windows.reducer;

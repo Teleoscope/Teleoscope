@@ -350,11 +350,11 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Saves the workspace UI state (window locations, bookmarks)
    */
-  save_UI_state(session_id: string, bookmarks, windows, edges) {
+  save_UI_state(workflow_id: string, bookmarks, windows, edges) {
     const body = {
       task: "save_UI_state",
       args: {
-        session_id: session_id,
+        workflow_id: workflow_id,
         bookmarks: bookmarks,
         windows: windows,
         nodes: windows,
@@ -368,11 +368,11 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Updates Teleoscopes
    */
-  update_edges(session_id: string, edges, state) {
+  update_edges(workflow_id: string, edges, state) {
     const body = {
       task: "update_edges",
       args: {
-        session_id,
+        workflow_id,
         edges: edges,
         state: state
       },
@@ -384,11 +384,11 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Single edge update.
    */
-  make_edge({session_id, source_node, target_node, handle_type, connection, ui_state}) {
+  make_edge({workflow_id, source_node, target_node, handle_type, connection, ui_state}) {
     const body = {
       task: "make_edge",
       args: {
-        session_id: session_id,
+        workflow_id: workflow_id,
         source_node: source_node,
         target_node: target_node,
         handle_type: handle_type,
@@ -403,12 +403,12 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * adds user to userlist of a session in MongoDB.
    */
-  add_user_to_session(contributor_id: string, session_id: string) {
+  add_user_to_session(contributor_id: string, workflow_id: string) {
     const body = {
       task: "add_user_to_session",
       args: {
         contributor_id: contributor_id,
-        session_id: session_id,
+        workflow_id: workflow_id,
       },
     };
     this.publish(body);
@@ -418,11 +418,11 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Requests to create a Teleoscope object in MongoDB.
    */
-  initialize_teleoscope(session_id: string, label: string) {
+  initialize_teleoscope(workflow_id: string, label: string) {
     const body = {
       task: "initialize_teleoscope",
       args: {
-        session_id: session_id,
+        workflow_id: workflow_id,
         label: label,
       },
     };
@@ -463,13 +463,13 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Requests to create a new group object in MongoDB.
    */
-  add_group(label: string, color: string, session_id: string, documents = []) {
+  add_group(label: string, color: string, workflow_id: string, documents = []) {
     const body = {
       task: "add_group",
       args: {
         label: label,
         color: color,
-        session_id: session_id,
+        workflow_id: workflow_id,
         documents: documents,
       },
     };
@@ -480,12 +480,12 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Requests to copy cluster to groups in MongoDB.
    */
-  copy_cluster(cluster_id: string, session_id: string) {
+  copy_cluster(cluster_id: string, workflow_id: string) {
     const body = {
       task: "copy_cluster",
       args: {
         cluster_id: cluster_id,
-        session_id: session_id,
+        workflow_id: workflow_id,
       },
     };
     this.publish(body);
@@ -495,13 +495,13 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Requests to copy group object in MongoDB.
    */
-  copy_group(label: string, group_id: string, session_id: string) {
+  copy_group(label: string, group_id: string, workflow_id: string) {
     const body = {
       task: "copy_group",
       args: {
         label: label,
         group_id: group_id,
-        session_id: session_id,
+        workflow_id: workflow_id,
       },
     };
     this.publish(body);
@@ -512,15 +512,15 @@ await Promise.race([checkConnection(), timeout()]);
    * Removes a group from a session in MongoDB. Does not delete the group.
    *
    * @param group_id
-   * @param session_id
+   * @param workflow_id
    * @returns
    */
-  remove_group(group_id: string, session_id: string) {
+  remove_group(group_id: string, workflow_id: string) {
     const body = {
       task: "remove_group",
       args: {
         group_id: group_id,
-        session_id: session_id,
+        workflow_id: workflow_id,
       },
     };
     this.publish(body);
@@ -550,15 +550,15 @@ await Promise.race([checkConnection(), timeout()]);
    * Removes a group from a session in MongoDB. Does not delete the group.
    *
    * @param teleoscope_id
-   * @param session_id
+   * @param workflow_id
    * @returns
    */
-  remove_teleoscope(teleoscope_id: string, session_id: string) {
+  remove_teleoscope(teleoscope_id: string, workflow_id: string) {
     const body = {
       task: "remove_teleoscope",
       args: {
         teleoscope_id: teleoscope_id,
-        session_id: session_id,
+        workflow_id: workflow_id,
       },
     };
     this.publish(body);
@@ -613,11 +613,11 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Request to add a note for a particular interface object.
    */
-  add_note(session_id: string, label = "new note", content = {}) {
+  add_note(workflow_id: string, label = "new note", content = {}) {
     const body = {
       task: "add_note",
       args: {
-        session_id: session_id,
+        workflow_id: workflow_id,
         label: label,
         content: content
       },
@@ -629,11 +629,11 @@ await Promise.race([checkConnection(), timeout()]);
   /**
      * Removes a session from a user in MongoDB. Does not delete the session.
     */
-  remove_session(session_id: string) {
+  remove_session(workflow_id: string) {
     const body = {
       task: "remove_session",
       args: {
-        session_id: session_id,
+        workflow_id: workflow_id,
       },
     };
     this.publish(body);
@@ -643,12 +643,12 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Request to add a note for a particular interface object.
    */
-  remove_note(note_id: string, session_id: string) {
+  remove_note(note_id: string, workflow_id: string) {
     const body = {
       task: "remove_note",
       args: {
         note_id: note_id,
-        session_id: session_id,
+        workflow_id: workflow_id,
       },
     };
     this.publish(body);
@@ -718,7 +718,7 @@ await Promise.race([checkConnection(), timeout()]);
       task: "recolor_workflow",
       args: {
         color: color,
-        session_id: session_oid,
+        workflow_id: session_oid,
       },
     };
     this.publish(body);
@@ -811,12 +811,12 @@ await Promise.race([checkConnection(), timeout()]);
    * @param read 
    * @returns 
    */
-  mark(document_id: string, session_id: string, read: boolean) {
+  mark(document_id: string, workflow_id: string, read: boolean) {
     const body = {
       task: "mark",
       args: {
         document_id: document_id,
-        session_id: session_id,
+        workflow_id: workflow_id,
         read: read
       },
     };
@@ -827,12 +827,12 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Create Snippet
    */
-  snippet(document_id: string, session_id: string, text: string ) {
+  snippet(document_id: string, workflow_id: string, text: string ) {
     const body = {
       task: "mark",
       args: {
         document_id: document_id,
-        session_id: session_id,
+        workflow_id: workflow_id,
         text: text
       },
     };
@@ -843,11 +843,11 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Add a workspace item to the interface.
    */
-  add_item(session_id: string, oid: string, uid: string, type: string, options = {}, state = {}) {
+  add_item(workflow_id: string, oid: string, uid: string, type: string, options = {}, state = {}) {
     const body = {
       task: "add_item",
       args: {
-        session_id: session_id,
+        workflow_id: workflow_id,
         oid: oid,
         uid: uid,
         type: type,
@@ -879,11 +879,11 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Requests to create a projection object in MongoDB.
    */
-  initialize_projection(session_id: string, label: string) {
+  initialize_projection(workflow_id: string, label: string) {
     const body = {
       task: "initialize_projection",
       args: {
-        session_id: session_id,
+        workflow_id: workflow_id,
         label: label,
       },
     };
@@ -895,15 +895,15 @@ await Promise.race([checkConnection(), timeout()]);
    * Deletes a projection
    *
    * @param projection_id
-   * @param session_id
+   * @param workflow_id
    * @returns
    */
-  remove_projection(projection_id: string, session_id: string) {
+  remove_projection(projection_id: string, workflow_id: string) {
     const body = {
       task: "remove_projection",
       args: {
         projection_id: projection_id,
-        session_id: session_id,
+        workflow_id: workflow_id,
       },
     };
     this.publish(body);
@@ -949,6 +949,21 @@ await Promise.race([checkConnection(), timeout()]);
       args: {
         contributor_id: contributor_id,
         workspace_id: workspace_id,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+  /**
+   * Update search query.
+   */
+  update_search(search_id: string, query: string) {
+    const body = {
+      task: "update_search",
+      args: {
+        search_id: search_id,
+        query: query,
       },
     };
     this.publish(body);

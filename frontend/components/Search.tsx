@@ -14,10 +14,12 @@ import DocumentList from "@/components/Documents/DocumentList";
 // util
 import { useSWRHook } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
+import { useStomp } from "@/util/Stomp";
 
-export default function Search(props) {
-  const [query, setQuery] = useState(props.windata?.query ? props.windata.query : "");
+export default function Search({id, windata, color}) {
+  const [query, setQuery] = useState(windata?.query ? windata.query : "");
   const swr = useSWRHook();
+  const client = useStomp()
   const { documents, documents_loading } = swr.useSWRAbstract(
     "documents",
     `search/${query}`
@@ -39,7 +41,7 @@ export default function Search(props) {
 
   const handleSetQuery = (e) => {
     setQuery(e.target.value);
-    dispatch(updateSearch({ id: props.id, term: e.target.value }));
+    dispatch(updateSearch({ client: client, search_id: windata.oid, query: e.target.value }));
   };
 
   const Count = () => (
@@ -52,14 +54,14 @@ export default function Search(props) {
     <Stack direction="column" sx={{ height: "100%" }}>
       <Stack direction="row" alignItems="center" sx={{ margin: 1 }}>
         <SearchIcon
-          sx={{ "&:hover": { color: props.color }, color: "#AAAAAA" }}
+          sx={{ "&:hover": { color: color }, color: "#AAAAAA" }}
         />
         <TextField
           fullWidth
           placeholder={query ? query : "Search..."}
           sx={{
             // '& .MuiInput-underline:before': { borderBottomColor: props.color },
-            "& .MuiInput-underline:after": { borderBottomColor: props.color },
+            "& .MuiInput-underline:after": { borderBottomColor: color },
           }}
           variant="standard"
           onChange={(e) => handleSetQuery(e)}

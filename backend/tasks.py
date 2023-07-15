@@ -273,26 +273,26 @@ def initialize_workflow(
 
 @app.task
 def remove_workflow(
-    *args, database: str, workspace_id: str, session_id: str, userid: str, 
+    *args, database: str, workspace_id: str, workflow_id: str, userid: str, 
     **kwargs) -> ObjectId:
     """
     Delete a workflow from the user. Workflow is not deleted from the whole 
     system, just the user.
     
     Returns:
-        Removed session_id.
+        Removed workflow_id.
     """
     #---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
 
     # handle ObjectID kwargs
-    session_id = ObjectId(str(session_id))
+    workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
     workspace_id = ObjectId(str(workspace_id))
 
     # log action to stdout
-    logging.info(f'Removing workflow {session_id} for {userid}.')
+    logging.info(f'Removing workflow {workflow_id} for {userid}.')
     #---------------------------------------------------------------------------
     
     user_db = utils.connect(db="users")
@@ -300,48 +300,48 @@ def remove_workflow(
         workspace_id,
         {
             "$pop": {
-                "workflows": session_id
+                "workflows": workflow_id
             }
         }
     )
 
     history_item = utils.update_history(
         item=schemas.create_workspace_history_object(userid),
-        oid=session_id,
+        oid=workflow_id,
         userid=userid,
         action="Remove session from workspace."
     )
 
     utils.push_history(user_db, "workspaces", workspace_id, history_item)
 
-    return session_id
+    return workflow_id
 
 
 @app.task
 def recolor_workflow(
-    *args, database: str, session_id: str, userid: str, 
+    *args, database: str, workflow_id: str, userid: str, 
     color: str,
     **kwargs) -> ObjectId:
     """
     Recolors a workflow.
 
     Returns:
-        Updated session_id.
+        Updated workflow_id.
     """
     #---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
 
     # handle ObjectID kwargs
-    session_id = ObjectId(str(session_id))
+    workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
     
     # log action to stdout
     logging.info(f'Recoloring workflow to color '
-                 f'{color} for {userid} and session {session_id}.')
+                 f'{color} for {userid} and session {workflow_id}.')
     #---------------------------------------------------------------------------
     
-    session = db.sessions.find_one({"_id": session_id})
+    session = db.sessions.find_one({"_id": workflow_id})
     settings = session["history"][0]["settings"]
     settings["color"] = color
     history_item = utils.update_history(
@@ -353,14 +353,14 @@ def recolor_workflow(
 
     with transaction_session.start_transaction():
         utils.push_history(
-            db, "sessions", session_id, history_item, transaction_session)
+            db, "sessions", workflow_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
-    return session_id
+    return workflow_id
 
 
 @app.task
 def relabel_workflow(
-    *args, database: str, session_id: str, userid: str, 
+    *args, database: str, workflow_id: str, userid: str, 
     label: str, relabeled_workflow_id: str, 
     **kwargs) -> ObjectId:
     """
@@ -371,7 +371,7 @@ def relabel_workflow(
     transaction_session, db = utils.create_transaction_session(db=database)
 
     # handle ObjectID kwargs
-    session_id = ObjectId(str(session_id))
+    workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
     relabeled_workflow_id = ObjectId(str(relabeled_workflow_id))
 
@@ -393,7 +393,7 @@ def relabel_workflow(
 
 @app.task
 def save_UI_state(
-    *args, database: str, session_id: str, userid: str,
+    *args, database: str, workflow_id: str, userid: str,
     bookmarks: List, nodes: List, edges: List,
     **kwargs) -> ObjectId:
     """
@@ -408,22 +408,22 @@ def save_UI_state(
             active workspace edges
     
     Returns:
-        session_id
+        workflow_id
     """
     #---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle ObjectID kwargs
-    session_id = ObjectId(str(session_id))
+    workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
 
     # log action to stdout
     logging.info(f'Saving state for '
-                 f'session {session_id} and user {userid}.')
+                 f'session {workflow_id} and user {userid}.')
     #---------------------------------------------------------------------------
 
-    session = db.sessions.find_one({"_id": session_id})
+    session = db.sessions.find_one({"_id": workflow_id})
     history_item = utils.update_history(
         item=session["history"][0],
         bookmarks=bookmarks,
@@ -432,9 +432,9 @@ def save_UI_state(
         action="Save UI state",
         user=userid
     )
-    utils.push_history(db, "sessions", session_id, history_item)
+    utils.push_history(db, "sessions", workflow_id, history_item)
 
-    return session_id
+    return workflow_id
 
 ################################################################################
 # Search tasks
@@ -442,19 +442,19 @@ def save_UI_state(
 
 @app.task
 def add_search(
-    *args, database: str, userid: str, session_id: str, query: str,
+    *args, database: str, userid: str, workflow_id: str, query: str,
     **kwargs) -> ObjectId:
     #---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle ObjectID kwargs
-    session_id = ObjectId(str(session_id))
+    workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
     
     # log action to stdout
     logging.info(f'Adding search {query} for'
-                 f'workflow {session_id} and user {userid}.')
+                 f'workflow {workflow_id} and user {userid}.')
     #---------------------------------------------------------------------------
     obj = schemas.create_search_object(userid=userid, query=query)
 
@@ -465,20 +465,20 @@ def add_search(
 
 @app.task
 def update_search(
-    *args, database: str, userid: str, session_id: str, search_id: str, 
+    *args, database: str, userid: str, workflow_id: str, search_id: str, 
     query: str, **kwargs) -> ObjectId:
     #---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle ObjectID kwargs
-    session_id = ObjectId(str(session_id))
+    workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
     search_id = ObjectId(str(search_id))
     
     # log action to stdout
     logging.info(f'Updating search {query} for'
-                 f'workflow {session_id} and user {userid}.')
+                 f'workflow {workflow_id} and user {userid}.')
     #---------------------------------------------------------------------------
     search = db.searches.find_one(search_id)
 
@@ -506,7 +506,7 @@ def update_search(
 
 @app.task 
 def add_group(
-    *args, database: str, userid: str, session_id: str, color: str, 
+    *args, database: str, userid: str, workflow_id: str, color: str, 
     label: str, description="A group", documents=[],
     **kwargs) -> ObjectId:
     """
@@ -520,19 +520,19 @@ def add_group(
     kwargs: 
         label: (string, arbitrary)
         color: (string, hex color)
-        session_id: (string, represents ObjectId)
+        workflow_id: (string, represents ObjectId)
     """
     #---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle ObjectID kwargs
-    session_id = ObjectId(str(session_id))
+    workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
     
     # log action to stdout
     logging.info(f'Adding group {label} for'
-                 f'workflow {session_id} and user {userid}.')
+                 f'workflow {workflow_id} and user {userid}.')
     #---------------------------------------------------------------------------
 
     # Creating document to be inserted into mongoDB
@@ -543,14 +543,14 @@ def add_group(
         "Initialize group", 
         userid, 
         description, 
-        session_id
+        workflow_id
     )
     
     # Initialize group in database
     groups_res = db.groups.insert_one(obj)
     
     # Add initialized group to session
-    session = db.sessions.find_one({'_id': session_id})
+    session = db.sessions.find_one({'_id': workflow_id})
     history_item = utils.update_history(
         item=session["history"][0],
         oid=groups_res.inserted_id,
@@ -558,9 +558,9 @@ def add_group(
         user=userid,
     )
     
-    sessions_res = utils.push_history(db, "sessions", session_id, history_item)    
+    sessions_res = utils.push_history(db, "sessions", workflow_id, history_item)    
     logging.info(f"Associated group {obj['history'][0]['label']} "
-                 f"with session {session_id} and result {sessions_res}.")
+                 f"with session {workflow_id} and result {sessions_res}.")
 
     return groups_res.inserted_id
     
@@ -689,7 +689,7 @@ def copy_group(*args, **kwargs):
     kwargs:
         userid: (int, represents ObjectId for a group)
         label: (string, arbitrary)
-        session_id:  (int, represent ObjectId for current session)
+        workflow_id:  (int, represent ObjectId for current session)
         group_id: (int, represent ObjectId for a group to be copies(
     """
     database = kwargs["database"]
@@ -704,9 +704,9 @@ def copy_group(*args, **kwargs):
 
     label = kwargs["label"]
 
-    session_id_str = kwargs["session_id"]
-    session_id = ObjectId(str(session_id_str))
-    session = db.sessions.find_one({"_id": session_id})
+    workflow_id_str = kwargs["workflow_id"]
+    workflow_id = ObjectId(str(workflow_id_str))
+    session = db.sessions.find_one({"_id": workflow_id})
 
     group_id = ObjectId(kwargs["group_id"])
     group_to_copy = db.groups.find_one({'_id': group_id})
@@ -717,7 +717,7 @@ def copy_group(*args, **kwargs):
     print(f'Copying ({group_id}) as new group named: {label}')
 
     # create a new group for the session
-    group_new_id = add_group(userid=userid, label=label, color=color, session_id=session_id_str)
+    group_new_id = add_group(userid=userid, label=label, color=color, workflow_id=workflow_id_str)
     logging.info(f'Add new group ({group_new_id})')
 
     group_new = db.groups.find_one({'_id': group_new_id})
@@ -744,17 +744,17 @@ def remove_group(*args, **kwargs):
     Delete a group (not the documents within) from the session. Group is not deleted from the whole system, just the session.
     kwargs:
         group_id: ObjectId
-        session_id: ObjectId
+        workflow_id: ObjectId
         user_id: ObjectId
     """
     group_id = ObjectId(str(kwargs["group_id"]))
-    session_id = ObjectId(str(kwargs["session_id"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
 
     database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    session = db.sessions.find_one({'_id': session_id}, session=transaction_session)        
+    session = db.sessions.find_one({'_id': workflow_id}, session=transaction_session)        
     history_item = session["history"][0]
     
     history_item["timestamp"] = datetime.datetime.utcnow()
@@ -763,13 +763,13 @@ def remove_group(*args, **kwargs):
     history_item["oid"] = group_id
 
     with transaction_session.start_transaction():
-        db.groups.update_one({"_id": group_id}, {"$pull": {"sessions": session_id}})
+        db.groups.update_one({"_id": group_id}, {"$pull": {"sessions": workflow_id}})
         db.groups.update_one({"_id": group_id}, {"$set": {"cluster": []}})
-        utils.push_history(db, "sessions", session_id, history_item, transaction_session) 
+        utils.push_history(db, "sessions", workflow_id, history_item, transaction_session) 
         utils.commit_with_retry(transaction_session)
-        logging.info(f"Removed group {group_id} from session {session_id}.")
+        logging.info(f"Removed group {group_id} from session {workflow_id}.")
 
-    return session_id
+    return workflow_id
 
 
 @app.task
@@ -850,20 +850,20 @@ def copy_cluster(*args, **kwargs):
     
     kwargs:
         cluster_id: (str) the cluster to copy
-        session_id: (str) the session to copy to
+        workflow_id: (str) the session to copy to
         user_id: (str) the user commiting the action
         
     """
 
     cluster_id = ObjectId(str(kwargs["cluster_id"]))
-    session_id = ObjectId(str(kwargs["session_id"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
     
     database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     cluster = db.clusters.find_one({"_id": cluster_id })
-    session = db.sessions.find_one({"_id": session_id })
+    session = db.sessions.find_one({"_id": workflow_id })
 
     obj = schemas.create_group_object(
         cluster["history"][0]["color"], 
@@ -872,14 +872,14 @@ def copy_cluster(*args, **kwargs):
         "Copy cluster", 
         user_id, 
         cluster["history"][0]["description"], 
-        session_id,
+        workflow_id,
         cluster_id=[cluster_id])
 
     with transaction_session.start_transaction():
         group_res = db.groups.insert_one(obj, session=transaction_session)
         history_item = session["history"][0]
         history_item["groups"] = [*history_item["groups"], group_res.inserted_id]
-        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
+        utils.push_history(db, "sessions", workflow_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
     return group_res.inserted_id
@@ -927,7 +927,7 @@ def initialize_projection(*args, **kwargs):
     
     # handle kwargs
     label = kwargs["label"]
-    session_id = ObjectId(str(kwargs["session_id"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
     userid = kwargs["userid"]
     
     user = db.users.find_one({"_id": ObjectId(str(userid))})
@@ -935,17 +935,17 @@ def initialize_projection(*args, **kwargs):
     if user != None:
         user_id = user['_id']
 
-    obj = schemas.create_projection_object(session_id, label, user_id)
+    obj = schemas.create_projection_object(workflow_id, label, user_id)
 
     with transaction_session.start_transaction():
 
         projection_res = db.projections.insert_one(obj, session=transaction_session)
         logging.info(f"Added projection {obj['history'][0]['label']} with result {projection_res}.")
         
-        session = db.sessions.find_one({'_id': session_id}, session=transaction_session)
+        session = db.sessions.find_one({'_id': workflow_id}, session=transaction_session)
         if not session:
-            logging.info(f"Warning: session with id {session_id} not found.")
-            raise Exception(f"session with id {session_id} not found")
+            logging.info(f"Warning: session with id {workflow_id} not found.")
+            raise Exception(f"session with id {workflow_id} not found")
         
 
         history_item = session["history"][0]
@@ -959,9 +959,9 @@ def initialize_projection(*args, **kwargs):
         history_item["action"] = f"Initialize new projection: {label}"
         history_item["user"] = user_id
 
-        sessions_res = utils.push_history(db, "sessions", session_id, history_item, transaction_session)
+        sessions_res = utils.push_history(db, "sessions", workflow_id, history_item, transaction_session)
         
-        logging.info(f"Associated projection {obj['history'][0]['label']} with session {session_id} and result {sessions_res}.")
+        logging.info(f"Associated projection {obj['history'][0]['label']} with session {workflow_id} and result {sessions_res}.")
         utils.commit_with_retry(transaction_session)
         return projection_res.inserted_id
     
@@ -972,13 +972,13 @@ def remove_projection(*args, **kwargs):
     """
     import clustering
     projection_id = ObjectId(str(kwargs["projection_id"]))
-    session_id = ObjectId(str(kwargs["session_id"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
 
     database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    session = db.sessions.find_one({'_id': session_id}, session=transaction_session)        
+    session = db.sessions.find_one({'_id': workflow_id}, session=transaction_session)        
     history_item = session["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()        
     history_item["projections"].remove(projection_id)
@@ -987,11 +987,11 @@ def remove_projection(*args, **kwargs):
 
     with transaction_session.start_transaction():
         
-        cluster = clustering.Clustering(kwargs["userid"], [], kwargs["projection_id"], kwargs["session_id"], kwargs["database"])
+        cluster = clustering.Clustering(kwargs["userid"], [], kwargs["projection_id"], kwargs["workflow_id"], kwargs["database"])
         cluster.clean_mongodb() # cleans up clusters associate with projection
         db.projections.delete_one({'_id': projection_id}, session=transaction_session) 
 
-        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
+        utils.push_history(db, "sessions", workflow_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
 @app.task
@@ -1049,25 +1049,25 @@ def initialize_teleoscope(*args, **kwargs):
     teleoscopes collection and returned.
     
     kwargs:
-        session_id: string
+        workflow_id: string
         label: string (optional)
     """
     database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle kwargs
-    session_id = ObjectId(str(kwargs["session_id"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
     userid = ObjectId(str(kwargs["userid"]))
-    del kwargs["session_id"]
+    del kwargs["workflow_id"]
     del kwargs["userid"]
 
-    teleoscope = schemas.create_teleoscope_object(session_id, userid, **kwargs)
+    teleoscope = schemas.create_teleoscope_object(workflow_id, userid, **kwargs)
     
     teleoscope_result = db.teleoscopes.insert_one(teleoscope)
 
     logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
 
-    ui_session = db.sessions.find_one({'_id': session_id})
+    ui_session = db.sessions.find_one({'_id': workflow_id})
     history_item = ui_session["history"][0]
     history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["action"] = "Initialize Teleoscope"
@@ -1075,7 +1075,7 @@ def initialize_teleoscope(*args, **kwargs):
     history_item["user"] = userid
 
     # associate the newly created teleoscope with correct session
-    utils.push_history(db, "sessions", ObjectId(str(session_id)), history_item)
+    utils.push_history(db, "sessions", ObjectId(str(workflow_id)), history_item)
     return teleoscope_result.inserted_id
 
 
@@ -1141,17 +1141,17 @@ def remove_teleoscope(*args, **kwargs):
     Delete a teleoscope (not the documents within) from the session. Teleoscope is not deleted from the whole system, just the session.
     kwargs:
         teleoscope_id: ObjectId
-        session_id: ObjectId
+        workflow_id: ObjectId
         user_id: ObjectId
     """
     teleoscope_id = ObjectId(str(kwargs["teleoscope_id"]))
-    session_id = ObjectId(str(kwargs["session_id"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
 
     database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    session = db.sessions.find_one({'_id': session_id})        
+    session = db.sessions.find_one({'_id': workflow_id})        
     history_item = session["history"][0]
 
     history_item["timestamp"] = datetime.datetime.utcnow()        
@@ -1159,9 +1159,9 @@ def remove_teleoscope(*args, **kwargs):
     history_item["user"] = user_id
     history_item["oid"] = teleoscope_id
 
-    db.teleoscopes.update_one({"_id": teleoscope_id}, {"$pull": {"sessions": session_id}})
+    db.teleoscopes.update_one({"_id": teleoscope_id}, {"$pull": {"sessions": workflow_id}})
     
-    utils.push_history(db, "sessions", session_id, history_item)
+    utils.push_history(db, "sessions", workflow_id, history_item)
     return teleoscope_id
 
 
@@ -1248,7 +1248,7 @@ def add_note(*args, **kwargs):
     label = kwargs["label"]
     content = kwargs["content"]
 
-    session_id = ObjectId(str(kwargs["session_id"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
     userid = ObjectId(str(kwargs["userid"]))
 
     text = " ".join([block["text"] for block in content["blocks"]])
@@ -1258,12 +1258,12 @@ def add_note(*args, **kwargs):
     
     res = db.notes.insert_one(note)
 
-    session = db.sessions.find_one({"_id": session_id})
+    session = db.sessions.find_one({"_id": workflow_id})
     history_item = session["history"][0]
     history_item["user"] = userid,
     history_item["action"] = "Add note"
     history_item["notes"].append(res.inserted_id)
-    utils.push_history(db, "sessions", session_id, history_item)
+    utils.push_history(db, "sessions", workflow_id, history_item)
     logging.info(f"Added note with result {res}.")
     return res.inserted_id
 
@@ -1281,18 +1281,18 @@ def remove_note(*args, **kwargs):
     userid = ObjectId(str(kwargs["userid"]))
 
     note_id = ObjectId(str(kwargs["note_id"]))
-    session_id = ObjectId(str(kwargs["session_id"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
 
-    session = db.sessions.find_one({"_id": session_id}, session=transaction_session)
+    session = db.sessions.find_one({"_id": workflow_id}, session=transaction_session)
     history_item = session["history"][0]
     history_item["user"] = userid,
     history_item["action"] = "Remove note"
     history_item["notes"].remove(note_id) 
 
     with transaction_session.start_transaction():
-        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
+        utils.push_history(db, "sessions", workflow_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
-        logging.info(f"Removed note {note_id} from session {session_id}.")
+        logging.info(f"Removed note {note_id} from session {workflow_id}.")
 
     
 ################################################################################
@@ -1453,7 +1453,7 @@ def snippet(*args, **kwargs):
     database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
 
-    session_id = ObjectId(str(kwargs["session_id"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
     userid = ObjectId(str(kwargs["userid"]))
     document_id =  ObjectId(str(kwargs["document_id"]))
     text = kwargs["text"]
@@ -1464,13 +1464,13 @@ def snippet(*args, **kwargs):
         "text": text,
         "vector": vectorize_text([text])
     }
-    session = db.sessions.find_one({"_id": session_id})
+    session = db.sessions.find_one({"_id": workflow_id})
     history_item = session["history"][0]
     history_item["user"] = userid
-    history_item["action"] = f"Add snippet for session {session_id} and document {document_id}."
+    history_item["action"] = f"Add snippet for session {workflow_id} and document {document_id}."
 
     with transaction_session.start_transaction():
-        utils.push_history(db, "sessions", session_id, history_item, transaction_session)
+        utils.push_history(db, "sessions", workflow_id, history_item, transaction_session)
         db.snippets.insert_one(snip, session=transaction_session)
         utils.commit_with_retry(transaction_session)
 
@@ -1524,16 +1524,16 @@ def mark(*args, **kwargs):
     
     userid      = ObjectId(str(kwargs["userid"]))
     document_id = ObjectId(str(kwargs["document_id"]))
-    session_id  = ObjectId(str(kwargs["session_id"]))
+    workflow_id  = ObjectId(str(kwargs["workflow_id"]))
     read        = kwargs["read"]
-    session     = db.sessions.find_one({"_id": session_id})
+    session     = db.sessions.find_one({"_id": workflow_id})
     history_item = session["history"][0]
     history_item["userid"] = userid
     history_item["action"] = f"Mark document read set to {read}."
 
     with transaction_session.start_transaction():
         db.documents.update_one({"_id": document_id}, {"$set": {"state.read": read}})        
-        utils.push_history(db, "teleoscopes", session_id, history_item, transaction_session)
+        utils.push_history(db, "teleoscopes", workflow_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
 
 
@@ -1544,7 +1544,7 @@ def add_item(*args, **kwargs):
 
     replyTo = kwargs["replyTo"]
     userid = ObjectId(str(kwargs["userid"]))
-    session_id = ObjectId(str(kwargs["session_id"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
 
     uid  = kwargs["uid"]
     node_type = kwargs["type"]
@@ -1571,12 +1571,12 @@ def add_item(*args, **kwargs):
                     else:
                         # oid is a cluster that has yet to be copied as a group
                         logging.info(f"Cluster has NOT been copied.")
-                        res = copy_cluster(db=database, userid=userid, session_id=session_id, cluster_id=oid, transaction_session=transaction_session)
+                        res = copy_cluster(db=database, userid=userid, workflow_id=workflow_id, cluster_id=oid, transaction_session=transaction_session)
             else:
                 # need to create a group
                 logging.info(f"Group is new.")
                 color = utils.random_color()
-                res = add_group(database=database, color=color, label="New Group", userid=userid, session_id=session_id, transaction_session=transaction_session)
+                res = add_group(database=database, color=color, label="New Group", userid=userid, workflow_id=workflow_id, transaction_session=transaction_session)
 
             utils.message(replyTo, {
                 "oid": str(res),
@@ -1598,7 +1598,7 @@ def add_item(*args, **kwargs):
                 res = add_search(
                     database=database, 
                     userid=userid, 
-                    session_id=session_id, 
+                    workflow_id=workflow_id, 
                     query="", 
                     transaction_session=transaction_session
                 )
@@ -1620,7 +1620,7 @@ def add_item(*args, **kwargs):
             else:
                 # need to create a group
                 logging.info(f"Search is new.")
-                res = add_search(database=database, userid=userid, session_id=session_id, query="", transaction_session=transaction_session)
+                res = add_search(database=database, userid=userid, workflow_id=workflow_id, query="", transaction_session=transaction_session)
 
             utils.message(replyTo, {
                 "oid": str(res),
@@ -1645,7 +1645,7 @@ def add_item(*args, **kwargs):
             }         
             res = add_note(
                 database=database, 
-                session_id=session_id, 
+                workflow_id=workflow_id, 
                 label="New Note", 
                 content=content, 
                 userid=userid
@@ -1665,7 +1665,7 @@ def add_item(*args, **kwargs):
 
             logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
-            res = initialize_projection(database=database, session_id=session_id, label="New Projection", userid=userid)
+            res = initialize_projection(database=database, workflow_id=workflow_id, label="New Projection", userid=userid)
 
             utils.message(replyTo, {
                 "oid": str(res),
@@ -1693,7 +1693,7 @@ def make_edge(*args, **kwargs):
     
     # handle kwargs
     userid = ObjectId(str(kwargs["userid"]))
-    session_id = ObjectId(str(kwargs["session_id"]))
+    workflow_id = ObjectId(str(kwargs["workflow_id"]))
     
     source_node = kwargs["source_node"]
     source_type = source_node["type"]

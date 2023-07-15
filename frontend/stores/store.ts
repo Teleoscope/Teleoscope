@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import ActiveSessionID from "@/actions/activeSessionID";
-import Windows from "@/actions/windows";
+import Windows, { updateSearch } from "@/actions/windows";
 import { makeNode, makeEdge, setColor, relabelSession } from "@/actions/windows";
 import crypto from 'crypto';
 
@@ -69,6 +69,12 @@ const makeNodeMiddleware = store => next => action => {
   if (action.type === relabelSession.type) {
     const result = next(action);
     action.payload.client.relabel_workflow(action.payload.label, action.payload.session_id);
+    return result
+  }
+
+  if (action.type === updateSearch.type) {
+    const result = next(action);
+    action.payload.client.update_search(action.payload.search_id, action.payload.query);
     return result
   }
 
