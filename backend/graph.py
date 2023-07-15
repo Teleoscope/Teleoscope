@@ -389,7 +389,7 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
             case "Note":
                 note = db.notes.find_one({"_id": c["id"]})
                 notes.append(note)
-    note_vecs = [np.array(note["vector"]) for note in notes]
+    note_vecs = [np.array(note["textVector"]) for note in notes]
     filtered_vecs = filter_vectors_by_oid(oids, ids, all_vectors)
     out_vecs = filtered_vecs + note_vecs
     logging.debug(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
