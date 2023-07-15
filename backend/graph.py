@@ -176,10 +176,10 @@ def remove_edge(db: database.Database,
     source = get_node(db, source_oid, source_type)
     source_collection = get_collection(db, source_type)
     source_collection.update_one(
-        {"_id": source["_id"]}, 
+        {"_id": source["_id"]},
         {
             "$pull": {
-                "edges.output": {"nodeid": source["_id"]}
+                "edges.output": {"nodeid": target_oid}
             }
         }
     )
@@ -188,7 +188,7 @@ def remove_edge(db: database.Database,
         {"_id": target_oid},
         {
             "$pull": {
-                f"edges.{edge_type}": {"nodeid": target_oid}
+                f"edges.{edge_type}": {"nodeid": source["_id"]}
             }
         }
     )
