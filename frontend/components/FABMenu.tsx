@@ -30,10 +30,10 @@ export default function FABMenu(props) {
     "Teleoscope",
     "Projection",
     "Note",
-    "Filter",
-    "Intersection",
-    "Exclusion",
-    "Union",
+    // "Filter",
+    // "Intersection",
+    // "Exclusion",
+    // "Union",
   ]
 
   const handleAddNode = (type) => {
