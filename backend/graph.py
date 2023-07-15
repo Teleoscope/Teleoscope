@@ -125,7 +125,7 @@ def make_edge(db: database.Database,
     db.graph.update_one(
         {"_id": source["_id"]},
         {
-            "$push": {
+            "$addToSet": {
                 f"edges.output": schemas.create_edge(target_oid, target["_id"], target_type)
             }
         }
@@ -135,7 +135,7 @@ def make_edge(db: database.Database,
     db.graph.update_one(
         {"_id": target["_id"]},
         {
-            "$push": {
+            "$addToSet": {
                 f"edges.{edge_type}": schemas.create_edge(source_oid, source["_id"], source_type)
             }
         }
