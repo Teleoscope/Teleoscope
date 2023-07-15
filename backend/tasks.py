@@ -109,7 +109,6 @@ def initialize_workspace(
         workspace_id=res.inserted_id
     )
     
-    
     return res.inserted_id
 
 
@@ -1172,127 +1171,152 @@ def remove_teleoscope(*args, **kwargs):
 ################################################################################
 
 @app.task
-def update_note(*args, **kwargs):
+def add_note(*args, database: str, userid: str, workflow_id: str,
+    label: str, content, **kwargs) -> ObjectId:
     """
-    Updates a note.
-
-    kwargs:
-        note_id: string
-        userid: string
-        db: string
-
-        content: string 
+    Adds a note to the note collection.
     """
-    database = kwargs["database"]
+    #---------------------------------------------------------------------------
+    # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    userid = ObjectId(str(kwargs["userid"]))
-    note_id = ObjectId(str(kwargs["note_id"]))
-    content = kwargs["content"]
-
-    text = " ".join([block["text"] for block in content["blocks"]])
-    vector = vectorize_text(text)
-    logging.info(f"Vectorized note with {text}.")
-
-    note = db.notes.find_one({"_id": note_id})
-    history_item = note["history"][0]
-    history_item["content"] = content
-    history_item["action"] = "Update note content."
-    history_item["userid"] = userid
-
-    with transaction_session.start_transaction():
-        res = utils.push_history(db, "notes", note_id, history_item, transaction_session)
-        db.notes.update_one({"_id": note_id}, {"$set": {"textVector": vector}}, session=transaction_session)
-        utils.commit_with_retry(transaction_session)
-        logging.info(f"Updated note {note_id} with {res}.")
-
-@app.task
-def relabel_note(*args, **kwargs):
-    """
-    Relabels a note.
-
-    kwargs:
-        note_id: string
-        userid: string
-        db: string
-
-        label: string 
-    """
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    userid = ObjectId(str(kwargs["userid"]))
-    note_id = ObjectId(str(kwargs["note_id"]))
-    label = kwargs["label"]
-    note = db.notes.find_one({"_id": note_id})
-    history_item = note["history"][0]
-    history_item["label"] = label
-    history_item["action"] = "Update note label."
-    history_item["userid"] = userid
-
-    with transaction_session.start_transaction():
-        res = utils.push_history(db, "notes", note_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
-        logging.info(f"Updated note {note_id} with {res} and label {label}.")
-
-
-@app.task
-def add_note(*args, **kwargs):
-    """
-    Adds a note to the notes collection.
-
-    kwargs:
-        id: document_id (string) 
-    """    
-    # Try finding document
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    label = kwargs["label"]
-    content = kwargs["content"]
-
-    workflow_id = ObjectId(str(kwargs["workflow_id"]))
-    userid = ObjectId(str(kwargs["userid"]))
-
-    text = " ".join([block["text"] for block in content["blocks"]])
-    vector = vectorize_text(text)
-
-    note = schemas.create_note_object(userid, label, content, vector)
     
-    res = db.notes.insert_one(note)
+    # handle ObjectID kwargs
+    workflow_id = ObjectId(str(workflow_id))
+    userid = ObjectId(str(userid))
+    
+    # log action to stdout
+    logging.info(f'Adding note {label} for'
+                 f'workflow {workflow_id} and user {userid}.')
+    #---------------------------------------------------------------------------
 
-    session = db.sessions.find_one({"_id": workflow_id})
-    history_item = session["history"][0]
-    history_item["user"] = userid,
-    history_item["action"] = "Add note"
-    history_item["notes"].append(res.inserted_id)
+    note = schemas.create_note_object(
+        workflow_id, 
+        userid, 
+        label, 
+        "", 
+        content, 
+        np.zeros(512)
+    )
+
+    res = db.notes.insert_one(note)
+    
+    workflow = db.sessions.find_one({"_id": workflow_id})
+    
+    history_item = utils.update_history(
+        item=workflow["history"][0],
+        user=userid,
+        action="Add note.",
+        oid=res.inserted_id
+    )
+
     utils.push_history(db, "sessions", workflow_id, history_item)
     logging.info(f"Added note with result {res}.")
     return res.inserted_id
 
+
 @app.task
-def remove_note(*args, **kwargs):
+def update_note(*args, database: str, userid: str, workflow_id: str,
+    note_id: str, content, **kwargs) -> ObjectId:
     """
-    Removes a note from the session but NOT from the notes collection.
-
-    kwargs:
-        id: document_id (string) 
-    """    
-    # Try finding document
-    database = kwargs["database"]
+    Updates a note content.
+    """
+    #---------------------------------------------------------------------------
+    # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    userid = ObjectId(str(kwargs["userid"]))
+    
+    # handle ObjectID kwargs
+    workflow_id = ObjectId(str(workflow_id))
+    userid = ObjectId(str(userid))
+    note_id = ObjectId(str(note_id))
+    
+    # log action to stdout
+    logging.info(f'Updating note {note_id} for'
+                 f'workflow {workflow_id} and user {userid}.')
+    #---------------------------------------------------------------------------
 
-    note_id = ObjectId(str(kwargs["note_id"]))
-    workflow_id = ObjectId(str(kwargs["workflow_id"]))
+    logging.info(f"Vectorized note with {text}.")
 
-    session = db.sessions.find_one({"_id": workflow_id}, session=transaction_session)
-    history_item = session["history"][0]
-    history_item["user"] = userid,
-    history_item["action"] = "Remove note"
-    history_item["notes"].remove(note_id) 
+    note = db.notes.find_one({"_id": note_id})
+    history_item = utils.update_history(
+        item=note["history"][0],
+        user=userid,
+        action="Update note content.",
+        content=content
+    )
 
-    with transaction_session.start_transaction():
-        utils.push_history(db, "sessions", workflow_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
-        logging.info(f"Removed note {note_id} from session {workflow_id}.")
+    res = utils.push_history(db, "notes", note_id, history_item)
+    
+    text = " ".join([block["text"] for block in content["blocks"]])
+    vector = vectorize_text(text)
+    
+    db.notes.update_one({"_id": note_id}, {"$set": { "textVector": vector, "text": text }})
+    logging.info(f"Updated note {note_id} with {res}.")
+
+@app.task
+def relabel_note(*args, database: str, userid: str, workflow_id: str,
+    note_id: str, label: str, **kwargs) -> ObjectId:
+    """
+    Relabels a note.
+    """
+    #---------------------------------------------------------------------------
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle ObjectID kwargs
+    workflow_id = ObjectId(str(workflow_id))
+    userid = ObjectId(str(userid))
+    note_id = ObjectId(str(note_id))
+    
+    # log action to stdout
+    logging.info(f'Updating note {note_id} for'
+                 f'workflow {workflow_id} and user {userid}.')
+    #---------------------------------------------------------------------------
+    note = db.notes.find_one({"_id": note_id})
+    history_item = utils.update_history(
+        item=note["history"][0],
+        user=userid,
+        action="Update note label.",
+        label=label
+    )
+
+    res = utils.push_history(db, "notes", note_id, history_item)
+    logging.info(f"Updated note {note_id} with {res} and label {label}.")
+
+
+@app.task
+def remove_note(*args, database: str, userid: str, workflow_id: str,
+    note_id: str, **kwargs) -> ObjectId:
+    """
+    Removes a note from the workflow but not the notes collection.
+    """
+    #---------------------------------------------------------------------------
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle ObjectID kwargs
+    workflow_id = ObjectId(str(workflow_id))
+    userid = ObjectId(str(userid))
+    note_id = ObjectId(str(note_id))
+    
+    # log action to stdout
+    logging.info(f'Removing note {note_id} from'
+                 f'workflow {workflow_id} by user {userid}.')
+    #---------------------------------------------------------------------------
+
+    workflow = db.sessions.find_one({"_id": workflow_id})
+
+    db.notes.update_one({"_id": note_id}, {"$pull": {"workflows": workflow_id}})
+
+    history_item = utils.update_history(
+        item=workflow["history"][0],
+        user=userid,
+        action="Remove note from workflow.",
+        oid=note_id
+    )
+
+    utils.push_history(db, "sessions", workflow_id, history_item)
+
+    logging.info(f"Removed note {note_id} from session {workflow_id}.")
 
     
 ################################################################################
@@ -1650,6 +1674,13 @@ def add_item(*args, **kwargs):
                 content=content, 
                 userid=userid
             )
+
+            utils.message(replyTo, {
+                "oid": str(res),
+                "uid": uid,
+                "action": "OID_UID_SYNC",
+                "description": f"Associated OID for {node_type} with UID."
+            })
 
         case "Projection":
             # If this already exists in the database, we can skip intitalization

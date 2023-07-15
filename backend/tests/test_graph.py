@@ -1,6 +1,7 @@
 import datetime
 import pytest
 import logging
+import bcrypt
 
 # local files
 from .. import utils
@@ -26,7 +27,8 @@ def setup_before_tests():
     db = utils.connect(db="test")
 
     # add a user
-    userid = tasks.register_account(password="password", username=f"test{current_time}")
+    password = bcrypt.hashpw(b"password", bcrypt.gensalt(10))
+    userid = tasks.register_account(password=password, username=f"test{current_time}")
     user = users_db.users.find_one(userid)
 
     # add a workspace which also initializes a workflow

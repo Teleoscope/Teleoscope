@@ -155,11 +155,8 @@ def create_workflow_object(
 
 def create_user_object(*args, username, password):
     return {
-        "creation_time": datetime.datetime.utcnow(),
         "password": password,
         "username": username,
-        "sessions":[],
-        "action": "initialize a user"
     }
 
 
@@ -213,15 +210,17 @@ def create_teleoscope_history_item(
     return history_item
 
 
-def create_note_object(userid, label, content, vector):
+def create_note_object(workflow_id: ObjectId, userid: ObjectId, label: str, text: str, content, vector):
     return {
         "creation_time": datetime.datetime.utcnow(),
         "textVector": vector,
+        "text": text,
+        "workflows": [workflow_id],
         "history": [create_note_history_item(userid, label, "Add note.", content=content)]
     }
 
 
-def create_note_history_item(userid, label, action, content={}):
+def create_note_history_item(userid: ObjectId, label: str, action, content={}):
     return {
             "user" : userid,
             "label" : label,

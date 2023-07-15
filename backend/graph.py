@@ -3,6 +3,7 @@ from pymongo import MongoClient, database
 from typing import List
 import numpy as np
 import logging
+import bcrypt
 
 from . import schemas
 from . import utils
