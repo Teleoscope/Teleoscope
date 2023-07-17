@@ -1,5 +1,3 @@
-import boto3
-client = boto3.client('ec2')
 # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#using-boto3
 # need to configure your machine w/ above
 
@@ -9,6 +7,16 @@ import os
 
 load_dotenv("../../frontend/.env.local")
 os.getenv('')
+
+ec2_session = boto3.Session(
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"), 
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
+)
+
+client = ec2_session.client(
+    'ec2', 
+    region_name = 'us-west-2'
+)
 
 INSTANCE_IDS = [f'{os.getenv("INSTANCE_ID")}']
 
