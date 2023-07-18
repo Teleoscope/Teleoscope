@@ -19,6 +19,9 @@ export default function DocumentList(props) {
   
 
   const renderItem = (index, item, currentIndex, setIndex) => {
+    if (!item) {
+      return <>ok</>
+    }
     return (
       <DocumentListItem
         showReadIcon={true}

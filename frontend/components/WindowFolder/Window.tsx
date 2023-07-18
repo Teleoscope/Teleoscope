@@ -7,6 +7,7 @@ import { Chip, Stack, Paper, Box, Divider } from "@mui/material";
 // actions
 import { useDispatch } from "react-redux";
 import { removeWindow, maximizeWindow } from "@/actions/windows";
+import { useEffect, useRef, useState } from "react";
 
 export default function Window(props) {
   const w = props.windata;
@@ -15,6 +16,16 @@ export default function Window(props) {
   const handleDelete = () => {
     dispatch(removeWindow(props.id));
   };
+
+  const elRef = useRef();
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    if (!elRef?.current?.clientHeight) {
+      return;
+    }
+    setHeight(elRef?.current?.clientHeight);
+  }, [elRef?.current?.clientHeight]);
 
   if (props.size.width < props.size.minWidth + 1 || props.size.height < props.size.minHeight + 1) {
     return (

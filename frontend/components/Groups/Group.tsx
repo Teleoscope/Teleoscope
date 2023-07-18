@@ -38,7 +38,7 @@ export default function Group({ id: winId, windata, color }) {
         ></ButtonActions>
       <Box sx={{ flexGrow: 1, flexDirection: "column" }}>
         <DocumentList
-          data={data}
+          data={[{id: id, ranked_documents: data}]}
           pagination={true}
           showGroupIcon={false}
           showOrientIcon={false}

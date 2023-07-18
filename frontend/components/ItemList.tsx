@@ -1,14 +1,23 @@
-import { Virtuoso } from "react-virtuoso";
 import React from "react";
 // actions
 import { useAppDispatch } from "@/util/hooks";
 import { bookmark } from "@/actions/windows";
+import { GroupedVirtuoso } from "react-virtuoso";
 
-export default function Itemlist(props) {
+export default function Itemlist({onSelect, data, render, loadMore}) {
   const ref = React.useRef(null);
   const [currentItemIndex, setCurrentItemIndex] = React.useState(-1);
   const listRef = React.useRef(null);
   const dispatch = useAppDispatch();
+
+  if (!data) {
+    return <></>
+  }
+
+  const groups = data ? data.length == 1 ? [] : data.map(d => `${d.id}: ${d.type}`): []
+
+  const groupCounts = data ? data.map(d => d?.ranked_documents?.length) : []
+  const reduced_data = data ? data.reduce((acc, dl) => acc.concat(dl?.ranked_documents), []) : []
 
   const keyDownCallback = React.useCallback(
     (e) => {
@@ -17,9 +26,9 @@ export default function Itemlist(props) {
       if (e.code === "ArrowUp") {
         nextIndex = Math.max(0, currentItemIndex - 1);
       } else if (e.code === "ArrowDown") {
-        nextIndex = Math.min(props.data.length - 1, currentItemIndex + 1);
+        nextIndex = Math.min(reduced_data.length - 1, currentItemIndex + 1);
       } else if (e.code === "Enter") {
-        dispatch(bookmark(props.data[currentItemIndex][0]));
+        dispatch(bookmark(reduced_data[currentItemIndex][0]));
       }
 
       if (nextIndex !== null) {
@@ -32,7 +41,7 @@ export default function Itemlist(props) {
         });
         e.preventDefault();
       }
-      props.onSelect(props.data[nextIndex]);
+      onSelect(reduced_data[nextIndex]);
     },
     [currentItemIndex, ref, setCurrentItemIndex]
   );
@@ -51,20 +60,27 @@ export default function Itemlist(props) {
 
   const handleSetCurrentItemIndex = (index) => {
     setCurrentItemIndex(index);
-    props.onSelect(props.data[index]);
+    onSelect(reduced_data[index]);
   };
 
-
-
   return (
-    <Virtuoso
+    <GroupedVirtuoso
       ref={ref}
-      data={props.data}
-      endReached={props.loadMore}
-      itemContent={(index, item) =>
-        props.render(index, item, currentItemIndex, handleSetCurrentItemIndex)
-      }
+      // data={data}
+      groupCounts={groupCounts}
+      endReached={loadMore}
+      itemContent={(index) => render(index, reduced_data?.at(index), currentItemIndex, handleSetCurrentItemIndex)}
       scrollerRef={scrollerRef}
+      groupContent={index => {
+        return <div 
+        style={{ 
+          backgroundColor: 'white', 
+          paddingTop: '1rem',
+          borderBottom: '1px solid #ccc' 
+        }}>{groups[index]}</div>
+      }}
+      style={{ height: 400 }}
+
     />
   );
 }

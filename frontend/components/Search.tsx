@@ -72,7 +72,7 @@ export default function Search({id, windata, color}) {
         <DocumentList
           loading={documents_loading}
           pagination={true}
-          data={data}
+          data={[{id: id, ranked_documents: data}]}
           showGroupIcon={true}
         />
       </Box>
