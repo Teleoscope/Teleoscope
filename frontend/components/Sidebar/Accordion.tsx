@@ -1,12 +1,10 @@
 import Stack from "@mui/material/Stack";
 import Groups from "@/components/Groups/Groups";
-import Teleoscopes from "@/components/Teleoscopes";
 import Notes from "@/components/Notes";
 import Bookmarks from "@/components/Bookmarks";
 import Setttings from "@/components/Settings";
 import AccordionSection from "@/components/Sidebar/AccordionSection";
 import SelectionViewer from "@/components/Sidebar/SelectionViewer";
-import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
 import Workflows from "@/components/Sidebar/WorkflowViewer";
 import { useWindowDefinitions } from "@/util/hooks";
 
@@ -29,13 +27,13 @@ export default function SimpleAccordion(props) {
         >
           <Workflows />
         </AccordionSection>
-        <AccordionSection
+        {/* <AccordionSection
           compact={props.compact}
           icon={wdefs.definitions()["Teleoscopes"].icon()}
           text="Teleoscopes"
         >
           <Teleoscopes />
-        </AccordionSection>
+        </AccordionSection> */}
         <AccordionSection
           compact={props.compact}
           icon={wdefs.definitions()["Groups"].icon()}
@@ -45,24 +43,24 @@ export default function SimpleAccordion(props) {
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
+          icon={wdefs.definitions()["Bookmarks"].icon()}
+          text="Bookmarks"
+        >
+          <Bookmarks />
+        </AccordionSection>
+        {/* <AccordionSection
+          compact={props.compact}
           icon={wdefs.definitions()["Projections"].icon()}
           text="Projections"
         >
           <ProjectionPalette />
-        </AccordionSection>
+        </AccordionSection> */}
         <AccordionSection
           compact={props.compact}
           icon={wdefs.definitions()["Notes"].icon()}
           text="Notes"
         >
           <Notes />
-        </AccordionSection>
-        <AccordionSection
-          compact={props.compact}
-          icon={wdefs.definitions()["Bookmarks"].icon()}
-          text="Bookmarks"
-        >
-          <Bookmarks />
         </AccordionSection>
         <AccordionSection
           compact={props.compact}
