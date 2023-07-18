@@ -1,23 +1,58 @@
 import React from "react";
 // actions
-import { useAppDispatch } from "@/util/hooks";
+import { useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import { bookmark } from "@/actions/windows";
 import { GroupedVirtuoso } from "react-virtuoso";
+import { useSWRHook } from "@/util/swr";
+import { Box } from "@mui/system";
 
-export default function Itemlist({onSelect, data, render, loadMore}) {
+const GroupLabel = ({ index, data }) => {
+  const wdefs = useWindowDefinitions();
+  const swr = useSWRHook();
+  const group = data[index];
+  const key = wdefs.getAPIRoute(group.type);
+
+  const { item } = swr.useSWRAbstract("item", `${key}/${group.id}`);
+
+  const title = (type) => {
+    if (type === "Document") {
+      return item.title;
+    }
+    if (type === "Group") {
+      return item.history[0].label;
+    }
+    if (type === "Search") {
+      return item.history[0].query;
+    }
+    if (type === "Note") {
+      return item.history[0].label;
+    }
+  };
+
+  return (
+    <Box
+      key={`${index}-${group.id}`}
+      sx={{
+        backgroundColor: "#f9f9f9",
+        padding: "0.5rem",
+        borderBottom: "1px solid #ccc",
+      }}
+    >
+      {`${group.type}: ${title(group.type)}`}
+    </Box>
+  );
+};
+
+export default function Itemlist({ onSelect, data, render, loadMore }) {
   const ref = React.useRef(null);
   const [currentItemIndex, setCurrentItemIndex] = React.useState(-1);
   const listRef = React.useRef(null);
   const dispatch = useAppDispatch();
 
-  if (!data) {
-    return <></>
-  }
+  const groups = data ? (data.length === 1 ? [] : data.map((d) => `${d.id}: ${d.type}`)) : [];
 
-  const groups = data ? data.length == 1 ? [] : data.map(d => `${d.id}: ${d.type}`): []
-
-  const groupCounts = data ? data.map(d => d?.ranked_documents?.length) : []
-  const reduced_data = data ? data.reduce((acc, dl) => acc.concat(dl?.ranked_documents), []) : []
+  const groupCounts = data ? data.map((d) => d?.ranked_documents?.length) : [];
+  const reduced_data = data ? data.reduce((acc, dl) => acc.concat(dl?.ranked_documents), []) : [];
 
   const keyDownCallback = React.useCallback(
     (e) => {
@@ -66,21 +101,12 @@ export default function Itemlist({onSelect, data, render, loadMore}) {
   return (
     <GroupedVirtuoso
       ref={ref}
-      // data={data}
       groupCounts={groupCounts}
       endReached={loadMore}
       itemContent={(index) => render(index, reduced_data?.at(index), currentItemIndex, handleSetCurrentItemIndex)}
       scrollerRef={scrollerRef}
-      groupContent={index => {
-        return <div 
-        style={{ 
-          backgroundColor: 'white', 
-          paddingTop: '1rem',
-          borderBottom: '1px solid #ccc' 
-        }}>{groups[index]}</div>
-      }}
-      style={{ height: 400 }}
-
+      groupContent={(index) => <GroupLabel index={index} data={data} />}
+      // style={{ height: 400 }}
     />
   );
 }

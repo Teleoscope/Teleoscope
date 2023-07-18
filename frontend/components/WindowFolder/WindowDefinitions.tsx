@@ -289,6 +289,10 @@ export default class WindowDefinitions {
     }, {}) 
   }
 
+  public getAPIRoute(str) {
+    const keymap = this.apikeymap()
+    return keymap[str]
+  }
 
   public apikeymap() {
     return {
