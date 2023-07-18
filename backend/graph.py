@@ -202,6 +202,7 @@ def graph(db: database.Database, node_oid: ObjectId):
     """Recalculates all nodes to the right of specified node.
     """
     node = db.graph.find_one({"_id": ObjectId(str(node_oid))})
+    db.graph.update_one(ObjectId(str(node_oid)), {"$set": {"doclists": []}})
 
     sources  = node["edges"]["source"]
     controls = node["edges"]["control"]
