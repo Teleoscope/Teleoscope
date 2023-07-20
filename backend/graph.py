@@ -474,7 +474,13 @@ def update_projection(db: database.Database, projection_node, sources: List, con
             case "Document" | "Search" | "Note":
                 logging.info(f"This node type cannot be the only control input. Returning original projection node.")
                 return projection_node
-    
+            
+    if len(controls) > 1:
+        c_types = [c["type"] for c in controls]
+        if "Group" not in c_types:
+            logging.info(f"Require group as control input. Returning original projection node.")
+            return projection_node 
+                   
     rank_slice_length = 1000
     if "rank_slice_length" in parameters:
         rank_slice_length = parameters["rank_slice_length"]
