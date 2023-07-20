@@ -193,13 +193,13 @@ class Projection:
                 case "Document":
                     # create temp group
                     obj = schemas.create_group_object(
-                        color="#FF0000", 
-                        documents=[c["id"]], 
-                        label="Your Document", 
+                        "#FF0000", 
+                        [c["id"]], 
+                        "Your Document", 
                         "Initialize group", 
-                        userid=ObjectId(generate()), # random id
-                        description=f"Group from Document",
-                        workflow_id=ObjectId(generate()), # random id
+                        ObjectId(generate()), # random id
+                        "Group from Document",
+                        ObjectId(generate()), # random id
                     )
                     # Initialize group in database
                     doc_group_oid = db.groups.insert_one(obj)
