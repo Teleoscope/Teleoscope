@@ -192,17 +192,20 @@ class Projection:
             match c["type"]:
                 case "Document":
                     # create temp group
-                    doc_group_oid = tasks.add_group(
-                        database=self.db.name,
+                    obj = schemas.create_group_object(
+                        color="#FF0000", 
+                        documents=[c["id"]], 
+                        label="Your Document", 
+                        "Initialize group", 
                         userid=ObjectId(generate()), # random id
-                        workflow_id=ObjectId(generate()), # random id
                         description=f"Group from Document",
-                        label="Your Document",
-                        color="#FF0000",
-                        documents=[c["id"]]
+                        workflow_id=ObjectId(generate()), # random id
                     )
+                    # Initialize group in database
+                    doc_group_oid = db.groups.insert_one(obj)
                     self.doc_groups.append(doc_group_oid)
                     self.groups.append(doc_group_oid)
+
                 case "Group":
                     group = self.db.groups.find_one({"_id": c["id"]})
                     self.groups.append(group)
