@@ -207,9 +207,15 @@ class Projection:
         if len(self.sources) == 0:
 
             logging.info('No sources. Using average ordering...')
-        
+            
+            # build a list of ids of documents in all groups 
+            docs = []
+            for group in self.groups:
+                group_document_ids = group["history"][0]["included_documents"]
+                docs += group_document_ids
+            
             # get control vectors
-            control_vecs = [all_doc_vecs[all_doc_ids.index(str(oid["_id"]))] for oid in self.groups]
+            control_vecs = [all_doc_vecs[all_doc_ids.index(oid)] for oid in docs]
 
             # compute average vector
             vec = np.average(control_vecs, axis=0)
