@@ -202,7 +202,7 @@ class Projection:
                         ObjectId(generate()), # random id
                     )
                     # Initialize group in database
-                    doc_group_oid = db.groups.insert_one(obj)
+                    doc_group_oid = self.db.groups.insert_one(obj)
                     self.doc_groups.append(doc_group_oid)
                     self.groups.append(doc_group_oid)
 
