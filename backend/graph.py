@@ -63,7 +63,7 @@ def make_node(db: database.Database,
         # or a target. In that case, every instance on the workspace corresponds
         # to only one graph node, which is created new. Note that there's no point
         # in updating the matrix because there's no input to the matrix yet.
-        case "Teleoscope" | "Union" | "Intersection" | "Exclusion" | "Subtraction":
+        case "Teleoscope" | "Projection" | "Union" | "Intersection" | "Exclusion" | "Subtraction":
             node["matrix"] = make_matrix(oid, node_type)
             res = db.graph.insert_one(node)
             node = db.graph.find_one({"_id": res.inserted_id})
