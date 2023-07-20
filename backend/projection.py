@@ -10,6 +10,7 @@ import gridfs
 import datetime
 import pika
 from pymongo import MongoClient, database
+from random_object_id import generate
 
 # ml dependencies
 import umap
@@ -66,6 +67,7 @@ class Projection:
         self.document_ids = None    
         self.hdbscan_labels = None
         self.doclists = []
+        self.doc_groups = []
 
     def clustering_task(self):
         """Cluster documents using user-defined groups.
@@ -147,6 +149,10 @@ class Projection:
             
             self.add_cluster(documents, _label, _color)
         
+        # clear any groups that were made for individual document inputs
+        for group in self.doc_groups:
+            self.db.groups.delete_one({"_id": group}) 
+
     def get_given_labels(self):
         """ Build the given_labels dictionary
 
@@ -182,20 +188,25 @@ class Projection:
                 a diagonal matrix containing where elements are distances between documents
         """
 
-        control_doc_ids = []
         for c in self.controls:
             match c["type"]:
                 case "Document":
-                    # control_doc_ids.append(c["id"])
-                    pass
+                    # create temp group
+                    doc_group_oid = tasks.add_group(
+                        database=self.db.name,
+                        userid=ObjectId(generate()), # random id
+                        workflow_id=ObjectId(generate()), # random id
+                        description=f"Group from Document",
+                        label="Your Document",
+                        color="#FF0000",
+                        documents=[c["id"]]
+                    )
+                    self.doc_groups.append(doc_group_oid)
+                    self.groups.append(doc_group_oid)
                 case "Group":
                     group = self.db.groups.find_one({"_id": c["id"]})
                     self.groups.append(group)
-                    # control_doc_ids = control_doc_ids + group["history"][0]["included_documents"]
                 case "Search":
-                    # search = self.db.searches.find_one({"_id": c["id"]})
-                    # cursor = self.db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
-                    # control_doc_ids = control_doc_ids + [d["_id"] for d in list(cursor)]
                     pass
                 case "Note":
                     pass

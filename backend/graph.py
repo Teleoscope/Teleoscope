@@ -471,13 +471,13 @@ def update_projection(db: database.Database, projection_node, sources: List, con
     
     if len(controls) == 1:
         match controls[0]["type"]:
-            case "Document" | "Search" | "Note":
+            case "Search" | "Note":
                 logging.info(f"This node type cannot be the only control input. Returning original projection node.")
                 return projection_node
             
     if len(controls) > 1:
         c_types = [c["type"] for c in controls]
-        if "Group" not in c_types:
+        if "Group" | "Document" not in c_types:
             logging.info(f"Require group as control input. Returning original projection node.")
             return projection_node 
                    
@@ -485,7 +485,6 @@ def update_projection(db: database.Database, projection_node, sources: List, con
     if "rank_slice_length" in parameters:
         rank_slice_length = parameters["rank_slice_length"]
     
-    # TODO: currently only accomodate groups as input
     project = projection.Projection(db, sources, controls, rank_slice_length)
     doclists = project.clustering_task()
         
