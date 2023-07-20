@@ -477,7 +477,7 @@ def update_projection(db: database.Database, projection_node, sources: List, con
             
     if len(controls) > 1:
         c_types = [c["type"] for c in controls]
-        if "Group" not in c_types | "Document" not in c_types:
+        if "Group" not in c_types or "Document" not in c_types:
             logging.info(f"Require group as control input. Returning original projection node.")
             return projection_node 
 
