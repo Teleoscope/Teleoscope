@@ -253,7 +253,7 @@ def get_collection(db: database.Database, node_type: schemas.NodeType):
         "Group": "groups",
         "Search": "searches",
         "Note": "notes",
-        "Projection": "projections",
+        "Projection": "graph",
         "Intersection": "graph",
         "Exclusion": "graph",
         "Union": "graph",
