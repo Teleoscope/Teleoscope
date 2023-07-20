@@ -231,7 +231,7 @@ class Projection:
             
             source_vecs = np.array(all_doc_vecs)
             ranks = graph.rank(control_vecs, all_doc_ids, source_vecs)
-            document_ids = ranks[1][:self.limit]
+            document_ids = ranks[:self.limit][0]
         
         else:
             # if sources > 0: sources U controls 
