@@ -202,9 +202,9 @@ class Projection:
                         ObjectId(generate()), # random id
                     )
                     # Initialize group in database
-                    doc_group_oid = self.db.groups.insert_one(obj)
-                    self.doc_groups.append(doc_group_oid)
-                    self.groups.append(doc_group_oid)
+                    res = self.db.groups.insert_one(obj)
+                    self.doc_groups.append(res.inserted_id)
+                    self.groups.append(res.inserted_id)
 
                 case "Group":
                     group = self.db.groups.find_one({"_id": c["id"]})
