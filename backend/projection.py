@@ -203,8 +203,10 @@ class Projection:
                     )
                     # Initialize group in database
                     res = self.db.groups.insert_one(obj)
-                    self.doc_groups.append(res.inserted_id)
-                    self.groups.append(res.inserted_id)
+                    oid = res.inserted_id
+                    group = self.db.groups.find_one({"_id": oid})
+                    self.doc_groups.append(oid)
+                    self.groups.append(group)
 
                 case "Group":
                     group = self.db.groups.find_one({"_id": c["id"]})
