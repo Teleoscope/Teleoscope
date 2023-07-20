@@ -231,7 +231,7 @@ class Projection:
             
             source_vecs = np.array(all_doc_vecs)
             ranks = graph.rank(control_vecs, all_doc_ids, source_vecs)
-            document_ids = [i for i,s in ranks[:limit]]
+            document_ids = [i for i,s in ranks[:self.limit]]
             
         
         else:
