@@ -209,7 +209,7 @@ class Projection:
             logging.info('No sources. Using average ordering...')
         
             # get control vectors
-            control_vecs = [all_doc_vecs[all_doc_ids.index(oid)] for oid in self.groups]
+            control_vecs = [all_doc_vecs[all_doc_ids.index(oid["_id"])] for oid in self.groups]
 
             # compute average vector
             vec = np.average(control_vecs, axis=0)
