@@ -22,6 +22,7 @@ from . import utils
 from . import tasks
 from . import auth
 from . import schemas
+from . import graph
 
 class Projection:
     """Semi-supervised Clustering 
@@ -217,17 +218,21 @@ class Projection:
             # get control vectors
             control_vecs = [all_doc_vecs[all_doc_ids.index(oid)] for oid in docs]
 
-            # compute average vector
-            vec = np.average(control_vecs, axis=0)
+            # # compute average vector
+            # vec = np.average(control_vecs, axis=0)
 
-            logging.info("Gather similarly scores based on vector...")
-            # gather similarly scores based on average vector
-            scores = utils.calculateSimilarity(all_doc_vecs, vec)
+            # logging.info("Gather similarly scores based on vector...")
+            # # gather similarly scores based on average vector
+            # scores = utils.calculateSimilarity(all_doc_vecs, vec)
 
-            logging.info("Sorting document ids based on scores...")
-            # sort document ids based on scores and take subset based on limit param
-            document_ids = utils.rank_document_ids_by_similarity(all_doc_ids, scores)[:self.limit]
-
+            # logging.info("Sorting document ids based on scores...")
+            # # sort document ids based on scores and take subset based on limit param
+            # document_ids = utils.rank_document_ids_by_similarity(all_doc_ids, scores)[:self.limit]
+            
+            source_vecs = np.array(all_doc_vecs)
+            ranks = graph.rank(control_vecs, all_doc_ids, source_vecs)
+            document_ids = ranks[:self.limit]
+        
         else:
             # if sources > 0: sources U controls 
             document_ids = []
