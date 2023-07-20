@@ -7,6 +7,7 @@ import bcrypt
 
 from . import schemas
 from . import utils
+from . import projection
 
 ################################################################################
 # Graph API
@@ -479,7 +480,6 @@ def update_projection(db: database.Database, projection_node, sources: List, con
         rank_slice_length = parameters["rank_slice_length"]
     
     # TODO: currently only accomodate groups as input
-    import projection
     project = projection.Projection(db, sources, controls, rank_slice_length)
     doclists = project.clustering_task()
         
