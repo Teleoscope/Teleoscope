@@ -854,7 +854,7 @@ def copy_cluster(*args, **kwargs):
         
     """
 
-    cluster_id = ObjectId(str(kwargs["cluster_id"]))
+        
     workflow_id = ObjectId(str(kwargs["workflow_id"]))
     user_id = ObjectId(str(kwargs["userid"]))
     

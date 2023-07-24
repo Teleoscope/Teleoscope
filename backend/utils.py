@@ -344,7 +344,7 @@ def get_documents(dbstring, rebuild=False):
     vectors = []
 
     if npzpath.exists() and pklpath.exists() and not rebuild:
-        logging.info(f"Attempting to retrieving cached documents for {dbstring}.")
+        logging.info(f"Attempting to retrieve cached documents for {dbstring}.")
         
         loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
         with open(pklpath.as_posix(), 'rb') as handle:
