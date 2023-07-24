@@ -874,12 +874,11 @@ def copy_cluster(*args, **kwargs):
         workflow_id,
         cluster_id=[cluster_id])
 
-    with transaction_session.start_transaction():
-        group_res = db.groups.insert_one(obj, session=transaction_session)
-        history_item = session["history"][0]
-        history_item["groups"] = [*history_item["groups"], group_res.inserted_id]
-        utils.push_history(db, "sessions", workflow_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
+    
+    group_res = db.groups.insert_one(obj)
+    history_item = session["history"][0]
+    history_item["groups"] = [*history_item["groups"], group_res.inserted_id]
+    utils.push_history(db, "sessions", workflow_id, history_item)
 
     return group_res.inserted_id
 
@@ -900,7 +899,7 @@ def remove_cluster(*args, **kwargs):
     database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    projection = db.projections.find_one({'_id': p_id}, session=transaction_session)        
+    projection = db.projections.find_one({'_id': p_id})        
     history_item = projection["history"][0]
     
     history_item["timestamp"] = datetime.datetime.utcnow()
@@ -909,7 +908,7 @@ def remove_cluster(*args, **kwargs):
     history_item["clusters"].remove(c_id)
 
     db.clusters.delete_one({"_id": c_id})
-    utils.push_history(db, "projections", p_id, history_item, transaction_session)
+    utils.push_history(db, "projections", p_id, history_item)
     utils.commit_with_retry(transaction_session)
     logging.info(f"Removed cluster {c_id} from projection {p_id}.")
 
@@ -936,33 +935,30 @@ def initialize_projection(*args, **kwargs):
 
     obj = schemas.create_projection_object(workflow_id, label, user_id)
 
-    with transaction_session.start_transaction():
+    projection_res = db.projections.insert_one(obj)
+    logging.info(f"Added projection {obj['history'][0]['label']} with result {projection_res}.")
+    
+    session = db.sessions.find_one({'_id': workflow_id})
+    if not session:
+        logging.info(f"Warning: session with id {workflow_id} not found.")
+        raise Exception(f"session with id {workflow_id} not found")
+    
 
-        projection_res = db.projections.insert_one(obj, session=transaction_session)
-        logging.info(f"Added projection {obj['history'][0]['label']} with result {projection_res}.")
-        
-        session = db.sessions.find_one({'_id': workflow_id}, session=transaction_session)
-        if not session:
-            logging.info(f"Warning: session with id {workflow_id} not found.")
-            raise Exception(f"session with id {workflow_id} not found")
-        
+    history_item = session["history"][0]
 
-        history_item = session["history"][0]
+    try:
+        history_item["projections"].append(projection_res.inserted_id)
+    except:
+        history_item["projections"] = [projection_res.inserted_id] 
 
-        try:
-            history_item["projections"].append(projection_res.inserted_id)
-        except:
-            history_item["projections"] = [projection_res.inserted_id] 
+    history_item["timestamp"] = datetime.datetime.utcnow()
+    history_item["action"] = f"Initialize new projection: {label}"
+    history_item["user"] = user_id
 
-        history_item["timestamp"] = datetime.datetime.utcnow()
-        history_item["action"] = f"Initialize new projection: {label}"
-        history_item["user"] = user_id
-
-        sessions_res = utils.push_history(db, "sessions", workflow_id, history_item, transaction_session)
-        
-        logging.info(f"Associated projection {obj['history'][0]['label']} with session {workflow_id} and result {sessions_res}.")
-        utils.commit_with_retry(transaction_session)
-        return projection_res.inserted_id
+    sessions_res = utils.push_history(db, "sessions", workflow_id, history_item)
+    
+    logging.info(f"Associated projection {obj['history'][0]['label']} with session {workflow_id} and result {sessions_res}.")
+    return projection_res.inserted_id
     
 @app.task
 def remove_projection(*args, **kwargs):
@@ -977,21 +973,18 @@ def remove_projection(*args, **kwargs):
     database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    session = db.sessions.find_one({'_id': workflow_id}, session=transaction_session)        
+    session = db.sessions.find_one({'_id': workflow_id})
     history_item = session["history"][0]
-    history_item["timestamp"] = datetime.datetime.utcnow()        
+    history_item["timestamp"] = datetime.datetime.utcnow()
     history_item["projections"].remove(projection_id)
     history_item["action"] = f"Remove projection from session"
     history_item["user"] = user_id
-
-    with transaction_session.start_transaction():
         
-        cluster = clustering.Clustering(kwargs["userid"], [], kwargs["projection_id"], kwargs["workflow_id"], kwargs["database"])
-        cluster.clean_mongodb() # cleans up clusters associate with projection
-        db.projections.delete_one({'_id': projection_id}, session=transaction_session) 
+    cluster = clustering.Clustering(kwargs["userid"], [], kwargs["projection_id"], kwargs["workflow_id"], kwargs["database"])
+    cluster.clean_mongodb() # cleans up clusters associate with projection
+    db.projections.delete_one({'_id': projection_id}) 
 
-        utils.push_history(db, "sessions", workflow_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
+    utils.push_history(db, "sessions", workflow_id, history_item)
 
 @app.task
 def relabel_projection(*args, **kwargs):
@@ -1005,15 +998,13 @@ def relabel_projection(*args, **kwargs):
     userid = ObjectId(str(kwargs["userid"]))
     label = kwargs["label"]
 
-    projection = db.projections.find_one({"_id": projection_id}, session=transaction_session)
+    projection = db.projections.find_one({"_id": projection_id})
     history_item = projection["history"][0]
     history_item["label"] = label
     history_item["action"] = "update label"
     history_item["user"] = userid
 
-    with transaction_session.start_transaction():
-        utils.push_history(db, "projections", projection_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
+    utils.push_history(db, "projections", projection_id, history_item)
 
     return 200
 

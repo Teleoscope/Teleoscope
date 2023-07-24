@@ -32,7 +32,7 @@ export default function Notes(props) {
   const swr = useSWRHook();
   const { notes_raw } = swr.useSWRAbstract(
     "notes_raw",
-    `sessions/${session_id}/notes`
+    `notes/${session_id}`
   );
   const dispatch = useAppDispatch();
 

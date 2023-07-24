@@ -5,8 +5,11 @@ import { bookmark } from "@/actions/windows";
 import { GroupedVirtuoso } from "react-virtuoso";
 import { useSWRHook } from "@/util/swr";
 import { Box } from "@mui/system";
+import { Button, Stack, Typography } from "@mui/material";
 
-const GroupLabel = ({ index, data }) => {
+import { HiChevronDoubleDown } from 'react-icons/hi';
+
+const GroupLabel = ({ index, data, callback}) => {
   const wdefs = useWindowDefinitions();
   const swr = useSWRHook();
   const group = data[index];
@@ -16,19 +19,19 @@ const GroupLabel = ({ index, data }) => {
 
   const title = (type) => {
     if (type === "Document") {
-      return item.title;
+      return item?.title;
     }
     if (type === "Group") {
-      return item.history[0].label;
+      return item?.history[0].label;
     }
     if (type === "Search") {
-      return item.history[0].query;
+      return item?.history[0].query;
     }
     if (type === "Note") {
-      return item.history[0].label;
+      return item?.history[0].label;
     }
   };
-
+  
   return (
     <Box
       key={`${index}-${group.id}`}
@@ -38,7 +41,10 @@ const GroupLabel = ({ index, data }) => {
         borderBottom: "1px solid #ccc",
       }}
     >
-      {`${group.type}: ${title(group.type)}`}
+      <Stack direction="row" justifyContent="space-between">
+        <Typography>{`${group.type}: ${title(group.type)}`}</Typography>
+        <Button size="small" onClick={(e) => callback(e, index)} sx={{color: "#CCCCCC", width: "1em"}}><HiChevronDoubleDown /></Button>
+      </Stack>
     </Box>
   );
 };
@@ -98,6 +104,14 @@ export default function Itemlist({ onSelect, data, render, loadMore }) {
     onSelect(reduced_data[index]);
   };
 
+  const handleScroll = (e, index) => {
+    e.preventDefault()
+    const total = groupCounts.reduce((acc, curr) => acc + curr, 0)
+    const i = groupCounts.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0)
+    const j = i >= total ? 0 : i;
+    ref?.current.scrollToIndex({index: j})
+  }
+
   return (
     <GroupedVirtuoso
       ref={ref}
@@ -105,7 +119,7 @@ export default function Itemlist({ onSelect, data, render, loadMore }) {
       endReached={loadMore}
       itemContent={(index) => render(index, reduced_data?.at(index), currentItemIndex, handleSetCurrentItemIndex)}
       scrollerRef={scrollerRef}
-      groupContent={(index) => <GroupLabel index={index} data={data} />}
+      groupContent={(index) => <GroupLabel callback={handleScroll} index={index} data={data} />}
       // style={{ height: 400 }}
     />
   );
