@@ -8,14 +8,10 @@ import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import FolderIcon from "@mui/icons-material/Folder";
 import { useStomp } from "@/util/Stomp";
-import { IconButton, Tooltip, Typography } from "@mui/material";
-import {
-  Diversity2 as Diversity2Icon
-} from "@mui/icons-material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { onDragStart } from "@/util/drag";
 import { setSelection } from "@/actions/windows";
-import { Stack, Divider } from "@mui/material";
+import { Stack } from "@mui/material";
 import Deleter from "@/components/Deleter";
 
 export default function Clusters(props) {
@@ -70,7 +66,7 @@ export default function Clusters(props) {
 
   return (
     <>
-      <>
+      {/* <>
         <Stack
           direction="row"
           justifyContent="right"
@@ -84,9 +80,8 @@ export default function Clusters(props) {
           </Tooltip>
         </Stack>
         <Divider />
-      </>
+      </> */}
       <div style={{ overflow: "auto", height: "100%" }}>
-        {clusters?.length !== 0 ? (
           <List>
             {clusters?.map((cluster) => {
               const isHighlighted = cluster._id === highlightedItem;
@@ -131,11 +126,6 @@ export default function Clusters(props) {
               );
             })}
           </List>
-        ) : (
-          <Typography sx={{ width: "100%" }} align="center" variant="h6">
-            Use button above to build clusters...
-          </Typography>
-        )}
       </div>
     </>
   );

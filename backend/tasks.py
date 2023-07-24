@@ -933,10 +933,10 @@ def initialize_projection(*args, **kwargs):
     if user != None:
         user_id = user['_id']
 
-    obj = schemas.create_projection_object(workflow_id, label, user_id)
+    # obj = schemas.create_projection_object(workflow_id, label, user_id)
 
-    projection_res = db.projections.insert_one(obj)
-    logging.info(f"Added projection {obj['history'][0]['label']} with result {projection_res}.")
+    # projection_res = db.projections.insert_one(obj)
+    # logging.info(f"Added projection {obj['history'][0]['label']} with result {projection_res}.")
     
     session = db.sessions.find_one({'_id': workflow_id})
     if not session:
@@ -1498,30 +1498,30 @@ def add_item(*args, **kwargs):
                 "description": f"Associated OID for {node_type} with UID."
             })
 
-        case "Projection":
-            # If this already exists in the database, we can skip intitalization
-            if ObjectId.is_valid(oid):
+        # case "Projection":
+        #     # If this already exists in the database, we can skip intitalization
+        #     if ObjectId.is_valid(oid):
 
-                docset = db.graph.find_one({"_id" : oid})
-                if docset:
-                    logging.info(f"{type} with {oid} already in DB.")
-                    return # perhaps do something else before return like save?
+        #         docset = db.graph.find_one({"_id" : oid})
+        #         if docset:
+        #             logging.info(f"{type} with {oid} already in DB.")
+        #             return # perhaps do something else before return like save?
 
-                logging.info(f"return anyways for now")
-                return
+        #         logging.info(f"return anyways for now")
+        #         return
 
-            logging.info(f"Received {type} with OID {oid} and UID {uid}.")
+        #     logging.info(f"Received {type} with OID {oid} and UID {uid}.")
 
-            res = initialize_projection(database=database, workflow_id=workflow_id, label="New Projection", userid=userid)
+        #     res = initialize_projection(database=database, workflow_id=workflow_id, label="New Projection", userid=userid)
 
-            utils.message(replyTo, {
-                "oid": str(res),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": "Associate OID with UID."
-            })            
+        #     utils.message(replyTo, {
+        #         "oid": str(res),
+        #         "uid": uid,
+        #         "action": "OID_UID_SYNC",
+        #         "description": "Associate OID with UID."
+        #     })            
 
-        case "Teleoscope" | "Filter" | "Intersection" | "Exclusion" | "Union":
+        case "Teleoscope" | "Projection" | "Filter" | "Intersection" | "Exclusion" | "Union":
             node = graph.make_node(db, None, node_type)
 
             utils.message(replyTo, {

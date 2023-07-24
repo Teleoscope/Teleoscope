@@ -20,7 +20,6 @@ import { IconContext } from "react-icons";
 import WindowNode from "@/components/Nodes/WindowNode";
 import OperationNode from "@/components/Nodes/OperationNode";
 import SourceNode from "@/components/Nodes/SourceNode";
-import TargetNode from "@/components/Nodes/TargetNode";
 
 
 // custom
@@ -137,10 +136,10 @@ export default class WindowDefinitions {
         tag:       "projection",
         type:      "Projection",
         apipath:   "projections",
-        nodetype:  TargetNode,      
-        title:     (d) => `Projection: ${d?.history[0].label}`,
-        color:     (d) => d?.history[0].color,
-        icon:      (d) => <Diversity2Icon sx={{ color: d?.history[0].color }}  fontSize="inherit" />,
+        nodetype:  OperationNode,      
+        title:     (d) => d?.type,
+        color:     (d) => this.color,
+        icon:      (d) => <Diversity2Icon sx={{ color: this.color }}  fontSize="inherit" />,
         component: (w, id, color) => <Projection id={id} windata={w} color={color} />,
       },
       Projections: {
