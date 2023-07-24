@@ -7,6 +7,7 @@ import bcrypt
 
 from . import schemas
 from . import utils
+from . import projection
 
 ################################################################################
 # Graph API
@@ -63,7 +64,7 @@ def make_node(db: database.Database,
         # or a target. In that case, every instance on the workspace corresponds
         # to only one graph node, which is created new. Note that there's no point
         # in updating the matrix because there's no input to the matrix yet.
-        case "Teleoscope" | "Union" | "Intersection" | "Exclusion" | "Subtraction":
+        case "Teleoscope" | "Projection" | "Union" | "Intersection" | "Exclusion" | "Subtraction":
             node["matrix"] = make_matrix(oid, node_type)
             res = db.graph.insert_one(node)
             node = db.graph.find_one({"_id": res.inserted_id})
@@ -222,6 +223,8 @@ def graph(db: database.Database, node_oid: ObjectId):
             node = update_note(db, node, parameters)
         case "Teleoscope":
             node = update_teleoscope(db, node, sources, controls, parameters)
+        case "Projection":
+            node = update_projection(db, node, sources, controls, parameters)
         case "Union":
             node = update_union(db, node, sources, controls, parameters)
         case "Intersection":
@@ -251,7 +254,7 @@ def get_collection(db: database.Database, node_type: schemas.NodeType):
         "Group": "groups",
         "Search": "searches",
         "Note": "notes",
-        "Projection": "projections",
+        "Projection": "graph",
         "Intersection": "graph",
         "Exclusion": "graph",
         "Union": "graph",
@@ -451,9 +454,48 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
     logging.debug(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
     return out_vecs
 
+################################################################################
+# Update Projection
+################################################################################
+
+def update_projection(db: database.Database, projection_node, sources: List, controls: List, parameters):
+
+    logging.debug(
+        f"Updating Projection for database {db.name} and node {projection_node} with "
+        f"sources {sources} and controls {controls} and paramaters {parameters}."
+    )
+
+    if len(controls) == 0:
+        logging.info(f"No controls included. Returning original projection node.")
+        return projection_node
+    
+    if len(controls) == 1:
+        match controls[0]["type"]:
+            case "Search" | "Note":
+                logging.info(f"This node type cannot be the only control input. Returning original projection node.")
+                return projection_node
+            
+    if len(controls) > 1:
+        c_types = [c["type"] for c in controls]
+        if "Group" not in c_types or "Document" not in c_types:
+            logging.info(f"Require group as control input. Returning original projection node.")
+            return projection_node 
+
+                   
+    rank_slice_length = 1000
+    if "rank_slice_length" in parameters:
+        rank_slice_length = parameters["rank_slice_length"]
+    
+    project = projection.Projection(db, sources, controls, rank_slice_length)
+    doclists = project.clustering_task()
+        
+    projection_node["doclists"] = doclists
+    
+    # TODO: matrix
+    return projection_node
 
 ################################################################################
-# Update Teleoscope
+# Update Other Operations
 ################################################################################
 
 def update_union(db, node, sources: List, controls: List, parameters):
