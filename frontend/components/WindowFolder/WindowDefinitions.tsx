@@ -135,7 +135,7 @@ export default class WindowDefinitions {
       Projection: {
         tag:       "projection",
         type:      "Projection",
-        apipath:   "projections",
+        apipath:   "graph",
         nodetype:  OperationNode,      
         title:     (d) => d?.type,
         color:     (d) => this.color,

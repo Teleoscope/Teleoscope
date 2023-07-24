@@ -484,7 +484,7 @@ class Projection:
         """
 
         doclist = { 
-            "ranked_documents": documents, 
+            "ranked_documents": [(d, 1.0) for d in documents],
             "label": label,
             "color": color,
             "type": "Cluster"
