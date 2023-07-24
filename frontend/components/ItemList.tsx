@@ -30,7 +30,15 @@ const GroupLabel = ({ index, data, callback}) => {
     if (type === "Note") {
       return item?.history[0].label;
     }
+
+    if (type === "Cluster") {
+      return data[index]?.label;
+    }
   };
+
+  if (data.length == 1) {
+    return <></>
+  }
   
   return (
     <Box
@@ -111,6 +119,7 @@ export default function Itemlist({ onSelect, data, render, loadMore }) {
     const j = i >= total ? 0 : i;
     ref?.current.scrollToIndex({index: j})
   }
+
 
   return (
     <GroupedVirtuoso
