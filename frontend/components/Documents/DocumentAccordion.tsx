@@ -49,9 +49,8 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 
 export default function CustomizedAccordions({doclists, node}) {
   const [expanded, setExpanded] = React.useState<string | false>("");
-  console.log("expanded", expanded)
+
   const handleChange = (panel: string) => (event: React.SyntheticEvent, newExpanded: boolean) => {
-      console.log("pabel", panel)
       setExpanded(newExpanded ? panel : false);
   };
 

@@ -155,7 +155,7 @@ function Flow(props) {
     if (node?.data?.type == "Cluster") {
       if (target) {
         if (target.data.type == "Groups") {
-          client.copy_cluster(node.id.split("%")[0], session_id);
+          client.copy_cluster(node.id.split("%")[0], session_id); // TODO: ADD index here
           dispatch(removeWindow(node.id));
         }
       }
@@ -252,6 +252,30 @@ function Flow(props) {
     }));
   }
 
+  const isValidConnection = (connection) => {
+    const source = nodes.find(n => n.id == connection.source)
+    const target = nodes.find(n => n.id == connection.target)
+
+    // console.log("isTargetValid", source, target, connection)
+
+    if ( source && target ) {
+      if (source.type == "Note" && target.type == "Projection") {
+        return false
+      }
+      
+      if (source.type == "Search" 
+          && target.type == "Projection" 
+          && connection.targetHandle.split("_").slice(-1)[0] === "control") {
+        return false
+      }
+      // add other conditions if needed
+      return true
+    }
+
+
+    return false
+  }
+
   const onConnect = useCallback((connection, curredges) => {
       create_edge(connection, curredges)
   }, [client]);
@@ -325,6 +349,7 @@ function Flow(props) {
             onNodeDragStop={onNodeDragStop}
             onPaneContextMenu={onPaneContextMenu}
             onSelectionChange={onSelectionChange}
+            isValidConnection={isValidConnection}
           >
             <FlowUIComponents
               fabWrapper={

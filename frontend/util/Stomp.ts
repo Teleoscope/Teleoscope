@@ -1,3 +1,4 @@
+// Stomp.ts
 import { Client } from "@stomp/stompjs";
 import crypto from 'crypto';
 import { createContext, useContext } from "react";
@@ -478,11 +479,12 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Requests to copy cluster to groups in MongoDB.
    */
-  copy_cluster(cluster_id: string, workflow_id: string) {
+  copy_cluster(graph_id: string, workflow_id: string, doclist_index) {
     const body = {
       task: "copy_cluster",
       args: {
-        cluster_id: cluster_id,
+        graph_id: graph_id,
+        doclist_index: doclist_index,
         workflow_id: workflow_id,
       },
     };

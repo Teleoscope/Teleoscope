@@ -70,7 +70,6 @@ const LoginForm = () => {
     if ((event.key === 'Return' || event.key === 'Enter' || event.keyCode === 13) && !passwordError) {
       handleSubmit(event)
     }
-    console.log(password)
   }
 
   const handlePasswordChange = (event) => {

@@ -18,6 +18,7 @@ const FlowWrapper = ({
   onNodeDragStop,
   onPaneContextMenu,
   onSelectionChange,
+  isValidConnection,
   edgeTypes,
   children
 
@@ -48,6 +49,7 @@ const FlowWrapper = ({
       onPaneContextMenu={onPaneContextMenu}
       onSelectionChange={onSelectionChange}
       connectionLineComponent={ConnectionLine}
+      isValidConnection={isValidConnection}
 
     >
       {children}
