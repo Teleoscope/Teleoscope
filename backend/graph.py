@@ -364,7 +364,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     if "rank_slice_length" in parameters:
         rank_slice_length = parameters["rank_slice_length"]
     
-    logging.debug(
+    logging.info(
         f"Updating Teleoscope for database {db.name} and node {teleoscope_node} with "
         f"sources {sources} and controls {controls} and paramaters {parameters}."
     )
@@ -375,7 +375,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     
     ids, all_vectors = utils.get_documents(db.name)
 
-    logging.debug(f"Found {len(ids)} IDs and {len(all_vectors)} vectors.")
+    logging.info(f"Found {len(ids)} IDs and {len(all_vectors)} vectors.")
 
     if len(ids) == 0 or len(all_vectors) == 0:
         raise Exception("Zero-length vector sources. Were vectors downloaded?")
@@ -420,7 +420,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     return teleoscope_node
 
 def rank(control_vecs, ids, vecs):
-    logging.debug(f"There were {len(control_vecs)} control vecs.")
+    logging.info(f"There were {len(control_vecs)} control vecs.")
     vec = np.average(control_vecs, axis=0)
     scores = utils.calculateSimilarity(vecs, vec)
     ranks = utils.rankDocumentsBySimilarity(ids, scores)
@@ -451,7 +451,7 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
     note_vecs = [np.array(note["textVector"]) for note in notes]
     filtered_vecs = filter_vectors_by_oid(oids, ids, all_vectors)
     out_vecs = filtered_vecs + note_vecs
-    logging.debug(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
+    logging.info(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
     return out_vecs
 
 ################################################################################
@@ -460,7 +460,7 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
 
 def update_projection(db: database.Database, projection_node, sources: List, controls: List, parameters):
 
-    logging.debug(
+    logging.info(
         f"Updating Projection for database {db.name} and node {projection_node} with "
         f"sources {sources} and controls {controls} and paramaters {parameters}."
     )
@@ -477,6 +477,7 @@ def update_projection(db: database.Database, projection_node, sources: List, con
             
     if len(controls) > 1:
         c_types = [c["type"] for c in controls]
+        logging.info(f"c_types for update_projection {c_types}.")
         if "Group" not in c_types or "Document" not in c_types:
             logging.info(f"Require group as control input. Returning original projection node.")
             return projection_node 
