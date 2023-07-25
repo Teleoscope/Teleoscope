@@ -1236,17 +1236,23 @@ def remove_edge(*args, database: str, userid: str, workflow_id: str,
 
 
 @app.task
-def add_item(*args, **kwargs):
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
+def add_item(*args, database: str, userid: str, replyTo: str, 
+             uid: str, node_type: str, oid: str, **kwargs) -> ObjectId:
+    """Add graph item."""
 
-    replyTo = kwargs["replyTo"]
+    #---------------------------------------------------------------------------
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle ObjectID kwargs
     userid = ObjectId(str(kwargs["userid"]))
     workflow_id = ObjectId(str(kwargs["workflow_id"]))
 
-    uid  = kwargs["uid"]
-    node_type = kwargs["type"]
-    oid  = kwargs["oid"]
+    # log action to stdout
+    logging.info(f'Adding item type {node_type} to graph for'
+                 f'workflow {workflow_id} by user {userid}.')
+    #---------------------------------------------------------------------------
+
     res = None
 
     match node_type:
@@ -1280,7 +1286,7 @@ def add_item(*args, **kwargs):
             "action": "OID_UID_SYNC",
             "description": "Associate OID with UID."
     })
-    return 
+    return res
 
 
 
