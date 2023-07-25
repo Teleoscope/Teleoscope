@@ -271,6 +271,7 @@ def make_matrix(node_type: schemas.NodeType, oid: ObjectId):
 def update_matrix(oid: ObjectId, node_type: schemas.NodeType, graph_oid: ObjectId):
     return []
 
+
 def update_parameters(db, node, parameters):
     collection = get_collection(db, node["type"])
     res = collection.update_one(node["_id"], {"$set": {"parameters": parameters}})
