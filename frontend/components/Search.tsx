@@ -2,7 +2,7 @@ import { useState } from "react";
 
 // mui
 import SearchIcon from "@mui/icons-material/Search";
-import { Stack, TextField, Box, Typography } from "@mui/material";
+import { Stack, TextField, Box, Typography, Divider } from "@mui/material";
 
 // actions
 import { useDispatch } from "react-redux";
@@ -67,6 +67,7 @@ export default function Search({id, windata, color}) {
           onChange={(e) => handleSetQuery(e)}
         />
       </Stack>
+      <Divider></Divider>
       <ButtonActions inner={[[Count, {}]]}></ButtonActions>
       <Box sx={{ flexGrow: 1, flexDirection: "column" }}>
         <DocumentList

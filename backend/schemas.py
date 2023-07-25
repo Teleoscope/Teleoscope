@@ -254,3 +254,18 @@ def create_edge(id: ObjectId, nodeid: ObjectId, node_type: NodeType):
         "nodeid": nodeid,
         "type": node_type
     }
+
+
+def create_note_content():
+    return {
+        "blocks": [{
+            "key": "835r3",
+            "text": " ",
+            "type": "unstyled",
+            "depth": 0,
+            "inlineStyleRanges": [],
+            "entityRanges": [],
+            "data": {}
+        }],
+        "entityMap": {}
+    }

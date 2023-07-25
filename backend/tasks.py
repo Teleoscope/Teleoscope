@@ -1247,124 +1247,39 @@ def add_item(*args, **kwargs):
     uid  = kwargs["uid"]
     node_type = kwargs["type"]
     oid  = kwargs["oid"]
+    res = None
 
     match node_type:
 
-        case "Group":
-            # check to see if oid is valid 
-            if ObjectId.is_valid(oid): 
-                group = db.groups.find_one({"_id" : ObjectId(str(oid))})  
+        case "Group" | "Search" | "Note":
+            coll = utils.get_collection(db, node_type)
+
+            if ObjectId.is_valid(oid):
+                found = coll.find_one({"_id" : ObjectId(str(oid))})
+                res = found["_id"]
                 
-                if group: # oid is a group
-                    logging.info(f"Group already exists.")
-                    res = group["_id"]
-                
-                else: # oid is a cluster
-                    cluster = db.groups.find_one({"cluster" : [ObjectId(str(oid))]})
-                    
-                    if cluster:
-                        # oid is a cluster thats already copied as a group
-                        logging.info(f"Cluster has already been copied.")
-                        res = cluster["_id"]
-                    else:
-                        # oid is a cluster that has yet to be copied as a group
-                        logging.info(f"Cluster has NOT been copied.")
-                        res = copy_cluster(db=database, userid=userid, workflow_id=workflow_id, cluster_id=oid, transaction_session=transaction_session)
             else:
-                # need to create a group
-                logging.info(f"Group is new.")
-                color = utils.random_color()
-                res = add_group(database=database, color=color, label="New Group", userid=userid, workflow_id=workflow_id, transaction_session=transaction_session)
-
-            utils.message(replyTo, {
-                "oid": str(res),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": "Associate OID with UID."
-            })
-        
-        case "Search":
-            if ObjectId.is_valid(oid): 
-                search = db.searches.find_one({"_id" : ObjectId(str(oid))})  
-                
-                if search: # oid is a search
-                    logging.info(f"Search already exists.")
-                    res = search["_id"]
-            else:
-                # need to create a search
-                logging.info(f"Search is new.")
-                res = add_search(
-                    database=database, 
-                    userid=userid, 
-                    workflow_id=workflow_id, 
-                    query="", 
-                    transaction_session=transaction_session
-                )
-
-            utils.message(replyTo, {
-                "oid": str(res),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": "Associate OID with UID."
-            })
-        
-        case "Search":
-            if ObjectId.is_valid(oid): 
-                search = db.searches.find_one({"_id" : ObjectId(str(oid))})  
-                
-                if search: # oid is a search
-                    logging.info(f"Search already exists.")
-                    res = search["_id"]
-            else:
-                # need to create a group
-                logging.info(f"Search is new.")
-                res = add_search(database=database, userid=userid, workflow_id=workflow_id, query="", transaction_session=transaction_session)
-
-            utils.message(replyTo, {
-                "oid": str(res),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": "Associate OID with UID."
-            })
-
-
-        case "Note":
-            content = {
-                "blocks": [{
-                    "key": "835r3",
-                    "text": " ",
-                    "type": "unstyled",
-                    "depth": 0,
-                    "inlineStyleRanges": [],
-                    "entityRanges": [],
-                    "data": {}
-                }],
-                "entityMap": {}
-            }         
-            res = add_note(
-                database=database, 
-                workflow_id=workflow_id, 
-                label="New Note", 
-                content=content, 
-                userid=userid
-            )
-
-            utils.message(replyTo, {
-                "oid": str(res),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": f"Associated OID for {node_type} with UID."
-            }) 
+                match node_type:
+                    case "Group":
+                        res = add_group(database=database, workflow_id=workflow_id, userid=userid,
+                                        color=utils.random_color(), label="New Group")
+                    case "Search":
+                        res = add_search(database=database, workflow_id=workflow_id, userid=userid,
+                                         query="")
+                    case "Note":
+                        res = add_note(database=database, workflow_id=workflow_id, userid=userid,
+                                       label="New Note", content=schemas.create_note_content())
 
         case "Teleoscope" | "Projection" | "Filter" | "Intersection" | "Exclusion" | "Union":
             node = graph.make_node(db, None, node_type)
+            res = node["_id"]
 
-            utils.message(replyTo, {
-                "oid": str(node["_id"]),
-                "uid": uid,
-                "action": "OID_UID_SYNC",
-                "description": f"Associated OID for {node_type} with UID."
-            })
+    utils.message(replyTo, {
+            "oid": str(res),
+            "uid": uid,
+            "action": "OID_UID_SYNC",
+            "description": "Associate OID with UID."
+    })
     return 
 
 

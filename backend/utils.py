@@ -18,6 +18,7 @@ import unicodedata
 
 # local files
 from . import auth
+from . import schemas
 
 db = "test"
 
@@ -435,3 +436,21 @@ def message(queue: str, msg):
     channel = connection.channel()
     channel.basic_publish(exchange='', routing_key=queue, body=json.dumps(msg))
     logging.info(f"Sent to queue {queue} and with message {json.dumps(msg)}.")
+
+
+def get_collection(db: database.Database, node_type: schemas.NodeType):
+    """Return the collection for a node type.
+    """
+    collection_map = {
+        "Document": "documents",
+        "Group": "groups",
+        "Search": "searches",
+        "Note": "notes",
+        "Projection": "graph",
+        "Intersection": "graph",
+        "Exclusion": "graph",
+        "Union": "graph",
+        "Teleoscope": "graph",
+    }
+
+    return db.get_collection(collection_map[node_type])

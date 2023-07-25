@@ -41,14 +41,14 @@ def make_node(db: database.Database,
         # corresponding node in the graph and make one if it does not exist.
         # If it does exist, update the matrix just in case.
         case "Document" | "Group" | "Search" | "Note":
-            obj = get_collection(db, node_type).find_one({"_id": oid})
+            obj = utils.get_collection(db, node_type).find_one({"_id": oid})
             if obj:
                 if "node" not in obj:
                     node["matrix"] = make_matrix(oid, node_type)
                     node["reference"] = oid
 
                     res = db.graph.insert_one(node)
-                    get_collection(db, node_type).update_one(
+                    utils.get_collection(db, node_type).update_one(
                         {"_id": oid},
                         {"$set": {"node": res.inserted_id}}
                     )
@@ -106,8 +106,8 @@ def make_edge(db: database.Database,
         None
     """
     
-    source = get_collection(db, source_type).find_one(source_oid)
-    target = get_collection(db, target_type).find_one(target_oid)
+    source = utils.get_collection(db, source_type).find_one(source_oid)
+    target = utils.get_collection(db, target_type).find_one(target_oid)
     
     # Ensure the source is from the graph. Target should always be.
     match source_type:
@@ -246,22 +246,7 @@ def graph(db: database.Database, node_oid: ObjectId):
 # Helpers
 ################################################################################
 
-def get_collection(db: database.Database, node_type: schemas.NodeType):
-    """Return the collection for a node type.
-    """
-    collection_map = {
-        "Document": "documents",
-        "Group": "groups",
-        "Search": "searches",
-        "Note": "notes",
-        "Projection": "graph",
-        "Intersection": "graph",
-        "Exclusion": "graph",
-        "Union": "graph",
-        "Teleoscope": "graph",
-    }
 
-    return db.get_collection(collection_map[node_type])
 
 
 def make_matrix(node_type: schemas.NodeType, oid: ObjectId):
@@ -273,7 +258,7 @@ def update_matrix(oid: ObjectId, node_type: schemas.NodeType, graph_oid: ObjectI
 
 
 def update_parameters(db, node, parameters):
-    collection = get_collection(db, node["type"])
+    collection = utils.get_collection(db, node["type"])
     res = collection.update_one(node["_id"], {"$set": {"parameters": parameters}})
     return res
 
