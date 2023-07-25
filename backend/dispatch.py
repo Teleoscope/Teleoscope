@@ -78,15 +78,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "save_UI_state":
                 res = tasks.save_UI_state.signature(args=(), kwargs=kwargs)
 
-            case "add_user_to_session":
-                res = tasks.add_user_to_session.signature(args=(), kwargs=kwargs)
-
-            case "initialize_teleoscope":
-                res = tasks.initialize_teleoscope.signature(args=(), kwargs=kwargs)
-
-            case "initialize_projection":
-                res = tasks.initialize_projection.signature(args=(), kwargs=kwargs)
-
             case "recolor_workflow":
                 res = tasks.recolor_workflow.signature(args=(), kwargs=kwargs)
 
@@ -96,23 +87,11 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "relabel_group":
                 res = tasks.relabel_group.signature(args=(), kwargs=kwargs)
 
-            case "relabel_teleoscope":
-                res = tasks.relabel_teleoscope.signature(args=(), kwargs=kwargs)
-
-            case "relabel_projection":
-                res = tasks.relabel_projection.signature(args=(), kwargs=kwargs)
-
-            case "relabel_session":
-                res = tasks.relabel_session.signature(args=(), kwargs=kwargs)
+            case "relabel_workflow":
+                res = tasks.relabel_workflow.signature(args=(), kwargs=kwargs)
 
             case "remove_group":
                 res = tasks.remove_group.signature(args=(), kwargs=kwargs)
-
-            case "remove_cluster":
-                res = tasks.remove_cluster.signature(args=(), kwargs=kwargs)
-            
-            case "remove_projection":
-                res = tasks.remove_projection.signature(args=(), kwargs=kwargs)
 
             case "remove_teleoscope":
                 res = tasks.remove_teleoscope.signature(args=(), kwargs=kwargs)
@@ -140,9 +119,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
             case "relabel_note":
                 res = tasks.relabel_note.signature(args=(), kwargs=kwargs)
-
-            case "cluster_by_groups":
-                res = tasks.cluster_by_groups.signature(args=(), kwargs=kwargs)
 
             case "snippet":
                 res = tasks.snippet.signature(args=(), kwargs=kwargs)
@@ -179,7 +155,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         try:
             res.apply_async(queue=auth.rabbitmq["task_queue"])
         except:
-            logging.warning(f"Task {task} for args {kwargs} was not valid.")
+            logging.warning(f"Task {task} for kwargs {kwargs} was not valid.")
         return
 
 
