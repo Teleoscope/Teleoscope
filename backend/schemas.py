@@ -249,9 +249,10 @@ def create_node(node_type, workflow_id, oid):
     }
 
 
-def create_edge(id: ObjectId, node_type: NodeType):
+def create_edge(id: ObjectId, nodeid: ObjectId, node_type: NodeType):
     return {
         "id": id,
+        "nodeid": nodeid,
         "type": node_type
     }
 

@@ -87,7 +87,7 @@ def make_edge(db: database.Database, workflow_id: ObjectId,
         {"_id": source["_id"]},
         {
             "$addToSet": {
-                f"edges.output": schemas.create_edge(target_oid, target_type)
+                f"edges.output": schemas.create_edge(target["reference"], target_oid, target_type)
             }
         }
     )
@@ -97,7 +97,7 @@ def make_edge(db: database.Database, workflow_id: ObjectId,
         {"_id": target["_id"]},
         {
             "$addToSet": {
-                f"edges.{edge_type}": schemas.create_edge(source_oid, source_type)
+                f"edges.{edge_type}": schemas.create_edge(source["reference"], source_oid, source_type)
             }
         }
     )
@@ -269,7 +269,7 @@ def update_search(db: database.Database, search_node, parameters):
         ).limit(1000)
     )
     doclist = {
-        "id": search_id, 
+        "id": search_id,
         "nodeid": search_node["_id"], 
         "type": search_node["type"],
         "ranked_documents": [(d["_id"], 1.0) for d in documents]
