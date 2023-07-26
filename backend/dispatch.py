@@ -154,8 +154,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 )
         try:
             res.apply_async(queue=auth.rabbitmq["task_queue"])
-        except:
-            logging.warning(f"Task {task} for kwargs {kwargs} was not valid.")
+        except Exception as e:
+            logging.warning(f"Task {task} for kwargs {kwargs} raised exception {e}.")
         return
 
 
