@@ -73,7 +73,7 @@ export default function DocViewer(props) {
             ))}
           </List> */}
           <div style={{height: "25vh"}}>
-            <DocumentList data={data} pagination={true} loadMore={handleLoadMore}></DocumentList>
+            <DocumentList           data={[{ranked_documents: data}]} pagination={true} loadMore={handleLoadMore}></DocumentList>
           </div>
         </Stack>
       </AccordionDetails>

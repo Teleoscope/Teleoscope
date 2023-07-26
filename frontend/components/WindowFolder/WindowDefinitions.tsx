@@ -137,7 +137,7 @@ export default class WindowDefinitions {
         type:      "Cluster",
         apipath:   "graph",
         nodetype:  WindowNode,
-        title:     function () {return this.type},
+        title:     (d) => `Cluster`,
         color:     () => this.color,
         icon:      () => <FlareIcon sx={this.style()} fontSize="inherit" />,
         component: (w, id, color) => <Group id={id} windata={w} color={color} />,
