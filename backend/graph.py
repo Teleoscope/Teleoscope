@@ -288,7 +288,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
         rank_slice_length = parameters["rank_slice_length"]
     
     logging.info(
-        f"Updating Teleoscope for database {db.name} and node {teleoscope_node["_id"]} with "
+        f"Updating Teleoscope for database {db.name} and node {teleoscope_node['_id']} with "
         f"sources {sources} and controls {controls} and paramaters {parameters}."
     )
 
