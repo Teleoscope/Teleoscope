@@ -1228,7 +1228,7 @@ def remove_edge(*args, database: str, userid: str, workflow_id: str,
 
 
 @app.task
-def add_item(*args, database: str, userid: str, replyTo: str, 
+def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
              uid: str, node_type: str, oid: str, **kwargs) -> ObjectId:
     """Add graph item."""
 
@@ -1237,8 +1237,8 @@ def add_item(*args, database: str, userid: str, replyTo: str,
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle ObjectID kwargs
-    userid = ObjectId(str(kwargs["userid"]))
-    workflow_id = ObjectId(str(kwargs["workflow_id"]))
+    userid = ObjectId(str(userid))
+    workflow_id = ObjectId(str(workflow_id))
 
     # log action to stdout
     logging.info(f'Adding item type {node_type} to graph for'
