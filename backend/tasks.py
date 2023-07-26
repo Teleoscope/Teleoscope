@@ -535,7 +535,7 @@ def add_group(
     # Creating document to be inserted into mongoDB
     obj = schemas.create_group_object(
         color, 
-        documents, 
+        [ObjectId(str(d)) for d in documents],
         label, 
         "Initialize group", 
         userid, 
