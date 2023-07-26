@@ -1248,7 +1248,7 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
     res = None
 
     match node_type:
-        case "Group" | "Search" | "Note":
+        case "Document" | "Group" | "Search" | "Note":
             coll = utils.get_collection(db, node_type)
 
             if ObjectId.is_valid(oid):
