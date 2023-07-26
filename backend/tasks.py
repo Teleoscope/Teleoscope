@@ -1276,7 +1276,7 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
     utils.message(replyTo, {
             "oid": str(res),
             "uid": uid,
-            "nodeid": node["_id"],
+            "nodeid": str(node["_id"]),
             "action": "OID_UID_SYNC",
             "description": "Associate OID with UID."
     })

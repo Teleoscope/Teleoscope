@@ -850,7 +850,7 @@ await Promise.race([checkConnection(), timeout()]);
         workflow_id: workflow_id,
         oid: oid,
         uid: uid,
-        type: type,
+        node_type: type,
         options: options,
         state: state
       },
