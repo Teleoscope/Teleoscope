@@ -230,10 +230,11 @@ def create_note_history_item(userid: ObjectId, label: str, action, content={}):
     }
 
 
-def create_node(node_type, oid):
+def create_node(node_type, workflow_id, oid):
     return {
         "creation_time": datetime.datetime.utcnow(),
         "type": node_type,
+        "workflow": workflow_id,
         "status": "loading",
         "matrix": None,
         "reference": oid,
@@ -248,10 +249,9 @@ def create_node(node_type, oid):
     }
 
 
-def create_edge(id: ObjectId, nodeid: ObjectId, node_type: NodeType):
+def create_edge(id: ObjectId, node_type: NodeType):
     return {
         "id": id,
-        "nodeid": nodeid,
         "type": node_type
     }
 

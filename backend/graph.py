@@ -13,7 +13,7 @@ from . import projection
 # Graph API
 ################################################################################
 
-def make_node(db: database.Database, 
+def make_node(db: database.Database, workflow_id: ObjectId, 
         oid: ObjectId, 
         node_type: schemas.NodeType):
     """Make a node in the graph.
@@ -34,47 +34,17 @@ def make_node(db: database.Database,
     """
     
     # make a default node
-    node = schemas.create_node(node_type, oid)
-
-    match node_type:
-        # If a workspace item can only be a source, check to make sure it has a 
-        # corresponding node in the graph and make one if it does not exist.
-        # If it does exist, update the matrix just in case.
-        case "Document" | "Group" | "Search" | "Note":
-            obj = utils.get_collection(db, node_type).find_one({"_id": oid})
-            if obj:
-                if "node" not in obj:
-                    node["matrix"] = make_matrix(oid, node_type)
-                    node["reference"] = oid
-
-                    res = db.graph.insert_one(node)
-                    utils.get_collection(db, node_type).update_one(
-                        {"_id": oid},
-                        {"$set": {"node": res.inserted_id}}
-                    )
-                    node = db.graph.find_one({"_id": res.inserted_id})
-                    update_matrix(oid, node_type, node["_id"])
-                else:
-                    node = db.graph.find_one({"_id": obj["node"]})
-                    update_matrix(oid, node_type, obj["node"])
-            else:
-                raise Exception(f"Can only make source node for existing source. Tried for {node_type} {oid}.")
-        
-        # If the workspace item is an operation, then it can be a source
-        # or a target. In that case, every instance on the workspace corresponds
-        # to only one graph node, which is created new. Note that there's no point
-        # in updating the matrix because there's no input to the matrix yet.
-        case "Teleoscope" | "Projection" | "Union" | "Intersection" | "Exclusion" | "Subtraction":
-            node["matrix"] = make_matrix(oid, node_type)
-            res = db.graph.insert_one(node)
-            node = db.graph.find_one({"_id": res.inserted_id})
+    node = schemas.create_node(node_type, workflow_id, oid)
+    node["matrix"] = make_matrix(oid, node_type)
+    res = db.graph.insert_one(node)
+    node = db.graph.find_one({"_id": res.inserted_id})
 
     return node
 
 
-def make_edge(db: database.Database,
+def make_edge(db: database.Database, workflow_id: ObjectId,
         source_oid: ObjectId, 
-        source_type: schemas.NodeType, 
+        source_type: schemas.NodeType,
         target_oid: ObjectId, 
         target_type: schemas.NodeType, 
         edge_type: schemas.EdgeType):
@@ -106,19 +76,9 @@ def make_edge(db: database.Database,
         None
     """
     
-    source = utils.get_collection(db, source_type).find_one(source_oid)
-    target = utils.get_collection(db, target_type).find_one(target_oid)
+    source = db.graph.find_one(source_oid)
+    target = db.graph.find_one(target_oid)
     
-    # Ensure the source is from the graph. Target should always be.
-    match source_type:
-        case "Group" | "Document" | "Search" | "Note":
-            if "node" in source:
-                logging.info("Found node in source, retrieving node...")
-                source = db.graph.find_one({"_id": source["node"]})
-            else:
-                logging.info("Did not find node in source, making node...")
-                source = make_node(db, source_oid, source_type)
-
     if (source == None or target == None):
         raise Exception("Source or target node is None.")
     
@@ -127,7 +87,7 @@ def make_edge(db: database.Database,
         {"_id": source["_id"]},
         {
             "$addToSet": {
-                f"edges.output": schemas.create_edge(target_oid, target["_id"], target_type)
+                f"edges.output": schemas.create_edge(target_oid, target_type)
             }
         }
     )
@@ -137,47 +97,24 @@ def make_edge(db: database.Database,
         {"_id": target["_id"]},
         {
             "$addToSet": {
-                f"edges.{edge_type}": schemas.create_edge(source_oid, source["_id"], source_type)
+                f"edges.{edge_type}": schemas.create_edge(source_oid, source_type)
             }
         }
     )
     
     # recalculate the graph from this node on
-    graph(db, target["_id"])
+    graph(db, target_oid)
 
-
-def get_node(db, source_oid, source_type):
-    match source_type:
-        case "Document":
-            document = db.documents.find_one(source_oid)
-            return db.graph.find_one(document["node"])
-        
-        case "Group":
-            group = db.groups.find_one(source_oid)
-            return db.graph.find_one(group["node"])
-
-        case "Search":
-            search = db.searches.find_one(source_oid)
-            return db.graph.find_one(search["node"])
-
-        case "Note":
-            note = db.notes.find_one(source_oid)
-            return db.graph.find_one(note["node"])
-        case _:
-            return db.graph.find_one(source_oid)
 
 def remove_edge(db: database.Database,
         source_oid: ObjectId, 
-        source_type: schemas.NodeType, 
         target_oid: ObjectId, 
-        target_type: schemas.NodeType, 
         edge_type: schemas.EdgeType):
     """Removes an edge from the graph.
     """
-    source = get_node(db, source_oid, source_type)
     
     db.graph.update_one(
-        {"_id": source["_id"]},
+        {"_id": source_oid},
         {
             "$pull": {
                 "edges.output": {"nodeid": target_oid}
@@ -189,7 +126,7 @@ def remove_edge(db: database.Database,
         {"_id": target_oid},
         {
             "$pull": {
-                f"edges.{edge_type}": {"nodeid": source["_id"]}
+                f"edges.{edge_type}": {"nodeid": source_oid}
             }
         }
     )

@@ -489,12 +489,10 @@ def update_search(
     )
     utils.push_history(db, "searches", search_id, history_item)
     
-    # update graph
-    if "node" not in search:
-        node = graph.make_node(db, search_id, "Search")
+    # update all graph items
+    nodes = db.graph.find({"reference": search_id})
+    for node in nodes:
         graph.graph(db, node["_id"])
-    else:
-        graph.graph(db, search["node"])
 
     return search_id
 
@@ -642,14 +640,10 @@ def add_document_to_group(
 
     utils.push_history(db, "groups", group_id, history_item)
     
-    # update graph
-    if "node" not in group:
-        node = graph.make_node(db, group_id, "Group")
+    # update all graph items
+    nodes = db.graph.find({"reference": group_id})
+    for node in nodes:
         graph.graph(db, node["_id"])
-    else:
-        graph.graph(db, group["node"])
-
-    
 
     return None
 
@@ -801,12 +795,10 @@ def remove_document_from_group(*args, **kwargs):
         utils.push_history(db, "groups", group_id, history_item, transaction_session)
         utils.commit_with_retry(transaction_session)
     
-    # update graph
-    if "node" not in group:
-        node = graph.make_node(db, group_id, "Group")
+    # update all graph items
+    nodes = db.graph.find({"reference": group_id})
+    for node in nodes:
         graph.graph(db, node["_id"])
-    else:
-        graph.graph(db, group["node"])
 
         
 @app.task
@@ -1192,12 +1184,12 @@ def make_edge(*args, database: str, userid: str, workflow_id: str,
     #---------------------------------------------------------------------------
     
     source_type = source_node["type"]
-    source_oid  = ObjectId(str(source_node["data"]["oid"]))
+    source_oid  = ObjectId(str(source_node["data"]["nodeid"]))
     
     target_type = target_node["type"]
-    target_oid  = ObjectId(str(target_node["data"]["oid"]))
+    target_oid  = ObjectId(str(target_node["data"]["nodeid"]))
     
-    graph.make_edge(db, source_oid, source_type, target_oid, target_type, edge_type)
+    graph.make_edge(db, workflow_id, source_oid, source_type, target_oid, target_type, edge_type)
     
     return 200
 
@@ -1256,7 +1248,6 @@ def add_item(*args, database: str, userid: str, replyTo: str,
     res = None
 
     match node_type:
-
         case "Group" | "Search" | "Note":
             coll = utils.get_collection(db, node_type)
 
@@ -1276,13 +1267,16 @@ def add_item(*args, database: str, userid: str, replyTo: str,
                         res = add_note(database=database, workflow_id=workflow_id, userid=userid,
                                        label="New Note", content=schemas.create_note_content())
 
+    node = graph.make_node(db, workflow_id, res, node_type)
+
+    match node_type:
         case "Teleoscope" | "Projection" | "Filter" | "Intersection" | "Exclusion" | "Union":
-            node = graph.make_node(db, None, node_type)
             res = node["_id"]
 
     utils.message(replyTo, {
             "oid": str(res),
             "uid": uid,
+            "nodeid": node["_id"],
             "action": "OID_UID_SYNC",
             "description": "Associate OID with UID."
     })

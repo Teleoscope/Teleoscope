@@ -265,6 +265,7 @@ export const Windows = createSlice({
       if (index > -1) {
         const id = `${action.payload.oid}%${action.payload.uid}%${temp[index].data.type.toLowerCase()}`
         temp[index].data.oid = action.payload.oid;
+        temp[index].data.nodeid = action.payload.nodeid;
         temp[index].data.label = id
         temp[index].id = id
       }
