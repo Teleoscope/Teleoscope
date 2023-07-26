@@ -1220,7 +1220,7 @@ def remove_edge(*args, database: str, userid: str, workflow_id: str,
     
     edge_type = edge["targetHandle"].split("_")[-1]
     
-    graph.remove_edge(db, source_oid, source_type, target_oid, target_type, edge_type)
+    graph.remove_edge(db, source_oid, target_oid, edge_type)
     
     return 200
 

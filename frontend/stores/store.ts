@@ -86,10 +86,12 @@ const makeNodeMiddleware = store => next => action => {
         const state = store.getState();
         const edges = state.windows.edges;
         const edge = edges.find(e => e.target == change.id || e.source == change.id)
-        store.dispatch(updateEdges([{
-          id: edge.id,
-          type: "remove"
-        }]))
+        if (edge) {
+          store.dispatch(updateEdges([{
+            id: edge.id,
+            type: "remove"
+          }]))  
+        }
       }
     })
 
