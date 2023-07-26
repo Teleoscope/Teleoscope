@@ -140,7 +140,7 @@ export default class WindowDefinitions {
         title:     function () {return this.type},
         color:     () => this.color,
         icon:      () => <FlareIcon sx={this.style()} fontSize="inherit" />,
-        component: (w, id, color) => <Teleoscopes id={id} windata={w} color={color} />,
+        component: (w, id, color) => <Group id={id} windata={w} color={color} />,
       },
       Projection: {
         tag:       "projection",

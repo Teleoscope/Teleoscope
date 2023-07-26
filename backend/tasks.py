@@ -1250,12 +1250,12 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
     match node_type:
         case "Cluster":
             projection = db.graph.find_one(ObjectId(str(oid)))
-            index = int(kwargs["options"]["index"])
-            ranked_docs = projection["doclists"][index]["ranked_documents"]
+            cluster = projection["doclists"][int(kwargs["options"]["index"])]
+            ranked_docs = cluster["ranked_documents"]
             documents = [d[0] for d in ranked_docs]
 
             res = add_group(database=database, workflow_id=workflow_id, userid=userid,
-                            color=utils.random_color(), label="New Group", documents=documents)
+                            color=utils.random_color(), label=cluster["label"], documents=documents)
             node_type = "Group"
             
         case "Document" | "Group" | "Search" | "Note":

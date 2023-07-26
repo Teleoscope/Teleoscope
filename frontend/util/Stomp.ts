@@ -843,7 +843,7 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Add a workspace item to the interface.
    */
-  add_item(workflow_id: string, oid: string, uid: string, type: string, options = {}, state = {}) {
+  add_item({workflow_id, oid, uid, type, options = {}, state = {}}) {
     const body = {
       task: "add_item",
       args: {
