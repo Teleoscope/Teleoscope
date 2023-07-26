@@ -6,8 +6,10 @@ import { GroupedVirtuoso } from "react-virtuoso";
 import { useSWRHook } from "@/util/swr";
 import { Box } from "@mui/system";
 import { Button, Stack, Typography } from "@mui/material";
-
+import { onDragStart } from "@/util/drag";
 import { HiChevronDoubleDown } from 'react-icons/hi';
+
+
 
 const GroupLabel = ({ index, data, callback}) => {
   const wdefs = useWindowDefinitions();
@@ -19,20 +21,19 @@ const GroupLabel = ({ index, data, callback}) => {
 
   const title = (type) => {
     if (type === "Document") {
-      return item?.title;
+      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Document")}>{item?.title}</span>;
     }
     if (type === "Group") {
-      return item?.history[0].label;
+      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Group")}>{item?.history[0].label}</span>;
     }
     if (type === "Search") {
-      return item?.history[0].query;
+      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Search")}>{item?.history[0].query}</span>;
     }
     if (type === "Note") {
-      return item?.history[0].label;
+      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Note")}>{item?.history[0].label}</span>;
     }
-
     if (type === "Cluster") {
-      return data[index]?.label;
+      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Cluster")}>{data[index]?.label}</span>;
     }
   };
 
@@ -50,7 +51,7 @@ const GroupLabel = ({ index, data, callback}) => {
       }}
     >
       <Stack direction="row" justifyContent="space-between">
-        <Typography>{`${group.type}: ${title(group.type)}`}</Typography>
+        <Typography>{`${group.type}: `}{title(group.type)}</Typography>
         <Button size="small" onClick={(e) => callback(e, index)} sx={{color: "#CCCCCC", width: "1em"}}><HiChevronDoubleDown /></Button>
       </Stack>
     </Box>
