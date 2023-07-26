@@ -291,14 +291,14 @@ def remove_workflow(
     workspace_id = ObjectId(str(workspace_id))
 
     # log action to stdout
-    logging.info(f'Removing workflow {workflow_id} for {userid}.')
+    logging.info(f'Removing workflow {workflow_id} for user {userid}.')
     #---------------------------------------------------------------------------
     
     user_db = utils.connect(db="users")
     user_db.workspaces.update_one(
         {"_id" : workspace_id},
         {
-            "$pop": {
+            "$pull": {
                 "workflows": workflow_id
             }
         }
