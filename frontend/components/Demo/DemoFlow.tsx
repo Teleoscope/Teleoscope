@@ -1,12 +1,12 @@
 import { useState, useCallback, useRef } from "react";
 import { Stack, Typography } from "@mui/material";
 import ReactFlow, {
-    MiniMap,
-    Controls,
-    Background,
-    addEdge,
-    applyEdgeChanges,
-    applyNodeChanges,
+  MiniMap,
+  Controls,
+  Background,
+  addEdge,
+  applyEdgeChanges,
+  applyNodeChanges,
 } from "reactflow";
 import { setSelection } from "@/actions/windows";
 import { useAppDispatch } from "@/util/hooks";
@@ -117,4 +117,4 @@ export default function ExampleFlow(props) {
         </div>
       </Stack>
     );
-  };
+  }

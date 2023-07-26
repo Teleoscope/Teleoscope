@@ -26,4 +26,4 @@ export default function DemoProviders(props) {
         </Provider>
       </SWRConfig>
     );
-  };
+  }
