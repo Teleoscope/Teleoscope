@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import ActiveSessionID from "@/actions/activeSessionID";
-import Windows, { updateEdges, updateSearch } from "@/actions/windows";
+import Windows, { updateEdges, updateNodes, updateSearch } from "@/actions/windows";
 import { makeNode, makeEdge, setColor, relabelSession } from "@/actions/windows";
 import crypto from 'crypto';
 
@@ -77,6 +77,22 @@ const makeNodeMiddleware = store => next => action => {
     const result = next(action);
     action.payload.client.update_search(action.payload.search_id, action.payload.query);
     return result
+  }
+
+  if (action.type === updateNodes.type) {
+    const changes = action.payload.changes;
+    changes.forEach(change => {
+      if (change.type == "remove") {
+        const state = store.getState();
+        const edges = state.windows.edges;
+        const edge = edges.find(e => e.target == change.id || e.source == change.id)
+        store.dispatch(updateEdges([{
+          id: edge.id,
+          type: "remove"
+        }]))
+      }
+    })
+
   }
 
   if (action.type === updateEdges.type) {

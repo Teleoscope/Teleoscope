@@ -188,7 +188,7 @@ export const Windows = createSlice({
       state.edges = action.payload.edges;
     },
     updateNodes: (state, action) => {
-      const changes = action.payload;
+      const changes = action.payload.changes;
       const nodes = applyNodeChanges(changes, state.nodes);
       state.logical_clock = state.logical_clock + 1;
       state.nodes = nodes;

@@ -296,7 +296,7 @@ def remove_workflow(
     
     user_db = utils.connect(db="users")
     user_db.workspaces.update_one(
-        workspace_id,
+        {"_id" : workspace_id},
         {
             "$pop": {
                 "workflows": workflow_id
@@ -350,10 +350,8 @@ def recolor_workflow(
         action="Recolor workflow."
     )
 
-    with transaction_session.start_transaction():
-        utils.push_history(
-            db, "sessions", workflow_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
+    utils.push_history(db, "sessions", workflow_id, history_item)
+        
     return workflow_id
 
 

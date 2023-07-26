@@ -124,7 +124,7 @@ export default function Workflows(props) {
                     />
                   </Stack>
                   <Stack direction="row">
-                    <Deleter callback={() => client.remove_session(session._id)} color={props.color}></Deleter>
+                    <Deleter callback={() => client.remove_workflow(session._id)} color={props.color}></Deleter>
                   </Stack>
                 </Stack>
               </ListItem>

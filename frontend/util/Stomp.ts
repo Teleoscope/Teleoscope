@@ -627,11 +627,11 @@ await Promise.race([checkConnection(), timeout()]);
   }
 
   /**
-     * Removes a session from a user in MongoDB. Does not delete the session.
+     * Removes a workflow from a user in MongoDB. Does not delete the session.
     */
-  remove_session(workflow_id: string) {
+  remove_workflow(workflow_id: string) {
     const body = {
-      task: "remove_session",
+      task: "remove_workflow",
       args: {
         workflow_id: workflow_id,
       },

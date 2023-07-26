@@ -166,7 +166,7 @@ function Flow(props) {
   };
 
   const onNodesChange = useCallback((changes) => {
-    dispatch(updateNodes(changes));
+    dispatch(updateNodes({changes: changes}));
   }, []);
 
   const onEdgesChange = useCallback((changes) => {
