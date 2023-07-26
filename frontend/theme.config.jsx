@@ -3,6 +3,17 @@ import { Flare } from "@mui/icons-material";
 import { BsDiscord } from "react-icons/bs";
 
 export default {
+  useNextSeoProps() {
+    return {
+      titleTemplate: '%s – Teleoscope'
+    }
+  },
+  head: (
+    <>
+      <meta property="og:title" content="Teleoscope" />
+      <meta property="og:description" content="Large document set exploration" />
+    </>
+  ),
   logo: <span>Teleoscope</span>,
   project: {
     link: "https://teleoscope.ca",

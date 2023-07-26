@@ -33,7 +33,7 @@ const GroupLabel = ({ index, data, callback}) => {
       return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Note")}>{item?.history[0].label}</span>;
     }
     if (type === "Cluster") {
-      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Cluster")}>{data[index]?.label}</span>;
+      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Cluster", index)}>{data[index]?.label}</span>;
     }
   };
 
@@ -129,7 +129,7 @@ export default function Itemlist({ onSelect, data, render, loadMore }) {
       endReached={loadMore}
       itemContent={(index) => render(index, reduced_data?.at(index), currentItemIndex, handleSetCurrentItemIndex)}
       scrollerRef={scrollerRef}
-      groupContent={(index) => <GroupLabel callback={handleScroll} index={index} data={data} />}
+      groupContent={(index) => <GroupLabel sourceid={sourceid} callback={handleScroll} index={index} data={data} />}
       // style={{ height: 400 }}
     />
   );

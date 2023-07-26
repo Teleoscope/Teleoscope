@@ -483,7 +483,7 @@ class Projection:
         Adds a cluster to projection
         """
 
-        doclist = { 
+        doclist = {
             "ranked_documents": [(d, 1.0) for d in documents],
             "label": label,
             "color": color,

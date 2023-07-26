@@ -132,6 +132,16 @@ export default class WindowDefinitions {
         icon:      () => <FlareIcon sx={this.style()} fontSize="inherit" />,
         component: (w, id, color) => <Teleoscopes id={id} windata={w} color={color} />,
       },
+      Cluster: {
+        tag:       "cluster",
+        type:      "Cluster",
+        apipath:   "graph",
+        nodetype:  WindowNode,
+        title:     function () {return this.type},
+        color:     () => this.color,
+        icon:      () => <FlareIcon sx={this.style()} fontSize="inherit" />,
+        component: (w, id, color) => <Teleoscopes id={id} windata={w} color={color} />,
+      },
       Projection: {
         tag:       "projection",
         type:      "Projection",

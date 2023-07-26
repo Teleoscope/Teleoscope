@@ -33,6 +33,7 @@ const makeNodeMiddleware = store => next => action => {
       modifiedAction.payload.oid,
       modifiedAction.payload.uid,
       modifiedAction.payload.type,
+      {index: modifiedAction.payload.index},
       updatedState,
     );
     

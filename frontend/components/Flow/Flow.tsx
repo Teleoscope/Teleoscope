@@ -186,6 +186,7 @@ function Flow(props) {
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const id = event.dataTransfer.getData("application/reactflow/id");
       const type = event.dataTransfer.getData("application/reactflow/type");
+      const index = event.dataTransfer.getData("application/reactflow/index");
 
       // check if the dropped element is valid
       if (typeof id === "undefined" || !id) {
@@ -204,7 +205,8 @@ function Flow(props) {
         width : settings.default_document_width,
         height: settings.default_document_height,
         x     : position.x,
-        y     : position.y
+        y     : position.y,
+        index : index 
       }));
     },
     [reactFlowInstance, settings]

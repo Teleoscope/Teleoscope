@@ -411,6 +411,10 @@ def update_projection(db: database.Database, projection_node, sources: List, con
     
     project = projection.Projection(db, sources, controls, rank_slice_length)
     doclists = project.clustering_task()
+    
+    for doclist in doclists:
+        doclist["id"] = projection_node["_id"]
+        doclist["nodeid"] = projection_node["_id"]
         
     projection_node["doclists"] = doclists
     

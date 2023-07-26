@@ -1,4 +1,5 @@
-export const onDragStart = (event, oid, type) => {
+export const onDragStart = (event, oid, type, index=0) => {
+    event.dataTransfer.setData("application/reactflow/index", index);
     event.dataTransfer.setData("application/reactflow/type", type);
     event.dataTransfer.setData("application/reactflow/id", `${oid}`);
     event.dataTransfer.effectAllowed = "move";

@@ -1248,6 +1248,16 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
     res = None
 
     match node_type:
+        case "Cluster":
+            projection = db.graph.find_one(ObjectId(str(oid)))
+            index = int(kwargs["options"]["index"])
+            ranked_docs = projection["doclists"][index]["ranked_documents"]
+            documents = [d[0] for d in ranked_docs]
+
+            res = add_group(database=database, workflow_id=workflow_id, userid=userid,
+                            color=utils.random_color(), label="New Group", documents=documents)
+            node_type = "Group"
+            
         case "Document" | "Group" | "Search" | "Note":
             coll = utils.get_collection(db, node_type)
 
@@ -1266,6 +1276,7 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
                     case "Note":
                         res = add_note(database=database, workflow_id=workflow_id, userid=userid,
                                        label="New Note", content=schemas.create_note_content())
+                    
 
     node = graph.make_node(db, workflow_id, res, node_type)
 
