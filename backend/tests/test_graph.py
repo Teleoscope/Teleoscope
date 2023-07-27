@@ -187,7 +187,8 @@ def test_make_edge_from_document_to_teleoscope():
     target_node = graph.make_node(db, workflow["_id"],None, "Teleoscope")
 
     graph.make_edge(
-        db=db, 
+        db=db,
+        workflow_id=workflow["_id"],
         source_oid=document_id,
         source_type="Document",
         target_oid=target_node["_id"],
@@ -223,6 +224,7 @@ def test_make_edge_from_group_to_teleoscope():
 
     graph.make_edge(
         db=db,
+        workflow_id=workflow["_id"],
         source_oid=group_id,
         source_type="Group",
         target_oid=target_node["_id"],
@@ -303,6 +305,7 @@ def test_search_as_source_group_as_control_teleoscope():
 
     graph.make_edge(
         db=db,
+        workflow_id=workflow["_id"],
         source_oid=group_id,
         source_type="Group",
         target_oid=target_node["_id"],
@@ -343,6 +346,7 @@ def test_search_as_source_group_as_control_reverse_order_teleoscope():
 
     graph.make_edge(
         db=db,
+        workflow_id=workflow["_id"],
         source_oid=group_id,
         source_type="Group",
         target_oid=target_node["_id"],
@@ -402,6 +406,7 @@ def test_search_as_source_group_and_documents_as_control_reverse_order_teleoscop
 
     graph.make_edge(
         db=db,
+        workflow_id=workflow["_id"],
         source_oid=group_id,
         source_type="Group",
         target_oid=target_node["_id"],
@@ -449,6 +454,7 @@ def test_make_edge_from_group_to_projection():
 
     graph.make_edge(
         db=db,
+        workflow_id=workflow["_id"],
         source_oid=group_id,
         source_type="Group",
         target_oid=target_node["_id"],
@@ -484,6 +490,7 @@ def test_make_edge_from_group_and_document_to_projection():
 
     graph.make_edge(
         db=db,
+        workflow_id=workflow["_id"],
         source_oid=group_id,
         source_type="Group",
         target_oid=target_node["_id"],
@@ -493,6 +500,7 @@ def test_make_edge_from_group_and_document_to_projection():
 
     graph.make_edge(
         db=db,
+        workflow_id=workflow["_id"],
         source_oid=document_id,
         source_type="Document",
         target_oid=target_node["_id"],
@@ -528,6 +536,7 @@ def test_search_as_source_group_as_control_projection():
 
     graph.make_edge(
         db=db,
+        workflow_id=workflow["_id"],
         source_oid=group_id,
         source_type="Group",
         target_oid=target_node["_id"],
