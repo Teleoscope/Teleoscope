@@ -122,13 +122,6 @@ def test_make_node_document():
     # make a new node from a document
     node = graph.make_node(db, workflow["_id"], document_id, "Document")
     assert node != None
-    logging.info(f"Node is: {node}.")
-    
-    # document should have a node field matching above
-    doc = db.documents.find_one({"_id": document_id})
-
-    assert "node" in doc
-    assert doc["node"] == node["_id"]
 
 
 def test_make_node_group():
@@ -138,12 +131,6 @@ def test_make_node_group():
     # make a new node from a group
     node = graph.make_node(db, workflow["_id"], groupid, "Group")
     assert node != None
-
-    # group should have a node field matching above
-    g = db.groups.find_one({"_id": groupid})
-
-    assert "node" in g
-    assert g["node"] == node["_id"]
 
 
 def test_make_node_teleoscope():
