@@ -1007,7 +1007,7 @@ def make_edge(*args, database: str, userid: str, workflow_id: str,
     
     graph.make_edge(db, workflow_id, source_oid, source_type, target_oid, target_type, edge_type)
 
-    workflow = db.workflows.find_one({"_id": workflow_id})
+    workflow = db.sessions.find_one({"_id": workflow_id})
     history_item = utils.update_history(
         item=workflow["history"][0],
         action=f"Add edge from {source_type} {source_oid} to {target_type} {target_oid} {edge_type}.",
@@ -1050,7 +1050,7 @@ def remove_edge(*args, database: str, userid: str, workflow_id: str,
     graph.remove_edge(db, source_oid, target_oid, edge_type)
 
 
-    workflow = db.workflows.find_one({"_id": workflow_id})
+    workflow = db.sessions.find_one({"_id": workflow_id})
     history_item = utils.update_history(
         item=workflow["history"][0],
         action=f"Remove edge from {source_type} {source_oid} to {target_type} {target_oid} {edge_type}.",
@@ -1127,7 +1127,7 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
             "description": "Associate OID with UID."
     })
 
-    workflow = db.workflows.find_one({"_id": workflow_id})
+    workflow = db.sessions.find_one({"_id": workflow_id})
     history_item = utils.update_history(
         item=workflow["history"][0],
         action=f"Add item {node_type} and with oid {oid} and uid {uid}.",
