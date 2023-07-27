@@ -536,9 +536,6 @@ def test_search_as_source_group_as_control_projection():
     )
 
     # Grab the nodes for the documents we just made
-    search_updated = db.searches.find_one(search_id)
-    group_updated = db.groups.find_one(group_id)
-    
     control_node_updated = db.graph.find_one({"reference": group_id})
     source_node_updated = db.graph.find_one({"reference": search_id})
     target_node_updated = db.graph.find_one(target_node["_id"])
