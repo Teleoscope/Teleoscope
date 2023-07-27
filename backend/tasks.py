@@ -777,7 +777,7 @@ def remove_group(*args, database: str, group_id: str, workflow_id: str, userid: 
 
 
 @app.task
-def remove_document_from_group(*args, database: str, **kwargs):
+def remove_document_from_group(*args, database: str, group_id: str, document_id: str, userid: str, **kwargs):
     """
     Remove the document_id from the included_documents of the specified group_id.
 
@@ -819,42 +819,6 @@ def remove_document_from_group(*args, database: str, **kwargs):
     for node in nodes:
         graph.graph(db, node["_id"])
 
-    return
-
-
-@app.task
-def update_group_label(*args, database: str, label: str, userid: str, 
-                       group_id: str, **kwargs):
-    """
-    Update the label of the specified group_id.
-
-    kwargs:
-        group_id: (int, represents ObjectId for a group)
-        label: (string, arbitrary)
-    """    
-    
-    #---------------------------------------------------------------------------
-    # connect to database
-    transaction_session, db = utils.create_transaction_session(db=database)
-    
-    # handle ObjectID kwargs
-    group_id = ObjectId(str(group_id))
-
-    # log action to stdout
-    logging.info(f'Update group {group_id} label to {label} '
-                 f'user {userid}.')
-
-    #---------------------------------------------------------------------------
-
-    group = db.groups.find_one({'_id': group_id})
-
-    history_item = utils.update_history(
-        item=group["history"][0],
-        action="Update group label.",
-        userid=userid
-    )
-
-    utils.push_history(db, "groups", group_id, history_item)
     return
 
 
@@ -1388,7 +1352,7 @@ def create_child(*args, **kwargs):
     
     
 @app.task
-def mark(*args, **kwargs):
+def mark(*args, database: str, **kwargs):
     database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
     

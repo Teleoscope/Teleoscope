@@ -98,9 +98,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "remove_document_from_group":
                 res = tasks.remove_document_from_group.signature(args=(), kwargs=kwargs)
 
-            case "update_group_label":
-                res = tasks.update_group_label.signature(args=(), kwargs=kwargs)
-
             case "add_note":
                 res = tasks.add_note.signature(args=(), kwargs=kwargs)
 
