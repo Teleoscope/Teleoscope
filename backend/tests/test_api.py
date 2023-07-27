@@ -163,7 +163,7 @@ def test_add_contributor():
     res = tasks.add_contributor(
         workspace_id=workspace["_id"], 
         userid=user["_id"], 
-        contributor=contributor["_id"]
+        contributor=contributor["username"]
     )
     assert res != None
     
@@ -177,7 +177,7 @@ def test_update_search():
         query="test2"
     )
     updated_search = db.searches.find_one({"_id": search["_id"]})
-    assert updated_search["query"] == "test2"
+    assert updated_search["history"][0]["query"] == "test2"
 
 
 def test_save_UI_state():
@@ -227,7 +227,7 @@ def test_relabel_workflow():
         workflow_id=workflow["_id"],
         userid=user["_id"],
         label="New label",
-        relabeled_workflow_id=workflow2
+        relabeled_workflow_id=workflow2["_id"]
     )
 
 def test_copy_group():
@@ -263,6 +263,7 @@ def test_relabel_note():
 def test_remove_contributor():
     tasks.remove_contributor(
         database="test",
+        workspace_id=workspace["_id"],
         workflow_id=workflow["_id"],
         userid=user["_id"],
         contributor_id=contributor["_id"]

@@ -714,6 +714,7 @@ def copy_group(*args, database: str, userid: str, workflow_id: str,
 
     # create a new group for the session
     group_new_id = add_group(
+        database=database,
         userid=userid, 
         label=label, 
         color=color, 

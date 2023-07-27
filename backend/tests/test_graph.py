@@ -120,7 +120,7 @@ def test_make_node_document():
     document_id = documents[0]["_id"]
     
     # make a new node from a document
-    node = graph.make_node(db, document_id, "Document")
+    node = graph.make_node(db, workflow["_id"], document_id, "Document")
     assert node != None
     logging.info(f"Node is: {node}.")
     
@@ -136,7 +136,7 @@ def test_make_node_group():
     groupid = group["_id"]
 
     # make a new node from a group
-    node = graph.make_node(db, groupid, "Group")
+    node = graph.make_node(db, workflow["_id"], groupid, "Group")
     assert node != None
 
     # group should have a node field matching above
@@ -148,31 +148,31 @@ def test_make_node_group():
 
 def test_make_node_teleoscope():
     global db
-    node = graph.make_node(db, None, "Teleoscope")
+    node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
     assert node != None
 
 
 def test_make_node_union():
     global db
-    node = graph.make_node(db, None, "Union")
+    node = graph.make_node(db, workflow["_id"], None, "Union")
     assert node != None
 
 
 def test_make_node_intersection():
     global db
-    node = graph.make_node(db, None, "Intersection")
+    node = graph.make_node(db, workflow["_id"], None, "Intersection")
     assert node != None
 
 
 def test_make_node_exclusion():
     global db
-    node = graph.make_node(db, None, "Exclusion")
+    node = graph.make_node(db, workflow["_id"], None, "Exclusion")
     assert node != None
 
 
 def test_make_node_subtraction():
     global db
-    node = graph.make_node(db, None, "Subtraction")
+    node = graph.make_node(db, workflow["_id"], None, "Subtraction")
     assert node != None
 
 
@@ -184,7 +184,7 @@ def test_make_edge_from_document_to_teleoscope():
     global db, documents
     document_id = documents[0]["_id"]
 
-    target_node = graph.make_node(db, None, "Teleoscope")
+    target_node = graph.make_node(db, workflow["_id"],None, "Teleoscope")
 
     graph.make_edge(
         db=db, 
@@ -219,7 +219,7 @@ def test_make_edge_from_group_to_teleoscope():
     global db, group
     group_id = group["_id"]
 
-    target_node = graph.make_node(db, None, "Teleoscope")
+    target_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
 
     graph.make_edge(
         db=db,
@@ -254,7 +254,7 @@ def test_make_edge_from_search_to_teleoscope():
     global db, search
     search_id = search["_id"]
 
-    target_node = graph.make_node(db, None, "Teleoscope")
+    target_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
 
     graph.make_edge(
         db=db, 
@@ -290,7 +290,7 @@ def test_search_as_source_group_as_control_teleoscope():
     search_id = search["_id"]
     group_id = group["_id"]
 
-    target_node = graph.make_node(db, None, "Teleoscope")
+    target_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
 
     graph.make_edge(
         db=db, 
@@ -339,7 +339,7 @@ def test_search_as_source_group_as_control_reverse_order_teleoscope():
     search_id = search["_id"]
     group_id = group["_id"]
 
-    target_node = graph.make_node(db, None, "Teleoscope")
+    target_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
 
     graph.make_edge(
         db=db,
@@ -388,7 +388,7 @@ def test_search_as_source_group_and_documents_as_control_reverse_order_teleoscop
     search_id = search["_id"]
     group_id = group["_id"]
 
-    target_node = graph.make_node(db, None, "Teleoscope")
+    target_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
 
     for document in documents:
         graph.make_edge(
@@ -445,7 +445,7 @@ def test_make_edge_from_group_to_projection():
     global db, group
     group_id = group["_id"]
 
-    target_node = graph.make_node(db, None, "Projection")
+    target_node = graph.make_node(db, workflow["_id"], None, "Projection")
 
     graph.make_edge(
         db=db,
@@ -480,7 +480,7 @@ def test_make_edge_from_group_and_document_to_projection():
     group_id = group["_id"]
     document_id = documents[0]["_id"]
 
-    target_node = graph.make_node(db, None, "Projection")
+    target_node = graph.make_node(db, workflow["_id"], None, "Projection")
 
     graph.make_edge(
         db=db,
@@ -524,7 +524,7 @@ def test_search_as_source_group_as_control_projection():
     search_id = search["_id"]
     group_id = group["_id"]
 
-    target_node = graph.make_node(db, None, "Projection")
+    target_node = graph.make_node(db, workflow["_id"], None, "Projection")
 
     graph.make_edge(
         db=db,
