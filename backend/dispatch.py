@@ -5,7 +5,6 @@ import logging
 import os
 
 # installed modules
-from celery import chain
 from celery import bootsteps
 from kombu import Consumer, Exchange, Queue
 
@@ -66,9 +65,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "mark":
                 res = tasks.mark.signature(args=(), kwargs=kwargs)
 
-            case "copy_cluster":
-                res = tasks.copy_cluster.signature(args=(), kwargs=kwargs)
-
             case "initialize_workflow":
                 res = tasks.initialize_workflow.signature(args=(), kwargs=kwargs)
                 
@@ -92,9 +88,6 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
             case "remove_group":
                 res = tasks.remove_group.signature(args=(), kwargs=kwargs)
-
-            case "remove_teleoscope":
-                res = tasks.remove_teleoscope.signature(args=(), kwargs=kwargs)
 
             case "copy_group":
                 res = tasks.copy_group.signature(args=(), kwargs=kwargs)
@@ -138,20 +131,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "update_search":
                 res = tasks.update_search.signature(args=(), kwargs=kwargs)
 
-            # TODO: refactor to be like above syntax when we're sure that everything
-            # has all arguments
             case "add_group":
-                documents = []
-                if "documents" in kwargs:
-                    documents = kwargs["documents"]
-
-                res = tasks.add_group.signature(
-                    args=(),
-                    kwargs={
-                        **kwargs,
-                        "documents": documents,
-                    },
-                )
+                res = tasks.add_group.signature(args=(), kwargs=kwargs)
         try:
             res.apply_async(queue=auth.rabbitmq["task_queue"])
         except Exception as e:

@@ -777,7 +777,7 @@ def remove_group(*args, database: str, group_id: str, workflow_id: str, userid: 
 
 
 @app.task
-def remove_document_from_group(*args, **kwargs):
+def remove_document_from_group(*args, database: str, **kwargs):
     """
     Remove the document_id from the included_documents of the specified group_id.
 
@@ -785,35 +785,46 @@ def remove_document_from_group(*args, **kwargs):
         group_id (int, represents ObjectId for a group)
         document_id (string, arbitrary)
     """
-    database = kwargs["database"]
+
+    #---------------------------------------------------------------------------
+    # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    # handle kwargs
-    group_id = ObjectId(str(kwargs["group_id"]))
-    document_id = ObjectId(str(kwargs["document_id"]))
+    # handle ObjectID kwargs
+    group_id = ObjectId(str(group_id))
+    document_id = ObjectId(str(document_id))
+    userid = ObjectId(str(userid))
+
+    # log action to stdout
+    logging.info(f'Removing document {document_id} from group {group_id} for '
+                 f'user {userid}.')
+    #---------------------------------------------------------------------------
 
     group = db.groups.find_one({'_id': group_id})
-    if not group:
-        logging.info(f"Warning: group with id {group_id} not found.")
-        raise Exception(f"group with id {group_id} not found")
+    docs = group["history"][0]["included_documents"]
 
-    history_item = group["history"][0]
-    history_item["timestamp"] = datetime.datetime.utcnow()
-    history_item["included_documents"].remove(document_id)
-    history_item["action"] = "Remove document from group"
+    docs.remove(document_id)
 
-    with transaction_session.start_transaction():
-        utils.push_history(db, "groups", group_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
-    
+    history_item = utils.update_history(
+        item=group["history"][0],
+        userid=userid,
+        oid=group_id,
+        included_documents=docs,
+        action="Remove group."
+    )
+    utils.push_history(db, "groups", group_id, history_item)
+
     # update all graph items
     nodes = db.graph.find({"reference": group_id})
     for node in nodes:
         graph.graph(db, node["_id"])
 
-        
+    return
+
+
 @app.task
-def update_group_label(*args, **kwargs):
+def update_group_label(*args, database: str, label: str, userid: str, 
+                       group_id: str, **kwargs):
     """
     Update the label of the specified group_id.
 
@@ -821,201 +832,30 @@ def update_group_label(*args, **kwargs):
         group_id: (int, represents ObjectId for a group)
         label: (string, arbitrary)
     """    
-    database = kwargs["database"]
+    
+    #---------------------------------------------------------------------------
+    # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    # handle kwargs
-    group_id = ObjectId(kwargs["group_id"])
+    # handle ObjectID kwargs
+    group_id = ObjectId(str(group_id))
+
+    # log action to stdout
+    logging.info(f'Update group {group_id} label to {label} '
+                 f'user {userid}.')
+
+    #---------------------------------------------------------------------------
+
     group = db.groups.find_one({'_id': group_id})
-    if not group:
-        logging.info(f"Warning: group with id {group_id} not found.")
-        raise Exception(f"group with id {group_id} not found")
-    
 
-    history_item = group["history_item"][0]
-    history_item["timestamp"] = datetime.datetime.utcnow()
-    history_item["action"] = "Update group label"
+    history_item = utils.update_history(
+        item=group["history"][0],
+        action="Update group label.",
+        userid=userid
+    )
 
-    with transaction_session.start_transaction():
-        utils.push_history(db, "groups", group_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
-
-
-################################################################################
-# Projection tasks
-################################################################################
-
-@app.task
-def copy_cluster(*args, **kwargs):
-    """
-    copies a cluster to a group
-    
-    kwargs:
-        cluster_id: (str) the cluster to copy
-        workflow_id: (str) the session to copy to
-        user_id: (str) the user commiting the action
-        
-    """
-
-        
-    workflow_id = ObjectId(str(kwargs["workflow_id"]))
-    user_id = ObjectId(str(kwargs["userid"]))
-    
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    
-    cluster = db.clusters.find_one({"_id": cluster_id })
-    session = db.sessions.find_one({"_id": workflow_id })
-
-    obj = schemas.create_group_object(
-        cluster["history"][0]["color"], 
-        cluster["history"][0]["included_documents"], 
-        cluster["history"][0]["label"], 
-        "Copy cluster", 
-        user_id, 
-        cluster["history"][0]["description"], 
-        workflow_id,
-        cluster_id=[cluster_id])
-
-    
-    group_res = db.groups.insert_one(obj)
-    history_item = session["history"][0]
-    history_item["groups"] = [*history_item["groups"], group_res.inserted_id]
-    utils.push_history(db, "sessions", workflow_id, history_item)
-
-    return group_res.inserted_id
-
-
-################################################################################
-# Teleoscope tasks
-################################################################################
-
-@app.task
-def initialize_teleoscope(*args, **kwargs):
-    """
-    initialize_teleoscope:
-    Performs a text query on db.documents text index.
-    If the query string already exists in the teleoscopes collection, returns existing reddit_ids.
-    Otherwise, adds the query to the teleoscopes collection and performs a text query the results of which are added to the
-    teleoscopes collection and returned.
-    
-    kwargs:
-        workflow_id: string
-        label: string (optional)
-    """
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    
-    # handle kwargs
-    workflow_id = ObjectId(str(kwargs["workflow_id"]))
-    userid = ObjectId(str(kwargs["userid"]))
-    del kwargs["workflow_id"]
-    del kwargs["userid"]
-
-    teleoscope = schemas.create_teleoscope_object(workflow_id, userid, **kwargs)
-    
-    teleoscope_result = db.teleoscopes.insert_one(teleoscope)
-
-    logging.info(f"New teleoscope id: {teleoscope_result.inserted_id}.")
-
-    ui_session = db.sessions.find_one({'_id': workflow_id})
-    history_item = ui_session["history"][0]
-    history_item["timestamp"] = datetime.datetime.utcnow()
-    history_item["action"] = "Initialize Teleoscope"
-    history_item["oid"] = teleoscope_result.inserted_id
-    history_item["user"] = userid
-
-    # associate the newly created teleoscope with correct session
-    utils.push_history(db, "sessions", ObjectId(str(workflow_id)), history_item)
-    return teleoscope_result.inserted_id
-
-
-@app.task
-def relabel_teleoscope(*args, **kwargs):
-    """
-    Relabels a teleoscope.
-    """
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-
-    teleoscope_id = ObjectId(str(kwargs["teleoscope_id"]))
-    userid = ObjectId(str(kwargs["userid"]))
-    label = kwargs["label"]
-
-    session = db.teleoscopes.find_one({"_id": teleoscope_id})
-    history_item = session["history"][0]
-    history_item["label"] = label
-    history_item["user"] = userid
-
-
-    utils.push_history(db, "teleoscopes", teleoscope_id, history_item)
- 
-    return 200
-
-
-@app.task
-def save_teleoscope_state(*args, **kwargs):
-    """
-    Save the current state of a teleoscope.
-    
-    input:
-        _id (int, represents ObjectId for a teleoscope)
-        history_item (Dict)
-    """
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    
-    # handle args
-    history_item = args[0]["history_item"]
-    _id = str(args[0]["_id"])
-
-    logging.info(f'Saving state for teleoscope {_id}.')
-    obj_id = ObjectId(_id)
-
-    # check if teleoscope id is valid, if not, raise exception
-    if not db.teleoscopes.find_one({"_id": obj_id}):
-        logging.info(f"Teleoscope {_id} not found.")
-        raise Exception("Teleoscope not found")
-
-    history_item["timestamp"] = datetime.datetime.utcnow()
-    history_item["action"] = "Save Teleoscope state"
-
-    with transaction_session.start_transaction():
-        utils.push_history(db, "teleoscopes", obj_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
-
-
-
-@app.task
-def remove_teleoscope(*args, **kwargs):
-    """
-    Delete a teleoscope (not the documents within) from the session. Teleoscope is not deleted from the whole system, just the session.
-    kwargs:
-        teleoscope_id: ObjectId
-        workflow_id: ObjectId
-        user_id: ObjectId
-    """
-    teleoscope_id = ObjectId(str(kwargs["teleoscope_id"]))
-    workflow_id = ObjectId(str(kwargs["workflow_id"]))
-    user_id = ObjectId(str(kwargs["userid"]))
-
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    
-    session = db.sessions.find_one({'_id': workflow_id})        
-    history_item = session["history"][0]
-
-    history_item["timestamp"] = datetime.datetime.utcnow()        
-    history_item["action"] = f"Remove teleoscope from session"
-    history_item["user"] = user_id
-    history_item["oid"] = teleoscope_id
-
-    db.teleoscopes.update_one({"_id": teleoscope_id}, {"$pull": {"sessions": workflow_id}})
-    
-    utils.push_history(db, "sessions", workflow_id, history_item)
-    return teleoscope_id
-
-
+    utils.push_history(db, "groups", group_id, history_item)
+    return
 
 
 ################################################################################
