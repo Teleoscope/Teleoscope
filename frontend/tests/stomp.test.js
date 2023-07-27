@@ -17,7 +17,6 @@ import {
 
 class DummyClient {
   publish(msg) {
-    console.log(msg);
     return msg;
   }
 }

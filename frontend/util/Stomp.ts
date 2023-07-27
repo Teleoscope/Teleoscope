@@ -52,9 +52,7 @@ export class Stomp {
    * @returns Stomp
    */
   public static getInstance({userid = undefined}): Stomp {
-    console.log(`New instance of stomp requested with userid ${userid}.`)
     if (!Stomp.stomp) {
-      console.log(`Creating new Stomp object. This should only be called once.`)
       Stomp.stomp = new Stomp({userid: userid});
       if (userid && !Stomp.stomp.client) {
         Stomp.stomp.client_init()
@@ -189,9 +187,9 @@ await Promise.race([checkConnection(), timeout()]);
    * Initializes the client (there should only be one)
    */
   client_init() {
-    console.log(`Initializing Stomp client for user ${this.userId}.`);
+    // console.log(`Initializing Stomp client for user ${this.userId}.`);
     if (this.userId == null || this.client) {
-      console.log(`Failed to initialize Stomp client for user ${this.userId}.`);
+      // console.log(`Failed to initialize Stomp client for user ${this.userId}.`);
       return;
     }
 
@@ -203,7 +201,7 @@ await Promise.race([checkConnection(), timeout()]);
         host: process.env.NEXT_PUBLIC_RABBITMQ_VHOST!,
       },
       debug: function (str) {
-        console.log("STOMP Debug:", str);
+        // console.log("STOMP Debug:", str);
       },
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
@@ -211,19 +209,19 @@ await Promise.race([checkConnection(), timeout()]);
     });    
 
     this.client.onDisconnect = (frame) => {
-      console.log("Disconnected", frame);
+      // console.log("Disconnected", frame);
     }
 
     this.client.onWebSocketClose = (event) => {
-      console.log("Connection closed.", event)
+      // console.log("Connection closed.", event)
     }
   
     this.client.onWebSocketError = (event) => {
-      console.log("Websocket error.", event)
+      // console.log("Websocket error.", event)
     }
 
     this.client.onUnhandledFrame = (frame) => {
-      console.log("Unhandled frame.", frame)
+      // console.log("Unhandled frame.", frame)
     }
 
     /**
@@ -251,7 +249,7 @@ await Promise.race([checkConnection(), timeout()]);
 
       }, headers);
       
-      console.log("Connected to RabbitMQ webSTOMP server.", frame);
+      // console.log("Connected to RabbitMQ webSTOMP server.", frame);
     };
 
     /**
@@ -262,8 +260,8 @@ await Promise.race([checkConnection(), timeout()]);
       // Bad login/passcode typically will cause an error
       // Complaint brokers will set `message` header with a brief message. Body may contain details.
       // Compliant brokers will terminate the connection after any error
-      console.log("Broker reported error: " + frame.headers["message"]);
-      console.log("Additional details: " + frame.body);
+      // console.log("Broker reported error: " + frame.headers["message"]);
+      // console.log("Additional details: " + frame.body);
     };
 
     this.client.activate();
@@ -306,9 +304,9 @@ await Promise.race([checkConnection(), timeout()]);
         headers: headers,
         body: JSON.stringify(body),
       });
-      console.log("Sent from Stomp: ", body);
+      // console.log("Sent from Stomp: ", body);
     } catch(err) {
-      console.log("Error in sending:", err, body);
+      // console.log("Error in sending:", err, body);
     }
     return body;
   

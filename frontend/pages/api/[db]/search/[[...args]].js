@@ -6,8 +6,6 @@ export default async (req, res) => {
   const db = await client.db(req.query.db);
   const { args } = req.query;
 
-  console.log
-
   var queries = [];
   if (!args) {
     queries = await db

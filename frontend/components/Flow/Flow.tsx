@@ -258,8 +258,6 @@ function Flow(props) {
     const source = nodes.find(n => n.id == connection.source)
     const target = nodes.find(n => n.id == connection.target)
 
-    // console.log("isTargetValid", source, target, connection)
-
     if ( source && target ) {
       if (source.type == "Note" && target.type == "Projection") {
         return false

@@ -14,12 +14,14 @@ export default {
       <meta property="og:description" content="Large document set exploration" />
     </>
   ),
+  editLink: false,
   logo: <span>Teleoscope</span>,
   project: {
     link: "https://teleoscope.ca",
     icon: <Flare />,
     docsRepositoryBase: "https://github.com/Teleoscope/Teleoscope/"
   },
+  docsRepositoryBase: "https://github.com/Teleoscope/Teleoscope/",
   primaryHue: 268,
   chat: {
     link: "https://discord.gg/3PyFEybpr9",

@@ -58,9 +58,7 @@ export default function Note(props) {
     debouncedSave(e);
   };
 
-  const handleFocus = () => {
-    console.log("focused on Note");
-  };
+  
 
   const focusEditor = () => {
     editor.current.focus();
@@ -88,7 +86,6 @@ export default function Note(props) {
             ref={editor}
             editorState={editorState}
             onBlur={handleBlur}
-            onFocus={handleFocus}
             onChange={handleOnChange}
             // placeholder={document ? document["title"] : props.id}
           />
