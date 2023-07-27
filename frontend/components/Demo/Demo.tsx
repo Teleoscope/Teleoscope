@@ -30,11 +30,14 @@ import {
   taking_doc,
   taking_teleoscope,
 } from "@/components/Demo/demoTeleoscopes";
+import WindowDefinitions from "../WindowFolder/WindowDefinitions";
 // API fetcher for SWR global config
 //const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
-const nodeTypes = { windowNode: WindowNode };
 
+const wdefs = new WindowDefinitions({settings: {color: "#D3D3D3"}})
+const nodeTypes = { windowNode: WindowNode, ...wdefs.nodeTypeDefs()}
+  
 export default function Demo(props) {
   const mySWR = new SWR("aita");
   const client = Stomp.getFakeClient();
@@ -43,7 +46,7 @@ export default function Demo(props) {
 
   const searchNode = {
     id: "%search",
-    type: "windowNode",
+    type: "Search",
     position: {
       x: 25,
       y: 25,
@@ -292,7 +295,7 @@ export default function Demo(props) {
 
   const groupNode = {
     id: "%group",
-    type: "windowNode",
+    type: "Group",
     position: {
       x: 25,
       y: 25,
@@ -395,7 +398,7 @@ export default function Demo(props) {
 
   const [teleoscopeNode, setTeleoscopeNode] = React.useState({
     id: "%teleoscope",
-    type: "windowNode",
+    type: "Teleoscope",
     position: {
       x: 425,
       y: 25,
@@ -442,7 +445,7 @@ export default function Demo(props) {
 
   const doc1 = {
     id: "637f6542b4b0ff51b395d612%document",
-    type: "windowNode",
+    type: "Document",
     position: {
       x: 25,
       y: 25,
@@ -475,7 +478,7 @@ export default function Demo(props) {
 
   const doc2 = {
     id: "637f7e826bc2573503502eb5%document",
-    type: "windowNode",
+    type: "Document",
     position: {
       x: 25,
       y: 200,
@@ -569,16 +572,6 @@ export default function Demo(props) {
       ...update,
     }));
 
-    // temp["demodata"] = {
-    //   data: blocking_teleoscope,
-    //   document: blocking_teleoscope
-    // }
-    // setTeleoscopeNode(temp)
-    // blocking_teleoscope
-    // account_fights_teleoscope
-    // taking_teleoscope
-    // taking_doc
-    // blocking_doc
   };
 
   if (props.type == "Teleoscope") {

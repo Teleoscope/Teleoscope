@@ -4,8 +4,13 @@ Teleoscope is a system for exploring large document sets by building machine lea
 
 
 
+## See how it works
+import YouTubeEmbed from "@/components/YouTube";
+export function MakeYouTube() {
+  return <YouTubeEmbed />;
+}
 
-
+<MakeYouTube />
 
 
 ## Tutorial
@@ -95,7 +100,15 @@ There are also reset controls <AllOutIcon /> on the left and a minimap <MapIcon 
 
 Keyword searches, like above, are great, but they don't get you documents that are **conceptually** similar but have different keywords. With Teleoscope, you search by _example_. The big idea with the Teleoscope that we mix your example documents together to get a much more interesting and relevant results. You connect examples of documents (or groups) to the Teleoscope.
 
-You can click and drag from **output** area of a document or group to the **input** area of a Teleoscope. Think of mixing together examples like mixing together paints. The Teleoscope produces a list of documents that are closest in concept (and math) to your example documents.
+You can click and drag from **output** arrow of a document or group to the bottom **control input** arrow of a Teleoscope. Think of mixing together examples like mixing together paints. The Teleoscope produces a list of documents that are closest in concept (and math) to your example documents.
+
+You can also restrict the Teleoscope to only rank from within a particular source such as a search or group by connecting to the top **source input**.
 
 <br />
-<MakeDemo type="Teleoscope" />
+
+![Teleoscope](/teleoscope.gif)
+
+### Projections
+
+At some point, you might want groups to be automatically created for you. Similar to the Teleoscope function, you can use a **Projection** to automatically create clusters for you.
+![Projection](/projection.gif)
