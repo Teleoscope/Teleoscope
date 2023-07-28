@@ -1353,23 +1353,24 @@ def create_child(*args, **kwargs):
     
     
 @app.task
-def mark(*args, database: str, **kwargs):
-    database = kwargs["database"]
+def mark(*args, database: str, userid: str, workflow_id: str, workspace_id: str, 
+         document_id: str, read: str, **kwargs):
+
     transaction_session, db = utils.create_transaction_session(db=database)
     
-    userid      = ObjectId(str(kwargs["userid"]))
-    document_id = ObjectId(str(kwargs["document_id"]))
-    workflow_id  = ObjectId(str(kwargs["workflow_id"]))
-    read        = kwargs["read"]
+    userid      = ObjectId(str(userid))
+    document_id = ObjectId(str(document_id))
+    workflow_id  = ObjectId(str(workflow_id))
+    
     session     = db.sessions.find_one({"_id": workflow_id})
     history_item = session["history"][0]
     history_item["userid"] = userid
     history_item["action"] = f"Mark document read set to {read}."
 
-    with transaction_session.start_transaction():
-        db.documents.update_one({"_id": document_id}, {"$set": {"state.read": read}})        
-        utils.push_history(db, "teleoscopes", workflow_id, history_item, transaction_session)
-        utils.commit_with_retry(transaction_session)
+
+    db.documents.update_one({"_id": document_id}, {"$set": {"state.read": read}})        
+    utils.push_history(db, "teleoscopes", workflow_id, history_item)
+
 
 
 @app.task

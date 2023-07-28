@@ -1,5 +1,4 @@
-import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
-import { RootState } from "@/stores/store";
+import { useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 
 // mui
 import Menu from "@mui/material/Menu";
@@ -12,27 +11,14 @@ import { useSelector } from "react-redux";
 // actions
 import { makeNode } from "@/actions/windows";
 
-// util
-import { useSWRHook } from "@/util/swr";
-
 // contexts
 import { useStomp } from "@/util/Stomp";
-import Typography from "@mui/material/Typography";
 
 export default function ContextMenu(props) {
-
   const client = useStomp();
   const dispatch = useAppDispatch();
-
-  const session_id = useAppSelector(
-    (state: RootState) => state.activeSessionID.value
-  );
-  const swr = useSWRHook();
-  const { teleoscopes_raw } = swr.useSWRAbstract(
-    "teleoscopes_raw",
-    `sessions/${session_id}/teleoscopes`
-  );
   
+
   const wdefs = useWindowDefinitions();
   const settings = useSelector((state) => state.windows.settings);
 
@@ -48,34 +34,19 @@ export default function ContextMenu(props) {
     }));
   };
 
-  const teleoscopes = teleoscopes_raw?.map((t) => {
-    const ret = {
-      _id: t._id,
-      label: t.history[0].label,
-    };
-    return ret;
-  });
-
   const handleOpenNewWindow = (menu_action) => {
     const w = { ...wdefs.definitions()[menu_action] };
     handleAddNode(w.tag, w.type);
     props.handleCloseContextMenu();
   };
 
-  const handleExistingTeleoscope = (t) => {
-    const w = { ...wdefs.definitions()["Teleoscope"] };
-    handleAddNode(t, w.type);
-    props.handleCloseContextMenu();
-  };
 
   const handleClose = () => {
     props.handleCloseContextMenu();
 
   };
 
-  const handleStompPing = () => {
-    client.ping();
-  }
+  
 
   return (
     <Menu
@@ -88,38 +59,33 @@ export default function ContextMenu(props) {
           : undefined
       }
     >
-      <MenuItem>
-        <Typography
-          variant="overline"
-          onClick={() => handleOpenNewWindow("Teleoscopes")}
-        >
-          All Teleoscopes
-        </Typography>
-      </MenuItem>
-      {teleoscopes?.map((t) => {
-        return (
-          <MenuItem key={t._id} onClick={() => handleExistingTeleoscope(t._id)}>
-            {t.label}
-          </MenuItem>
-        );
-      })}
-      <Divider />
+      
 
       <MenuItem onClick={() => handleOpenNewWindow("Search")}>
-        Open Search
+        <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Search"].icon()}</span> New Search
       </MenuItem>
+      <MenuItem onClick={() => handleOpenNewWindow("Group")}>
+        <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Group"].icon()}</span> New Group
+      </MenuItem>
+      <MenuItem onClick={() => handleOpenNewWindow("Teleoscope")}>
+      <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Teleoscope"].icon()}</span> New Teleoscope
+      </MenuItem>
+      <MenuItem onClick={() => handleOpenNewWindow("Projection")}>
+      <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Projection"].icon()}</span> New Projection
+      </MenuItem>
+      <MenuItem onClick={() => handleOpenNewWindow("Note")}>
+      <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Note"].icon()}</span> New Note
+      </MenuItem>
+      <Divider></Divider>
+      
       <MenuItem onClick={() => handleOpenNewWindow("Groups")}>
         Open Groups
       </MenuItem>
-      <MenuItem onClick={() => handleOpenNewWindow("FABMenu")}>
-        Open Floating Menu
+      <MenuItem onClick={() => handleOpenNewWindow("Notes")}>
+        Open Notes
       </MenuItem>
-      <Divider />
-      <MenuItem onClick={() => handleOpenColorPicker()}>
-        Change session color
-      </MenuItem>
-      <MenuItem onClick={() => handleStompPing()}>
-        Ping Stomp
+      <MenuItem onClick={() => handleOpenNewWindow("Bookmarks")}>
+        Open Bookmarks
       </MenuItem>
       
     </Menu>

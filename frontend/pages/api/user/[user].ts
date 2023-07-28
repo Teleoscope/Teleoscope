@@ -16,7 +16,6 @@ export default async function handler(req, res) {
   const client = await new MongoClient(process.env.MONGODB_REGISTRAR_URI).connect();
   
   const db = await client.db("users");
-  console.log(`Requested user: ${new ObjectId(req.query.user)}`)
 
   const user = await db.collection("users").findOne({_id: new ObjectId(req.query.user)}, { projection: { password: 0} })
 

@@ -43,6 +43,7 @@ import Exclusion from "@/components/Operations/Exclusion";
 import Union from "@/components/Operations/Union";
 
 import { PreprocessTitle } from "@/util/Preprocessers";
+import Bookmarks from "@/components/Bookmarks";
 
 export default class WindowDefinitions {
   private color;
@@ -98,8 +99,8 @@ export default class WindowDefinitions {
         apipath:   "groups",
         nodetype:  SourceNode,      
         title:     (d) => `Group: ${d?.history[0].label ? d?.history[0].label : "loading..."}`,
-        color:     (d) => d?.history[0].color,
-        icon:      (d) => <FolderIcon sx={{ color: d?.history[0].color }} fontSize="inherit"  />,
+        color:     (d) => d ? d?.history[0].color : this.color,
+        icon:      (d) => <FolderIcon sx={{ color: d ? d?.history[0].color : this.color  }} fontSize="inherit"  />,
         component: (w, id, color) => <Group id={id} windata={w} color={color} />,
       },
       Document: {
@@ -200,7 +201,7 @@ export default class WindowDefinitions {
         title:     function () {return this.type},
         color:     () => this.color,
         icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><RiBookmark3Line /></IconContext.Provider>,
-        component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
+        component: (w, id, color) => <Bookmarks id={id} windata={w} color={color} />,
       },
       Settings: {
         tag:       "settings",
