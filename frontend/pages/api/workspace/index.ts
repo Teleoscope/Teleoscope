@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   }
 
 
-  const connection = await amqp.connect(`amqp://${process.env.NEXT_PUBLIC_RABBITMQ_USERNAME}:${process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD}localhost:5672/${process.env.NEXT_PUBLIC_RABBITMQ_VHOST}`);
+  const connection = await amqp.connect(`amqp://${process.env.NEXT_PUBLIC_RABBITMQ_USERNAME}:${process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD}@localhost:5672/${process.env.NEXT_PUBLIC_RABBITMQ_VHOST}`);
   const channel = await connection.createChannel();
   const queue = `${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`;
   channel.assertQueue(queue, { durable: true });
