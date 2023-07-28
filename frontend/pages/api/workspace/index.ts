@@ -9,7 +9,9 @@
 
 import { authOptions } from 'pages/api/auth/[...nextauth]';
 import { getServerSession } from "next-auth/next";
-import { Stomp } from '@/util/Stomp';
+
+import amqp from 'amqplib';
+import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req, res) {
   const parameters = req.body;
@@ -17,18 +19,49 @@ export default async function handler(req, res) {
   if (req.method != "POST") {
     return null
   }
-  
   const session = await getServerSession(req, res, authOptions)
-
+  
   if (!session) {
     res.status(401).json({ message: "You must be logged in to access.", session: session });
     return;
   }
 
-  const client = Stomp.getInstance({userid: session.user.id})
-  await client.wait_for_client_connection()
-  client.initialize_workspace(parameters.label, parameters.datasource)
-  await client.wait_for_client_disconnection()
+
+  const connection = await amqp.connect(`amqp://${process.env.NEXT_PUBLIC_RABBITMQ_USERNAME}:${process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD}localhost:5672/${process.env.NEXT_PUBLIC_RABBITMQ_VHOST}`);
+  const channel = await connection.createChannel();
+  const queue = `${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`;
+  channel.assertQueue(queue, { durable: true });
+
+  const taskMessage = {
+    id: uuidv4(),
+    task: 'intitialize_workflow',
+    args: [],
+    kwargs: {
+      userid: session.user.id,
+      label: parameters.label,
+      datasource: parameters.datasource
+
+    },
+    retries: 0,
+    eta: new Date().toISOString()
+  };
+
+  channel.sendToQueue(queue, Buffer.from(taskMessage), {
+    persistent: true
+  });
+
+  console.log(" [x] Sent '%s'", taskMessage);
+  res.status(200).json({ status: 'Message sent' });
+
+  // Make sure the network buffers have been flushed and close connection
+  await channel.close();
+  await connection.close();
+  
+
+  // const client = Stomp.getInstance({userid: session.user.id})
+  // await client.wait_for_client_connection()
+  // client.initialize_workspace(parameters.label, parameters.datasource)
+  // await client.wait_for_client_disconnection()
   
 
   return res.json({"status": "success"})
