@@ -420,8 +420,8 @@ def test_search_as_source_group_and_documents_as_control_reverse_order_teleoscop
     )
 
     # Grab the nodes for the documents we just made
-    control_node_updated = db.graph.find_one({"reference": group_id})
-    source_node_updated = db.graph.find_one({"reference": search_id})
+    control_node_updated = db.graph.find_one({"_id": control_node["_id"]})
+    source_node_updated = db.graph.find_one({"_id": source_node["_id"]})
     target_node_updated = db.graph.find_one({"_id": target_node["_id"]})
 
     # make sure the source contains a reference to the target
@@ -444,11 +444,12 @@ def test_make_edge_from_group_to_projection():
     group_id = group["_id"]
 
     target_node = graph.make_node(db, workflow["_id"], None, "Projection")
+    control_node = graph.make_node(db, workflow["_id"], group_id, "Group")
 
     graph.make_edge(
         db=db,
         workflow_id=workflow["_id"],
-        source_oid=group_id,
+        source_oid=control_node["_id"],
         source_type="Group",
         target_oid=target_node["_id"],
         target_type="Projection",
@@ -456,18 +457,18 @@ def test_make_edge_from_group_to_projection():
     )
 
     # Grab the nodes for the documents we just made
-    source_node_updated = db.graph.find_one({"reference": group_id})
+    control_node_updated = db.graph.find_one({"_id": control_node["_id"]})
     target_node_updated = db.graph.find_one({"_id": target_node["_id"]})
 
     logging.info(f"Target node updated {target_node_updated}.")
 
     # make sure the source contains a reference to the target
-    updated_source_edges = source_node_updated["edges"]
+    updated_source_edges = control_node_updated["edges"]
     assert target_node["_id"] in [e["nodeid"] for e in updated_source_edges["output"]]
     
     # make sure the target contains a reference to the source
     updated_target_edges = target_node_updated["edges"]
-    assert source_node_updated["_id"] in [e["nodeid"] for e in updated_target_edges["control"]]
+    assert control_node_updated["_id"] in [e["nodeid"] for e in updated_target_edges["control"]]
 
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
@@ -479,11 +480,12 @@ def test_make_edge_from_group_and_document_to_projection():
     document_id = documents[0]["_id"]
 
     target_node = graph.make_node(db, workflow["_id"], None, "Projection")
+    control_node = graph.make_node(db, workflow["_id"], group_id, "Group")
 
     graph.make_edge(
         db=db,
         workflow_id=workflow["_id"],
-        source_oid=group_id,
+        source_oid=control_node["_id"],
         source_type="Group",
         target_oid=target_node["_id"],
         target_type="Projection",
@@ -501,23 +503,23 @@ def test_make_edge_from_group_and_document_to_projection():
     )
 
     # Grab the nodes for the documents we just made
-    group_updated = db.groups.find_one(group_id)
-    source_node_updated = db.graph.find_one({"reference": group_id})
+    control_updated = db.graph.find_one({"reference": group_id})
     target_node_updated = db.graph.find_one(target_node["_id"])
 
     logging.info(f"Target node updated {target_node_updated}.")
 
     # make sure the source contains a reference to the target
-    updated_source_edges = source_node_updated["edges"]
+    updated_source_edges = control_updated["edges"]
     assert target_node["_id"] in [e["nodeid"] for e in updated_source_edges["output"]]
     
     # make sure the target contains a reference to the source
     updated_target_edges = target_node_updated["edges"]
-    assert source_node_updated["_id"] in [e["nodeid"] for e in updated_target_edges["control"]]
+    assert control_updated["_id"] in [e["nodeid"] for e in updated_target_edges["control"]]
 
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) > 0
+
 
 def test_search_as_source_group_as_control_projection():
     global db, group, search
@@ -525,11 +527,13 @@ def test_search_as_source_group_as_control_projection():
     group_id = group["_id"]
 
     target_node = graph.make_node(db, workflow["_id"], None, "Projection")
+    control_node = graph.make_node(db, workflow["_id"], group_id, "Group")
+    source_node = graph.make_node(db, workflow["_id"], search_id, "Search")
 
     graph.make_edge(
         db=db,
         workflow_id=workflow["_id"],
-        source_oid=group_id,
+        source_oid=control_node["_id"],
         source_type="Group",
         target_oid=target_node["_id"],
         target_type="Projection",
@@ -539,7 +543,7 @@ def test_search_as_source_group_as_control_projection():
     graph.make_edge(
         db=db,
         workflow_id=workflow["_id"],
-        source_oid=search_id,
+        source_oid=source_node["_id"],
         source_type="Search",
         target_oid=target_node["_id"],
         target_type="Projection",
