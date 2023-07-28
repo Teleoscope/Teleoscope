@@ -45,12 +45,14 @@ export default async function handler(req, res) {
     retries: 0,
     eta: new Date().toISOString()
   };
+  const msg = JSON.stringify(taskMessage);
 
-  channel.sendToQueue(queue, Buffer.from(taskMessage), {
+
+  channel.sendToQueue(queue, Buffer.from(msg), {
     persistent: true
   });
 
-  console.log(" [x] Sent '%s'", taskMessage);
+  console.log(" [x] Sent '%s'", msg);
   res.status(200).json({ status: 'Message sent' });
 
   // Make sure the network buffers have been flushed and close connection
