@@ -221,7 +221,7 @@ def test_make_edge_from_group_to_teleoscope():
     )
 
     # Grab the nodes for the documents we just made
-    control_node_updated = db.graph.find_one({"reference": group_id})
+    control_node_updated = db.graph.find_one({"_id": control_node["_id"]})
     target_node_updated = db.graph.find_one({"_id": target_node["_id"]})
 
     logging.info(f"Target node updated {target_node_updated}.")
