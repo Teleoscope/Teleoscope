@@ -171,12 +171,13 @@ def test_make_edge_from_document_to_teleoscope():
     global db, documents
     document_id = documents[0]["_id"]
 
-    target_node = graph.make_node(db, workflow["_id"],None, "Teleoscope")
+    target_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
+    source_node = graph.make_node(db, workflow["_id"], document_id, "Document")
 
     graph.make_edge(
         db=db,
         workflow_id=workflow["_id"],
-        source_oid=document_id,
+        source_oid=source_node["_id"],
         source_type="Document",
         target_oid=target_node["_id"],
         target_type="Teleoscope",
@@ -207,11 +208,12 @@ def test_make_edge_from_group_to_teleoscope():
     group_id = group["_id"]
 
     target_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
+    source_node = graph.make_node(db, workflow["_id"], group_id, "Group")
 
     graph.make_edge(
         db=db,
         workflow_id=workflow["_id"],
-        source_oid=group_id,
+        source_oid=source_node["_id"],
         source_type="Group",
         target_oid=target_node["_id"],
         target_type="Teleoscope",
