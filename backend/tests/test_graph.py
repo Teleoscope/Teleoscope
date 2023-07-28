@@ -208,12 +208,12 @@ def test_make_edge_from_group_to_teleoscope():
     group_id = group["_id"]
 
     target_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
-    source_node = graph.make_node(db, workflow["_id"], group_id, "Group")
+    control_node = graph.make_node(db, workflow["_id"], group_id, "Group")
 
     graph.make_edge(
         db=db,
         workflow_id=workflow["_id"],
-        source_oid=source_node["_id"],
+        source_oid=control_node["_id"],
         source_type="Group",
         target_oid=target_node["_id"],
         target_type="Teleoscope",
@@ -221,19 +221,18 @@ def test_make_edge_from_group_to_teleoscope():
     )
 
     # Grab the nodes for the documents we just made
-    group_updated = db.groups.find_one(group_id)
-    source_node_updated = db.graph.find_one({"reference": group_id})
+    control_node_updated = db.graph.find_one({"reference": group_id})
     target_node_updated = db.graph.find_one({"_id": target_node["_id"]})
 
     logging.info(f"Target node updated {target_node_updated}.")
 
     # make sure the source contains a reference to the target
-    updated_source_edges = source_node_updated["edges"]
+    updated_source_edges = control_node_updated["edges"]
     assert target_node["_id"] in [e["nodeid"] for e in updated_source_edges["output"]]
     
     # make sure the target contains a reference to the source
     updated_target_edges = target_node_updated["edges"]
-    assert source_node_updated["_id"] in [e["nodeid"] for e in updated_target_edges["control"]]
+    assert control_node_updated["_id"] in [e["nodeid"] for e in updated_target_edges["control"]]
 
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
@@ -249,6 +248,7 @@ def test_make_edge_from_search_to_teleoscope():
 
     graph.make_edge(
         db=db, 
+        workflow_id=workflow["_id"],
         source_oid=source_node["_id"],
         source_type="Search",
         target_oid=target_node["_id"],
@@ -285,7 +285,8 @@ def test_search_as_source_group_as_control_teleoscope():
     source_node = graph.make_node(db, workflow["_id"], group_id, "Group")
 
     graph.make_edge(
-        db=db, 
+        db=db,
+        workflow_id=workflow["_id"],
         source_oid=source_node["_id"],
         source_type="Search",
         target_oid=target_node["_id"],
@@ -345,6 +346,7 @@ def test_search_as_source_group_as_control_reverse_order_teleoscope():
 
     graph.make_edge(
         db=db, 
+        workflow_id=workflow["_id"],
         source_oid=search_id,
         source_type="Search",
         target_oid=target_node["_id"],
@@ -389,6 +391,7 @@ def test_search_as_source_group_and_documents_as_control_reverse_order_teleoscop
         doc_nodes.append(doc_node)
         graph.make_edge(
             db=db,
+            workflow_id=workflow["_id"],
             source_oid=doc_node["_id"],
             source_type="Document",
             target_oid=target_node["_id"],
@@ -407,7 +410,8 @@ def test_search_as_source_group_and_documents_as_control_reverse_order_teleoscop
     )
 
     graph.make_edge(
-        db=db, 
+        db=db,
+        workflow_id=workflow["_id"],
         source_oid=source_node["_id"],
         source_type="Search",
         target_oid=target_node["_id"],
@@ -533,7 +537,8 @@ def test_search_as_source_group_as_control_projection():
     )
 
     graph.make_edge(
-        db=db, 
+        db=db,
+        workflow_id=workflow["_id"],
         source_oid=search_id,
         source_type="Search",
         target_oid=target_node["_id"],
