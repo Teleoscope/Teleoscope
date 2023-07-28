@@ -337,7 +337,7 @@ def test_search_as_source_group_as_control_reverse_order_teleoscope():
     graph.make_edge(
         db=db,
         workflow_id=workflow["_id"],
-        source_oid=group_id,
+        source_oid=control_node["_id"],
         source_type="Group",
         target_oid=target_node["_id"],
         target_type="Teleoscope",
@@ -347,7 +347,7 @@ def test_search_as_source_group_as_control_reverse_order_teleoscope():
     graph.make_edge(
         db=db, 
         workflow_id=workflow["_id"],
-        source_oid=search_id,
+        source_oid=source_node["_id"],
         source_type="Search",
         target_oid=target_node["_id"],
         target_type="Teleoscope",
