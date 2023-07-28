@@ -34,7 +34,7 @@ export default async function handler(req, res) {
 
   const taskMessage = {
     id: uuidv4(),
-    task: 'intitialize_workflow',
+    task: 'initialize_workspace',
     args: {
       userid: session.user.id,
       label: parameters.label,
