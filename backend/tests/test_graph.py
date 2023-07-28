@@ -281,8 +281,8 @@ def test_search_as_source_group_as_control_teleoscope():
     group_id = group["_id"]
 
     target_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
-    control_node = graph.make_node(db, workflow["_id"], search_id, "Search")
-    source_node = graph.make_node(db, workflow["_id"], group_id, "Group")
+    source_node = graph.make_node(db, workflow["_id"], search_id, "Search")
+    control_node = graph.make_node(db, workflow["_id"], group_id, "Group")
 
     graph.make_edge(
         db=db,
@@ -331,8 +331,8 @@ def test_search_as_source_group_as_control_reverse_order_teleoscope():
     group_id = group["_id"]
 
     target_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
-    control_node = graph.make_node(db, workflow["_id"], search_id, "Search")
-    source_node = graph.make_node(db, workflow["_id"], group_id, "Group")
+    source_node = graph.make_node(db, workflow["_id"], search_id, "Search")
+    control_node = graph.make_node(db, workflow["_id"], group_id, "Group")
 
     graph.make_edge(
         db=db,
@@ -481,6 +481,7 @@ def test_make_edge_from_group_and_document_to_projection():
 
     target_node = graph.make_node(db, workflow["_id"], None, "Projection")
     control_node = graph.make_node(db, workflow["_id"], group_id, "Group")
+    doc_control_node = graph.make_node(db, workflow["_id"], document_id, "Document")
 
     graph.make_edge(
         db=db,
@@ -495,7 +496,7 @@ def test_make_edge_from_group_and_document_to_projection():
     graph.make_edge(
         db=db,
         workflow_id=workflow["_id"],
-        source_oid=document_id,
+        source_oid=doc_control_node["_id"],
         source_type="Document",
         target_oid=target_node["_id"],
         target_type="Projection",
@@ -503,8 +504,8 @@ def test_make_edge_from_group_and_document_to_projection():
     )
 
     # Grab the nodes for the documents we just made
-    control_updated = db.graph.find_one({"reference": group_id})
-    target_node_updated = db.graph.find_one(target_node["_id"])
+    control_updated = db.graph.find_one({"_id": control_node["_id"]})
+    target_node_updated = db.graph.find_one({"_id": target_node["_id"]})
 
     logging.info(f"Target node updated {target_node_updated}.")
 
@@ -551,8 +552,8 @@ def test_search_as_source_group_as_control_projection():
     )
 
     # Grab the nodes for the documents we just made
-    control_node_updated = db.graph.find_one({"reference": group_id})
-    source_node_updated = db.graph.find_one({"reference": search_id})
+    control_node_updated = db.graph.find_one({"_id": control_node["_id"]})
+    source_node_updated = db.graph.find_one({"_id": source_node["_id"]})
     target_node_updated = db.graph.find_one(target_node["_id"])
 
     # make sure the source contains a reference to the target
