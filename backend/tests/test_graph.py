@@ -576,7 +576,8 @@ def test_search_as_source_group_as_control_projection():
 
 def test_model():
 
-    # pytest test_graph.py::test_model --log-cli-level=INFO
+    # To run single test with logging info
+    # > pytest test_graph.py::test_model --log-cli-level=INFO
 
     global db, group, user, workflow
     
