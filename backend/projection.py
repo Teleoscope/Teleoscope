@@ -11,6 +11,7 @@ import datetime
 import pika
 from pymongo import MongoClient, database
 from random_object_id import generate
+import random
 
 # ml dependencies
 import umap
@@ -32,7 +33,7 @@ class Projection:
     by the limit param plus the documents in the provided human clusters/groups.
     """
 
-    def __init__(self, db: database.Database, sources, controls, rank_slice_length, limit=30000, topic_label_length=2):
+    def __init__(self, db: database.Database, sources, controls, limit=10000, topic_label_length=2):
         """Initializes the instance 
 
         Args:
@@ -60,7 +61,6 @@ class Projection:
         self.description = ""
         self.group_doc_indices = None
         self.groups = []
-        self.rank_slice_length = rank_slice_length
 
         # large lists (number of examples)
         self.nlp = spacy.load("en_core_web_sm")
@@ -91,12 +91,30 @@ class Projection:
         logging.info("Running UMAP Reduction...")
         # self.ping_stomp("Running UMAP Reduction... 2/5")
 
+        # best params from march
+        # n_components = 30, min_dist = 1e-5, min_cluster_size = 10, cluster_selection_epsilon = 0.2
+        # https://github.com/lmcinnes/umap/issues/25
+
+        n_components = 10 # random.randint(10, 15)
+        n_neighbors = 10 # random.randint(5, 10)
+        min_cluster_size = 6
+        min_samples = 5
+        cluster_selection_epsilon = 0.2 # random.uniform(0.1, 0.3)
+        min_dist = 1e-5
+
+        # Log the generated hyperparameter values
+        logging.info("Hyperparameters:")
+        logging.info(f"n_components: {n_components}")
+        logging.info(f"n_neighbors: {n_neighbors}")
+        logging.info(f"min_cluster_size: {min_cluster_size}")
+        logging.info(f"cluster_selection_epsilon: {cluster_selection_epsilon}")
+
         umap_embeddings = umap.UMAP(
             verbose = True,         # for logging
             metric = "precomputed", # use distance matrix
-            n_components = 20,      # reduce to n_components dimensions (2~100)
-            # n_neighbors = 10,     # local (small n ~2) vs. global (large n ~100) structure 
-            min_dist = 1e-5,        # minimum distance apart that points are allowed (0.0~0.99)
+            n_components = n_components,      # reduce to n_components dimensions (2~100)
+            n_neighbors = n_neighbors,     # local (small n ~2) vs. global (large n ~100) structure 
+            min_dist = min_dist,        # minimum distance apart that points are allowed (0.0~0.99)
         ).fit_transform(dm)
         logging.info(f"Shape after reduction: {umap_embeddings.shape}")
 
@@ -105,11 +123,14 @@ class Projection:
         # self.ping_stomp("Clustering with HDBSCAN... 3/5")
 
         self.hdbscan_labels = hdbscan.HDBSCAN(
-            min_cluster_size = 10,              # num of neighbors needed to be considered a cluster (0~50, df=5)
-            # min_samples = 5,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
-            cluster_selection_epsilon = 0.2,    # have large clusters in dense regions while leaving smaller clusters small
+            min_cluster_size = min_cluster_size,              # num of neighbors needed to be considered a cluster (0~50, df=5)
+            min_samples = min_samples,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
+            cluster_selection_epsilon = cluster_selection_epsilon,    # have large clusters in dense regions while leaving smaller clusters small
                                                 # merge clusters if inter cluster distance is less than thres (df=0)
         ).fit_predict(umap_embeddings)
+        
+
+        logging.info(f"{len(set(self.hdbscan_labels))} resultant clusters.")
 
     def build_clusters(self):
         """ Iteratively builds groups in mongoDB relative to clustering
@@ -219,7 +240,7 @@ class Projection:
         logging.info("Gathering all document vectors from embeddings...")
         # grab all document data from embeddings
         all_doc_ids, all_doc_vecs = utils.get_documents(self.db.name)
-        
+
         # if sources = 0: average ordering of conrolls for all[30000]
         if len(self.sources) == 0:
 
@@ -233,11 +254,9 @@ class Projection:
             
             # get control vectors
             control_vecs = [all_doc_vecs[all_doc_ids.index(oid)] for oid in docs]
-
             source_vecs = np.array(all_doc_vecs)
-            ranks = graph.rank(control_vecs, all_doc_ids, source_vecs)
-            document_ids = [i for i,s in ranks[:self.limit]]
-            
+            ranks = graph.rank(control_vecs, all_doc_ids, source_vecs, self.limit)
+            document_ids = [i for i,s in ranks] 
         
         else:
             # if sources > 0: sources U controls 
@@ -254,7 +273,7 @@ class Projection:
 
                     case "Search":
                         search = self.db.searches.find_one({"_id": source["id"]})
-                        cursor = self.db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1}).limit(self.rank_slice_length)
+                        cursor = self.db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1}).limit(self.limit)
                         document_ids += [d["_id"] for d in list(cursor)]
 
                     case "Note":
@@ -263,13 +282,16 @@ class Projection:
             # remove duplicate ids
             document_ids = list(dict.fromkeys(document_ids))
  
-        # indices of ranked ids
-        indices = [all_doc_ids.index(i) for i in document_ids]
+        # Create a dictionary to store the indices of all_doc_ids
+        index_dict = {all_doc_ids[i]: i for i in range(len(all_doc_ids))}
+
+        # Get the indices of document_ids using the dictionary
+        indices = [index_dict[i] for i in document_ids]
 
         logging.info("Building sorted array of document vectors...")
         # use indices of ranked ids to build sorted array of document vectors
         document_vectors = np.array([all_doc_vecs[i] for i in indices])
-
+        logging.info(f"Document vectors are length: {len(document_vectors)}")
         # dict where keys are group names and values are indices of documents
         group_doc_indices = {}
         

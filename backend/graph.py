@@ -309,8 +309,8 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     source_map = []
     
     if len(sources) == 0:
-        ranks = rank(control_vecs, ids, all_vectors)
-        doclists.append({ "ranked_documents": ranks[0:rank_slice_length], "type": "All"})
+        ranks = rank(control_vecs, ids, all_vectors, rank_slice_length)
+        doclists.append({ "ranked_documents": ranks, "type": "All"})
     else:
         for source in sources:
             match source["type"]:
@@ -333,8 +333,8 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
                     pass
 
     for source, source_vecs, source_oids in source_map:
-        ranks = rank(control_vecs, source_oids, source_vecs)
-        source["ranked_documents"] = ranks[0:rank_slice_length]
+        ranks = rank(control_vecs, source_oids, source_vecs, rank_slice_length)
+        source["ranked_documents"] = ranks
         doclists.append(source)
         
     teleoscope_node["doclists"] = doclists
@@ -342,11 +342,11 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     # TODO: matrix
     return teleoscope_node
 
-def rank(control_vecs, ids, vecs):
+def rank(control_vecs, ids, vecs, limit):
     logging.info(f"There were {len(control_vecs)} control vecs.")
     vec = np.average(control_vecs, axis=0)
     scores = utils.calculateSimilarity(vecs, vec)
-    ranks = utils.rankDocumentsBySimilarity(ids, scores)
+    ranks = utils.rankDocumentsBySimilarity(ids, scores, limit)
     return ranks
 
 def filter_vectors_by_oid(oids, ids, vectors):
@@ -383,10 +383,10 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
 
 def update_projection(db: database.Database, projection_node, sources: List, controls: List, parameters):
 
-    logging.info(
-        f"Updating Projection for database {db.name} and node {projection_node} with "
-        f"sources {sources} and controls {controls} and paramaters {parameters}."
-    )
+    # logging.info(
+    #     f"Updating Projection for database {db.name} and node {projection_node} with "
+    #     f"sources {sources} and controls {controls} and paramaters {parameters}."
+    # )
 
     if len(controls) == 0:
         logging.info(f"No controls included. Returning original projection node.")
@@ -405,11 +405,7 @@ def update_projection(db: database.Database, projection_node, sources: List, con
             logging.info(f"Require group as control input. Returning original projection node.")
             return projection_node
                    
-    rank_slice_length = 1000
-    if "rank_slice_length" in parameters:
-        rank_slice_length = parameters["rank_slice_length"]
-    
-    project = projection.Projection(db, sources, controls, rank_slice_length)
+    project = projection.Projection(db, sources, controls)
     doclists = project.clustering_task()
     
     for doclist in doclists:
