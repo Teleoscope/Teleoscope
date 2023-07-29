@@ -97,7 +97,7 @@ class Projection:
 
         n_components = 10 # random.randint(10, 15)
         n_neighbors = 10 # random.randint(5, 10)
-        min_cluster_size = 6
+        min_cluster_size = 5
         min_samples = 5
         cluster_selection_epsilon = 0.2 # random.uniform(0.1, 0.3)
         min_dist = 1e-5
