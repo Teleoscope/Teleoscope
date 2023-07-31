@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import ActiveSessionID from "@/actions/activeSessionID";
-import Windows, { updateEdges, updateNodes, updateSearch } from "@/actions/windows";
+import Windows, { removeWindow, updateEdges, updateNodes, updateSearch } from "@/actions/windows";
 import { makeNode, makeEdge, setColor, relabelSession } from "@/actions/windows";
 import crypto from 'crypto';
 
@@ -79,21 +79,46 @@ const makeNodeMiddleware = store => next => action => {
     return result
   }
 
+  if (action.type === removeWindow.type) {
+    const result = next(action);
+    const node_id = action.payload.node;
+    const state = store.getState();
+    const edges = state.windows.edges.filter(e => e.target == node_id || e.source == node_id)
+    edges.forEach(edge => {
+      store.dispatch(updateEdges(
+        {
+          client: action.payload.client,
+          changes: [{
+            id: edge.id,
+            type: "remove"
+          }]
+        }
+      ))}
+    )
+    return result
+  }
+
   if (action.type === updateNodes.type) {
+    const result = next(action);
     const changes = action.payload.changes;
     changes.forEach(change => {
       if (change.type == "remove") {
         const state = store.getState();
         const edges = state.windows.edges.filter(e => e.target == change.id || e.source == change.id)
         edges.forEach(edge => {
-          store.dispatch(updateEdges([{
-            id: edge.id,
-            type: "remove"
-          }]))
-        })
+          store.dispatch(updateEdges(
+            {
+              client: action.payload.client,
+              changes: [{
+                id: edge.id,
+                type: "remove"
+              }]
+            }
+          ))}
+        )
       }
     })
-
+    return result
   }
 
   if (action.type === updateEdges.type) {

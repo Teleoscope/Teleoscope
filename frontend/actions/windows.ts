@@ -69,11 +69,12 @@ export const Windows = createSlice({
       state.collision = action.payload;
     },
     removeWindow: (state, action) => {
+      console.log("action", action)
       var temp_nodes = [...state.nodes];
       var node_ids = state.nodes.map((n) => {
         return n.id;
       });
-      var node_index = node_ids.indexOf(action.payload);
+      var node_index = node_ids.indexOf(action.payload.node);
       if (node_index > -1) {
         temp_nodes.splice(node_index, 1);
       }
@@ -82,7 +83,7 @@ export const Windows = createSlice({
       var edge_ids = state.edges.map((e) => {
         return e.source;
       });
-      var edge_index = edge_ids.indexOf(action.payload);
+      var edge_index = edge_ids.indexOf(action.payload.node);
       if (edge_index > -1) {
         temp_edges.splice(edge_index, 1);
       }
