@@ -620,6 +620,7 @@ def test_make_and_remove_edge_from_document_to_teleoscope():
         edge={
             "source": f"{control_node['_id']}%12345%Document",
             "target": f"{target_node['_id']}%12345%Teleoscope",
+            "targetHandle": f"randomstuff1234_control"
         }
     )
 
@@ -670,6 +671,7 @@ def test_make_and_remove_multiple_edges_from_document_to_teleoscope():
         edge={
             "source": f"{control_nodes[0]['_id']}%12345%Document",
             "target": f"{target_node['_id']}%12345%Teleoscope",
+            "targetHandle": f"randomstuff1234_control"
         }
     )
 
