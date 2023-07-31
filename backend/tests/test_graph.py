@@ -689,7 +689,7 @@ def test_make_and_remove_multiple_edges_from_document_to_teleoscope():
 
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
-    assert len(updated_target_docs) == 0
+    assert len(updated_target_docs) == 1
 
 
 

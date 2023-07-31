@@ -132,8 +132,9 @@ def remove_edge(db: database.Database,
     )
 
     graph(db, target_oid)
+    graph(db, source_oid)
 
-    pass
+    return
 
 
 def graph(db: database.Database, node_oid: ObjectId):
