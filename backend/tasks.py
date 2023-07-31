@@ -41,7 +41,8 @@ app.conf.update(
     accept_content=['pickle'],  # Ignore other content
     result_serializer='pickle',
     task_queues=[queue],
-    worker_concurrency=4
+    worker_concurrency=4,
+    worker_max_memory_per_child = 4000000
 )
 
 
