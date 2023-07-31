@@ -10,7 +10,8 @@ module.exports = {
       script: "/usr/share/miniconda3/envs/teleoscope/bin/python",
       args: ["-m", "backend.dispatch"],
       watch: false,
-      interpreter: ""
+      interpreter: "",
+      max_memory_restart: "16G"
     },
     {
       name: "frontend",
