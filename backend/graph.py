@@ -115,7 +115,7 @@ def remove_edge(db: database.Database,
 
     # There may be multiple corresponding nodes for this source_oid
     # but there should be only one possible target_oid since each target is unique
-    source = db.graph.find_one({"reference": source_oid, "edge.output.nodeid": target_oid})
+    source = db.graph.find_one({"reference": source_oid, "edges.output.nodeid": target_oid})
     
     db.graph.update_one(
         {"_id": source["_id"]},
