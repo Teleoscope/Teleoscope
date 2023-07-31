@@ -132,7 +132,6 @@ def remove_edge(db: database.Database,
     )
 
     graph(db, target_oid)
-    graph(db, source_oid)
 
     return
 
@@ -140,8 +139,10 @@ def remove_edge(db: database.Database,
 def graph(db: database.Database, node_oid: ObjectId):
     """Recalculates all nodes to the right of specified node.
     """
-    node = db.graph.find_one({"_id": ObjectId(str(node_oid))})
+
     db.graph.update_one({"_id": ObjectId(str(node_oid))}, {"$set": {"doclists": []}})
+    node = db.graph.find_one({"_id": ObjectId(str(node_oid))})
+    
 
     sources  = node["edges"]["source"]
     controls = node["edges"]["control"]
