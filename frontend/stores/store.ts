@@ -80,10 +80,10 @@ const makeNodeMiddleware = store => next => action => {
   }
 
   if (action.type === removeWindow.type) {
-    const result = next(action);
     const node_id = action.payload.node;
     const state = store.getState();
-    const edges = state.windows.edges.filter(e => e.target == node_id || e.source == node_id)
+    const edges = state.windows.edges.filter(e => e.target.includes(node_id) || e.source.includes(node_id))
+
     edges.forEach(edge => {
       store.dispatch(updateEdges(
         {
@@ -95,6 +95,8 @@ const makeNodeMiddleware = store => next => action => {
         }
       ))}
     )
+    
+    const result = next(action);
     return result
   }
 

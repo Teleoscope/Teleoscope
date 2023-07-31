@@ -69,7 +69,6 @@ export const Windows = createSlice({
       state.collision = action.payload;
     },
     removeWindow: (state, action) => {
-      console.log("action", action)
       var temp_nodes = [...state.nodes];
       var node_ids = state.nodes.map((n) => {
         return n.id;
