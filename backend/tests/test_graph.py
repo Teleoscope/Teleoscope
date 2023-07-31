@@ -636,7 +636,7 @@ def test_make_and_remove_edge_from_document_to_teleoscope():
     updated_target_edges = target_node_updated["edges"]
     assert control_node_updated["_id"] not in [e["nodeid"] for e in updated_target_edges["control"]]
 
-    # make sure the document list is non-zero
+    # make sure the document list is zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) == 0
 
@@ -663,7 +663,7 @@ def test_make_and_remove_multiple_edges_from_document_to_teleoscope():
             edge_type="control"
         )
     
-    # Remove the edge
+    # Remove the 1st edge
     tasks.remove_edge(
         database="test", 
         userid=user["_id"], 
@@ -690,6 +690,66 @@ def test_make_and_remove_multiple_edges_from_document_to_teleoscope():
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) == 1
+
+
+    # Remove the 2nd edge
+    tasks.remove_edge(
+        database="test", 
+        userid=user["_id"], 
+        workflow_id=workflow["_id"],
+        edge={
+            "source": f"{control_nodes[1]['_id']}%12345%Document",
+            "target": f"{target_node['_id']}%12345%Teleoscope",
+            "targetHandle": f"randomstuff1234_control"
+        }
+    )
+
+    # Grab the nodes for the documents we just made
+    control_node_updated = db.graph.find_one({"_id": control_nodes[0]["_id"]})
+    target_node_updated = db.graph.find_one({"_id": target_node["_id"]})
+
+    # make sure the source contains a reference to the target
+    updated_source_edges = control_node_updated["edges"]
+    assert target_node["_id"] not in [e["nodeid"] for e in updated_source_edges["output"]]
+    
+    # make sure the target contains a reference to the source
+    updated_target_edges = target_node_updated["edges"]
+    assert control_node_updated["_id"] not in [e["nodeid"] for e in updated_target_edges["control"]]
+
+    # make sure the document list is non-zero
+    updated_target_docs = target_node_updated["doclists"]
+    assert len(updated_target_docs) == 1
+
+
+    # Remove the 3rd edge
+    tasks.remove_edge(
+        database="test", 
+        userid=user["_id"], 
+        workflow_id=workflow["_id"],
+        edge={
+            "source": f"{control_nodes[2]['_id']}%12345%Document",
+            "target": f"{target_node['_id']}%12345%Teleoscope",
+            "targetHandle": f"randomstuff1234_control"
+        }
+    )
+
+    # Grab the nodes for the documents we just made
+    control_node_updated = db.graph.find_one({"_id": control_nodes[0]["_id"]})
+    target_node_updated = db.graph.find_one({"_id": target_node["_id"]})
+
+    # make sure the source contains a reference to the target
+    updated_source_edges = control_node_updated["edges"]
+    assert target_node["_id"] not in [e["nodeid"] for e in updated_source_edges["output"]]
+    
+    # make sure the target contains a reference to the source
+    updated_target_edges = target_node_updated["edges"]
+    assert control_node_updated["_id"] not in [e["nodeid"] for e in updated_target_edges["control"]]
+
+    # make sure the document list is non-zero
+    updated_target_docs = target_node_updated["doclists"]
+    assert len(updated_target_docs) == 0
+
+
 
 
 
