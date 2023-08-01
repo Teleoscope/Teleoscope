@@ -23,7 +23,7 @@ from . import schemas
 db = "test"
 
 def make_client():
-    autht = "authSource=admin&authMechanism=SCRAM-SHA-256"
+    autht = "authSource=admin&authMechanism=SCRAM-SHA-256&tls=true"
     connect_str = (
         f'mongodb://'
         f'{auth.mongodb["username"]}:'
