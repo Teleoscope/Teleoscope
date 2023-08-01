@@ -87,18 +87,18 @@ class Projection:
             n_components = 30, min_dist = 1e-5, min_cluster_size = 10, cluster_selection_epsilon = 0.2
 
             notes from turning:
-                - num clusters dont hit thresh if greater min_cluster_size > 7-8
+                - dont hit thresh. if min_cluster_size > 7-8
                 - increase min samples, increase clusters
                 - increase epsilon, decrease clusters
                 - large n_components requires larger n_neighbors
                 - increasing n_neighbors, decreases clusters
-                - n_components greater than 10 are much the same
-                - 11 was most frequent nn for thresh
+                - n_components greater than 10 are much the same, less than 10 are bad.
+                - 11 was most frequent nn for thresh.
                 - https://maartengr.github.io/BERTopic/getting_started/parameter%20tuning/parametertuning.html#umap
         """
 
-        n_components = random.randint(11, 13)
-        n_neighbors = random.randint(11, 12)
+        n_components = random.randint(10, 12)
+        n_neighbors = random.randint(n_components, 13)
         min_dist = 1e-4
         
         logging.info("Running UMAP Reduction...")
