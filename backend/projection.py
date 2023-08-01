@@ -99,9 +99,6 @@ class Projection:
 
         n_components = random.randint(11, 13)
         n_neighbors = random.randint(11, 12)
-        min_cluster_size = random.randint(6, 8)
-        min_samples = random.randint(1, 4)
-        cluster_selection_epsilon = random.uniform(0.26, 0.29)
         min_dist = 1e-4
         
         logging.info("Running UMAP Reduction...")
@@ -118,8 +115,8 @@ class Projection:
         logging.info('{:<12s}{:<10s}'.format('Attempt','Num. Clusters'))
         logging.info('---------------------------------------')
 
-        i = 0
-        num_clust = 0
+        i, num_clust, min_cluster_size, min_samples, cluster_selection_epsilon = 0, 0, 0, 0, 0.0
+
         while (num_clust < 10 or num_clust > 100):
         
             min_cluster_size = random.randint(6, 8)
@@ -134,7 +131,7 @@ class Projection:
             ).fit_predict(umap_embeddings)
 
             num_clust = len(set(self.hdbscan_labels))
-            i+=1
+            i+=1 #epoch
 
             logging.info('{:<12d}{:<10d}'.format(i,num_clust))
 
@@ -143,24 +140,17 @@ class Projection:
         logging.info('---------umap-hyperparameters----------')
         logging.info('{:<28s}{:<5d}'.format('n_components:',n_components))
         logging.info('{:<28s}{:<5d}'.format('n_neighbors:',n_neighbors))
+        logging.info('{:<28s}{:<5f}'.format('min_dist:',min_dist))
 
-        # logging.info(f"n_components: {n_components}")
-        # logging.info(f"n_neighbors:  {n_neighbors}")
-        
         logging.info('--------hdbscan-hyperparameters--------')
         logging.info('{:<28s}{:<5d}'.format('min_cluster_size:',min_cluster_size))
         logging.info('{:<28s}{:<5d}'.format('min_samples:',min_samples))
         logging.info('{:<28s}{:<3f}'.format('cluster_selection_epsilon:',cluster_selection_epsilon))
 
-        # logging.info(f"min_cluster_size:          {min_cluster_size}")
-        # logging.info(f"min_samples:               {min_samples}")
-        # logging.info(f"cluster_selection_epsilon: {np.round(cluster_selection_epsilon,3)}")
-
         logging.info('---------------results-----------------')
-        # logging.info(f"number of clusters: {len(set(self.hdbscan_labels))}")
         logging.info('{:<28s}{:<5d}'.format('number of clusters:',len(set(self.hdbscan_labels))))
 
-
+        # # CODE FOR TUNING
         # res = {}
         # count = 0
         # try:
