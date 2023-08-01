@@ -113,6 +113,12 @@ You can also restrict the Teleoscope to only rank from within a particular sourc
 At some point, you might want groups to be automatically created for you. Similar to the Teleoscope function, you can use a **Projection** to automatically create clusters for you.
 ![Projection](/projection.gif)
 
+
+### Notes
+You can write **notes** for yourself just to keep notes. However, note contents are **vectorized**. This means that you can use them as **controls** for Teleoscopes.
+![Notes](/note.gif)
+
+
 ## Concepts
 Teleoscope is supported by a variety of computational systems. At its core, Teleoscope is a [distributed](https://en.wikipedia.org/wiki/Distributed_computing), [cloud-first](https://en.wikipedia.org/wiki/Cloud_computing), [machine-learning](https://en.wikipedia.org/wiki/Machine_learning) workflow editor that uses prebuilt language models and algorithms to perform [semi-supervised](https://en.wikipedia.org/wiki/Weak_supervision) [topic modelling](https://en.wikipedia.org/wiki/Topic_model). But that's a lot of buzzwords. In this section, we'll go over the core concepts and design choices for Teleoscope.
 
@@ -166,8 +172,18 @@ The practical upshot is that our system will attempt to cluster the document sou
 
 In this section, we will go over example ways to use our workflows to achieve desired outcomes.
 
-### Coming Soon
+### Ranking
+![Rank](/rank-group.gif)
+The Teleoscope tool ranks documents according to a source document. If you want to sort a source (search, document, or group) by similarity to another source, you can connect the one you want to rank to to the top source input, and the other to the bottom control input.
+
+As you can see in this example, the document that the group is being sorted relative to is now at the top of the list.
 
 
+### Unequal Weighting
+![Weight](/weight-teleoscope.gif)
+If you want to increase the influence of one source on the Teleoscope output, you can connect multiple copies of that source. Since the source vectors are averaged, having more copies of something allows you to weight the average. 
 
 
+### Focus on a snippet of text
+![Snippet](/note-snippet.gif)
+Since notes can have arbitrary text, you can copy and paste a snippet of text into a note from a document. Connect the note to the control input of a Teleoscope to only use the snippet of text that you care about.

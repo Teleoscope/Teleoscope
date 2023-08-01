@@ -164,18 +164,19 @@ def calculateSimilarity(documentVectors, queryVector):
     '''Calculate similarity
     '''
     # cosine similarity scores. (assumes vectors are normalized to unit length)
-    scores = queryVector.dot(documentVectors.T).flatten() 
+    scores = queryVector.dot(documentVectors.T).flatten()
     return scores
 
-def rankDocumentsBySimilarity(documents_ids, scores):
-    '''Create and return a list a tuples of (document_id, similarity_score) sorted by similarity score, high to low
+# def rankDocumentsBySimilarity(documents_ids, scores):
+    '''Create and return a list a tuples of (document_id, similarity_score) 
+    sorted by similarity score, high to low
     '''
-    return sorted([(document_id, score) for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
-
+    # return sorted([(document_id, score) for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
 
 
 def rankDocumentsBySimilarity(document_ids, scores, n_top=1000):
-    '''Create and return a list a tuples of (document_id, similarity_score) sorted by similarity score, high to low, keeping only the top N documents.
+    '''Create and return a list a tuples of (document_id, similarity_score) 
+    sorted by similarity score, high to low, keeping only the top N documents.
 
     Args:
     document_ids (List): The list of document IDs. 

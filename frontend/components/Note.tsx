@@ -22,7 +22,7 @@ export default function Note(props) {
   const editor = React.useRef(null);
 
   const debouncedSave = useRef(
-    lodash.debounce((e) => {
+    lodash.debounce((e, client) => {
       const content = e.getCurrentContent();
       client.update_note(id, convertToRaw(content));
     }, 1000)  // waits 5000 ms after the last call
@@ -35,7 +35,6 @@ export default function Note(props) {
   }, []);
 
  
-
   const handleLoad = () => {
     if (note) {
       const item = note["history"][0];
@@ -55,10 +54,8 @@ export default function Note(props) {
 
   const handleOnChange = (e) => {
     setEditorState(e);
-    debouncedSave(e);
+    debouncedSave(e, client);
   };
-
-  
 
   const focusEditor = () => {
     editor.current.focus();
@@ -87,7 +84,8 @@ export default function Note(props) {
             editorState={editorState}
             onBlur={handleBlur}
             onChange={handleOnChange}
-            // placeholder={document ? document["title"] : props.id}
+
+            placeholder={"Type here..."}
           />
         </Stack>
       </div>

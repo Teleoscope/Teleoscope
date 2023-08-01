@@ -49,6 +49,12 @@ export default function ButtonEdge({
     strokeWidth: 1.5
   }, markerEnd, }: EdgeProps)
 {
+ 
+  const selected_edges  = useAppSelector((state: RootState) => state.windows.selection.edges);
+  const selected = selected_edges.find(e => e.id === id)
+  if (selected) {
+    style.strokeWidth = 2.5
+  }
   
   const curvature = 0.15;
 
