@@ -9,6 +9,7 @@ import time
 import gridfs
 import datetime
 import pika
+import json
 from pymongo import MongoClient, database
 from random_object_id import generate
 import random
@@ -16,7 +17,7 @@ import random
 # ml dependencies
 import umap
 import hdbscan
-from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.metrics.pairwise import euclidean_distances, cosine_distances
 import spacy
 
 # local files
@@ -33,7 +34,7 @@ class Projection:
     by the limit param plus the documents in the provided human clusters/groups.
     """
 
-    def __init__(self, db: database.Database, sources, controls, limit=10000, topic_label_length=2):
+    def __init__(self, db: database.Database, sources, controls, limit=30000, topic_label_length=2):
         """Initializes the instance 
 
         Args:
@@ -88,49 +89,122 @@ class Projection:
         # build training set
         dm = self.document_ordering()
 
-        logging.info("Running UMAP Reduction...")
-        # self.ping_stomp("Running UMAP Reduction... 2/5")
 
-        # best params from march
-        # n_components = 30, min_dist = 1e-5, min_cluster_size = 10, cluster_selection_epsilon = 0.2
-        # https://github.com/lmcinnes/umap/issues/25
+        """
+            best params from march:
+            n_components = 30, min_dist = 1e-5, min_cluster_size = 10, cluster_selection_epsilon = 0.2
 
-        n_components = 10 # random.randint(10, 15)
-        n_neighbors = 10 # random.randint(5, 10)
-        min_cluster_size = 5
-        min_samples = 5
-        cluster_selection_epsilon = 0.2 # random.uniform(0.1, 0.3)
+            notes from turning:
+                - num clusters dont hit thresh if greater min_cluster_size > 7-8
+                - increase min samples, increase clusters
+                - increase epsilon, decrease clusters
+                - large n_components requires larger n_neighbors
+                - increasing n_neighbors, decreases clusters
+                - n_components greater than 10 are much the same
+                - 11 was most frequent nn for thresh
+        """
+
+        n_components = random.randint(11, 13)
+        n_neighbors = random.randint(11, 12)
+        min_cluster_size = random.randint(6, 8)
+        min_samples = random.randint(1, 4)
+        cluster_selection_epsilon = random.uniform(0.26, 0.29)
         min_dist = 1e-5
-
-        # Log the generated hyperparameter values
-        logging.info("Hyperparameters:")
-        logging.info(f"n_components: {n_components}")
-        logging.info(f"n_neighbors: {n_neighbors}")
-        logging.info(f"min_cluster_size: {min_cluster_size}")
-        logging.info(f"cluster_selection_epsilon: {cluster_selection_epsilon}")
-
+        
+        logging.info("Running UMAP Reduction...")
         umap_embeddings = umap.UMAP(
-            verbose = True,         # for logging
             metric = "precomputed", # use distance matrix
             n_components = n_components,      # reduce to n_components dimensions (2~100)
             n_neighbors = n_neighbors,     # local (small n ~2) vs. global (large n ~100) structure 
             min_dist = min_dist,        # minimum distance apart that points are allowed (0.0~0.99)
         ).fit_transform(dm)
-        logging.info(f"Shape after reduction: {umap_embeddings.shape}")
-
-
-        logging.info("Clustering with HDBSCAN...")
-        # self.ping_stomp("Clustering with HDBSCAN... 3/5")
-
-        self.hdbscan_labels = hdbscan.HDBSCAN(
-            min_cluster_size = min_cluster_size,              # num of neighbors needed to be considered a cluster (0~50, df=5)
-            min_samples = min_samples,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
-            cluster_selection_epsilon = cluster_selection_epsilon,    # have large clusters in dense regions while leaving smaller clusters small
-                                                # merge clusters if inter cluster distance is less than thres (df=0)
-        ).fit_predict(umap_embeddings)
+                
         
+        logging.info("Running HDBSCAN clustering...")
+        logging.info('----------------epochs-----------------')
+        logging.info('{:<12s}{:<10s}'.format('Attempt','Num. Clusters'))
+        logging.info('---------------------------------------')
 
-        logging.info(f"{len(set(self.hdbscan_labels))} resultant clusters.")
+        i = 0
+        num_clust = 0
+        while (num_clust < 10 or num_clust > 100):
+        
+            min_cluster_size = random.randint(6, 8)
+            min_samples = random.randint(1, 4)
+            cluster_selection_epsilon = random.uniform(0.26, 0.29)
+                
+            self.hdbscan_labels = hdbscan.HDBSCAN(
+                min_cluster_size = min_cluster_size,              # num of neighbors needed to be considered a cluster (0~50, df=5)
+                min_samples = min_samples,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
+                cluster_selection_epsilon = cluster_selection_epsilon,    # have large clusters in dense regions while leaving smaller clusters small
+                                                                        # merge clusters if inter cluster distance is less than thres (df=0)
+            ).fit_predict(umap_embeddings)
+
+            num_clust = len(set(self.hdbscan_labels))
+            i+=1
+
+            logging.info('{:<12d}{:<10d}'.format(i,num_clust))
+
+            if i == 100: raise Exception(f"Sorry, bad luck. dump: {num_clust}")
+
+        logging.info('---------umap-hyperparameters----------')
+        logging.info(f"n_components: {n_components}")
+        logging.info(f"n_neighbors:  {n_neighbors}")
+        
+        logging.info('--------hdbscan-hyperparameters--------')
+        logging.info(f"min_cluster_size:          {min_cluster_size}")
+        logging.info(f"min_samples:               {min_samples}")
+        logging.info(f"cluster_selection_epsilon: {np.round(cluster_selection_epsilon,3)}")
+
+        logging.info('---------------results-----------------')
+        logging.info(f"number of clusters: {len(set(self.hdbscan_labels))}")
+
+
+        # res = {}
+        # count = 0
+        # try:
+
+        #     for n_components in range(5,30,3):
+        #         logging.info(f"ncomp {n_components}")
+        #         for n_neighbors in range(5,30,3):
+        #             logging.info(f"nn {n_neighbors}")
+
+        #             umap_embeddings = umap.UMAP(
+        #                 verbose = True,         # for logging
+        #                 metric = "precomputed", # use distance matrix
+        #                 n_components = n_components,      # reduce to n_components dimensions (2~100)
+        #                 n_neighbors = n_neighbors,     # local (small n ~2) vs. global (large n ~100) structure 
+        #                 min_dist = min_dist,        # minimum distance apart that points are allowed (0.0~0.99)
+        #             ).fit_transform(dm)
+
+        
+        #             self.hdbscan_labels = hdbscan.HDBSCAN(
+        #                 min_cluster_size = 7,              # num of neighbors needed to be considered a cluster (0~50, df=5)
+        #                 min_samples = 2,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
+        #                 cluster_selection_epsilon = .27,    # have large clusters in dense regions while leaving smaller clusters small
+        #                                                                         # merge clusters if inter cluster distance is less than thres (df=0)
+        #             ).fit_predict(umap_embeddings)
+            
+        #             if len(set(self.hdbscan_labels)) > 20 and len(set(self.hdbscan_labels)) < 90:
+        #                 res[count] = {
+        #                     'clusters': len(set(self.hdbscan_labels)),
+        #                     'n_components': n_components,
+        #                     'n_neighbors': n_neighbors,
+        #                 }
+        #                 count+=1
+        #                 logging.info(f"||||||||FOUND|||||||FOUND||||||||||FOUND||||||||||")
+        #                 logging.info(f"{len(set(self.hdbscan_labels))} clusters.")
+
+
+        #     logging.info(f"dump {res}")
+        #     with open('result.json', 'w') as fp:
+        #         json.dump(res, fp) 
+       
+        # except KeyboardInterrupt:
+        #     logging.info(f"dump {res}")
+        #     with open('result.json', 'w') as fp:
+        #         json.dump(res, fp) 
+        
 
     def build_clusters(self):
         """ Iteratively builds groups in mongoDB relative to clustering
@@ -141,6 +215,10 @@ class Projection:
 
         # keep track of all topic labels (for collisions)
         topic_labels = []
+      
+        logging.info('---------------------------------------')
+        logging.info('{:<20s}{:<4s}'.format('Label','Num. Docs'))
+        logging.info('---------------------------------------')
 
         # create a new mongoDB group for each machine cluster
         for hdbscan_label in set(self.hdbscan_labels):
@@ -166,7 +244,8 @@ class Projection:
                 _label = self.get_topic(label_ids[:limit], topic_labels)
                 topic_labels.append(_label)
 
-            logging.info(f'There are {len(documents)} documents for Machine Cluster "{_label}".')
+            # logging.info(f'Cluster: "{_label}" has {len(documents)} documents')
+            logging.info('{:<20s}{:<4d}'.format(_label,len(documents)))
             
             self.add_cluster(documents, _label, _color)
         
@@ -329,11 +408,11 @@ class Projection:
 
         # build distance matrix
         logging.info("Building distance matrix...")
-        dm = euclidean_distances(document_vectors)
+        dm = cosine_distances(document_vectors)
         logging.info(f"Distance matrix has shape {dm.shape}.") # n-by-n symmetrical matrix
 
         # update distance matrix such that documents in the same group have distance ~0
-        INTRA_CLUSTER_DISTANCE = 1e-4
+        INTRA_CLUSTER_DISTANCE = 1e-2
         for group in group_doc_indices:
 
             indices = group_doc_indices[group]
