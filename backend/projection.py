@@ -34,7 +34,7 @@ class Projection:
     by the limit param plus the documents in the provided human clusters/groups.
     """
 
-    def __init__(self, db: database.Database, sources, controls, limit=30000, topic_label_length=2):
+    def __init__(self, db: database.Database, sources, controls, limit=20000, topic_label_length=2):
         """Initializes the instance 
 
         Args:
@@ -102,6 +102,7 @@ class Projection:
                 - increasing n_neighbors, decreases clusters
                 - n_components greater than 10 are much the same
                 - 11 was most frequent nn for thresh
+                - https://maartengr.github.io/BERTopic/getting_started/parameter%20tuning/parametertuning.html#umap
         """
 
         n_components = random.randint(11, 13)
@@ -148,16 +149,24 @@ class Projection:
             if i == 100: raise Exception(f"Sorry, bad luck. dump: {num_clust}")
 
         logging.info('---------umap-hyperparameters----------')
-        logging.info(f"n_components: {n_components}")
-        logging.info(f"n_neighbors:  {n_neighbors}")
+        logging.info('{:<28s}{:<5d}'.format('n_components:',n_components))
+        logging.info('{:<28s}{:<5d}'.format('n_neighbors:',n_neighbors))
+
+        # logging.info(f"n_components: {n_components}")
+        # logging.info(f"n_neighbors:  {n_neighbors}")
         
         logging.info('--------hdbscan-hyperparameters--------')
-        logging.info(f"min_cluster_size:          {min_cluster_size}")
-        logging.info(f"min_samples:               {min_samples}")
-        logging.info(f"cluster_selection_epsilon: {np.round(cluster_selection_epsilon,3)}")
+        logging.info('{:<28s}{:<5d}'.format('min_cluster_size:',min_cluster_size))
+        logging.info('{:<28s}{:<5d}'.format('min_samples:',min_samples))
+        logging.info('{:<28s}{:<3f}'.format('cluster_selection_epsilon:',cluster_selection_epsilon))
+
+        # logging.info(f"min_cluster_size:          {min_cluster_size}")
+        # logging.info(f"min_samples:               {min_samples}")
+        # logging.info(f"cluster_selection_epsilon: {np.round(cluster_selection_epsilon,3)}")
 
         logging.info('---------------results-----------------')
-        logging.info(f"number of clusters: {len(set(self.hdbscan_labels))}")
+        # logging.info(f"number of clusters: {len(set(self.hdbscan_labels))}")
+        logging.info('{:<28s}{:<5d}'.format('number of clusters:',len(set(self.hdbscan_labels))))
 
 
         # res = {}
