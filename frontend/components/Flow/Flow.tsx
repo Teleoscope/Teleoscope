@@ -18,7 +18,6 @@ import FlowUIComponents from "@/components/Flow/FlowUIComponents";
 import ContextMenuHandler from "@/components/ContextMenuHandler";
 import FlowFABWrapper from "@/components/Flow/FlowFABWrapper";
 import "reactflow/dist/style.css";
-import styles from "@/styles/flow.module.css";
 import lodash from 'lodash';
 import { setNodes, setEdges, setColor } from "@/actions/windows";
 import { loadBookmarkedDocuments } from "@/actions/windows";
@@ -32,7 +31,7 @@ interface MouseCoords {
   mouseY: number;
   worldX: number;
   worldY: number;
-} 
+}
 
 function Flow(props) {
   const wdefs = useWindowDefinitions();
@@ -139,24 +138,24 @@ function Flow(props) {
             target.id.split("%")[0],
             node.id.split("%")[0]
           );
-          dispatch(removeWindow(node.id));
+          dispatch(removeWindow({client: client, node: node.id}));
         }
       }
     }
 
     if (node?.data?.type == "Document" || node?.data?.type == "Note" || node?.data.type == "Group") {
-      if (tempEdges.length == 1 && tempEdges[0] != null) {
-        const connection = make_connection(tempEdges[0])
-        create_edge(connection, edges)
-        setTempEdges([])
-      }
+      // if (tempEdges.length == 1 && tempEdges[0] != null) {
+      //   const connection = make_connection(tempEdges[0])
+      //   create_edge(connection, edges)
+      //   setTempEdges([])
+      // }
     }
 
     if (node?.data?.type == "Cluster") {
       if (target) {
         if (target.data.type == "Groups") {
           client.copy_cluster(node.id.split("%")[0], session_id); // TODO: ADD index here
-          dispatch(removeWindow(node.id));
+          dispatch(removeWindow({client: client, node: node.id}));
         }
       }
     }
@@ -297,11 +296,11 @@ function Flow(props) {
   }, [getClosestEdge, setTempEdges, nodes]);
 
   const handleTempEdge = (_, node) => {
-      const closeEdge = getClosestEdge(node, nodes, edges);
-      if (closeEdge) {
-        closeEdge.className = styles.temp
-      }
-      setTempEdges([closeEdge])
+      // const closeEdge = getClosestEdge(node, nodes, edges);
+      // if (closeEdge) {
+      //   closeEdge.className = styles.temp
+      // }
+      // setTempEdges([closeEdge])
     }
 
     const throttledSave = useRef(

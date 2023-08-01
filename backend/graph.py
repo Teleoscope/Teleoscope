@@ -112,9 +112,13 @@ def remove_edge(db: database.Database,
         edge_type: schemas.EdgeType):
     """Removes an edge from the graph.
     """
+
+    # There may be multiple corresponding nodes for this source_oid
+    # but there should be only one possible target_oid since each target is unique
+    source = db.graph.find_one({"reference": source_oid, "edges.output.nodeid": target_oid})
     
     db.graph.update_one(
-        {"_id": source_oid},
+        {"_id": source["_id"]},
         {
             "$pull": {
                 "edges.output": {"nodeid": target_oid}
@@ -126,21 +130,23 @@ def remove_edge(db: database.Database,
         {"_id": target_oid},
         {
             "$pull": {
-                f"edges.{edge_type}": {"nodeid": source_oid}
+                f"edges.{edge_type}": {"nodeid": source["_id"]}
             }
         }
     )
 
     graph(db, target_oid)
 
-    pass
+    return
 
 
 def graph(db: database.Database, node_oid: ObjectId):
     """Recalculates all nodes to the right of specified node.
     """
+
+    db.graph.update_one({"_id": ObjectId(str(node_oid))}, {"$set": {"doclists": []}})
     node = db.graph.find_one({"_id": ObjectId(str(node_oid))})
-    db.graph.update_one({"_id":ObjectId(str(node_oid))}, {"$set": {"doclists": []}})
+    
 
     sources  = node["edges"]["source"]
     controls = node["edges"]["control"]
@@ -182,10 +188,6 @@ def graph(db: database.Database, node_oid: ObjectId):
 ################################################################################
 # Helpers
 ################################################################################
-
-
-
-
 def make_matrix(node_type: schemas.NodeType, oid: ObjectId):
     return []
 

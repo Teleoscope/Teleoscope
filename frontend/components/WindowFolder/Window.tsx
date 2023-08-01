@@ -8,13 +8,15 @@ import { Chip, Stack, Paper, Box, Divider } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { removeWindow, maximizeWindow } from "@/actions/windows";
 import { useEffect, useRef, useState } from "react";
+import { useStomp } from "@/util/Stomp";
 
 export default function Window(props) {
+  const client = useStomp()
   const w = props.windata;
   const dispatch = useDispatch();
 
   const handleDelete = () => {
-    dispatch(removeWindow(props.id));
+    dispatch(removeWindow({client: client, node: props.id}));
   };
 
   const elRef = useRef();
