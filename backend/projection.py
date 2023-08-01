@@ -1,16 +1,8 @@
 # boilerplate
-import tqdm, numpy as np, pickle
-import matplotlib.pyplot as plt
-import logging, pickle
+import numpy as np
+import logging
 from bson.objectid import ObjectId
-import gc
-from pathlib import Path
-import time
-import gridfs
-import datetime
-import pika
-import json
-from pymongo import MongoClient, database
+from pymongo import database
 from random_object_id import generate
 import random
 
@@ -110,7 +102,7 @@ class Projection:
         min_cluster_size = random.randint(6, 8)
         min_samples = random.randint(1, 4)
         cluster_selection_epsilon = random.uniform(0.26, 0.29)
-        min_dist = 1e-5
+        min_dist = 1e-4
         
         logging.info("Running UMAP Reduction...")
         umap_embeddings = umap.UMAP(
