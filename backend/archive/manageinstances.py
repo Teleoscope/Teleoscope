@@ -4,6 +4,7 @@
 import sys
 from dotenv import load_dotenv
 import os
+import boto3
 
 load_dotenv("../../frontend/.env.local")
 os.getenv('')
