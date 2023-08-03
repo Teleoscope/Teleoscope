@@ -7,7 +7,7 @@ export default async (req, res) => {
     .collection("documents")
     .find({})
     .project({ _id: 1, id: 1, text: 1, title: 1 })
-    .limit(20)
+    .limit(5)
     .toArray();
   res.json(query);
 };
