@@ -178,3 +178,6 @@ ansible/vars/*
 # next.js
 /.next/
 /out/
+
+# certificate files
+*.pem
