@@ -82,6 +82,7 @@
     "rgb-hex": "^4.0.1",
     "rxjs": "^7.8.1",
     "selecto": "^1.22.5",
+    "sharp": "^0.32.4",
     "swr": "^2.1.5",
     "ts-jest": "^29.1.0",
     "unique-names-generator": "^4.7.1",
