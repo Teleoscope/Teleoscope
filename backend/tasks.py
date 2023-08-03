@@ -264,7 +264,7 @@ def initialize_workflow(
         item=schemas.create_workspace_history_object(userid),
         oid=result.inserted_id,
         userid=userid,
-        action="Added session to workspace."
+        action="Added workflow to workspace."
     )
 
     utils.push_history(user_db, "workspaces", workspace_id, history_item)

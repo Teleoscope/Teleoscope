@@ -41,8 +41,15 @@ export async function getServerSideProps(context) {
   let db = await client.db("users");
 
   const workspace = await db
-    .collection("workspaces")
-    .findOne({ owner: new ObjectId(session.user.id), _id: new ObjectId(workspace_id)});
+  .collection("workspaces")
+  .findOne({
+    $or: [
+      { owner: new ObjectId(session.user.id) },
+      { "contributors.id": new ObjectId(session.user.id) }
+    ],
+    _id: new ObjectId(workspace_id)
+  });
+
   client.close()
 
   const database = workspace.database;
