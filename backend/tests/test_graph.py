@@ -10,6 +10,8 @@ from .. import tasks
 from .. import graph
 from .. import projection
 from .. import schemas
+from . import tuning
+
 
 current_time = None
 db = None
@@ -818,7 +820,9 @@ def test_model():
         ])  
     group_c = db.groups.find_one({"_id": groupid})
     c = schemas.create_edge(group_c["_id"], group_c["_id"], "Group")
-    controls.append(c)
+    # controls.append(c)
 
-    project = projection.Projection(db, sources, controls)
-    project.clustering_task()
+    # project = projection.Projection(db, sources, controls)
+    # project.clustering_task()
+    project = tuning.Tuning(db, sources, controls)
+    project.tuning()

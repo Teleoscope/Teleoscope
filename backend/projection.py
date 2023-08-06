@@ -358,6 +358,7 @@ class Projection:
             logging.info(f'{len(self.sources)} sources. Combining docs from sources...')
 
             document_ids = []
+            full_search_input = False # check to disallow more than one full search input
 
             for source in self.sources:
                 match source["type"]:
@@ -371,8 +372,14 @@ class Projection:
 
                     case "Search":
                         search = self.db.searches.find_one({"_id": source["id"]})
-                        cursor = self.db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1}).limit(self.n)
-                        document_ids += [d["_id"] for d in list(cursor)]
+                        query = search["history"][0]["query"]
+                        
+                        if query != "":
+                            cursor = self.db.documents.find(utils.make_query(query),projection={ "_id": 1}).limit(self.n)
+                            document_ids += [d["_id"] for d in list(cursor)]
+                        elif query == "" and full_search_input is False:
+                            document_ids += random.sample(all_doc_ids, self.n)
+                            full_search_input = True
 
                     case "Note":
                         pass
