@@ -61,14 +61,78 @@ class Tuning:
         # build distance matrix, run dimensionality reduction, run clustering
         self.learn_clusters()
 
+    def plot_results(self, parameter_name, parameter_values, num_clusters_list):
+        plt.plot(parameter_values, num_clusters_list, marker='o')
+        plt.xlabel(parameter_name)
+        plt.ylabel('Number of Clusters')
+        title = f'Number of Clusters vs. {parameter_name}'
+        plt.title(f'Number of Clusters vs. {parameter_name}')
+        plt.grid(True)
+        plt.savefig(f'{title}.png')
+        plt.close()
+ 
+
+    def tune_n(self):
+        float_list = list(np.linspace(500, 35000, 10)) #500, 35000, 10
+        parameter_values = [int(x) for x in float_list]
+
+        num_clusters_list_random = []
+        num_clusters_list_average = []
+        for val in parameter_values:
+            
+            self.ordering = 'random'  
+            self.n = val
+            dm = self.document_ordering()
+
+            umap_embeddings = umap.UMAP(
+                metric="precomputed",
+                min_dist=1e-4,
+                n_components=10,
+                n_neighbors=11,
+            ).fit_transform(dm)
+
+            self.hdbscan_labels = hdbscan.HDBSCAN(
+                min_cluster_size=7,
+                min_samples=3,
+                cluster_selection_epsilon=0.27,
+            ).fit_predict(umap_embeddings)
+
+            num_clusters = len(set(self.hdbscan_labels))
+            num_clusters_list_random.append(num_clusters)
+
+            self.ordering = 'average'  # Switch to 'average' ordering
+            dm = self.document_ordering()
+
+            umap_embeddings = umap.UMAP(
+                metric="precomputed",
+                min_dist=1e-4,
+                n_components=10,
+                n_neighbors=11,
+            ).fit_transform(dm)
+
+            self.hdbscan_labels = hdbscan.HDBSCAN(
+                min_cluster_size=7,
+                min_samples=3,
+                cluster_selection_epsilon=0.27,
+            ).fit_predict(umap_embeddings)
+
+            num_clusters = len(set(self.hdbscan_labels))
+            num_clusters_list_average.append(num_clusters)
+
+        plt.plot(parameter_values, num_clusters_list_random, marker='o', label='Random Ordering')
+        plt.plot(parameter_values, num_clusters_list_average, marker='o', label='Average Ordering')
+        plt.xlabel('n')
+        plt.ylabel('Number of Clusters')
+        plt.title(f'Number of Clusters vs. n')
+        plt.grid(True)
+        plt.legend()
+        plt.savefig(f'clusters_vs_n.png')
+        plt.close()
+
+
     def tune_n_components(self, dm):
 
         n_components = range(1,50,1) # 10
-        n_neighbors = 11
-        min_dist = 1e-4
-        min_cluster_size = 7
-        min_samples = 3
-        cluster_selection_epsilon = .27
 
         parameter_values = n_components
         parameter_name = 'n_components'
@@ -78,38 +142,20 @@ class Tuning:
 
             umap_embeddings = umap.UMAP(
                 metric = "precomputed", # use distance matrix
-                n_components = val,      # reduce to n_components dimensions (2~100)
-                n_neighbors = n_neighbors,     # local (small n ~2) vs. global (large n ~100) structure 
-                min_dist = min_dist,        # minimum distance apart that points are allowed (0.0~0.99)
+                n_components = val,     #      # minimum distance apart that points are allowed (0.0~0.99)
             ).fit_transform(dm)
             
-            self.hdbscan_labels = hdbscan.HDBSCAN(
-                min_cluster_size = min_cluster_size,              # num of neighbors needed to be considered a cluster (0~50, df=5)
-                min_samples = min_samples,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
-                cluster_selection_epsilon = cluster_selection_epsilon,    # have large clusters in dense regions while leaving smaller clusters small
-                                                                        # merge clusters if inter cluster distance is less than thres (df=0)
-            ).fit_predict(umap_embeddings)
+            self.hdbscan_labels = hdbscan.HDBSCAN().fit_predict(umap_embeddings)
 
             num_clusters = len(set(self.hdbscan_labels))
             num_clusters_list.append(num_clusters)
-
-        plt.plot(parameter_values, num_clusters_list, marker='o')
-        plt.xlabel(parameter_name)
-        plt.ylabel('Number of Clusters')
-        title = f'Number of Clusters vs. {parameter_name}'
-        plt.title(f'Number of Clusters vs. {parameter_name}')
-        plt.grid(True)
-        plt.savefig(f'/figs/{title}.png')
-        plt.show()
+            
+        self.plot_results(parameter_name, parameter_values, num_clusters_list)
 
     def tune_n_neighbors(self, dm):
 
-        n_components = 10
+
         n_neighbors = range(2,50,2) #11
-        min_dist = 1e-4
-        min_cluster_size = 7
-        min_samples = 3
-        cluster_selection_epsilon = .27
 
         parameter_values = n_neighbors
         parameter_name = 'n_neighbors'
@@ -119,39 +165,21 @@ class Tuning:
 
             umap_embeddings = umap.UMAP(
                 metric = "precomputed", # use distance matrix
-                n_components = n_components,      # reduce to n_components dimensions (2~100)
                 n_neighbors = val,     # local (small n ~2) vs. global (large n ~100) structure 
-                min_dist = min_dist,        # minimum distance apart that points are allowed (0.0~0.99)
             ).fit_transform(dm)
             
-            self.hdbscan_labels = hdbscan.HDBSCAN(
-                min_cluster_size = min_cluster_size,              # num of neighbors needed to be considered a cluster (0~50, df=5)
-                min_samples = min_samples,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
-                cluster_selection_epsilon = cluster_selection_epsilon,    # have large clusters in dense regions while leaving smaller clusters small
-                                                                        # merge clusters if inter cluster distance is less than thres (df=0)
-            ).fit_predict(umap_embeddings)
+            self.hdbscan_labels = hdbscan.HDBSCAN().fit_predict(umap_embeddings)
 
             num_clusters = len(set(self.hdbscan_labels))
             num_clusters_list.append(num_clusters)
 
-        plt.plot(parameter_values, num_clusters_list, marker='o')
-        plt.xlabel(parameter_name)
-        plt.ylabel('Number of Clusters')
-        title = f'Number of Clusters vs. {parameter_name}'
-        plt.title(f'Number of Clusters vs. {parameter_name}')
-        plt.grid(True)
-        plt.savefig(f'/figs/{title}.png')
-        plt.show()
+        self.plot_results(parameter_name, parameter_values, num_clusters_list)
+
 
     def tune_min_dist(self, dm):
 
-        n_components = 10
-        n_neighbors = 11
-        min_dist = list(np.linspace(1e-5,1e-3,30)) # 1e-4
-        min_cluster_size = 7
-        min_samples = 3
-        cluster_selection_epsilon = .27
-
+        min_dist = list(np.linspace(0.0,0.2,30)) # 1e-4
+        
         parameter_values = min_dist
         parameter_name = 'min_dist'
 
@@ -160,38 +188,26 @@ class Tuning:
 
             umap_embeddings = umap.UMAP(
                 metric = "precomputed", # use distance matrix
-                n_components = n_components,      # reduce to n_components dimensions (2~100)
-                n_neighbors = n_neighbors,     # local (small n ~2) vs. global (large n ~100) structure 
-                min_dist = val,        # minimum distance apart that points are allowed (0.0~0.99)
+                min_dist = val,       
+                n_components = 10,
+                n_neighbors =  11,
             ).fit_transform(dm)
             
             self.hdbscan_labels = hdbscan.HDBSCAN(
-                min_cluster_size = min_cluster_size,              # num of neighbors needed to be considered a cluster (0~50, df=5)
-                min_samples = min_samples,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
-                cluster_selection_epsilon = cluster_selection_epsilon,    # have large clusters in dense regions while leaving smaller clusters small
-                                                                        # merge clusters if inter cluster distance is less than thres (df=0)
+                min_cluster_size = 7,
+                min_samples = 3,
+                cluster_selection_epsilon = .27,
             ).fit_predict(umap_embeddings)
 
             num_clusters = len(set(self.hdbscan_labels))
             num_clusters_list.append(num_clusters)
 
-        plt.plot(parameter_values, num_clusters_list, marker='o')
-        plt.xlabel(parameter_name)
-        plt.ylabel('Number of Clusters')
-        title = f'Number of Clusters vs. {parameter_name}'
-        plt.title(f'Number of Clusters vs. {parameter_name}')
-        plt.grid(True)
-        plt.savefig(f'/figs/{title}.png')
-        plt.show()
+        self.plot_results(parameter_name, parameter_values, num_clusters_list)
+
     
     def tune_min_cluster_size(self, dm):
 
-        n_components = 10
-        n_neighbors =  11
-        min_dist = 1e-4
         min_cluster_size = range(2,50,2) #7
-        min_samples = 3
-        cluster_selection_epsilon = .27
 
         parameter_values = min_cluster_size
         parameter_name = 'min_cluster_size'
@@ -200,39 +216,21 @@ class Tuning:
         for val in parameter_values:
 
             umap_embeddings = umap.UMAP(
-                metric = "precomputed", # use distance matrix
-                n_components = n_components,      # reduce to n_components dimensions (2~100)
-                n_neighbors = n_neighbors,     # local (small n ~2) vs. global (large n ~100) structure 
-                min_dist = min_dist,        # minimum distance apart that points are allowed (0.0~0.99)
+                metric = "precomputed", 
             ).fit_transform(dm)
             
             self.hdbscan_labels = hdbscan.HDBSCAN(
-                min_cluster_size = val,              # num of neighbors needed to be considered a cluster (0~50, df=5)
-                min_samples = min_samples,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
-                cluster_selection_epsilon = cluster_selection_epsilon,    # have large clusters in dense regions while leaving smaller clusters small
-                                                                        # merge clusters if inter cluster distance is less than thres (df=0)
-            ).fit_predict(umap_embeddings)
+                min_cluster_size = val).fit_predict(umap_embeddings)
 
             num_clusters = len(set(self.hdbscan_labels))
             num_clusters_list.append(num_clusters)
 
-        plt.plot(parameter_values, num_clusters_list, marker='o')
-        plt.xlabel(parameter_name)
-        plt.ylabel('Number of Clusters')
-        title = f'Number of Clusters vs. {parameter_name}'
-        plt.title(f'Number of Clusters vs. {parameter_name}')
-        plt.grid(True)
-        plt.savefig(f'/figs/{title}.png')
-        plt.show()
+        self.plot_results(parameter_name, parameter_values, num_clusters_list)
+
 
     def tune_min_samples(self, dm):
 
-        n_components = 10
-        n_neighbors =  11
-        min_dist = 1e-4
-        min_cluster_size = 7
         min_samples = range(1,50,1) #3
-        cluster_selection_epsilon = .27
 
         parameter_values = min_samples
         parameter_name = 'min_samples'
@@ -241,38 +239,25 @@ class Tuning:
         for val in parameter_values:
 
             umap_embeddings = umap.UMAP(
-                metric = "precomputed", # use distance matrix
-                n_components = n_components,      # reduce to n_components dimensions (2~100)
-                n_neighbors = n_neighbors,     # local (small n ~2) vs. global (large n ~100) structure 
-                min_dist = min_dist,        # minimum distance apart that points are allowed (0.0~0.99)
-            ).fit_transform(dm)
+                metric = "precomputed").fit_transform(dm)
             
-            self.hdbscan_labels = hdbscan.HDBSCAN(
-                min_cluster_size = min_cluster_size,              # num of neighbors needed to be considered a cluster (0~50, df=5)
-                min_samples = val,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
-                cluster_selection_epsilon = cluster_selection_epsilon,    # have large clusters in dense regions while leaving smaller clusters small
-                                                                        # merge clusters if inter cluster distance is less than thres (df=0)
+            self.hdbscan_labels = hdbscan.HDBSCAN(             # num of neighbors needed to be considered a cluster (0~50, df=5)
+                min_samples = val,       
             ).fit_predict(umap_embeddings)
 
             num_clusters = len(set(self.hdbscan_labels))
             num_clusters_list.append(num_clusters)
 
-        plt.plot(parameter_values, num_clusters_list, marker='o')
-        plt.xlabel(parameter_name)
-        plt.ylabel('Number of Clusters')
-        title = f'Number of Clusters vs. {parameter_name}'
-        plt.title(f'Number of Clusters vs. {parameter_name}')
-        plt.grid(True)
-        plt.savefig(f'/figs/{title}.png')
-        plt.show()
+        self.plot_results(parameter_name, parameter_values, num_clusters_list)
+
 
     def tune_cluster_selection_epsilon(self, dm):
 
-        n_components = 10
-        n_neighbors =  11
-        min_dist = 1e-4
-        min_cluster_size = 7
-        min_samples = 3
+        # n_components = 10
+        # n_neighbors =  11
+        # min_dist = 1e-4
+        # min_cluster_size = 7
+        # min_samples = 3
         cluster_selection_epsilon = [0.1, 0.1206896551724138, 0.1413793103448276, 0.16206896551724137, 0.18275862068965518, 0.20344827586206898, 0.22413793103448276, 0.24482758620689657, 0.2655172413793103, 0.28620689655172415, 0.30689655172413793, 0.3275862068965517, 0.34827586206896555, 0.36896551724137927, 0.3896551724137931, 0.41034482758620694, 0.43103448275862066, 0.4517241379310345, 0.4724137931034482, 0.49310344827586206, 0.5137931034482759, 0.5344827586206896, 0.5551724137931034, 0.5758620689655173, 0.596551724137931, 0.6172413793103448, 0.6379310344827586, 0.6586206896551724, 0.6793103448275862, 0.7]#.27
 
         parameter_values = cluster_selection_epsilon
@@ -283,29 +268,17 @@ class Tuning:
 
             umap_embeddings = umap.UMAP(
                 metric = "precomputed", # use distance matrix
-                n_components = n_components,      # reduce to n_components dimensions (2~100)
-                n_neighbors = n_neighbors,     # local (small n ~2) vs. global (large n ~100) structure 
-                min_dist = min_dist,        # minimum distance apart that points are allowed (0.0~0.99)
             ).fit_transform(dm)
             
-            self.hdbscan_labels = hdbscan.HDBSCAN(
-                min_cluster_size = min_cluster_size,              # num of neighbors needed to be considered a cluster (0~50, df=5)
-                min_samples = min_samples,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
-                cluster_selection_epsilon = val,    # have large clusters in dense regions while leaving smaller clusters small
-                                                                        # merge clusters if inter cluster distance is less than thres (df=0)
+            self.hdbscan_labels = hdbscan.HDBSCAN(          # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
+                cluster_selection_epsilon = val,                       # merge clusters if inter cluster distance is less than thres (df=0)
             ).fit_predict(umap_embeddings)
 
             num_clusters = len(set(self.hdbscan_labels))
             num_clusters_list.append(num_clusters)
 
-        plt.plot(parameter_values, num_clusters_list, marker='o')
-        plt.xlabel(parameter_name)
-        plt.ylabel('Number of Clusters')
-        title = f'Number of Clusters vs. {parameter_name}'
-        plt.title(f'Number of Clusters vs. {parameter_name}')
-        plt.grid(True)
-        plt.savefig(f'/figs/{title}.png')
-        plt.show()
+        self.plot_results(parameter_name, parameter_values, num_clusters_list)
+
 
 
     def learn_clusters(self):
@@ -313,6 +286,7 @@ class Tuning:
         """
 
         # build training set
+        self.tune_n()
         dm = self.document_ordering()
 
 
@@ -331,11 +305,10 @@ class Tuning:
                 - https://maartengr.github.io/BERTopic/getting_started/parameter%20tuning/parametertuning.html#umap
         """
         # self.tune_min_dist(dm)
-
         # self.tune_n_components(dm)
         # self.tune_n_neighbors(dm)
         # self.tune_min_cluster_size(dm)
-        self.tune_min_samples(dm)
+        # self.tune_min_samples(dm)
         # self.tune_cluster_selection_epsilon(dm)
 
     def document_ordering(self):
