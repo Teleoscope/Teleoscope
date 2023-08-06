@@ -26,7 +26,14 @@ class Projection:
     by the limit param plus the documents in the provided human clusters/groups.
     """
 
-    def __init__(self, db: database.Database, sources, controls, limit=20000, topic_label_length=2):
+    def __init__(
+            self, 
+            db: database.Database, 
+            sources, 
+            controls, 
+            limit=20000, 
+            ordering="random", 
+            topic_label_length=2):
         """Initializes the instance 
 
         Args:
@@ -35,7 +42,11 @@ class Projection:
             controls:
                 list of control inputs: group, document, search, note 
             limit:
-                The number of documents to cluster. Default 10000
+                Limits the size of n
+            ordering:
+                Metric for subsetting feature space
+                    random: random subset
+                    average: ranked ordering w/ respect to average vector of labelled documents
             topic_label_length:
                 Minimum number of words to use for machine cluster topic labels. Default 2
         """
@@ -49,9 +60,9 @@ class Projection:
         self.db = db
         self.sources = sources
         self.controls = controls
-        self.limit = limit
+        self.n = limit
         self.topic_label_length = topic_label_length
-        self.description = ""
+        self.ordering = ordering
         self.group_doc_indices = None
         self.groups = []
 
@@ -60,6 +71,7 @@ class Projection:
         self.document_ids = None    
         self.hdbscan_labels = None
         self.doclists = []
+        self.user_groups = []
         self.doc_groups = []
 
     def clustering_task(self):
@@ -71,6 +83,9 @@ class Projection:
 
         # iteratively add clusters (as groups) to database
         self.build_clusters()
+
+        # append updated user groups to head
+        self.doclists = self.user_groups + self.doclists
 
         return self.doclists
 
@@ -100,19 +115,23 @@ class Projection:
         n_components = random.randint(10, 12)
         n_neighbors = random.randint(n_components, 13)
         min_dist = 1e-4
-        
+
         logging.info("Running UMAP Reduction...")
+        logging.info('---------umap-hyperparameters----------')
+        logging.info('{:<28s}{:<5d}'.format('n_components:',n_components))
+        logging.info('{:<28s}{:<5d}'.format('n_neighbors:',n_neighbors))
+        logging.info('{:<28s}{:<5f}'.format('min_dist:',min_dist))
+        
         umap_embeddings = umap.UMAP(
             metric = "precomputed", # use distance matrix
             n_components = n_components,      # reduce to n_components dimensions (2~100)
             n_neighbors = n_neighbors,     # local (small n ~2) vs. global (large n ~100) structure 
             min_dist = min_dist,        # minimum distance apart that points are allowed (0.0~0.99)
         ).fit_transform(dm)
-                
         
         logging.info("Running HDBSCAN clustering...")
-        logging.info('----------------epochs-----------------')
-        logging.info('{:<12s}{:<10s}'.format('Attempt','Num. Clusters'))
+        logging.info('---------------------------------------')
+        logging.info('{:<7s}{:<10s}'.format('Epoch','Num. Clusters'))
         logging.info('---------------------------------------')
 
         i, num_clust, min_cluster_size, min_samples, cluster_selection_epsilon = 0, 0, 0, 0, 0.0
@@ -133,14 +152,9 @@ class Projection:
             num_clust = len(set(self.hdbscan_labels))
             i+=1 #epoch
 
-            logging.info('{:<12d}{:<10d}'.format(i,num_clust))
+            logging.info('{:<7d}{:<10d}'.format(i,num_clust))
 
-            if i == 100: raise Exception(f"Sorry, bad luck. dump: {num_clust}")
-
-        logging.info('---------umap-hyperparameters----------')
-        logging.info('{:<28s}{:<5d}'.format('n_components:',n_components))
-        logging.info('{:<28s}{:<5d}'.format('n_neighbors:',n_neighbors))
-        logging.info('{:<28s}{:<5f}'.format('min_dist:',min_dist))
+            if i == 100: break
 
         logging.info('--------hdbscan-hyperparameters--------')
         logging.info('{:<28s}{:<5d}'.format('min_cluster_size:',min_cluster_size))
@@ -227,18 +241,18 @@ class Projection:
             documents = label_ids.tolist()
             
             # create appropriate label for current hdbscan label
-            _label, _color = self.get_label(hdbscan_label, given_labels)
+            _label, _color, _description = self.get_label(hdbscan_label, given_labels)
             
             # learn a topic label for if current cluster is a machine cluster
             if _label == 'machine':
                 limit = min(20, len(label_ids))
-                _label = self.get_topic(label_ids[:limit], topic_labels)
+                _label, _description = self.get_topic(label_ids[:limit], topic_labels)
                 topic_labels.append(_label)
 
             # logging.info(f'Cluster: "{_label}" has {len(documents)} documents')
             logging.info('{:<20s}{:<4d}'.format(_label,len(documents)))
             
-            self.add_cluster(documents, _label, _color)
+            self.add_cluster(documents, _label, _color, _description)
         
         # clear any groups that were made for individual document inputs
         for group in self.doc_groups:
@@ -310,26 +324,39 @@ class Projection:
         logging.info("Gathering all document vectors from embeddings...")
         # grab all document data from embeddings
         all_doc_ids, all_doc_vecs = utils.get_documents(self.db.name)
+        if len(all_doc_ids) < self.n:
+            self.n = len(all_doc_ids)
 
         # if sources = 0: average ordering of conrolls for all[30000]
-        if len(self.sources) == 0:
+        logging.info('Gathering Document IDs...')
 
-            logging.info('No sources. Using average ordering...')
+        if len(self.sources) == 0:
             
-            # build a list of ids of documents in all groups 
-            docs = []
-            for group in self.groups:
-                group_document_ids = group["history"][0]["included_documents"]
-                docs += group_document_ids
+            logging.info(f"n = {self.n}")
+
+            if self.ordering == "average":
+                logging.info('No sources. Using average ordering...')
+                
+                # build a list of ids of documents in all groups 
+                docs = []
+                for group in self.groups:
+                    group_document_ids = group["history"][0]["included_documents"]
+                    docs += group_document_ids
+                
+                # get control vectors
+                control_vecs = [all_doc_vecs[all_doc_ids.index(oid)] for oid in docs]
+                source_vecs = np.array(all_doc_vecs)
+                ranks = graph.rank(control_vecs, all_doc_ids, source_vecs, self.n)
+                document_ids = [i for i,s in ranks] 
             
-            # get control vectors
-            control_vecs = [all_doc_vecs[all_doc_ids.index(oid)] for oid in docs]
-            source_vecs = np.array(all_doc_vecs)
-            ranks = graph.rank(control_vecs, all_doc_ids, source_vecs, self.limit)
-            document_ids = [i for i,s in ranks] 
-        
+            if self.ordering == "random":
+                logging.info('No sources. Using random ordering...')
+                document_ids = random.sample(all_doc_ids, self.n)
+
         else:
             # if sources > 0: sources U controls 
+            logging.info(f'{len(self.sources)} sources. Combining docs from sources...')
+
             document_ids = []
 
             for source in self.sources:
@@ -339,18 +366,22 @@ class Projection:
 
                     case "Group":
                         group = self.db.groups.find_one({"_id": source["id"]})
-                        document_ids.append(group["history"][0]["included_documents"])
+                        docs =  group["history"][0]["included_documents"]
+                        document_ids += [ObjectId(str(id)) for id in docs]
 
                     case "Search":
                         search = self.db.searches.find_one({"_id": source["id"]})
-                        cursor = self.db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1}).limit(self.limit)
+                        cursor = self.db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1}).limit(self.n)
                         document_ids += [d["_id"] for d in list(cursor)]
 
                     case "Note":
                         pass
             
             # remove duplicate ids
-            document_ids = list(dict.fromkeys(document_ids))
+            document_ids = list(set(document_ids))
+            self.n = len(document_ids)
+            logging.info(f"n = {self.n}")
+
  
         # Create a dictionary to store the indices of all_doc_ids
         index_dict = {all_doc_ids[i]: i for i in range(len(all_doc_ids))}
@@ -358,15 +389,14 @@ class Projection:
         # Get the indices of document_ids using the dictionary
         indices = [index_dict[i] for i in document_ids]
 
-        logging.info("Building sorted array of document vectors...")
+        logging.info('Gathering Document Vectors...')
         # use indices of ranked ids to build sorted array of document vectors
         document_vectors = np.array([all_doc_vecs[i] for i in indices])
-        logging.info(f"Document vectors are length: {len(document_vectors)}")
         # dict where keys are group names and values are indices of documents
         group_doc_indices = {}
         
         # make sure documents in groups are included in training sets
-        logging.info("Appending documents from groups to document vector and id list...")
+        logging.info("Appending documents from input groups...")
         for group in self.groups:
 
             group_document_ids = group["history"][0]["included_documents"]
@@ -378,7 +408,7 @@ class Projection:
                 # see if document is already in training sets
                 try:
                     id = ObjectId(str(str_id))
-                    document_ids.index(str(id))
+                    document_ids.index(id)
 
                 # if not add document to training sets
                 except:
@@ -387,13 +417,13 @@ class Projection:
                         projection={'textVector': 1},
                     )
                     if not document: raise Exception(f"Document {str(id)} not found")
-                    document_ids.append(str(id))
+                    document_ids.append(id)
                     vector = np.array(document["textVector"]).reshape((1, 512))
                     document_vectors = np.append(document_vectors, vector, axis=0)
 
                 # get index of document in group with respect to training sets
                 finally:
-                    indices.append(document_ids.index(str(id)))
+                    indices.append(document_ids.index(id))
 
             group_doc_indices[group["history"][0]["label"]] = indices
 
@@ -441,8 +471,7 @@ class Projection:
         
         # outlier label
         if hdbscan_label == -1:
-            self.description = "outlier documents"
-            return 'outliers', '#ff1919'
+            return 'outliers', '#ff1919', "outlier documents"
 
         # check if hdbscan_label was for a human cluster(s)
         for _name in given_labels:
@@ -461,11 +490,10 @@ class Projection:
                     check = more = True
         
         if check:
-            self.description = "your group"
-            return name, '#ff70e2'
+            return name, '#ff70e2', "your group"
 
         # return for if label is newly generated machine cluster
-        return 'machine', '#737373'
+        return 'machine', '#737373', ''
 
     def get_topic(self, label_ids, topic_labels):
         """Provides a topic label for a machine cluster
@@ -499,7 +527,10 @@ class Projection:
         # transform as bag of words with tf-idf strategy
         from sklearn.feature_extraction.text import TfidfVectorizer
         vec = TfidfVectorizer()
-        X = vec.fit_transform(docs_pp)
+        try:
+            X = vec.fit_transform(docs_pp)
+        except:
+            return "generic cluster", "documents only contain stop words"
 
         # apply LDA topic modelling reduction
         from sklearn.decomposition import LatentDirichletAllocation
@@ -523,15 +554,15 @@ class Projection:
                 pass
 
         # build a 7 word description from frequent topic labels
-        self.description = feature_names[sorting[0][0]]
+        description = feature_names[sorting[0][0]]
         for i in range(1, min(8, len(sorting[0]))):
-            self.description += " " + feature_names[sorting[0][i]]
+            description += " " + feature_names[sorting[0][i]]
 
         # check for collisions with existing labels; if yes, append another topic label. 
         i = self.topic_label_length
         while(1):
             if label not in topic_labels:
-                return label
+                return label, description
             else:
                 label += " " + feature_names[sorting[0][i]]
                 i += 1
@@ -570,7 +601,7 @@ class Projection:
                 clean_text.append(lemma.lower())
         return " ".join(clean_text) 
     
-    def add_cluster(self, documents, label, color):
+    def add_cluster(self, documents, label, color, description):
         """
         Adds a cluster to projection
         """
@@ -579,8 +610,12 @@ class Projection:
             "ranked_documents": [(d, 1.0) for d in documents],
             "label": label,
             "color": color,
+            "description": description,
             "type": "Cluster"
         }
 
-        self.doclists.append(doclist)
+        if description == "your group":
+            self.user_groups.append(doclist)
+        else:
+            self.doclists.append(doclist)
         

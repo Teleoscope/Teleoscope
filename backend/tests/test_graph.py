@@ -751,14 +751,7 @@ def test_make_and_remove_multiple_edges_from_document_to_teleoscope():
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) == 0
-
-
-
-
-
-
-
-    
+  
 
 def test_model():
 
@@ -825,7 +818,7 @@ def test_model():
         ])  
     group_c = db.groups.find_one({"_id": groupid})
     c = schemas.create_edge(group_c["_id"], group_c["_id"], "Group")
-    # controls.append(c)
+    controls.append(c)
 
     project = projection.Projection(db, sources, controls)
     project.clustering_task()

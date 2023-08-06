@@ -23,12 +23,13 @@ from . import schemas
 db = "test"
 
 def make_client():
-    autht = "authSource=admin&authMechanism=SCRAM-SHA-256&tls=true"
+    # autht = "authSource=admin&authMechanism=SCRAM-SHA-256&tls=true" Added this to config as: auth.mongodb["autht"]
     connect_str = (
         f'mongodb://'
         f'{auth.mongodb["username"]}:'
         f'{auth.mongodb["password"]}@'
-        f'{auth.mongodb["host"]}/?{autht}'
+        f'{auth.mongodb["host"]}/?'
+        f'{auth.mongodb["autht"]}'
     )
     client = MongoClient(
         connect_str, 
