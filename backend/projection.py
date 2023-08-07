@@ -62,7 +62,9 @@ class Projection:
         self.sources = sources
         self.controls = controls
         self.n = limit
+        self.n = limit
         self.topic_label_length = topic_label_length
+        self.ordering = ordering
         self.ordering = ordering
         self.group_doc_indices = None
         self.groups = []
