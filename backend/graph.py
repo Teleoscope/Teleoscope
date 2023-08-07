@@ -385,10 +385,6 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
 
 def update_projection(db: database.Database, projection_node, sources: List, controls: List, parameters):
 
-    # logging.info(
-    #     f"Updating Projection for database {db.name} and node {projection_node} with "
-    #     f"sources {sources} and controls {controls} and paramaters {parameters}."
-    # )
 
     if len(controls) == 0:
         logging.info(f"No controls included. Returning original projection node.")
@@ -397,7 +393,7 @@ def update_projection(db: database.Database, projection_node, sources: List, con
     if len(controls) == 1:
         match controls[0]["type"]:
             case "Search" | "Note":
-                logging.info(f"This node type cannot be the only control input. Returning original projection node.")
+                logging.info(f"This node type cannot be the only control input. Returning original projection node.")                
                 return projection_node
             
     if len(controls) > 1:
@@ -406,8 +402,10 @@ def update_projection(db: database.Database, projection_node, sources: List, con
         if "Group" not in c_types and "Document" not in c_types:
             logging.info(f"Require group as control input. Returning original projection node.")
             return projection_node
-                   
-    project = projection.Projection(db, sources, controls)
+    
+    logging.info(f"Updating Projection id: {projection_node['_id']}")
+              
+    project = projection.Projection(db, sources, controls, projection_node['_id'])
     doclists = project.clustering_task()
     
     for doclist in doclists:
