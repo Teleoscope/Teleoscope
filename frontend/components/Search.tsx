@@ -46,7 +46,7 @@ export default function Search({id, windata, color}) {
 
   const Count = () => (
     <Typography sx={{ width: "100%" }} align="center" variant="caption">
-      Results {count_loading ? "loading..." : `: ${count}`}
+      Number of results: {count_loading ? "loading..." : `${count}`}
     </Typography>
   );
 

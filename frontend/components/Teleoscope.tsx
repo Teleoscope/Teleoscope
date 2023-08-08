@@ -9,8 +9,9 @@ import DocumentList from "@/components/Documents/DocumentList";
 
 // util
 import { useSWRHook } from "@/util/swr";
-import { Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import ButtonActions from "./ButtonActions";
+import Histogram from "./Histogram";
 
 export default function Teleoscope(props) {
   const [teleoscope_id] = useState(props.id.split("%")[0]);
@@ -24,8 +25,14 @@ export default function Teleoscope(props) {
   const Status = (teleoscope) => {
     if (teleoscope) {
      if (teleoscope.doclists.length > 0) {
-       return <Typography sx={{ width: "100%" }} align="center" variant="caption">
-         Number of results: {teleoscope.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)}</Typography>
+       return (
+        <Stack direction="row" sx={{ width: "100%" }} spacing={2} alignItems="center" justifyContent="center">
+          <Typography  align="center" variant="caption">
+            Number of results: {teleoscope.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)}
+          </Typography>
+          <Histogram data={teleoscope.doclists[0].ranked_documents}></Histogram>
+        </Stack>
+        )
      }
      if (teleoscope.edges.control.length > 0) {
        return  <Typography sx={{ width: "100%" }} align="center" variant="caption">

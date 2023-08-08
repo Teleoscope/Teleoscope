@@ -10,6 +10,7 @@ import DocumentList from "@/components/Documents/DocumentList";
 import { useSWRHook } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
 import { CopyJson, CopyText, SaveDocx } from "@/components/Groups/GroupActions";
+import { Typography } from "@mui/material";
 
 export default function Group({ id: winId, windata, color }) {
   const id = winId.split("%")[0];
@@ -27,6 +28,13 @@ export default function Group({ id: winId, windata, color }) {
     group: group,
   };
 
+  const Status = (doclist) => {
+    return (
+      <Typography sx={{ width: "100%" }} align="center" variant="caption">
+        Number of documents: {doclist?.length}</Typography>
+    )
+  }
+
   return (
     <Stack direction="column" sx={{ height: "100%" }}>
         <ButtonActions
@@ -36,6 +44,12 @@ export default function Group({ id: winId, windata, color }) {
             [CopyText, ButtonActionsConfig],
           ]}
         ></ButtonActions>
+        <ButtonActions
+          inner={[
+            [Status, data]
+          ]}
+        >
+        </ButtonActions>
       <Box sx={{ flexGrow: 1, flexDirection: "column" }}>
         <DocumentList
           data={[{id: id, ranked_documents: data}]}
