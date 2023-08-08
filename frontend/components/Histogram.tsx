@@ -36,8 +36,7 @@ const Histogram = ({ data }) => {
     // Create the histogram bins
     const bins = d3.histogram()
       .domain(x.domain())
-      .thresholds(thresholds)
-      (rankData);
+      .thresholds(thresholds)(rankData);
 
     const y = d3.scaleLinear()
       .domain([0, d3.max(bins, d => d.length)])
