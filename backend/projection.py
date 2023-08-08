@@ -31,6 +31,7 @@ class Projection:
             db: database.Database, 
             sources, 
             controls, 
+            projection_id,
             limit=20000, 
             ordering="random", 
             topic_label_length=2):
@@ -65,6 +66,7 @@ class Projection:
         self.ordering = ordering
         self.group_doc_indices = None
         self.groups = []
+        self.pid = ObjectId(str(projection_id))
 
         # large lists (number of examples)
         self.nlp = spacy.load("en_core_web_sm")
@@ -94,8 +96,8 @@ class Projection:
         """
 
         # build training set
+        self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "processing source input... (1/4)"} })
         dm = self.document_ordering()
-
 
         """
             best params from march:
@@ -118,6 +120,7 @@ class Projection:
 
 
         logging.info("Running UMAP Reduction...")
+        self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "projecting control input... (2/4)"} })
         
         umap_embeddings = umap.UMAP(
             metric = "precomputed", # use distance matrix
@@ -126,6 +129,7 @@ class Projection:
             min_dist = min_dist,        # minimum distance apart that points are allowed (0.0~0.99)
         ).fit_transform(dm)
         
+        self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "clustering... (3/4)"} })
 
         logging.info("Running HDBSCAN clustering...")
         logging.info('---------------------------------------')
@@ -170,6 +174,8 @@ class Projection:
     def build_clusters(self):
         """ Iteratively builds groups in mongoDB relative to clustering
         """
+
+        self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "labelling clusters... (4/4)"} })
 
         # identify what machine label was given to each group
         given_labels = self.get_given_labels()
