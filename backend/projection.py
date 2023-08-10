@@ -32,7 +32,7 @@ class Projection:
             sources, 
             controls, 
             projection_id,
-            limit=20000, 
+            limit=10000, 
             ordering="random", 
             topic_label_length=2):
         """Initializes the instance 
@@ -62,9 +62,7 @@ class Projection:
         self.sources = sources
         self.controls = controls
         self.n = limit
-        self.n = limit
         self.topic_label_length = topic_label_length
-        self.ordering = ordering
         self.ordering = ordering
         self.group_doc_indices = None
         self.groups = []
@@ -159,6 +157,37 @@ class Projection:
             logging.info('{:<7d}{:<10d}'.format(i,num_clust))
 
             if i == 100: break
+
+
+        # clusters_list = []
+
+        # for epoch in range(20):
+        #     # embedding_sample = random.sample(umap_embeddings.tolist(), 10000)
+
+        #     num_clust = 0
+        #     while (num_clust < 20 or num_clust > 80):
+
+        #         min_cluster_size = random.randint(10, 15) #11
+        #         min_samples = random.randint(10, 15)#12
+        #         cluster_selection_epsilon = random.uniform(0.26, 0.29) #0.270212
+                    
+        #         epoch_labels = hdbscan.HDBSCAN(
+        #             min_cluster_size = min_cluster_size,              # num of neighbors needed to be considered a cluster (0~50, df=5)
+        #             min_samples = min_samples,                  # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
+        #             cluster_selection_epsilon = cluster_selection_epsilon,    # have large clusters in dense regions while leaving smaller clusters small
+        #                                                                     # merge clusters if inter cluster distance is less than thres (df=0)
+        #         ).fit_predict(umap_embeddings)
+                
+        #         num_clust = len(set(epoch_labels))
+        #         logging.info('{:<7d}{:<10d}'.format(epoch,num_clust))
+
+        #     clusters_list.append(epoch_labels)
+
+        # from . import ensemble
+        # logging.info('ensembling')
+
+        # self.hdbscan_labels = ensemble.clustering_ensemble(clusters_list, weights = None, threshold=0.1)
+        # logging.info(f'out labels {self.hdbscan_labels[:3]}')
         
         logging.info('---------umap-hyperparameters----------')
         logging.info('{:<28s}{:<5d}'.format('n_components:',n_components))
