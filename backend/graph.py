@@ -404,8 +404,12 @@ def update_projection(db: database.Database, projection_node, sources: List, con
             return projection_node
     
     logging.info(f"Updating Projection id: {projection_node['_id']}")
+
+    if parameters["ordering"] is not None:
+        ordering = parameters["ordering"]
+    else: ordering = "average" # default ordering
               
-    project = projection.Projection(db, sources, controls, projection_node['_id'])
+    project = projection.Projection(db, sources, controls, projection_node['_id'], ordering)
     doclists = project.clustering_task()
     
     for doclist in doclists:

@@ -32,8 +32,8 @@ class Projection:
             sources, 
             controls, 
             projection_id,
+            ordering, 
             limit=20000, 
-            ordering="random", 
             topic_label_length=2):
         """Initializes the instance 
 
