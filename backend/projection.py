@@ -33,6 +33,7 @@ class Projection:
             controls, 
             projection_id,
             ordering, 
+            separation,
             limit=20000, 
             topic_label_length=2):
         """Initializes the instance 
@@ -52,18 +53,14 @@ class Projection:
                 Minimum number of words to use for machine cluster topic labels. Default 2
         """
 
-        # self.dbstring = None
-        # self.transaction_session = None
-        # self.user_id = None
-        # self.group_id_strings = None
-        # self.projection_id = None
-        # self.session_id = None
+
         self.db = db
         self.sources = sources
         self.controls = controls
         self.n = limit
         self.topic_label_length = topic_label_length
         self.ordering = ordering
+        self.separation = separation
         self.group_doc_indices = None
         self.groups = []
         self.pid = ObjectId(str(projection_id))
@@ -403,17 +400,21 @@ class Projection:
 
         # update distance matrix such that documents in the same group have distance ~0
         INTRA_CLUSTER_DISTANCE = 1e-3
-        for group in group_doc_indices:
 
-            indices = group_doc_indices[group]
-            size = range(len(indices))
+        for group, indices in group_doc_indices.items():
+            for i in indices:
+                dm[i, indices] *= INTRA_CLUSTER_DISTANCE
 
-            for _i in size:
-                i = indices[_i]
+        if self.separation:
+            # update distance matrix such that documents in the differnet groups have distance 1
+            INTER_CLUSTER_DISTANCE = 1
 
-                for _j in size:
-                    j = indices[_j]
-                    dm[i, j] *= INTRA_CLUSTER_DISTANCE
+            for group_i, indices_i in group_doc_indices.items():
+                for group_j, indices_j in group_doc_indices.items():
+                    if group_i != group_j:
+                        for i in indices_i:
+                            for j in indices_j:
+                                dm[i, j] = INTER_CLUSTER_DISTANCE
 
         self.group_doc_indices = group_doc_indices
         self.document_ids = document_ids

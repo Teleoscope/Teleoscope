@@ -408,8 +408,12 @@ def update_projection(db: database.Database, projection_node, sources: List, con
     if parameters["ordering"] is not None:
         ordering = parameters["ordering"]
     else: ordering = "average" # default ordering
-              
-    project = projection.Projection(db, sources, controls, projection_node['_id'], ordering)
+
+    if parameters["separation"] is not None:
+        separation = parameters["separation"]
+    else: separation = False # default no seperation
+
+    project = projection.Projection(db, sources, controls, projection_node['_id'], ordering, separation)
     doclists = project.clustering_task()
     
     for doclist in doclists:
