@@ -119,6 +119,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "ping":
                 res = tasks.ping.signature(args=(), kwargs=kwargs)
             
+            case "update_node":
+                res = tasks.make_edge.signature(args=(), kwargs=kwargs)
+            
             case "make_edge":
                 res = tasks.make_edge.signature(args=(), kwargs=kwargs)
 

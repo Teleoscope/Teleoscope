@@ -198,7 +198,10 @@ def update_matrix(oid: ObjectId, node_type: schemas.NodeType, graph_oid: ObjectI
 
 def update_parameters(db, node, parameters):
     collection = utils.get_collection(db, node["type"])
-    res = collection.update_one(node["_id"], {"$set": {"parameters": parameters}})
+    res = collection.update_one(
+        {"_id": node["_id"]}, 
+        {"$set": {"parameters": parameters}}
+    )
     return res
 
 
@@ -404,8 +407,21 @@ def update_projection(db: database.Database, projection_node, sources: List, con
             return projection_node
     
     logging.info(f"Updating Projection id: {projection_node['_id']}")
-              
-    project = projection.Projection(db, sources, controls, projection_node['_id'])
+
+    try: 
+        ordering = parameters["ordering"]
+    except:
+        ordering = "average" # default ordering
+    
+    try: 
+        separation = parameters["separation"]
+        if len(controls) < 2: separation = False
+    except:
+        separation = False # default no seperation
+
+    logging.info(f"Running with {ordering} ordering and seperation={separation}")
+
+    project = projection.Projection(db, sources, controls, projection_node['_id'], ordering, separation)
     doclists = project.clustering_task()
     
     for doclist in doclists:

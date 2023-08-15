@@ -983,6 +983,44 @@ def remove_note(*args, database: str, userid: str, workflow_id: str,
 ################################################################################
 
 @app.task
+def update_node(*args, database: str, userid: str, workflow_id: str,
+    node_id, parameters, **kwargs):
+    """
+    Makes an edge between two nodes.
+    """
+    #---------------------------------------------------------------------------
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db=database)
+    
+    # handle ObjectID kwargs
+    workflow_id = ObjectId(str(workflow_id))
+    userid = ObjectId(str(userid))
+    
+    # log action to stdout
+    logging.info(f'Updating parameters for node in'
+                 f'workflow {workflow_id} by user {userid}.')
+    #---------------------------------------------------------------------------
+    
+    node_oid  = ObjectId(str(node_id))
+    node = db.graph.find_one(node_oid)
+    
+    if (node == None):
+        raise Exception("Node is None.")
+    
+    graph.update_parameters(db, node, parameters)
+
+    workflow = db.sessions.find_one({"_id": workflow_id})
+    history_item = utils.update_history(
+        item=workflow["history"][0],
+        action=f"update node {node_oid}.",
+        user=userid,
+    )
+
+    utils.push_history(db, "sessions", workflow_id, history_item)
+    
+    return 200
+
+@app.task
 def make_edge(*args, database: str, userid: str, workflow_id: str,
     source_node, target_node, edge_type: str, **kwargs):
     """
@@ -1019,7 +1057,6 @@ def make_edge(*args, database: str, userid: str, workflow_id: str,
     utils.push_history(db, "sessions", workflow_id, history_item)
     
     return 200
-
 
 @app.task
 def remove_edge(*args, database: str, userid: str, workflow_id: str, 

@@ -485,6 +485,12 @@ def test_make_edge_from_group_and_document_to_projection():
     document_id = documents[0]["_id"]
 
     target_node = graph.make_node(db, workflow["_id"], None, "Projection")
+    params = {
+        "ordering": "random",
+        "separation": True,
+    }
+    graph.update_parameters(db=db, node=target_node, parameters=params)
+
     control_node = graph.make_node(db, workflow["_id"], group_id, "Group")
     doc_control_node = graph.make_node(db, workflow["_id"], document_id, "Document")
 
@@ -508,6 +514,7 @@ def test_make_edge_from_group_and_document_to_projection():
         edge_type="control"
     )
 
+
     # Grab the nodes for the documents we just made
     control_updated = db.graph.find_one({"_id": control_node["_id"]})
     target_node_updated = db.graph.find_one({"_id": target_node["_id"]})
@@ -525,7 +532,6 @@ def test_make_edge_from_group_and_document_to_projection():
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) > 0
-
 
 def test_search_as_source_group_as_control_projection():
     global db, group, search
@@ -575,7 +581,6 @@ def test_search_as_source_group_as_control_projection():
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) > 0
-
 
 ###############################################################################
 # Remove edge tests
