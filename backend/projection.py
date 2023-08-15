@@ -407,6 +407,8 @@ class Projection:
 
         if self.separation:
             # update distance matrix such that documents in the differnet groups have distance 1
+            logging.info("Separating control groups...")
+
             INTER_CLUSTER_DISTANCE = 1
 
             for group_i, indices_i in group_doc_indices.items():
