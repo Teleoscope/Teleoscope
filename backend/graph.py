@@ -408,16 +408,14 @@ def update_projection(db: database.Database, projection_node, sources: List, con
     
     logging.info(f"Updating Projection id: {projection_node['_id']}")
 
-    try: 
-        ordering = parameters["ordering"]
-    except:
-        ordering = "average" # default ordering
+    ordering = "random" # default ordering
+    separation = False # default no seperation
+
+    try: ordering = parameters["ordering"]
+    except: pass
     
-    try: 
-        separation = parameters["separation"]
-        if len(controls) < 2: separation = False
-    except:
-        separation = False # default no seperation
+    try: separation = parameters["separation"]
+    except: pass
 
     logging.info(f"Running with {ordering} ordering and seperation={separation}")
 

@@ -154,7 +154,7 @@ class Projection:
             logging.info('{:<7d}{:<10d}'.format(i,num_clust))
 
             if i == 100: 
-                self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "ERROR: Try a different input"} })
+                self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "ERROR: Please try again..."} })
                 raise Exception("HDBSCAN did not converge")
         
         logging.info('---------umap-hyperparameters----------')
