@@ -153,7 +153,9 @@ class Projection:
 
             logging.info('{:<7d}{:<10d}'.format(i,num_clust))
 
-            if i == 100: break
+            if i == 100: 
+                self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "ERROR: Try a different input"} })
+                raise Exception("HDBSCAN did not converge")
         
         logging.info('---------umap-hyperparameters----------')
         logging.info('{:<28s}{:<5d}'.format('n_components:',n_components))
@@ -399,17 +401,17 @@ class Projection:
         logging.info(f"Distance matrix has shape {dm.shape}.") # n-by-n symmetrical matrix
 
         # update distance matrix such that documents in the same group have distance ~0
-        INTRA_CLUSTER_DISTANCE = 1e-3
+        INTRA_CLUSTER_DISTANCE = 1 # with cosine metric
 
         for group, indices in group_doc_indices.items():
             for i in indices:
-                dm[i, indices] *= INTRA_CLUSTER_DISTANCE
+                dm[i, indices] = INTRA_CLUSTER_DISTANCE
 
         if self.separation:
             # update distance matrix such that documents in the differnet groups have distance 1
             logging.info("Separating control groups...")
 
-            INTER_CLUSTER_DISTANCE = 1
+            INTER_CLUSTER_DISTANCE = 0 # with cosine metric
 
             for group_i, indices_i in group_doc_indices.items():
                 for group_j, indices_j in group_doc_indices.items():
