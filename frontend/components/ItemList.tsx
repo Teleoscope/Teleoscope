@@ -33,7 +33,7 @@ const GroupLabel = ({ index, data, callback}) => {
       return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Note")}>{item?.history[0].label}</span>;
     }
     if (type === "Cluster") {
-      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Cluster", index)}>{data[index]?.label}</span>;
+      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Cluster", index)}>{`${data[index]?.label} (${data[index]?.ranked_documents?.length} docs)`}</span>;
     }
   };
 
