@@ -36,6 +36,7 @@ def make_node(db: database.Database, workflow_id: ObjectId,
     # make a default node
     node = schemas.create_node(node_type, workflow_id, oid)
     node["matrix"] = make_matrix(oid, node_type)
+    node["parameters"] = schemas.create_node_parameters(node_type)
     res = db.graph.insert_one(node)
     node = db.graph.find_one({"_id": res.inserted_id})
 
@@ -196,11 +197,17 @@ def update_matrix(oid: ObjectId, node_type: schemas.NodeType, graph_oid: ObjectI
     return []
 
 
+
 def update_parameters(db, node, parameters):
     collection = utils.get_collection(db, node["type"])
+    params = node["parameters"]
+
+    for key, value in parameters.items():
+        params[key] = value
+
     res = collection.update_one(
         {"_id": node["_id"]}, 
-        {"$set": {"parameters": parameters}}
+        {"$set": {"parameters": params}}
     )
     return res
 
@@ -408,18 +415,10 @@ def update_projection(db: database.Database, projection_node, sources: List, con
     
     logging.info(f"Updating Projection id: {projection_node['_id']}")
 
-    try: 
-        ordering = parameters["ordering"]
-    except:
-        ordering = "average" # default ordering
-    
-    try: 
-        separation = parameters["separation"]
-        if len(controls) < 2: separation = False
-    except:
-        separation = False # default no seperation
+    ordering = parameters["ordering"]
+    separation = parameters["separation"]
 
-    logging.info(f"Running with {ordering} ordering and seperation={separation}")
+    logging.info(f"Running with {ordering} ordering and seperation = {separation}")
 
     project = projection.Projection(db, sources, controls, projection_node['_id'], ordering, separation)
     doclists = project.clustering_task()
