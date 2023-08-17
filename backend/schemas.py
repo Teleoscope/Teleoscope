@@ -270,3 +270,13 @@ def create_note_content():
         }],
         "entityMap": {}
     }
+
+def create_node_parameters(node_type: NodeType):
+    default = {}
+    match node_type:
+        case "Projection":
+            default = {
+                "ordering": "random",
+                "separation": False,
+            }
+    return default

@@ -36,7 +36,7 @@ def make_node(db: database.Database, workflow_id: ObjectId,
     # make a default node
     node = schemas.create_node(node_type, workflow_id, oid)
     node["matrix"] = make_matrix(oid, node_type)
-    node["parameters"] = make_parameters(node_type)
+    node["parameters"] = schemas.create_node_parameters(node_type)
     res = db.graph.insert_one(node)
     node = db.graph.find_one({"_id": res.inserted_id})
 
@@ -196,15 +196,7 @@ def make_matrix(node_type: schemas.NodeType, oid: ObjectId):
 def update_matrix(oid: ObjectId, node_type: schemas.NodeType, graph_oid: ObjectId):
     return []
 
-def make_parameters(node_type: schemas.NodeType):
-    default = {}
-    match node_type:
-        case "Projection":
-            default = {
-                "ordering": "random",
-                "separation": False,
-            }
-    return default
+
 
 def update_parameters(db, node, parameters):
     collection = utils.get_collection(db, node["type"])
