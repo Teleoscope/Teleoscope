@@ -986,7 +986,7 @@ def remove_note(*args, database: str, userid: str, workflow_id: str,
 def update_node(*args, database: str, userid: str, workflow_id: str,
     node_id, parameters, **kwargs):
     """
-    Makes an edge between two nodes.
+    Updates node parameters.
     """
     #---------------------------------------------------------------------------
     # connect to database

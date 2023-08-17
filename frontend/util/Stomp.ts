@@ -857,7 +857,23 @@ await Promise.race([checkConnection(), timeout()]);
     return body;
   }
 
+  /**
+   * Update a node parameters.
+   */
+  update_node(node_id, parameters) {
+    const body = {
+        task: "update_node",
+        args: {
+          node_id: node_id,
+          parameters: parameters,
+        },
+      };
+    this.publish(body);
+    return body;
+  }
 
+
+  
   /**
    * Ping temporary queue.
    */
