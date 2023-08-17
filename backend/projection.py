@@ -133,7 +133,8 @@ class Projection:
         logging.info('{:<7s}{:<10s}'.format('Epoch','Num. Clusters'))
         logging.info('---------------------------------------')
 
-        i, num_clust, min_cluster_size, min_samples, cluster_selection_epsilon = 0, 0, 0, 0, 0.0
+        i, num_clust, max_epochs = 0, 0, 10
+        min_cluster_size, min_samples, cluster_selection_epsilon = 0, 0, 0.0
 
         while (num_clust < 10 or num_clust > 100):
         
@@ -153,7 +154,7 @@ class Projection:
 
             logging.info('{:<7d}{:<10d}'.format(i,num_clust))
 
-            if i == 100: break
+            if i == max_epochs: break
         
         logging.info('---------umap-hyperparameters----------')
         logging.info('{:<28s}{:<5d}'.format('n_components:',n_components))
