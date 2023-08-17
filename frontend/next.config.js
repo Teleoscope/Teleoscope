@@ -10,7 +10,7 @@ options = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: true,
-  distDir: 'builds/build-' + new Date().getTime(),
+  distDir: "build",
   async headers() {
     return [
       {
