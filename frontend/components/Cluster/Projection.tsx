@@ -8,7 +8,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import { useSWRHook } from "@/util/swr";
 import DocumentList from "@/components/Documents/DocumentList";
 import ButtonActions from "../ButtonActions";
-import { Tooltip, Typography } from "@mui/material";
+import { Box, Tooltip, Typography } from "@mui/material";
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
@@ -35,72 +35,83 @@ export default function Projection(props) {
   const doclists = projection?.doclists;
 
   const ToggleCollapse = () => {
-  const [alignment, setAlignment] = React.useState<boolean | null>(false);
 
-  const handleAlignment = (
+
+  const updateValue = (
     event: React.MouseEvent<HTMLElement>,
-    newAlignment: boolean | null,
+    newValue: boolean | null,
   ) => {
-    client.update_node(projection_id, {separation: newAlignment})
-    setAlignment(newAlignment);
+    client.update_node(projection_id, {separation: newValue})
   };
 
 
   return (
     <ToggleButtonGroup
-      value={alignment}
+      value={projection?.parameters.separation}
       exclusive
       size="small"
-      onChange={handleAlignment}
-      aria-label="text alignment"
+      onChange={updateValue}
+      aria-label="group separation"
       sx={{margin: "0.25em"}}
     >
-      <Tooltip title="Expand groups">
+      
       <ToggleButton value={true} aria-label="expand">
+      <Tooltip title="Expand groups">
+        <Box component="span" sx={{margin: 0, padding: 0}}>
         <BsArrowsExpand />
+        </Box>
+        </Tooltip>
       </ToggleButton>
-      </Tooltip>
-      <Tooltip title="Collapse groups">
+      
+      
       <ToggleButton value={false} aria-label="collapse">
+      <Tooltip title="Collapse groups">
+      <Box component="span" sx={{margin: 0, padding: 0}}>
         <BsArrowsCollapse />
+        </Box>
+        </Tooltip>
       </ToggleButton>
-      </Tooltip>
+      
       
     </ToggleButtonGroup>
   );
 }
 const ToggleOrder = () => {
   //   "ordering": <either "average" or "random">,
-  const [alignment, setAlignment] = React.useState<string | null>('average');
 
-  const handleAlignment = (
+  const updateValue = (
     event: React.MouseEvent<HTMLElement>,
-    newAlignment: string | null,
+    newValue: string | null,
   ) => {
-    client.update_node(projection_id, {ordering: newAlignment})
-    setAlignment(newAlignment);
+    client.update_node(projection_id, {ordering: newValue})
   };
 
   return (
     <ToggleButtonGroup
-      value={alignment}
+      value={projection?.parameters.ordering}
       exclusive
       size="small"
-      onChange={handleAlignment}
-      aria-label="text alignment"
+      onChange={updateValue}
+      aria-label="document ordering"
       sx={{margin: "0.25em"}}
     >
-      <Tooltip title="Randomize source documents">
-      <ToggleButton value="random" aria-label="random">
-        <FaDiceThree />
-      </ToggleButton>
-      </Tooltip>
-      <Tooltip title="Sort source documents">
-      <ToggleButton value="average" aria-label="average">
-        <HiSortAscending />
-      </ToggleButton>
-      </Tooltip>
       
+      <ToggleButton value="random" aria-label="random">
+        <Tooltip title="Randomize source documents">
+          <Box component="span" sx={{margin: 0, padding: 0}}>
+            <FaDiceThree />
+          </Box>
+        </Tooltip>
+      </ToggleButton>
+      
+      
+      <ToggleButton value="average" aria-label="average">
+      <Tooltip title="Sort source documents">
+        <Box component="span" sx={{margin: 0, padding: 0}}>
+        <HiSortAscending />
+        </Box>
+        </Tooltip>
+      </ToggleButton>
     </ToggleButtonGroup>
   );
 }
