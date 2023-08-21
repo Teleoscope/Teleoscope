@@ -880,6 +880,7 @@ def test_group_difference_doc():
 
     assert difference_oids == compare_oids
 
+
 def test_group_intersection_doc():
     global group, documents
     groupid = group["_id"]
@@ -897,8 +898,29 @@ def test_group_intersection_doc():
 
     intersection_oids = set([rd[0] for rd in updated_intersection_node["doclists"][0]["ranked_documents"]])
     compare_oids = set([docid])
-    
+
     assert intersection_oids == compare_oids
+
+
+def test_group_exclusion_doc():
+    global group, documents
+    groupid = group["_id"]
+    docid = documents[0]["_id"]
+    
+    # make new nodes
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    doc_node = graph.make_node(db, workflow["_id"], docid, "Document")
+    exclusion_node = graph.make_node(db, workflow["_id"], None, "Exclusion")
+
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", exclusion_node["_id"], "Exclusion", "source")
+    graph.make_edge(db, workflow["_id"], doc_node["_id"], "Document", exclusion_node["_id"], "Exclusion", "control")
+    
+    updated_exclusion_node = db.graph.find_one({"_id": exclusion_node["_id"]})
+
+    exclusion_oids = set([rd[0] for rd in updated_exclusion_node["doclists"][0]["ranked_documents"]])
+    compare_oids = set(group["history"][0]["included_documents"]).difference(set([docid]))
+
+    assert exclusion_oids == compare_oids
 
 
 
