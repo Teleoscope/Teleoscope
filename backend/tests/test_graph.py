@@ -837,10 +837,12 @@ def test_model():
 # Boolean Operations Tests
 ###############################################################################
 def test_group_union_doc():
-    global group, documents
+    global group
     groupid = group["_id"]
-    docid = documents[0]["_id"]
+    documents = list(db.documents.aggregate([{ "$sample": { "size": 1 } }]))
 
+    docid = documents[0]["_id"]
+    
     # make new nodes
     group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
     doc_node = graph.make_node(db, workflow["_id"], docid, "Document")
