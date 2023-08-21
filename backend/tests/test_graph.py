@@ -939,3 +939,15 @@ def test_group_union_group_trivial():
     assert len(updated_union_node["doclists"][0]["ranked_documents"]) == len(group["history"][0]["included_documents"])
     assert union_oids == compare_oids
 
+
+def test_group_difference_group_trivial():
+    global group
+    groupid = group["_id"]
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    difference_node = graph.make_node(db, workflow["_id"], None, "Difference")
+    
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", difference_node["_id"], "Difference", "source")
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", difference_node["_id"], "Difference", "control")
+
+    updated_difference_node = db.graph.find_one({"_id": difference_node["_id"]})
+    assert len(updated_difference_node["doclists"]) == 0
