@@ -175,7 +175,7 @@ def graph(db: database.Database, node_oid: ObjectId):
             node = update_intersection(db, node, sources, controls, parameters)
         case "Exclusion":
             node = update_exclusion(db, node, sources, controls, parameters)
-        case "Subtraction":
+        case "Difference":
             node = update_difference(db, node, sources, controls, parameters)
         case "Filter":
             node = update_filter(db, node, sources, controls, parameters)
