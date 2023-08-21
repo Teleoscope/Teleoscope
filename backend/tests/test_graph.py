@@ -859,6 +859,28 @@ def test_group_union_doc():
     assert union_oids == compare_oids
 
 
+def test_group_difference_doc():
+    global group, documents
+    groupid = group["_id"]
+    docid = documents[0]["_id"]
+    
+    # make new nodes
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    doc_node = graph.make_node(db, workflow["_id"], docid, "Document")
+    difference_node = graph.make_node(db, workflow["_id"], None, "Difference")
+
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", difference_node["_id"], "Difference", "source")
+    graph.make_edge(db, workflow["_id"], doc_node["_id"], "Document", difference_node["_id"], "Difference", "control")
+    
+    updated_difference_node = db.graph.find_one({"_id": difference_node["_id"]})
+
+    difference_oids = set([rd[0] for rd in updated_difference_node["doclists"][0]["ranked_documents"]])
+    compare_oids = set(group["history"][0]["included_documents"] + [docid])
+    compare_oids.difference_update(set([docid]))
+
+    assert difference_oids == compare_oids
+
+
 
 
 
