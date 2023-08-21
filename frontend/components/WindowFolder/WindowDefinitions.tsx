@@ -37,10 +37,10 @@ import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
 import Notes from "@/components/Notes";
 
 
-import Filter from "@/components/Operations/Filter";
 import Intersection from "@/components/Operations/Intersection";
 import Exclusion from "@/components/Operations/Exclusion";
 import Union from "@/components/Operations/Union";
+import Difference from "@/components/Operations/Difference";
 
 import { PreprocessTitle } from "@/util/Preprocessers";
 import Bookmarks from "@/components/Bookmarks";
@@ -233,15 +233,15 @@ export default class WindowDefinitions {
         icon:      (sx = this.style()) => <AccountTreeIcon sx={sx} fontSize="inherit"  />,
         component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
       },
-      Filter: {
-        tag:       "filter",
-        type:      "Filter",
-        apipath:   "filter",
+      Difference: {
+        tag:       "difference",
+        type:      "Difference",
+        apipath:   "graph",
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
         icon:      (sx = this.style()) => <MdManageSearch />,
-        component: (w, id, color) => <Filter id={id} windata={w} color={color} />,
+        component: (w, id, color) => <Difference id={id} windata={w} color={color} />,
       },
       Intersection: {
         tag:       "intersection",

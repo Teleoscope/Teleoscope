@@ -1156,7 +1156,7 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
     node = graph.make_node(db, workflow_id, res, node_type)
 
     match node_type:
-        case "Teleoscope" | "Projection" | "Filter" | "Intersection" | "Exclusion" | "Union":
+        case "Teleoscope" | "Projection" | "Difference" | "Intersection" | "Exclusion" | "Union":
             res = node["_id"]
 
     utils.message(replyTo, {

@@ -951,3 +951,4 @@ def test_group_difference_group_trivial():
 
     updated_difference_node = db.graph.find_one({"_id": difference_node["_id"]})
     assert len(updated_difference_node["doclists"][0]["ranked_documents"]) == 0
+
