@@ -10,8 +10,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import FolderIcon from "@mui/icons-material/Folder";
 
 
-import { CgPathIntersect, CgPathExclude } from 'react-icons/cg';
-import { MdManageSearch } from 'react-icons/md';
+import { CgPathIntersect, CgPathExclude, CgPathFront, CgPathUnite } from 'react-icons/cg';
 import { RiBookmark3Line } from 'react-icons/ri';
 import { BsStickies, BsSticky } from 'react-icons/bs';
 
@@ -240,13 +239,13 @@ export default class WindowDefinitions {
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
-        icon:      (sx = this.style()) => <MdManageSearch />,
+        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathFront /></IconContext.Provider>,
         component: (w, id, color) => <Difference id={id} windata={w} color={color} />,
       },
       Intersection: {
         tag:       "intersection",
         type:      "Intersection",
-        apipath:   "intersection",
+        apipath:   "graph",
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
@@ -256,7 +255,7 @@ export default class WindowDefinitions {
       Exclusion: {
         tag:       "exclusion",
         type:      "Exclusion",
-        apipath:   "exclusion",
+        apipath:   "graph",
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
@@ -266,11 +265,11 @@ export default class WindowDefinitions {
       Union: {
         tag:       "union",
         type:      "Union",
-        apipath:   "union",
+        apipath:   "graph",
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
-        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathIntersect /></IconContext.Provider>,
+        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathUnite /></IconContext.Provider>,
         component: (w, id, color) => <Union id={id} windata={w} color={color} />,
       },
     };
