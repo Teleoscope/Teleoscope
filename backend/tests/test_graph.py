@@ -831,3 +831,32 @@ def test_model():
     # project.clustering_task()
     project = tuning.Tuning(db, sources, controls)
     project.tuning()
+
+
+###############################################################################
+# Boolean Operations Tests
+###############################################################################
+def test_group_union_doc():
+    global group, documents
+    groupid = group["_id"]
+    docid = documents[0]["_id"]
+
+    # make new nodes
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    doc_node = graph.make_node(db, workflow["_id"], docid, "Document")
+    union_node = graph.make_node(db, workflow["_id"], None, "Union")
+
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "source")
+    graph.make_edge(db, workflow["_id"], doc_node["_id"], "Document", union_node["_id"], "Union", "control")
+    
+    updated_union_node = db.graph.find_one({"_id": union_node["_id"]})
+
+    union_oids = set([rd[0] for rd in updated_union_node["doclists"][0]["ranked_documents"]])
+    compare_oids = set(group["history"][0]["included_documents"] + [docid])
+
+    assert union_oids == compare_oids
+
+
+
+
+

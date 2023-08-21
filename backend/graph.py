@@ -175,6 +175,8 @@ def graph(db: database.Database, node_oid: ObjectId):
             node = update_intersection(db, node, sources, controls, parameters)
         case "Exclusion":
             node = update_exclusion(db, node, sources, controls, parameters)
+        case "Subtraction":
+            node = update_difference(db, node, sources, controls, parameters)
         case "Filter":
             node = update_filter(db, node, sources, controls, parameters)
 
@@ -432,21 +434,110 @@ def update_projection(db: database.Database, projection_node, sources: List, con
     # TODO: matrix
     return projection_node
 
+
 ################################################################################
-# Update Other Operations
+# Update Boolean Operations
 ################################################################################
+def update_boolean(db, node, sources: List, controls: List, parameters, operation):
+    doclists = []
+    source_map = []
+    control_oids = []
+
+    for control in controls:
+            match control["type"]:
+                case "Document":
+                    oids = [control["id"]]
+                    control_oids = control_oids + oids
+                case "Group":
+                    group = db.groups.find_one({"_id": control["id"]})
+                    oids = group["history"][0]["included_documents"]
+                    control_oids = control_oids + oids
+                case "Search":
+                    search = db.searches.find_one({"_id": control["id"]})
+                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
+                    oids = [d["_id"] for d in list(cursor)]
+                    control_oids = control_oids + oids
+                case "Note":
+                    pass
+    
+    for source in sources:
+            match source["type"]:
+                case "Document":
+                    oids = [source["id"]]
+                    oids = operation(oids, control_oids)
+                    source_map.append((source, oids))
+                case "Group":
+                    group = db.groups.find_one({"_id": source["id"]})
+                    oids = group["history"][0]["included_documents"]
+                    oids = operation(oids, control_oids)
+                    source_map.append((source, oids))
+                case "Search":
+                    search = db.searches.find_one({"_id": source["id"]})
+                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
+                    oids = [d["_id"] for d in list(cursor)]
+                    oids = operation(oids, control_oids)
+                    source_map.append((source, oids))
+                case "Note":
+                    pass
+    
+    for source, source_oids in source_map:
+        ranks = [(oid, 1.0) for oid in source_oids]
+        source["ranked_documents"] = ranks
+        doclists.append(source)
+
+    return doclists
+
+
+def update_difference(db, node, sources: List, controls: List, parameters):
+    def difference(current_oids, control_oids):
+        curr = set(current_oids)
+        ctrl = set(control_oids)
+        return list(curr.difference(ctrl))
+    
+    doclists = update_boolean(db, node, sources, controls, parameters, difference)
+    
+    node["doclists"] = doclists
+    return node
 
 def update_union(db, node, sources: List, controls: List, parameters):
-    return node # stub
+    def union(current_oids, control_oids):
+        curr = set(current_oids)
+        ctrl = set(control_oids)
+        return list(curr.union(ctrl))
+    
+    doclists = update_boolean(db, node, sources, controls, parameters, union)
+    
+    node["doclists"] = doclists
+    return node
 
 
 def update_intersection(db, node, sources: List, controls: List, parameters):
-    return node # stub
+    def intersection(current_oids, control_oids):
+        curr = set(current_oids)
+        ctrl = set(control_oids)
+        return list(curr.intersection(ctrl))
+    
+    doclists = update_boolean(db, node, sources, controls, parameters, intersection)
+    
+    node["doclists"] = doclists
+    return node
 
 
 def update_exclusion(db, node, sources: List, controls: List, parameters):
-    return node # stub
+    def exclusion(current_oids, control_oids):
+        curr = set(current_oids)
+        ctrl = set(control_oids)
+        diff_curr = curr.difference(ctrl)
+        diff_ctrl = ctrl.difference(curr)
+        return list(diff_curr.union(diff_ctrl))
+    
+    doclists = update_boolean(db, node, sources, controls, parameters, exclusion)
+    
+    node["doclists"] = doclists
+    return node
 
 
 def update_filter(db, node, sources: List, controls: List, parameters):
     return node # stub
+
+

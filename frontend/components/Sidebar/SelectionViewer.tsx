@@ -29,7 +29,7 @@ export default function SelectionViewer(props) {
             ></GroupViewer>
           );
         }
-        if (node.data.type == "Cluster" && !props.noGroup) {
+        if (node.data.type == "Projection" && !props.noGroup) {
           return (
             <ClusterViewer
               compact={true}

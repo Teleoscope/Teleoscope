@@ -5,7 +5,7 @@ from typing import Literal
 from typing import List
 
 EdgeType = Literal["source", "control", "output"]
-NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Union", "Intersection", "Exclusion", "Subtraction"]
+NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Union", "Intersection", "Exclusion", "Difference"]
 HexStr = NewType('HexStr', str)
 
 

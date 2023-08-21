@@ -35,13 +35,7 @@ export default function TeleoscopeViewer(props) {
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
-        {/* <Stack direction="column">
-          {teleoscope?.history[0].rank_slice.map(([docid, rank]) => (
-            <DocumentListItem key={docid} id={docid}></DocumentListItem>
-          ))}
-        </Stack> */}
         <Stack spacing={1} sx={{ margin: "1em" }}>
-          {/* <Typography variant="h5">Teleoscope</Typography> */}
           <Divider></Divider>
           <div style={{height: "25vh"}}>
             <DocumentList data={data} pagination={true} loadMore={handleLoadMore}></DocumentList>
