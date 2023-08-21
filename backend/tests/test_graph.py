@@ -880,6 +880,25 @@ def test_group_difference_doc():
 
     assert difference_oids == compare_oids
 
+def test_group_intersection_doc():
+    global group, documents
+    groupid = group["_id"]
+    docid = documents[0]["_id"]
+    
+    # make new nodes
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    doc_node = graph.make_node(db, workflow["_id"], docid, "Document")
+    intersection_node = graph.make_node(db, workflow["_id"], None, "Intersection")
+
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", intersection_node["_id"], "Intersection", "source")
+    graph.make_edge(db, workflow["_id"], doc_node["_id"], "Document", intersection_node["_id"], "Intersection", "control")
+    
+    updated_intersection_node = db.graph.find_one({"_id": intersection_node["_id"]})
+
+    intersection_oids = set([rd[0] for rd in updated_intersection_node["doclists"][0]["ranked_documents"]])
+    compare_oids = set([docid])
+    
+    assert intersection_oids == compare_oids
 
 
 
