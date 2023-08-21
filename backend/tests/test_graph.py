@@ -950,4 +950,4 @@ def test_group_difference_group_trivial():
     graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", difference_node["_id"], "Difference", "control")
 
     updated_difference_node = db.graph.find_one({"_id": difference_node["_id"]})
-    assert len(updated_difference_node["doclists"]) == 0
+    assert len(updated_difference_node["doclists"][0]["ranked_documents"]) == 0
