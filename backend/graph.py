@@ -80,10 +80,10 @@ def make_edge(db: database.Database, workflow_id: ObjectId,
     source = db.graph.find_one(source_oid)
     target = db.graph.find_one(target_oid)
     
-    if "reference" not in source:
+    if type(source["reference"]) != ObjectId :
         source["reference"] = source["_id"]
-
-    if "reference" not in target:
+        
+    if type(target["reference"]) != ObjectId :
         target["reference"] = target["_id"]
 
     if (source == None or target == None):
