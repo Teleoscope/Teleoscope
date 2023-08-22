@@ -59,7 +59,6 @@ export default function SelectionViewer(props) {
           );
         }
 
-
         if ((node.data.type == "Union" || node.data.type == "Exclusion" || node.data.type == "Intersection" || node.data.type == "Difference") && !props.noGroup) {
           return (
             <OperationViewer

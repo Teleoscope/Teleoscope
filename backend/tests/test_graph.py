@@ -996,3 +996,24 @@ def test_teleoscope_union():
 
     assert union_t_docs == group_t_docs
 
+
+
+def test_group_union_group_union():
+    global group
+    groupid = group["_id"]
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    union_1_node = graph.make_node(db, workflow["_id"], None, "Union")
+    union_2_node = graph.make_node(db, workflow["_id"], None, "Union")
+    
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_1_node["_id"], "Union", "source")
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_1_node["_id"], "Union", "control")
+
+    graph.make_edge(db, workflow["_id"], union_1_node["_id"], "Union", union_2_node["_id"], "Union", "source")
+    graph.make_edge(db, workflow["_id"], union_1_node["_id"], "Union", union_2_node["_id"], "Union", "control")
+
+    updated_union_node = db.graph.find_one({"_id": union_2_node["_id"]})
+    union_oids = set([rd[0] for rd in updated_union_node["doclists"][0]["ranked_documents"]])
+    compare_oids = set(group["history"][0]["included_documents"])
+
+    assert len(updated_union_node["doclists"][0]["ranked_documents"]) == len(group["history"][0]["included_documents"])
+    assert union_oids == compare_oids
