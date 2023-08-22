@@ -93,9 +93,11 @@ class Tuning:
                     # self.group_doc_indices = {key: loaded_data[key] for key in loaded_data}
 
                     # self.group_doc_indices = group_doc_indices
-                    mcs_vals = np.around(np.linspace(2,70,10)).astype(int) # default=5
-                    ms_vals = [None] + np.around(np.linspace(1, 30, 10)).astype(int).tolist()
-                    eps_vals = [0.        , 0.11111111, 0.22222222, 0.33333333, 0.44444444, 0.55555556, 0.66666667, 0.77777778, 0.88888889, 1.        ] # default=0.0
+                    mcs_vals = np.around(np.linspace(2,70,15)).astype(int) # default=5
+                    ms_vals = [None] + np.around(np.linspace(1, 30, 15)).astype(int).tolist()
+                    eps_vals = [0.        , 0.07142857, 0.14285714, 0.21428571, 0.28571429,
+       0.35714286, 0.42857143, 0.5       , 0.57142857, 0.64285714,
+       0.71428571, 0.78571429, 0.85714286, 0.92857143, 1.        ] # default=0.0
 
                     for min_cluster_size in tqdm(mcs_vals, desc="min_cluster_size", leave=False): 
                         for min_samples in tqdm(ms_vals, desc="min_samples", leave=False): 
