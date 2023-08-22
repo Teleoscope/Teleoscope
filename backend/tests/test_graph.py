@@ -961,8 +961,9 @@ def test_teleoscope_union():
     groupid = group["_id"]
     group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
     union_node = graph.make_node(db, workflow["_id"], None, "Union")
+    
     union_teleoscope_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
-    group_teleoscope_node = graph.make_node(db, workflow["_id"], None, "Group")
+    group_teleoscope_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
     
     graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "source")
     graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "control")
