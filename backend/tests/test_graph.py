@@ -444,6 +444,7 @@ def test_search_as_source_group_and_documents_as_control_reverse_order_teleoscop
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) > 0
 
+
 def test_make_edge_from_group_to_projection():
     global db, group
     group_id = group["_id"]
@@ -478,6 +479,7 @@ def test_make_edge_from_group_to_projection():
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) > 0
+
 
 def test_make_edge_from_group_and_document_to_projection():
     global db, group
@@ -532,6 +534,7 @@ def test_make_edge_from_group_and_document_to_projection():
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) > 0
+
 
 def test_search_as_source_group_as_control_projection():
     global db, group, search
@@ -951,4 +954,44 @@ def test_group_difference_group_trivial():
 
     updated_difference_node = db.graph.find_one({"_id": difference_node["_id"]})
     assert len(updated_difference_node["doclists"][0]["ranked_documents"]) == 0
+
+
+def test_teleoscope_union():
+    global group
+    groupid = group["_id"]
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    union_node = graph.make_node(db, workflow["_id"], None, "Union")
+    union_teleoscope_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
+    group_teleoscope_node = graph.make_node(db, workflow["_id"], None, "Group")
+    
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "source")
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "control")
+
+    graph.make_edge(
+        db=db,
+        workflow_id=workflow["_id"],
+        source_oid=union_node["_id"],
+        source_type="Union",
+        target_oid=union_teleoscope_node["_id"],
+        target_type="Teleoscope",
+        edge_type="control"
+    )
+
+    graph.make_edge(
+        db=db,
+        workflow_id=workflow["_id"],
+        source_oid=group_node["_id"],
+        source_type="Group",
+        target_oid=group_teleoscope_node["_id"],
+        target_type="Teleoscope",
+        edge_type="control"
+    )
+    
+    updated_union_teleoscope_node = db.graph.find_one({"_id": union_teleoscope_node["_id"]})
+    updated_group_teleoscope_node = db.graph.find_one({"_id": group_teleoscope_node["_id"]})
+
+    union_t_docs = updated_union_teleoscope_node["doclists"]
+    group_t_docs = updated_group_teleoscope_node["doclists"]
+
+    assert union_t_docs == group_t_docs
 

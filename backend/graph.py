@@ -198,8 +198,6 @@ def make_matrix(node_type: schemas.NodeType, oid: ObjectId):
 def update_matrix(oid: ObjectId, node_type: schemas.NodeType, graph_oid: ObjectId):
     return []
 
-
-
 def update_parameters(db, node, parameters):
     collection = utils.get_collection(db, node["type"])
     params = node["parameters"]
@@ -343,6 +341,13 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
                     oids = [d["_id"] for d in list(cursor)]
                     vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
                     source_map.append((source, vecs, oids))
+                case "Union" | "Difference" | "Intersection" | "Exclusion":
+                    node = db.graph.find_one({"_id": source["id"]})
+                    node_doclists = node["doclists"]
+                    for doclist in node_doclists:
+                        oids = [d[0] for d in doclist["ranked_documents"]]
+                        vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
+                        source_map.append((doclist, vecs, oids))
                 case "Note":
                     pass
 
@@ -385,18 +390,23 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
             case "Note":
                 note = db.notes.find_one({"_id": c["id"]})
                 notes.append(note)
+            case "Union" | "Difference" | "Intersection" | "Exclusion":
+                node = db.graph.find_one({"_id": c["id"]})
+                for doclist in node["doclists"]:
+                        oids = oids + [d[0] for d in doclist["ranked_documents"]]
+                    
     note_vecs = [np.array(note["textVector"]) for note in notes]
     filtered_vecs = filter_vectors_by_oid(oids, ids, all_vectors)
     out_vecs = filtered_vecs + note_vecs
     logging.info(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
     return out_vecs
 
+
 ################################################################################
 # Update Projection
 ################################################################################
 
 def update_projection(db: database.Database, projection_node, sources: List, controls: List, parameters):
-
 
     if len(controls) == 0:
         logging.info(f"No controls included. Returning original projection node.")
@@ -438,6 +448,7 @@ def update_projection(db: database.Database, projection_node, sources: List, con
 ################################################################################
 # Update Boolean Operations
 ################################################################################
+
 def update_boolean(db, node, sources: List, controls: List, parameters, operation):
     doclists = []
     source_map = []
