@@ -475,6 +475,11 @@ def update_boolean(db, node, sources: List, controls: List, parameters, operatio
                     cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
                     oids = [d["_id"] for d in list(cursor)]
                     control_oids = control_oids + oids
+                case "Union" | "Difference" | "Intersection" | "Exclusion":
+                    node = db.graph.find_one({"_id": source["id"]})
+                    for doclist in node["doclists"]:
+                        oids = [d[0] for d in doclist["ranked_documents"]]
+                        control_oids = control_oids + oids
                 case "Note":
                     pass
     
@@ -495,6 +500,11 @@ def update_boolean(db, node, sources: List, controls: List, parameters, operatio
                     oids = [d["_id"] for d in list(cursor)]
                     oids = operation(oids, control_oids)
                     source_map.append((source, oids))
+                case "Union" | "Difference" | "Intersection" | "Exclusion":
+                    node = db.graph.find_one({"_id": source["id"]})
+                    for doclist in node["doclists"]:
+                        oids = [d[0] for d in doclist["ranked_documents"]]
+                        source_map.append((doclist, oids))
                 case "Note":
                     pass
     
