@@ -765,23 +765,6 @@ def test_model():
 
     """
         Super set hyperparameter testing.
-            - 3 for UMAP
-            - 3 for HDBSCAN
-        groups (n=?)
-            - taken from allies existing groups
-        test variables
-            - ordering 
-
-        for [1 group, 3 groups, 5 groups]: # or just always use n groups
-            for [random ordering, average ordering]:
-                for [separate, not separate]:
-                for [UMAP 1]:
-                    for [UMAP 2]:
-                    for [UMAP 3]:
-                        for [HDBSCAN 1]:
-                        for [HDBSCAN 2]:
-                            for [HDBSCAN 3]:
-                            # compute a bunch of metrics
 
         To run single test with logging info
             > pytest test_graph.py::test_model --log-cli-level=INFO
