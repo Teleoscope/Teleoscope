@@ -4,6 +4,7 @@ import GroupViewer from "@/components/Sidebar/GroupViewer";
 import NotesViewer from "@/components/Sidebar/NotesViewer";
 import TeleoscopeViewer from "@/components/Sidebar/TeleoscopeViewer";
 import ClusterViewer from "@/components/Sidebar/ClusterViewer";
+import OperationViewer from "./OperationViewer";
 
 export default function SelectionViewer(props) {
   const selection = useAppSelector((state) => state.windows.selection);
@@ -57,6 +58,21 @@ export default function SelectionViewer(props) {
             ></TeleoscopeViewer>
           );
         }
+
+
+        if ((node.data.type == "Union" || node.data.type == "Exclusion" || node.data.type == "Intersection" || node.data.type == "Difference") && !props.noGroup) {
+          return (
+            <OperationViewer
+              compact={true}
+              type={node.data.type}
+              key={node.id.split("%")[0]}
+              id={node.id.split("%")[0]}
+            ></OperationViewer>
+          );
+        }
+
+
+
       })}
     </div>
   );

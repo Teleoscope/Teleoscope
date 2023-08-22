@@ -10,7 +10,7 @@ function OperationNode({ data, id, selected }) {
       <BaseNode data={data} id={id} selected={selected}  />
       <Handle type="target" variant="source" position={Position.Left}  nodeid={id} id={`${id}_source`}  />
       <Handle type="target" variant="control" position={Position.Left} nodeid={id} id={`${id}_control`} />
-      {/* <Handle type="source" variant="output" position={Position.Right} nodeid={id} id={`${id}_output`}  /> */}
+      <Handle type="source" variant="output" position={Position.Right} nodeid={id} id={`${id}_output`}  />
     </>
   );
 }

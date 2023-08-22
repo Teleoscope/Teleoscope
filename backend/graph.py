@@ -357,6 +357,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
                 case "Note":
                     pass
 
+    
     for source, source_vecs, source_oids in source_map:
         ranks = rank(control_vecs, source_oids, source_vecs, rank_slice_length)
         source["ranked_documents"] = ranks

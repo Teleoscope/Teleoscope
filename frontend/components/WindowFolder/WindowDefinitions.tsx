@@ -18,6 +18,7 @@ import { IconContext } from "react-icons";
 
 import WindowNode from "@/components/Nodes/WindowNode";
 import OperationNode from "@/components/Nodes/OperationNode";
+import TargetNode from "@/components/Nodes/TargetNode";
 import SourceNode from "@/components/Nodes/SourceNode";
 
 
@@ -116,7 +117,7 @@ export default class WindowDefinitions {
         tag:       "teleoscope",
         type:      "Teleoscope",
         apipath:   "graph",
-        nodetype:  OperationNode,      
+        nodetype:  TargetNode,      
         title:     (d) => d?.type,
         color:     (d) => this.color,
         icon:      (d) => <FlareIcon sx={{ color: this.color }} fontSize="inherit" />,
@@ -146,7 +147,7 @@ export default class WindowDefinitions {
         tag:       "projection",
         type:      "Projection",
         apipath:   "graph",
-        nodetype:  OperationNode,      
+        nodetype:  TargetNode,      
         title:     (d) => d?.type,
         color:     (d) => this.color,
         icon:      (d) => <Diversity2Icon sx={{ color: this.color }}  fontSize="inherit" />,
