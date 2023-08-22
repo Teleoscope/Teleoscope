@@ -476,7 +476,7 @@ def update_boolean(db, node, sources: List, controls: List, parameters, operatio
                     oids = [d["_id"] for d in list(cursor)]
                     control_oids = control_oids + oids
                 case "Union" | "Difference" | "Intersection" | "Exclusion":
-                    node = db.graph.find_one({"_id": source["id"]})
+                    node = db.graph.find_one({"_id": control["id"]})
                     for doclist in node["doclists"]:
                         oids = [d[0] for d in doclist["ranked_documents"]]
                         control_oids = control_oids + oids
