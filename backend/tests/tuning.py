@@ -75,11 +75,9 @@ class Tuning:
 
         """"
         TODO 
-            - use default UMAP with n_comp=2
-            - increase epoch for HDBSCAN around the defaults
-            - plot results
-            - compute statistics for inter/intracluster distance
-            - add existing stats
+            - fix hdbscan (see proj.py for param)
+            - make smaller plots
+            - vary umap
         """
         try:
             i=0

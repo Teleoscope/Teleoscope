@@ -282,6 +282,7 @@ class Projection:
                     node = self.db.graph.find_one({"_id": c["id"]})
                     node_doclists = node["doclists"]
                     
+                    # TODO - doclists labels should include control type and title
                     # label = f'{c["type"]} of ' 
                     # for control in node["edges"]["control"]:
                     #     match control["type"]:
