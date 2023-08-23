@@ -431,12 +431,6 @@ def update_projection(db: database.Database, projection_node, sources: List, con
                 logging.info(f"This node type cannot be the only control input. Returning original projection node.")                
                 return projection_node
             
-    if len(controls) > 1:
-        c_types = [c["type"] for c in controls]
-        logging.info(f"c_types for update_projection {c_types}.")
-        if "Group" not in c_types and "Document" not in c_types:
-            logging.info(f"Require group as control input. Returning original projection node.")
-            return projection_node
     
     logging.info(f"Updating Projection id: {projection_node['_id']}")
 

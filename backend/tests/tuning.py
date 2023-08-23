@@ -7,12 +7,16 @@ from pymongo import database
 from random_object_id import generate
 import random
 import matplotlib.pyplot as plt
-
+from tqdm import tqdm
+import warnings
 # ml dependencies
 import umap
 import hdbscan
 from sklearn.metrics.pairwise import euclidean_distances, cosine_distances
 import spacy
+import pandas as pd
+from pathlib import Path
+import traceback
 
 # local files
 from .. import utils
@@ -33,21 +37,18 @@ class Tuning:
             db: database.Database, 
             sources, 
             controls, 
-            limit=5000, 
-            ordering="random", 
-            topic_label_length=2):
+            limit=15000):
 
         self.db = db
         self.sources = sources
         self.controls = controls
         self.n = limit
-        self.topic_label_length = topic_label_length
-        self.ordering = ordering
+        self.ordering = None
+        self.separation = None
         self.group_doc_indices = None
         self.groups = []
 
         # large lists (number of examples)
-        self.nlp = spacy.load("en_core_web_sm")
         self.document_ids = None    
         self.hdbscan_labels = None
         self.doclists = []
@@ -55,261 +56,162 @@ class Tuning:
         self.doc_groups = []
 
     def tuning(self):
-        """Cluster documents using user-defined groups.
+        """        
+        for [1 group, 3 groups, 5 groups]: # or just always use n groups
+            for [random ordering, average ordering]:
+                for [separate, not separate]:
+                    for [UMAP 1]:
+                        for [UMAP 2]:
+                            for [UMAP 3]:
+                                for [HDBSCAN 1]:
+                                    for [HDBSCAN 2]:
+                                        for [HDBSCAN 3]:
+                                            # compute a bunch of metrics
         """
 
-        # build distance matrix, run dimensionality reduction, run clustering
-        self.learn_clusters()
+        # prep feature space
+        # n = 15000
+        results = []  # List to store results
 
-    def plot_results(self, parameter_name, parameter_values, num_clusters_list):
-        plt.plot(parameter_values, num_clusters_list, marker='o')
-        plt.xlabel(parameter_name)
-        plt.ylabel('Number of Clusters')
-        title = f'Number of Clusters vs. {parameter_name}'
-        plt.title(f'Number of Clusters vs. {parameter_name}')
-        plt.grid(True)
-        plt.savefig(f'{title}.png')
-        plt.close()
- 
+        """"
+        TODO 
+            - fix hdbscan (see proj.py for param)
+            - make smaller plots
+            - vary umap
+            - get more user study groups, want to check inter/intra quality
+        """
+        try:
+            i=0
+            for ordering in tqdm(["random", "average"], desc="Ordering", leave=False):
+                self.ordering = ordering
+                for separation in tqdm([True, False], desc="Separation", leave=False):
+                    self.separation = separation
+                    logging.info(f'Preparing data with {ordering} ordering and separation {separation}')
 
-    def tune_n(self):
-        float_list = list(np.linspace(500, 35000, 10)) #500, 35000, 10
-        parameter_values = [int(x) for x in float_list]
+                    umap_embedding = self.get_embedding()
+                    # self.group_doc_indices = {key: loaded_data[key] for key in loaded_data}
 
-        num_clusters_list_random = []
-        num_clusters_list_average = []
-        for val in parameter_values:
-            
-            self.ordering = 'random'  
-            self.n = val
-            dm = self.document_ordering()
+                    # self.group_doc_indices = group_doc_indices
+                    mcs_vals = np.around(np.linspace(2,70,15)).astype(int) # default=5
+                    ms_vals = [None] + np.around(np.linspace(1, 30, 14)).astype(int).tolist() # default=None
+                    eps_vals = [0.        , 0.07142857, 0.14285714, 0.21428571, 0.28571429,
+       0.35714286, 0.42857143, 0.5       , 0.57142857, 0.64285714,
+       0.71428571, 0.78571429, 0.85714286, 0.92857143, 1.        ] # np.linspace(0, 1, 15) default=0.0
 
-            umap_embeddings = umap.UMAP(
-                metric="precomputed",
-                min_dist=1e-4,
-                n_components=10,
-                n_neighbors=11,
-            ).fit_transform(dm)
+                    for min_cluster_size in tqdm(mcs_vals, desc="min_cluster_size", leave=False): 
+                        for min_samples in tqdm(ms_vals, desc="min_samples", leave=False): 
+                            for cluster_selection_epsilon in tqdm(eps_vals, desc="cluster_selection_epsilon", leave=False): 
+                                
+                                hdbscan_labels = hdbscan.HDBSCAN(
+                                    min_cluster_size = min_cluster_size,           
+                                    min_samples = min_samples,                  
+                                    cluster_selection_epsilon = cluster_selection_epsilon,  
+                                ).fit_predict(umap_embedding)
+                                
+                                # variable stats
+                                values = {
+                                    "ordering": ordering,
+                                    "separation": separation,
+                                    "min_cluster_size": min_cluster_size,
+                                    "min_samples": min_samples,
+                                    "cluster_selection_epsilon": cluster_selection_epsilon
+                                }
 
-            self.hdbscan_labels = hdbscan.HDBSCAN(
-                min_cluster_size=7,
-                min_samples=3,
-                cluster_selection_epsilon=0.27,
-            ).fit_predict(umap_embeddings)
+                                if min_samples is None: values["min_samples"] = "None"
+                                
+                                # inter/intra cluster dist stats
+                                umap_dm = cosine_distances(umap_embedding)
+                                intra_cluster_distances = []
+                                group_centroids = []
+                                for group, indices in self.group_doc_indices.items():
 
-            num_clusters = len(set(self.hdbscan_labels))
-            num_clusters_list_random.append(num_clusters)
+                                    # Calculate intra-cluster distances for the current group
+                                    intra_distances = umap_dm[indices][:, indices]
+                                    intra_cluster_distances.extend(intra_distances.ravel())  # Append all intra-distances
 
-            self.ordering = 'average'  # Switch to 'average' ordering
-            dm = self.document_ordering()
+                                    # get centroid for this group
+                                    group_vectors = umap_embedding[indices]  # Get vectors for the current group
+                                    group_centroid = np.mean(group_vectors, axis=0)  # Calculate the centroid
+                                    group_centroids.append(group_centroid)
+                                
+                                inter_dm = cosine_distances(group_centroids)
+                                inter_cluster_distances = inter_dm[np.triu_indices(len(inter_dm), k=1)]
 
-            umap_embeddings = umap.UMAP(
-                metric="precomputed",
-                min_dist=1e-4,
-                n_components=10,
-                n_neighbors=11,
-            ).fit_transform(dm)
+                                intra_array = np.array(intra_cluster_distances)
+                                values["intra_min"] = np.min(intra_array)
+                                values["intra_max"] = np.max(intra_array)
+                                values["intra_mean"] = np.mean(intra_array)
+                                values["intra_std"] = np.std(intra_array)
+                                
+                                inter_array = np.array(inter_cluster_distances)
+                                values["inter_min"] = np.min(inter_array)
+                                values["inter_max"] = np.max(inter_array)
+                                values["inter_mean"] = np.mean(inter_array)
+                                values["inter_std"] = np.std(inter_array) 
 
-            self.hdbscan_labels = hdbscan.HDBSCAN(
-                min_cluster_size=7,
-                min_samples=3,
-                cluster_selection_epsilon=0.27,
-            ).fit_predict(umap_embeddings)
+                                del inter_dm, umap_dm, intra_cluster_distances, inter_cluster_distances, intra_array, inter_array
 
-            num_clusters = len(set(self.hdbscan_labels))
-            num_clusters_list_average.append(num_clusters)
+                                # resultant cluster stats
+                                num_clusters = len(np.unique(hdbscan_labels))
+                                values["total_num_clusters"] = num_clusters
 
-        plt.plot(parameter_values, num_clusters_list_random, marker='o', label='Random Ordering')
-        plt.plot(parameter_values, num_clusters_list_average, marker='o', label='Average Ordering')
-        plt.xlabel('n')
-        plt.ylabel('Number of Clusters')
-        plt.title(f'Number of Clusters vs. n')
-        plt.grid(True)
-        plt.legend()
-        plt.savefig(f'clusters_vs_n.png')
-        plt.close()
+                                hdbscan_labels = np.where(hdbscan_labels == -1, num_clusters+1, hdbscan_labels)
+                                counts = np.bincount(hdbscan_labels)
+                                values["median_cluster_density"] = np.median(counts)
+                                
+                                for group in self.group_doc_indices:
+                                    
+                                    # list of labels given to docs in group
+                                    labels = hdbscan_labels[self.group_doc_indices[group]] 
+                                    # get non -1 label (if exists)
+                                    correct_label = -1 if len(labels) == 0 else max(labels)
+                                    count_of_label = np.count_nonzero(hdbscan_labels == correct_label)
+                                    values[f"size_of_{group}"] = count_of_label
+                                
+                                values["size_of_largest_cluster"] = np.max(counts)
 
+                                # Plot clustering 
+                                clustered = (hdbscan_labels >= 0)
+                                plt.scatter(umap_embedding[~clustered, 0],
+                                    umap_embedding[~clustered, 1],
+                                    color=(0.5, 0.5, 0.5),
+                                    s=0.1,
+                                    alpha=0.5)
+                                plt.scatter(umap_embedding[clustered, 0],
+                                    umap_embedding[clustered, 1],
+                                    c=hdbscan_labels[clustered],
+                                    s=0.1,
+                                    cmap='Spectral')
+                                dir = Path(f'~/results/plots').expanduser()
+                                dir.mkdir(parents=True, exist_ok=True)
+                                plot_path = dir / f"plot_{i}.png"
+                                plt.title("UMAP Embedding clustered with HDBSCAN")
+                                plt.suptitle(
+                                    f"ordering={ordering}, " 
+                                    f"separation={separation}, " 
+                                    f"min_cluster_size={min_cluster_size}, " 
+                                    f"min_samples={min_samples}, " 
+                                    f"cluster_selection_epsilon={cluster_selection_epsilon}")
+                                plt.savefig(plot_path, dpi=300, bbox_inches="tight")
+                                plt.close()  
 
-    def tune_n_components(self, dm):
-
-        n_components = range(1,50,1) # 10
-
-        parameter_values = n_components
-        parameter_name = 'n_components'
-
-        num_clusters_list = []
-        for val in parameter_values:
-
-            umap_embeddings = umap.UMAP(
-                metric = "precomputed", # use distance matrix
-                n_components = val,     #      # minimum distance apart that points are allowed (0.0~0.99)
-            ).fit_transform(dm)
-            
-            self.hdbscan_labels = hdbscan.HDBSCAN().fit_predict(umap_embeddings)
-
-            num_clusters = len(set(self.hdbscan_labels))
-            num_clusters_list.append(num_clusters)
-            
-        self.plot_results(parameter_name, parameter_values, num_clusters_list)
-
-    def tune_n_neighbors(self, dm):
-
-
-        n_neighbors = range(2,50,2) #11
-
-        parameter_values = n_neighbors
-        parameter_name = 'n_neighbors'
-
-        num_clusters_list = []
-        for val in parameter_values:
-
-            umap_embeddings = umap.UMAP(
-                metric = "precomputed", # use distance matrix
-                n_neighbors = val,     # local (small n ~2) vs. global (large n ~100) structure 
-            ).fit_transform(dm)
-            
-            self.hdbscan_labels = hdbscan.HDBSCAN().fit_predict(umap_embeddings)
-
-            num_clusters = len(set(self.hdbscan_labels))
-            num_clusters_list.append(num_clusters)
-
-        self.plot_results(parameter_name, parameter_values, num_clusters_list)
-
-
-    def tune_min_dist(self, dm):
-
-        min_dist = list(np.linspace(0.0,0.2,30)) # 1e-4
+                                # Append the results to the list
+                                results.append(values)
+                                i+=1
         
-        parameter_values = min_dist
-        parameter_name = 'min_dist'
-
-        num_clusters_list = []
-        for val in parameter_values:
-
-            umap_embeddings = umap.UMAP(
-                metric = "precomputed", # use distance matrix
-                min_dist = val,       
-                n_components = 10,
-                n_neighbors =  11,
-            ).fit_transform(dm)
+        except:
+            # Handle the exception and print the error log
+            logging.info(traceback.format_exc())
             
-            self.hdbscan_labels = hdbscan.HDBSCAN(
-                min_cluster_size = 7,
-                min_samples = 3,
-                cluster_selection_epsilon = .27,
-            ).fit_predict(umap_embeddings)
+        # Create a DataFrame from the list of results
+        results_df = pd.DataFrame(results)
 
-            num_clusters = len(set(self.hdbscan_labels))
-            num_clusters_list.append(num_clusters)
+        # Write the DataFrame to a CSV file
+        dir = Path(f'~/results/').expanduser()
+        dir.mkdir(parents=True, exist_ok=True)
+        csvpath = dir / 'stats.csv'
+        results_df.to_csv(csvpath, index=False)
 
-        self.plot_results(parameter_name, parameter_values, num_clusters_list)
-
-    
-    def tune_min_cluster_size(self, dm):
-
-        min_cluster_size = range(2,50,2) #7
-
-        parameter_values = min_cluster_size
-        parameter_name = 'min_cluster_size'
-
-        num_clusters_list = []
-        for val in parameter_values:
-
-            umap_embeddings = umap.UMAP(
-                metric = "precomputed", 
-            ).fit_transform(dm)
-            
-            self.hdbscan_labels = hdbscan.HDBSCAN(
-                min_cluster_size = val).fit_predict(umap_embeddings)
-
-            num_clusters = len(set(self.hdbscan_labels))
-            num_clusters_list.append(num_clusters)
-
-        self.plot_results(parameter_name, parameter_values, num_clusters_list)
-
-
-    def tune_min_samples(self, dm):
-
-        min_samples = range(1,50,1) #3
-
-        parameter_values = min_samples
-        parameter_name = 'min_samples'
-
-        num_clusters_list = []
-        for val in parameter_values:
-
-            umap_embeddings = umap.UMAP(
-                metric = "precomputed").fit_transform(dm)
-            
-            self.hdbscan_labels = hdbscan.HDBSCAN(             # num of neighbors needed to be considered a cluster (0~50, df=5)
-                min_samples = val,       
-            ).fit_predict(umap_embeddings)
-
-            num_clusters = len(set(self.hdbscan_labels))
-            num_clusters_list.append(num_clusters)
-
-        self.plot_results(parameter_name, parameter_values, num_clusters_list)
-
-
-    def tune_cluster_selection_epsilon(self, dm):
-
-        # n_components = 10
-        # n_neighbors =  11
-        # min_dist = 1e-4
-        # min_cluster_size = 7
-        # min_samples = 3
-        cluster_selection_epsilon = [0.1, 0.1206896551724138, 0.1413793103448276, 0.16206896551724137, 0.18275862068965518, 0.20344827586206898, 0.22413793103448276, 0.24482758620689657, 0.2655172413793103, 0.28620689655172415, 0.30689655172413793, 0.3275862068965517, 0.34827586206896555, 0.36896551724137927, 0.3896551724137931, 0.41034482758620694, 0.43103448275862066, 0.4517241379310345, 0.4724137931034482, 0.49310344827586206, 0.5137931034482759, 0.5344827586206896, 0.5551724137931034, 0.5758620689655173, 0.596551724137931, 0.6172413793103448, 0.6379310344827586, 0.6586206896551724, 0.6793103448275862, 0.7]#.27
-
-        parameter_values = cluster_selection_epsilon
-        parameter_name = 'cluster_selection_epsilon'
-
-        num_clusters_list = []
-        for val in parameter_values:
-
-            umap_embeddings = umap.UMAP(
-                metric = "precomputed", # use distance matrix
-            ).fit_transform(dm)
-            
-            self.hdbscan_labels = hdbscan.HDBSCAN(          # how conservative clustering will be, larger is more conservative (more outliers) (df=None)
-                cluster_selection_epsilon = val,                       # merge clusters if inter cluster distance is less than thres (df=0)
-            ).fit_predict(umap_embeddings)
-
-            num_clusters = len(set(self.hdbscan_labels))
-            num_clusters_list.append(num_clusters)
-
-        self.plot_results(parameter_name, parameter_values, num_clusters_list)
-
-
-
-    def learn_clusters(self):
-        """ Learn cluster labels: build distance matrix, run dimensionality reduction, run clustering
-        """
-
-        # build training set
-        self.tune_n()
-        dm = self.document_ordering()
-
-
-        """
-            best params from march:
-            n_components = 30, min_dist = 1e-5, min_cluster_size = 10, cluster_selection_epsilon = 0.2
-
-            notes from turning:
-                - dont hit thresh. if min_cluster_size > 7-8
-                - increase min samples, increase clusters
-                - increase epsilon, decrease clusters
-                - large n_components requires larger n_neighbors
-                - increasing n_neighbors, decreases clusters
-                - n_components greater than 10 are much the same, less than 10 are bad.
-                - 11 was most frequent nn for thresh.
-                - https://maartengr.github.io/BERTopic/getting_started/parameter%20tuning/parametertuning.html#umap
-        """
-        # self.tune_min_dist(dm)
-        # self.tune_n_components(dm)
-        # self.tune_n_neighbors(dm)
-        # self.tune_min_cluster_size(dm)
-        # self.tune_min_samples(dm)
-        # self.tune_cluster_selection_epsilon(dm)
 
     def document_ordering(self):
         """ Build a training set besed on the average of groups' document vectors
@@ -347,18 +249,15 @@ class Tuning:
                 case "Note":
                     pass
 
-        logging.info("Gathering all document vectors from embeddings...")
         # grab all document data from embeddings
         all_doc_ids, all_doc_vecs = utils.get_documents(self.db.name)
         if len(all_doc_ids) < self.n:
             self.n = len(all_doc_ids)
 
         # if sources = 0: average ordering of conrolls for all[30000]
-        logging.info('Gathering Document IDs...')
 
         if len(self.sources) == 0:
             
-            logging.info(f"n = {self.n}")
 
             if self.ordering == "average":
                 logging.info('No sources. Using average ordering...')
@@ -379,10 +278,10 @@ class Tuning:
                 logging.info('No sources. Using random ordering...')
                 random.seed(47)
                 document_ids = random.sample(all_doc_ids, self.n)
+        
 
         else:
             # if sources > 0: sources U controls 
-            logging.info(f'{len(self.sources)} sources. Combining docs from sources...')
 
             document_ids = []
             full_search_input = False # check to disallow more than one full search input
@@ -414,7 +313,6 @@ class Tuning:
             # remove duplicate ids
             document_ids = list(set(document_ids))
             self.n = len(document_ids)
-            logging.info(f"n = {self.n}")
 
  
         # Create a dictionary to store the indices of all_doc_ids
@@ -423,14 +321,12 @@ class Tuning:
         # Get the indices of document_ids using the dictionary
         indices = [index_dict[i] for i in document_ids]
 
-        logging.info('Gathering Document Vectors...')
         # use indices of ranked ids to build sorted array of document vectors
         document_vectors = np.array([all_doc_vecs[i] for i in indices])
         # dict where keys are group names and values are indices of documents
         group_doc_indices = {}
         
         # make sure documents in groups are included in training sets
-        logging.info("Appending documents from input groups...")
         for group in self.groups:
 
             group_document_ids = group["history"][0]["included_documents"]
@@ -462,26 +358,74 @@ class Tuning:
             group_doc_indices[group["history"][0]["label"]] = indices
 
         # build distance matrix
-        logging.info("Building distance matrix...")
         dm = cosine_distances(document_vectors)
-        logging.info(f"Distance matrix has shape {dm.shape}.") # n-by-n symmetrical matrix
 
         # update distance matrix such that documents in the same group have distance ~0
-        INTRA_CLUSTER_DISTANCE = 1e-2
-        for group in group_doc_indices:
+        INTRA_CLUSTER_DISTANCE = 1e-3
 
-            indices = group_doc_indices[group]
-            size = range(len(indices))
+        for group, indices in group_doc_indices.items():
+            for i in indices:
+                dm[i, indices] *= INTRA_CLUSTER_DISTANCE
 
-            for _i in size:
-                i = indices[_i]
+        if self.separation:
+            # update distance matrix such that documents in the differnet groups have distance 1
+            logging.info("Separating control groups...")
 
-                for _j in size:
-                    j = indices[_j]
-                    dm[i, j] *= INTRA_CLUSTER_DISTANCE
+            INTER_CLUSTER_DISTANCE = 1
+
+            for group_i, indices_i in group_doc_indices.items():
+                for group_j, indices_j in group_doc_indices.items():
+                    if group_i != group_j:
+                        for i in indices_i:
+                            for j in indices_j:
+                                dm[i, j] = INTER_CLUSTER_DISTANCE
 
         self.group_doc_indices = group_doc_indices
         self.document_ids = document_ids
 
         return dm
+    
+    def get_embedding(self):
+        
+        # dir = Path(f'~/embeddings/UMAP/').expanduser()
+        # dir.mkdir(parents=True, exist_ok=True)
+        # npzpath = Path(f'~/embeddings/UMAP/{self.ordering}_{self.separation}.npz').expanduser()
 
+        # if npzpath.exists():
+            
+        #     loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
+        #     return loadDocuments['embedding'], loadDocuments['indices'] 
+
+        dm = self.document_ordering()
+        warnings.filterwarnings("ignore")
+        umap_embedding = umap.UMAP(
+            metric = "precomputed", # use distance matrix
+            n_components = 2      
+        ).fit_transform(dm)
+        return umap_embedding
+        # np.savez(npzpath.as_posix(), embedding=umap_embedding, indices=group_indices)
+
+
+if __name__ == '__main__':
+
+    """ RUN FROM CL AS MODULE > python -m backend.tests.tuning """
+
+    db = utils.connect(db="nursing")
+    
+    sources = []
+    controls = []
+    ids = [
+        "6452ffcaa192f6224493e419", # race/culture
+        "6488b6ebde56ae65c7cfe67e", # 2SLGBTQ+ 
+        "6452ffe1a192f6224493e41f", # vulnerable
+        "64545bf9ae13c83727e4fb4a", # disabilities
+        "6452ffd6a192f6224493e41d", # mental health
+    ]
+
+    for id in ids:
+        group = db.groups.find_one({"_id": ObjectId(str(id))})
+        edge = schemas.create_edge(group["_id"], group["_id"], "Group")
+        controls.append(edge)
+
+    project = Tuning(db, sources, controls)
+    project.tuning()
