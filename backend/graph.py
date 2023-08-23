@@ -510,6 +510,7 @@ def update_boolean(db, node, sources: List, controls: List, parameters, operatio
                     node = db.graph.find_one({"_id": source["id"]})
                     for doclist in node["doclists"]:
                         oids = [d[0] for d in doclist["ranked_documents"]]
+                        oids = operation(oids, control_oids)
                         new_dl = schemas.create_doclist(source["id"], source["nodeid"], source["type"])
                         source_map.append((new_dl, oids))
                 case "Note":
