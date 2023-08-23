@@ -1,3 +1,12 @@
+import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions"
+export function WinIcon({type}) {
+  const wdefs = new WindowDefinitions({settings: {color: "grey"}})
+  return wdefs.definitions()[type].icon()
+}
+
+import StarOutlinedIcon from "@mui/icons-material/StarOutlined";
+
+
 # Teleoscope
 
 Teleoscope is a system for exploring large document sets by building machine learning workflows. 
@@ -42,7 +51,7 @@ export function MakeYouTube() {
 This tutorial uses data from Reddit's [AmITheAsshole](https://www.reddit.com/r/AmItheAsshole/) advice forum. 
 Follow along step-by-step to learn how the Teleoscope system works and to explore this fascinating slice of the internet.
 
-### Search
+### <WinIcon type="Search" /> Search
 
 A Teleoscope workflow starts with a normal text search. 
 You can use spaces for multiple search terms, quotes to search for exact phrases, 
@@ -69,7 +78,7 @@ import { Callout } from "nextra-theme-docs";
   **bookmark**.
 </Callout>
 
-### Bookmarks
+### <StarOutlinedIcon sx={{ color: "grey" }}/> Bookmarks
 
 You can choose documents that you'd like to save to read later by **bookmarking** them.
 Bookmarks are one of a few ways to **group** documents together. 
@@ -89,7 +98,7 @@ export function GroupIcon() {
   bookmarks.
 </Callout>
 
-### Groups
+### <WinIcon type="Group" /> Groups
 
 You can create **groups** of documents. At first, you can use this just to organize your documents. 
 But, as you use the Teleoscope system more, you'll start to use groups as a primary interaction mechanism.
@@ -127,7 +136,7 @@ There are also reset controls <AllOutIcon /> on the left and a minimap <MapIcon 
 
 <MakeDemo type="Workspace" />
 
-### Teleoscoping
+### <WinIcon type="Teleoscope" /> Teleoscoping
 
 Keyword searches, like above, are great, but they don't get you documents that are 
 **conceptually** similar but have different keywords. With Teleoscope, you search by _example_. 
@@ -145,14 +154,14 @@ search or group by connecting to the top **source input**.
 
 ![Teleoscope](/teleoscope.gif)
 
-### Projections
+### <WinIcon type="Projection" /> Projections
 
 At some point, you might want groups to be automatically created for you. 
 Similar to the Teleoscope function, you can use a **Projection** to automatically create clusters for you.
 ![Projection](/projection.gif)
 
 
-### Notes
+### <span><WinIcon type="Note" /></span> Notes
 You can write **notes** for yourself just to keep notes. However, note contents are **vectorized**. 
 This means that you can use them as **controls** for Teleoscopes.
 ![Notes](/note.gif)
@@ -256,19 +265,91 @@ The practical upshot is that our system will attempt to cluster the document sou
 the groups you provide. You can think of it like pruning a large, general language model 
 like USE for your specific way of thinking about your document set.
 
+### Boolean Operations
+[Boolean](https://en.wikipedia.org/wiki/Boolean_algebra) operations are functions that operate
+on [sets of things](https://en.wikipedia.org/wiki/Set_theory). You can think of them as ways
+to join or filter document sources. They can be chained together to create more complex joins
+and filters. And you can use them as sources or controls for Teleoscopes and Projections.
+
+#### <WinIcon type="Union" /> Union
+![Union](/Union.gif)
+[Union](https://en.wikipedia.org/wiki/Union_(set_theory)) joins each source with all of
+the control documents. You can use it to join groups, searches, or single documents without
+merging the groups by hand. In the above figure, notice how each group alone has a single document.
+Both documents are present in the union's output.
+
+#### <WinIcon type="Difference" /> Difference
+![Difference](/Difference.gif)
+[Difference](https://en.wikipedia.org/wiki/Complement_(set_theory)#Relative_complement) subtracts 
+the control documents from the source. You can use it to filter out documents from a source.
+In the above example, the original group has two documents. One of the documents is being used
+to filter itself out of the group. This is a simple example for explanatory purposes; a more
+complex example is shown below in the [Example Workflow Patterns](#example-workflow-patterns) section.
+
+#### <WinIcon type="Intersection" /> Intersection
+![Intersection](/Intersection.gif)
+[Intersection](https://en.wikipedia.org/wiki/Intersection_(set_theory)) produces only the documents that are present in **both** the source and control. You can use it wherever you would like to have more strict criteria for a source. In the above example, you can see that it gives the opposite result of the difference operation: the control document is retained, but the other documents are removed. Again, there is a more complex example in the [Example Workflow Patterns](#example-workflow-patterns) section.
+
+#### <WinIcon type="Exclusion" /> Exclusion
+![Exclusion](/Exclusion.gif)
+[Exclusion](https://en.wikipedia.org/wiki/Symmetric_difference) produces only the documents that **are not in both** source and control. You can use this to find which documents are unique to each group. In the above example, we can see that because the control document is in the source group, it is removed from the exclusion output. Again, a more complex example is available in the [Example Workflow Patterns](#example-workflow-patterns) section.
+
 
 ## Example Workflow Patterns 
+The operations that we provide you are simple and can be chained together to achieve more complex results.
+Here are some design patterns that you can use if you want to achieve specific outcomes.
 
-In this section, we will go over example ways to use our workflows to achieve desired outcomes.
+
+
+### Focus on a snippet of text
+![Snippet](/note-snippet.gif)
+Since notes can have arbitrary text, you can copy and paste a snippet of text 
+into a note from a document. Connect the note to the control input of a Teleoscope 
+to only use the snippet of text that you care about.
+
 
 ### Ranking
 ![Rank](/rank-group.gif)
 The Teleoscope tool ranks documents according to a source document. If you want to sort a source 
 (search, document, or group) by similarity to another source, you can connect the one you want 
 to rank to to the top source input, and the other to the bottom control input.
-
 As you can see in this example, the document that the group is being sorted relative to is 
 now at the top of the list.
+
+![Rank Search](/rank-search-by-word.png)
+
+Similarly, here's a pattern where you can rank a search by word. On the left, you can see that the 
+`pizza` search is unordered; by adding the Note as a control with the word `garlic`, the `pizza` search
+is now ordered by documents that are similar to the word `garlic`.
+
+
+
+### Filtering a Search
+![Search-Intersection](/Search-Intersection.gif)
+If you want to filter a search by another seach, you can use the intersection operation. 
+In the above example, the `jalapenos` search is filtered by the `pizza` search, which 
+produces only documents that contain both `jalapenos` and `pizza`. 
+
+
+### Chaining boolean operations
+![Intersection-Union](/Intersection-Union.gif)
+Boolean operations can be chained indefinitely (although chaining more will update more slowly). 
+In the above example, we see that the intersection is joined with the `Fishing` group by using union.
+All of documents that are in `Fishing` are now joined with the intersection results.
+
+![Long chain](/long-chain.png)
+
+In this example, many operations are chained together to produce a desired outcome. 
+The first intersection produces only documents that contain both `pizza` and `jalapenos`;
+the second intersection produces only documents that contain both `pizza` and `mushrooms`. 
+The results are joined together, then ranked with a Teleoscope according to a search for `garlic`.
+
+![Long chain equivalence](/long-chain-equivalence.png)
+
+Due to the logic of Boolean operations, you could get the same result by using the same 
+operations in a different order. In the above, the searches are joined with union, and then the union
+is interesected with the `pizza` search.
+
 
 
 ### Unequal Weighting
@@ -278,8 +359,6 @@ multiple copies of that source. Since the source vectors are averaged, having mo
 something allows you to weight the average. 
 
 
-### Focus on a snippet of text
-![Snippet](/note-snippet.gif)
-Since notes can have arbitrary text, you can copy and paste a snippet of text 
-into a note from a document. Connect the note to the control input of a Teleoscope 
-to only use the snippet of text that you care about.
+
+
+### 

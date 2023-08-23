@@ -9,7 +9,6 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import FolderIcon from "@mui/icons-material/Folder";
 
-
 import { CgPathIntersect, CgPathExclude, CgPathFront, CgPathUnite } from 'react-icons/cg';
 import { RiBookmark3Line } from 'react-icons/ri';
 import { BsStickies, BsSticky } from 'react-icons/bs';
@@ -70,7 +69,7 @@ export default class WindowDefinitions {
         nodetype:  SourceNode,      
         title:     (d) => `Note: ${d?.history[0].label}`,
         color:     () => this.color,
-        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><BsSticky /></IconContext.Provider>,
+        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><BsSticky style={{ display: "inline" }} /></IconContext.Provider>,
         component: (w, id, color) => <Note id={id} windata={w} color={color} />,
       },
       Notes: {
@@ -80,7 +79,7 @@ export default class WindowDefinitions {
         nodetype:  WindowNode,
         title:     function () {return this.type},
         color:     () => this.color,
-        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><BsStickies /></IconContext.Provider>,
+        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><BsStickies style={{ display: "inline" }} /></IconContext.Provider>,
         component: (w, id, color) => <Notes id={id} windata={w} color={color} />,
       },
       FABMenu: {
@@ -200,7 +199,7 @@ export default class WindowDefinitions {
         nodetype:  WindowNode,      
         title:     function () {return this.type},
         color:     () => this.color,
-        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><RiBookmark3Line /></IconContext.Provider>,
+        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><RiBookmark3Line style={{ display: "inline" }} /></IconContext.Provider>,
         component: (w, id, color) => <Bookmarks id={id} windata={w} color={color} />,
       },
       Settings: {
@@ -240,7 +239,7 @@ export default class WindowDefinitions {
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
-        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathFront /></IconContext.Provider>,
+        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathFront style={{ display: "inline" }} /></IconContext.Provider>,
         component: (w, id, color) => <Difference id={id} windata={w} color={color} />,
       },
       Intersection: {
@@ -250,7 +249,7 @@ export default class WindowDefinitions {
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
-        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathIntersect /></IconContext.Provider>,
+        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathIntersect style={{ display: "inline" }} /></IconContext.Provider>,
         component: (w, id, color) => <Intersection id={id} windata={w} color={color} />,
       },
       Exclusion: {
@@ -260,7 +259,7 @@ export default class WindowDefinitions {
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
-        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathExclude /></IconContext.Provider>,
+        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathExclude style={{ display: "inline" }} /></IconContext.Provider>,
         component: (w, id, color) => <Exclusion id={id} windata={w} color={color} />,
       },
       Union: {
@@ -270,7 +269,7 @@ export default class WindowDefinitions {
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
-        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathUnite /></IconContext.Provider>,
+        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathUnite style={{ display: "inline" }} /></IconContext.Provider>,
         component: (w, id, color) => <Union id={id} windata={w} color={color} />,
       },
     };
