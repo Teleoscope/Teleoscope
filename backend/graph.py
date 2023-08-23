@@ -80,10 +80,10 @@ def make_edge(db: database.Database, workflow_id: ObjectId,
     source = db.graph.find_one(source_oid)
     target = db.graph.find_one(target_oid)
     
-    if type(source["reference"]) != ObjectId :
+    if type(source["reference"]) != ObjectId:
         source["reference"] = source["_id"]
         
-    if type(target["reference"]) != ObjectId :
+    if type(target["reference"]) != ObjectId:
         target["reference"] = target["_id"]
 
     if (source == None or target == None):
@@ -122,7 +122,14 @@ def remove_edge(db: database.Database,
 
     # There may be multiple corresponding nodes for this source_oid
     # but there should be only one possible target_oid since each target is unique
-    source = db.graph.find_one({"reference": source_oid, "edges.output.nodeid": target_oid})
+    source = db.graph.find_one(
+        {
+            "$or": [
+                {"reference": source_oid, "edges.output.nodeid": target_oid},
+                {"_id": source_oid, "edges.output.nodeid": target_oid}
+            ]
+        }
+    )
     
     db.graph.update_one(
         {"_id": source["_id"]},
@@ -154,7 +161,6 @@ def graph(db: database.Database, node_oid: ObjectId):
     db.graph.update_one({"_id": ObjectId(str(node_oid))}, {"$set": {"doclists": []}})
     node = db.graph.find_one({"_id": ObjectId(str(node_oid))})
     
-
     sources  = node["edges"]["source"]
     controls = node["edges"]["control"]
     outputs  = node["edges"]["output"]
