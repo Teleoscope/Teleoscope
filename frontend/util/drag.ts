@@ -35,7 +35,7 @@ export const getClosestEdge = (node, nodes, edges) => {
     n.data.type === "Exclusion"    ||
     n.data.type === "Intersection" ||
     n.data.type === "Union"        ||
-    n.data.type === "Filter"
+    n.data.type === "Difference"
     
     ).reduce(
     (res, n) => {

@@ -1,28 +1,28 @@
-import { Stack, Typography, Accordion, AccordionSummary, AccordionDetails, Divider } from "@mui/material";
 import { useSWRHook } from "@/util/swr";
-
-import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import DocumentList from "../Documents/DocumentList";
+import { Typography, Stack, Divider } from "@mui/material";
+import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
+import DocumentList from "@/components/Documents/DocumentList";
 
-export default function TeleoscopeViewer(props) {
+export default function OperationViewer({id, type}) {
   const swr = useSWRHook();
-  const { teleoscope } = swr.useSWRAbstract(
-    "teleoscope", 
-    `graph/${props.id}`
-  );
+  const { operation } = swr.useSWRAbstract("operation", `graph/${id}`);
   const settings = useAppSelector((state) => state.windows.settings);
   const wdefs = useWindowDefinitions();
+  
+  const data = operation?.doclists
+
 
   const handleLoadMore = () => { console.log("stub") }
-
-  const data = teleoscope?.doclists
 
   return (
     <Accordion
       defaultExpanded={settings.defaultExpanded}
       disableGutters={true}
-      square={true}
+      square={true} 
     >
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
@@ -30,8 +30,7 @@ export default function TeleoscopeViewer(props) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {wdefs.definitions()["Teleoscope"].icon(teleoscope)} Teleoscope
-          {/* {`${teleoscope?.history[0].label}`} */}
+          {wdefs.definitions()[type].icon(operation)} {type}
         </Typography>
       </AccordionSummary>
       <AccordionDetails>

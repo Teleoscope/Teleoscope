@@ -30,10 +30,11 @@ export default function FABMenu(props) {
     "Teleoscope",
     "Projection",
     "Note",
-    // "Filter",
-    // "Intersection",
-    // "Exclusion",
-    // "Union",
+    "Divider",
+    "Union",
+    "Difference",
+    "Intersection",
+    "Exclusion"
   ]
 
   const handleAddNode = (type) => {
@@ -73,8 +74,12 @@ export default function FABMenu(props) {
       open={open}
       transitionDuration={10}
     >
-      {actions.map((action) => (
-        <SpeedDialAction
+      {actions.map((action) => {
+
+        if (action == "Divider") {
+         return <SpeedDialAction sx={{ visibility: 'hidden', height: "1px", margin: 0, padding: 0 }} />
+        }
+          return <SpeedDialAction
           sx={{ color: settings.color }}
           key={action}
           icon={wdefs.definitions()[action].icon()}
@@ -86,8 +91,11 @@ export default function FABMenu(props) {
               wdefs.definitions()[action].type
             )
           }
-        />
-      ))}
+          />
+      }
+
+       
+      )}
     </SpeedDial>
   );
 }

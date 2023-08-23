@@ -80,6 +80,12 @@ def make_edge(db: database.Database, workflow_id: ObjectId,
     source = db.graph.find_one(source_oid)
     target = db.graph.find_one(target_oid)
     
+    if type(source["reference"]) != ObjectId:
+        source["reference"] = source["_id"]
+        
+    if type(target["reference"]) != ObjectId:
+        target["reference"] = target["_id"]
+
     if (source == None or target == None):
         raise Exception("Source or target node is None.")
     
@@ -116,7 +122,14 @@ def remove_edge(db: database.Database,
 
     # There may be multiple corresponding nodes for this source_oid
     # but there should be only one possible target_oid since each target is unique
-    source = db.graph.find_one({"reference": source_oid, "edges.output.nodeid": target_oid})
+    source = db.graph.find_one(
+        {
+            "$or": [
+                {"reference": source_oid, "edges.output.nodeid": target_oid},
+                {"_id": source_oid, "edges.output.nodeid": target_oid}
+            ]
+        }
+    )
     
     db.graph.update_one(
         {"_id": source["_id"]},
@@ -148,7 +161,6 @@ def graph(db: database.Database, node_oid: ObjectId):
     db.graph.update_one({"_id": ObjectId(str(node_oid))}, {"$set": {"doclists": []}})
     node = db.graph.find_one({"_id": ObjectId(str(node_oid))})
     
-
     sources  = node["edges"]["source"]
     controls = node["edges"]["control"]
     outputs  = node["edges"]["output"]
@@ -175,6 +187,8 @@ def graph(db: database.Database, node_oid: ObjectId):
             node = update_intersection(db, node, sources, controls, parameters)
         case "Exclusion":
             node = update_exclusion(db, node, sources, controls, parameters)
+        case "Difference":
+            node = update_difference(db, node, sources, controls, parameters)
         case "Filter":
             node = update_filter(db, node, sources, controls, parameters)
 
@@ -195,8 +209,6 @@ def make_matrix(node_type: schemas.NodeType, oid: ObjectId):
 
 def update_matrix(oid: ObjectId, node_type: schemas.NodeType, graph_oid: ObjectId):
     return []
-
-
 
 def update_parameters(db, node, parameters):
     collection = utils.get_collection(db, node["type"])
@@ -341,9 +353,17 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
                     oids = [d["_id"] for d in list(cursor)]
                     vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
                     source_map.append((source, vecs, oids))
+                case "Union" | "Difference" | "Intersection" | "Exclusion":
+                    node = db.graph.find_one({"_id": source["id"]})
+                    node_doclists = node["doclists"]
+                    for doclist in node_doclists:
+                        oids = [d[0] for d in doclist["ranked_documents"]]
+                        vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
+                        source_map.append((doclist, vecs, oids))
                 case "Note":
                     pass
 
+    
     for source, source_vecs, source_oids in source_map:
         ranks = rank(control_vecs, source_oids, source_vecs, rank_slice_length)
         source["ranked_documents"] = ranks
@@ -383,18 +403,23 @@ def get_control_vectors(db: database.Database, controls, ids, all_vectors):
             case "Note":
                 note = db.notes.find_one({"_id": c["id"]})
                 notes.append(note)
+            case "Union" | "Difference" | "Intersection" | "Exclusion":
+                node = db.graph.find_one({"_id": c["id"]})
+                for doclist in node["doclists"]:
+                        oids = oids + [d[0] for d in doclist["ranked_documents"]]
+                    
     note_vecs = [np.array(note["textVector"]) for note in notes]
     filtered_vecs = filter_vectors_by_oid(oids, ids, all_vectors)
     out_vecs = filtered_vecs + note_vecs
     logging.info(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
     return out_vecs
 
+
 ################################################################################
 # Update Projection
 ################################################################################
 
 def update_projection(db: database.Database, projection_node, sources: List, controls: List, parameters):
-
 
     if len(controls) == 0:
         logging.info(f"No controls included. Returning original projection node.")
@@ -432,21 +457,123 @@ def update_projection(db: database.Database, projection_node, sources: List, con
     # TODO: matrix
     return projection_node
 
+
 ################################################################################
-# Update Other Operations
+# Update Boolean Operations
 ################################################################################
 
+def update_boolean(db, node, sources: List, controls: List, parameters, operation):
+    doclists = []
+    source_map = []
+    control_oids = []
+
+    for control in controls:
+            match control["type"]:
+                case "Document":
+                    oids = [control["id"]]
+                    control_oids = control_oids + oids
+                case "Group":
+                    group = db.groups.find_one({"_id": control["id"]})
+                    oids = group["history"][0]["included_documents"]
+                    control_oids = control_oids + oids
+                case "Search":
+                    search = db.searches.find_one({"_id": control["id"]})
+                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
+                    oids = [d["_id"] for d in list(cursor)]
+                    control_oids = control_oids + oids
+                case "Union" | "Difference" | "Intersection" | "Exclusion":
+                    node = db.graph.find_one({"_id": control["id"]})
+                    for doclist in node["doclists"]:
+                        oids = [d[0] for d in doclist["ranked_documents"]]
+                        control_oids = control_oids + oids
+                case "Note":
+                    pass
+    
+    for source in sources:
+            match source["type"]:
+                case "Document":
+                    oids = [source["id"]]
+                    oids = operation(oids, control_oids)
+                    source_map.append((source, oids))
+                case "Group":
+                    group = db.groups.find_one({"_id": source["id"]})
+                    oids = group["history"][0]["included_documents"]
+                    oids = operation(oids, control_oids)
+                    source_map.append((source, oids))
+                case "Search":
+                    search = db.searches.find_one({"_id": source["id"]})
+                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
+                    oids = [d["_id"] for d in list(cursor)]
+                    oids = operation(oids, control_oids)
+                    source_map.append((source, oids))
+                case "Union" | "Difference" | "Intersection" | "Exclusion":
+                    node = db.graph.find_one({"_id": source["id"]})
+                    for doclist in node["doclists"]:
+                        oids = [d[0] for d in doclist["ranked_documents"]]
+                        oids = operation(oids, control_oids)
+                        new_dl = schemas.create_doclist(source["id"], source["nodeid"], source["type"])
+                        source_map.append((new_dl, oids))
+                case "Note":
+                    pass
+    
+    for source, source_oids in source_map:
+        ranks = [(oid, 1.0) for oid in source_oids]
+        source["ranked_documents"] = ranks
+        doclists.append(source)
+
+    return doclists
+
+
+def update_difference(db, node, sources: List, controls: List, parameters):
+    def difference(current_oids, control_oids):
+        curr = set(current_oids)
+        ctrl = set(control_oids)
+        return list(curr.difference(ctrl))
+    
+    doclists = update_boolean(db, node, sources, controls, parameters, difference)
+    
+    node["doclists"] = doclists
+    return node
+
 def update_union(db, node, sources: List, controls: List, parameters):
-    return node # stub
+    def union(current_oids, control_oids):
+        curr = set(current_oids)
+        ctrl = set(control_oids)
+        return list(curr.union(ctrl))
+    
+    doclists = update_boolean(db, node, sources, controls, parameters, union)
+    
+    node["doclists"] = doclists
+    return node
 
 
 def update_intersection(db, node, sources: List, controls: List, parameters):
-    return node # stub
+    def intersection(current_oids, control_oids):
+        curr = set(current_oids)
+        ctrl = set(control_oids)
+        return list(curr.intersection(ctrl))
+    
+    doclists = update_boolean(db, node, sources, controls, parameters, intersection)
+    
+    node["doclists"] = doclists
+    return node
 
 
 def update_exclusion(db, node, sources: List, controls: List, parameters):
-    return node # stub
+    def exclusion(current_oids, control_oids):
+        curr = set(current_oids)
+        ctrl = set(control_oids)
+        diff_curr = curr.difference(ctrl)
+        diff_ctrl = ctrl.difference(curr)
+        return list(diff_curr.union(diff_ctrl))
+    
+    doclists = update_boolean(db, node, sources, controls, parameters, exclusion)
+    
+    node["doclists"] = doclists
+    return node
 
 
 def update_filter(db, node, sources: List, controls: List, parameters):
     return node # stub
+
+

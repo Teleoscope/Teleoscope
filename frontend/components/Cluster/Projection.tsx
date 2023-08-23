@@ -56,7 +56,7 @@ export default function Projection(props) {
     >
       
       <ToggleButton value={true} aria-label="expand">
-      <Tooltip title="Expand groups">
+      <Tooltip title="Attempt to separate groups">
         <Box component="span" sx={{margin: 0, padding: 0}}>
         <BsArrowsExpand />
         </Box>
@@ -65,7 +65,7 @@ export default function Projection(props) {
       
       
       <ToggleButton value={false} aria-label="collapse">
-      <Tooltip title="Collapse groups">
+      <Tooltip title="Allow groups to merge">
       <Box component="span" sx={{margin: 0, padding: 0}}>
         <BsArrowsCollapse />
         </Box>

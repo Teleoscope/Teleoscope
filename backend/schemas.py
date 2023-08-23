@@ -5,7 +5,7 @@ from typing import Literal
 from typing import List
 
 EdgeType = Literal["source", "control", "output"]
-NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Union", "Intersection", "Exclusion", "Subtraction"]
+NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Union", "Intersection", "Exclusion", "Difference"]
 HexStr = NewType('HexStr', str)
 
 
@@ -280,3 +280,12 @@ def create_node_parameters(node_type: NodeType):
                 "separation": False,
             }
     return default
+
+
+def create_doclist(id, nodeid, node_type, ranked_documents=[]):
+    return {
+        "id": id,
+        "nodeid": nodeid,
+        "type": node_type,
+        "ranked_documents": ranked_documents
+    }

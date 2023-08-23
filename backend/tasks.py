@@ -1008,6 +1008,7 @@ def update_node(*args, database: str, userid: str, workflow_id: str,
         raise Exception("Node is None.")
     
     graph.update_parameters(db, node, parameters)
+    graph.graph(db, node_oid)
 
     workflow = db.sessions.find_one({"_id": workflow_id})
     history_item = utils.update_history(
@@ -1155,7 +1156,7 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
     node = graph.make_node(db, workflow_id, res, node_type)
 
     match node_type:
-        case "Teleoscope" | "Projection" | "Filter" | "Intersection" | "Exclusion" | "Union":
+        case "Teleoscope" | "Projection" | "Difference" | "Intersection" | "Exclusion" | "Union":
             res = node["_id"]
 
     utils.message(replyTo, {

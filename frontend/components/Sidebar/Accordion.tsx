@@ -27,13 +27,6 @@ export default function SimpleAccordion(props) {
         >
           <Workflows />
         </AccordionSection>
-        {/* <AccordionSection
-          compact={props.compact}
-          icon={wdefs.definitions()["Teleoscopes"].icon()}
-          text="Teleoscopes"
-        >
-          <Teleoscopes />
-        </AccordionSection> */}
         <AccordionSection
           compact={props.compact}
           icon={wdefs.definitions()["Groups"].icon()}
@@ -48,13 +41,6 @@ export default function SimpleAccordion(props) {
         >
           <Bookmarks />
         </AccordionSection>
-        {/* <AccordionSection
-          compact={props.compact}
-          icon={wdefs.definitions()["Projections"].icon()}
-          text="Projections"
-        >
-          <ProjectionPalette />
-        </AccordionSection> */}
         <AccordionSection
           compact={props.compact}
           icon={wdefs.definitions()["Notes"].icon()}

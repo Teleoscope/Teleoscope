@@ -10,8 +10,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import FolderIcon from "@mui/icons-material/Folder";
 
 
-import { CgPathIntersect, CgPathExclude } from 'react-icons/cg';
-import { MdManageSearch } from 'react-icons/md';
+import { CgPathIntersect, CgPathExclude, CgPathFront, CgPathUnite } from 'react-icons/cg';
 import { RiBookmark3Line } from 'react-icons/ri';
 import { BsStickies, BsSticky } from 'react-icons/bs';
 
@@ -19,6 +18,7 @@ import { IconContext } from "react-icons";
 
 import WindowNode from "@/components/Nodes/WindowNode";
 import OperationNode from "@/components/Nodes/OperationNode";
+import TargetNode from "@/components/Nodes/TargetNode";
 import SourceNode from "@/components/Nodes/SourceNode";
 
 
@@ -37,10 +37,10 @@ import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
 import Notes from "@/components/Notes";
 
 
-import Filter from "@/components/Operations/Filter";
 import Intersection from "@/components/Operations/Intersection";
 import Exclusion from "@/components/Operations/Exclusion";
 import Union from "@/components/Operations/Union";
+import Difference from "@/components/Operations/Difference";
 
 import { PreprocessTitle } from "@/util/Preprocessers";
 import Bookmarks from "@/components/Bookmarks";
@@ -117,7 +117,7 @@ export default class WindowDefinitions {
         tag:       "teleoscope",
         type:      "Teleoscope",
         apipath:   "graph",
-        nodetype:  OperationNode,      
+        nodetype:  TargetNode,      
         title:     (d) => d?.type,
         color:     (d) => this.color,
         icon:      (d) => <FlareIcon sx={{ color: this.color }} fontSize="inherit" />,
@@ -147,7 +147,7 @@ export default class WindowDefinitions {
         tag:       "projection",
         type:      "Projection",
         apipath:   "graph",
-        nodetype:  OperationNode,      
+        nodetype:  TargetNode,      
         title:     (d) => d?.type,
         color:     (d) => this.color,
         icon:      (d) => <Diversity2Icon sx={{ color: this.color }}  fontSize="inherit" />,
@@ -233,20 +233,20 @@ export default class WindowDefinitions {
         icon:      (sx = this.style()) => <AccountTreeIcon sx={sx} fontSize="inherit"  />,
         component: (w, id, color) => <Clusters id={id} windata={w} color={color} />,
       },
-      Filter: {
-        tag:       "filter",
-        type:      "Filter",
-        apipath:   "filter",
+      Difference: {
+        tag:       "difference",
+        type:      "Difference",
+        apipath:   "graph",
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
-        icon:      (sx = this.style()) => <MdManageSearch />,
-        component: (w, id, color) => <Filter id={id} windata={w} color={color} />,
+        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathFront /></IconContext.Provider>,
+        component: (w, id, color) => <Difference id={id} windata={w} color={color} />,
       },
       Intersection: {
         tag:       "intersection",
         type:      "Intersection",
-        apipath:   "intersection",
+        apipath:   "graph",
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
@@ -256,7 +256,7 @@ export default class WindowDefinitions {
       Exclusion: {
         tag:       "exclusion",
         type:      "Exclusion",
-        apipath:   "exclusion",
+        apipath:   "graph",
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
@@ -266,11 +266,11 @@ export default class WindowDefinitions {
       Union: {
         tag:       "union",
         type:      "Union",
-        apipath:   "union",
+        apipath:   "graph",
         nodetype: OperationNode,
         title:     function () {return this.type},
         color:     () => this.color,
-        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathIntersect /></IconContext.Provider>,
+        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathUnite /></IconContext.Provider>,
         component: (w, id, color) => <Union id={id} windata={w} color={color} />,
       },
     };

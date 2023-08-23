@@ -444,6 +444,7 @@ def test_search_as_source_group_and_documents_as_control_reverse_order_teleoscop
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) > 0
 
+
 def test_make_edge_from_group_to_projection():
     global db, group
     group_id = group["_id"]
@@ -478,6 +479,7 @@ def test_make_edge_from_group_to_projection():
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) > 0
+
 
 def test_make_edge_from_group_and_document_to_projection():
     global db, group
@@ -532,6 +534,7 @@ def test_make_edge_from_group_and_document_to_projection():
     # make sure the document list is non-zero
     updated_target_docs = target_node_updated["doclists"]
     assert len(updated_target_docs) > 0
+
 
 def test_search_as_source_group_as_control_projection():
     global db, group, search
@@ -791,3 +794,208 @@ def test_model():
 
     project = tuning.Tuning(db, sources, controls)
     project.tuning()
+
+
+###############################################################################
+# Boolean Operations Tests
+###############################################################################
+def test_group_union_doc():
+    global group
+    groupid = group["_id"]
+    documents = list(db.documents.aggregate([{ "$sample": { "size": 1 } }]))
+
+    docid = documents[0]["_id"]
+    
+    # make new nodes
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    doc_node = graph.make_node(db, workflow["_id"], docid, "Document")
+    union_node = graph.make_node(db, workflow["_id"], None, "Union")
+
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "source")
+    graph.make_edge(db, workflow["_id"], doc_node["_id"], "Document", union_node["_id"], "Union", "control")
+    
+    updated_union_node = db.graph.find_one({"_id": union_node["_id"]})
+
+    union_oids = set([rd[0] for rd in updated_union_node["doclists"][0]["ranked_documents"]])
+    compare_oids = set(group["history"][0]["included_documents"] + [docid])
+
+    assert union_oids == compare_oids
+
+
+def test_group_difference_doc():
+    global group, documents
+    groupid = group["_id"]
+    docid = documents[0]["_id"]
+    
+    # make new nodes
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    doc_node = graph.make_node(db, workflow["_id"], docid, "Document")
+    difference_node = graph.make_node(db, workflow["_id"], None, "Difference")
+
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", difference_node["_id"], "Difference", "source")
+    graph.make_edge(db, workflow["_id"], doc_node["_id"], "Document", difference_node["_id"], "Difference", "control")
+    
+    updated_difference_node = db.graph.find_one({"_id": difference_node["_id"]})
+
+    difference_oids = set([rd[0] for rd in updated_difference_node["doclists"][0]["ranked_documents"]])
+    compare_oids = set(group["history"][0]["included_documents"] + [docid])
+    compare_oids.difference_update(set([docid]))
+
+    assert difference_oids == compare_oids
+
+
+def test_group_intersection_doc():
+    global group, documents
+    groupid = group["_id"]
+    docid = documents[0]["_id"]
+    
+    # make new nodes
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    doc_node = graph.make_node(db, workflow["_id"], docid, "Document")
+    intersection_node = graph.make_node(db, workflow["_id"], None, "Intersection")
+
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", intersection_node["_id"], "Intersection", "source")
+    graph.make_edge(db, workflow["_id"], doc_node["_id"], "Document", intersection_node["_id"], "Intersection", "control")
+    
+    updated_intersection_node = db.graph.find_one({"_id": intersection_node["_id"]})
+
+    intersection_oids = set([rd[0] for rd in updated_intersection_node["doclists"][0]["ranked_documents"]])
+    compare_oids = set([docid])
+
+    assert intersection_oids == compare_oids
+
+
+def test_group_exclusion_doc():
+    global group, documents
+    groupid = group["_id"]
+    docid = documents[0]["_id"]
+    
+    # make new nodes
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    doc_node = graph.make_node(db, workflow["_id"], docid, "Document")
+    exclusion_node = graph.make_node(db, workflow["_id"], None, "Exclusion")
+
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", exclusion_node["_id"], "Exclusion", "source")
+    graph.make_edge(db, workflow["_id"], doc_node["_id"], "Document", exclusion_node["_id"], "Exclusion", "control")
+    
+    updated_exclusion_node = db.graph.find_one({"_id": exclusion_node["_id"]})
+
+    exclusion_oids = set([rd[0] for rd in updated_exclusion_node["doclists"][0]["ranked_documents"]])
+    compare_oids = set(group["history"][0]["included_documents"]).difference(set([docid]))
+
+    assert exclusion_oids == compare_oids
+
+
+def test_group_union_group_trivial():
+    global group
+    groupid = group["_id"]
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    union_node = graph.make_node(db, workflow["_id"], None, "Union")
+    
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "source")
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "control")
+
+    updated_union_node = db.graph.find_one({"_id": union_node["_id"]})
+    union_oids = set([rd[0] for rd in updated_union_node["doclists"][0]["ranked_documents"]])
+    compare_oids = set(group["history"][0]["included_documents"])
+
+    assert len(updated_union_node["doclists"][0]["ranked_documents"]) == len(group["history"][0]["included_documents"])
+    assert union_oids == compare_oids
+
+
+def test_group_difference_group_trivial():
+    global group
+    groupid = group["_id"]
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    difference_node = graph.make_node(db, workflow["_id"], None, "Difference")
+    
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", difference_node["_id"], "Difference", "source")
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", difference_node["_id"], "Difference", "control")
+
+    updated_difference_node = db.graph.find_one({"_id": difference_node["_id"]})
+    assert len(updated_difference_node["doclists"][0]["ranked_documents"]) == 0
+
+
+def test_teleoscope_union():
+    global group
+    groupid = group["_id"]
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    union_node = graph.make_node(db, workflow["_id"], None, "Union")
+    
+    union_teleoscope_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
+    group_teleoscope_node = graph.make_node(db, workflow["_id"], None, "Teleoscope")
+    
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "source")
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "control")
+
+    graph.make_edge(
+        db=db,
+        workflow_id=workflow["_id"],
+        source_oid=union_node["_id"],
+        source_type="Union",
+        target_oid=union_teleoscope_node["_id"],
+        target_type="Teleoscope",
+        edge_type="control"
+    )
+
+    graph.make_edge(
+        db=db,
+        workflow_id=workflow["_id"],
+        source_oid=group_node["_id"],
+        source_type="Group",
+        target_oid=group_teleoscope_node["_id"],
+        target_type="Teleoscope",
+        edge_type="control"
+    )
+    
+    updated_union_teleoscope_node = db.graph.find_one({"_id": union_teleoscope_node["_id"]})
+    updated_group_teleoscope_node = db.graph.find_one({"_id": group_teleoscope_node["_id"]})
+
+    union_t_docs = updated_union_teleoscope_node["doclists"]
+    group_t_docs = updated_group_teleoscope_node["doclists"]
+
+    assert union_t_docs == group_t_docs
+
+
+
+def test_group_union_group_union():
+    global group
+    groupid = group["_id"]
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    union_1_node = graph.make_node(db, workflow["_id"], None, "Union")
+    union_2_node = graph.make_node(db, workflow["_id"], None, "Union")
+    
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_1_node["_id"], "Union", "source")
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_1_node["_id"], "Union", "control")
+
+    graph.make_edge(db, workflow["_id"], union_1_node["_id"], "Union", union_2_node["_id"], "Union", "source")
+    graph.make_edge(db, workflow["_id"], union_1_node["_id"], "Union", union_2_node["_id"], "Union", "control")
+
+    updated_union_node = db.graph.find_one({"_id": union_2_node["_id"]})
+    union_oids = set([rd[0] for rd in updated_union_node["doclists"][0]["ranked_documents"]])
+    compare_oids = set(group["history"][0]["included_documents"])
+
+    assert len(updated_union_node["doclists"][0]["ranked_documents"]) == len(group["history"][0]["included_documents"])
+    assert union_oids == compare_oids
+
+
+
+def test_group_union_difference():
+    global db, group
+    groupid = group["_id"]
+    group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
+    union_node = graph.make_node(db, workflow["_id"], None, "Union")
+    difference_node = graph.make_node(db, workflow["_id"], None, "Difference")
+    
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "source")
+    graph.make_edge(db, workflow["_id"], group_node["_id"], "Group", union_node["_id"], "Union", "control")
+
+    graph.make_edge(db, workflow["_id"], union_node["_id"], "Union", difference_node["_id"], "Difference", "source")
+    graph.make_edge(db, workflow["_id"], union_node["_id"], "Union", difference_node["_id"], "Difference", "control")
+
+    graph.graph(db, difference_node["_id"])
+
+    updated_difference_node = db.graph.find_one({"_id": difference_node["_id"]})
+    
+    assert len(updated_difference_node["doclists"][0]["ranked_documents"]) == 0
+
