@@ -121,6 +121,9 @@ class Projection:
         
         umap_embeddings = umap.UMAP(
             metric = "precomputed", # use distance matrix
+            n_components=n_components,
+            n_neighbors=n_neighbors,
+            min_dist=min_dist
         ).fit_transform(dm)
         
         self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "clustering... (3/4)"} })
