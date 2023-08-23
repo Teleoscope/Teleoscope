@@ -121,9 +121,6 @@ class Projection:
         
         umap_embeddings = umap.UMAP(
             metric = "precomputed", # use distance matrix
-            n_components = n_components,      # reduce to n_components dimensions (2~100)
-            n_neighbors = n_neighbors,     # local (small n ~2) vs. global (large n ~100) structure 
-            min_dist = min_dist,        # minimum distance apart that points are allowed (0.0~0.99)
         ).fit_transform(dm)
         
         self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "clustering... (3/4)"} })
@@ -138,9 +135,9 @@ class Projection:
 
         while (num_clust < 10 or num_clust > 100):
         
-            min_cluster_size = random.randint(10, 15) #11
-            min_samples = random.randint(10, 15)#12
-            cluster_selection_epsilon = random.uniform(0.26, 0.29) #0.270212
+            min_cluster_size = 20#random.randint(10, 15) #11
+            min_samples = 15 #random.randint(10, 15)#12
+            cluster_selection_epsilon = 0.1 #random.uniform(0.26, 0.29) #0.270212
                 
             self.hdbscan_labels = hdbscan.HDBSCAN(
                 min_cluster_size = min_cluster_size,              # num of neighbors needed to be considered a cluster (0~50, df=5)
@@ -257,10 +254,11 @@ class Projection:
             match c["type"]:
                 case "Document":
                     # create temp group
+                    doc = self.db.documents.find_one({"_id": c["id"]})
                     obj = schemas.create_group_object(
                         "#FF0000", 
                         [c["id"]], 
-                        "Your Document", 
+                        f"{doc['title']}", 
                         "Initialize group", 
                         ObjectId(generate()), # random id
                         "Group from Document",
@@ -276,6 +274,66 @@ class Projection:
                 case "Group":
                     group = self.db.groups.find_one({"_id": c["id"]})
                     self.groups.append(group)
+
+                case "Union" | "Difference" | "Intersection" | "Exclusion":
+                    node = self.db.graph.find_one({"_id": c["id"]})
+                    node_doclists = node["doclists"]
+                    
+                    # label = f'{c["type"]} of ' 
+                    # for control in node["edges"]["control"]:
+                    #     match control["type"]:
+                    #         case "Document": 
+                    #             source = self.db.documents.find_one({"_id": control["id"]})
+                    #             title = source["title"]
+                    #             label += f'{control["type"]}: {title}'
+
+                    #         case "Group": 
+                    #             source = self.db.groups.find_one({"_id": control["id"]})
+                    #             title = source["history"][0]["label"]
+                    #             label += f'{control["type"]}: {title}'
+                            
+                    #         case "Search": 
+                    #             source = self.db.searches.find_one({"_id": control["id"]})
+                    #             title = source["history"][0]["query"]
+                    #             label += f'{control["type"]}: {title}'
+
+                    for doclist in node_doclists:
+                        ids = [d[0] for d in doclist["ranked_documents"]]
+                        
+                        label = f'{c["type"]} on ' 
+
+                        match doclist["type"]:
+                            case "Document": 
+                                source = self.db.documents.find_one({"_id": doclist["id"]})
+                                title = source["title"]
+                                label += f'{doclist["type"]}: {title}'
+
+                            case "Group": 
+                                source = self.db.groups.find_one({"_id": doclist["id"]})
+                                title = source["history"][0]["label"]
+                                label += f'{doclist["type"]}: {title}'
+                            
+                            case "Search": 
+                                source = self.db.searches.find_one({"_id": doclist["id"]})
+                                title = source["history"][0]["query"]
+                                label += f'{doclist["type"]}: {title}'
+
+                        obj = schemas.create_group_object(
+                            "#FF0000", 
+                            ids, 
+                            f"{label}", 
+                            "Initialize group", 
+                            ObjectId(generate()), # random id
+                            f'Group from {c["type"]}',
+                            ObjectId(generate()), # random id
+                        )
+                        # Initialize group in database
+                        res = self.db.groups.insert_one(obj)
+                        oid = res.inserted_id
+                        group = self.db.groups.find_one({"_id": oid})
+                        self.doc_groups.append(oid)
+                        self.groups.append(group)
+
                 case "Search":
                     pass
                 case "Note":
@@ -340,6 +398,12 @@ class Projection:
                         elif query == "" and full_search_input is False:
                             document_ids += random.sample(all_doc_ids, self.n)
                             full_search_input = True
+
+                    case "Union" | "Difference" | "Intersection" | "Exclusion":
+                        node = self.db.graph.find_one({"_id": source["id"]})
+                        node_doclists = node["doclists"]
+                        for doclist in node_doclists:
+                            document_ids += [d[0] for d in doclist["ranked_documents"]]
 
                     case "Note":
                         pass

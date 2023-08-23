@@ -182,3 +182,4 @@ ansible/vars/*
 
 # certificate files
 *.pem
+frontend/yarn.lock

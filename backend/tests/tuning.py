@@ -94,10 +94,10 @@ class Tuning:
 
                     # self.group_doc_indices = group_doc_indices
                     mcs_vals = np.around(np.linspace(2,70,15)).astype(int) # default=5
-                    ms_vals = [None] + np.around(np.linspace(1, 30, 15)).astype(int).tolist()
+                    ms_vals = [None] + np.around(np.linspace(1, 30, 14)).astype(int).tolist() # default=None
                     eps_vals = [0.        , 0.07142857, 0.14285714, 0.21428571, 0.28571429,
        0.35714286, 0.42857143, 0.5       , 0.57142857, 0.64285714,
-       0.71428571, 0.78571429, 0.85714286, 0.92857143, 1.        ] # default=0.0
+       0.71428571, 0.78571429, 0.85714286, 0.92857143, 1.        ] # np.linspace(0, 1, 15) default=0.0
 
                     for min_cluster_size in tqdm(mcs_vals, desc="min_cluster_size", leave=False): 
                         for min_samples in tqdm(ms_vals, desc="min_samples", leave=False): 
@@ -419,8 +419,8 @@ if __name__ == '__main__':
         "6452ffcaa192f6224493e419", # race/culture
         "6488b6ebde56ae65c7cfe67e", # 2SLGBTQ+ 
         "6452ffe1a192f6224493e41f", # vulnerable
-        # "64545bf9ae13c83727e4fb4a", # disabilities
-        # "6452ffd6a192f6224493e41d", # mental health
+        "64545bf9ae13c83727e4fb4a", # disabilities
+        "6452ffd6a192f6224493e41d", # mental health
     ]
 
     for id in ids:
