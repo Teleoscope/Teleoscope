@@ -765,73 +765,33 @@ def test_make_and_remove_multiple_edges_from_document_to_teleoscope():
 
 def test_model():
 
-    # To run single test with logging info
-    # > pytest test_graph.py::test_model --log-cli-level=INFO
 
-    global db, group, user, workflow
+    """
+        Super set hyperparameter testing.
+
+        To run single test with logging info
+            > pytest test_graph.py::test_model --log-cli-level=INFO
+
+        
+    """
+
+    db = utils.connect(db="nursing")
     
     sources = []
     controls = []
+    ids = [
+        "6452ffcaa192f6224493e419", # race/culture
+        "6488b6ebde56ae65c7cfe67e", # 2SLGBTQ+ 
+        "6452ffe1a192f6224493e41f", # vulnerable
+        "64545bf9ae13c83727e4fb4a", # disabilities
+        "6452ffd6a192f6224493e41d", # mental health
+    ]
 
-    groupid = tasks.add_group(
-        database="test",
-        userid=user["_id"],
-        workflow_id=workflow["_id"],
-        description=f"School",
-        label=f"School",
-        color="#FF0000",
-        documents=[
-            ObjectId(str("637f765cad44345a593e537b")),
-            ObjectId(str("637f65bbb4b0ff51b395daeb")),
-            ObjectId(str("637f35286e9ac92a035740b1")),
-            ObjectId(str("637f7acfad44345a593e6fe0")),
-            ObjectId(str("637f25d886185c8845a969ff")),
-            ObjectId(str("637fabdaafe39393a032697c")),
-        ])    
-    group_a = db.groups.find_one({"_id": groupid})
-    a = schemas.create_edge(group_a["_id"], group_a["_id"], "Group")
-    controls.append(a)
+    for id in ids:
+        group = db.groups.find_one({"_id": ObjectId(str(id))})
+        edge = schemas.create_edge(group["_id"], group["_id"], "Group")
+        controls.append(edge)
 
-    groupid = tasks.add_group(
-        database="test",
-        userid=user["_id"],
-        workflow_id=workflow["_id"],
-        description=f"Computer",
-        label=f"Computer",
-        color="#FF0000",
-        documents=[
-            ObjectId(str("637f2e6d460aea988a461dfe")),
-            ObjectId(str("637fbe45fb3d152b7a65d3e3")),
-            ObjectId(str("637f5852aaa6615e600f6f74")),
-            ObjectId(str("637fb12a485c454a3f49a2ad")),
-            ObjectId(str("637f5f018881e51b8d88648d")),
-            ObjectId(str("637f5c808881e51b8d884b3e")),
-        ])
-    group_b = db.groups.find_one({"_id": groupid})
-    b = schemas.create_edge(group_b["_id"], group_b["_id"], "Group")
-    controls.append(b)
-
-    groupid = tasks.add_group(
-        database="test",
-        userid=user["_id"],
-        workflow_id=workflow["_id"],
-        description=f"Fear",
-        label=f"Fear",
-        color="#FF0000",
-        documents=[
-            ObjectId(str("637f3949c9e41f34c0eb8663")),
-            ObjectId(str("637fb41f485c454a3f49aafd")),
-            ObjectId(str("637fbf32fb3d152b7a65d6b3")),
-            ObjectId(str("637facfbafe39393a0326c9b")),
-            ObjectId(str("63800ea2c8d28922db7f9ef7")),
-            ObjectId(str("637f34326e9ac92a03573624")),
-        ])  
-    group_c = db.groups.find_one({"_id": groupid})
-    c = schemas.create_edge(group_c["_id"], group_c["_id"], "Group")
-    # controls.append(c)
-
-    # project = projection.Projection(db, sources, controls)
-    # project.clustering_task()
     project = tuning.Tuning(db, sources, controls)
     project.tuning()
 
