@@ -1020,8 +1020,8 @@ def test_group_union_group_union():
 
 
 
-def test_group_union_group_difference():
-    global group
+def test_group_union_difference():
+    global db, group
     groupid = group["_id"]
     group_node = graph.make_node(db, workflow["_id"], groupid, "Group") 
     union_node = graph.make_node(db, workflow["_id"], None, "Union")
@@ -1032,6 +1032,8 @@ def test_group_union_group_difference():
 
     graph.make_edge(db, workflow["_id"], union_node["_id"], "Union", difference_node["_id"], "Difference", "source")
     graph.make_edge(db, workflow["_id"], union_node["_id"], "Union", difference_node["_id"], "Difference", "control")
+
+    graph.graph(db, difference_node["_id"])
 
     updated_difference_node = db.graph.find_one({"_id": difference_node["_id"]})
     
