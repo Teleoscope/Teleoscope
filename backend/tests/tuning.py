@@ -78,6 +78,7 @@ class Tuning:
             - fix hdbscan (see proj.py for param)
             - make smaller plots
             - vary umap
+            - get more user study groups, want to check inter/intra quality
         """
         try:
             i=0
