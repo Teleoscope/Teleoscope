@@ -89,35 +89,48 @@ class Tuning:
                     logging.info(f'Preparing data with {ordering} ordering and separation {separation}')
 
                     umap_embedding = self.get_embedding()
-                    # self.group_doc_indices = {key: loaded_data[key] for key in loaded_data}
 
-                    # self.group_doc_indices = group_doc_indices
-                    mcs_vals = np.around(np.linspace(2,70,15)).astype(int) # default=5
-                    ms_vals = [None] + np.around(np.linspace(1, 30, 14)).astype(int).tolist() # default=None
-                    eps_vals = [0.        , 0.07142857, 0.14285714, 0.21428571, 0.28571429,
-       0.35714286, 0.42857143, 0.5       , 0.57142857, 0.64285714,
-       0.71428571, 0.78571429, 0.85714286, 0.92857143, 1.        ] # np.linspace(0, 1, 15) default=0.0
 
-                    for min_cluster_size in tqdm(mcs_vals, desc="min_cluster_size", leave=False): 
-                        for min_samples in tqdm(ms_vals, desc="min_samples", leave=False): 
-                            for cluster_selection_epsilon in tqdm(eps_vals, desc="cluster_selection_epsilon", leave=False): 
+    #                 mcs_vals = np.around(np.linspace(2,70,15)).astype(int) # default=5
+    #                 ms_vals = [None] + np.around(np.linspace(1, 30, 14)).astype(int).tolist() # default=None
+    #                 eps_vals = [0.        , 0.07142857, 0.14285714, 0.21428571, 0.28571429,
+    #    0.35714286, 0.42857143, 0.5       , 0.57142857, 0.64285714,
+    #    0.71428571, 0.78571429, 0.85714286, 0.92857143, 1.        ] # np.linspace(0, 1, 15) default=0.0
+                    
+                    nc_vals = np.around(np.linspace(2,20,5)).astype(int) # random.randint(7, 12) default=2
+                    nn_vals = np.around(np.linspace(2,30,20)).astype(int) #random.randint(10, 15) default=15 >1
+                    md_vals = np.linspace(0, 0.5, 10) #random.uniform(1e-4, 0.05) 0.029184 default=0.1
+
+                    for n_components in tqdm(nc_vals, desc="n_components", leave=False): 
+                        for n_neighbors in tqdm(nn_vals, desc="n_neighbors", leave=False): 
+                            for min_dist in tqdm(md_vals, desc="min_dist", leave=False): 
                                 
+                                dm = self.document_ordering()
+
+                                warnings.filterwarnings("ignore")
+                                umap_embedding = umap.UMAP(
+                                    metric = "precomputed", # use distance matrix
+                                    n_components=n_components,
+                                    n_neighbors=n_neighbors,
+                                    min_dist=min_dist,      
+                                ).fit_transform(dm)
+
                                 hdbscan_labels = hdbscan.HDBSCAN(
-                                    min_cluster_size = min_cluster_size,           
-                                    min_samples = min_samples,                  
-                                    cluster_selection_epsilon = cluster_selection_epsilon,  
+                                    min_cluster_size = 20,           
+                                    min_samples = 15,                  
+                                    cluster_selection_epsilon = 0.1,  
                                 ).fit_predict(umap_embedding)
                                 
                                 # variable stats
                                 values = {
                                     "ordering": ordering,
                                     "separation": separation,
-                                    "min_cluster_size": min_cluster_size,
-                                    "min_samples": min_samples,
-                                    "cluster_selection_epsilon": cluster_selection_epsilon
+                                    "n_components": n_components,
+                                    "n_neighbors": n_neighbors,
+                                    "min_dist": min_dist
                                 }
 
-                                if min_samples is None: values["min_samples"] = "None"
+                                # if min_samples is None: values["min_samples"] = "None"
                                 
                                 # inter/intra cluster dist stats
                                 umap_dm = cosine_distances(umap_embedding)
@@ -171,29 +184,29 @@ class Tuning:
                                 values["size_of_largest_cluster"] = np.max(counts)
 
                                 # Plot clustering 
-                                clustered = (hdbscan_labels >= 0)
-                                plt.scatter(umap_embedding[~clustered, 0],
-                                    umap_embedding[~clustered, 1],
-                                    color=(0.5, 0.5, 0.5),
-                                    s=0.1,
-                                    alpha=0.5)
-                                plt.scatter(umap_embedding[clustered, 0],
-                                    umap_embedding[clustered, 1],
-                                    c=hdbscan_labels[clustered],
-                                    s=0.1,
-                                    cmap='Spectral')
-                                dir = Path(f'~/results/plots').expanduser()
-                                dir.mkdir(parents=True, exist_ok=True)
-                                plot_path = dir / f"plot_{i}.png"
-                                plt.title("UMAP Embedding clustered with HDBSCAN")
-                                plt.suptitle(
-                                    f"ordering={ordering}, " 
-                                    f"separation={separation}, " 
-                                    f"min_cluster_size={min_cluster_size}, " 
-                                    f"min_samples={min_samples}, " 
-                                    f"cluster_selection_epsilon={cluster_selection_epsilon}")
-                                plt.savefig(plot_path, dpi=300, bbox_inches="tight")
-                                plt.close()  
+                                # clustered = (hdbscan_labels >= 0)
+                                # plt.scatter(umap_embedding[~clustered, 0],
+                                #     umap_embedding[~clustered, 1],
+                                #     color=(0.5, 0.5, 0.5),
+                                #     s=0.1,
+                                #     alpha=0.5)
+                                # plt.scatter(umap_embedding[clustered, 0],
+                                #     umap_embedding[clustered, 1],
+                                #     c=hdbscan_labels[clustered],
+                                #     s=0.1,
+                                #     cmap='Spectral')
+                                # dir = Path(f'~/results/plots').expanduser()
+                                # dir.mkdir(parents=True, exist_ok=True)
+                                # plot_path = dir / f"plot_{i}.png"
+                                # plt.title("UMAP Embedding clustered with HDBSCAN")
+                                # plt.suptitle(
+                                #     f"ordering={ordering}, " 
+                                #     f"separation={separation}, " 
+                                #     f"min_cluster_size={min_cluster_size}, " 
+                                #     f"min_samples={min_samples}, " 
+                                #     f"cluster_selection_epsilon={cluster_selection_epsilon}")
+                                # plt.savefig(plot_path, dpi=300, bbox_inches="tight")
+                                # plt.close()  
 
                                 # Append the results to the list
                                 results.append(values)
@@ -420,6 +433,12 @@ if __name__ == '__main__':
         "6452ffe1a192f6224493e41f", # vulnerable
         "64545bf9ae13c83727e4fb4a", # disabilities
         "6452ffd6a192f6224493e41d", # mental health
+        "648f9b3ee36fa645cb68d7a7", # HIV
+        "648f8ffbde56ae65c7cfe894", # junkie
+        "648f8bbdde56ae65c7cfe864", # drug testing
+        "648f8d5ae36fa645cb68d6e7", # IVDU
+        "642ca5e25ac8896e03057a17", # not relevant
+        "642caaeb5ac8896e03057a8f", # refugees
     ]
 
     for id in ids:

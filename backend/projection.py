@@ -304,23 +304,23 @@ class Projection:
                     for doclist in node_doclists:
                         ids = [d[0] for d in doclist["ranked_documents"]]
                         
-                        label = f'{c["type"]} on ' 
+                        label = f'{c["type"]} on {doclist["type"]}' 
 
                         match doclist["type"]:
                             case "Document": 
                                 source = self.db.documents.find_one({"_id": doclist["id"]})
                                 title = source["title"]
-                                label += f'{doclist["type"]}: {title}'
+                                label += f': {title}'
 
                             case "Group": 
                                 source = self.db.groups.find_one({"_id": doclist["id"]})
                                 title = source["history"][0]["label"]
-                                label += f'{doclist["type"]}: {title}'
+                                label += f': {title}'
                             
                             case "Search": 
                                 source = self.db.searches.find_one({"_id": doclist["id"]})
                                 title = source["history"][0]["query"]
-                                label += f'{doclist["type"]}: {title}'
+                                label += f': {title}'
 
                         obj = schemas.create_group_object(
                             "#FF0000", 
