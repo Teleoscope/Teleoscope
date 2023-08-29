@@ -75,7 +75,7 @@ export default function DocumentListItem(props) {
                 )}
               </IconButton>
             ) : null}
-            {props.showGroupIcon ? <GroupSelector id={props.id} /> : null}
+            <GroupSelector id={props.id} />
           </Stack>
           <DocumentTitle title={title} noWrap={false} />
         </Stack>
