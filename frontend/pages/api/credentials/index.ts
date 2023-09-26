@@ -5,7 +5,7 @@
  * effects: if user doesn't exist, register user
  * returns: returns username and OID
  */
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { MongoClient } from "mongodb";
 
 export default async (req, res) => {
