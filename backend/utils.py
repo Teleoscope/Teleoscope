@@ -433,7 +433,7 @@ def make_query(text):
 
 def message(queue: str, msg):
     credentials = pika.PlainCredentials(auth.rabbitmq["username"], auth.rabbitmq["password"])
-    parameters = pika.ConnectionParameters(host=auth.rabbitmq["host"], port=5672, virtual_host='teleoscope', credentials=credentials)
+    parameters = pika.ConnectionParameters(host=auth.rabbitmq["host"].spit(":")[0], port=int(auth.rabbitmq["host"].spit(":")[1]), virtual_host='teleoscope', credentials=credentials)
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     channel.basic_publish(exchange='', routing_key=queue, body=json.dumps(msg))
