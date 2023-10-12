@@ -10,6 +10,7 @@ import {
   makeNode,
   removeWindow,
   setSelection,
+  toggleMinMax
 } from "@/actions/windows";
 import { useStomp } from "@/util/Stomp";
 import FlowProviderWrapper from "@/components/Flow/FlowProviderWrapper";
@@ -178,6 +179,11 @@ function Flow(props) {
   }, []);
 
   const onNodeDragStart = (evt, node) => { dragRef.current = node };
+
+
+  const onNodeDoubleClick = useCallback((event, node) => {
+    dispatch(toggleMinMax(node.id))
+  },[])
 
   const onDrop = useCallback(
     (event) => {
@@ -349,6 +355,7 @@ function Flow(props) {
             onPaneContextMenu={onPaneContextMenu}
             onSelectionChange={onSelectionChange}
             isValidConnection={isValidConnection}
+            // onNodeDoubleClick={onNodeDoubleClick}
           >
             <FlowUIComponents
               fabWrapper={

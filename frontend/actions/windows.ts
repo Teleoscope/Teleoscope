@@ -103,6 +103,28 @@ export const Windows = createSlice({
       }
       state.windows = temp;
     },
+    toggleMinMax: (state, action) => {
+      var temp = [...state.nodes];
+      var ids = state.nodes.map((w) => {
+        return w.id;
+      });
+      var index = ids.indexOf(action.payload.id);
+      if (index > -1) {
+        if (temp[index].width > state.settings.default_document_width ||
+            temp[index].height > state.settings.default_document_height) {
+              temp[index].width = state.settings.default_document_width;
+              temp[index].height = state.settings.default_document_height;
+              temp[index].style.width = state.settings.default_document_width;
+              temp[index].style.height = state.settings.default_document_height;
+        } else {
+          temp[index].width = 300;
+          temp[index].height = 340;
+          temp[index].style.width = 300;
+          temp[index].style.height = 340;
+        }
+      }
+      state.windows = temp;
+    },
     minimizeWindow: (state, action) => {
       var temp = [...state.nodes];
       var ids = state.nodes.map((w) => {
@@ -306,5 +328,6 @@ export const {
   deselectAll,
   moveWindowToFront,
   setLogicalClock,
+  toggleMinMax
 } = Windows.actions;
 export default Windows.reducer;

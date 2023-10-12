@@ -19,6 +19,7 @@ const FlowWrapper = ({
   onPaneContextMenu,
   onSelectionChange,
   isValidConnection,
+  onNodeDoubleClick,
   edgeTypes,
   children
 
@@ -50,6 +51,8 @@ const FlowWrapper = ({
       onSelectionChange={onSelectionChange}
       connectionLineComponent={ConnectionLine}
       isValidConnection={isValidConnection}
+      onNodeDoubleClick={onNodeDoubleClick}
+      zoomOnDoubleClick={false}
 
     >
       {children}

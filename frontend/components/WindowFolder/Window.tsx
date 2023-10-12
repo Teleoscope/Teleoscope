@@ -10,13 +10,13 @@ import { removeWindow, maximizeWindow } from "@/actions/windows";
 import { useEffect, useRef, useState } from "react";
 import { useStomp } from "@/util/Stomp";
 
-export default function Window(props) {
+export default function Window({windata, id, size, title, icon, inner, color}) {
   const client = useStomp()
-  const w = props.windata;
+  const w = windata;
   const dispatch = useDispatch();
 
   const handleDelete = () => {
-    dispatch(removeWindow({client: client, node: props.id}));
+    dispatch(removeWindow({client: client, node: id}));
   };
 
   const elRef = useRef();
@@ -29,7 +29,7 @@ export default function Window(props) {
     setHeight(elRef?.current?.clientHeight);
   }, [elRef?.current?.clientHeight]);
 
-  if (props.size.width < props.size.minWidth + 1 || props.size.height < props.size.minHeight + 1) {
+  if (size.width < size.minWidth + 1 || size.height < size.minHeight + 1) {
     return (
       <Chip
         label={
@@ -37,26 +37,28 @@ export default function Window(props) {
             sx={{ 
               display: 'flex', 
               flexShrink: 2, 
-              width: props.size.width,
+              width: size.width,
               paddingLeft: "2px"
             }}
-          >{props.title}
+          >{title}
           </Box>
         }
         // variant="filled"
-        avatar={<span style={{width: "1em", padding: "0.425em"}}>{props.icon}</span>}
-        onDoubleClick={() => dispatch(maximizeWindow({ id: props.id }))}
+        avatar={<span style={{width: "1em", padding: "0.425em"}}>{icon}</span>}
+        onDoubleClick={() => {
+          dispatch(maximizeWindow({ id: id }))
+        }}
         onDelete={handleDelete}
         sx={{
           border: w.isChecked
-            ? `2px solid ${props.color}`
+            ? `2px solid ${color}`
             : "1px solid #DDDDDD",
           boxShadow: "1",
           cursor: "move",
           
           backgroundColor: "white",
           [`& .MuiChip-icon`]: {
-            color: props.color,
+            color: color,
             // fontSize: "1.5em",
             // marginLeft: "1em",
           },
@@ -69,8 +71,8 @@ export default function Window(props) {
     <Paper
       variant="outlined"
       style={{
-        height: props.size.height,
-        width: props.size.width,
+        height: size.height,
+        width: size.width,
         overflow: "hidden",
       }}
       sx={{
@@ -79,14 +81,14 @@ export default function Window(props) {
     >
       <Stack
         style={{
-          height: props.size.height - 2,
-          width: props.size.width - 2,
+          height: size.height - 2,
+          width: size.width - 2,
         }}
       >
         <WindowTopBar
-          title={props.title}
-          id={props.id}
-          icon={props.icon}
+          title={title}
+          id={id}
+          icon={icon}
         />
         <Divider />
         <Box
@@ -97,7 +99,7 @@ export default function Window(props) {
             overflow: "hidden",
           }}
         >
-          {props.inner}
+          {inner}
         </Box>
       </Stack>
     </Paper>
