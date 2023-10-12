@@ -826,7 +826,7 @@ def remove_document_from_group(*args, database: str, group_id: str, document_id:
 
 
 @app.task
-def copy_doclists_to_groups(*args, database: str, workflow_id: str, node_id: str, document_id: str, userid: str, **kwargs)
+def copy_doclists_to_groups(*args, database: str, workflow_id: str, node_id: str, document_id: str, userid: str, **kwargs):
 
     #---------------------------------------------------------------------------
     # connect to database
