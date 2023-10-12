@@ -825,6 +825,40 @@ def remove_document_from_group(*args, database: str, group_id: str, document_id:
     return
 
 
+@app.task
+def copy_doclists_to_groups(*args, database: str, workflow_id: str, node_id: str, document_id: str, userid: str, **kwargs)
+
+    #---------------------------------------------------------------------------
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db=database)
+
+    # handle ObjectID kwargs
+    node_id = ObjectId(str(node_id))
+    workflow_id = ObjectId(str(workflow_id))
+    userid = ObjectId(str(userid))
+
+    # log action to stdout
+    logging.info(f'Copying doclists from {node_id} to groups for '
+                 f'user {userid}.')
+    #---------------------------------------------------------------------------
+
+    node = db.graph.find_one({"_id": node_id})
+    
+    acc = 0
+    for doclist in node["doclists"]:
+        acc = acc + 1
+        included_documents = [d[0] for d in doclist["ranked_documents"]]
+
+        # create a new group for the session
+        group_new_id = add_group(
+            database=database,
+            userid=userid, 
+            label=f'Group {acc} from graph item', 
+            color=utils.random_color(), 
+            workflow_id=workflow_id, 
+            documents=included_documents
+        )
+
 ################################################################################
 # Note tasks
 ################################################################################

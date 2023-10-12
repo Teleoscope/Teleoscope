@@ -133,6 +133,10 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
             case "add_group":
                 res = tasks.add_group.signature(args=(), kwargs=kwargs)
+
+            case "copy_doclists_to_groups":
+                res = tasks.copy_doclists_to_groups.signature(args=(), kwargs=kwargs)
+
         try:
             res.apply_async(queue=auth.rabbitmq["task_queue"])
         except Exception as e:

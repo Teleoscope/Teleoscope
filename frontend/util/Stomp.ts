@@ -984,5 +984,21 @@ await Promise.race([checkConnection(), timeout()]);
     return body;
   }  
 
+
+  /**
+   * Copies node doclists to groups.
+   */
+  copy_doclists_to_groups(node_id: string) {
+    const body = {
+      task: "copy_doclists_to_groups",
+      args: {
+        node_id: node_id,
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
+
 }
 
