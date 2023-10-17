@@ -1320,46 +1320,6 @@ def vectorize_text(text): #(text) -> Vector
     return vector
     
 
-@app.task
-def add_single_document_to_database(document, **kwargs):
-    '''
-    add_single_document_to_database
-
-    input: Dict
-    output: void
-    purpose: This function adds a single document to the database
-            (Ignores dictionaries containing error keys)
-    '''
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    with transaction_session.start_transaction():
-        # Insert document into database
-        db.documents.insert_one(document, session=transaction_session)
-        # Commit the session with retry
-        utils.commit_with_retry(transaction_session)
-
-@app.task
-def add_multiple_documents_to_database(documents, **kwargs):
-    '''
-    add_single_document_to_database
-
-    input: List[Dict]
-    output: void
-    purpose: This function adds multiple documents to the database
-            (Ignores dictionaries containing error keys)
-    '''
-    documents = (list (filter (lambda x: 'error' not in x, documents)))
-    # Create session
-    database = kwargs["database"]
-    transaction_session, db = utils.create_transaction_session(db=database)
-    if len(documents) > 0:
-        target = db.documents
-        with transaction_session.start_transaction():
-            # Insert documents into database
-            target.insert_many(documents, session=transaction_session)
-            # Commit the session with retry
-            utils.commit_with_retry(transaction_session)
-
 
 ################################################################################
 # Misc/WIP tasks

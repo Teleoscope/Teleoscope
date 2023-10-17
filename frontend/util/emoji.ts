@@ -10,21 +10,24 @@ export function stripEmojis(text) {
 }
   
 export function makeQuery(text) {
-  const buffer = text.replace(/"/g, '\\"').trim();
-  const regex = extractSpecialCharacters(buffer);
+  const trimmedText = text.trim();
+  const regex = extractSpecialCharacters(trimmedText);
 
-  if (regex.length == 0) {
-    return { $text: { $search: buffer} };
+  // Only escape the quotes for regex search
+  const bufferForRegex = trimmedText.replace(/"/g, '\\"');
+  
+  if (regex.length === 0) {
+      return { $text: { $search: trimmedText} };
   }
 
-  if (stripEmojis(buffer).length == 0) {
-    return { text: { $regex: regex.join('|') } }
+  if (stripEmojis(trimmedText).length === 0) {
+      return { text: { $regex: regex.join('|') } };
   }
 
   return {
       $and: [
-          { $text: { $search: buffer} },
-          {  text: { $regex: regex.join('|') } }
+          { $text: { $search: trimmedText} },
+          { text: { $regex: bufferForRegex } }
       ]
   };
 }

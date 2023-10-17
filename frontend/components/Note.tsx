@@ -16,7 +16,12 @@ import { useStomp } from "@/util/Stomp";
 export default function Note(props) {
   const id = props.id.split("%")[0];
   const swr = useSWRHook();
-  const { note } = swr.useSWRAbstract("note", `note/${id}`);
+  const { note } = swr.useSWRAbstract("note", `note/${id}`, {
+    onSuccess: (data, key, config) => {
+      console.log("loaded", data, key, config)
+      setEditorState(handleLoad(data))
+    }
+  });
 
   const client = useStomp();
   const editor = React.useRef(null);
@@ -35,7 +40,7 @@ export default function Note(props) {
   }, []);
 
  
-  const handleLoad = () => {
+  const handleLoad = (note) => {
     if (note) {
       const item = note["history"][0];
       if (item && Object.keys(item.content).length > 0) {
@@ -45,7 +50,7 @@ export default function Note(props) {
     return EditorState.createEmpty();
   };
 
-  const [editorState, setEditorState] = React.useState(() => handleLoad());
+  const [editorState, setEditorState] = React.useState(() => handleLoad(note));
 
   // Handlers
   const handleBlur = () => {

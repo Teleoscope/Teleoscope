@@ -1,6 +1,6 @@
 // swr.js
 import useSWR from "swr";
-import React, { useContext, createContext } from "react";
+import { useContext, createContext } from "react";
 
 export const swrContext = createContext(null);
 export const useSWRHook = () => useContext(swrContext);
@@ -10,9 +10,9 @@ export class SWR {
     this.subdomain = subdomain;
   }
 
-  useSWRAbstract = (datakey, url) => {
+  useSWRAbstract = (datakey, url, options={}) => {
     var ret = {};
-    const { data, error, mutate } = useSWR(`/api/${this.subdomain}/${url}`);
+    const { data, error, mutate } = useSWR(`/api/${this.subdomain}/${url}`, options);
     ret[datakey] = data;
     ret[datakey + "_loading"] = !error && !data;
     ret[datakey + "_error"] = error;
