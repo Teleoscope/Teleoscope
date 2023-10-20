@@ -171,6 +171,9 @@ def create_document_object(title, textVector, text, relationships={}, metadata={
         },
         'metadata' : {
             **metadata
+        },
+        'state': {
+            'read': False
         }
     }
 

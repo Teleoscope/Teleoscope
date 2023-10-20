@@ -1,15 +1,18 @@
-import zreader
 import ujson as json
 import argparse
 import os
-import sys
 from os import listdir
 from os.path import isfile, join
-import utils
-import tasks
-import schemas
 import zstandard
+import logging
 
+from . import utils
+from . import tasks
+from . import schemas
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s [%(levelname)s]: %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S')
 
 parser = argparse.ArgumentParser(
                     prog='Pushshift to MongoDB',
@@ -17,7 +20,7 @@ parser = argparse.ArgumentParser(
                     epilog='Still under construction.')
 
 parser.add_argument('directory')                              # directory to parse
-parser.add_argument('-d', '--database', default="teleoscope") # which database to insert into
+parser.add_argument('-d', '--database', default="test")       # which database to insert into
 parser.add_argument('-s', '--subreddit', nargs='+')           # the subreddit(s) to parse space delimited
 parser.add_argument('-k', '--chunk-size')                     # how large
 
@@ -50,7 +53,7 @@ class Pushshift:
         if self.args.uid != None:
             found = list(self.db.documents.find({"metadata.id": obj[self.args.uid]}))
             if len(found) > 0:
-                print(f"document with {obj[self.args.uid]} already in database")
+                logging.warning(f"document with {obj[self.args.uid]} already in database")
                 return
         text = obj[self.args.text]
         title = obj[self.args.title]
@@ -63,11 +66,11 @@ class Pushshift:
         try:
             self.db.documents.insert_one(doc)
         except Exception as err:
-            print("Insert failed: ", doc, err)
+            logging.exception("Insert failed: ", doc, err)
       
     def handle(self, obj):
         if self.args.check:
-            print(obj['subreddit'], len(obj['selftext']))
+            logging.info(obj['subreddit'], len(obj['selftext']))
         else:
             self.upload(obj)
 
@@ -83,11 +86,11 @@ class Pushshift:
                         self.handle(obj)
             except KeyError as err:
                 if self.args.keyerrors:
-                    print(f"KeyError {err}.")
+                    logging.info(f"KeyError {err}.")
                 pass
             except Exception as err:
-                error = f"Unexpected {err=}, {type(err)=} for {filepath}.\n"
-                print(error)
+                logging.exception(f"Unexpected error for {filepath}.")
+
                 
 
     def process(self, files):
@@ -102,13 +105,13 @@ class Pushshift:
 
         for filename in files:
             filepath = os.path.join(self.args.directory, filename)
-            print(f'started {filename}.')
+            logging.info(f'started {filename}.')
             try:
                 self.processfile(filepath)
-                print(f'finished {filename}.' )
+                logging.info(f'finished {filename}.' )
                 os.rename(filepath, os.path.join(outdir, filename))
             except Exception as err:
-                print(f'error for {filename}')
+                logging.info(f'error for {filename}')
                 os.rename(filepath, os.path.join(errdir, filename))
                 pass
 
@@ -140,19 +143,23 @@ class Pushshift:
         except UnicodeDecodeError:
             if bytes_read > max_window_size:
                 raise UnicodeError(f"Unable to decode frame after reading {bytes_read:,} bytes")
-            print(f"Decoding error with {bytes_read:,} bytes, reading another chunk")
+            logging.info(f"Decoding error with {bytes_read:,} bytes, reading another chunk")
             return self.read_and_decode(reader, chunk_size, max_window_size, chunk, bytes_read)
             
 
 if __name__ == "__main__":
     # Parse the arguments
     args = parser.parse_args()
+    
     # Get all files (not directories) in given directory
     files = [f for f in listdir(args.directory) if isfile(join(args.directory, f))]
-    print(f"Starting to process the following files in {args.directory}:")
+
+    logging.info(f"Starting to process the following files in {args.directory}:")
     for f in files:
-        print(f)
+        logging.info(f)
+    
     ps = Pushshift(args)
     ps.process(files)
+    
     # print arguments
-    print(args)
+    logging.info(args)
