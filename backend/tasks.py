@@ -155,9 +155,12 @@ def remove_user_from_workspace(
     # add contributor to session's userlist
     db.workspaces.update_one(
         {"_id": workspace_id}, 
-        {
-            "contributors": workspace["contributors"],
-            "owner": workspace["owner"]
+        { 
+            "$set":
+                {
+                    "contributors": workspace["contributors"],
+                    "owner": workspace["owner"]
+                }
         }, 
     )
 
