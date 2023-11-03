@@ -383,7 +383,14 @@ def rank(control_vecs, ids, vecs, limit):
 
 def filter_vectors_by_oid(oids, ids, vectors):
     # ids and vecs must correspond
-    vecs = [vectors[ids.index(oid)] for oid in oids]
+    # vecs = [vectors[ids.index(oid)] for oid in oids]
+    vecs = []
+    for oid in oids:
+        try:
+            vecs.append(vectors[ids.index(oid)])
+        except ValueError:
+            continue
+
     return vecs
 
 def get_control_vectors(db: database.Database, controls, ids, all_vectors):
