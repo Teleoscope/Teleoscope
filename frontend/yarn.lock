@@ -339,15 +339,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hookform/resolvers@npm:^2.9.10":
-  version: 2.9.11
-  resolution: "@hookform/resolvers@npm:2.9.11"
-  peerDependencies:
-    react-hook-form: ^7.0.0
-  checksum: 977ea038bb94457ac9f6c7ca65438ce8fcd0cf7643b9925d8bc4d66df6faa0f49ad642bee7362f86a4d3ff7ff53d18b7aea0597085993971cae00e86bf6eda73
-  languageName: node
-  linkType: hard
-
 "@humanwhocodes/config-array@npm:^0.11.11":
   version: 0.11.11
   resolution: "@humanwhocodes/config-array@npm:0.11.11"
@@ -3541,7 +3532,6 @@ __metadata:
     "@emotion/react": ^11.9.3
     "@emotion/styled": ^11.9.3
     "@fontsource/roboto": ^4.5.7
-    "@hookform/resolvers": ^2.9.10
     "@mdx-js/loader": ^2.3.0
     "@mdx-js/mdx": ^2.3.0
     "@mdx-js/react": ^2.3.0
@@ -3605,6 +3595,7 @@ __metadata:
     typescript: ^5.0.4
     unique-names-generator: ^4.7.1
     websocket-ts: ^1.1.1
+    xlsx: "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
   languageName: unknown
   linkType: soft
 
@@ -8546,6 +8537,15 @@ __metadata:
   version: 1.0.2
   resolution: "wrappy@npm:1.0.2"
   checksum: 159da4805f7e84a3d003d8841557196034155008f817172d4e986bd591f74aa82aa7db55929a54222309e01079a65a92a9e6414da5a6aa4b01ee44a511ac3ee5
+  languageName: node
+  linkType: hard
+
+"xlsx@https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz":
+  version: 0.20.0
+  resolution: "xlsx@https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
+  bin:
+    xlsx: ./bin/xlsx.njs
+  checksum: 497516ab670df69ab68722915e8081adb52507894fa6f097fd61666d75593f7bf3d1e6c6e7a5e5d8824b2b8055b741e2e0b14cf71f0b8de6167269c2150bd41b
   languageName: node
   linkType: hard
 

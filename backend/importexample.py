@@ -16,7 +16,6 @@ parser.add_argument('-t', '--text', default="text")             # the text field
 parser.add_argument('-s', '--samples', default=100, type=int)   # sample size per iteration
 parser.add_argument('-i', '--iterations', default=10, type=int) # number of iterations
 
-
 def get_memory_usage():
     rusage = resource.getrusage(resource.RUSAGE_SELF)
     return rusage.ru_idrss + rusage.ru_isrss  # Virtual memory usage in kilobytes

@@ -1,13 +1,15 @@
 import { MakeDocx } from "@/util/DocxMaker";
 import { IconButton, Tooltip } from "@mui/material";
 import {
-  Download as DownloadIcon,
   ContentCopy as ContentCopyIcon,
   CopyAll as CopyAllIcon,
   Diversity2 as Diversity2Icon,
 } from "@mui/icons-material";
 import { useSelector } from "react-redux";
+import { utils, writeFile } from "xlsx";
 
+import { BsFiletypeDocx } from "react-icons/bs";
+import { BsFiletypeXlsx } from "react-icons/bs";
 
 // Button Action Functions
 export const SaveDocxAction = (props) => {
@@ -25,7 +27,7 @@ export const SaveDocxAction = (props) => {
   return (
     <Tooltip title="Download as Docx" key="Download as Docx">
       <IconButton onClick={createDocx}>
-        <DownloadIcon fontSize="small" />
+        <BsFiletypeDocx fontSize="small" />
       </IconButton>
     </Tooltip>
   );
@@ -71,6 +73,45 @@ export const CopyTextAction = (props) => {
     </Tooltip>
   );
 };
+
+
+// Button Action Functions
+export const SaveXLSXAction = (props) => {
+  const { fetchgroups, session } = props;
+  const label = useSelector((state) => state.windows.label);
+
+  const createXLSX = async (props) => {
+    const groups = await fetchgroups();
+    const workbook = utils.book_new();
+    
+    groups.forEach((group: Object) => {
+      const docs = group.documents;  
+      const doc_map = docs.map((doc: Object) => {
+        const ret = { ...doc, ...doc.metadata, ...{ label: group.history[0].label } };
+        return ret
+      });
+      const worksheet = utils.json_to_sheet(doc_map);
+      utils.book_append_sheet(workbook, worksheet, group.history[0].label);
+    })
+
+    writeFile(workbook, "AllGroups.xlsx", { compression: true });  
+  }
+
+  return (
+    <Tooltip title="Download as XLSX" key="Download as XLSX">
+      <IconButton onClick={createXLSX}>
+        <BsFiletypeXlsx fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  );
+};
+
+
+
+
+
+
+
 
 export const ClusterButtonAction = (props) => {
   const { runClusters } = props;

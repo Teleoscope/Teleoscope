@@ -31,15 +31,14 @@ parser.add_argument('-r', '--relationships')                  # the relationship
 parser.add_argument('-m', '--metadata')                       # the metadata fields
 parser.add_argument('-u', '--uid')                            # a UID field
 
+
 # True/false option fields
 parser.add_argument('-c', '--check',
                     action='store_true')                      # only print the output rather than inserting into MongoDB
 parser.add_argument('-v', '--vectorize',
                     action='store_true')                      # vectorize text while putting in MongoDB
-
 parser.add_argument('-e', '--keyerrors',
                     action='store_true')                      # log key errors
-
 
 class Pushshift:
     def __init__(self, args):
@@ -51,7 +50,7 @@ class Pushshift:
 
     def upload(self, obj):
         if self.args.uid != None:
-            found = list(self.db.documents.find({"metadata.id": obj[self.args.uid]}))
+            found = list(self.db.documents.find({f"metadata.{self.args.uid}": obj[self.args.uid]}))
             if len(found) > 0:
                 logging.warning(f"document with {obj[self.args.uid]} already in database")
                 return

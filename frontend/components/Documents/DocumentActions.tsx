@@ -1,23 +1,29 @@
 import LinkIcon from "@mui/icons-material/Link";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
-import DownloadIcon from "@mui/icons-material/Download";
 import Tooltip from "@mui/material/Tooltip";
 import GroupSelector from "@/components/Groups/GroupSelector";
 import { MakeDocx } from "@/util/DocxMaker";
 import { IconButton } from "@mui/material";
 import ButtonActions from "../ButtonActions";
+import { utils, writeFile } from "xlsx";
+import { BsFiletypeXlsx } from "react-icons/bs";
+import { BsFiletypeDocx } from "react-icons/bs";
 
-export const handleLinkClick = (props) => {
-  if (props.document.metadata.url) {
-    window.open(props.document.metadata.url, "_blank");
+export const handleLinkClick = ({ document }) => {
+  if (document.metadata.url) {
+    window.open(document.metadata.url, "_blank");
   }
+  if (document.metadata.source_url) {
+    window.open(document.metadata.source_url, "_blank");
+  }
+  console.log("document", document)
 };
 
-export const Link = (props) => {
+export const Link = (doc) => {
   return (
     <Tooltip title="Open URL in new window">
-      <IconButton onClick={() => handleLinkClick(props.document)}>
+      <IconButton onClick={() => handleLinkClick(doc)}>
         <LinkIcon fontSize="small" />
       </IconButton>
     </Tooltip>
@@ -72,16 +78,37 @@ export const SaveDocx = (props) => {
           })
         }
       >
-        <DownloadIcon fontSize="small" />
+        <BsFiletypeDocx fontSize="small" />
       </IconButton>
     </Tooltip>
   );
 };
 
+
+export const SaveXLSX = (props) => {
+  return (
+    <Tooltip title="Download as XLSX" key="Download as XLSX">
+      <IconButton
+        onClick={() => {
+          const worksheet = utils.json_to_sheet([{...props.document, ...props.document.metadata}]);
+          const workbook = utils.book_new();
+          utils.book_append_sheet(workbook, worksheet, "Document");
+          writeFile(workbook, "Document.xlsx", { compression: true });
+        }
+        
+        }
+      >
+        <BsFiletypeXlsx fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  );  
+}
+
 export const DocumentActions = ({ document }) => {
   return (
     <ButtonActions
       inner={[
+        [SaveXLSX, { document: document }],
         [SaveDocx, { document: document }],
         [CopyJson, { document: document }],
         [CopyText, { document: document }],

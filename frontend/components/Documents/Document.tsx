@@ -9,6 +9,7 @@ import { useSWRHook } from "@/util/swr";
 import { PreprocessText } from "@/util/Preprocessers";
 import ButtonActions from "@/components/ButtonActions";
 import {
+  SaveXLSX,
   SaveDocx,
   CopyJson,
   CopyText,
@@ -26,6 +27,7 @@ export default function Document(props) {
     <Stack sx={{ height: "100%" }}>
       <ButtonActions
         inner={[
+          [SaveXLSX, { document: document }],
           [SaveDocx, { document: document }],
           [CopyJson, { document: document }],
           [CopyText, { document: document }],

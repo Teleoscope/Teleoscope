@@ -9,7 +9,7 @@ import DocumentList from "@/components/Documents/DocumentList";
 //utils
 import { useSWRHook } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
-import { CopyJson, CopyText, SaveDocx } from "@/components/Groups/GroupActions";
+import { SaveXLSX, CopyJson, CopyText, SaveDocx } from "@/components/Groups/GroupActions";
 import { Typography } from "@mui/material";
 
 export default function Group({ id: winId, windata, color }) {
@@ -39,6 +39,7 @@ export default function Group({ id: winId, windata, color }) {
     <Stack direction="column" sx={{ height: "100%" }}>
         <ButtonActions
           inner={[
+            [SaveXLSX, ButtonActionsConfig],
             [SaveDocx, ButtonActionsConfig],
             [CopyJson, ButtonActionsConfig],
             [CopyText, ButtonActionsConfig],

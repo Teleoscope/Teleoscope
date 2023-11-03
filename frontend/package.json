@@ -67,7 +67,8 @@
     "rxjs": "^7.8.1",
     "swr": "^2.1.5",
     "unique-names-generator": "^4.7.1",
-    "websocket-ts": "^1.1.1"
+    "websocket-ts": "^1.1.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^13.1.1",

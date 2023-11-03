@@ -1,7 +1,6 @@
 import { Stack } from "@mui/material";
 
 
-
 // GroupItem.js
 
 import { ListItem, ListItemIcon, IconButton } from "@mui/material";
@@ -84,6 +83,7 @@ import { useStomp } from "@/util/Stomp";
 import randomColor from "randomcolor";
 import ButtonActions from "@/components/ButtonActions";
 import {
+  SaveXLSXAction,
   SaveDocxAction,
   CopyJsonAction,
   CopyTextAction,
@@ -134,6 +134,7 @@ export default function Groups(props) {
 
       <ButtonActions
         inner={[
+          [SaveXLSXAction, { fetchgroups, session }],
           [SaveDocxAction, { fetchgroups, session }],
           [CopyJsonAction, { fetchgroups }],
           [CopyTextAction, { fetchgroups }],
