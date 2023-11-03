@@ -53,7 +53,7 @@ const createDocx = async (props) => {
 const createXLSX = async (props) => {
   const docs = await fetchdocs(props);
   
-  const doc_map = docs.map((doc: Object) => {
+  const doc_map = docs.map((doc) => {
     const ret = { ...doc, ...doc.metadata, ...{ label: props.group.history[0]["label"] } };
     return ret
   });

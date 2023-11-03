@@ -86,7 +86,7 @@ export const SaveXLSXAction = (props) => {
     
     groups.forEach((group: Object) => {
       const docs = group.documents;  
-      const doc_map = docs.map((doc: Object) => {
+      const doc_map = docs.map((doc) => {
         const ret = { ...doc, ...doc.metadata, ...{ label: group.history[0].label } };
         return ret
       });
