@@ -93,7 +93,7 @@ export const SaveXLSX = (props) => {
           const worksheet = utils.json_to_sheet([{...props.document, ...props.document.metadata}]);
           const workbook = utils.book_new();
           utils.book_append_sheet(workbook, worksheet, "Document");
-          writeFile(workbook, "Document.xlsx", { compression: true });
+          writeFile(workbook, `${props.document.title}.xlsx`, { compression: true });
         }
         
         }

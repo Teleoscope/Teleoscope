@@ -61,7 +61,7 @@ const createXLSX = async (props) => {
   const worksheet = utils.json_to_sheet(doc_map);
   const workbook = utils.book_new();
   utils.book_append_sheet(workbook, worksheet, "Document");
-  writeFile(workbook, "Document.xlsx", { compression: true });  
+  writeFile(workbook, `${props.group.history[0]["label"]}.xlsx`, { compression: true });  
 }
 
 export const CopyText = (props) => {

@@ -84,7 +84,7 @@ export const SaveXLSXAction = (props) => {
     const groups = await fetchgroups();
     const workbook = utils.book_new();
     
-    groups.forEach((group: Object) => {
+    groups.forEach((group) => {
       const docs = group.documents;  
       const doc_map = docs.map((doc) => {
         const ret = { ...doc, ...doc.metadata, ...{ label: group.history[0].label } };
@@ -94,7 +94,7 @@ export const SaveXLSXAction = (props) => {
       utils.book_append_sheet(workbook, worksheet, group.history[0].label);
     })
 
-    writeFile(workbook, "AllGroups.xlsx", { compression: true });  
+    writeFile(workbook, `${label}.xlsx`, { compression: true });  
   }
 
   return (
