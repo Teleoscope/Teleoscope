@@ -84,7 +84,7 @@ def initialize_workspace(
     *args, userid: str, label: str, datasource: str,
     **kwargs) -> ObjectId:
     """
-    Initializes a workflow with userid as owner.
+    Initializes a workspace with userid as owner.
     """
     #---------------------------------------------------------------------------  
     # connect to database
@@ -1416,6 +1416,32 @@ def ping(*args, database: str, userid: str, message: str, replyTo: str, **kwargs
     logging.info(f"Received a ping: {message}")
 
     utils.message(replyTo, msg)
+
+
+
+@app.task
+def vectorize_and_upload_text(text, database, id): #(text) -> Vector
+    '''
+    vectorize__and_upload_text
+
+    input: string
+    output: numpy
+    purpose: This function is used to return a vectorized version of the text
+            (Assumes the text is error free)
+    '''
+    import tensorflow_hub as hub
+    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+
+    vector = embed([text]).numpy()[0].tolist()
+    db = utils.connect(db=database)
+    db.documents.update_one(
+        {"_id": ObjectId(str(id))},
+        { "$set": {
+            "textVector" : vector
+        }}
+    )
+    print(f"Vectorized and uploaded {id}.")
+
 
 "dispatch.${userInfo.username}@%h"
 

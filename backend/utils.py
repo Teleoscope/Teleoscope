@@ -363,18 +363,24 @@ def get_documents(dbstring, rebuild=False):
     
     db = connect(db=dbstring)
 
-    count = db.documents.count_documents({})
-    logging.info(f"Connected to database {dbstring}. There are {count} documents to retrieve.")
+    total_count = db.documents.count_documents({})
+    count = db.documents.count_documents({"textVector": {"$size": 512}})
+    logging.info(f"Connected to database {dbstring}. There are {count} documents with vectors and {total_count} left to vectorize.")
 
     logging.info(f"Aggregating documents...")
     documents = db.documents.aggregate(
         [
+            # Filter documents where textVector has a size of 512
+            { "$match": { "textVector": { "$size": 512 } } },
+
             # Only get IDs and vectors
-            { "$project": { "textVector": 1, "_id": 1 }},
+            { "$project": { "textVector": 1, "_id": 1 } },
+
             # Ensure they're always in the same order
             { "$sort" : { "_id" : 1 } }
-            ]
+        ]
     )
+
 
     _ids = []
     _vecs = []
