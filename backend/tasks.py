@@ -113,6 +113,58 @@ def initialize_workspace(
     
     return res.inserted_id
 
+@app.task
+def remove_user_from_workspace(
+    *args, userid: str, workspace_id: str,
+    **kwargs) -> ObjectId:
+    """
+    Removes a workspace with userid as owner. 
+    Doesn't delete corresponding workflows.
+
+    """
+    #---------------------------------------------------------------------------  
+    # connect to database
+    transaction_session, db = utils.create_transaction_session(db="users")
+     
+    # handle ObjectID kwargs
+    userid = ObjectId(str(userid))
+    workspace_id = ObjectId(str(workspace_id))
+
+    # log action to stdout
+    logging.info(f"Removing user {userid} from workspace {workspace_id}.")
+    #---------------------------------------------------------------------------
+    workspace = db.workspaces.find_one({"_id": workspace_id})
+    
+
+    if workspace["owner"] == userid:
+        workspace["owner"] = None
+    
+    workspace["contributors"] = [c for c in workspace["contributors"] if c["id"] != userid]
+
+    if workspace["owner"] == None:
+        if len(workspace["contributors"]) > 0:
+            workspace["owner"] = workspace["contributors"][0]["id"]
+
+    history_item = utils.update_history(
+        item=workspace,
+        oid=userid,
+        action=f"Removed contributor {userid} from workspace {workspace_id}.",
+        user=userid,
+    )
+
+    # add contributor to session's userlist
+    db.workspaces.update_one(
+        {"_id": workspace_id}, 
+        {
+            "contributors": workspace["contributors"],
+            "owner": workspace["owner"]
+        }, 
+    )
+
+    utils.push_history(db, "workspaces", workspace_id, history_item)
+
+    return userid
+
 
 @app.task
 def add_contributor(
