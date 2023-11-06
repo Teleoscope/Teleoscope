@@ -29,7 +29,6 @@ export default function ButtonEdge({
 
   const onEdgeClick = (evt, id) => {
     evt.stopPropagation();
-    alert(`remove ${id}`);
     flow.deleteElements({edges: [{id: id}]})
   };
   
