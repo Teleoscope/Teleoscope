@@ -41,7 +41,6 @@ const FlowWrapper = ({
       onDrop={onDrop}
       onConnect={(connection) => onConnect(connection, edges)}
       onInit={onInit}
-      multiSelectionKeyCode={["Meta", "Control", "Shift"]}
       disableKeyboardA11y={true}
       onClick={onClick}
       onNodeDrag={onNodeDrag}
@@ -53,6 +52,10 @@ const FlowWrapper = ({
       isValidConnection={isValidConnection}
       onNodeDoubleClick={onNodeDoubleClick}
       zoomOnDoubleClick={false}
+      // Key code for keyboard shortcuts
+      multiSelectionKeyCode={["Meta", "Control", "Shift"]}
+      deleteKeyCode={["Backspace", "Delete"]}
+      
 
     >
       {children}

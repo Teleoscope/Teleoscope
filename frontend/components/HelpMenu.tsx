@@ -6,6 +6,8 @@ import PanToolIcon from "@mui/icons-material/PanTool";
 import ControlCameraIcon from "@mui/icons-material/ControlCamera";
 import { GiResize } from 'react-icons/gi';
 import { CgScrollV } from 'react-icons/cg';
+import { TiDeleteOutline } from 'react-icons/ti';
+
 import ReadMoreIcon from "@mui/icons-material/ReadMore";
 
 export default function HelpMenu(props) {
@@ -40,6 +42,10 @@ export default function HelpMenu(props) {
 
                     <Typography sx={{fontWeight: "bold"}}><CgScrollV sx={{ fontSize: 15 }}/> Zoom in and Out</Typography>
                     <Typography variant="body">Zoom in and out by scrolling the mouse wheel.</Typography>
+                    <Divider sx={{bgcolor: "#555555", marginTop: "1em", marginBottom: "1em"}} />   
+                    
+                    <Typography sx={{fontWeight: "bold"}}><TiDeleteOutline sx={{ fontSize: 15 }}/> Delete nodes and edges</Typography>
+                    <Typography variant="body">Delete nodes and edges by clicking the "X" or pressing delete or backspace.</Typography>
                     
                 </>
             }
