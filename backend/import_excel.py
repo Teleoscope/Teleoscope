@@ -28,9 +28,9 @@ try:
         except errors.WriteError as write_error:
             # Handle the WriteError exception here
             logging.error(f"WriteError: {write_error} for row {row}")
-        except errors.ConnectionError as connection_error:
+        except errors.ConnectionFailure as connection_failure:
             # Handle the ConnectionError exception here
-            logging.error(f"ConnectionError: {connection_error} for row {row}")
+            logging.error(f"ConnectionError: {connection_failure} for row {row}")
 except Exception as e:
     # Handle any other unexpected exceptions here
     logging.error(f"An unexpected error occurred: {e}")

@@ -1,6 +1,8 @@
 import { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import styles from '@/styles/d3tooltip.module.css'; // Import the CSS module
+import { format } from 'd3-format';
+const twoDecimalFormat = format(".2f");
 
 const Histogram = ({ data }) => {
 
@@ -17,7 +19,7 @@ const Histogram = ({ data }) => {
     const height = h - margin.top - margin.bottom;
 
     // Prepare the data for the histogram
-    const rankData = data.map(d => d[1]);
+    const rankData = data.map(d => parseFloat(twoDecimalFormat(d[1])));
 
     // Create a tooltip div that is initially hidden
     const tooltip = d3.select("body").append("div")
@@ -32,7 +34,7 @@ const Histogram = ({ data }) => {
 
       const thresholds = Array.from({ length: 11 }, (_, i) => parseFloat((i * 0.1).toFixed(1)));
 
-
+      // console.log("data", rankData, x, thresholds)
     // Create the histogram bins
     const bins = d3.histogram()
       .domain(x.domain())
@@ -54,14 +56,17 @@ const Histogram = ({ data }) => {
     .attr("y", 0)
     .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
     .attr("height", height)
-    .attr("fill", d => "#F0F0F0") // Fill with white for zero bins
+    .attr("fill", d => "#F0F0F0")
 
     // Add the visible bars
     bar.append("rect")
     .attr("x", 1)
     .attr("y", d => y(d.length))
     .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
-    .attr("height", d => height - y(d.length))
+    .attr("height", d => {
+      console.log("data", d)
+      return d.length >= 1 ? Math.max(1, height - y(d.length)) : 0
+    })
     .attr("fill", "black");
 
     // Add an invisible layer to capture mouse events
