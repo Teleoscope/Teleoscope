@@ -14,7 +14,7 @@ import ButtonActions from "@/components/ButtonActions";
 import Histogram from "@/components/Histogram";
 import { useStomp } from "@/util/Stomp";
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppSelector } from "@/util/hooks";
 
 // Custom tooltip component
 function ValueLabelComponent(props) {
@@ -35,7 +35,6 @@ export default function Teleoscope(props) {
   const [teleoscope_id] = useState(props.id.split("%")[0]);
   const swr = useSWRHook();
   const client = useStomp();
-  const dispatch = useAppDispatch();
 
   const color = useAppSelector((state) => state.windows.settings.color);
   const { teleoscope } = props.windata?.demo
@@ -65,8 +64,8 @@ export default function Teleoscope(props) {
             style={{
               width: "25%"
             }}
-            aria-label="Temperature"
-            defaultValue={0.4}
+            aria-label="Similarity"
+            defaultValue={teleoscope["parameters"]["similarity"] ? teleoscope["parameters"]["similarity"] : "0.4"}
             valueLabelDisplay="auto"
             step={0.1}
             size="small"
