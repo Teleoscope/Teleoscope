@@ -146,10 +146,10 @@ export const Windows = createSlice({
       });
       var index = ids.indexOf(action.payload.id);
       if (index > -1) {
-        temp[index].width = 300;
-        temp[index].height = 340;
-        temp[index].style.width = 300;
-        temp[index].style.height = 340;
+        temp[index].width = 400;
+        temp[index].height = 450;
+        temp[index].style.width = 400;
+        temp[index].style.height = 450;
       }
       state.windows = temp;
     },

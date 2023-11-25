@@ -3,7 +3,7 @@ import { useAppSelector, useGlobalMousePosition } from "@/util/hooks";
 import { renderToString } from 'react-dom/server';
 import { FaArrowRight } from "react-icons/fa";
 
-import ReactFlow, { useReactFlow } from 'reactflow';
+import { useReactFlow } from 'reactflow';
 
 
 
@@ -65,7 +65,8 @@ export default function HandleWrapper({ type, id, nodeid, position, variant }) {
         backgroundSize: "contain",
         backgroundColor: settings.color,
         transition: `opacity 0.3s ease`,
-        opacity: showHandles ? 1 : 0
+        opacity: showHandles ? 1 : 0,
+        cursor: "pointer"
     }
 
     const style = () => { 

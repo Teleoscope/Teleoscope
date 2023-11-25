@@ -9,22 +9,45 @@ import DocumentList from "@/components/Documents/DocumentList";
 
 // util
 import { useSWRHook } from "@/util/swr";
-import { IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { IconButton, Slider, Stack, Tooltip, Typography } from "@mui/material";
 import ButtonActions from "@/components/ButtonActions";
 import Histogram from "@/components/Histogram";
 import { useStomp } from "@/util/Stomp";
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
+
+// Custom tooltip component
+function ValueLabelComponent(props) {
+  const { children, value } = props;
+
+  return (
+    <Tooltip 
+      placement="bottom"
+      title={`Min similarity: ${value}`}
+    >
+      {children}
+    </Tooltip>
+  );
+}
+
+
 export default function Teleoscope(props) {
   const [teleoscope_id] = useState(props.id.split("%")[0]);
   const swr = useSWRHook();
-  
+  const client = useStomp();
+  const dispatch = useAppDispatch();
 
-
+  const color = useAppSelector((state) => state.windows.settings.color);
   const { teleoscope } = props.windata?.demo
     ? props.windata.demodata
     : swr.useSWRAbstract("teleoscope", `graph/${teleoscope_id}`);
 
   const doclists = teleoscope?.doclists;
+
+  const handleChange = (event, value) => {
+    client.update_node(teleoscope_id, {similarity: value})
+  };
+
   const Status = (teleoscope) => {
     if (teleoscope) {
      if (teleoscope.doclists.length > 0) {
@@ -34,6 +57,26 @@ export default function Teleoscope(props) {
             Number of results: {teleoscope.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)}
           </Typography>
           <Histogram data={teleoscope.doclists[0].ranked_documents}></Histogram>
+          
+          <Slider
+            slots={{
+              valueLabel: ValueLabelComponent,
+            }}
+            style={{
+              width: "25%"
+            }}
+            aria-label="Temperature"
+            defaultValue={0.4}
+            valueLabelDisplay="auto"
+            step={0.1}
+            size="small"
+            min={0.1}
+            max={1}
+            sx={{ color: color }}
+            onChangeCommitted={(event, value) =>
+              handleChange(event, value)
+            }
+          />
         </Stack>
         )
      }
@@ -48,7 +91,6 @@ export default function Teleoscope(props) {
 
 
    const CopyToGroup = (teleoscope) => {
-      const client = useStomp();
       return (
       <Tooltip title="Copy Doclists to Groups" key="Copy Doclists to Groups">
       <IconButton onClick={() => client.copy_doclists_to_groups(teleoscope._id)}>
