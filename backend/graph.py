@@ -311,6 +311,11 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     if "rank_slice_length" in parameters:
         rank_slice_length = parameters["rank_slice_length"]
     
+    similarity = 0.4
+    if "similarity" in parameters:
+        similarity = parameters["similarity"]
+    
+
     logging.info(
         f"Updating Teleoscope for database {db.name} and node {teleoscope_node['_id']} with "
         f"sources {sources} and controls {controls} and paramaters {parameters}."
@@ -333,7 +338,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     source_map = []
     
     if len(sources) == 0:
-        ranks = rank(control_vecs, ids, all_vectors, rank_slice_length)
+        ranks = rank(control_vecs, ids, all_vectors, similarity)
         doclists.append({ "ranked_documents": ranks, "type": "All"})
     else:
         for source in sources:
@@ -365,7 +370,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
 
     
     for source, source_vecs, source_oids in source_map:
-        ranks = rank(control_vecs, source_oids, source_vecs, rank_slice_length)
+        ranks = rank(control_vecs, source_oids, source_vecs, similarity)
         source["ranked_documents"] = ranks
         doclists.append(source)
         
@@ -374,11 +379,12 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     # TODO: matrix
     return teleoscope_node
 
-def rank(control_vecs, ids, vecs, limit):
+def rank(control_vecs, ids, vecs, similarity):
     logging.info(f"There were {len(control_vecs)} control vecs.")
     vec = np.average(control_vecs, axis=0)
     scores = utils.calculateSimilarity(vecs, vec)
-    ranks = utils.rankDocumentsBySimilarity(ids, scores, limit)
+    ranks = utils.rankDocumentsBySimilarityThreshold(ids, scores, similarity)
+    logging.info(f"Found {len(ranks)} documents at similarity {similarity}.")
     return ranks
 
 def filter_vectors_by_oid(oids, ids, vectors):

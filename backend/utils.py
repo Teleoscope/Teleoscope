@@ -175,6 +175,13 @@ def calculateSimilarity(documentVectors, queryVector):
     # return sorted([(document_id, score) for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
 
 
+def rankDocumentsBySimilarityThreshold(document_ids, scores, threshold):
+    scores_and_ids = zip(scores, document_ids)
+    filtered = [sid for sid in scores_and_ids if sid[1] >= threshold]
+    hipass = sorted(filtered, key=lambda x: x[0], reverse=True)
+    return [(doc_id, score) for score, doc_id in hipass]
+
+
 def rankDocumentsBySimilarity(document_ids, scores, n_top=1000):
     '''Create and return a list a tuples of (document_id, similarity_score) 
     sorted by similarity score, high to low, keeping only the top N documents.
