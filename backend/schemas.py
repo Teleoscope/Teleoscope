@@ -233,7 +233,7 @@ def create_note_history_item(userid: ObjectId, label: str, action, content={}):
     }
 
 
-def create_node(node_type, workflow_id, oid):
+def create_node(node_type: NodeType, workflow_id, oid):
     return {
         "creation_time": datetime.datetime.utcnow(),
         "type": node_type,
@@ -243,13 +243,20 @@ def create_node(node_type, workflow_id, oid):
         "reference": oid,
         "columns": [],
         "doclists": [],
-        "parameters": {},
+        "parameters": create_parameters(node_type),
         "edges": {
             "source": [],
             "control": [],
             "output": []
         }
     }
+
+
+def create_parameters(node_type: NodeType):
+    parameters = {}
+    if node_type == "Teleoscope":
+        parameters["similarity"] = 0.4
+    return parameters
 
 
 def create_edge(id: ObjectId, nodeid: ObjectId, node_type: NodeType):

@@ -80,8 +80,10 @@ export default function Teleoscope(props) {
         )
      }
      if (teleoscope.edges.control.length > 0) {
-       return  <Typography sx={{ width: "100%" }} align="center" variant="caption">
-         {teleoscope.status}</Typography>
+       return <Stack direction="row" sx={{ width: "100%" }} spacing={2} alignItems="center" justifyContent="center">
+          <Typography sx={{ width: "100%" }} align="center" variant="caption">{teleoscope.status}</Typography>
+
+       </Stack>
      }
     }
     
