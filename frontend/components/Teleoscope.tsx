@@ -31,6 +31,34 @@ function ValueLabelComponent(props) {
 }
 
 
+
+const SimilaritySlider = ({teleoscope, client, color}) => {
+  const handleChange = (event, value) => {
+    client.update_node(teleoscope._id, {similarity: value})
+  };
+
+  return <Slider
+  slots={{
+    valueLabel: ValueLabelComponent,
+  }}
+  style={{
+    width: "25%"
+  }}
+  aria-label="Similarity"
+  defaultValue={teleoscope["parameters"]["similarity"] ? teleoscope["parameters"]["similarity"] : "0.4"}
+  valueLabelDisplay="auto"
+  step={0.1}
+  size="small"
+  min={0.1}
+  max={1}
+  sx={{ color: color }}
+  onChangeCommitted={(event, value) =>
+    handleChange(event, value)
+  }
+/>
+}
+
+
 export default function Teleoscope(props) {
   const [teleoscope_id] = useState(props.id.split("%")[0]);
   const swr = useSWRHook();
@@ -43,9 +71,6 @@ export default function Teleoscope(props) {
 
   const doclists = teleoscope?.doclists;
 
-  const handleChange = (event, value) => {
-    client.update_node(teleoscope_id, {similarity: value})
-  };
 
   const Status = (teleoscope) => {
     if (teleoscope) {
@@ -56,35 +81,22 @@ export default function Teleoscope(props) {
             Number of results: {teleoscope.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)}
           </Typography>
           <Histogram data={teleoscope.doclists[0].ranked_documents}></Histogram>
+          <SimilaritySlider color={color} teleoscope={teleoscope} client={client} />
           
-          <Slider
-            slots={{
-              valueLabel: ValueLabelComponent,
-            }}
-            style={{
-              width: "25%"
-            }}
-            aria-label="Similarity"
-            defaultValue={teleoscope["parameters"]["similarity"] ? teleoscope["parameters"]["similarity"] : "0.4"}
-            valueLabelDisplay="auto"
-            step={0.1}
-            size="small"
-            min={0.1}
-            max={1}
-            sx={{ color: color }}
-            onChangeCommitted={(event, value) =>
-              handleChange(event, value)
-            }
-          />
         </Stack>
         )
      }
-     if (teleoscope.edges.control.length > 0) {
+     else if (teleoscope.edges.control.length > 0) {
        return <Stack direction="row" sx={{ width: "100%" }} spacing={2} alignItems="center" justifyContent="center">
           <Typography sx={{ width: "100%" }} align="center" variant="caption">{teleoscope.status}</Typography>
-
        </Stack>
      }
+     else {
+      return <SimilaritySlider color={color} teleoscope={teleoscope} client={client} />
+     }
+
+
+
     }
     
     return null
