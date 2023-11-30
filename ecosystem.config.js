@@ -11,7 +11,9 @@ module.exports = {
       args: ["-m", "backend.dispatch"],
       watch: false,
       interpreter: "",
-      max_memory_restart: "16G"
+      max_memory_restart: "16G",
+      "instances": 4,
+
     },
     {
       name: "frontend",

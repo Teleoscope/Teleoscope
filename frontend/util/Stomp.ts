@@ -349,14 +349,13 @@ await Promise.race([checkConnection(), timeout()]);
   /**
    * Saves the workspace UI state (window locations, bookmarks)
    */
-  save_UI_state(workflow_id: string, bookmarks, windows, edges) {
+  save_UI_state(workflow_id: string, bookmarks, nodes, edges) {
     const body = {
       task: "save_UI_state",
       args: {
         workflow_id: workflow_id,
         bookmarks: bookmarks,
-        windows: windows,
-        nodes: windows,
+        nodes: nodes,
         edges: edges,
       },
     };

@@ -80,13 +80,13 @@ def push_history(db, collection_name, item_id, history_item, transaction_session
     """
     Update one document and push a history item.
     """
+    db.history.insert_one({"collection": collection_name, "item": item_id, "history_item": history_item})
     res = db[collection_name].update_one({"_id": item_id},
-        {"$push": {
-                "history": {
-                    "$each": [history_item],
-                    "$position": 0
-                }
-            }}, session=transaction_session
+        {
+            "$set": {
+                "history": [history_item],
+            }
+        }, session=transaction_session
     )
     return res
 

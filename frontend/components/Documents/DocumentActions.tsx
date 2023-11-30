@@ -17,7 +17,6 @@ export const handleLinkClick = ({ document }) => {
   if (document.metadata.source_url) {
     window.open(document.metadata.source_url, "_blank");
   }
-  console.log("document", document)
 };
 
 export const Link = (doc) => {

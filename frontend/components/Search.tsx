@@ -25,7 +25,6 @@ export default function Search({id, windata, color}) {
     `search/${query}`
   );
 
-  console.log("Search",  `search/${query}`)
   const { count, count_loading } = swr.useSWRAbstract(
     "count",
     `count/${query}`

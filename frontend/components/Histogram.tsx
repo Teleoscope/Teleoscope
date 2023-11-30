@@ -34,7 +34,6 @@ const Histogram = ({ data }) => {
 
       const thresholds = Array.from({ length: 11 }, (_, i) => parseFloat((i * 0.1).toFixed(1)));
 
-      // console.log("data", rankData, x, thresholds)
     // Create the histogram bins
     const bins = d3.histogram()
       .domain(x.domain())
@@ -64,7 +63,6 @@ const Histogram = ({ data }) => {
     .attr("y", d => y(d.length))
     .attr("width", x(bins[0].x1) - x(bins[0].x0) - 1)
     .attr("height", d => {
-      console.log("data", d)
       return d.length >= 1 ? Math.max(1, height - y(d.length)) : 0
     })
     .attr("fill", "black");

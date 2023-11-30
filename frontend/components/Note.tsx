@@ -18,7 +18,6 @@ export default function Note(props) {
   const swr = useSWRHook();
   const { note } = swr.useSWRAbstract("note", `note/${id}`, {
     onSuccess: (data, key, config) => {
-      console.log("loaded", data, key, config)
       setEditorState(handleLoad(data))
     }
   });

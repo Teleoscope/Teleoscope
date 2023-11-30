@@ -57,7 +57,6 @@ const createXLSX = async (props) => {
     const ret = { ...doc, ...doc.metadata, ...{ label: props.group.history[0]["label"] } };
     return ret
   });
-  // console.log("documents", doc_map)
   const worksheet = utils.json_to_sheet(doc_map);
   const workbook = utils.book_new();
   utils.book_append_sheet(workbook, worksheet, "Document");
