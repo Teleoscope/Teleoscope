@@ -369,7 +369,7 @@ class Projection:
                 control_vecs = [all_doc_vecs[all_doc_ids.index(oid)] for oid in docs]
                 source_vecs = np.array(all_doc_vecs)
                 ranks = graph.rank(control_vecs, all_doc_ids, source_vecs, 0.4)
-                document_ids = [i for i,s in ranks] 
+                document_ids = [i for i,s in ranks[0:self.n]]
             
             if self.ordering == "random":
                 logging.info('No sources. Using random ordering...')
