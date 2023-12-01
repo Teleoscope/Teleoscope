@@ -1,4 +1,5 @@
 import logging, pickle, json, numpy as np
+import uuid
 from scipy.sparse import csc_matrix
 from warnings import simplefilter
 from celery import Celery, chain
@@ -1501,4 +1502,4 @@ def vectorize_and_upload_text(text, database, id): #(text) -> Vector
 "dispatch.${userInfo.username}@%h"
 
 if __name__ == '__main__':
-    app.worker_main(['worker', '--loglevel=INFO', f"--hostname=tasks.{os.getlogin()}@%h" ])
+    app.worker_main(['worker', '--loglevel=INFO', f"--hostname=tasks.{os.getlogin()}@%h{uuid.uuid4()}" ])

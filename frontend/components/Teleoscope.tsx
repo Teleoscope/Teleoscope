@@ -1,5 +1,5 @@
 // Teleoscope.js
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // mui
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -63,6 +63,17 @@ export default function Teleoscope(props) {
   const [teleoscope_id] = useState(props.id.split("%")[0]);
   const swr = useSWRHook();
   const client = useStomp();
+
+     // Time before render
+     const startTime = performance.now();
+
+     useEffect(() => {
+         // Time after render
+         const endTime = performance.now();
+ 
+         // Calculate and log the render time
+         console.log(`Render time: ${endTime - startTime} milliseconds`);
+     });
 
   const color = useAppSelector((state) => state.windows.settings.color);
   const { teleoscope } = props.windata?.demo

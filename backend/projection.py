@@ -427,6 +427,8 @@ class Projection:
         logging.info('Gathering Document Vectors...')
         # use indices of ranked ids to build sorted array of document vectors
         document_vectors = np.array([all_doc_vecs[i] for i in indices])
+        if len(indices) == 0:
+            document_vectors = np.empty((0, 512))
         # dict where keys are group names and values are indices of documents
         group_doc_indices = {}
         

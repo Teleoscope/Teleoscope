@@ -3,6 +3,7 @@ from warnings import simplefilter
 import json
 import logging
 import os
+import uuid
 
 # installed modules
 from celery import bootsteps
@@ -148,4 +149,4 @@ tasks.app.steps["consumer"].add(WebTaskConsumer)
 
 
 if __name__ == '__main__':
-    tasks.app.worker_main(['worker', '--loglevel=INFO', f"--hostname=dispatch.{os.getlogin()}@%h" ])
+    tasks.app.worker_main(['worker', '--loglevel=INFO', f"--hostname=dispatch.{os.getlogin()}@%h{uuid.uuid4()}" ])
