@@ -35,7 +35,7 @@ def main():
     
     args = parser.parse_args()
 
-    parse_xml(args.file_path, args.target_tag, args.checkpoint)
+    parse_xml(args.file, args.tag, args.checkpoint)
 
 if __name__ == "__main__":
     main()
