@@ -4,10 +4,10 @@ from lxml import etree
 import backend.utils as utils
 import backend.schemas as schemas
 import pymongo
+import mmap
 
 def process_element(elem, db, title, text):
     # Process the element here
-    # print(f"Element: {elem.tag}, Attributes: {elem.attrib}")
     doc = {}
    
     try:
@@ -26,6 +26,19 @@ def process_element(elem, db, title, text):
     while elem.getprevious() is not None:
         del elem.getparent()[0]
 
+
+
+def read_file_backwards(filename):
+    with open(filename, "r+b") as f:
+        with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
+            endline = mm.rfind(b'\n', 0, mm.size())  # Find the last newline
+            startline = mm.rfind(b'\n', 0, endline) + 1 if endline != 0 else 0
+            while startline >= 0:
+                yield mm[startline:endline].decode('utf-8')
+                endline = startline - 1  # Move to the previous line
+                startline = mm.rfind(b'\n', 0, endline) + 1 if endline != 0 else 0
+
+
 def parse_xml(file, tag, checkpoint, database, title, text):
     db = utils.connect(db=database)
     last_processed = 0
@@ -37,18 +50,22 @@ def parse_xml(file, tag, checkpoint, database, title, text):
             else:
                 print("Checkpoint file contains invalid data. Starting from the beginning.")
 
+    # Usage example
+    for line in read_file_backwards(file):
+        
+        context = etree.iterparse(line, events=('end',), tag=tag)
+        for event, elem in context:
+            print(f"Element: {elem.tag}, Attributes: {elem.attrib}, Event: {event}")
+            # if processed >= last_processed:
+        #         process_element(elem, db, title, text)
+        #         last_processed = processed
+        #         with open(checkpoint, 'w') as f:
+        #             f.write(str(processed))
+        #     processed += 1
+        # del context
 
-    processed = 0
-    context = etree.iterparse(file, events=('end',), tag=tag)
 
-    for event, elem in context:
-        if processed >= last_processed:
-            process_element(elem, db, title, text)
-            last_processed = processed
-            with open(checkpoint, 'w') as f:
-                f.write(str(processed))
-        processed += 1
-    del context
+
 
 def main():
     parser = argparse.ArgumentParser(description="XML Parser for Large Files with Checkpointing")
