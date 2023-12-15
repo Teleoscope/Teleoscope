@@ -35,6 +35,7 @@
     "color-space": "^2.0.0",
     "crypto": "^1.0.1",
     "docx": "^8.0.4",
+    "dompurify": "^3.0.6",
     "dotenv": "^16.1.2",
     "draft-js": "^0.11.7",
     "file-saver": "^2.0.5",

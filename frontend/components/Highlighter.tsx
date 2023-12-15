@@ -1,4 +1,5 @@
 import { useSelector } from "react-redux";
+import DOMPurify from 'dompurify';
 
 export default function Highlighter({ children }) {
     const nodes = useSelector((state) => state.windows.nodes);
@@ -22,15 +23,16 @@ export default function Highlighter({ children }) {
 
       return parts.map((part, index) => (
         regex.test(part) ? (
-          <span key={index} style={{ backgroundColor: 'yellow' }}>{part}</span>
+          `<span key="${index}" style="background-color: 'yellow'">${part}</span>`
         ) : (
           part
         )
       ));
     }
-    
+    const safeHtml = DOMPurify.sanitize(highlight(children));
+    console.log("safe",safeHtml)
 
       return (
-        <>{highlight(children)}</>
+        <div dangerouslySetInnerHTML={{ __html: safeHtml }} />
       );
 }

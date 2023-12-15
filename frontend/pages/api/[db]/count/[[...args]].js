@@ -8,7 +8,7 @@ export default async (req, res) => {
 
   var count = 0;
   if (!args) {
-    count = await db.collection("documents").countDocuments({});
+    count = await db.collection("documents").estimatedDocumentCount({});
   } else if (args.length == 1) {
     count = await db
       .collection("documents")
