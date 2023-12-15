@@ -53,9 +53,9 @@ def parse_xml(file, tag, checkpoint, database, title, text):
     # Usage example
     for line in read_file_backwards(file):
         
-        context = etree.iterparse(line, events=('end',), tag=tag)
-        for event, elem in context:
-            print(f"Element: {elem.tag}, Attributes: {elem.attrib}, Event: {event}")
+        elem = etree.fromstring(line)
+        
+        print(f"Element: {elem.tag}, Attributes: {elem.attrib}, Event: {event}")
             # if processed >= last_processed:
         #         process_element(elem, db, title, text)
         #         last_processed = processed
