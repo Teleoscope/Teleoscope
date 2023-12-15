@@ -47,7 +47,7 @@ def parse_xml(file, tag, checkpoint, database, title, text):
         processed = 0
         elem = etree.fromstring(line)
         
-        print(f"Element: {elem.tag}, Attributes: {elem.attrib}")
+        # print(f"Element: {elem.tag}, Attributes: {elem.attrib}")
         process_element(elem, db, title, text)
 
         processed += 1
