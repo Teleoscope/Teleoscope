@@ -14,7 +14,12 @@ def parse_xml(file_path, target_tag, checkpoint_file):
     last_processed = 0
     if os.path.exists(checkpoint_file):
         with open(checkpoint_file, 'r') as f:
-            last_processed = int(f.read())
+            content = f.read().strip()
+            if content.isdigit():
+                last_processed = int(content)
+            else:
+                print("Checkpoint file contains invalid data. Starting from the beginning.")
+
 
     processed = 0
     context = etree.iterparse(file_path, events=('end',), tag=target_tag)
