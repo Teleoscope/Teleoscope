@@ -55,7 +55,7 @@ def parse_xml(file, tag, checkpoint, database, title, text):
         
         elem = etree.fromstring(line)
         
-        print(f"Element: {elem.tag}, Attributes: {elem.attrib}, Event: {event}")
+        print(f"Element: {elem.tag}, Attributes: {elem.attrib}")
             # if processed >= last_processed:
         #         process_element(elem, db, title, text)
         #         last_processed = processed
