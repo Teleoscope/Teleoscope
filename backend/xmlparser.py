@@ -29,8 +29,8 @@ def parse_xml(file_path, target_tag, checkpoint_file):
 
 def main():
     parser = argparse.ArgumentParser(description="XML Parser for Large Files with Checkpointing")
-    parser.add_argument("file_path", help="Path to the XML file")
-    parser.add_argument("target_tag", help="Target tag to process in the XML file")
+    parser.add_argument("--file", help="Path to the XML file")
+    parser.add_argument("--tag", help="Target tag to process in the XML file")
     parser.add_argument("--checkpoint", default="checkpoint.txt", help="Checkpoint file name")
     
     args = parser.parse_args()
