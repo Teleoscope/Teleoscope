@@ -3,10 +3,11 @@ import os
 from lxml import etree
 import backend.utils as utils
 import backend.schemas as schemas
+import pymongo
 
 def process_element(elem, db, title, text):
     # Process the element here
-    print(f"Element: {elem.tag}, Attributes: {elem.attrib}")
+    # print(f"Element: {elem.tag}, Attributes: {elem.attrib}")
     doc = {}
    
     try:
@@ -14,7 +15,11 @@ def process_element(elem, db, title, text):
     except KeyError:
         doc = schemas.create_document_object(elem.attrib[text],[],elem.attrib[text],metadata=elem.attrib)
     
-    db.documents.insert_one(doc)
+    try:
+        db.documents.insert_one(doc)
+    except pymongo.errors.DuplicateKeyError:
+        print(f"Already in database: {elem.attrib}")
+        pass
 
     # Clear processed elements to save memory
     elem.clear()
