@@ -7,7 +7,13 @@ import backend.schemas as schemas
 def process_element(elem, db, title, text):
     # Process the element here
     print(f"Element: {elem.tag}, Attributes: {elem.attrib}")
-    doc = schemas.create_document_object(elem.attrib[title],[],elem.attrib[text],metadata=elem.attrib)
+    doc = {}
+   
+    try:
+        doc = schemas.create_document_object(elem.attrib[title],[],elem.attrib[text],metadata=elem.attrib)
+    except KeyError:
+        doc = schemas.create_document_object(elem.attrib[text],[],elem.attrib[text],metadata=elem.attrib)
+    
     db.documents.insert_one(doc)
 
     # Clear processed elements to save memory
