@@ -4,7 +4,7 @@ from lxml import etree
 
 def process_element(elem):
     # Process the element here
-    print(elem.tag, elem.text)
+    print(f"Element: {elem.tag}, Attributes: {elem.attrib}")
     # Clear processed elements to save memory
     elem.clear()
     while elem.getprevious() is not None:
