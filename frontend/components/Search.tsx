@@ -2,7 +2,7 @@ import { useState } from "react";
 
 // mui
 import SearchIcon from "@mui/icons-material/Search";
-import { Stack, TextField, Box, Typography, Divider } from "@mui/material";
+import { Stack, TextField, Box, Divider } from "@mui/material";
 
 // actions
 import { useDispatch } from "react-redux";
@@ -15,6 +15,7 @@ import DocumentList from "@/components/Documents/DocumentList";
 import { useSWRHook } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
 import { useStomp } from "@/util/Stomp";
+import Count from "@/components/Count";
 
 export default function Search({id, windata, color}) {
   const [query, setQuery] = useState(windata?.query ? windata.query : "");
@@ -44,11 +45,7 @@ export default function Search({id, windata, color}) {
     dispatch(updateSearch({ client: client, search_id: windata.oid, query: e.target.value }));
   };
 
-  const Count = () => (
-    <Typography sx={{ width: "100%" }} align="center" variant="caption">
-      Number of results: {count_loading ? "loading..." : `${count}`}
-    </Typography>
-  );
+  
 
   return (
     <Stack direction="column" sx={{ height: "100%" }}>
@@ -68,7 +65,7 @@ export default function Search({id, windata, color}) {
         />
       </Stack>
       <Divider></Divider>
-      <ButtonActions inner={[[Count, {}]]}></ButtonActions>
+      <ButtonActions inner={[[Count, {count_loading, count}]]}></ButtonActions>
       <Box sx={{ flexGrow: 1, flexDirection: "column" }}>
         <DocumentList
           loading={documents_loading}

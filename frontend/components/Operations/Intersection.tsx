@@ -6,6 +6,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 
 // custom components
 import DocumentList from "@/components/Documents/DocumentList";
+import Count from "@/components/Count";
 
 // util
 import { useSWRHook } from "@/util/swr";
@@ -27,9 +28,7 @@ export default function Intersection({id, windata, color}) {
      if (node.doclists.length > 0) {
        return (
         <Stack direction="row" sx={{ width: "100%" }} spacing={2} alignItems="center" justifyContent="center">
-          <Typography  align="center" variant="caption">
-            Number of results: {node.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)}
-          </Typography>
+          <Count count={node.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)} />  
           <Histogram data={node.doclists[0].ranked_documents}></Histogram>
         </Stack>
         )

@@ -6,6 +6,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 
 // custom components
 import DocumentList from "@/components/Documents/DocumentList";
+import Count from "@/components/Count";
 
 // util
 import { useSWRHook } from "@/util/swr";
@@ -88,9 +89,7 @@ export default function Teleoscope(props) {
      if (teleoscope.doclists.length > 0) {
        return (
         <Stack direction="row" sx={{ width: "100%" }} spacing={2} alignItems="center" justifyContent="center">
-          <Typography  align="center" variant="caption">
-            Number of results: {teleoscope.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)}
-          </Typography>
+          <Count loading={teleoscope ? false : true} count={teleoscope.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)} /> 
           <Histogram data={teleoscope.doclists[0].ranked_documents}></Histogram>
           <SimilaritySlider color={color} teleoscope={teleoscope} client={client} />
           
