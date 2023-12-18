@@ -27,9 +27,13 @@ def read_file_backwards(filename, checkpoint, encoding='utf-8'):
     with open(filename, "r+b") as f:
         with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
             search_bytes = checkpoint.encode(encoding)
-            endline = mm.rfind(search_bytes)
-            
-            startline = mm.rfind(b'\n', 0, endline) + 1 if endline != 0 else 0
+            position = mm.rfind(search_bytes)
+
+            if position != -1:
+                # Find the start of the line
+                startline = max(mm.rfind(b'\n', 0, position) + 1, 0)
+                end = mm.find(b'\n', position)
+                endline = end if end != -1 else len(mm)
 
             # Read the file backwards from the calculated starting point
             while startline >= 0:
