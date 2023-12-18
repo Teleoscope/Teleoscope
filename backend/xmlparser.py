@@ -10,7 +10,7 @@ def process_element(line, db, title, text):
     try: 
         elem = etree.fromstring(line)
     except Exception as e:
-        print(f"Parsing failed: {line}", e)
+        raise Exception(f"Parsing failed: {line}", e)
 
     # Process the element here
     doc = {}
