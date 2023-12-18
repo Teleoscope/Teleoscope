@@ -7,7 +7,11 @@ import pymongo
 import mmap
 
 def process_element(line, db, title, text):
-    elem = etree.fromstring(line)
+    try: 
+        elem = etree.fromstring(line)
+    except Exception as e:
+        print(f"Parsing failed: {line}", e)
+
     # Process the element here
     doc = {}
    
