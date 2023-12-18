@@ -6,7 +6,8 @@ import backend.schemas as schemas
 import pymongo
 import mmap
 
-def process_element(elem, db, title, text):
+def process_element(line, db, title, text):
+    elem = etree.fromstring(line)
     # Process the element here
     doc = {}
    
@@ -15,47 +16,55 @@ def process_element(elem, db, title, text):
     except KeyError:
         doc = schemas.create_document_object(elem.attrib[text],[],elem.attrib[text],metadata=elem.attrib)
     
-    try:
-        db.documents.insert_one(doc)
-    except pymongo.errors.DuplicateKeyError:
-        print(f"Already in database: {elem.attrib}")
-        pass
-
-    # Clear processed elements to save memory
-    elem.clear()
-    while elem.getprevious() is not None:
-        del elem.getparent()[0]
+    return doc
 
 
-
-def read_file_backwards(filename):
+def read_file_backwards(filename, checkpoint, encoding='utf-8'):
     with open(filename, "r+b") as f:
         with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
-            endline = mm.rfind(b'\n', 0, mm.size())  # Find the last newline
+            search_bytes = checkpoint.encode(encoding)
+            endline = mm.rfind(search_bytes)
+            
             startline = mm.rfind(b'\n', 0, endline) + 1 if endline != 0 else 0
+
+            # Read the file backwards from the calculated starting point
             while startline >= 0:
                 yield mm[startline:endline].decode('utf-8')
-                endline = startline - 1  # Move to the previous line
+                endline = startline - 1
                 startline = mm.rfind(b'\n', 0, endline) + 1 if endline != 0 else 0
+
+
+def chunk_generator(generator, chunk_size):
+    """
+    Yields chunks of specified size from the generator.
+    
+    :param generator: An iterable generator.
+    :param chunk_size: The size of each chunk.
+    """
+    chunk = []
+    for item in generator:
+        chunk.append(item)
+        if len(chunk) >= chunk_size:
+            yield chunk
+            chunk = []
+    if chunk:
+        yield chunk
 
 
 def parse_xml(file, tag, checkpoint, database, title, text):
     db = utils.connect(db=database)
-    
-    # Usage example
-    for line in read_file_backwards(file):
-        processed = 0
-        elem = etree.fromstring(line)
-        
-        # print(f"Element: {elem.tag}, Attributes: {elem.attrib}")
-        process_element(elem, db, title, text)
+    processed = 0
 
-        processed += 1
-        with open(checkpoint, 'w') as f:
-            f.write(str(processed))
-        del elem
-        
-
+    for chunk in chunk_generator(read_file_backwards(file, checkpoint), 1000):
+        processed = [process_element(line, db, title, text) for line in chunk]
+        try:
+            db.documents.insert_many(processed, ordered=False)
+        except pymongo.errors.BulkWriteError as bwe:
+            print("Bulk write error occurred:", bwe.details)
+            # Handle specific errors (e.g., duplicates, validation errors)
+        except Exception as e:
+            print("An error occurred:", str(e))
+            # Handle other exceptions
 
 
 def main():
@@ -65,7 +74,7 @@ def main():
     parser.add_argument("--db", help="Database to add to.")
     parser.add_argument("--title", help="Name of title field")
     parser.add_argument("--text", help="Name of text field")
-    parser.add_argument("--checkpoint", default="checkpoint.txt", help="Checkpoint file name")
+    parser.add_argument("--checkpoint", help="Text to start backwards from")
     
     args = parser.parse_args()
 
