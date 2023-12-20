@@ -321,7 +321,6 @@ def update_search(db: database.Database, search_node, parameters):
 
 def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
     
-    
     chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=Settings(anonymized_telemetry=False))
     logging.debug("Connected to client {chroma_client}.")
 
@@ -339,7 +338,7 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     doclists = []
     
     if len(sources) == 0:
-        results = chroma_collection.query(query_embeddings=[list(search_vector)], n_results=10000, include=["distances"])
+        results = chroma_collection.query(query_embeddings=[list(search_vector)], n_results=100, include=["distances"])
         
         distance = float(np.average(results["distances"][0])) / 2
         if "distance" in parameters:
