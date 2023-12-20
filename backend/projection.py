@@ -15,7 +15,6 @@ import spacy
 # local files
 from . import utils
 from . import tasks
-from . import auth
 from . import schemas
 from . import graph
 
