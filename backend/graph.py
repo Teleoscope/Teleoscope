@@ -313,7 +313,8 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     if "distance" in parameters:
         distance = parameters["distance"]
     
-    chroma_client = chromadb.PersistentClient(path=auth["datapath"])
+    chroma_client = chromadb.HttpClient(host=auth.chroma["host"], port=auth.chroma["port"])
+    
     chroma_collection = chroma_client.get_collection(db.name)
 
     control_vectors = chroma_collection.get(ids=[str(control) for control in controls], include=["embeddings"])

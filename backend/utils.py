@@ -469,3 +469,14 @@ def get_collection(db: database.Database, node_type: schemas.NodeType):
     }
 
     return db.get_collection(collection_map[node_type])
+
+
+def binary_search(lst, number):
+    left, right = 0, len(lst) - 1
+    while left <= right:
+        mid = left + (right - left) // 2
+        if lst[mid] < number:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return left if left < len(lst) else -1
