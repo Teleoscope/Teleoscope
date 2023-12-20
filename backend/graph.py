@@ -331,7 +331,7 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     
     if len(sources) == 0:
         results = chroma_collection.query(query_embeddings=[list(search_vector)], n_results=10000, include=["distances"])
-        index = utils.binary_search(results["distances"], distance)
+        index = utils.binary_search(results["distances"][0], distance)
         ranks = zip(results["ids"][0:index], results["distances"][0:index])
         doclists.append({ "ranked_documents": ranks, "type": "All"})
     
