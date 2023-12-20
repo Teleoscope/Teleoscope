@@ -1126,7 +1126,7 @@ def make_edge(*args, database: str, userid: str, workflow_id: str,
     userid = ObjectId(str(userid))
     
     # log action to stdout
-    logging.info(f'Making edge type {edge_type} for'
+    logging.info(f'Making edge type {edge_type} for '
                  f'workflow {workflow_id} by user {userid}.')
     #---------------------------------------------------------------------------
     

@@ -5,6 +5,7 @@ import numpy as np
 import logging
 import bcrypt
 import chromadb
+from chromadb.config import Settings
 
 from . import schemas
 from . import utils
@@ -316,7 +317,7 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     if "distance" in parameters:
         distance = parameters["distance"]
     
-    chroma_client = chromadb.HttpClient(host=auth.chroma["host"], port=auth.chroma["port"])
+    chroma_client = chromadb.HttpClient(host=auth.chroma["host"], port=auth.chroma["port"], settings=Settings(anonymized_telemetry=False))
     logging.debug("Connected to client {chroma_client}.")
 
     chroma_collection = chroma_client.get_collection(db.name)
