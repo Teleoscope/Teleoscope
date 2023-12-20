@@ -180,7 +180,10 @@ def graph(db: database.Database, node_oid: ObjectId):
         case "Note":
             node = update_note(db, node, parameters)
         case "Teleoscope":
-            node = update_teleoscope(db, node, sources, controls, parameters)
+            if db.name == "aita":
+                node = update_teleoscope_chroma(db, node, sources, controls, parameters)
+            else:
+                node = update_teleoscope(db, node, sources, controls, parameters)
         case "Projection":
             node = update_projection(db, node, sources, controls, parameters)
         case "Union":
