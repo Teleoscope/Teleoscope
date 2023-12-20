@@ -1091,7 +1091,7 @@ def update_node(*args, database: str, userid: str, workflow_id: str,
     userid = ObjectId(str(userid))
     
     # log action to stdout
-    logging.info(f'Updating parameters for node in'
+    logging.info(f'Updating parameters for node in '
                  f'workflow {workflow_id} by user {userid}.')
     #---------------------------------------------------------------------------
     
