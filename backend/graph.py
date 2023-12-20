@@ -336,7 +336,7 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
         results = chroma_collection.query(query_embeddings=[list(search_vector)], n_results=10000, include=["distances"])
         index = utils.binary_search(results["distances"][0], distance)
         ranks = zip(results["ids"][0:index], results["distances"][0:index])
-        doclists.append({ "ranked_documents": ranks, "type": "All"})
+        doclists.append({ "ranked_documents": [(doc_id, score) for doc_id, score in ranks], "type": "All"})
     
     else:
         for source in sources:
@@ -352,7 +352,7 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
                     source_map.append((source, results["ids"], results["embeddings"]))
                 case "Search":
                     search = db.searches.find_one({"_id": source["id"]})
-                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1}).limit(rank_slice_length)
+                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
                     oids = [d["_id"] for d in list(cursor)]
                     results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
                     source_map.append((source, results["ids"], results["embeddings"]))
