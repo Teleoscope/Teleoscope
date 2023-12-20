@@ -17,15 +17,12 @@ def main():
 def importdb(database, datapath):
     client = chromadb.PersistentClient(path=datapath)
     
-    try:
-        collection = client.get_collection("stack")
-    except ValueError:
-        collection = client.create_collection(name="stack")
-
+    collection = client.get_or_create_collection(database)
+    
     db = utils.connect(db=database)
     
     # Set batch size
-    batch_size = 1000
+    batch_size = 10000
 
     # Initialize the processed count
     processed_count = 0
