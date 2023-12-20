@@ -19,8 +19,17 @@ import spacy
 # local files
 from . import utils
 from . import tasks
-from . import auth
 from . import schemas
+
+# environment variables
+from dotenv import load_dotenv
+load_dotenv()  # This loads the variables from .env
+import os
+RABBITMQ_USERNAME = os.getenv('RABBITMQ_USERNAME') 
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD') 
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST') 
+RABBITMQ_VHOST = os.getenv('RABBITMQ_VHOST') 
+RABBITMQ_TASK_QUEUE = os.getenv('RABBITMQ_TASK_QUEUE') 
 
 class Clustering:
     """Semi-supervised Clustering 
@@ -69,7 +78,7 @@ class Clustering:
 
     def ping_stomp(self, message):
 
-        credentials = pika.PlainCredentials(auth.rabbitmq["username"], auth.rabbitmq["password"])
+        credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
         parameters = pika.ConnectionParameters(host='localhost', port=5672, virtual_host='teleoscope', credentials=credentials)
         connection = pika.BlockingConnection(parameters)
         channel = connection.channel()

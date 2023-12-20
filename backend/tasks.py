@@ -12,10 +12,18 @@ import os
 
 # local imports
 from . import utils
-from . import auth
 from . import schemas
 from . import graph
 
+# environment variables
+from dotenv import load_dotenv
+load_dotenv()  # This loads the variables from .env
+import os
+RABBITMQ_USERNAME = os.getenv('RABBITMQ_USERNAME') 
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD') 
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST') 
+RABBITMQ_VHOST = os.getenv('RABBITMQ_VHOST') 
+RABBITMQ_TASK_QUEUE = os.getenv('RABBITMQ_TASK_QUEUE') 
 
 # ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
@@ -24,17 +32,13 @@ simplefilter(action='ignore', category=FutureWarning)
 # url: "amqp://myuser:mypassword@localhost:5672/myvhost"
 CELERY_BROKER_URL = (
     f'amqp://'
-    f'{auth.rabbitmq["username"]}:'
-    f'{auth.rabbitmq["password"]}@'
-    f'{auth.rabbitmq["host"]}/'
-    f'{auth.rabbitmq["vhost"]}'
+    f'{RABBITMQ_USERNAME}:'
+    f'{RABBITMQ_PASSWORD}@'
+    f'{RABBITMQ_HOST}/'
+    f'{RABBITMQ_VHOST}'
 )
 
-queue = Queue(
-    auth.rabbitmq["task_queue"],
-    Exchange(auth.rabbitmq["task_queue"]),
-    auth.rabbitmq["task_queue"])
-
+queue = Queue(RABBITMQ_TASK_QUEUE, Exchange(RABBITMQ_TASK_QUEUE), RABBITMQ_TASK_QUEUE)
 app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
 
 app.conf.update(

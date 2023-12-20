@@ -10,22 +10,28 @@ from celery import bootsteps
 from kombu import Consumer, Exchange, Queue
 
 # local files
-from . import auth
 from . import tasks
+
+# environment variables
+from dotenv import load_dotenv
+load_dotenv()  # This loads the variables from .env
+import os
+RABBITMQ_DISPATCH_QUEUE = os.getenv('RABBITMQ_DISPATCH_QUEUE') 
+RABBITMQ_TASK_QUEUE = os.getenv('RABBITMQ_TASK_QUEUE') 
 
 # ignore all future warnings
 simplefilter(action="ignore", category=FutureWarning)
 
 dispatch_queue = Queue(
-    auth.rabbitmq["dispatch_queue"],
-    Exchange(auth.rabbitmq["dispatch_queue"]),
-    auth.rabbitmq["dispatch_queue"],
+    RABBITMQ_DISPATCH_QUEUE,
+    Exchange(RABBITMQ_DISPATCH_QUEUE),
+    RABBITMQ_DISPATCH_QUEUE,
 )
 
 task_queue = Queue(
-    auth.rabbitmq["task_queue"],
-    Exchange(auth.rabbitmq["task_queue"]),
-    auth.rabbitmq["task_queue"],
+    RABBITMQ_TASK_QUEUE,
+    Exchange(RABBITMQ_TASK_QUEUE),
+    RABBITMQ_TASK_QUEUE,
 )
 
 class WebTaskConsumer(bootsteps.ConsumerStep):
@@ -139,7 +145,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
                 res = tasks.copy_doclists_to_groups.signature(args=(), kwargs=kwargs)
 
         try:
-            res.apply_async(queue=auth.rabbitmq["task_queue"])
+            res.apply_async(queue=RABBITMQ_TASK_QUEUE)
         except Exception as e:
             logging.warning(f"Task {task} for kwargs {kwargs} raised exception {e}.")
         return

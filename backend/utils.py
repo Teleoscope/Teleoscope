@@ -17,29 +17,42 @@ import datetime
 import unicodedata
 
 # local files
-from . import auth
 from . import schemas
+
+# environment variables
+from dotenv import load_dotenv
+load_dotenv()  # This loads the variables from .env
+import os
+
+RABBITMQ_USERNAME = os.getenv('RABBITMQ_USERNAME') 
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD') 
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST') 
+
+MONGODB_USERNAME = os.getenv('MONGODB_USERNAME')
+MONGODB_PASSWORD = os.getenv('MONGODB_PASSWORD') 
+MONGODB_HOST = os.getenv('MONGODB_HOST') 
+MONGODB_AUTHT = os.getenv('MONGODB_AUTHT')
+MONGODB_REPLICASET = os.getenv('MONGODB_REPLICASET')
 
 db = "test"
 
 def make_client():
-    # autht = "authSource=admin&authMechanism=SCRAM-SHA-256&tls=true" Added this to config as: auth.mongodb["autht"]
+    # autht = "authSource=admin&authMechanism=SCRAM-SHA-256&tls=true" Added this to config as: MONGODB_AUTHT
     connect_str = (
         f'mongodb://'
-        f'{auth.mongodb["username"]}:'
-        f'{auth.mongodb["password"]}@'
-        f'{auth.mongodb["host"]}/?'
-        f'{auth.mongodb["autht"]}'
+        f'{MONGODB_USERNAME}:'
+        f'{MONGODB_PASSWORD}@'
+        f'{MONGODB_HOST}/?'
+        f'{MONGODB_AUTHT}'
     )
     client = MongoClient(
         connect_str, 
         connectTimeoutMS = 50000, 
         serverSelectionTimeoutMS = 50000,
         directConnection=True,
-        replicaSet = "rs0"
+        replicaSet = MONGODB_REPLICASET
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
-    # logging.log(f'Connected to MongoDB with user {auth.mongodb["username"]}.')
     return client
 
 def connect(db=db):
@@ -445,8 +458,8 @@ def make_query(text):
     }
 
 def message(queue: str, msg):
-    credentials = pika.PlainCredentials(auth.rabbitmq["username"], auth.rabbitmq["password"])
-    parameters = pika.ConnectionParameters(host=auth.rabbitmq["host"].split(":")[0], port=int(auth.rabbitmq["host"].split(":")[1]), virtual_host='teleoscope', credentials=credentials)
+    credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
+    parameters = pika.ConnectionParameters(host=RABBITMQ_HOST.split(":")[0], port=int(RABBITMQ_HOST.split(":")[1]), virtual_host='teleoscope', credentials=credentials)
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     channel.basic_publish(exchange='', routing_key=queue, body=json.dumps(msg))

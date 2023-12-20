@@ -9,8 +9,15 @@ from chromadb.config import Settings
 
 from . import schemas
 from . import utils
-from . import auth
 from . import projection
+
+# environment variables
+from dotenv import load_dotenv
+load_dotenv()  # This loads the variables from .env
+import os
+CHROMA_HOST = os.getenv('CHROMA_HOST') 
+CHROMA_PORT = os.getenv('CHROMA_PORT') 
+
 
 ################################################################################
 # Graph API
@@ -313,11 +320,9 @@ def update_search(db: database.Database, search_node, parameters):
 ################################################################################
 
 def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
-    distance = 1.0
-    if "distance" in parameters:
-        distance = parameters["distance"]
     
-    chroma_client = chromadb.HttpClient(host=auth.chroma["host"], port=auth.chroma["port"], settings=Settings(anonymized_telemetry=False))
+    
+    chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=Settings(anonymized_telemetry=False))
     logging.debug("Connected to client {chroma_client}.")
 
     chroma_collection = chroma_client.get_collection(db.name)
@@ -335,6 +340,11 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     
     if len(sources) == 0:
         results = chroma_collection.query(query_embeddings=[list(search_vector)], n_results=10000, include=["distances"])
+        
+        distance = float(np.average(results["distances"][0])) / 2
+        if "distance" in parameters:
+            distance = parameters["distance"]
+
         index = utils.binary_search(results["distances"][0], distance)
         ranks = zip(results["ids"][0][0:index], results["distances"][0][0:index])
         doclists.append({ "ranked_documents": list(ranks), "type": "All"})

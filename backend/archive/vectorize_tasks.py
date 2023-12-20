@@ -12,8 +12,6 @@ simplefilter(action='ignore', category=FutureWarning)
 from dotenv import load_dotenv
 import os
 
-
-
 load_dotenv("./.env.coordinator")
 
 os.getenv('')

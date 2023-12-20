@@ -8,7 +8,6 @@ def main():
     parser.add_argument("--db", help="The database to import documents from.")
     parser.add_argument("--datapath", help="Where to persist the vector DB.")
     
-    
     args = parser.parse_args()
 
     importdb(args.db, args.datapath)

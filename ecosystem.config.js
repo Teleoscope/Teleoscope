@@ -22,6 +22,15 @@ module.exports = {
       watch: false,
       interpreter: "",
       max_memory_restart: "1G"
+    },
+    {
+      name:"chromadb",
+      cwd:"./backend",
+      script:"./chroma.sh",
+      args:"",
+      watch: false,
+      interpreter: "",
+      // max_memory_restart: "1G"
     }
   ]
 };
