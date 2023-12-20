@@ -314,11 +314,16 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
         distance = parameters["distance"]
     
     chroma_client = chromadb.HttpClient(host=auth.chroma["host"], port=auth.chroma["port"])
-    
+    logging.debug("Connected to client {chroma_client}.")
+
     chroma_collection = chroma_client.get_collection(db.name)
+    logging.debug("Found collection {chroma_colection}.")
 
     control_vectors = chroma_collection.get(ids=[str(control) for control in controls], include=["embeddings"])
+    logging.debug("Found vectors {control_vectors} for controls {controls}.")
+
     search_vector = np.average(control_vectors, axis=0)
+    logging.debug("Search vector is: {search_vector}.")
 
     source_map = []
     doclists = []
