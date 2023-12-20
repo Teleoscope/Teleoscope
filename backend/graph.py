@@ -319,10 +319,11 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     chroma_collection = chroma_client.get_collection(db.name)
     logging.debug("Found collection {chroma_colection}.")
 
-    control_vectors = chroma_collection.get(ids=[str(control["id"]) for control in controls], include=["embeddings"])
+    control_oids = get_control_oids(db, controls)
+    control_vectors = chroma_collection.get(ids=[str(control["id"]) for control in control_oids], include=["embeddings"])
     logging.debug("Found vectors {control_vectors} for controls {controls}.")
 
-    search_vector = np.average(control_vectors, axis=0)
+    search_vector = np.average(control_vectors["embeddings"], axis=0)
     logging.debug("Search vector is: {search_vector}.")
 
     source_map = []
@@ -476,6 +477,30 @@ def filter_vectors_by_oid(oids, ids, vectors):
             continue
 
     return vecs
+
+
+def get_control_oids(db: database.Database, controls):
+    oids = []
+    for c in controls:
+        match c["type"]:
+            case "Document":
+                oids.append(c["id"])
+            case "Group":
+                group = db.groups.find_one({"_id": c["id"]})
+                oids = oids + group["history"][0]["included_documents"]
+            case "Search":
+                search = db.searches.find_one({"_id": c["id"]})
+                cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
+                oids = oids + [d["_id"] for d in list(cursor)]
+            case "Note":
+                oids.append(c["id"])
+            case "Union" | "Difference" | "Intersection" | "Exclusion":
+                node = db.graph.find_one({"_id": c["id"]})
+                for doclist in node["doclists"]:
+                        oids = oids + [d[0] for d in doclist["ranked_documents"]]
+    return oids
+
+
 
 def get_control_vectors(db: database.Database, controls, ids, all_vectors):
     oids = []
