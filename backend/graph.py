@@ -4,9 +4,11 @@ from typing import List
 import numpy as np
 import logging
 import bcrypt
+import chromadb
 
 from . import schemas
 from . import utils
+from . import auth
 from . import projection
 
 ################################################################################
@@ -306,6 +308,66 @@ def update_search(db: database.Database, search_node, parameters):
 # Update Teleoscope
 ################################################################################
 
+def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
+    distance = 1.0
+    if "distance" in parameters:
+        distance = parameters["distance"]
+    
+    chroma_client = chromadb.PersistentClient(path=auth["datapath"])
+    chroma_collection = chroma_client.get_collection(db.name)
+
+    control_vectors = chroma_collection.get(ids=[str(control) for control in controls], include=["embeddings"])
+    search_vector = np.average(control_vectors, axis=0)
+
+    source_map = []
+    doclists = []
+    
+    if len(sources) == 0:
+        results = chroma_collection.query(query_embeddings=[search_vector], n_results=10000, include=["distances"])
+        index = utils.binary_search(results["distances"], distance)
+        ranks = zip(results["ids"][0:index], results["distances"][0:index])
+        doclists.append({ "ranked_documents": ranks, "type": "All"})
+    
+    else:
+        for source in sources:
+            match source["type"]:
+                case "Document":
+                    oids = [source["id"]]
+                    results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
+                    source_map.append((source, results["ids"], results["embeddings"]))
+                case "Group":
+                    group = db.groups.find_one({"_id": source["id"]})
+                    oids = group["history"][0]["included_documents"]
+                    results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
+                    source_map.append((source, results["ids"], results["embeddings"]))
+                case "Search":
+                    search = db.searches.find_one({"_id": source["id"]})
+                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1}).limit(rank_slice_length)
+                    oids = [d["_id"] for d in list(cursor)]
+                    results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
+                    source_map.append((source, results["ids"], results["embeddings"]))
+                case "Union" | "Difference" | "Intersection" | "Exclusion":
+                    node = db.graph.find_one({"_id": source["id"]})
+                    node_doclists = node["doclists"]
+                    for doclist in node_doclists:
+                        oids = [d[0] for d in doclist["ranked_documents"]]
+                        results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
+                        source_map.append((source, results["ids"], results["embeddings"]))
+                case "Note":
+                    pass
+
+        for source, source_vecs, source_oids in source_map:
+            ranks = rank(control_vectors, [ObjectId(oid) for oid in source_oids], source_vecs)
+            source["ranked_documents"] = ranks
+            doclists.append(source)
+
+    teleoscope_node["doclists"] = doclists
+    
+    return teleoscope_node
+        
+
+
+
 def update_teleoscope(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
     rank_slice_length = 1000
     if "rank_slice_length" in parameters:
@@ -338,7 +400,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     source_map = []
     
     if len(sources) == 0:
-        ranks = rank(control_vecs, ids, all_vectors, similarity)
+        ranks = rank_similarity(control_vecs, ids, all_vectors, similarity)
         doclists.append({ "ranked_documents": ranks, "type": "All"})
     else:
         for source in sources:
@@ -370,7 +432,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
 
     
     for source, source_vecs, source_oids in source_map:
-        ranks = rank(control_vecs, source_oids, source_vecs, similarity)
+        ranks = rank(control_vecs, source_oids, source_vecs)
         source["ranked_documents"] = ranks
         doclists.append(source)
         
@@ -379,7 +441,17 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     # TODO: matrix
     return teleoscope_node
 
-def rank(control_vecs, ids, vecs, similarity):
+
+def rank(control_vecs, ids, vecs):
+    logging.info(f"There were {len(control_vecs)} control vecs.")
+    vec = np.average(control_vecs, axis=0)
+    scores = utils.calculateSimilarity(vecs, vec)
+    ranks = utils.rankDocumentsBySimilarity(ids, scores)
+    return ranks
+
+
+
+def rank_similarity(control_vecs, ids, vecs, similarity):
     logging.info(f"There were {len(control_vecs)} control vecs.")
     vec = np.average(control_vecs, axis=0)
     scores = utils.calculateSimilarity(vecs, vec)

@@ -77,6 +77,19 @@ export default function Settings(props) {
         defaultColor={settings.color}
         onChange={handleColorChange}
       ></ColorPicker>
+      <Typography>Title Length</Typography>
+      <Slider
+        aria-label="default_title_length"
+        defaultValue={settings.default_title_length}
+        valueLabelDisplay="auto"
+        step={1}
+        min={10}
+        max={200}
+        onChangeCommitted={(event, value) =>
+          handleChange(event, value, "default_title_length")
+        }
+        sx={{ color: settings.color }}
+      />
     </Stack>
   );
 }

@@ -1,3 +1,6 @@
+import { useAppSelector } from "@/util/hooks";
+import { RootState } from "@/stores/store";
+
 // MUI imports
 import Typography from "@mui/material/Typography";
 
@@ -7,14 +10,18 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
-export default function DocumentTitle(props) {
+export default function DocumentTitle({size, color, noWrap, title}) {
+  const settings = useAppSelector((state: RootState) => state.windows.settings);
+  const sliced = title ? title.slice(0, settings.default_title_length) : ""
+  const display = title.length >= sliced.length ? sliced + "..." : title
+
   return (
     <Typography
-      variant={props.size == "small" ? "caption" : "subtitle"}
-      color={props.color ? props.color : "black"}
-      noWrap={props.noWrap}
+      variant={size == "small" ? "caption" : "subtitle"}
+      color={color ? color : "black"}
+      noWrap={noWrap}
     >
-      {props.title}
+      {display}
     </Typography>
   );
 }

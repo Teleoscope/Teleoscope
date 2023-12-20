@@ -15,6 +15,7 @@ const initialState = {
   settings: {
     default_document_width: 200,
     default_document_height: 34,
+    default_title_length: 200,
     defaultExpanded: true,
     color: "#D3D3D3",
   },
