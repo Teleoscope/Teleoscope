@@ -5,6 +5,7 @@ import numpy as np
 import logging
 import bcrypt
 import chromadb
+from chromadb import Documents, EmbeddingFunction, Embeddings
 from chromadb.config import Settings
 
 from . import schemas
@@ -338,12 +339,18 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     doclists = []
     
     if len(sources) == 0:
-        results = chroma_collection.query(query_embeddings=[list(search_vector)], n_results=100, include=["distances"])
-        
-        distance = float(np.average(results["distances"][0])) / 2
+        distance = 0.5
         if "distance" in parameters:
             distance = parameters["distance"]
+        
+        # Get results until distance has been met
+        n_results = 64
+        results = chroma_collection.query(query_embeddings=[list(search_vector)], n_results=n_results, include=["distances"])
+        while results["distances"][0][-1] < distance:
+            n_results = n_results * 2
+            results = chroma_collection.query(query_embeddings=[list(search_vector)], n_results=n_results, include=["distances"])    
 
+        # Cut results off at distance max
         index = utils.binary_search(results["distances"][0], distance)
         ranks = zip(results["ids"][0][0:index], results["distances"][0][0:index])
         doclists.append({ "ranked_documents": list(ranks), "type": "All"})
