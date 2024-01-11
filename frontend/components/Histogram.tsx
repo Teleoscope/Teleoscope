@@ -28,7 +28,7 @@ const Histogram = ({ data }) => {
 
 
     const x = d3.scaleLinear()
-      .domain([0, 1])
+      .domain([0, 1.5])
       .rangeRound([0, width])
       .nice();
 
@@ -79,7 +79,7 @@ const Histogram = ({ data }) => {
         tooltip.transition()
         .duration(200)
         .style("opacity", 0.9);
-        tooltip.html(`Similarity: ${d.x0.toFixed(1)} - ${d.x1.toFixed(1)} <br/> Count: ${d.length}`)
+        tooltip.html(`Distance: ${d.x0.toFixed(1)} - ${d.x1.toFixed(1)} <br/> Count: ${d.length}`)
         .style("left", (event.pageX) + "px")
         .style("top", (event.pageY - 28) + "px");
     })

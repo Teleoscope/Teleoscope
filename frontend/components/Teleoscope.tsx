@@ -24,7 +24,7 @@ function ValueLabelComponent(props) {
   return (
     <Tooltip 
       placement="bottom"
-      title={`Min similarity: ${value}`}
+      title={`${value}`}
     >
       {children}
     </Tooltip>
@@ -32,6 +32,31 @@ function ValueLabelComponent(props) {
 }
 
 
+const DistanceSlider = ({teleoscope, client, color}) => {
+  const handleChange = (event, value) => {
+    client.update_node(teleoscope._id, {distance: value})
+  };
+
+  return <Slider
+  slots={{
+    valueLabel: ValueLabelComponent,
+  }}
+  style={{
+    width: "25%"
+  }}
+  aria-label="Distance"
+  defaultValue={teleoscope["parameters"]["distance"] ? teleoscope["parameters"]["distance"] : "0.4"}
+  valueLabelDisplay="auto"
+  step={0.1}
+  size="small"
+  min={0.1}
+  max={1.5}
+  sx={{ color: color }}
+  onChangeCommitted={(event, value) =>
+    handleChange(event, value)
+  }
+/>
+}
 
 const SimilaritySlider = ({teleoscope, client, color}) => {
   const handleChange = (event, value) => {
@@ -61,6 +86,7 @@ const SimilaritySlider = ({teleoscope, client, color}) => {
 
 
 export default function Teleoscope(props) {
+  const debug = false;
   const [teleoscope_id] = useState(props.id.split("%")[0]);
   const swr = useSWRHook();
   const client = useStomp();
@@ -91,7 +117,7 @@ export default function Teleoscope(props) {
         <Stack direction="row" sx={{ width: "100%" }} spacing={2} alignItems="center" justifyContent="center">
           <Count loading={teleoscope ? false : true} count={teleoscope.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)} /> 
           <Histogram data={teleoscope.doclists[0].ranked_documents}></Histogram>
-          <SimilaritySlider color={color} teleoscope={teleoscope} client={client} />
+          <DistanceSlider color={color} teleoscope={teleoscope} client={client} />
           
         </Stack>
         )
@@ -102,7 +128,7 @@ export default function Teleoscope(props) {
        </Stack>
      }
      else {
-      return <SimilaritySlider color={color} teleoscope={teleoscope} client={client} />
+      return <DistanceSlider color={color} teleoscope={teleoscope} client={client} />
      }
 
 
@@ -126,7 +152,8 @@ export default function Teleoscope(props) {
   return (
     <><ButtonActions inner={[[Status, teleoscope], [CopyToGroup, teleoscope]]}></ButtonActions>
       {teleoscope ? (
-        <DocumentList data={doclists} pagination={true}></DocumentList>
+        <>{debug ? <p>{teleoscope._id}</p> : <></>}
+        <DocumentList data={doclists} pagination={true}></DocumentList></>
       ) : (
         <LoadingButton loading={true} />
       )}
