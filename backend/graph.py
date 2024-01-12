@@ -322,6 +322,10 @@ def update_search(db: database.Database, search_node, parameters):
 
 def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
     
+    if len(controls) == 0:
+        logging.info(f"No controls included. Returning original teleoscope node.")
+        return teleoscope_node
+
     chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=Settings(anonymized_telemetry=False))
     logging.debug("Connected to client {chroma_client}.")
 
@@ -329,7 +333,8 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     logging.debug("Found collection {chroma_colection}.")
 
     control_oids = get_control_oids(db, controls)
-    control_vectors = chroma_collection.get(ids=[str(control) for control in control_oids], include=["embeddings"])
+
+    control_vectors = chroma_collection.get(ids=[str(control) for control in list(set(control_oids))], include=["embeddings"])
     logging.debug("Found vectors {control_vectors} for controls {controls}.")
 
     search_vector = np.average(control_vectors["embeddings"], axis=0)
