@@ -39,5 +39,10 @@
           - ujson
           - tqdm
           - pika
+          - bcrypt
+          - random_object_id
+          - chromadb
+          - pytest
+          - pandas
           - spacy # python -m spacy download en_core_web_sm
         executable: "{{ conda_prefix }}/envs/{{ conda_environment }}/bin/pip"

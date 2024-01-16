@@ -13,7 +13,9 @@ import "@fontsource/roboto/700.css";
 export default function DocumentTitle({size, color, noWrap, title}) {
   const settings = useAppSelector((state: RootState) => state.windows.settings);
   const sliced = title ? title.slice(0, settings.default_title_length) : ""
-  const display = title.length >= sliced.length ? sliced + "..." : title
+  const display = title.length > sliced.length ? sliced + "..." : title
+
+  console.log("title", title, title.length, sliced, sliced.length)
 
   return (
     <Typography
