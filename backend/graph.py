@@ -366,30 +366,30 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
                 case "Document":
                     oids = [source["id"]]
                     results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
-                    source_map.append((source, results["ids"][0], results["embeddings"]))
+                    source_map.append((source, [ObjectId(oid) for oid in results["ids"][0]], results["embeddings"]))
                 case "Group":
                     group = db.groups.find_one({"_id": source["id"]})
                     oids = group["history"][0]["included_documents"]
                     results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
-                    source_map.append((source, results["ids"][0], results["embeddings"]))
+                    source_map.append((source, [ObjectId(oid) for oid in results["ids"][0]], results["embeddings"]))
                 case "Search":
                     search = db.searches.find_one({"_id": source["id"]})
                     cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
                     oids = [d["_id"] for d in list(cursor)]
                     results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
-                    source_map.append((source, results["ids"][0], results["embeddings"]))
+                    source_map.append((source, [ObjectId(oid) for oid in results["ids"][0]], results["embeddings"]))
                 case "Union" | "Difference" | "Intersection" | "Exclusion":
                     node = db.graph.find_one({"_id": source["id"]})
                     node_doclists = node["doclists"]
                     for doclist in node_doclists:
                         oids = [d[0] for d in doclist["ranked_documents"]]
                         results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
-                        source_map.append((source, results["ids"][0], results["embeddings"]))
+                        source_map.append((source, [ObjectId(oid) for oid in results["ids"][0]], results["embeddings"]))
                 case "Note":
                     pass
 
         for source, source_vecs, source_oids in source_map:
-            ranks = rank(control_vectors, [ObjectId(oid) for oid in source_oids], source_vecs)
+            ranks = rank(control_vectors, source_oids, source_vecs)
             source["ranked_documents"] = ranks
             doclists.append(source)
 
