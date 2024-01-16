@@ -355,6 +355,9 @@ def update_ids():
         db.teleoscopes.update_one({"_id": teleoscope["_id"]}, { "$set": { "history": teleoscope["history"] } })
 
 def get_documents(dbstring, rebuild=False):
+    if dbstring == "aita" or dbstring == "brands":
+        pass
+
     # cache embeddings
     from pathlib import Path
     import pickle
