@@ -5,6 +5,7 @@ from tqdm import tqdm
 import heapq
 import re
 import pika
+import os
 
 # installed modules
 from pymongo import MongoClient, database
