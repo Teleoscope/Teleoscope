@@ -179,8 +179,9 @@ def calculateSimilarity(documentVectors, queryVector):
     '''
     # cosine similarity scores. (assumes vectors are normalized to unit length)
     if type(documentVectors) is list:
-
-        documentVectors = np.concatenate( [np.array(v) for v in documentVectors], axis=0 )
+        arrays = [np.array(v) for v in documentVectors]
+        logging.warning(f"Vector shapes: {[a.shape for a in arrays]}")
+        documentVectors = np.concatenate( arrays, axis=0 )
 
 
     scores = queryVector.dot(documentVectors.T).flatten()
