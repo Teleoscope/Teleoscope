@@ -338,7 +338,7 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     control_vectors = chroma_results["embeddings"]
     logging.debug("Found vectors {control_vectors} for controls {controls}.")
 
-    search_vector = np.average(control_vectors["embeddings"], axis=0)
+    search_vector = np.average(control_vectors, axis=0)
     logging.debug("Search vector is: {search_vector}.")
 
     source_map = []
