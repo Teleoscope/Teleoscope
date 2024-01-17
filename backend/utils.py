@@ -25,7 +25,11 @@ from . import schemas
 
 # environment variables
 from dotenv import load_dotenv
-load_dotenv()  # This loads the variables from .env
+env_loaded = load_dotenv()  # This loads the variables from .env
+if not env_loaded:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    env_path = os.path.join(script_dir, '.env')
+    load_dotenv(env_path)
 import os
 
 RABBITMQ_USERNAME = os.getenv('RABBITMQ_USERNAME') 
