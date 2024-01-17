@@ -371,16 +371,16 @@ def update_ids():
         db.teleoscopes.update_one({"_id": teleoscope["_id"]}, { "$set": { "history": teleoscope["history"] } })
 
 
-def get_documents_chromadb(dbstring):
+def get_documents_chromadb(dbstring, limit):
     chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=Settings(anonymized_telemetry=False))
     chroma_collection = chroma_client.get_collection(dbstring)
-    results = chroma_collection.get(include=["embeddings"])
+    results = chroma_collection.get(include=["embeddings"], limit=limit)
     logging.warning(f"Chroma results: {results.keys()}")
 
 
-def get_documents(dbstring, rebuild=False):
+def get_documents(dbstring, rebuild=False, limit=None):
     if dbstring == "aita" or dbstring == "brands":
-        get_documents_chromadb(dbstring)
+        get_documents_chromadb(dbstring, limit)
 
     # cache embeddings
     from pathlib import Path

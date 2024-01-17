@@ -344,7 +344,7 @@ class Projection:
 
         logging.info("Gathering all document vectors from embeddings...")
         # grab all document data from embeddings
-        all_doc_ids, all_doc_vecs = utils.get_documents(self.db.name)
+        all_doc_ids, all_doc_vecs = utils.get_documents(self.db.name, limit=self.n)
         if len(all_doc_ids) < self.n:
             self.n = len(all_doc_ids)
 
