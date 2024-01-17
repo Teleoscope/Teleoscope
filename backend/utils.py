@@ -181,7 +181,7 @@ def calculateSimilarity(documentVectors, queryVector):
     if type(documentVectors) is list:
         arrays = [np.array(v) for v in documentVectors]
         logging.warning(f"Vector shapes: {[a.shape for a in arrays]} and queryVector shape is {queryVector.shape}")
-        documentVectors = np.concatenate( arrays, axis=0 )
+        documentVectors = np.vstack( arrays )
 
 
     scores = queryVector.dot(documentVectors.T).flatten()
