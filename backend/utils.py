@@ -102,6 +102,7 @@ def update_history(item, *args, **kwargs):
         item[k] = kwargs[k]
     return item
 
+
 def push_history(db, collection_name, item_id, history_item, transaction_session = None):
     """
     Update one document and push a history item.
@@ -521,3 +522,84 @@ def binary_search(lst, number):
         else:
             right = mid - 1
     return left if left < len(lst) else -1
+
+
+def filter_vectors_by_oid(oids, ids, vectors):
+    # ids and vecs must correspond
+    # vecs = [vectors[ids.index(oid)] for oid in oids]
+    vecs = []
+    for oid in oids:
+        try:
+            vecs.append(vectors[ids.index(oid)])
+        except ValueError:
+            continue
+
+    return vecs
+
+
+def rank(control_vecs, ids, source_vecs):
+    logging.info(f"There were {len(control_vecs)} control vecs and {len(source_vecs)} source vecs.")
+    vec = np.average(control_vecs, axis=0)
+    scores = calculateSimilarity(source_vecs, vec)
+    ranks = rankDocumentsBySimilarity(ids, scores)
+    return ranks
+
+
+def rank_similarity(control_vecs, ids, vecs, similarity):
+    logging.info(f"There were {len(control_vecs)} control vecs.")
+    vec = np.average(control_vecs, axis=0)
+    scores = calculateSimilarity(vecs, vec)
+    ranks = rankDocumentsBySimilarityThreshold(ids, scores, similarity)
+    logging.info(f"Found {len(ranks)} documents at similarity {similarity}.")
+    return ranks
+
+
+def get_oids(db: database.Database, controls):
+    oids = []
+    for c in controls:
+        match c["type"]:
+            case "Document":
+                oids.append(c["id"])
+            case "Group":
+                group = db.groups.find_one({"_id": c["id"]})
+                oids = oids + group["history"][0]["included_documents"]
+            case "Search":
+                search = db.searches.find_one({"_id": c["id"]})
+                cursor = db.documents.find(make_query(search["history"][0]["query"]),projection={ "_id": 1})
+                oids = oids + [d["_id"] for d in list(cursor)]
+            case "Note":
+                oids.append(c["id"])
+            case "Union" | "Difference" | "Intersection" | "Exclusion":
+                node = db.graph.find_one({"_id": c["id"]})
+                for doclist in node["doclists"]:
+                        oids = oids + [d[0] for d in doclist["ranked_documents"]]
+    return oids
+
+
+def get_vectors(db: database.Database, controls, ids, all_vectors):
+    oids = []
+    notes = []
+    for c in controls:
+        match c["type"]:
+            case "Document":
+                oids.append(c["id"])
+            case "Group":
+                group = db.groups.find_one({"_id": c["id"]})
+                oids = oids + group["history"][0]["included_documents"]
+            case "Search":
+                search = db.searches.find_one({"_id": c["id"]})
+                cursor = db.documents.find(make_query(search["history"][0]["query"]),projection={ "_id": 1})
+                oids = oids + [d["_id"] for d in list(cursor)]
+            case "Note":
+                note = db.notes.find_one({"_id": c["id"]})
+                notes.append(note)
+            case "Union" | "Difference" | "Intersection" | "Exclusion":
+                node = db.graph.find_one({"_id": c["id"]})
+                for doclist in node["doclists"]:
+                        oids = oids + [d[0] for d in doclist["ranked_documents"]]
+                    
+    note_vecs = [np.array(note["textVector"]) for note in notes]
+    filtered_vecs = filter_vectors_by_oid(oids, ids, all_vectors)
+    out_vecs = filtered_vecs + note_vecs
+    logging.info(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
+    return out_vecs

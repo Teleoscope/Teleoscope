@@ -72,6 +72,7 @@ class Projection:
         self.user_groups = []
         self.doc_groups = []
 
+
     def clustering_task(self):
         """Cluster documents using user-defined groups.
         """
@@ -86,6 +87,7 @@ class Projection:
         self.doclists = self.user_groups + self.doclists
 
         return self.doclists
+
 
     def learn_clusters(self):
         """ Learn cluster labels: build distance matrix, run dimensionality reduction, run clustering
@@ -244,14 +246,8 @@ class Projection:
 
         return given_labels
     
-    def document_ordering(self):
-        """ Build a training set besed on the average of groups' document vectors
 
-        Returns:
-            dm:
-                a diagonal matrix containing where elements are distances between documents
-        """
-
+    def create_temp_groups(self):
         for c in self.controls:
             match c["type"]:
                 case "Document":
@@ -342,6 +338,19 @@ class Projection:
                 case "Note":
                     pass
 
+
+
+    def document_ordering(self):
+        """ Build a training set besed on the average of groups' document vectors
+
+        Returns:
+            dm:
+                a diagonal matrix containing where elements are distances between documents
+        """
+
+        logging.info("Creating tempporary groups...")
+        self.create_temp_groups()
+        
         logging.info("Gathering all document vectors from embeddings...")
         # grab all document data from embeddings
         all_doc_ids, all_doc_vecs = utils.get_documents(self.db.name, limit=self.n)

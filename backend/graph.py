@@ -332,7 +332,7 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     chroma_collection = chroma_client.get_collection(db.name)
     logging.debug("Found collection {chroma_colection}.")
 
-    control_oids = get_control_oids(db, controls)
+    control_oids = utils.get_oids(db, controls)
 
     chroma_results = chroma_collection.get(ids=[str(control) for control in list(set(control_oids))], include=["embeddings"])
     control_vectors = [np.array(v) for v in chroma_results["embeddings"]]
@@ -390,7 +390,7 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
                     pass
 
         for source, source_oids, source_vecs in source_map:
-            ranks = rank(control_vectors, source_oids, source_vecs)
+            ranks = utils.rank(control_vectors, source_oids, source_vecs)
             source["ranked_documents"] = ranks
             doclists.append(source)
 
@@ -427,45 +427,45 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     if len(ids) == 0 or len(all_vectors) == 0:
         raise Exception("Zero-length vector sources. Were vectors downloaded?")
     
-    control_vecs = get_control_vectors(db, controls, ids, all_vectors)
+    control_vecs = utils.get_vectors(db, controls, ids, all_vectors)
 
     doclists = []
     source_map = []
     
     if len(sources) == 0:
-        ranks = rank_similarity(control_vecs, ids, all_vectors, similarity)
+        ranks = utils.rank_similarity(control_vecs, ids, all_vectors, similarity)
         doclists.append({ "ranked_documents": ranks, "type": "All"})
     else:
         for source in sources:
             match source["type"]:
                 case "Document":
                     oids = [source["id"]]
-                    vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
+                    vecs = np.array(utils.filter_vectors_by_oid(oids, ids, all_vectors))
                     source_map.append((source, vecs, oids))
                 case "Group":
                     group = db.groups.find_one({"_id": source["id"]})
                     oids = group["history"][0]["included_documents"]
-                    vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
+                    vecs = np.array(utils.filter_vectors_by_oid(oids, ids, all_vectors))
                     source_map.append((source, vecs, oids))
                 case "Search":
                     search = db.searches.find_one({"_id": source["id"]})
                     cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1}).limit(rank_slice_length)
                     oids = [d["_id"] for d in list(cursor)]
-                    vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
+                    vecs = np.array(utils.filter_vectors_by_oid(oids, ids, all_vectors))
                     source_map.append((source, vecs, oids))
                 case "Union" | "Difference" | "Intersection" | "Exclusion":
                     node = db.graph.find_one({"_id": source["id"]})
                     node_doclists = node["doclists"]
                     for doclist in node_doclists:
                         oids = [d[0] for d in doclist["ranked_documents"]]
-                        vecs = np.array(filter_vectors_by_oid(oids, ids, all_vectors))
+                        vecs = np.array(utils.filter_vectors_by_oid(oids, ids, all_vectors))
                         source_map.append((doclist, vecs, oids))
                 case "Note":
                     pass
 
     
     for source, source_vecs, source_oids in source_map:
-        ranks = rank(control_vecs, source_oids, source_vecs)
+        ranks = utils.rank(control_vecs, source_oids, source_vecs)
         source["ranked_documents"] = ranks
         doclists.append(source)
         
@@ -475,85 +475,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     return teleoscope_node
 
 
-def rank(control_vecs, ids, source_vecs):
-    logging.info(f"There were {len(control_vecs)} control vecs and {len(source_vecs)} source vecs.")
-    vec = np.average(control_vecs, axis=0)
-    scores = utils.calculateSimilarity(source_vecs, vec)
-    ranks = utils.rankDocumentsBySimilarity(ids, scores)
-    return ranks
 
-
-def rank_similarity(control_vecs, ids, vecs, similarity):
-    logging.info(f"There were {len(control_vecs)} control vecs.")
-    vec = np.average(control_vecs, axis=0)
-    scores = utils.calculateSimilarity(vecs, vec)
-    ranks = utils.rankDocumentsBySimilarityThreshold(ids, scores, similarity)
-    logging.info(f"Found {len(ranks)} documents at similarity {similarity}.")
-    return ranks
-
-def filter_vectors_by_oid(oids, ids, vectors):
-    # ids and vecs must correspond
-    # vecs = [vectors[ids.index(oid)] for oid in oids]
-    vecs = []
-    for oid in oids:
-        try:
-            vecs.append(vectors[ids.index(oid)])
-        except ValueError:
-            continue
-
-    return vecs
-
-
-def get_control_oids(db: database.Database, controls):
-    oids = []
-    for c in controls:
-        match c["type"]:
-            case "Document":
-                oids.append(c["id"])
-            case "Group":
-                group = db.groups.find_one({"_id": c["id"]})
-                oids = oids + group["history"][0]["included_documents"]
-            case "Search":
-                search = db.searches.find_one({"_id": c["id"]})
-                cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
-                oids = oids + [d["_id"] for d in list(cursor)]
-            case "Note":
-                oids.append(c["id"])
-            case "Union" | "Difference" | "Intersection" | "Exclusion":
-                node = db.graph.find_one({"_id": c["id"]})
-                for doclist in node["doclists"]:
-                        oids = oids + [d[0] for d in doclist["ranked_documents"]]
-    return oids
-
-
-
-def get_control_vectors(db: database.Database, controls, ids, all_vectors):
-    oids = []
-    notes = []
-    for c in controls:
-        match c["type"]:
-            case "Document":
-                oids.append(c["id"])
-            case "Group":
-                group = db.groups.find_one({"_id": c["id"]})
-                oids = oids + group["history"][0]["included_documents"]
-            case "Search":
-                search = db.searches.find_one({"_id": c["id"]})
-                cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
-                oids = oids + [d["_id"] for d in list(cursor)]
-            case "Note":
-                note = db.notes.find_one({"_id": c["id"]})
-                notes.append(note)
-            case "Union" | "Difference" | "Intersection" | "Exclusion":
-                node = db.graph.find_one({"_id": c["id"]})
-                for doclist in node["doclists"]:
-                        oids = oids + [d[0] for d in doclist["ranked_documents"]]
-                    
-    note_vecs = [np.array(note["textVector"]) for note in notes]
-    filtered_vecs = filter_vectors_by_oid(oids, ids, all_vectors)
-    out_vecs = filtered_vecs + note_vecs
-    logging.info(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
-    return out_vecs
 
 
 ################################################################################
