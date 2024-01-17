@@ -334,7 +334,8 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
 
     control_oids = get_control_oids(db, controls)
 
-    control_vectors = chroma_collection.get(ids=[str(control) for control in list(set(control_oids))], include=["embeddings"])
+    chroma_results = chroma_collection.get(ids=[str(control) for control in list(set(control_oids))], include=["embeddings"])
+    control_vectors = chroma_results["embeddings"]
     logging.debug("Found vectors {control_vectors} for controls {controls}.")
 
     search_vector = np.average(control_vectors["embeddings"], axis=0)
@@ -389,14 +390,7 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
                     pass
 
         for source, source_vecs, source_oids in source_map:
-            try:
-                ranks = rank(control_vectors, source_oids, source_vecs)
-            except Exception as e:
-                logging.warning(f'control vectors: {control_vectors}')
-                logging.warning(f'source oids: {source_oids}')
-                logging.warning(f'source vectors: {source_vecs}')
-                raise e
-
+            ranks = rank(control_vectors, source_oids, source_vecs)
             source["ranked_documents"] = ranks
             doclists.append(source)
 
