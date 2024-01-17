@@ -389,7 +389,7 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
                 case "Note":
                     pass
 
-        for source, source_vecs, source_oids in source_map:
+        for source, source_oids, source_vecs in source_map:
             ranks = rank(control_vectors, source_oids, source_vecs)
             source["ranked_documents"] = ranks
             doclists.append(source)
@@ -481,7 +481,6 @@ def rank(control_vecs, ids, vecs):
     scores = utils.calculateSimilarity(control_vecs, vec)
     ranks = utils.rankDocumentsBySimilarity(ids, scores)
     return ranks
-
 
 
 def rank_similarity(control_vecs, ids, vecs, similarity):

@@ -182,7 +182,6 @@ def calculateSimilarity(documentVectors, queryVector):
         documentVectors = np.concatenate( documentVectors, axis=0 )
     scores = queryVector.dot(documentVectors.T).flatten()
     
-        
     return scores
 
 # def rankDocumentsBySimilarity(documents_ids, scores):
