@@ -177,10 +177,15 @@ def getAllDocuments(db, projection, batching=True, batchSize=10000):
 def calculateSimilarity(documentVectors, queryVector):
     '''Calculate similarity
     '''
+
+
+
     # cosine similarity scores. (assumes vectors are normalized to unit length)
     if type(documentVectors) is list:
         documentVectors = np.concatenate( documentVectors, axis=0 )
+
     scores = queryVector.dot(documentVectors.T).flatten()
+    
     
     return scores
 
