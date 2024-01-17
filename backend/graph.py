@@ -389,7 +389,14 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
                     pass
 
         for source, source_vecs, source_oids in source_map:
-            ranks = rank(control_vectors, source_oids, source_vecs)
+            try:
+                ranks = rank(control_vectors, source_oids, source_vecs)
+            except Exception as e:
+                logging.warning(f'control vectors: {control_vectors}')
+                logging.warning(f'source oids: {source_oids}')
+                logging.warning(f'source vectors: {source_vecs}')
+                raise e
+
             source["ranked_documents"] = ranks
             doclists.append(source)
 
