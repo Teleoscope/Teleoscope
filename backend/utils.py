@@ -376,6 +376,7 @@ def get_documents_chromadb(dbstring, limit):
     chroma_collection = chroma_client.get_collection(dbstring)
     results = chroma_collection.get(include=["embeddings"], limit=limit)
     logging.warning(f"Chroma results: {results.keys()}")
+    return results
 
 
 def get_documents(dbstring, rebuild=False, limit=None):
