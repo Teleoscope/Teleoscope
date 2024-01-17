@@ -478,8 +478,6 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
 def rank(control_vecs, ids, source_vecs):
     logging.info(f"There were {len(control_vecs)} control vecs and {len(source_vecs)} source vecs.")
     vec = np.average(control_vecs, axis=0)
-    logging.info(f"Control vec list: {len(control_vecs)}.")
-    logging.info(f"Control vec: {len(vec)}.")
     scores = utils.calculateSimilarity(source_vecs, vec)
     ranks = utils.rankDocumentsBySimilarity(ids, scores)
     return ranks
