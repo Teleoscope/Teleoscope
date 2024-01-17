@@ -335,7 +335,7 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     control_oids = get_control_oids(db, controls)
 
     chroma_results = chroma_collection.get(ids=[str(control) for control in list(set(control_oids))], include=["embeddings"])
-    control_vectors = chroma_results["embeddings"]
+    control_vectors = [np.array(v) for v in chroma_results["embeddings"]]
     logging.debug("Found vectors {control_vectors} for controls {controls}.")
 
     search_vector = np.average(control_vectors, axis=0)
@@ -478,7 +478,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
 def rank(control_vecs, ids, vecs):
     logging.info(f"There were {len(control_vecs)} control vecs.")
     vec = np.average(control_vecs, axis=0)
-    scores = utils.calculateSimilarity(np.vstack([np.array(v) for v in vecs]), vec)
+    scores = utils.calculateSimilarity(control_vecs, vec)
     ranks = utils.rankDocumentsBySimilarity(ids, scores)
     return ranks
 
