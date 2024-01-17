@@ -15,6 +15,10 @@ from json import JSONEncoder
 from typing import List
 import datetime
 import unicodedata
+import chromadb
+from chromadb import Documents, EmbeddingFunction, Embeddings
+from chromadb.config import Settings
+
 
 # local files
 from . import schemas
@@ -33,6 +37,10 @@ MONGODB_PASSWORD = os.getenv('MONGODB_PASSWORD')
 MONGODB_HOST = os.getenv('MONGODB_HOST') 
 MONGODB_AUTHT = os.getenv('MONGODB_AUTHT')
 MONGODB_REPLICASET = os.getenv('MONGODB_REPLICASET')
+
+CHROMA_HOST = os.getenv('CHROMA_HOST') 
+CHROMA_PORT = os.getenv('CHROMA_PORT') 
+
 
 db = "test"
 
@@ -357,9 +365,17 @@ def update_ids():
             history_item['negative_docs'] = oid_arr
         db.teleoscopes.update_one({"_id": teleoscope["_id"]}, { "$set": { "history": teleoscope["history"] } })
 
+
+def get_documents_chromadb(dbstring):
+    chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=Settings(anonymized_telemetry=False))
+    chroma_collection = chroma_client.get_collection(dbstring)
+    results = chroma_collection.get(include=["embeddings"])
+    logging.warning(f"Chroma results: {results.keys()}")
+
+
 def get_documents(dbstring, rebuild=False):
     if dbstring == "aita" or dbstring == "brands":
-        pass
+        get_documents_chromadb(dbstring)
 
     # cache embeddings
     from pathlib import Path
