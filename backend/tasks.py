@@ -949,7 +949,7 @@ def add_note(*args, database: str, userid: str, workflow_id: str,
     )
 
     res = db.notes.insert_one(note)
-    utils.add_chromadb(database, ids=[res.inserted_id], texts=[""], metadatas=[{"type": "Note"}])
+    utils.add_chromadb(database, ids=[res.inserted_id], texts=[""])
     
     workflow = db.sessions.find_one({"_id": workflow_id})
     

@@ -426,14 +426,14 @@ def get_vectors(db: database.Database, controls, ids, all_vectors):
     return out_vecs
 
 
-def add_chromadb(dbstring, ids=[], texts=[], metadatas=None):
+def add_chromadb(dbstring, ids=[], texts=[]):
     chroma_client = get_chroma_client()
     chroma_collection = chroma_client.get_collection(dbstring)
-    chroma_collection.add(ids=[str(id) for id in ids], documents=texts, metadatas=metadatas)
+    chroma_collection.add(ids=[str(id) for id in ids], documents=texts)
 
 
 def update_chromadb(dbstring, ids=[], texts=[], metadatas=None):
     logging.warning(f"DB: {dbstring}; ids: {ids}; texts: {texts}, metadatas: {metadatas} ")
     chroma_client = get_chroma_client()
     chroma_collection = chroma_client.get_collection(dbstring)
-    chroma_collection.update(ids=[str(id) for id in ids], documents=texts, metadatas=metadatas)
+    chroma_collection.update(ids=[str(id) for id in ids], documents=texts)
