@@ -78,10 +78,18 @@ class Projection:
         """
 
         # build distance matrix, run dimensionality reduction, run clustering
-        self.learn_clusters()
+        try:
+            self.learn_clusters()
+        except Exception as e:
+            self.log("Failure to learn clusters. Try again.")
+            raise e
 
         # iteratively add clusters (as groups) to database
-        self.build_clusters()
+        try:
+            self.build_clusters()
+        except Exception as e:
+            self.log("Failure to build clusters. Try again.")
+            raise e
 
         # append updated user groups to head
         self.doclists = self.user_groups + self.doclists
