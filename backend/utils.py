@@ -375,7 +375,7 @@ def update_ids():
 def get_embeddings(dbstring, oids):
     chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=Settings(anonymized_telemetry=False))
     chroma_collection = chroma_client.get_collection(dbstring)
-    results = chroma_collection.get(ids=oids, include=["embeddings"])
+    results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
     return results
 
 
