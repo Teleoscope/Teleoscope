@@ -949,6 +949,7 @@ def add_note(*args, database: str, userid: str, workflow_id: str,
     )
 
     res = db.notes.insert_one(note)
+    utils.add_chromadb(database, ids=[res.inserted_id], texts=[""], metadatas=[{"type": "Note"}])
     
     workflow = db.sessions.find_one({"_id": workflow_id})
     
@@ -984,7 +985,6 @@ def update_note(*args, database: str, userid: str, workflow_id: str,
                  f'workflow {workflow_id} and user {userid}.')
     #---------------------------------------------------------------------------
 
-
     note = db.notes.find_one({"_id": note_id})
     history_item = utils.update_history(
         item=note["history"][0],
@@ -996,11 +996,17 @@ def update_note(*args, database: str, userid: str, workflow_id: str,
     res = utils.push_history(db, "notes", note_id, history_item)
     
     text = " ".join([block["text"] for block in content["blocks"]])
-    vector = vectorize_text(text)
-    logging.info(f"Vectorized note with text: {text}.")
     
-    db.notes.update_one({"_id": note_id}, {"$set": { "textVector": vector, "text": text }})
+    # Ensure mongodb is updated
+    db.notes.update_one({"_id": note_id}, {"$set": { "text": text }})
     logging.info(f"Updated note {note_id} with {res}.")
+    
+    # Ensure embedding is updated
+    utils.update_chromadb(database, note_id, text)
+    logging.info(f"Updating note {note_id} embedding.")
+
+    
+
 
 @app.task
 def relabel_note(*args, database: str, userid: str, workflow_id: str,

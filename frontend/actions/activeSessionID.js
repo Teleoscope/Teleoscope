@@ -21,20 +21,6 @@ export const ActiveSessionID = createSlice({
       state.userid = action.payload;
     },
   },
-  // extraReducers: (builder) => {
-  //   builder
-  //     .addCase(fetchInitialState.pending, (state) => {
-  //       state.loading = true;
-  //     })
-  //     .addCase(fetchInitialState.fulfilled, (state, action) => {
-  //       state.loading = false;
-  //       state.data = action.payload;
-  //     })
-  //     .addCase(fetchInitialState.rejected, (state, action) => {
-  //       state.loading = false;
-  //       state.error = action.error.message;
-  //     });
-  // },
 });
 
 // Action creators are generated for each case reducer function

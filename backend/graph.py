@@ -397,8 +397,6 @@ def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: Li
     teleoscope_node["doclists"] = doclists
     
     return teleoscope_node
-        
-
 
 
 def update_teleoscope(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
