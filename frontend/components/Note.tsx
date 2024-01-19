@@ -18,7 +18,10 @@ export default function Note(props) {
   const swr = useSWRHook();
   const { note } = swr.useSWRAbstract("note", `note/${id}`, {
     onSuccess: (data, key, config) => {
-      setEditorState(handleLoad(data))
+      // Only reload if not focused
+      if (!(document.activeElement === editor.current)) {
+        setEditorState(handleLoad(data))
+      }
     }
   });
 
