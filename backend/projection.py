@@ -406,9 +406,10 @@ class Projection:
                 
                 # see if document is already in training sets
                 if id not in document_ids:
-                    vector = utils.get_embeddings(self.db.name, [id])["embeddings"][0]
+                    vector = np.array(utils.get_embeddings(self.db.name, [id])["embeddings"][0])
+                    logging.info(f"Shape of new vector {vector.shape}. Shape of top vector: {document_vectors[0].shape}. ")
                     
-                    document_vectors = np.append(document_vectors, np.array(vector), axis=0)
+                    document_vectors = np.append(document_vectors, vector, axis=0)
                     # get index of document in group with respect to training sets    
                     document_ids.append(id)
                 

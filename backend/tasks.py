@@ -1370,10 +1370,10 @@ def vectorize_text(text): #(text) -> Vector
     '''
     print("is this here 2")
 
-    import tensorflow_hub as hub 
-    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-    vector = embed([text]).numpy()[0].tolist()
-    return vector
+    # import tensorflow_hub as hub 
+    # embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    # vector = embed([text]).numpy()[0].tolist()
+    # return vector
     
 
 
@@ -1485,15 +1485,15 @@ def vectorize_and_upload_text(text, database, id): #(text) -> Vector
     purpose: This function is used to return a vectorized version of the text
             (Assumes the text is error free)
     '''
-    import tensorflow_hub as hub
-    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    # import tensorflow_hub as hub
+    # embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 
-    vector = embed([text]).numpy()[0].tolist()
+    # vector = embed([text]).numpy()[0].tolist()
     db = utils.connect(db=database)
     db.documents.update_one(
         {"_id": ObjectId(str(id))},
         { "$set": {
-            "textVector" : vector
+            # "textVector" : vector
         }}
     )
     print(f"Vectorized and uploaded {id}.")
