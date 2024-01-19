@@ -1,13 +1,10 @@
-import logging, pickle, json, numpy as np
+import logging, json, numpy as np
 import uuid
-from scipy.sparse import csc_matrix
 from warnings import simplefilter
-from celery import Celery, chain
+from celery import Celery
 from bson.objectid import ObjectId
-from kombu import Consumer, Exchange, Queue
-import datetime
+from kombu import  Exchange, Queue
 from typing import List
-from pymongo import client_session, database
 import os
 
 # local imports
@@ -1354,7 +1351,6 @@ def vectorize_document(document): #(text) -> Vector
     '''
     ## Call vectorize_text in this function - based on the text that you're getting from the document - second step after vectorize_text works
     print("is this here")
-    import tensorflow_hub as hub
     if 'error' not in document:
         document['vector'] = vectorize_text([document['title']])
         document['textVector'] = vectorize_text([document['text']])

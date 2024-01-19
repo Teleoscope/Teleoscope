@@ -402,13 +402,8 @@ class Projection:
 
                 # if not add document to training sets
                 except:
-                    document = self.db.documents.find_one(
-                        {"_id": id},
-                        projection={'textVector': 1},
-                    )
-                    if not document: raise Exception(f"Document {str(id)} not found")
+                    vector = utils.get_embeddings(self.db.name, [id]["embeddings"])[0]
                     document_ids.append(id)
-                    vector = np.array(document["textVector"]).reshape((1, 512))
                     document_vectors = np.append(document_vectors, vector, axis=0)
 
                 # get index of document in group with respect to training sets
