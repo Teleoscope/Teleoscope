@@ -405,20 +405,13 @@ class Projection:
                 id = ObjectId(str(str_id))
                 
                 # see if document is already in training sets
-                try:
-                    document_ids.index(id)
-
-                # if not add document to training sets
-                except ValueError:
+                if id not in document_ids:
                     vector = utils.get_embeddings(self.db.name, [id])["embeddings"][0]
-                    
                     document_vectors = np.append(document_vectors, vector, axis=0)
-                    
                     # get index of document in group with respect to training sets    
                     document_ids.append(id)
                 
-                finally:
-                    indices.append(document_ids.index(id))
+                indices.append(document_ids.index(id))
                     
 
             group_doc_indices[group["history"][0]["label"]] = indices
