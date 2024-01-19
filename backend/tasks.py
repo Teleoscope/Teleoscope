@@ -1002,7 +1002,7 @@ def update_note(*args, database: str, userid: str, workflow_id: str,
     logging.info(f"Updated note {note_id} with {res}.")
     
     # Ensure embedding is updated
-    utils.update_chromadb(database, note_id, text)
+    utils.update_chromadb(database, [note_id], text)
     logging.info(f"Updating note {note_id} embedding.")
 
     
