@@ -363,7 +363,7 @@ class Projection:
         logging.info("Gathering document embeddings...")
         
         # grab all document data from embeddings
-        document_embeddings = utils.get_embeddings(self.db.name, document_ids)
+        document_embeddings = utils.get_embeddings(self.db.name, document_ids)["embeddings"]
         
         # if sources = 0: average ordering of conrolls for all[30000]
         logging.info('Gathering Document IDs...')
@@ -600,7 +600,7 @@ class Projection:
                 clean_text.append(lemma.lower())
         return " ".join(clean_text) 
     
-    
+
     def add_cluster(self, documents, label, color, description):
         """
         Adds a cluster to projection
