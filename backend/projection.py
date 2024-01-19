@@ -131,7 +131,7 @@ class Projection:
             min_dist=min_dist
         ).fit_transform(dm)
         
-        self.log({"_id": self.pid}, { "$set": { "status": "clustering... (3/4)"} })
+        self.log("clustering... (3/4)")
 
         logging.info("Running HDBSCAN clustering...")
         logging.info('---------------------------------------')
