@@ -231,6 +231,7 @@ class Projection:
         for group in self.doc_groups:
             self.db.groups.delete_one({"_id": group}) 
 
+
     def get_given_labels(self):
         """ Build the given_labels dictionary
 
@@ -407,7 +408,6 @@ class Projection:
                 # see if document is already in training sets
                 if id not in document_ids:
                     vector = np.array(utils.get_embeddings(self.db.name, [id])["embeddings"][0])
-                    logging.info(f"Shape of new vector {vector.shape}. Shape of top vector: {document_vectors[0].shape}. ")
                     
                     document_vectors = np.vstack((document_vectors, vector))
                     # get index of document in group with respect to training sets    
