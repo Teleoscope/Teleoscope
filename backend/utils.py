@@ -432,11 +432,10 @@ def add_chromadb(dbstring, ids=[], texts=[], metadatas=None):
     default_ef = embedding_functions.DefaultEmbeddingFunction()
     chroma_collection = chroma_client.get_collection(dbstring, embedding_function=default_ef)
     chroma_collection.add(ids=[str(id) for id in ids], documents=texts, metadatas=metadatas)
-    
+
 
 def update_chromadb(dbstring, ids=[], texts=[], metadatas=None):
     chroma_client = get_chroma_client()
     default_ef = embedding_functions.DefaultEmbeddingFunction()
     chroma_collection = chroma_client.get_collection(dbstring, embedding_function=default_ef)
-    chroma_collection = chroma_client.get_collection(dbstring)
     chroma_collection.update(ids=[str(id) for id in ids], documents=texts, metadatas=metadatas)
