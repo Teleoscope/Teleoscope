@@ -1,7 +1,6 @@
-import React, { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Editor, EditorState, convertFromRaw, convertToRaw } from "draft-js";
 import "draft-js/dist/Draft.css";
-import lodash from 'lodash';
 
 // mui
 import Stack from "@mui/material/Stack";
@@ -15,58 +14,51 @@ import { useStomp } from "@/util/Stomp";
 
 export default function Note(props) {
   const id = props.id.split("%")[0];
-  const swr = useSWRHook();
-  const { note } = swr.useSWRAbstract("note", `note/${id}`, {
-    onSuccess: (data, key, config) => {
-      // Only reload if not focused
-      if (!(document.activeElement === editor.current)) {
-        setEditorState(handleLoad(data))
-      }
-    }
-  });
+    const swr = useSWRHook();
+    const { data: noteData, error } = swr.useSWRAbstract("note", `note/${id}`);
 
-  const client = useStomp();
-  const editor = React.useRef(null);
+    const client = useStomp();
+    const editor = useRef(null);
 
-  const debouncedSave = useRef(
-    lodash.debounce((e, client) => {
-      const content = e.getCurrentContent();
-      client.update_note(id, convertToRaw(content));
-    }, 1000)  // waits 5000 ms after the last call
-  ).current;
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [editorState, setEditorState] = useState(() => EditorState.createEmpty());
 
-  useEffect(() => {
-    return () => {
-      debouncedSave.cancel();
+    const handleLoad = (note) => {
+        if (note) {
+            const item = note["history"][0];
+            if (item && Object.keys(item.content).length > 0) {
+                return EditorState.createWithContent(convertFromRaw(item["content"]));
+            }
+        }
+        return EditorState.createEmpty();
     };
-  }, []);
 
- 
-  const handleLoad = (note) => {
-    if (note) {
-      const item = note["history"][0];
-      if (item && Object.keys(item.content).length > 0) {
-        return EditorState.createWithContent(convertFromRaw(item["content"]));
-      }
-    }
-    return EditorState.createEmpty();
-  };
+    // Initialize the editor state only once when the component mounts or `id` changes
+    useEffect(() => {
+        if (noteData && !isLoaded) {
+            setEditorState(handleLoad(noteData));
+            setIsLoaded(true);  // Mark as loaded
+        }
+    }, [noteData, isLoaded]);
 
-  const [editorState, setEditorState] = React.useState(() => handleLoad(note));
 
-  // Handlers
-  const handleBlur = () => {
-    const content = editorState.getCurrentContent();
-  };
+    // Handlers
+    const handleBlur = () => {
+        const content = editorState.getCurrentContent();
+        client.update_note(id, convertToRaw(content));
+    };
 
-  const handleOnChange = (e) => {
-    setEditorState(e);
-    debouncedSave(e, client);
-  };
+    const handleFocus = () => {
+        const content = editorState.getCurrentContent();
+    };
 
-  const focusEditor = () => {
-    editor.current.focus();
-  };
+    const handleOnChange = (e) => {
+        setEditorState(e);
+    };
+
+    const focusEditor = () => {
+        editor.current.focus();
+    };
 
   return (
     <Card
@@ -90,6 +82,7 @@ export default function Note(props) {
             ref={editor}
             editorState={editorState}
             onBlur={handleBlur}
+            onFocus={handleFocus}
             onChange={handleOnChange}
 
             placeholder={"Type here..."}
