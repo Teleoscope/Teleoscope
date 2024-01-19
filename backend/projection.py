@@ -409,7 +409,7 @@ class Projection:
                     document_ids.index(id)
 
                 # if not add document to training sets
-                except:
+                except ValueError:
                     vector = utils.get_embeddings(self.db.name, [id]["embeddings"])[0]
                     document_ids.append(id)
                     document_vectors = np.append(document_vectors, vector, axis=0)
