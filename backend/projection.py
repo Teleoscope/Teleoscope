@@ -33,7 +33,7 @@ class Projection:
             projection_id,
             ordering, 
             separation,
-            limit=20000, 
+            limit=20000,
             topic_label_length=2):
         """Initializes the instance 
 
@@ -89,12 +89,16 @@ class Projection:
         return self.doclists
 
 
+    def log(self, message):
+        self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": message} })
+
+
     def learn_clusters(self):
         """ Learn cluster labels: build distance matrix, run dimensionality reduction, run clustering
         """
 
         # build training set
-        self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "processing source input... (1/4)"} })
+        self.log("processing source input... (1/4)")
         dm = self.document_ordering()
 
         """
@@ -118,7 +122,7 @@ class Projection:
 
 
         logging.info("Running UMAP Reduction...")
-        self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "projecting control input... (2/4)"} })
+        self.log("projecting control input... (2/4)")
         
         umap_embeddings = umap.UMAP(
             metric = "precomputed", # use distance matrix
@@ -127,7 +131,7 @@ class Projection:
             min_dist=min_dist
         ).fit_transform(dm)
         
-        self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "clustering... (3/4)"} })
+        self.log({"_id": self.pid}, { "$set": { "status": "clustering... (3/4)"} })
 
         logging.info("Running HDBSCAN clustering...")
         logging.info('---------------------------------------')
@@ -174,7 +178,7 @@ class Projection:
         """ Iteratively builds groups in mongoDB relative to clustering
         """
 
-        self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": "labelling clusters... (4/4)"} })
+        self.log("labelling clusters... (4/4)")
 
         # identify what machine label was given to each group
         given_labels = self.get_given_labels()
@@ -351,90 +355,31 @@ class Projection:
         logging.info("Creating tempporary groups...")
         self.create_temp_groups()
         
-        logging.info("Gathering all document vectors from embeddings...")
+        # Get unique document ids
+        document_ids = list(set(utils.get_oids(self.db, self.sources, exclude=["Note"])))
+        self.n = len(document_ids)
+        logging.info(f"n = {self.n}")
+ 
+        logging.info("Gathering document embeddings...")
+        
         # grab all document data from embeddings
-        all_doc_ids, all_doc_vecs = utils.get_documents(self.db.name, limit=self.n)
-        if len(all_doc_ids) < self.n:
-            self.n = len(all_doc_ids)
-
+        document_embeddings = utils.get_embeddings(self.db.name, document_ids)
+        
         # if sources = 0: average ordering of conrolls for all[30000]
         logging.info('Gathering Document IDs...')
 
-        if len(self.sources) == 0:
-            
-            logging.info(f"n = {self.n}")
+        # if sources > 0: sources U controls 
+        logging.info(f'{len(self.sources)} sources. Combining docs from sources...')
 
-            if self.ordering == "average":
-                logging.info('No sources. Using average ordering...')
-                
-                # build a list of ids of documents in all groups 
-                docs = []
-                for group in self.groups:
-                    group_document_ids = group["history"][0]["included_documents"]
-                    docs += group_document_ids
-                
-                # get control vectors
-                control_vecs = [all_doc_vecs[all_doc_ids.index(oid)] for oid in docs]
-                source_vecs = np.array(all_doc_vecs)
-                ranks = graph.rank(control_vecs, all_doc_ids, source_vecs)
-                document_ids = [i for i,s in ranks[0:self.n]]
-            
-            if self.ordering == "random":
-                logging.info('No sources. Using random ordering...')
-                document_ids = random.sample(all_doc_ids, self.n)
-
-        else:
-            # if sources > 0: sources U controls 
-            logging.info(f'{len(self.sources)} sources. Combining docs from sources...')
-
-            document_ids = []
-            full_search_input = False # check to disallow more than one full search input
-
-            for source in self.sources:
-                match source["type"]:
-                    case "Document":
-                        document_ids.append(source["id"])
-
-                    case "Group":
-                        group = self.db.groups.find_one({"_id": source["id"]})
-                        docs =  group["history"][0]["included_documents"]
-                        document_ids += [ObjectId(str(id)) for id in docs]
-
-                    case "Search":
-                        search = self.db.searches.find_one({"_id": source["id"]})
-                        query = search["history"][0]["query"]
-                        
-                        if query != "":
-                            cursor = self.db.documents.find(utils.make_query(query),projection={ "_id": 1}).limit(self.n)
-                            document_ids += [d["_id"] for d in list(cursor)]
-                        elif query == "" and full_search_input is False:
-                            document_ids += random.sample(all_doc_ids, self.n)
-                            full_search_input = True
-
-                    case "Union" | "Difference" | "Intersection" | "Exclusion":
-                        node = self.db.graph.find_one({"_id": source["id"]})
-                        node_doclists = node["doclists"]
-                        for doclist in node_doclists:
-                            document_ids += [d[0] for d in doclist["ranked_documents"]]
-
-                    case "Note":
-                        pass
-            
-            # remove duplicate ids
-            document_ids = list(set(document_ids))
-            self.n = len(document_ids)
-            logging.info(f"n = {self.n}")
-
- 
         # Create a dictionary to store the indices of all_doc_ids
-        index_dict = {all_doc_ids[i]: i for i in range(len(all_doc_ids))}
+        index_dict = {document_ids[i]: i for i in range(len(document_ids))}
 
         # Get the indices of document_ids using the dictionary
         indices = [index_dict[i] for i in document_ids]
 
         logging.info('Gathering Document Vectors...')
         # use indices of ranked ids to build sorted array of document vectors
-        document_vectors = np.array([all_doc_vecs[i] for i in indices])
+        document_vectors = np.array([document_embeddings[i] for i in indices])
         if len(indices) == 0:
             document_vectors = np.empty((0, 512))
         # dict where keys are group names and values are indices of documents
@@ -502,6 +447,7 @@ class Projection:
 
         return dm
 
+
     def get_label(self, hdbscan_label, given_labels):
         """Identify and produce label & colour for given hdbscan label
 
@@ -545,6 +491,7 @@ class Projection:
 
         # return for if label is newly generated machine cluster
         return 'machine', '#737373', ''
+
 
     def get_topic(self, label_ids, topic_labels):
         """Provides a topic label for a machine cluster
@@ -618,6 +565,7 @@ class Projection:
                 label += " " + feature_names[sorting[0][i]]
                 i += 1
 
+
     def preprocess(self, doc):
         """Preprocess text
 
@@ -651,6 +599,7 @@ class Projection:
                 lemma = token.lemma_  # Take the lemma of the word
                 clean_text.append(lemma.lower())
         return " ".join(clean_text) 
+    
     
     def add_cluster(self, documents, label, color, description):
         """

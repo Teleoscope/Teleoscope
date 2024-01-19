@@ -488,6 +488,10 @@ def update_projection(db: database.Database, projection_node, sources: List, con
         logging.info(f"No controls included. Returning original projection node.")
         return projection_node
     
+    if len(sources) == 0:
+        logging.info(f"No sources included. Returning original projection node.")
+        return projection_node
+    
     if len(controls) == 1:
         match controls[0]["type"]:
             case "Search" | "Note":

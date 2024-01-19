@@ -372,11 +372,17 @@ def update_ids():
         db.teleoscopes.update_one({"_id": teleoscope["_id"]}, { "$set": { "history": teleoscope["history"] } })
 
 
+def get_embeddings(dbstring, oids):
+    chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=Settings(anonymized_telemetry=False))
+    chroma_collection = chroma_client.get_collection(dbstring)
+    results = chroma_collection.get(ids=oids, include=["embeddings"])
+    return results
+
+
 def get_documents_chromadb(dbstring, limit):
     chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=Settings(anonymized_telemetry=False))
     chroma_collection = chroma_client.get_collection(dbstring)
     results = chroma_collection.get(include=["embeddings"], limit=limit)
-    logging.warning(f"Chroma results: {results.keys()}")
     return results
 
 
@@ -554,25 +560,45 @@ def rank_similarity(control_vecs, ids, vecs, similarity):
     return ranks
 
 
-def get_oids(db: database.Database, controls):
+def get_oids(db: database.Database, sources, exclude=[]):
     oids = []
-    for c in controls:
+    for c in sources:
         match c["type"]:
             case "Document":
-                oids.append(c["id"])
+                if not "Document" in exclude:
+                    oids.append(c["id"])
             case "Group":
-                group = db.groups.find_one({"_id": c["id"]})
-                oids = oids + group["history"][0]["included_documents"]
+                if not "Group" in exclude:
+                    group = db.groups.find_one({"_id": c["id"]})
+                    oids = oids + group["history"][0]["included_documents"]
             case "Search":
-                search = db.searches.find_one({"_id": c["id"]})
-                cursor = db.documents.find(make_query(search["history"][0]["query"]),projection={ "_id": 1})
-                oids = oids + [d["_id"] for d in list(cursor)]
+                if not "Search" in exclude:
+                    search = db.searches.find_one({"_id": c["id"]})
+                    cursor = db.documents.find(make_query(search["history"][0]["query"]),projection={ "_id": 1})
+                    oids = oids + [d["_id"] for d in list(cursor)]
             case "Note":
-                oids.append(c["id"])
-            case "Union" | "Difference" | "Intersection" | "Exclusion":
-                node = db.graph.find_one({"_id": c["id"]})
-                for doclist in node["doclists"]:
-                        oids = oids + [d[0] for d in doclist["ranked_documents"]]
+                if not "Note" in exclude:
+                    oids.append(c["id"])
+            case "Union":
+                if not "Union" in exclude:
+                    node = db.graph.find_one({"_id": c["id"]})
+                    for doclist in node["doclists"]:
+                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
+            case "Difference":
+                if not "Difference" in exclude:
+                    node = db.graph.find_one({"_id": c["id"]})
+                    for doclist in node["doclists"]:
+                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
+            case "Intersection": 
+                if not "Intersection" in exclude:
+                    node = db.graph.find_one({"_id": c["id"]})
+                    for doclist in node["doclists"]:
+                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
+            case "Exclusion":
+                if not "Exclusion" in exclude:
+                    node = db.graph.find_one({"_id": c["id"]})
+                    for doclist in node["doclists"]:
+                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
     return oids
 
 
