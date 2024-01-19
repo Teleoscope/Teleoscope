@@ -159,10 +159,10 @@ def getDocumentVector(db, document_id):
     documentVector = np.array(document['textVector']) # extract vector of document which was liked/disliked
     return documentVector
 
-def loadModel():
-    import tensorflow_hub as hub
-    model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-    return model
+# def loadModel():
+#     import tensorflow_hub as hub
+#     model = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+#     return model
 
 def getAllDocuments(db, projection, batching=True, batchSize=10000):
     if not batching:

@@ -409,7 +409,7 @@ class Projection:
                     vector = np.array(utils.get_embeddings(self.db.name, [id])["embeddings"][0])
                     logging.info(f"Shape of new vector {vector.shape}. Shape of top vector: {document_vectors[0].shape}. ")
                     
-                    document_vectors = np.append(document_vectors, vector, axis=0)
+                    document_vectors = np.vstack(document_vectors, vector)
                     # get index of document in group with respect to training sets    
                     document_ids.append(id)
                 
