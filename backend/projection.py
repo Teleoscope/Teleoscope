@@ -394,10 +394,10 @@ class Projection:
             indices = []
 
             for str_id in group_document_ids:
-
+                id = ObjectId(str(str_id))
+                
                 # see if document is already in training sets
                 try:
-                    id = ObjectId(str(str_id))
                     document_ids.index(id)
 
                 # if not add document to training sets
