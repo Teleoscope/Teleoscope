@@ -15,8 +15,6 @@ export default function DocumentTitle({size, color, noWrap, title}) {
   const sliced = title ? title.slice(0, settings.default_title_length) : ""
   const display = title.length > sliced.length ? sliced + "..." : title
 
-  console.log("title", title, title.length, sliced, sliced.length)
-
   return (
     <Typography
       variant={size == "small" ? "caption" : "subtitle"}

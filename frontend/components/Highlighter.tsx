@@ -24,7 +24,6 @@ export default function Highlighter({ children }) {
       const highlighted = parts.map((part, index) => {
         if (regex.test(part)) {
           const highlighted_span = `<span key="${index}" style="background-color: yellow">${part}</span>`
-          console.log("span", highlighted_span)
           return highlighted_span
         } else {
           return part
@@ -35,7 +34,6 @@ export default function Highlighter({ children }) {
       
     }
     const safeHtml = DOMPurify.sanitize(highlight(children));
-    console.log("safe",safeHtml)
 
       return (
         <div dangerouslySetInnerHTML={{ __html: safeHtml }} />

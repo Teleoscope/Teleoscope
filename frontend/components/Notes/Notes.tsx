@@ -51,7 +51,7 @@ export default function Notes(props) {
       client.add_note(session_id, e.target.value, content);
     };
 
-
+    
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
       <NewItemForm 

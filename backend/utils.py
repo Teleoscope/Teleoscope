@@ -288,6 +288,7 @@ def make_query(text):
         ]
     }
 
+
 def message(queue: str, msg):
     credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
     parameters = pika.ConnectionParameters(host=RABBITMQ_HOST.split(":")[0], port=int(RABBITMQ_HOST.split(":")[1]), virtual_host='teleoscope', credentials=credentials)

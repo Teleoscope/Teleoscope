@@ -313,10 +313,6 @@ function Flow(props) {
       lodash.throttle((client, sessionId, bookmarks, nodes, edges) => {
         const node_size = new TextEncoder().encode(JSON.stringify(nodes)).length / 1024
         const edge_size = new TextEncoder().encode(JSON.stringify(edges)).length / 1024
-
-        console.log("save_UI_state", node_size, edge_size, sessionId, bookmarks, nodes, edges)
-        
-
         client.save_UI_state(sessionId, bookmarks, nodes, edges);
       }, 5000)  // waits 5000 ms after the last call
     ).current;

@@ -12,6 +12,8 @@ import FolderIcon from "@mui/icons-material/Folder";
 import { CgPathIntersect, CgPathExclude, CgPathFront, CgPathUnite } from 'react-icons/cg';
 import { RiBookmark3Line } from 'react-icons/ri';
 import { BsStickies, BsSticky } from 'react-icons/bs';
+import { HiSortDescending } from "react-icons/hi";
+
 
 import { IconContext } from "react-icons";
 
@@ -22,7 +24,7 @@ import SourceNode from "@/components/Nodes/SourceNode";
 
 
 // custom
-import Note from "@/components/Note";
+import Note from "@/components/Notes/Note";
 import FABMenu from "@/components/FABMenu";
 import Group from "@/components/Groups/Group";
 import Document from "@/components/Documents/Document";
@@ -33,7 +35,7 @@ import Groups from "@/components/Groups/Groups";
 import Clusters from "@/components/Cluster/Clusters";
 import Projection from "@/components/Cluster/Projection";
 import ProjectionPalette from "@/components/Cluster/ProjectionPalette";
-import Notes from "@/components/Notes";
+import Notes from "@/components/Notes/Notes";
 
 
 import Intersection from "@/components/Operations/Intersection";
@@ -117,9 +119,9 @@ export default class WindowDefinitions {
         type:      "Teleoscope",
         apipath:   "graph",
         nodetype:  TargetNode,      
-        title:     (d) => d?.type,
+        title:     (d) => "Rank",
         color:     (d) => this.color,
-        icon:      (d) => <FlareIcon sx={{ color: this.color }} fontSize="inherit" />,
+        icon:      (d) => <IconContext.Provider value={{size: "1em", color: this.color}}><HiSortDescending style={{ display: "inline" }} /></IconContext.Provider>,
         component: (w, id, color) => <Teleoscope id={id} windata={w} color={color} />,
       },
       Teleoscopes: {
@@ -129,7 +131,7 @@ export default class WindowDefinitions {
         nodetype:  WindowNode,      
         title:     function () {return this.type},
         color:     () => this.color,
-        icon:      () => <FlareIcon sx={this.style()} fontSize="inherit" />,
+        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><HiSortDescending style={{ display: "inline" }} /></IconContext.Provider>,
         component: (w, id, color) => <Teleoscopes id={id} windata={w} color={color} />,
       },
       Cluster: {

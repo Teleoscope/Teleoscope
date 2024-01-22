@@ -1,6 +1,6 @@
 import Stack from "@mui/material/Stack";
 import Groups from "@/components/Groups/Groups";
-import Notes from "@/components/Notes";
+import Notes from "@/components/Notes/Notes";
 import Bookmarks from "@/components/Bookmarks";
 import Setttings from "@/components/Settings";
 import AccordionSection from "@/components/Sidebar/AccordionSection";
