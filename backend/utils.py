@@ -182,6 +182,10 @@ def get_documents_chromadb(dbstring, limit):
     return results
 
 
+def get_distance_matrix(vectors, distance):
+    return distance(vectors)
+
+
 def get_documents(dbstring, rebuild=False, limit=None):
     if dbstring == "aita" or dbstring == "brands":
         get_documents_chromadb(dbstring, limit)

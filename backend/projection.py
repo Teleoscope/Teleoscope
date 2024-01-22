@@ -420,8 +420,11 @@ class Projection:
 
         # build distance matrix
         logging.info("Building distance matrix...")
-        dm = cosine_distances(document_vectors)
+        
+        
+        dm = utils.get_distance_matrix(document_vectors, cosine_distances)
         logging.info(f"Distance matrix has shape {dm.shape}.") # n-by-n symmetrical matrix
+        logging.info(f"Max distance is {np.max(dm)} and min distance is {np.min(dm)}.")
 
         # update distance matrix such that documents in the same group have distance ~0
         INTRA_CLUSTER_DISTANCE = 1e-3
