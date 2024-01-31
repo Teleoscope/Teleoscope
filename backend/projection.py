@@ -125,7 +125,7 @@ class Projection:
         """
 
         n_components = random.randint(7, 12) #7
-        n_neighbors = random.randint(10, 15) #15 
+        n_neighbors = random.randint(5, 15) #15 
         min_dist = random.uniform(1e-4, 0.05) # 0.029184 # 1e-4
 
 
