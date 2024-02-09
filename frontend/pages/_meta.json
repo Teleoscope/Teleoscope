@@ -6,6 +6,10 @@
   "signin": {
     "title": "Sign in/Sign up",
     "href": "/signin"
+  },
+  "preprint": {
+    "title": "Read Preprint",
+    "href": "/preprint"
   }
 }
 
