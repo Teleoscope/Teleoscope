@@ -74,6 +74,10 @@ export const CopyTextAction = (props) => {
   );
 };
 
+function replaceSpecialChars(str) {
+  return str.replace(/[:\\\/\?\*\[\]]/g, '_');
+}
+
 
 // Button Action Functions
 export const SaveXLSXAction = (props) => {
@@ -87,11 +91,11 @@ export const SaveXLSXAction = (props) => {
     groups.forEach((group) => {
       const docs = group.documents;  
       const doc_map = docs.map((doc) => {
-        const ret = { ...doc, ...doc.metadata, ...{ label: group.history[0].label } };
+        const ret = { ...doc, ...doc.metadata, ...{ label: replaceSpecialChars(group.history[0].label) } };
         return ret
       });
       const worksheet = utils.json_to_sheet(doc_map);
-      utils.book_append_sheet(workbook, worksheet, group.history[0].label);
+      utils.book_append_sheet(workbook, worksheet, replaceSpecialChars(group.history[0].label));
     })
 
     writeFile(workbook, `${label}.xlsx`, { compression: true });  
