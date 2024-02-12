@@ -75,7 +75,7 @@ export const CopyTextAction = (props) => {
 };
 
 function replaceSpecialChars(str) {
-  return str.replace(/[:\\\/\?\*\[\]]/g, '_');
+  return str.replace(/[\\/:*?[\]]/g, '_');
 }
 
 
