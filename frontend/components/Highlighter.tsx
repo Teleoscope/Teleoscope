@@ -9,14 +9,14 @@ export default function Highlighter({ children }) {
         .reduce((acc, n) => n.length > 0 ? acc.concat(n) : acc, [])
         
     const highlight = (text) => {
-      
+      const regstring = query.join('|');
       if (query.length === 0 || regstring == `/\b()\b/gi` || (query.length == 1 && query[0] == '') ) {
         // Return text without highlighting if query is empty
         return text;
       }
 
     
-      const regex = new RegExp(query.join('|'), 'gi');
+      const regex = new RegExp(regstring, 'gi');
       
       const parts = text ? text.split(regex) : []
 
