@@ -96,7 +96,7 @@ export default function FABMenu(props) {
           sx={{ color: settings.color }}
           key={action}
           icon={wdefs.definitions()[action].icon()}
-          tooltipTitle={actionMap["action"]}
+          tooltipTitle={actionMap[action]}
           tooltipPlacement="right"
           tooltipOpen={settings.showFABToolTip}
           onClick={() =>
