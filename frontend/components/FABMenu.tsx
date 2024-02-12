@@ -37,6 +37,19 @@ export default function FABMenu(props) {
     "Exclusion"
   ]
 
+  const actionMap = {
+    "Search": "Search",
+    "Group": "Group",
+    "Teleoscope": "Rank",
+    "Projection": "Projection",
+    "Note": "Note",
+    "Divider": "Divider",
+    "Union": "Union",
+    "Difference": "Difference",
+    "Intersection": "Intersection",
+    "Exclusion":" Exclusion"
+  }
+
   const handleAddNode = (type) => {
     dispatch(makeNode({
       client: client,
@@ -83,7 +96,7 @@ export default function FABMenu(props) {
           sx={{ color: settings.color }}
           key={action}
           icon={wdefs.definitions()[action].icon()}
-          tooltipTitle={action}
+          tooltipTitle={actionMap["action"]}
           tooltipPlacement="right"
           tooltipOpen={settings.showFABToolTip}
           onClick={() =>
