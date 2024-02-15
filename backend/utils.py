@@ -67,7 +67,6 @@ def make_client():
         connect_str, 
         connectTimeoutMS = 50000, 
         serverSelectionTimeoutMS = 50000,
-        directConnection=True,
         replicaSet = MONGODB_REPLICASET
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
