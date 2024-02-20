@@ -13,7 +13,7 @@ export default {
       <meta property="og:description" content="Large document set exploration" />
     </>
   ),
-  editLink: false,
+  editLink: null,
   logo: <span>Teleoscope</span>,
   project: {
     link: "https://teleoscope.ca",
