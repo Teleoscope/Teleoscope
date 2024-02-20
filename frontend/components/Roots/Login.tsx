@@ -74,6 +74,8 @@ const validateUsername = async (username) => {
       } else {
         console.log("Error", response)
       }
+    } else {
+      console.log("Error in username/password" )
     }
   };
 
