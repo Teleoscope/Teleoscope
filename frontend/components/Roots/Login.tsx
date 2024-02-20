@@ -63,7 +63,7 @@ const validateUsername = async (username) => {
   const handleSubmit = async (event) => {
     console.log("Submitting...")
     event.preventDefault(); // Prevent form submission
-    if (!passwordError && !usernameError && password && username) {
+    if (!passwordError && password && username) {
       const response = await signIn("credentials", {
         redirect: false,
         username,
