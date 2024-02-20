@@ -70,6 +70,8 @@ const validateUsername = async (username) => {
       });
       if (response?.ok) {
         router.push('/dashboard');
+      } else {
+        console.log("Error", response)
       }
     }
   };
