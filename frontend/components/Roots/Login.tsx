@@ -61,7 +61,7 @@ const validateUsername = async (username) => {
   };
 
   const handleSubmit = async (event) => {
-    console.log("Submitting...")
+    
     event.preventDefault(); // Prevent form submission
     if (!passwordError && password && username) {
       const response = await signIn("credentials", {
@@ -72,10 +72,8 @@ const validateUsername = async (username) => {
       if (response?.ok) {
         router.push('/dashboard');
       } else {
-        console.log("Error", response)
       }
     } else {
-      console.log("Error in username/password" )
     }
   };
 
