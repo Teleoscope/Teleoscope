@@ -71,10 +71,8 @@ const validateUsername = async (username) => {
       });
       if (response?.ok) {
         router.push('/dashboard');
-      } else {
       }
-    } else {
-    }
+    } 
   };
 
   return (
