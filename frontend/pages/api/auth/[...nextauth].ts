@@ -55,7 +55,7 @@ export const authOptions = {
           method: 'POST',
           body: JSON.stringify(credentials),
           headers: { "Content-Type": "application/json" }
-        })
+        }).catch(error => console.error('Fetch failed:', error));
         
         const user = await res.json()
 
