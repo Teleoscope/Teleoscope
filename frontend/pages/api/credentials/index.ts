@@ -9,6 +9,7 @@ import bcrypt from 'bcryptjs';
 import { MongoClient } from "mongodb";
 
 export default async (req, res) => {
+  console.log("at least we got here")
   const client = await new MongoClient(process.env.MONGODB_REGISTRAR_URI).connect();
   const db = await client.db("users");
 
@@ -29,6 +30,7 @@ export default async (req, res) => {
         "id": user._id,
       })
     } else {
+      console.log("Credentials", compare)
       client.close()
       return res.status(401)
     }
@@ -48,7 +50,6 @@ export default async (req, res) => {
       })
     } catch (error) {
       console.log("Credentials", error)
-      client.close()
       return res.status(401)
     }
   }
