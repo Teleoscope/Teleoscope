@@ -47,7 +47,7 @@ export default async (req, res) => {
         "id": newUser.insertedId.toString(),
       })
     } catch (error) {
-      
+      console.log("Credentials", error)
       client.close()
       return res.status(401)
     }
