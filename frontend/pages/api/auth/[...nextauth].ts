@@ -6,6 +6,9 @@ const useSecureCookies = process.env.NEXT_PUBLIC_NEXTAUTH_URL.startsWith("https:
 const cookiePrefix = useSecureCookies ? "__Secure-" : "";
 const domain = process.env.NEXT_PUBLIC_NEXTAUTH_URL.split("//")[1].split(":")[0]
 
+
+const hostName = new URL(getEnvVar("NEXTAUTH_URL")).hostname;
+
 export const authOptions = {
   pages: {
     signIn: '/signin',
@@ -21,7 +24,7 @@ export const authOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        domain: domain,
+        domain: '.' + domain,
         secure: useSecureCookies,
       },
     },
