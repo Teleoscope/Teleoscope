@@ -16,7 +16,7 @@ export default async (req, res) => {
   const credentials = req.body;
 
   const user = await db.collection("users").findOne({ username: credentials.username });
-  
+  console.log("user", user)
   const saltRounds = 10;  
   const salt = bcrypt.genSaltSync(saltRounds);
   const hash = bcrypt.hashSync(credentials.password, salt);
