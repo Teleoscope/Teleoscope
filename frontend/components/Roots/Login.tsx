@@ -24,7 +24,7 @@ const LoginForm = () => {
   const validateUsername = () => {
     setUsernameError("")
 
-    fetch(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${event.target.value}`)
+    fetch(`${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${event.target.value}`)
     .then(resp => {
         return resp.json()
     }).then(data => {

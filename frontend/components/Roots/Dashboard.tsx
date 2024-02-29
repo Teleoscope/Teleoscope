@@ -13,7 +13,7 @@ const fetcher = (...args) => fetch(...args).then(res => res.json())
 
 const ExistingWorkspace = ({workspace, color}) => {
     const [contributor, setContributor] = useState("");    
-    const { data: coll } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${contributor}`, fetcher)
+    const { data: coll } = useSWR(`${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${contributor}`, fetcher)
     const [open, setOpen] = useState(false);
 
     const handleTextChange = (event, ws) => {
@@ -231,7 +231,7 @@ export default function Dashboard() {
     const { data: session, status } = useSession();
     const { data: user, error } = useSWR(`/api/user/${session?.user?.id}`, fetcher);
     
-    const { data: workspaces } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/workspaces`, fetcher)
+    const { data: workspaces } = useSWR(`${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/workspaces`, fetcher)
 
     if (error || status != "authenticated" || !session) {
         return <div>Looks like you forgot to sign in. <Link href="/">Click here to return to the home page.</Link></div>
