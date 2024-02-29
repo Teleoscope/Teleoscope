@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Teleoscope frontend package.",
   "scripts": {
-    "dev": "next dev",
-    "proxy": "npx local-ssl-proxy --key localhost-key.pem --cert localhost.pem --source 3001 --target 3000",
+    "dev": "next dev -p 3001",
+    "proxy": "npx local-ssl-proxy --key localhost-key.pem --cert localhost.pem --source 3002 --target 3001",
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "eslint package.json"

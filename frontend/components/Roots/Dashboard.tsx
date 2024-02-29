@@ -12,6 +12,11 @@ import CloseIcon from '@mui/icons-material/Close';
 const fetcher = (...args) => fetch(...args).then(res => res.json())
 
 const ExistingWorkspace = ({workspace, color}) => {
+
+    // Use window.location to determine the host dynamically
+    const protocol = window.location.protocol;
+    const host = window.location.host; // Includes hostname and port if applicable
+
     const [contributor, setContributor] = useState("");    
     const { data: coll } = useSWR(`${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/users/${contributor}`, fetcher)
     const [open, setOpen] = useState(false);

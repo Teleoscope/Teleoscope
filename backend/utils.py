@@ -27,12 +27,16 @@ from . import schemas
 
 # environment variables
 from dotenv import load_dotenv
-env_loaded = load_dotenv()  # This loads the variables from .env
-if not env_loaded:
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    env_path = os.path.join(script_dir, '.env')
-    load_dotenv(env_path)
 import os
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(script_dir, '.env')
+if os.path.isfile(env_path):
+    load_dotenv(env_path) # This loads the variables from module .env
+else:
+    env_loaded = load_dotenv()  # This loads the variables from working directory .env
+
+
 
 RABBITMQ_USERNAME = os.getenv('RABBITMQ_USERNAME') 
 RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD') 
@@ -63,7 +67,6 @@ def make_client():
         connect_str, 
         connectTimeoutMS = 50000, 
         serverSelectionTimeoutMS = 50000,
-        directConnection=True,
         replicaSet = MONGODB_REPLICASET
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
