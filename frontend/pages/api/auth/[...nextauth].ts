@@ -52,7 +52,7 @@ export const authOptions = {
         // You can also use the `req` object to obtain additional parameters
         // (i.e., the request IP address)
         console.log("Request", req)
-        const res = await fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/credentials`, {
+        const res = await fetch(`https://${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/credentials`, {
           method: 'POST',
           body: JSON.stringify(credentials),
           headers: { "Content-Type": "application/json" }
