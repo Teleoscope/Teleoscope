@@ -8,6 +8,8 @@ import space from 'color-space';
 import rgbHex from 'rgb-hex';
 import themeConfig from "theme.config";
 import CloseIcon from '@mui/icons-material/Close';
+import { FileUpload } from 'primereact/fileupload';
+
 
 const fetcher = (...args) => fetch(...args).then(res => res.json())
 
@@ -232,6 +234,8 @@ const Workspaces = ({workspaces, color}) => {
 }
 
 
+
+
 export default function Dashboard() {
     const { data: session, status } = useSession();
     const { data: user, error } = useSWR(`/api/user/${session?.user?.id}`, fetcher);
@@ -248,7 +252,9 @@ export default function Dashboard() {
         color: color
     }
 
-        
+    
+   
+
     return (
         <Stack spacing={2} sx={{margin: "2em"}}>
             <Stack direction="row" justifyContent="space-between" >
@@ -263,7 +269,11 @@ export default function Dashboard() {
             your request. Subreddits are provided courtesy of <Link style={linkstyle} href="https://pushshift.io/">pushshift.io</Link> and are up 
             to date on their schedule, which is roughly within two months.</Typography>
             
+            <FileUpload name="demo[]" url={'/api/upload'} multiple accept=".csv,.xlsx" maxFileSize={1000000} emptyTemplate={<p className="m-0">Drag and drop files to here to upload.</p>} />
+
             <Workspaces workspaces={workspaces} color={color} />
+
+
         </Stack>
         
     )
