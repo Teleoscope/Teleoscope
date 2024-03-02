@@ -31,7 +31,7 @@ export async function getServerSideProps(context) {
         session: null,
         workflow: null,
         workflow_id: null,
-        req: context.req
+        req: null
       }
     }
   }
@@ -114,7 +114,7 @@ export default function Home({workspace, database, workflow, workflow_id, req}) 
       )
   }
 
-  if (!database || status === "loading") {
+  if (!req || !database || status === "loading") {
     return (
       <div>Loading...</div>
     )
