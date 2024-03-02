@@ -50,7 +50,7 @@ const ExistingWorkspace = ({workspace, color}) => {
       );
     
     const handleDelete = (c) => {
-        fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/contributors/remove`, {
+        fetch(`${host}/api/contributors/remove`, {
             method: 'POST',
             body: JSON.stringify({contributor_id: c, workspace_id: workspace["_id"]}),
             headers: { "Content-Type": "application/json" }
@@ -60,7 +60,7 @@ const ExistingWorkspace = ({workspace, color}) => {
     const handleKeyDown = (event) => {
         if ((event.key === 'Return' || event.key === 'Enter' || event.keyCode === 13) && coll?.found) {
             setOpen(true)
-            fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/contributors/add`, {
+            fetch(`${host}/api/contributors/add`, {
                 method: 'POST',
                 body: JSON.stringify({contributor: contributor, workspace_id: workspace["_id"]}),
                 headers: { "Content-Type": "application/json" }
@@ -118,7 +118,7 @@ const NewWorkspace = ({color}) => {
     const handleClick = () => {
         
         if (!validateLabel()) {
-            fetch(`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/workspace`, {
+            fetch(`${host}/api/workspace`, {
                 method: 'POST',
                 body: JSON.stringify({label: label, datasource: newWorkspaceSource}),
                 headers: { "Content-Type": "application/json" }

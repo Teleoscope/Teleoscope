@@ -30,7 +30,8 @@ export async function getServerSideProps(context) {
         database: null,
         session: null,
         workflow: null,
-        workflow_id: null
+        workflow_id: null,
+        req: context.req
       }
     }
   }
@@ -80,14 +81,15 @@ export async function getServerSideProps(context) {
       database: database,
       session: session,
       workflow: outflow,
-      workflow_id: workflow_id.toString()
+      workflow_id: workflow_id.toString(),
+      req: context.req
     }
   }
 
 }
 
 
-export default function Home({workspace, database, workflow, workflow_id}) {
+export default function Home({workspace, database, workflow, workflow_id, req}) {
   
 
   const { data: session, status } = useSession()
@@ -105,7 +107,7 @@ export default function Home({workspace, database, workflow, workflow_id}) {
   if (status === "unauthenticated") {
     return (
       <p> 
-        <a href={`${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/auth/signin`}> 
+        <a href={`${req.headers.host}/api/auth/signin`}> 
         Not signed in. Sign in here.
         </a>
       </p>
