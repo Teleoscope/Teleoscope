@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-export function UploadForm() {
+export default function Uploader() {
   const [file, setFile] = useState<File>()
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
