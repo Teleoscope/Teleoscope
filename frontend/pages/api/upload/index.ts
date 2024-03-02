@@ -1,42 +1,39 @@
 // Import necessary modules
-import { promises as fs } from 'fs';
-import formidable from 'formidable';
+import { writeFile } from 'fs/promises';
 import { authOptions } from 'pages/api/auth/[...nextauth]';
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from "next-auth/next";
 
-// Disable Next.js body parsing
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-export default async function handler(req, res) {
+// Define the handler function
+async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
 
   if (!session) {
-    res.status(401).json({ message: "You must be logged in." });
-    return;
+    return res.status(401).json({ message: "You must be logged in." });
   }
 
-  const data = await new Promise((resolve, reject) => {
-    const form = new formidable.IncomingForm();
-    form.parse(req, (err, fields, files) => {
-      if (err) reject(err);
-      resolve({ fields, files });
-    });
-  });
+  try {
+    const data = await req.formData();
+    const file = data.get('file');
 
-  const file = data.files.file;
+    if (!file || typeof file === 'string') {
+      return res.status(400).json({ success: false, message: 'No file uploaded or invalid file data.' });
+    }
 
-  if (!file) {
-    return res.status(400).json({ success: false, message: 'No file uploaded.' });
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // With the file data in the buffer, you can do whatever you want with it.
+    // For this example, we'll just write it to the filesystem in a new location
+    const path = `/tmp/${file.name}`;
+    await writeFile(path, buffer);
+    console.log(`open ${path} to see the uploaded file`);
+
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error processing the upload:', error);
+    return res.status(500).json({ success: false, message: 'Server error processing the file.' });
   }
-
-  const fileContent = await fs.readFile(file.filepath);
-  const path = `/tmp/${file.originalFilename}`;
-  await fs.writeFile(path, fileContent);
-  console.log(`open ${path} to see the uploaded file`);
-
-  return res.status(200).json({ success: true });
 }
+
+// Export the handler as the default export
+export default handler;
