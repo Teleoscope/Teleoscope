@@ -47,6 +47,8 @@ const handler = async (req, res) => {
   if (!file) {
     // If no file is uploaded, return an error
     return res.status(400).json({ success: false, message: 'No file uploaded.' });
+  } else {
+    console.log(file)
   }
 
   // Process the uploaded file
