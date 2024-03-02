@@ -53,8 +53,6 @@ export const authOptions = {
         // e.g. return { id: 1, name: 'J Smith', email: 'jsmith@example.com' }
         // You can also use the `req` object to obtain additional parameters
         // (i.e., the request IP address)
-        console.log("Request", req)
-        
         var user = await checkCredentials(req)
         
         // If no error and we have user data, return it
