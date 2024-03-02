@@ -42,7 +42,7 @@ const handler = async (req, res) => {
   });
 
   // Extract the file from the parsed data
-  const file = data.files.file;
+  const file = data.files.file[0];
 
   if (!file) {
     // If no file is uploaded, return an error
