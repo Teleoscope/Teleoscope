@@ -1,31 +1,37 @@
-/**
- * /api/workspaces/[workspace]
- * workspace: ObjectID string
- * requires: authenticated user with avaiable session token cookie
- * returns: workspace object from MongoDB
- */
+
+// Import necessary modules
+import { writeFile } from 'fs/promises';
+import { NextResponse } from 'next/server';
+
 
 import { authOptions } from 'pages/api/auth/[...nextauth]';
 import { getServerSession } from "next-auth/next";
-import { MongoClient } from "mongodb";
-import { ObjectId } from "bson";
+
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions)
 
   if (!session) {
-    res.status(401).json({ message: "You must be logged in to access.", session: session });
+    res.status(401).json({ message: "You must be logged in." });
     return;
   }
 
-  const client = await new MongoClient(process.env.MONGODB_REGISTRAR_URI).connect();
-  const db = await client.db("users");
+  const data = await req.formData()
+  const file: File | null = data.get('file') as unknown as File
+  
+    if (!file) {
+      return NextResponse.json({ success: false })
+    }
+  
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+  
+    // With the file data in the buffer, you can do whatever you want with it.
+    // For this, we'll just write it to the filesystem in a new location
+    const path = `/tmp/${file.name}`
+    await writeFile(path, buffer)
+    console.log(`open ${path} to see the uploaded file`)
+  
+    return NextResponse.json({ success: true })
 
-  const workspace = await db
-    .collection("workspaces")
-    .findOne(new ObjectId(req.query.workspace));
-
-  client.close()
-
-  return res.json(workspace)
 }

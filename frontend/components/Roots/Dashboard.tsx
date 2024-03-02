@@ -1,6 +1,7 @@
 import { Button, Chip, Divider, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, Snackbar, TextField } from "@mui/material";
 import { Stack, Typography } from "@mui/material";
 import { signOut, useSession } from "next-auth/react";
+import Uploader from "@/components/Uploader";
 import Link from "next/link";
 import { useState } from "react";
 import useSWR from "swr";
@@ -8,7 +9,7 @@ import space from 'color-space';
 import rgbHex from 'rgb-hex';
 import themeConfig from "theme.config";
 import CloseIcon from '@mui/icons-material/Close';
-import { FileUpload } from 'primereact/fileupload';
+
 
 
 const fetcher = (...args) => fetch(...args).then(res => res.json())
@@ -269,7 +270,7 @@ export default function Dashboard() {
             your request. Subreddits are provided courtesy of <Link style={linkstyle} href="https://pushshift.io/">pushshift.io</Link> and are up 
             to date on their schedule, which is roughly within two months.</Typography>
             
-            <FileUpload name="demo[]" url={'/api/upload'} multiple accept=".csv,.xlsx" maxFileSize={1000000} emptyTemplate={<p className="m-0">Drag and drop files to here to upload.</p>} />
+            <Uploader></Uploader>
 
             <Workspaces workspaces={workspaces} color={color} />
 
