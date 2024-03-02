@@ -4,9 +4,9 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from 'bcryptjs';
 import { MongoClient } from "mongodb";
 
-const useSecureCookies = process.env.NEXT_PUBLIC_NEXTAUTH_URL.startsWith("https://");
-const cookiePrefix = useSecureCookies ? "__Secure-" : "";
-const domain = process.env.NEXT_PUBLIC_NEXTAUTH_URL.split("//")[1].split(":")[0]
+
+const cookiePrefix = "__Secure-";
+
 
 export const authOptions = {
   pages: {
@@ -23,8 +23,7 @@ export const authOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        domain: domain,
-        secure: useSecureCookies,
+        secure: true,
       },
     },
   },

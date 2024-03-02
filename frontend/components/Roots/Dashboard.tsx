@@ -238,8 +238,6 @@ export default function Dashboard() {
     
     const { data: workspaces } = useSWR(`https://${process.env.NEXT_PUBLIC_FRONTEND_HOST}/api/workspaces`, fetcher)
 
-    console.log("User info", user, error);
-
     if (error || status != "authenticated" || !session) {
         return <div>Looks like you forgot to sign in. <Link href="/">Click here to return to the home page.</Link></div>
     }
