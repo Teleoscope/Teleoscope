@@ -253,7 +253,7 @@ export default function Dashboard() {
         <Stack spacing={2} sx={{margin: "2em"}}>
             <Stack direction="row" justifyContent="space-between" >
                 <Typography variant="h4">Welcome, {user?.username}.</Typography>
-                <Button onClick={() => signOut({ callbackUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}` })}>Sign out</Button>
+                <Button onClick={() => signOut({ callbackUrl: `/` })}>Sign out</Button>
             </Stack>
             <Typography variant="h5">Start by creating a new workspace or accessing a previous one. </Typography>
             <Typography>For now, we have two data sources from <Link style={linkstyle} href={"https://reddit.com"}>Reddit</Link> that are loaded and open to use: <Link style={linkstyle} href={"https://reddit.com/r/nursing"}>r/nursing</Link> and <Link style={linkstyle} href={"https://reddit.com/r/AmITheAsshole"}>r/AmITheAsshole</Link>. When you create a new workspace, you 
