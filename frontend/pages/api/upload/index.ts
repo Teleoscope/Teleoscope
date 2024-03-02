@@ -2,7 +2,8 @@
 import { promises as fs } from 'fs';
 import { authOptions } from 'pages/api/auth/[...nextauth]';
 import { getServerSession } from 'next-auth/next';
-import formidable from 'formidable';
+import { IncomingForm } from 'formidable';
+
 
 // Disable Next.js's built-in body parser to handle 'multipart/form-data'
 export const config = {
@@ -28,7 +29,7 @@ const handler = async (req, res) => {
 
   // Use formidable to parse the form data
   const data = await new Promise((resolve, reject) => {
-    const form = new formidable.IncomingForm();
+    const form = new IncomingForm();
 
     form.parse(req, (err, fields, files) => {
       if (err) {
