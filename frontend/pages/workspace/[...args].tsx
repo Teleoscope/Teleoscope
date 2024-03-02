@@ -31,7 +31,6 @@ export async function getServerSideProps(context) {
         session: null,
         workflow: null,
         workflow_id: null,
-        req: null
       }
     }
   }
@@ -82,14 +81,13 @@ export async function getServerSideProps(context) {
       session: session,
       workflow: outflow,
       workflow_id: workflow_id.toString(),
-      req: context.req.headers.host
     }
   }
 
 }
 
 
-export default function Home({workspace, database, workflow, workflow_id, host}) {
+export default function Home({workspace, database, workflow, workflow_id}) {
   
 
   const { data: session, status } = useSession()
@@ -107,14 +105,14 @@ export default function Home({workspace, database, workflow, workflow_id, host})
   if (status === "unauthenticated") {
     return (
       <p> 
-        <a href={`${host}/api/auth/signin`}> 
+        <a href={`/api/auth/signin`}> 
         Not signed in. Sign in here.
         </a>
       </p>
       )
   }
 
-  if (!host || !database || status === "loading") {
+  if (!database || status === "loading") {
     return (
       <div>Loading...</div>
     )
