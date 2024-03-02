@@ -49,18 +49,21 @@ const handler = async (req, res) => {
   }
 
   // Process the uploaded file
-  try {
-    const fileData = await fs.readFile(file.filepath);
-    const path = `/tmp/${file.originalFilename}`;
-    await fs.writeFile(path, fileData);
-    console.log(`File uploaded to ${path}`);
-
-    // Respond with success
-    return res.status(200).json({ success: true });
-  } catch (error) {
-    console.error('Error processing the upload:', error);
-    return res.status(500).json({ success: false, message: 'Server error processing the file.' });
+try {
+  if (!file.filepath) { // Ensure the filepath property exists
+    throw new Error('File path is undefined');
   }
+
+  const fileData = await fs.readFile(file.filepath); // Use the correct property for the file path
+  const path = `/tmp/${file.originalFilename}`; // Ensure originalFilename is defined and used correctly
+  await fs.writeFile(path, fileData);
+  console.log(`File uploaded to ${path}`);
+
+  return res.status(200).json({ success: true });
+} catch (error) {
+  console.error('Error processing the upload:', error);
+  return res.status(500).json({ success: false, message: 'Server error processing the file.' });
+}
 };
 
 // Export the handler as the default export
