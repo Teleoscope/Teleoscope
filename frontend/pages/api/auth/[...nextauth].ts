@@ -1,6 +1,8 @@
 import NextAuth from "next-auth";
 import type { NextApiRequest, NextApiResponse } from "next";
 import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from 'bcryptjs';
+import { MongoClient } from "mongodb";
 
 const useSecureCookies = process.env.NEXT_PUBLIC_NEXTAUTH_URL.startsWith("https://");
 const cookiePrefix = useSecureCookies ? "__Secure-" : "";
@@ -52,17 +54,11 @@ export const authOptions = {
         // You can also use the `req` object to obtain additional parameters
         // (i.e., the request IP address)
         console.log("Request", req)
-        const res = await fetch(`https://${req.headers.host}/api/credentials`, {
-          method: 'POST',
-          body: JSON.stringify(credentials),
-          headers: { "Content-Type": "application/json" }
-        }).catch(error => console.error('Fetch failed:', error));
         
-        const user = await res.json()
-        console.log("User", user)
+        var user = await checkCredentials(req)
         
         // If no error and we have user data, return it
-        if (res.ok && user) {
+        if (user) {
           return user
         }
         
@@ -95,3 +91,45 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
   return await NextAuth(req, res, authOptions)
 }
 // export default NextAuth(authOptions)
+
+
+
+
+async function checkCredentials (req) {
+  try {
+    const client = await new MongoClient(process.env.MONGODB_REGISTRAR_URI).connect();
+    
+    const db = client.db("users");
+    const credentials = req.body;
+
+    const user = await db.collection("users").findOne({ username: credentials.username });
+    if (user) {
+      const compare = await bcrypt.compare(credentials.password, user.password);
+      if (compare) {
+        client.close();
+        return {
+          "username": user.username,
+          "id": user._id.toString(), // Ensure consistent string ID representation
+        };
+      } else {
+        client.close();
+      }
+    } else {
+      const saltRounds = 10;  
+      const salt = await bcrypt.genSalt(saltRounds);
+      const hash = await bcrypt.hash(credentials.password, salt);
+
+      const newUser = await db.collection("users").insertOne({ 
+        username: credentials.username,
+        password: hash,
+      });
+      client.close();
+      return {
+        "username": credentials.username,
+        "id": newUser.insertedId.toString(),
+      };
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
