@@ -36,6 +36,7 @@ const handler = async (req, res) => {
         reject(err);
         return;
       }
+      console.log(files)
       resolve({ fields, files });
     });
   });
