@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Button, FormControl, InputLabel, Select, MenuItem, OutlinedInput, Chip } from '@mui/material';
+
 import { read, utils } from 'xlsx';
 import Table from '@/components/Table'; // Ensure this component can handle the data format provided
 
@@ -49,7 +50,12 @@ export default function Uploader() {
   const [text, setText] = useState('');
   const [error, setError] = useState('');
   const [headerLine, setHeaderLine] = useState(1); // State for selecting header line
+  const [selectedHeaders, setSelectedHeaders] = useState([]); // State for multiselect
 
+  const handleChangeMultiple = (event) => {
+    const { value } = event.target;
+    setSelectedHeaders(typeof value === 'string' ? value.split(',') : value);
+  };
 
   const handleFileChange = (e) => {
     const newFile = e.target.files?.[0];
@@ -154,6 +160,30 @@ export default function Uploader() {
               ))}
             </Select>
           </FormControl>
+
+          <FormControl fullWidth margin="normal">
+          <InputLabel>Header Columns</InputLabel>
+          <Select
+            multiple
+            value={selectedHeaders}
+            onChange={handleChangeMultiple}
+            input={<OutlinedInput label="Header Columns" />}
+            renderValue={(selected) => (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {selected.map((value) => (
+                  <Chip key={value} label={value} />
+                ))}
+              </div>
+            )}
+          >
+            {headers.map((header) => (
+              <MenuItem key={header} value={header}>
+                {header}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
           <Table data={previewData} />
         </>
       )}
