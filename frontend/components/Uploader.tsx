@@ -1,118 +1,98 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react';
-import { FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
-import { read, utils } from "xlsx";
-import Table from '@/components/Table';
+import { useState } from 'react';
+import { Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { read, utils } from 'xlsx';
+import Table from '@/components/Table'; // Ensure this component can handle the data format provided
+
+function previewFile(file, setHeaders, setPreviewData) {
+  if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+    previewCsv(file, setHeaders, setPreviewData);
+  } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx')) {
+    previewXlsx(file, setHeaders, setPreviewData);
+  }
+}
 
 function previewXlsx(file, setHeaders, setPreviewData, headerLine = 1) {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      const data = new Uint8Array(event.target.result);
-      const workbook = read(data, {type: 'array', sheetRows: 5});
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      const json = utils.sheet_to_json(worksheet, {header: 1, range: headerLine - 1, raw: true}).slice(0, 5);
-      setHeaders(json[0]);
-      setPreviewData(json)
-      console.log(json); // Display in console or update the DOM
-
-    };
-    reader.readAsArrayBuffer(file);
-  }
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    const data = new Uint8Array(event.target.result);
+    const workbook = read(data, { type: 'array', sheetRows: headerLine + 4 });
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const json = utils.sheet_to_json(worksheet, { header: 1, range: headerLine - 1 }).slice(0, 5);
+    setHeaders(json[0]);
+    setPreviewData(json.slice(1)); // Exclude header row from preview data
+  };
+  reader.readAsArrayBuffer(file);
+}
 
 function previewCsv(file, setHeaders, setPreviewData, headerLine = 1) {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      const text = event.target.result;
-      const lines = text.split('\n');
-      const headers = lines[headerLine - 1].split(',').map(header => header.trim()); // Assume first line is headers
-      const json = lines.map(l => l.split(","))
-      setHeaders(headers); // Update state with headers for dropdown
-      setPreviewData(json)
-      console.log(json); // Display in console or update the DOM
-
-    };
-    reader.readAsText(file);
-  }
-  
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    const text = event.target.result;
+    const lines = text.split('\n').slice(headerLine - 1);
+    const headers = lines[0].split(',').map(header => header.trim());
+    const json = lines.slice(1, 6).map(line => line.split(",").map(cell => cell.trim()));
+    setHeaders(headers);
+    setPreviewData(json);
+  };
+  reader.readAsText(file);
+}
 
 export default function Uploader() {
-  const [file, setFile] = useState<File | null>(null);
-  const [error, setError] = useState<string>('');
-
+  const [file, setFile] = useState(null);
   const [headers, setHeaders] = useState([]);
   const [previewData, setPreviewData] = useState([]);
   const [uniqueId, setUniqueId] = useState('');
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
-
-  const validateFile = (file: File) => {
-    const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv'];
-    if (!validTypes.includes(file.type)) {
-      setError('File must be a .xlsx or .csv file');
-      return false;
-    }
-    setError('');
-    return true;
-  };
-
-
-  
-
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!file) {
-      setError('No file selected');
-      return;
-    }
-
-    if (!validateFile(file)) return; // Validate file type
-
-    try {
-      const data = new FormData();
-      data.set('file', file);
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: data,
-      });
-
-      if (!res.ok) throw new Error(await res.text());
-      setError(''); // Clear error on successful upload
-    } catch (e: any) {
-      console.error(e);
-      setError(e.message); // Set error from catch block
-    }
-  };
-
+  const [error, setError] = useState('');
 
   const handleFileChange = (e) => {
     const newFile = e.target.files?.[0];
+    if (!newFile) {
+      setError("No file selected.");
+      return;
+    }
     setFile(newFile);
+    setError('');
+    previewFile(newFile, setHeaders, setPreviewData);
+  };
 
-    if (!newFile) return;
+  const uploadFile = async () => {
+    if (!file) {
+      setError('No file selected for upload.');
+      return;
+    }
+    setError('');
+    const data = new FormData();
+    data.append('file', file);
 
-    if (newFile.type === 'text/csv') {
-      previewCsv(newFile, setHeaders, setPreviewData);
-    } else if (newFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-      previewXlsx(newFile, setHeaders, setPreviewData);
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: data,
+      });
+      if (!response.ok) throw new Error(await response.text());
+      setError('');
+      // Handle success
+      alert('File uploaded successfully');
+    } catch (error) {
+      console.error(error);
+      setError('Failed to upload file.');
     }
   };
 
   return (
     <div>
-      <Button
-        variant="contained"
-        component="label"
-      >
-        Upload File
-        <input
-          type="file"
-          hidden
-          onChange={handleFileChange}
-          accept=".csv"
-        />
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <Button variant="contained" component="label">
+        Choose File
+        <input type="file" hidden onChange={handleFileChange} accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+      </Button>
+      <Button variant="contained" onClick={uploadFile} disabled={!file}>
+        Upload
       </Button>
 
       {headers.length > 0 && (
@@ -155,9 +135,11 @@ export default function Uploader() {
               ))}
             </Select>
           </FormControl>
+          <Table data={previewData} />
         </>
       )}
-      <Table data={previewData} />
     </div>
   );
 }
+
+
