@@ -62,6 +62,11 @@ export default function Uploader() {
     previewFile(newFile, setHeaders, setPreviewData, headerLine);
   };
 
+  const handleHeaderChange = (e) => {
+    setHeaderLine(Number(e.target.value))
+    previewFile(file, setHeaders, setPreviewData, headerLine);
+  }
+
   const uploadFile = async () => {
     if (!file) {
       setError('No file selected for upload.');
@@ -98,7 +103,7 @@ export default function Uploader() {
         <Select
           value={headerLine}
           label="Header Line"
-          onChange={(e) => setHeaderLine(Number(e.target.value))}
+          onChange={(e) => handleHeaderChange(e)}
         >
           {[...Array(10).keys()].map(line => (
             <MenuItem key={line} value={line + 1}>{line + 1}</MenuItem>
