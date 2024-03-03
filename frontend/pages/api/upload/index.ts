@@ -43,6 +43,8 @@ const handler = async (req, res) => {
     });
   });
 
+  console.log(data)
+
   const headerLine = parseInt(data.fields.headerLine);
   const uniqueId = data.fields.id;
   const title = data.fields.title;
