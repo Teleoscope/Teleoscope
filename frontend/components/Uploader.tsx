@@ -1,15 +1,33 @@
 'use client'
 
 import React, { useState } from 'react';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-
+import { FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
 import { read, utils } from "xlsx";
 
+function previewXlsx(file, setHeaders, headerLine = 1) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      const data = new Uint8Array(event.target.result);
+      const workbook = read(data, {type: 'array', sheetRows: 5});
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const json = utils.sheet_to_json(worksheet, {header: 1, range: headerLine - 1, raw: true}).slice(0, 5);
+      console.log(json); // Display in console or update the DOM
+      setHeaders(json[0]);
+    };
+    reader.readAsArrayBuffer(file);
+  }
 
-
+function previewCsv(file, setHeaders, headerLine = 1) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      const text = event.target.result;
+      const lines = text.split('\n');
+      const headers = lines[headerLine - 1].split(',').map(header => header.trim()); // Assume first line is headers
+      setHeaders(headers); // Update state with headers for dropdown
+    };
+    reader.readAsText(file);
+  }
   
 
 export default function Uploader() {
@@ -32,31 +50,7 @@ export default function Uploader() {
   };
 
 
-function previewCsv(file) {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      const text = event.target.result;
-      const lines = text.split('\n').slice(0, 5); // Get first 5 lines
-      console.log(lines.join('\n')); // Display in console or update the DOM
-      setHeaders(lines[0].split(","))
-    };
-    reader.readAsText(file);
-  }
-
   
-  function previewXlsx(file) {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      const data = new Uint8Array(event.target.result);
-      const workbook = read(data, {type: 'array', sheetRows: 5});
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      const json = utils.sheet_to_json(worksheet, {header: 1, range: 0, raw: true}).slice(0, 5);
-      console.log(json); // Display in console or update the DOM
-      setHeaders(Object.keys(json[0]));
-    };
-    reader.readAsArrayBuffer(file);
-  }
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -85,72 +79,76 @@ function previewCsv(file) {
   };
 
 
-  const onChange = (e) => {
+  const handleFileChange = (e) => {
     const newFile = e.target.files?.[0];
     setFile(newFile);
 
     if (!newFile) return;
 
     if (newFile.type === 'text/csv') {
-      previewCsv(newFile);
+      previewCsv(newFile, setHeaders);
     } else if (newFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-      previewXlsx(newFile);
+      previewXlsx(newFile, setHeaders);
     }
   };
 
   return (
     <div>
-    <div>
-      <form onSubmit={onSubmit}>
+      <Button
+        variant="contained"
+        component="label"
+      >
+        Upload File
         <input
           type="file"
-          name="file"
-          onChange={onChange}
+          hidden
+          onChange={handleFileChange}
+          accept=".csv"
         />
-        <input type="submit" value="Upload" />
-      </form>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-    </div>
-    <FormControl fullWidth>
-        <InputLabel>Unique ID</InputLabel>
-        <Select
-          value={uniqueId}
-          label="Unique ID"
-          onChange={(e) => setUniqueId(e.target.value)}
-        >
-          {headers.map((header, index) => (
-            <MenuItem key={index} value={header}>{header}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      </Button>
 
-      {/* Dropdown for Title */}
-      <FormControl fullWidth>
-        <InputLabel>Title</InputLabel>
-        <Select
-          value={title}
-          label="Title"
-          onChange={(e) => setTitle(e.target.value)}
-        >
-          {headers.map((header, index) => (
-            <MenuItem key={index} value={header}>{header}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      {headers.length > 0 && (
+        <>
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Unique ID</InputLabel>
+            <Select
+              value={uniqueId}
+              label="Unique ID"
+              onChange={(e) => setUniqueId(e.target.value)}
+            >
+              {headers.map((header, index) => (
+                <MenuItem key={index} value={header}>{header}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-      {/* Dropdown for Text */}
-      <FormControl fullWidth>
-        <InputLabel>Text</InputLabel>
-        <Select
-          value={text}
-          label="Text"
-          onChange={(e) => setText(e.target.value)}
-        >
-          {headers.map((header, index) => (
-            <MenuItem key={index} value={header}>{header}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Title</InputLabel>
+            <Select
+              value={title}
+              label="Title"
+              onChange={(e) => setTitle(e.target.value)}
+            >
+              {headers.map((header, index) => (
+                <MenuItem key={index} value={header}>{header}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Text</InputLabel>
+            <Select
+              value={text}
+              label="Text"
+              onChange={(e) => setText(e.target.value)}
+            >
+              {headers.map((header, index) => (
+                <MenuItem key={index} value={header}>{header}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </>
+      )}
     </div>
   );
 }
