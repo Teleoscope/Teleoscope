@@ -49,7 +49,7 @@ const handler = async (req, res) => {
   const uniqueId = data.fields.id;
   const title = data.fields.title;
   const text = data.fields.text;
-  const groups = JSON.parse(data.fields.groups);
+  const groups = JSON.parse(`[${data.fields.groups}]`);
 
 
   // Assuming files.file is an array and taking the first file
