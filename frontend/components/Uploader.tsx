@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
 import { read, utils } from "xlsx";
+import Table from '@/components/Table';
 
-function previewXlsx(file, setHeaders, headerLine = 1) {
+function previewXlsx(file, setHeaders, setPreviewData, headerLine = 1) {
     const reader = new FileReader();
     reader.onload = function (event) {
       const data = new Uint8Array(event.target.result);
@@ -12,19 +13,25 @@ function previewXlsx(file, setHeaders, headerLine = 1) {
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       const json = utils.sheet_to_json(worksheet, {header: 1, range: headerLine - 1, raw: true}).slice(0, 5);
-      console.log(json); // Display in console or update the DOM
       setHeaders(json[0]);
+      setPreviewData(json)
+      console.log(json); // Display in console or update the DOM
+
     };
     reader.readAsArrayBuffer(file);
   }
 
-function previewCsv(file, setHeaders, headerLine = 1) {
+function previewCsv(file, setHeaders, setPreviewData, headerLine = 1) {
     const reader = new FileReader();
     reader.onload = function (event) {
       const text = event.target.result;
       const lines = text.split('\n');
       const headers = lines[headerLine - 1].split(',').map(header => header.trim()); // Assume first line is headers
+      const json = lines.map(l => l.split(","))
       setHeaders(headers); // Update state with headers for dropdown
+      setPreviewData()
+      console.log(json); // Display in console or update the DOM
+
     };
     reader.readAsText(file);
   }
@@ -35,6 +42,7 @@ export default function Uploader() {
   const [error, setError] = useState<string>('');
 
   const [headers, setHeaders] = useState([]);
+  const [previewData, setPreviewData] = useState([]);
   const [uniqueId, setUniqueId] = useState('');
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
@@ -86,9 +94,9 @@ export default function Uploader() {
     if (!newFile) return;
 
     if (newFile.type === 'text/csv') {
-      previewCsv(newFile, setHeaders);
+      previewCsv(newFile, setHeaders, setPreviewData);
     } else if (newFile.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-      previewXlsx(newFile, setHeaders);
+      previewXlsx(newFile, setHeaders, setPreviewData);
     }
   };
 
@@ -149,6 +157,7 @@ export default function Uploader() {
           </FormControl>
         </>
       )}
+      <Table data={previewData} />
     </div>
   );
 }
