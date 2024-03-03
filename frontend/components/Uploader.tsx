@@ -36,7 +36,7 @@ function previewCsv(file) {
       const text = event.target.result;
       const lines = text.split('\n').slice(0, 5); // Get first 5 lines
       console.log(lines.join('\n')); // Display in console or update the DOM
-      setHeaders(lines[0])
+      setHeaders(lines[0].split(","))
     };
     reader.readAsText(file);
   }
