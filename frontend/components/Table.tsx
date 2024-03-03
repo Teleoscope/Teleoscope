@@ -6,7 +6,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-function MuiArrayAsTable({ data }) {
+export default function TheTable({ data }) {
   const headers = data.length > 0 ? Object.keys(data[0]) : [];
 
   return (
