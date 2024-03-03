@@ -81,6 +81,11 @@ export default function Uploader() {
     setError('');
     const data = new FormData();
     data.append('file', file);
+    data.append('headerLine', headerLine.toString());
+    data.append('id', uniqueId);
+    data.append('title', title);
+    data.append('text', text);
+    data.append('groups', selectedHeaders.toString());
 
     try {
       const response = await fetch('/api/upload', {
@@ -162,7 +167,7 @@ export default function Uploader() {
           </FormControl>
 
           <FormControl fullWidth margin="normal">
-          <InputLabel>Header Columns</InputLabel>
+          <InputLabel>Group Data By Columns</InputLabel>
           <Select
             multiple
             value={selectedHeaders}
