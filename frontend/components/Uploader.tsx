@@ -29,7 +29,7 @@ function previewCsv(file, setHeaders, setPreviewData, headerLine = 1) {
       const headers = lines[headerLine - 1].split(',').map(header => header.trim()); // Assume first line is headers
       const json = lines.map(l => l.split(","))
       setHeaders(headers); // Update state with headers for dropdown
-      setPreviewData()
+      setPreviewData(json)
       console.log(json); // Display in console or update the DOM
 
     };
