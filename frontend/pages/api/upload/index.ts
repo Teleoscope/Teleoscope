@@ -63,6 +63,16 @@ const handler = async (req, res) => {
     return res.status(400).json({ success: false, message: 'Invalid file type. Only .xlsx and .csv files are allowed.' });
 }
 
+// After checking the file type and ensuring it's either .xlsx or .csv
+let firstLines;
+if (file.mimetype === 'text/csv') {
+  firstLines = await readFirstLinesCsv(file.filepath);
+} else if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+  firstLines = readFirstLinesXlsx(file.filepath);
+}
+
+console.log(firstLines); // Output the first few lines for debugging
+
   // Process the uploaded file
 try {
   if (!file.filepath) { // Ensure the filepath property exists
@@ -83,3 +93,32 @@ try {
 
 // Export the handler as the default export
 export default handler;
+
+
+import readline from 'readline';
+import { createReadStream } from 'fs';
+
+async function readFirstLinesCsv(filePath, numLines = 5) {
+  const stream = createReadStream(filePath);
+  const reader = readline.createInterface({ input: stream });
+  const lines = [];
+
+  for await (const line of reader) {
+    lines.push(line);
+    if (lines.length >= numLines) break;
+  }
+
+  reader.close();
+  return lines;
+}
+
+
+import xlsx from 'xlsx';
+
+function readFirstLinesXlsx(filePath, numLines = 5) {
+  const workbook = xlsx.readFile(filePath);
+  const sheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  const rows = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+  return rows.slice(0, numLines);
+}
