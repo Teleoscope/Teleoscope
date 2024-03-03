@@ -5,11 +5,11 @@ import { Button, FormControl, InputLabel, Select, MenuItem } from '@mui/material
 import { read, utils } from 'xlsx';
 import Table from '@/components/Table'; // Ensure this component can handle the data format provided
 
-function previewFile(file, setHeaders, setPreviewData) {
+function previewFile(file, setHeaders, setPreviewData, headerLine) {
   if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
-    previewCsv(file, setHeaders, setPreviewData);
+    previewCsv(file, setHeaders, setPreviewData, headerLine);
   } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx')) {
-    previewXlsx(file, setHeaders, setPreviewData);
+    previewXlsx(file, setHeaders, setPreviewData, headerLine);
   }
 }
 
@@ -33,7 +33,7 @@ function previewCsv(file, setHeaders, setPreviewData, headerLine = 1) {
     const text = event.target.result;
     const lines = text.split('\n').slice(headerLine - 1);
     const headers = lines[0].split(',').map(header => header.trim());
-    const json = lines.map(line => line.split(",").map(cell => cell.trim()));
+    const json = lines.slice(0,5).map(line => line.split(",").map(cell => cell.trim()));
     setHeaders(headers);
     setPreviewData(json);
   };
@@ -59,7 +59,7 @@ export default function Uploader() {
     }
     setFile(newFile);
     setError('');
-    previewFile(newFile, setHeaders, setPreviewData);
+    previewFile(newFile, setHeaders, setPreviewData, headerLine);
   };
 
   const uploadFile = async () => {
