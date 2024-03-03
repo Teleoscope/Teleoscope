@@ -64,7 +64,7 @@ export default function Uploader() {
 
   const handleHeaderChange = (e) => {
     setHeaderLine(Number(e.target.value))
-    previewFile(file, setHeaders, setPreviewData, headerLine);
+    previewFile(file, setHeaders, setPreviewData, Number(e.target.value));
   }
 
   const uploadFile = async () => {
