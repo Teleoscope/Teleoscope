@@ -6,6 +6,8 @@ import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 
+import { read, utils } from "xlsx";
+
 
 
   
@@ -46,10 +48,10 @@ function previewCsv(file) {
     const reader = new FileReader();
     reader.onload = function (event) {
       const data = new Uint8Array(event.target.result);
-      const workbook = XLSX.read(data, {type: 'array', sheetRows: 5});
+      const workbook = read(data, {type: 'array', sheetRows: 5});
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      const json = XLSX.utils.sheet_to_json(worksheet, {header: 1, range: 0, raw: true}).slice(0, 5);
+      const json = utils.sheet_to_json(worksheet, {header: 1, range: 0, raw: true}).slice(0, 5);
       console.log(json); // Display in console or update the DOM
       setHeaders(Object.keys(json[0]));
     };
