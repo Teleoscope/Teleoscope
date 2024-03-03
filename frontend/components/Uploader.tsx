@@ -22,7 +22,7 @@ function previewXlsx(file, setHeaders, setPreviewData, headerLine = 1) {
     const worksheet = workbook.Sheets[firstSheetName];
     const json = utils.sheet_to_json(worksheet, { header: 1, range: headerLine - 1 }).slice(0, 5);
     setHeaders(json[0]);
-    setPreviewData(json.slice(1)); // Exclude header row from preview data
+    setPreviewData(json); // Exclude header row from preview data
   };
   reader.readAsArrayBuffer(file);
 }
@@ -33,7 +33,7 @@ function previewCsv(file, setHeaders, setPreviewData, headerLine = 1) {
     const text = event.target.result;
     const lines = text.split('\n').slice(headerLine - 1);
     const headers = lines[0].split(',').map(header => header.trim());
-    const json = lines.slice(1, 6).map(line => line.split(",").map(cell => cell.trim()));
+    const json = lines.map(line => line.split(",").map(cell => cell.trim()));
     setHeaders(headers);
     setPreviewData(json);
   };
@@ -48,6 +48,8 @@ export default function Uploader() {
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [error, setError] = useState('');
+  const [headerLine, setHeaderLine] = useState(1); // State for selecting header line
+
 
   const handleFileChange = (e) => {
     const newFile = e.target.files?.[0];
@@ -91,6 +93,18 @@ export default function Uploader() {
         Choose File
         <input type="file" hidden onChange={handleFileChange} accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
       </Button>
+      <FormControl fullWidth margin="normal">
+        <InputLabel>Header Line</InputLabel>
+        <Select
+          value={headerLine}
+          label="Header Line"
+          onChange={(e) => setHeaderLine(Number(e.target.value))}
+        >
+          {[...Array(10).keys()].map(line => (
+            <MenuItem key={line} value={line + 1}>{line + 1}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
       <Button variant="contained" onClick={uploadFile} disabled={!file}>
         Upload
       </Button>
