@@ -7,7 +7,7 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
 export default function TheTable({ data }) {
-  const headers = data?.length > 0 ? Object.keys(data[0]) : [];
+  const headers = data?.length > 0 ? data[0] : [];
 
   if (!data) {
     return (
