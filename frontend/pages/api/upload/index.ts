@@ -20,6 +20,8 @@ const handler = async (req, res) => {
   if (!session) {
     // If not authenticated, return 401 Unauthorized
     return res.status(401).json({ message: "You must be logged in." });
+  } else {
+    console.log(session)
   }
 
   // Only allow POST method
@@ -41,15 +43,25 @@ const handler = async (req, res) => {
     });
   });
 
-  // Extract the file from the parsed data
-  const file = data.files.file[0];
+
+  // Assuming files.file is an array and taking the first file
+  const file = data.files.file && data.files.file.length ? data.files.file[0] : null;
 
   if (!file) {
     // If no file is uploaded, return an error
     return res.status(400).json({ success: false, message: 'No file uploaded.' });
-  } else {
-    console.log(file)
   }
+
+  // Check for file MIME type
+  const allowedMimeTypes = [
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // For .xlsx
+    'text/csv' // For .csv
+  ];
+
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    // If file type is not allowed, return an error
+    return res.status(400).json({ success: false, message: 'Invalid file type. Only .xlsx and .csv files are allowed.' });
+}
 
   // Process the uploaded file
 try {
