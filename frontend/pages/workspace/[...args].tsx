@@ -73,7 +73,14 @@ export async function getServerSideProps(context) {
 // The main component for the page
 export default function Home({workspace, database, workflow, workflow_id}) {
   const { status } = useSession();
-  const store = createStore({ "activeSessionID": { value: workflow_id, workspace }, "windows": workflow });
+  const store = createStore({ 
+    "activeSessionID": { 
+      value: workflow_id, 
+      workspace: workspace,
+      database: database
+    }, 
+    "windows": workflow 
+  });
 
   if (status === "unauthenticated") {
     return <p><a href="/api/auth/signin">Not signed in. Sign in here.</a></p>;

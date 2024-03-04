@@ -1477,20 +1477,29 @@ def mark(*args, database: str, userid: str, workflow_id: str, workspace_id: str,
 
 
 @app.task
-def file_upload(*args, userid: str, path: str, mimetype: str, headerLine: int, uniqueId: str, title: str, text: str, groups: list, **kwargs):
+def file_upload(*args, database: str, userid: str, path: str, mimetype: str, headerLine: int, uniqueId: str, title: str, text: str, groups: list, **kwargs):
     import pandas as pd
 
     def process_row(row):
-        # Example processing function
-        # Implement special instructions depending on header values here
-        print(row)  # Placeholder: replace with actual processing logic
+        schemas.create_document_object(row[title], [], row[text], metadata=row.to_json())
         
 
     df = None
+
     if mimetype == "text/csv":
         df = pd.read_csv(path, skiprows=headerLine - 1)
     else:
         df = pd.read_excel(path, skiprows=headerLine - 1)
+
+    # Initialize an empty set to store the combined unique values
+    unique_values = set()
+
+    for column in groups:
+        # Update the set with unique values from the current column
+        unique_values.update(df[column].unique())
+    
+    add_group()
+
 
     # Process each row
     for _, row in df.iterrows():

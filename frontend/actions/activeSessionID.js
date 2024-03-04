@@ -6,6 +6,7 @@ export const ActiveSessionID = createSlice({
   initialState: {
     value: -1,
     workspace: -1,
+    database: -1
   },
   reducers: {
     sessionActivator: (state, action) => {
