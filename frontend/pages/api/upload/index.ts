@@ -45,11 +45,11 @@ const handler = async (req, res) => {
 
   console.log(data)
 
-  const headerLine = parseInt(data.fields.headerLine);
-  const uniqueId = data.fields.id;
-  const title = data.fields.title;
-  const text = data.fields.text;
-  const groups = data.fields.groups.split(",")
+  const headerLine = parseInt(data.fields.headerLine[0]);
+  const uniqueId = data.fields.id[0];
+  const title = data.fields.title[0];
+  const text = data.fields.text[0];
+  const groups = data.fields.groups[0].split(",")
 
 
   // Assuming files.file is an array and taking the first file
