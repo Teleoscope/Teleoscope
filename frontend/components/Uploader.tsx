@@ -110,7 +110,7 @@ export default function Uploader() {
         Choose File
         <input type="file" hidden onChange={handleFileChange} accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
       </Button>
-      {file ? <Typography>file.name</Typography> : null}
+      {file ? <Typography>{file.name}</Typography> : null}
       <FormControl fullWidth margin="normal">
         <InputLabel>Header Line</InputLabel>
         <Select
