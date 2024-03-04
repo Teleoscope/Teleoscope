@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from kombu import  Exchange, Queue
 from typing import List
 import os
+import itertools
 
 # local imports
 from . import utils
@@ -1477,13 +1478,20 @@ def mark(*args, database: str, userid: str, workflow_id: str, workspace_id: str,
 
 
 @app.task
-def file_upload(*args, database: str, userid: str, path: str, mimetype: str, headerLine: int, uniqueId: str, title: str, text: str, groups: list, **kwargs):
+def file_upload(*args, 
+                database: str, 
+                userid: str,
+                workflow: str,
+                path: str, 
+                mimetype: str, 
+                headerLine: int, 
+                uniqueId: str, 
+                title: str, 
+                text: str, 
+                groups: list, **kwargs):
     import pandas as pd
 
-    def process_row(row):
-        schemas.create_document_object(row[title], [], row[text], metadata=row.to_json())
-        
-
+    
     df = None
 
     if mimetype == "text/csv":
@@ -1498,12 +1506,20 @@ def file_upload(*args, database: str, userid: str, path: str, mimetype: str, hea
         # Update the set with unique values from the current column
         unique_values.update(df[column].unique())
     
-    add_group()
-
+    for group in unique_values:
+        color = utils.random_color()
+        add_group(database, userid, workflow, color, group, "Imported group")
 
     # Process each row
-    for _, row in df.iterrows():
-        process_row(row)
+    for batch in itertools.batched(df.iterrows(), 1000):
+        documents = []
+        for _, row in batch:
+            doc = schemas.create_document_object(row[title], [], row[text], metadata=row.to_json())
+            documents.append(doc)
+        db = utils.connect(db=database)
+        db.documents.insert_many(documents)
+
+
 
 
 

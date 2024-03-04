@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button, FormControl, InputLabel, Select, MenuItem, OutlinedInput, Chip, Typography } from '@mui/material';
+import { useAppSelector } from "@/util/hooks";
 
 import { read, utils } from 'xlsx';
 import Table from '@/components/Table'; // Ensure this component can handle the data format provided
@@ -53,6 +54,9 @@ export default function Uploader() {
   const [headerLine, setHeaderLine] = useState(1); // State for selecting header line
   const [selectedHeaders, setSelectedHeaders] = useState([]); // State for multiselect
 
+  const database = useAppSelector((state) => state.activeSessionID.database);
+  const session_id = useAppSelector((state) => state.activeSessionID.value);
+
   const handleChangeMultiple = (event) => {
     const { value } = event.target;
     setSelectedHeaders(typeof value === 'string' ? value.split(',') : value);
@@ -82,6 +86,8 @@ export default function Uploader() {
     setError('');
     const data = new FormData();
     data.append('file', file);
+    data.append('database', database);
+    data.append('session_id', session_id);
     data.append('headerLine', headerLine.toString());
     data.append('id', uniqueId);
     data.append('title', title);

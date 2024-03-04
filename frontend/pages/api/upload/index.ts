@@ -44,13 +44,13 @@ const handler = async (req, res) => {
   });
 
   console.log(data)
-
+  const workflow = parseInt(data.fields.session_id[0]);
   const headerLine = parseInt(data.fields.headerLine[0]);
   const uniqueId = data.fields.id[0];
   const title = data.fields.title[0];
   const text = data.fields.text[0];
   const groups = data.fields.groups[0].split(",")
-
+  const database = data.fields.database[0]
   
 
   // Assuming files.file is an array and taking the first file
@@ -100,11 +100,13 @@ try {
     'userid': session.user.id,
     'path': path,
     'mimetype': file.mimetype,
+    'workflow': workflow,
     'headerLine': headerLine,
     'uniqueId': uniqueId,
     'title': title,
     'text': text,
-    'groups': groups
+    'groups': groups,
+    'database': database
   }
 
   await send('file_upload', args)
