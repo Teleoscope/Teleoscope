@@ -108,6 +108,10 @@ const NewWorkspace = ({color}) => {
     const [labelError, setLabelError] = useState("");
     const [open, setOpen] = useState(false);
 
+    // const protocol = window.location.protocol;
+    const host = window.location.host; // Includes hostname and port if applicable
+
+
     const handleChange = (event) => {
         setNewWorkspaceSource(event?.target.value)
     }
