@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, FormControl, InputLabel, Select, MenuItem, OutlinedInput, Chip } from '@mui/material';
+import { Button, FormControl, InputLabel, Select, MenuItem, OutlinedInput, Chip, Typography } from '@mui/material';
 
 import { read, utils } from 'xlsx';
 import Table from '@/components/Table'; // Ensure this component can handle the data format provided
 
 function previewFile(file, setHeaders, setPreviewData, headerLine) {
-  console.log("file", file)
+
   if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
     previewCsv(file, setHeaders, setPreviewData, headerLine);
   } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx')) {
@@ -110,6 +110,7 @@ export default function Uploader() {
         Choose File
         <input type="file" hidden onChange={handleFileChange} accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
       </Button>
+      {file ? <Typography>file.name</Typography> : null}
       <FormControl fullWidth margin="normal">
         <InputLabel>Header Line</InputLabel>
         <Select
