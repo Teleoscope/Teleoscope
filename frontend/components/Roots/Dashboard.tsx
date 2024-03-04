@@ -108,9 +108,6 @@ const NewWorkspace = ({color}) => {
     const [labelError, setLabelError] = useState("");
     const [open, setOpen] = useState(false);
 
-    // const protocol = window.location.protocol;
-    const host = window.location.host; // Includes hostname and port if applicable
-
 
     const handleChange = (event) => {
         setNewWorkspaceSource(event?.target.value)
@@ -124,7 +121,7 @@ const NewWorkspace = ({color}) => {
     const handleClick = () => {
         
         if (!validateLabel()) {
-            fetch(`${host}/api/workspace`, {
+            fetch(`/api/workspace`, {
                 method: 'POST',
                 body: JSON.stringify({label: label, datasource: newWorkspaceSource}),
                 headers: { "Content-Type": "application/json" }
