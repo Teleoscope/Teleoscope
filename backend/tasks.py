@@ -7,6 +7,7 @@ from kombu import  Exchange, Queue
 from typing import List
 import os
 import itertools
+import pandas as pd
 
 # local imports
 from . import utils
@@ -1489,8 +1490,6 @@ def file_upload(*args,
                 title: str, 
                 text: str, 
                 groups: list, **kwargs):
-    import pandas as pd
-
     
     df = None
 
@@ -1499,6 +1498,18 @@ def file_upload(*args,
     else:
         df = pd.read_excel(path, skiprows=headerLine - 1)
 
+
+    db = utils.connect(db=database)
+    # Process each row
+    for batch in itertools.batched(df.iterrows(), 1000):
+        documents = []
+        for _, row in batch:
+            doc = schemas.create_document_object(row[title], [], row[text], metadata=row.to_json())
+            documents.append(doc)
+        db.documents.insert_many(documents)
+    
+    inserted_documents = db.documents.find({})
+    
     # Initialize an empty set to store the combined unique values
     unique_values = set()
 
@@ -1506,20 +1517,64 @@ def file_upload(*args,
         # Update the set with unique values from the current column
         unique_values.update(df[column].unique())
     
+    group_map = dict()
+
     for group in unique_values:
         color = utils.random_color()
-        add_group(database, userid, workflow, color, group, "Imported group")
+        res = add_group(database, userid, workflow, color, group, "Imported group")
+        group_map[group] = res
+    
+    for inserted_doc in inserted_documents:
+        for group in groups:
+            if group in inserted_doc["metadata"]:
+                add_document_to_group(database, userid, group_map[group], inserted_doc["_id"])
 
-    # Process each row
-    for batch in itertools.batched(df.iterrows(), 1000):
-        documents = []
-        for _, row in batch:
-            doc = schemas.create_document_object(row[title], [], row[text], metadata=row.to_json())
-            documents.append(doc)
-        db = utils.connect(db=database)
-        db.documents.insert_many(documents)
+    import pymongo
+    db.documents.create_index("text", pymongo.TEXT, background=True)
+
+    milvus_import(database, userid)
 
 
+
+@app.task
+def milvus_import(*args, 
+                database: str, 
+                userid: str,
+                ):
+    
+    from pymilvus import connections, Collection, utility
+    conn = connections.connect(host="127.0.0.1", port=19530, db_name="teleoscope")
+    
+    collection = None
+    if not utility.has_collection(database):
+        collection = Collection(
+            name=database,
+            schema=schemas.create_milvus_schema(1024),
+            using='default',
+            shards_num=2
+        )
+    else:
+        collection = Collection(database)
+    
+    mongo_db = utils.connect(db=database)
+    
+    from FlagEmbedding import BGEM3FlagModel
+    model = BGEM3FlagModel('BAAI/bge-m3', use_fp16=True) # Setting use_fp16 to True speeds up computation with a slight performance degradation
+
+    documents = mongo_db.documents.find({})
+    
+    for batch in itertools.batched(documents, 1000):
+        ids = [str(doc["_id"]) for doc in batch]
+        embeddings = model.encode([doc['text'] for doc in batch])
+        collection.insert([ids, embeddings])
+
+    index_params = {
+        "metric_type":"IP",
+        "index_type":"IVF_FLAT"
+    }
+    collection.create_index("text_vector", index_params)
+
+    
 
 
 
