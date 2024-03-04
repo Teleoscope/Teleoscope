@@ -99,6 +99,7 @@ try {
   const args = {
     'userid': session.user.id,
     'path': path,
+    'mimetype': file.mimetype,
     'headerLine': headerLine,
     'uniqueId': uniqueId,
     'title': title,
