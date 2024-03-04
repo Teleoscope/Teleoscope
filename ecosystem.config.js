@@ -31,6 +31,16 @@ module.exports = {
       watch: false,
       interpreter: "",
       // max_memory_restart: "1G"
-    }
+    },
+    {
+      name: "embeddings",
+      script: "/usr/share/miniconda3/envs/teleoscope/bin/python",
+      args: ["-m", "backend.embeddings"],
+      watch: false,
+      interpreter: "",
+      max_memory_restart: "16G",
+      instances: 1,
+    },
+
   ]
 };

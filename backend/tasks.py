@@ -14,6 +14,9 @@ from . import utils
 from . import schemas
 from . import graph
 
+from embeddings import milvus_import
+
+
 # environment variables
 from dotenv import load_dotenv
 load_dotenv()  # This loads the variables from .env
@@ -1531,47 +1534,11 @@ def file_upload(*args,
     import pymongo
     db.documents.create_index("text", pymongo.TEXT, background=True)
 
-    milvus_import(database, userid)
+    milvus_import.apply_async(kwargs={
+        'database': database,
+        'userid': userid,
+    }, queue='embeddings')
 
-
-
-@app.task
-def milvus_import(*args, 
-                database: str, 
-                userid: str,
-                ):
-    
-    from pymilvus import connections, Collection, utility
-    conn = connections.connect(host="127.0.0.1", port=19530, db_name="teleoscope")
-    
-    collection = None
-    if not utility.has_collection(database):
-        collection = Collection(
-            name=database,
-            schema=schemas.create_milvus_schema(1024),
-            using='default',
-            shards_num=2
-        )
-    else:
-        collection = Collection(database)
-    
-    mongo_db = utils.connect(db=database)
-    
-    from FlagEmbedding import BGEM3FlagModel
-    model = BGEM3FlagModel('BAAI/bge-m3', use_fp16=True) # Setting use_fp16 to True speeds up computation with a slight performance degradation
-
-    documents = mongo_db.documents.find({})
-    
-    for batch in itertools.batched(documents, 1000):
-        ids = [str(doc["_id"]) for doc in batch]
-        embeddings = model.encode([doc['text'] for doc in batch])
-        collection.insert([ids, embeddings])
-
-    index_params = {
-        "metric_type":"IP",
-        "index_type":"IVF_FLAT"
-    }
-    collection.create_index("text_vector", index_params)
 
 
 
