@@ -103,7 +103,7 @@ const ExistingWorkspace = ({workspace, color}) => {
 }
 
 const NewWorkspace = ({color}) => {
-    const [newWorkspaceSource, setNewWorkspaceSource] = useState("aita");
+    const [newWorkspaceSource, setNewWorkspaceSource] = useState("blank");
     const [label, setLabel] = useState("");
     const [labelError, setLabelError] = useState("");
     const [open, setOpen] = useState(false);
@@ -198,7 +198,7 @@ const NewWorkspace = ({color}) => {
                             label="Data source"
                             onChange={handleChange}
                             size="small"
-                        >   <MenuItem value={"nursing"}>Blank</MenuItem>
+                        >   <MenuItem value={"blank"}>Blank</MenuItem>
                             <MenuItem value={"nursing"}>r/nursing</MenuItem>
                             <MenuItem value={"aita"}>r/AmITheAsshole</MenuItem>
                         </Select>                    
