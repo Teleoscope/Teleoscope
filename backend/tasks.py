@@ -102,7 +102,9 @@ def initialize_workspace(
     # Every workspace should be initialized with one workflow
     color = utils.random_color()
 
-    dbname = utils.sanitize_db_name(label)
+    uuid_str = str(uuid.uuid4())
+
+    dbname = utils.sanitize_db_name(f"{label}_{uuid_str}")
 
     if datasource == "aita" or datasource == "nursing":
         dbname = datasource
