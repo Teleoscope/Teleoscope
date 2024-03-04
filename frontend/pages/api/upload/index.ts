@@ -89,7 +89,7 @@ try {
 
   const fileData = await fs.readFile(file.filepath); // Use the correct property for the file path
   
-  const path = `${process.env.FILES}/${file.filepath}`; 
+  const path = `${process.env.FILES}/${file.newFilename}`; 
   
   await fs.writeFile(path, fileData);
   console.log(`File uploaded to ${path}`);
