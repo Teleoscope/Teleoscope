@@ -51,14 +51,7 @@ const handler = async (req, res) => {
   const text = data.fields.text[0];
   const groups = data.fields.groups[0].split(",")
 
-  const args = {
-    'userid': session.user.id,
-    'headerLine': headerLine,
-    'uniqueId': uniqueId,
-    'title': title,
-    'text': text,
-    'groups': groups
-  }
+  
 
   // Assuming files.file is an array and taking the first file
   const file = data.files.file && data.files.file.length ? data.files.file[0] : null;
@@ -103,7 +96,16 @@ try {
 
   console.log(`File uploaded to ${path}`);
 
-  
+  const args = {
+    'userid': session.user.id,
+    'path': path,
+    'headerLine': headerLine,
+    'uniqueId': uniqueId,
+    'title': title,
+    'text': text,
+    'groups': groups
+  }
+
   await send('file_upload', args)
   
   return res.status(200).json({ success: true });
