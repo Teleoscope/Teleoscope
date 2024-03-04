@@ -1,0 +1,7 @@
+{
+  "name": "Teleoscope",
+  "packageManager": "yarn@3.5.1",
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
