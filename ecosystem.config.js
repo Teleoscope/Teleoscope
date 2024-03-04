@@ -2,12 +2,13 @@
 // npm install -g pm2
 // pm2 start ecosystem.config.js
 // pm2 monit
+require('dotenv').config(); // Make sure to require dotenv at the top
 
 module.exports = {
   apps: [
     {
       name: "dispatch",
-      script: "/usr/share/miniconda3/envs/teleoscope/bin/python",
+      script: process.env.PYTHON_INTERPRETER,
       args: ["-m", "backend.dispatch"],
       watch: false,
       interpreter: "",
@@ -34,7 +35,7 @@ module.exports = {
     },
     {
       name: "embeddings",
-      script: "/usr/share/miniconda3/envs/teleoscope/bin/python",
+      script: process.env.PYTHON_INTERPRETER,
       args: ["-m", "backend.embeddings"],
       watch: false,
       interpreter: "",
