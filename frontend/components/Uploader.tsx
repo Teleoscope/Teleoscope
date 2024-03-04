@@ -7,6 +7,7 @@ import { read, utils } from 'xlsx';
 import Table from '@/components/Table'; // Ensure this component can handle the data format provided
 
 function previewFile(file, setHeaders, setPreviewData, headerLine) {
+  console.log("file", file)
   if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
     previewCsv(file, setHeaders, setPreviewData, headerLine);
   } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx')) {
