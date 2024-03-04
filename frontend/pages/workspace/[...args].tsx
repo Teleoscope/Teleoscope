@@ -1,7 +1,4 @@
-/**
- * Entrypoint for workspaces.
- */
-
+// Import necessary libraries and components
 import Head from "next/head";
 import { SWRConfig } from 'swr';
 import Workspace from "@/components/Roots/Workspace";
@@ -13,113 +10,82 @@ import { authOptions } from "../api/auth/[...nextauth]";
 import { MongoClient } from "mongodb";
 import { ObjectId } from "bson";
 
+// Define a fetcher function for SWR
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
-// Supposedly this renders server-side only, so OK to use credentials
+/**
+ * Fetches server-side props including user session and workspace details from MongoDB.
+ * @param {object} context - The context object provided by Next.js for server-side rendering.
+ * @returns {Promise<object>} An object containing props for the page.
+ */
 export async function getServerSideProps(context) {
-  const session = await getServerSession(
-    context.req,
-    context.res,
-    authOptions
-  )
+  const session = await getServerSession(context.req, context.res, authOptions);
 
   if (!session) {
-    return {
-      props: {
-        workspace: null,
-        database: null,
-        session: null,
-        workflow: null,
-        workflow_id: null,
-      }
-    }
+    return { props: { workspace: null, database: null, session: null, workflow: null, workflow_id: null } };
   }
 
-  const workspace_id = context.query.args[0]
+  const workspace_id = context.query.args[0];
+  const client = await MongoClient.connect(process.env.MONGODB_URI);
+  const db = client.db("users");
 
-  const client = await new MongoClient(process.env.MONGODB_URI).connect();
-  let db = await client.db("users");
-
-  const workspace = await db
-  .collection("workspaces")
-  .findOne({
-    $or: [
-      { owner: new ObjectId(session.user.id) },
-      { "contributors.id": new ObjectId(session.user.id) }
-    ],
+  const workspace = await db.collection("workspaces").findOne({
+    $or: [{ owner: new ObjectId(session.user.id) }, { "contributors.id": new ObjectId(session.user.id) }],
     _id: new ObjectId(workspace_id)
   });
 
-  client.close()
-
-  const database = workspace.database;
-  const workflow_id = context.query.args.length == 2 ? context.query.args[1] : workspace.workflows[0]
-
-  db = await client.db(database);
-  
-  const workflow = await db.collection("sessions").findOne(
-    {_id: new ObjectId(workflow_id)},
-    {projection: { projection: { history: { $slice: 1 } } }}
-  )
-
-  const outflow = {
-      nodes: workflow.history[0].nodes ? workflow.history[0].nodes : [],
-      edges: workflow.history[0].edges ? workflow.history[0].edges : [],
-      bookmarks: workflow.history[0].bookmarks ? workflow.history[0].bookmarks : [],
-      logical_clock: workflow.history[0].logical_clock,
-      label: workflow.history[0].label,
-      selection: workflow.history[0].selection ? workflow.history[0].selection : { nodes: [], edges: []},
-      settings: workflow.history[0].settings ? workflow.history[0].settings : {} ,
+  if (!workspace) {
+    client.close();
+    return { props: { workspace: null, database: null, session: null, workflow: null, workflow_id: null } };
   }
 
-  client.close()
+  const workflow_id = context.query.args[1] || workspace.workflows[0];
+  const workflowDb = client.db(workspace.database);
+  
+  const workflow = await workflowDb.collection("sessions").findOne(
+    { _id: new ObjectId(workflow_id) },
+    { projection: { history: { $slice: 1 } } }
+  );
+
+  client.close();
+
+  const outflow = workflow.history[0] ? {
+    nodes: workflow.history[0].nodes || [],
+    edges: workflow.history[0].edges || [],
+    bookmarks: workflow.history[0].bookmarks || [],
+    logical_clock: workflow.history[0].logical_clock,
+    label: workflow.history[0].label,
+    selection: workflow.history[0].selection || { nodes: [], edges: [] },
+    settings: workflow.history[0].settings || {},
+  } : {};
 
   return {
     props: {
       workspace: workspace_id,
-      database: database,
-      session: session,
+      database: workspace.database,
+      session,
       workflow: outflow,
       workflow_id: workflow_id.toString(),
     }
-  }
-
+  };
 }
 
-
+// The main component for the page
 export default function Home({workspace, database, workflow, workflow_id}) {
-  
+  const { status } = useSession();
+  const store = createStore({ "activeSessionID": { value: workflow_id, workspace }, "windows": workflow });
 
-  const { data: session, status } = useSession()
-
-  const preloaded = {
-    "activeSessionID": {
-      value: workflow_id,
-      workspace: workspace
-    },
-    "windows": workflow,
-  }
-  const store = createStore(preloaded)
-
- 
   if (status === "unauthenticated") {
-    return (
-      <p> 
-        <a href={`/api/auth/signin`}> 
-        Not signed in. Sign in here.
-        </a>
-      </p>
-      )
+    return <p><a href="/api/auth/signin">Not signed in. Sign in here.</a></p>;
   }
 
   if (!database || status === "loading") {
-    return (
-      <div>Loading...</div>
-    )
+    return <div>Loading...</div>;
   }
-  
+
+  // Configuration for SWR
   const swrConfig = {
-    fetcher: fetcher,
+    fetcher,
     errorRetryCount: 10,
     refreshInterval: 250,
   };
@@ -127,17 +93,14 @@ export default function Home({workspace, database, workflow, workflow_id}) {
   return (
     <StoreProvider store={store}>
       <SWRConfig value={swrConfig}>
-          <div>
-            <Head>
-              <title>Teleoscope</title>
-              <link rel="icon" href="/favicon.ico" />
-            </Head>
-            <main>
-                <Workspace database={database} workflow={workflow_id} workspace={workspace} />
-            </main>
-          </div>
+        <Head>
+          <title>Teleoscope</title>
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <main>
+          <Workspace database={database} workflow={workflow_id} workspace={workspace} />
+        </main>
       </SWRConfig>
     </StoreProvider>
-
   );
 }

@@ -36,16 +36,6 @@ export default async function handler(req, res) {
 
   res.status(200).json({ status: 'Message sent' });
 
-  // Make sure the network buffers have been flushed and close connection
-  await channel.close();
-  await connection.close();
-  
-
-  // const client = Stomp.getInstance({userid: session.user.id})
-  // await client.wait_for_client_connection()
-  // client.initialize_workspace(parameters.label, parameters.datasource)
-  // await client.wait_for_client_disconnection()
-  
 
   return res.json({"status": "success"})
 }
