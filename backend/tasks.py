@@ -113,7 +113,7 @@ def initialize_workspace(
     res = db.workspaces.insert_one(obj)
 
     workflow_id = initialize_workflow(
-        database=datasource,
+        database=dbname,
         userid=userid,
         label=label,
         color=color,
