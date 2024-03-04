@@ -447,3 +447,23 @@ def update_chromadb(dbstring, ids=[], texts=[], metadatas=None):
     default_ef = embedding_functions.DefaultEmbeddingFunction()
     chroma_collection = chroma_client.get_collection(dbstring, embedding_function=default_ef)
     chroma_collection.update(ids=[str(id) for id in ids], documents=texts, metadatas=metadatas)
+
+
+def sanitize_db_name(name):
+    # Remove forbidden characters
+    forbidden_chars = " .$/\\"
+    for char in forbidden_chars:
+        name = name.replace(char, "_")
+    
+    # Ensure the name is not too long
+    max_length = 63  # 64 bytes - 1 for safety
+    if len(name.encode('utf-8')) > max_length:
+        # Trim the name if it's too long, considering multibyte characters
+        while len(name.encode('utf-8')) > max_length:
+            name = name[:-1]
+    
+    # Ensure the name is not empty after removing forbidden characters
+    if not name:
+        raise ValueError("Database name cannot be empty after sanitization.")
+    
+    return name
