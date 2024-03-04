@@ -49,7 +49,7 @@ const handler = async (req, res) => {
   const uniqueId = data.fields.id;
   const title = data.fields.title;
   const text = data.fields.text;
-  const groups = [data.fields.groups.split(",")]
+  const groups = data.fields.groups.split(",")
 
 
   // Assuming files.file is an array and taking the first file
