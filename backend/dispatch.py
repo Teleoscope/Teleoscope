@@ -143,6 +143,10 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
             case "copy_doclists_to_groups":
                 res = tasks.copy_doclists_to_groups.signature(args=(), kwargs=kwargs)
+            
+            case "file_upload":
+                res = tasks.file_upload.signature(args=(), kwargs=kwargs)
+
 
         try:
             res.apply_async(queue=RABBITMQ_TASK_QUEUE)
