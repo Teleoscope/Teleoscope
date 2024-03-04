@@ -1,7 +1,6 @@
 import { Button, Chip, Divider, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, Snackbar, TextField } from "@mui/material";
 import { Stack, Typography } from "@mui/material";
 import { signOut, useSession } from "next-auth/react";
-import Uploader from "@/components/Uploader";
 import Link from "next/link";
 import { useState } from "react";
 import useSWR from "swr";
@@ -270,7 +269,7 @@ export default function Dashboard() {
             your request. Subreddits are provided courtesy of <Link style={linkstyle} href="https://pushshift.io/">pushshift.io</Link> and are up 
             to date on their schedule, which is roughly within two months.</Typography>
             
-            <Uploader></Uploader>
+            
 
             <Workspaces workspaces={workspaces} color={color} />
 
