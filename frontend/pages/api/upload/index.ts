@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 import { authOptions } from 'pages/api/auth/[...nextauth]';
 import { getServerSession } from 'next-auth/next';
 import { IncomingForm } from 'formidable';
-import { Stomp } from '@/util/Stomp';
+import send from '@/util/amqp';
 
 // Disable Next.js's built-in body parser to handle 'multipart/form-data'
 export const config = {
@@ -51,6 +51,14 @@ const handler = async (req, res) => {
   const text = data.fields.text[0];
   const groups = data.fields.groups[0].split(",")
 
+  const args = {
+    'userid': session.user.id,
+    'headerLine': headerLine,
+    'uniqueId': uniqueId,
+    'title': title,
+    'text': text,
+    'groups': groups
+  }
 
   // Assuming files.file is an array and taking the first file
   const file = data.files.file && data.files.file.length ? data.files.file[0] : null;
@@ -92,14 +100,11 @@ try {
   const path = `${process.env.FILES}/${file.newFilename}`; 
   
   await fs.writeFile(path, fileData);
+
   console.log(`File uploaded to ${path}`);
 
-  const client = Stomp.getInstance({userid: session.user.id})
-  await client.wait_for_client_connection()
   
-  client.file_upload(path, headerLine, uniqueId, title, text, groups)
-  
-  await client.wait_for_client_disconnection()
+  await send('file_upload', args)
   
   return res.status(200).json({ success: true });
 } catch (error) {
