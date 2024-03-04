@@ -1,7 +1,10 @@
 import logging
 import itertools
 from celery import Celery
-from celery.bin.worker import worker
+from celery.apps.worker import Worker
+from kombu import  Exchange, Queue
+import uuid
+import os
 
 from warnings import simplefilter
 from . import utils
@@ -28,6 +31,17 @@ CELERY_BROKER_URL = (
     f'{RABBITMQ_PASSWORD}@'
     f'{RABBITMQ_HOST}/'
     f'{RABBITMQ_VHOST}'
+)
+
+queue = Queue("embeddings", Exchange("embeddings"), "embeddings")
+app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
+
+app.conf.update(
+    task_serializer='pickle',
+    accept_content=['pickle'],  # Ignore other content
+    result_serializer='pickle',
+    task_queues=[queue],
+    worker_concurrency=1
 )
 
 
@@ -75,10 +89,4 @@ def milvus_import(*args,
 
 
 if __name__ == '__main__':
-    worker = worker(app=app)
-    options = {
-        'loglevel': 'INFO',
-        'traceback': True,
-        'queues': ['embeddings'],
-    }
-    worker.run(**options)
+    app.worker_main(['worker', '--loglevel=INFO', f"--hostname=embeddings.{os.getlogin()}@%h{uuid.uuid4()}"])
