@@ -12,7 +12,7 @@ async function send(task, args) {
 
     // Ensure the queue exists
     await channel.assertQueue(queue, {
-        durable: false
+        durable: true
     });
 
     const message = {
