@@ -101,15 +101,20 @@ def initialize_workspace(
 
     # Every workspace should be initialized with one workflow
     color = utils.random_color()
+
+    dbname = utils.sanitize_db_name(label)
+
+    if datasource == "aita" or datasource == "nursing":
+        dbname = datasource
     
-    obj = schemas.create_workspace_object(owner=userid, label=label, database=datasource)
+    obj = schemas.create_workspace_object(owner=userid, label=label, database=dbname)
     res = db.workspaces.insert_one(obj)
 
     workflow_id = initialize_workflow(
-        database=datasource, 
-        userid=userid, 
-        label=label, 
-        color=color, 
+        database=datasource,
+        userid=userid,
+        label=label,
+        color=color,
         workspace_id=res.inserted_id
     )
     
@@ -1477,6 +1482,7 @@ def file_upload(*args, userid: str, path: str, mimetype: str, headerLine: int, u
         # Example processing function
         # Implement special instructions depending on header values here
         print(row)  # Placeholder: replace with actual processing logic
+        
 
     df = None
     if mimetype == "text/csv":

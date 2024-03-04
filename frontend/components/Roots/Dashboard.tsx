@@ -198,7 +198,7 @@ const NewWorkspace = ({color}) => {
                             label="Data source"
                             onChange={handleChange}
                             size="small"
-                        >
+                        >   <MenuItem value={"nursing"}>Blank</MenuItem>
                             <MenuItem value={"nursing"}>r/nursing</MenuItem>
                             <MenuItem value={"aita"}>r/AmITheAsshole</MenuItem>
                         </Select>                    

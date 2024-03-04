@@ -18,9 +18,7 @@ export default function SimpleAccordion(props) {
       justifyContent="space-between"
     >
       <SelectionViewer></SelectionViewer>
-
-
-      
+            
       <div>
       <AccordionSection
           compact={props.compact}
