@@ -1498,13 +1498,12 @@ def file_upload(*args,
     else:
         df = pd.read_excel(path, skiprows=headerLine - 1)
 
-
     db = utils.connect(db=database)
     # Process each row
     for batch in itertools.batched(df.iterrows(), 1000):
         documents = []
         for _, row in batch:
-            doc = schemas.create_document_object(row[title], [], row[text], metadata=row.to_json())
+            doc = schemas.create_document_object(row[title], [], row[text], metadata=json.loads(row.to_json()))
             documents.append(doc)
         db.documents.insert_many(documents)
     
@@ -1573,8 +1572,6 @@ def milvus_import(*args,
         "index_type":"IVF_FLAT"
     }
     collection.create_index("text_vector", index_params)
-
-    
 
 
 
