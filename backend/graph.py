@@ -392,8 +392,8 @@ def update_teleoscope_milvus(mdb: database.Database, teleoscope_node, sources: L
                     limit=n_results
                 )
             # Cut results off at distance max
-            index = utils.binary_search(results["distances"][0], distance)
-            ranks = zip(results["ids"][0][0:index], results["distances"][0][0:index])
+            index = utils.binary_search(results[0].distances, distance)
+            ranks = zip(results[0].ids[0:index], results[0].distances[0:index])
             doclists.append({ "ranked_documents": list(ranks), "type": "All"})
     
     else:
