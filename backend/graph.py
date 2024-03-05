@@ -7,6 +7,7 @@ import bcrypt
 import chromadb
 from chromadb import Documents, EmbeddingFunction, Embeddings
 from chromadb.config import Settings
+from pymilvus import connections, db, utility, Collection
 
 from . import schemas
 from . import utils
@@ -18,7 +19,9 @@ load_dotenv()  # This loads the variables from .env
 import os
 CHROMA_HOST = os.getenv('CHROMA_HOST') 
 CHROMA_PORT = os.getenv('CHROMA_PORT') 
-
+MILVUS_HOST = os.getenv('MILVUS_HOST') 
+MILVUS_PORT = os.getenv('MILVUS_PORT') 
+MILVUS_DATABASE = os.getenv('MILVUS_DATABASE') 
 
 ################################################################################
 # Graph API
@@ -319,6 +322,117 @@ def update_search(db: database.Database, search_node, parameters):
 ################################################################################
 # Update Teleoscope
 ################################################################################
+
+
+def update_teleoscope_milvus(mdb: database.Database, teleoscope_node, sources: List, controls: List, parameters):
+
+    if len(controls) == 0:
+        logging.info(f"No controls included. Returning original teleoscope node.")
+        return teleoscope_node
+
+    connections.connect("teleoscope", host=MILVUS_HOST, port=MILVUS_PORT)
+    db.using_database(MILVUS_DATABASE)
+
+    milvus_collection = Collection(mdb.name)
+    milvus_collection.load()
+
+    logging.debug(f"Connected to Milvus Collection {milvus_collection}.")
+
+    control_oids = utils.get_oids(mdb, controls)
+
+    def get(oids):
+        expression = f"oid in {oids}"
+        milvus_collection.query(expr=expression, output_fields=["text_vector"])
+
+    def mappend(li, source, results):
+        li.append((source, [ObjectId(res["oid"]) for res in results], [res["text_vector"] for res in results]))
+       
+
+    milvus_results = get(control_oids)
+
+    control_vectors = [np.array(res['text_vector']) for res in milvus_results]
+
+    logging.debug("Found vectors {control_vectors} for controls {controls}.")
+
+    search_vector = np.average(control_vectors, axis=0)
+    logging.debug("Search vector is: {search_vector}.")
+
+    source_map = []
+    doclists = []
+    
+    search_params = {
+        "metric_type": "IP", 
+        "offset": 0, 
+        "ignore_growing": False,
+    }
+
+    if len(sources) == 0:
+            distance = 0.5
+            if "distance" in parameters:
+                distance = parameters["distance"]
+
+            # Get results until distance has been met
+            n_results = 64
+            results = milvus_collection.search(
+                data=[search_vector],
+                anns_field="text_vector",
+                param=search_params,
+                limit=n_results
+            )
+            
+            while max(results[0].distances) < distance:
+                n_results = n_results * 2
+                results = milvus_collection.search(
+                    data=[search_vector],
+                    anns_field="text_vector",
+                    param=search_params,
+                    limit=n_results
+                )
+            # Cut results off at distance max
+            index = utils.binary_search(results["distances"][0], distance)
+            ranks = zip(results["ids"][0][0:index], results["distances"][0][0:index])
+            doclists.append({ "ranked_documents": list(ranks), "type": "All"})
+    
+    else:
+        
+
+        for source in sources:
+            match source["type"]:
+                case "Document":
+                    oids = [source["id"]]
+                    results = get(oids)
+                    mappend(source_map, source, results)
+                case "Group":
+                    group = db.groups.find_one({"_id": source["id"]})
+                    oids = group["history"][0]["included_documents"]
+                    results = get(oids)
+                    mappend(source_map, source, results)
+                case "Search":
+                    search = db.searches.find_one({"_id": source["id"]})
+                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
+                    oids = [d["_id"] for d in list(cursor)]
+                    results = get(oids)
+                    mappend(source_map, source, results)
+                case "Union" | "Difference" | "Intersection" | "Exclusion":
+                    node = db.graph.find_one({"_id": source["id"]})
+                    node_doclists = node["doclists"]
+                    for doclist in node_doclists:
+                        oids = [d[0] for d in doclist["ranked_documents"]]
+                        results = get(oids)
+                        mappend(source_map, source, results)
+                case "Note":
+                    pass
+
+        for source, source_oids, source_vecs in source_map:
+            ranks = utils.rank(control_vectors, source_oids, source_vecs)
+            source["ranked_documents"] = ranks
+            doclists.append(source)
+
+    teleoscope_node["doclists"] = doclists
+    
+    return teleoscope_node
+
+
 
 def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
     

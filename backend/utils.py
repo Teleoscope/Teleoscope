@@ -364,6 +364,12 @@ def rank_similarity(control_vecs, ids, vecs, similarity):
     return ranks
 
 
+# {
+#     "type": "Document",
+#     "id": "65e6a782201a918bc772e05b"
+# }
+
+
 def get_oids(db: database.Database, sources, exclude=[]):
     oids = []
     for c in sources:
