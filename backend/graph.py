@@ -383,7 +383,7 @@ def update_teleoscope_milvus(mdb: database.Database, teleoscope_node, sources: L
                 limit=n_results
             )
             
-            while max(results[0].distances) < distance:
+            while max(results[0].distances) < distance and n_results < 16384:
                 n_results = n_results * 2
                 results = milvus_collection.search(
                     data=[search_vector],
