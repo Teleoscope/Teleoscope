@@ -5,7 +5,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import { Typography, Stack, List, ListItem, Divider } from "@mui/material";
+import { Typography, Stack, List, ListItem, Divider, Box } from "@mui/material";
 import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import { DocumentActions } from "@/components/Documents/DocumentActions";
 import Highlighter from "@/components/Highlighter";
@@ -34,11 +34,17 @@ export default function DocViewer(props) {
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
+
         <Stack spacing={1} sx={{ margin: "1em" }}>
           <Typography variant="h5">{document?.title}</Typography>
           <Divider></Divider>
           <DocumentActions document={document} />
-          <Typography><Highlighter>{document?.text}</Highlighter></Typography>
+          <Box sx={{ overflow: "scroll" }}>
+            <Highlighter>
+            {document?.text}
+          </Highlighter>
+          </Box>
+        
           <List>
             {document?.metadata
               ? Object.entries(document.metadata).map(([key, value]) => {

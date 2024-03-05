@@ -194,7 +194,7 @@ await Promise.race([checkConnection(), timeout()]);
     }
 
     this.client = new Client({
-      brokerURL: `wss://${process.env.NEXT_PUBLIC_WEBSOCKET_HOST}/ws`,
+      brokerURL: `${process.env.NEXT_PUBLIC_WEBSOCKET_BROKER_URI}`,
       connectHeaders: {
         login: process.env.NEXT_PUBLIC_RABBITMQ_USERNAME!,
         passcode: process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD!,
