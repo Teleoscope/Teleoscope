@@ -34,7 +34,7 @@ CELERY_BROKER_URL = (
 )
 
 queue = Queue("embeddings", Exchange("embeddings"), "embeddings")
-app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
+app = Celery('embeddings', backend='rpc://', broker=CELERY_BROKER_URL)
 
 app.conf.update(
     task_serializer='pickle',
@@ -45,7 +45,6 @@ app.conf.update(
 )
 
 
-app = Celery('embeddings', broker=CELERY_BROKER_URL)
 
 @app.task
 def milvus_import(*args, 
