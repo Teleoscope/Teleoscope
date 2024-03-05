@@ -363,42 +363,35 @@ def update_teleoscope_milvus(mdb: database.Database, teleoscope_node, sources: L
     source_map = []
     doclists = []
     
+    distance = 0.5
+    if "distance" in parameters:
+        distance = parameters["distance"]
+
     search_params = {
-        "metric_type": "IP", 
-        "offset": 0, 
-        "ignore_growing": False,
+        # use `IP` as the metric to calculate the distance
+        "metric_type": "IP",
+        "params": {
+            # search for vectors with a distance greater than 0.8
+            "radius": 1 - distance,
+            # filter out most similar vectors with a distance greater than or equal to 1.0
+            "range_filter" : 1.0
+        }
     }
 
-    if len(sources) == 0:
-            distance = 0.5
-            if "distance" in parameters:
-                distance = parameters["distance"]
+    if len(sources) == 0:            
+        # Get results until distance has been met
+        n_results = 64
+        results = milvus_collection.search(
+            data=[search_vector],
+            anns_field="text_vector",
+            param=search_params,
+            limit=n_results
+        )
 
-            # Get results until distance has been met
-            n_results = 64
-            results = milvus_collection.search(
-                data=[search_vector],
-                anns_field="text_vector",
-                param=search_params,
-                limit=n_results
-            )
-            
-            while max(results[0].distances) < distance and n_results < 16384:
-                n_results = n_results * 2
-                results = milvus_collection.search(
-                    data=[search_vector],
-                    anns_field="text_vector",
-                    param=search_params,
-                    limit=n_results
-                )
-            # Cut results off at distance max
-            index = utils.binary_search(results[0].distances, distance)
-            ranks = zip(results[0].ids[0:index], results[0].distances[0:index])
-            doclists.append({ "ranked_documents": list(ranks), "type": "All"})
+        ranks = zip(results[0].ids, results[0].distances)
+        doclists.append({ "ranked_documents": list(ranks), "type": "All"})
     
     else:
-        
-
         for source in sources:
             match source["type"]:
                 case "Document":
