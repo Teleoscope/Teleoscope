@@ -48,6 +48,7 @@
     "next-auth": "^4.22.1",
     "nextra": "^2.6.2",
     "nextra-theme-docs": "^2.6.2",
+    "primereact": "^10.5.1",
     "randomcolor": "^0.6.2",
     "react": "latest",
     "react-clipboard.js": "^2.0.16",
