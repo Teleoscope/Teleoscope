@@ -13,7 +13,7 @@ import pandas as pd
 from . import utils
 from . import schemas
 from . import graph
-from .embeddings import milvus_import
+from backend.embeddings import milvus_import
 
 # environment variables
 from dotenv import load_dotenv

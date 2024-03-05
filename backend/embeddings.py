@@ -88,7 +88,7 @@ def milvus_import(*args,
 
 if __name__ == '__main__':
     worker = app.Worker(
-        include=['backend'],
+        include=['backend.embeddings'],
         hostname=f"embeddings.{os.getlogin()}@%h{uuid.uuid4()}",
         loglevel="INFO"
     )
