@@ -7,10 +7,11 @@
 
 import { authOptions } from 'pages/api/auth/[...nextauth]';
 import { getServerSession } from "next-auth/next";
-import { Stomp } from '@/util/Stomp';
+
+import send from '@/util/amqp';
 
 export default async function handler(req, res) {
-  const args = req.body;
+  let args = req.body;
 
   if (req.method != "POST") {
     return null
@@ -23,10 +24,9 @@ export default async function handler(req, res) {
     return;
   }
 
-  const client = Stomp.getInstance({userid: session.user.id})
-  await client.wait_for_client_connection()
-  client.add_contributor(args.contributor, args.workspace_id)
-  await client.wait_for_client_disconnection()
+  args["userid"] = session.user.id
+  
+  await send('add_contributor', args)
 
   return res.json({"status": "success"})
 }

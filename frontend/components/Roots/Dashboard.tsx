@@ -16,11 +16,11 @@ const fetcher = (...args) => fetch(...args).then(res => res.json())
 const ExistingWorkspace = ({workspace, color}) => {
 
     // Use window.location to determine the host dynamically
-    const protocol = window.location.protocol;
-    const host = window.location.host; // Includes hostname and port if applicable
+    // const protocol = window.location.protocol;
+    // const host = window.location.host; // Includes hostname and port if applicable
 
     const [contributor, setContributor] = useState("");    
-    const { data: coll } = useSWR(`${protocol}//${host}/api/users/${contributor}`, fetcher)
+    const { data: coll } = useSWR(`/api/users/${contributor}`, fetcher)
     const [open, setOpen] = useState(false);
 
     const handleTextChange = (event, ws) => {
@@ -52,7 +52,7 @@ const ExistingWorkspace = ({workspace, color}) => {
       );
     
     const handleDelete = (c) => {
-        fetch(`${host}/api/contributors/remove`, {
+        fetch(`/api/contributors/remove`, {
             method: 'POST',
             body: JSON.stringify({contributor_id: c, workspace_id: workspace["_id"]}),
             headers: { "Content-Type": "application/json" }
@@ -62,7 +62,7 @@ const ExistingWorkspace = ({workspace, color}) => {
     const handleKeyDown = (event) => {
         if ((event.key === 'Return' || event.key === 'Enter' || event.keyCode === 13) && coll?.found) {
             setOpen(true)
-            fetch(`${host}/api/contributors/add`, {
+            fetch(`/api/contributors/add`, {
                 method: 'POST',
                 body: JSON.stringify({contributor: contributor, workspace_id: workspace["_id"]}),
                 headers: { "Content-Type": "application/json" }

@@ -7,7 +7,7 @@
 
 import { authOptions } from 'pages/api/auth/[...nextauth]';
 import { getServerSession } from "next-auth/next";
-import { Stomp } from '@/util/Stomp';
+import send from '@/util/amqp';
 
 export default async function handler(req, res) {
   const args = req.body;
@@ -23,10 +23,10 @@ export default async function handler(req, res) {
     return;
   }
 
-  const client = Stomp.getInstance({userid: session.user.id})
-  await client.wait_for_client_connection()
-  client.remove_contributor(args.contributor_id, args.workspace_id)
-  Stomp.stop()
+  
+  args["userid"] = session.user.id
+  
+  await send('remove_contributor', args)
 
   return res.json({"status": "success"})
 }
