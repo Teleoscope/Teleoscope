@@ -11,7 +11,7 @@ import { getServerSession } from "next-auth/next";
 import send from '@/util/amqp';
 
 export default async function handler(req, res) {
-  let args = req.body;
+  const args = req.body;
 
   if (req.method != "POST") {
     return null
