@@ -1534,7 +1534,8 @@ def file_upload(*args,
                     group_id=group_map[group], document_id=inserted_doc["_id"])
 
     import pymongo
-    db.documents.create_index("text", background=True)
+    db.documents.create_index([('text', 'text')], background=True)
+
 
     milvus_import.apply_async(kwargs={
         'database': database,
