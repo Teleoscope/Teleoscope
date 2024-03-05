@@ -88,4 +88,4 @@ def milvus_import(*args,
 
 
 if __name__ == '__main__':
-    app.worker_main(['worker', '--loglevel=INFO', f"--hostname=embeddings.{os.getlogin()}@%h{uuid.uuid4()}"])
+    app.start(['worker', '--loglevel=INFO', f"--hostname=embeddings.{os.getlogin()}@%h{uuid.uuid4()}"])
