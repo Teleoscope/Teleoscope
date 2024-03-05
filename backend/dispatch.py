@@ -159,4 +159,6 @@ tasks.app.steps["consumer"].add(WebTaskConsumer)
 
 
 if __name__ == '__main__':
-    tasks.app.worker_main(['worker', '--loglevel=INFO', f"--hostname=dispatch.{os.getlogin()}@%h{uuid.uuid4()}" ])
+    worker = tasks.app.Worker(include=['backend.dispatch'])
+    worker.start()
+    # tasks.app.worker_main(['worker', '--loglevel=INFO', f"--hostname=dispatch.{os.getlogin()}@%h{uuid.uuid4()}" ])
