@@ -1521,13 +1521,16 @@ def file_upload(*args,
 
     for group in unique_values:
         color = utils.random_color()
-        res = add_group(database, userid, workflow, color, group, "Imported group")
+        res = add_group(database=database, userid=userid, workflow_id=workflow, 
+                        color=color, label=group, description="Imported group")
+        
         group_map[group] = res
     
     for inserted_doc in inserted_documents:
         for group in groups:
             if group in inserted_doc["metadata"]:
-                add_document_to_group(database, userid, group_map[group], inserted_doc["_id"])
+                add_document_to_group(database=database, userid=userid, 
+                    group_id=group_map[group], document_id=inserted_doc["_id"])
 
     import pymongo
     db.documents.create_index("text", pymongo.TEXT, background=True)
