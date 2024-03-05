@@ -1,7 +1,6 @@
 import logging
 import itertools
 from celery import Celery
-from celery.apps.worker import Worker
 from kombu import  Exchange, Queue
 import uuid
 import os
@@ -88,4 +87,4 @@ def milvus_import(*args,
 
 
 if __name__ == '__main__':
-    app.start(['worker', '--loglevel=INFO', f"--hostname=embeddings.{os.getlogin()}@%h{uuid.uuid4()}"])
+    app.worker_main(['worker', '--loglevel=INFO', f"--hostname=embeddings.{os.getlogin()}@%h{uuid.uuid4()}"])
