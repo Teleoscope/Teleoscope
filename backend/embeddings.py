@@ -87,4 +87,6 @@ def milvus_import(*args,
 
 
 if __name__ == '__main__':
-    app.worker_main(['worker', '--loglevel=INFO', f"--hostname=embeddings.{os.getlogin()}@%h{uuid.uuid4()}"])
+    worker = app.Worker(include=['project.tasks'])
+    worker.start()
+    # (['worker', '--loglevel=INFO', f"--hostname=embeddings.{os.getlogin()}@%h{uuid.uuid4()}"])
