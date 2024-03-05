@@ -7,7 +7,7 @@ module.exports = {
   apps: [
     {
       name: "dispatch",
-      script: "/usr/share/miniconda3/envs/teleoscope/bin/python",
+      script: 'python',
       args: ["-m", "backend.dispatch"],
       watch: false,
       interpreter: "",
@@ -31,6 +31,17 @@ module.exports = {
       watch: false,
       interpreter: "",
       // max_memory_restart: "1G"
-    }
+    },
+    {
+      name: "embeddings",
+      script: 'python',
+      args: ["-m", "backend.embeddings"],
+      watch: false,
+      interpreter: "",
+      max_memory_restart: "16G",
+      instances: 1,
+    },
+
   ]
 };
+

@@ -162,6 +162,7 @@ experiments/data/
 ansible/vars/*
 
 # yarn
+.yarn/*
 .pnp.*
 */.yarn
 */.vscode

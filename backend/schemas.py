@@ -3,6 +3,7 @@ from bson.objectid import ObjectId
 from typing import NewType
 from typing import Literal
 from typing import List
+from pymilvus import CollectionSchema, FieldSchema, DataType
 
 EdgeType = Literal["source", "control", "output"]
 NodeType = Literal["Group", "Document", "Search", "Teleoscope", "Projection", "Union", "Intersection", "Exclusion", "Difference"]
@@ -299,3 +300,37 @@ def create_doclist(id, nodeid, node_type, ranked_documents=[]):
         "type": node_type,
         "ranked_documents": ranked_documents
     }
+
+
+def create_milvus_schema(vector_dimensions=1024):
+    
+#     document_id = FieldSchema(
+#   name="document_id",
+#   dtype=DataType.VARCHAR,
+#   max_length=24,
+# )
+
+# text_embedding = FieldSchema(
+#   name="text_embedding",
+#   dtype=DataType.FLOAT_VECTOR,
+#   dim=1024
+# )
+
+    oid = FieldSchema(
+        name="oid",
+        dtype=DataType.VARCHAR,
+        max_length=24,
+        is_primary=True,
+        default_value="Unknown"
+    )
+    text_vector = FieldSchema(
+        name="text_vector",
+        dtype=DataType.FLOAT_VECTOR,
+        dim=vector_dimensions
+    )
+    schema = CollectionSchema(
+        fields=[oid, text_vector],
+        description="Text vector schema",
+        enable_dynamic_field=True
+    )
+    return schema

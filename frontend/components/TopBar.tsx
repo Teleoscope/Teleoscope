@@ -23,7 +23,7 @@ export default function TopBar(props) {
     const [openMenu, setOpenMenu] = React.useState(false);
     
     const handleSignOut = () => {
-      signOut({ callbackUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/signin` })
+      signOut({ callbackUrl: `/signin` })
     }
 
     const handleDashboard = () => {

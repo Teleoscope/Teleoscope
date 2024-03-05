@@ -143,6 +143,10 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
             case "copy_doclists_to_groups":
                 res = tasks.copy_doclists_to_groups.signature(args=(), kwargs=kwargs)
+            
+            case "file_upload":
+                res = tasks.file_upload.signature(args=(), kwargs=kwargs)
+
 
         try:
             res.apply_async(queue=RABBITMQ_TASK_QUEUE)
@@ -155,4 +159,10 @@ tasks.app.steps["consumer"].add(WebTaskConsumer)
 
 
 if __name__ == '__main__':
-    tasks.app.worker_main(['worker', '--loglevel=INFO', f"--hostname=dispatch.{os.getlogin()}@%h{uuid.uuid4()}" ])
+    worker = tasks.app.Worker(
+        include=['backend.dispatch'], 
+        hostname=f"hostname=dispatch.{os.getlogin()}@%h{uuid.uuid4()}",
+        loglevel="INFO"
+    )
+    worker.start()
+    # tasks.app.worker_main(['worker', '--loglevel=INFO', f"--hostname=dispatch.{os.getlogin()}@%h{uuid.uuid4()}" ])
