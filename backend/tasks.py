@@ -13,7 +13,7 @@ import pandas as pd
 from . import utils
 from . import schemas
 from . import graph
-from . import embeddings
+from .embeddings import milvus_import
 
 # environment variables
 from dotenv import load_dotenv
@@ -1536,7 +1536,7 @@ def file_upload(*args,
     import pymongo
     db.documents.create_index("text", background=True)
 
-    embeddings.milvus_import.apply_async(kwargs={
+    milvus_import.apply_async(kwargs={
         'database': database,
         'userid': userid,
     }, queue='embeddings')
