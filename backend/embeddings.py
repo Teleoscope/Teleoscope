@@ -77,6 +77,7 @@ def milvus_import(*args,
     for batch in itertools.batched(documents, 1000):
         ids = [str(doc["_id"]) for doc in batch]
         embeddings = model.encode([doc['text'] for doc in batch])
+        logging.info(f'Ids: {ids}; Embeddings: {embeddings}')
         collection.insert([ids, embeddings])
 
     index_params = {
