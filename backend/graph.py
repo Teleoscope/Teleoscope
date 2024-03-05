@@ -345,7 +345,7 @@ def update_teleoscope_milvus(mdb: database.Database, teleoscope_node, sources: L
 
     def get(oids):
         expression = f"oid in {[str(oid) for oid in oids]}"
-        milvus_collection.query(expr=expression, output_fields=["text_vector"])
+        return milvus_collection.query(expr=expression, output_fields=["text_vector"])
 
     def mappend(li, source, results):
         li.append((source, [ObjectId(res["oid"]) for res in results], [res["text_vector"] for res in results]))
