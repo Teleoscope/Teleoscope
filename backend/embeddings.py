@@ -82,7 +82,8 @@ def milvus_import(*args,
 
     index_params = {
         "metric_type":"IP",
-        "index_type":"IVF_FLAT"
+        "index_type":"IVF_FLAT",
+        "params":{"nlist":1024}
     }
     collection.create_index("text_vector", index_params)
 
