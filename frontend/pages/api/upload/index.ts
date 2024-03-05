@@ -44,7 +44,7 @@ const handler = async (req, res) => {
   });
 
   console.log(data)
-  const workflow = parseInt(data.fields.session_id[0]);
+  const workflow = data.fields.session_id[0];
   const headerLine = parseInt(data.fields.headerLine[0]);
   const uniqueId = data.fields.id[0];
   const title = data.fields.title[0];
