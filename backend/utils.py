@@ -6,6 +6,7 @@ import heapq
 import re
 import pika
 import os
+import pymilvus
 
 # installed modules
 from pymongo import MongoClient, database
@@ -50,6 +51,10 @@ MONGODB_REPLICASET = os.getenv('MONGODB_REPLICASET')
 
 CHROMA_HOST = os.getenv('CHROMA_HOST') 
 CHROMA_PORT = os.getenv('CHROMA_PORT') 
+
+MILVUS_HOST = os.getenv('MILVUS_HOST') 
+MILVUS_PORT = os.getenv('MILVUS_PORT') 
+MILVUS_DATABASE = os.getenv('MILVUS_DATABASE') 
 
 
 db = "test"
@@ -172,10 +177,24 @@ def get_chroma_client():
 
 
 def get_embeddings(dbstring, oids):
-    chroma_client = get_chroma_client()
-    chroma_collection = chroma_client.get_collection(dbstring)
-    results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
-    return results
+    # chroma_client = get_chroma_client()
+    # chroma_collection = chroma_client.get_collection(dbstring)
+    # results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
+    from pymilvus import connections, db, utility, Collection
+    
+    connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
+
+    db.using_database(MILVUS_DATABASE)
+
+    milvus_collection = Collection(dbstring)
+    milvus_collection.load()
+
+    logging.debug(f"Connected to Milvus Collection {milvus_collection}.")
+
+    expression = f"oid in {[str(oid) for oid in oids]}"
+    results = milvus_collection.query(expr=expression, output_fields=["text_vector"])
+
+    return [res["text_vector"] for res in results]
 
 
 def get_documents_chromadb(dbstring, limit):

@@ -7,7 +7,7 @@ import bcrypt
 import chromadb
 from chromadb import Documents, EmbeddingFunction, Embeddings
 from chromadb.config import Settings
-from pymilvus import connections, db, utility, Collection
+import pymilvus
 
 from . import schemas
 from . import utils
@@ -327,6 +327,7 @@ def update_search(db: database.Database, search_node, parameters):
 
 
 def update_teleoscope_milvus(mdb: database.Database, teleoscope_node, sources: List, controls: List, parameters):
+    from pymilvus import connections, db, utility, Collection
 
     if len(controls) == 0:
         logging.info(f"No controls included. Returning original teleoscope node.")
