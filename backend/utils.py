@@ -6,6 +6,7 @@ import heapq
 import re
 import pika
 import os
+import pymilvus
 
 # installed modules
 from pymongo import MongoClient, database
@@ -50,6 +51,10 @@ MONGODB_REPLICASET = os.getenv('MONGODB_REPLICASET')
 
 CHROMA_HOST = os.getenv('CHROMA_HOST') 
 CHROMA_PORT = os.getenv('CHROMA_PORT') 
+
+MILVUS_HOST = os.getenv('MILVUS_HOST') 
+MILVUS_PORT = os.getenv('MILVUS_PORT') 
+MILVUS_DATABASE = os.getenv('MILVUS_DATABASE') 
 
 
 db = "test"
@@ -172,10 +177,24 @@ def get_chroma_client():
 
 
 def get_embeddings(dbstring, oids):
-    chroma_client = get_chroma_client()
-    chroma_collection = chroma_client.get_collection(dbstring)
-    results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
-    return results
+    # chroma_client = get_chroma_client()
+    # chroma_collection = chroma_client.get_collection(dbstring)
+    # results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
+    from pymilvus import connections, db, utility, Collection
+    
+    connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
+
+    db.using_database(MILVUS_DATABASE)
+
+    milvus_collection = Collection(dbstring)
+    milvus_collection.load()
+
+    logging.debug(f"Connected to Milvus Collection {milvus_collection}.")
+
+    expression = f"oid in {[str(oid) for oid in oids]}"
+    results = milvus_collection.query(expr=expression, output_fields=["text_vector"])
+
+    return [res["text_vector"] for res in results]
 
 
 def get_documents_chromadb(dbstring, limit):
@@ -364,6 +383,12 @@ def rank_similarity(control_vecs, ids, vecs, similarity):
     return ranks
 
 
+# {
+#     "type": "Document",
+#     "id": "65e6a782201a918bc772e05b"
+# }
+
+
 def get_oids(db: database.Database, sources, exclude=[]):
     oids = []
     for c in sources:
@@ -447,3 +472,23 @@ def update_chromadb(dbstring, ids=[], texts=[], metadatas=None):
     default_ef = embedding_functions.DefaultEmbeddingFunction()
     chroma_collection = chroma_client.get_collection(dbstring, embedding_function=default_ef)
     chroma_collection.update(ids=[str(id) for id in ids], documents=texts, metadatas=metadatas)
+
+
+def sanitize_db_name(name):
+    # Remove forbidden characters
+    forbidden_chars = " .$/\\"
+    for char in forbidden_chars:
+        name = name.replace(char, "_")
+    
+    # Ensure the name is not too long
+    max_length = 63  # 64 bytes - 1 for safety
+    if len(name.encode('utf-8')) > max_length:
+        # Trim the name if it's too long, considering multibyte characters
+        while len(name.encode('utf-8')) > max_length:
+            name = name[:-1]
+    
+    # Ensure the name is not empty after removing forbidden characters
+    if not name:
+        raise ValueError("Database name cannot be empty after sanitization.")
+    
+    return name

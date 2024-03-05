@@ -998,6 +998,25 @@ await Promise.race([checkConnection(), timeout()]);
     return body;
   }
 
+  /**
+   * Copies node doclists to groups.
+   */
+  file_upload(path: string, headerLine: Number, uniqueId: string, title: string, text: string, groups: Array<string>) {
+    const body = {
+      task: "file_upload",
+      args: {
+        path: path,
+        headerLine: headerLine,
+        uniqueId: uniqueId,
+        title: title,
+        text: text,
+        groups: groups
+      },
+    };
+    this.publish(body);
+    return body;
+  }
+
 
 }
 

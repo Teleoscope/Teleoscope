@@ -7,7 +7,7 @@ import AccordionSection from "@/components/Sidebar/AccordionSection";
 import SelectionViewer from "@/components/Sidebar/SelectionViewer";
 import Workflows from "@/components/Sidebar/WorkflowViewer";
 import { useWindowDefinitions } from "@/util/hooks";
-
+import Uploader from "@/components/Uploader";
 
 export default function SimpleAccordion(props) {
   const wdefs = useWindowDefinitions();
@@ -18,8 +18,15 @@ export default function SimpleAccordion(props) {
       justifyContent="space-between"
     >
       <SelectionViewer></SelectionViewer>
-
+            
       <div>
+      <AccordionSection
+          compact={props.compact}
+          icon={wdefs.definitions()["Workflows"].icon()}
+          text="Upload"
+        >
+          <Uploader />
+        </AccordionSection>
         <AccordionSection
           compact={props.compact}
           icon={wdefs.definitions()["Workflows"].icon()}

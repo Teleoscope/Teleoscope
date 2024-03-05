@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { MongoClient } from "mongodb";
 
 export default async (req, res) => {
-  console.log("at least we got here");
+
   try {
     const client = await new MongoClient(process.env.MONGODB_REGISTRAR_URI).connect();
     const db = client.db("users");
@@ -10,7 +10,7 @@ export default async (req, res) => {
     const credentials = req.body;
 
     const user = await db.collection("users").findOne({ username: credentials.username });
-    console.log("user", user);
+
 
     if (user) {
       const compare = await bcrypt.compare(credentials.password, user.password);

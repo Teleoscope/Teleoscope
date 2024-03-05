@@ -6,11 +6,14 @@ from bson.objectid import ObjectId
 from kombu import  Exchange, Queue
 from typing import List
 import os
+import itertools
+import pandas as pd
 
 # local imports
 from . import utils
 from . import schemas
 from . import graph
+from backend.embeddings import milvus_import
 
 # environment variables
 from dotenv import load_dotenv
@@ -40,7 +43,7 @@ app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
 
 app.conf.update(
     task_serializer='pickle',
-    accept_content=['pickle'],  # Ignore other content
+    accept_content=['pickle', 'json'],  # Ignore other content
     result_serializer='pickle',
     task_queues=[queue],
     worker_concurrency=4,
@@ -101,15 +104,22 @@ def initialize_workspace(
 
     # Every workspace should be initialized with one workflow
     color = utils.random_color()
+
+    uuid_str = str(uuid.uuid4()).replace('-', '_')
+
+    dbname = utils.sanitize_db_name(f"{label}_{uuid_str}")
+
+    if datasource == "aita" or datasource == "nursing":
+        dbname = datasource
     
-    obj = schemas.create_workspace_object(owner=userid, label=label, database=datasource)
+    obj = schemas.create_workspace_object(owner=userid, label=label, database=dbname)
     res = db.workspaces.insert_one(obj)
 
     workflow_id = initialize_workflow(
-        database=datasource, 
-        userid=userid, 
-        label=label, 
-        color=color, 
+        database=dbname,
+        userid=userid,
+        label=label,
+        color=color,
         workspace_id=res.inserted_id
     )
     
@@ -1470,6 +1480,71 @@ def mark(*args, database: str, userid: str, workflow_id: str, workspace_id: str,
 
 
 @app.task
+def file_upload(*args, 
+                database: str, 
+                userid: str,
+                workflow: str,
+                path: str, 
+                mimetype: str, 
+                headerLine: int, 
+                uniqueId: str, 
+                title: str, 
+                text: str, 
+                groups: list, **kwargs):
+    
+    df = None
+
+    if mimetype == "text/csv":
+        df = pd.read_csv(path, skiprows=headerLine - 1)
+    else:
+        df = pd.read_excel(path, skiprows=headerLine - 1)
+
+    db = utils.connect(db=database)
+    # Process each row
+    for batch in itertools.batched(df.iterrows(), 1000):
+        documents = []
+        for _, row in batch:
+            doc = schemas.create_document_object(row[title], [], row[text], metadata=json.loads(row.to_json()))
+            documents.append(doc)
+        db.documents.insert_many(documents)
+    
+    inserted_documents = db.documents.find({})
+    
+    # Initialize an empty set to store the combined unique values
+    unique_values = set()
+
+    for column in groups:
+        # Update the set with unique values from the current column
+        unique_values.update(df[column].unique())
+    
+    group_map = dict()
+
+    for group in unique_values:
+        color = utils.random_color()
+        res = add_group(database=database, userid=userid, workflow_id=workflow,
+                        color=color, label=str(group), description="Imported group")
+        
+        group_map[group] = res
+    
+    for inserted_doc in inserted_documents:
+        for group in unique_values:
+            keys = [inserted_doc["metadata"][g] for g in groups]
+            if group in keys:
+                add_document_to_group(database=database, userid=userid, 
+                    group_id=group_map[group], document_id=inserted_doc["_id"])
+
+    import pymongo
+    db.documents.create_index("text", background=True)
+
+    milvus_import.apply_async(kwargs={
+        'database': database,
+        'userid': userid,
+    }, queue='embeddings')
+
+
+
+
+@app.task
 def ping(*args, database: str, userid: str, message: str, replyTo: str, **kwargs):
     
     userid = ObjectId(str(userid))
@@ -1505,7 +1580,10 @@ def vectorize_and_upload_text(text, database, id): #(text) -> Vector
     print(f"Vectorized and uploaded {id}.")
 
 
-"dispatch.${userInfo.username}@%h"
-
 if __name__ == '__main__':
-    app.worker_main(['worker', '--loglevel=INFO', f"--hostname=tasks.{os.getlogin()}@%h{uuid.uuid4()}" ])
+    worker = tasks.app.Worker(
+        include=['backend.tasks'], 
+        hostname=f"tasks.{os.getlogin()}@%h{uuid.uuid4()}",
+        loglevel="INFO"
+    )
+    worker.start()

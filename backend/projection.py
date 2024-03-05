@@ -372,7 +372,7 @@ class Projection:
         logging.info("Gathering document embeddings...")
         
         # grab all document data from embeddings
-        document_embeddings = utils.get_embeddings(self.db.name, document_ids)["embeddings"]
+        document_embeddings = utils.get_embeddings(self.db.name, document_ids)
         
         # if sources = 0: average ordering of conrolls for all[30000]
         logging.info('Gathering Document IDs...')
@@ -407,7 +407,7 @@ class Projection:
                 
                 # see if document is already in training sets
                 if id not in document_ids:
-                    vector = np.array(utils.get_embeddings(self.db.name, [id])["embeddings"][0])
+                    vector = np.array(utils.get_embeddings(self.db.name, [id])[0])
                     
                     document_vectors = np.vstack((document_vectors, vector))
                     # get index of document in group with respect to training sets    
