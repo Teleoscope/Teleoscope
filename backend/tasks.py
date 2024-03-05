@@ -1521,8 +1521,8 @@ def file_upload(*args,
 
     for group in unique_values:
         color = utils.random_color()
-        res = add_group(database=database, userid=userid, workflow_id=workflow, 
-                        color=color, label=group, description="Imported group")
+        res = add_group(database=database, userid=userid, workflow_id=workflow,
+                        color=color, label=str(group), description="Imported group")
         
         group_map[group] = res
     
