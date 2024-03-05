@@ -8,7 +8,7 @@ module.exports = {
   apps: [
     {
       name: "dispatch",
-      script: process.env.PYTHON_INTERPRETER,
+      script: 'python',
       args: ["-m", "backend.dispatch"],
       watch: false,
       interpreter: "",
@@ -35,7 +35,7 @@ module.exports = {
     },
     {
       name: "embeddings",
-      script: process.env.PYTHON_INTERPRETER,
+      script: 'python',
       args: ["-m", "backend.embeddings"],
       watch: false,
       interpreter: "",
