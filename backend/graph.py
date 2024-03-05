@@ -332,7 +332,8 @@ def update_teleoscope_milvus(mdb: database.Database, teleoscope_node, sources: L
         logging.info(f"No controls included. Returning original teleoscope node.")
         return teleoscope_node
 
-    connections.connect("teleoscope", host=MILVUS_HOST, port=MILVUS_PORT)
+    connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
+
     db.using_database(MILVUS_DATABASE)
 
     milvus_collection = Collection(mdb.name)
@@ -432,6 +433,8 @@ def update_teleoscope_milvus(mdb: database.Database, teleoscope_node, sources: L
 
     teleoscope_node["doclists"] = doclists
     
+    connections.disconnect("default")
+
     return teleoscope_node
 
 
