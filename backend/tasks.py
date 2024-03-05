@@ -105,7 +105,7 @@ def initialize_workspace(
     # Every workspace should be initialized with one workflow
     color = utils.random_color()
 
-    uuid_str = str(uuid.uuid4())
+    uuid_str = str(uuid.uuid4()).replace('-', '_')
 
     dbname = utils.sanitize_db_name(f"{label}_{uuid_str}")
 
