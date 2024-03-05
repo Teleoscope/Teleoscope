@@ -38,7 +38,7 @@ app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
 
 app.conf.update(
     task_serializer='pickle',
-    accept_content=['pickle'],  # Ignore other content
+    accept_content=['pickle', 'json'],  # Ignore other content
     result_serializer='pickle',
     task_queues=[queue],
     worker_concurrency=1
