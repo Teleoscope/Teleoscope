@@ -1527,8 +1527,9 @@ def file_upload(*args,
         group_map[group] = res
     
     for inserted_doc in inserted_documents:
-        for group in groups:
-            if group in inserted_doc["metadata"]:
+        for group in unique_values:
+            keys = [inserted_doc["metadata"][g] for g in groups]
+            if group in keys:
                 add_document_to_group(database=database, userid=userid, 
                     group_id=group_map[group], document_id=inserted_doc["_id"])
 
