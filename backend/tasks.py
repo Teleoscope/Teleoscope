@@ -1580,8 +1580,6 @@ def vectorize_and_upload_text(text, database, id): #(text) -> Vector
     print(f"Vectorized and uploaded {id}.")
 
 
-"dispatch.${userInfo.username}@%h"
-
 if __name__ == '__main__':
     worker = tasks.app.Worker(
         include=['backend.tasks'], 
@@ -1589,4 +1587,3 @@ if __name__ == '__main__':
         loglevel="INFO"
     )
     worker.start()
-    # app.worker_main(['worker', '--loglevel=INFO', f"--hostname=tasks.{os.getlogin()}@%h{uuid.uuid4()}" ])
