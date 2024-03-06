@@ -18,7 +18,7 @@ broker_url = f'amqp://{RABBITMQ_USERNAME}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}/{R
 
 # Create the Celery application instance
 queue = Queue("embeddings", Exchange("embeddings"), "embeddings")
-app = Celery('messenger', backend='rpc://', broker=broker_url)
+app = Celery('messenger', backend='rpc://', broker=broker_url,include=['backend.tasks', 'backend.embeddings'])
 
 app.conf.update(
     task_track_started=True,
@@ -32,10 +32,10 @@ app.conf.update(
 )
 
 task = "backend.embeddings.milvus_import"
-kwargs = {"database": "aita", "userid": "64b1a2cd857461d1d46bc7e2"}
+kwargs = {"database": "aita", "userid": ""}
 
-res = app.send_task(task, kwargs=kwargs)
-res.get(timeout=10)
+app.send_task(task, kwargs=kwargs, queue="embeddings")
+
 
 
 
