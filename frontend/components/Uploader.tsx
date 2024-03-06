@@ -54,6 +54,8 @@ export default function Uploader() {
   const [headerLine, setHeaderLine] = useState(1); // State for selecting header line
   const [selectedHeaders, setSelectedHeaders] = useState([]); // State for multiselect
 
+  const settings = useAppSelector((state) => state.windows.settings);
+
   const database = useAppSelector((state) => state.activeSessionID.database);
   const session_id = useAppSelector((state) => state.activeSessionID.value);
 
@@ -112,7 +114,7 @@ export default function Uploader() {
   return (
     <div>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      <Button variant="contained" component="label">
+      <Button variant="contained" component="label" style={{ backgroundColor: settings.color}}>
         Choose File
         <input type="file" hidden onChange={handleFileChange} accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
       </Button>
@@ -129,7 +131,7 @@ export default function Uploader() {
           ))}
         </Select>
       </FormControl>
-      <Button variant="contained" onClick={uploadFile} disabled={!file}>
+      <Button variant="contained" onClick={uploadFile} disabled={!file} style={{ backgroundColor: settings.color}}>
         Upload
       </Button>
 
