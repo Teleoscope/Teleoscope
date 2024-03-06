@@ -1556,6 +1556,9 @@ def ping(*args, database: str, userid: str, message: str, replyTo: str, **kwargs
     utils.message(replyTo, msg)
 
 
+@app.task
+def ping_rabbit(msg):
+    logging.info(msg)
 
 @app.task
 def vectorize_and_upload_text(text, database, id): #(text) -> Vector
@@ -1582,7 +1585,7 @@ def vectorize_and_upload_text(text, database, id): #(text) -> Vector
 
 
 if __name__ == '__main__':
-    worker = tasks.app.Worker(
+    worker = app.Worker(
         include=['backend.tasks'], 
         hostname=f"tasks.{os.getlogin()}@%h{uuid.uuid4()}",
         loglevel="INFO"

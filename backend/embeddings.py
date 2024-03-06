@@ -45,7 +45,7 @@ app.conf.update(
 
 
 
-@app.task(name="")
+@app.task
 def milvus_import(*args, 
                 database: str, 
                 userid: str,
