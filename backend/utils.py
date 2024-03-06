@@ -204,11 +204,33 @@ def get_documents_chromadb(dbstring, limit):
     return results
 
 
+def get_documents_milvus(dbstring, limit):
+    
+    from pymilvus import connections, db, utility, Collection
+    
+    connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
+
+    db.using_database(MILVUS_DATABASE)
+
+    milvus_collection = Collection(dbstring)
+    milvus_collection.load()
+
+    logging.debug(f"Connected to Milvus Collection {milvus_collection}.")
+
+    expression = f"oid > 0"
+    results = milvus_collection.query(expr=expression, limit=limit)
+
+    return [res["oid"] for res in results], [res["text_vector"] for res in results]
+
+
 def get_distance_matrix(vectors, distance):
     return distance(vectors)
 
 
 def get_documents(dbstring, rebuild=False, limit=None):
+    return get_documents_milvus(dbstring, limit)
+    
+    '''
     if dbstring == "aita" or dbstring == "brands":
         get_documents_chromadb(dbstring, limit)
 
@@ -278,6 +300,7 @@ def get_documents(dbstring, rebuild=False, limit=None):
         
     return ids, vectors
 
+    '''
 
 def random_color():
     import random

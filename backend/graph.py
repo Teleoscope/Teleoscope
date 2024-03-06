@@ -192,10 +192,7 @@ def graph(db: database.Database, node_oid: ObjectId):
         case "Note":
             node = update_note(db, node, parameters)
         case "Teleoscope":
-            if db.name == "aita" or db.name == "brands":
-                node = update_teleoscope_chroma(db, node, sources, controls, parameters)
-            else:
-                node = update_teleoscope_milvus(db, node, sources, controls, parameters)
+            node = update_teleoscope_milvus(db, node, sources, controls, parameters)
         case "Projection":
             node = update_projection(db, node, sources, controls, parameters)
         case "Union":

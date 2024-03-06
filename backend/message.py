@@ -32,12 +32,6 @@ app.conf.update(
 )
 
 task = "backend.embeddings.milvus_import"
-kwargs = {"database": "aita", "userid": ""}
+kwargs = {"database": "brands", "userid": ""}
 
 app.send_task(task, kwargs=kwargs, queue="embeddings")
-
-
-
-
-
-
