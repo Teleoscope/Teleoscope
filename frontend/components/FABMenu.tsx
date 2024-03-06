@@ -90,7 +90,7 @@ export default function FABMenu(props) {
       {actions.map((action) => {
 
         if (action == "Divider") {
-         return <SpeedDialAction sx={{ visibility: 'hidden', height: "1px", margin: 0, padding: 0 }} />
+         return <SpeedDialAction key={action} sx={{ visibility: 'hidden', height: "1px", margin: 0, padding: 0 }} />
         }
           return <SpeedDialAction
           sx={{ color: settings.color }}

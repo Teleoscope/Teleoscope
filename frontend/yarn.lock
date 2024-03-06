@@ -320,10 +320,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fontsource/roboto@npm:^4.5.7":
-  version: 4.5.8
-  resolution: "@fontsource/roboto@npm:4.5.8"
-  checksum: 460b6de2c9f7a172192c3f5bdd3aa11f78f0b6660dca9dc2b9d8207272b50c55b5a8f2da68e11e7fbaf44c7d3cf4191030eecce9def79fab75d4cc1de39754e2
+"@fontsource/roboto@npm:^5.0.12":
+  version: 5.0.12
+  resolution: "@fontsource/roboto@npm:5.0.12"
+  checksum: fe1efe352dd2a8d5f58e8cf73be27ccb78c349f3a41d26a1ec38b9b1d1854903002b5f2fd898cb4cd26400d5e5d76a40b17116848f50a7391035e9c12a566b8f
   languageName: node
   linkType: hard
 
@@ -3624,7 +3624,7 @@ __metadata:
   dependencies:
     "@emotion/react": ^11.9.3
     "@emotion/styled": ^11.9.3
-    "@fontsource/roboto": ^4.5.7
+    "@fontsource/roboto": ^5.0.12
     "@mdx-js/loader": ^2.3.0
     "@mdx-js/mdx": ^2.3.0
     "@mdx-js/react": ^2.3.0
@@ -3684,7 +3684,7 @@ __metadata:
     react-syntax-highlighter: ^15.5.0
     react-virtuoso: ^4.3.8
     react-youtube: ^10.1.0
-    reactflow: ^11.7.2
+    reactflow: ^11.10.4
     redux: ^4.2.1
     redux-thunk: ^2.4.2
     rehype-raw: ^7.0.0
@@ -7490,7 +7490,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"reactflow@npm:^11.7.2":
+"reactflow@npm:^11.10.4":
   version: 11.10.4
   resolution: "reactflow@npm:11.10.4"
   dependencies:

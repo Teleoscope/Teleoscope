@@ -64,8 +64,6 @@ export default function Itemlist({ onSelect, data, render, loadMore }) {
   const listRef = React.useRef(null);
   const dispatch = useAppDispatch();
 
-  const groups = data ? (data.length === 1 ? [] : data.map((d) => `${d.id}: ${d.type}`)) : [];
-
   const groupCounts = data ? data.map((d) => d?.ranked_documents?.length) : [];
   const reduced_data = data ? data.reduce((acc, dl) => acc.concat(dl?.ranked_documents), []) : [];
 
@@ -121,8 +119,8 @@ export default function Itemlist({ onSelect, data, render, loadMore }) {
     ref?.current.scrollToIndex({index: j})
   }
 
-  // return <></>
   return (
+    
     <GroupedVirtuoso
       ref={ref}
       groupCounts={groupCounts}
@@ -130,7 +128,6 @@ export default function Itemlist({ onSelect, data, render, loadMore }) {
       itemContent={(index) => render(index, reduced_data?.at(index), currentItemIndex, handleSetCurrentItemIndex)}
       scrollerRef={scrollerRef}
       groupContent={(index) => <GroupLabel callback={handleScroll} index={index} data={data} />}
-      // style={{ height: 400 }}
     />
   );
 }

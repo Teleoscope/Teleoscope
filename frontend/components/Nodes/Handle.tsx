@@ -39,9 +39,12 @@ export default function HandleWrapper({ type, id, nodeid, position, variant }) {
     const settings = useAppSelector((state) => state.windows.settings);
     
     const nodesize = useStore(s => defaultSize(s, nodeid) );
-    const mousePosition = flow.project(useGlobalMousePosition());
+    const mousePosition = flow.screenToFlowPosition(useGlobalMousePosition());
 
-    
+    // const position = reactFlowInstance.screenToFlowPosition({
+    //     x: event.clientX,
+    //     y: event.clientY,
+    //   });
     
     const distance = calculateDistanceToEdges(mousePosition, nodesize);
 

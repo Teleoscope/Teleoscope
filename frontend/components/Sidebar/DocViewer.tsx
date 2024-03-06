@@ -39,7 +39,7 @@ export default function DocViewer(props) {
           <Typography variant="h5">{document?.title}</Typography>
           <Divider></Divider>
           <DocumentActions document={document} />
-          <Box sx={{ overflow: "scroll" }}>
+          <Box sx={{ overflow: "auto" }}>
             <Highlighter>
             {document?.text}
           </Highlighter>

@@ -1,66 +1,46 @@
-// mui
-
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-
-// custom
 import DocumentList from "@/components/Documents/DocumentList";
-
-//utils
-import { useSWRHook } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
 import { SaveXLSX, CopyJson, CopyText, SaveDocx } from "@/components/Groups/GroupActions";
-import { Typography } from "@mui/material";
+import { useSWRHook } from "@/util/swr";
+import Count from "@/components/Count";
 
-export default function Group({ id: winId, windata, color }) {
+
+export default function Group({ id: winId, windata }) {
   const id = winId.split("%")[0];
   const swr = useSWRHook();
-  const { group } = windata.demo
-    ? windata.demodata
-    : swr.useSWRAbstract("group", `groups/${id}`); 
-  const data = group?.history[0].included_documents.map((p) => {
-    return [p, 1.0];
-  });
+  const { group } = windata.demo ? windata.demodata : swr.useSWRAbstract("group", `groups/${id}`);
+  
+  // Prepare data for the DocumentList and ButtonActions
+  const data = group?.history[0].included_documents.map(doc => [doc, 1.0]);
+  
+  // Button actions configuration
+  const buttonActionsConfig = { swr, data, group };
 
-  const ButtonActionsConfig = {
-    swr: swr,
-    data: data,
-    group: group,
-  };
 
-  const Status = (doclist) => {
-    return (
-      <Typography sx={{ width: "100%" }} align="center" variant="caption">
-        Number of documents: {doclist?.length}</Typography>
-    )
-  }
 
   return (
     <Stack direction="column" sx={{ height: "100%" }}>
-        <ButtonActions
-          inner={[
-            [SaveXLSX, ButtonActionsConfig],
-            [SaveDocx, ButtonActionsConfig],
-            [CopyJson, ButtonActionsConfig],
-            [CopyText, ButtonActionsConfig],
-          ]}
-        ></ButtonActions>
-        <ButtonActions
-          inner={[
-            [Status, data]
-          ]}
-        >
-        </ButtonActions>
+      <ButtonActions
+        inner={[
+          [SaveXLSX, buttonActionsConfig],
+          [SaveDocx, buttonActionsConfig],
+          [CopyJson, buttonActionsConfig],
+          [CopyText, buttonActionsConfig],
+        ]}
+      />
+      <ButtonActions inner={[[Count, {loading: data ? false : true, label: "Number of documents", count: data?.length }]]} />
       <Box sx={{ flexGrow: 1, flexDirection: "column" }}>
         <DocumentList
-          data={[{id: id, ranked_documents: data}]}
+          data={[{ id, ranked_documents: data }]}
           pagination={true}
           showGroupIcon={false}
           showOrientIcon={false}
           showRemoveIcon={false}
           group={group}
           ShowDeleteIcon={true}
-        ></DocumentList>
+        />
       </Box>
     </Stack>
   );

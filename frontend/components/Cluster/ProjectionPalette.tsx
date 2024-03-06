@@ -1,28 +1,23 @@
-// mui
-import {
-  Stack,
-  List,
-  ListItem,
-  ListItemIcon
-} from "@mui/material";
+// Core MUI Components
+import { Stack, List, ListItem, ListItemIcon } from "@mui/material";
+import { Diversity2 as Diversity2Icon } from "@mui/icons-material";
 
-import {
-  Diversity2 as Diversity2Icon
-} from "@mui/icons-material";
-
-// custom
+// Custom Components
 import EditableText from "@/components/EditableText";
 import Deleter from "@/components/Deleter";
+import { NewItemForm } from "../NewItemForm";
 
-// actions
+// Redux and Hooks
 import { useAppSelector } from "@/util/hooks";
 import { RootState } from "@/stores/store";
-
-// utils
 import { useSWRHook } from "@/util/swr";
 import { useStomp } from "@/util/Stomp";
-import { NewItemForm } from "../NewItemForm";
+
+// Utilities
 import { onDragStart } from "@/util/drag";
+
+// Component Props Interface (if using TypeScript)
+interface ClustersProps {}
 
 export default function Clusters(props) {
   const client = useStomp();

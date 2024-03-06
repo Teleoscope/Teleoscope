@@ -188,7 +188,6 @@ function Flow(props) {
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
-      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const id = event.dataTransfer.getData("application/reactflow/id");
       const type = event.dataTransfer.getData("application/reactflow/type");
       const index = event.dataTransfer.getData("application/reactflow/index");
@@ -198,9 +197,9 @@ function Flow(props) {
         return;
       }
 
-      const position = reactFlowInstance.project({
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
       });
 
       dispatch(makeNode({
@@ -220,10 +219,9 @@ function Flow(props) {
   
 
   const handleOpenContextMenu = (event) => {
-    const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
-    const position = reactFlowInstance.project({
-      x: event.clientX - reactFlowBounds.left,
-      y: event.clientY - reactFlowBounds.top,
+    const position = reactFlowInstance.screenToFlowPosition({
+      x: event.clientX,
+      y: event.clientY,
     });
 
     setContextMenu(

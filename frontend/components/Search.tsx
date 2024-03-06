@@ -57,7 +57,6 @@ export default function Search({id, windata, color}) {
           fullWidth
           placeholder={query ? query : "Search..."}
           sx={{
-            // '& .MuiInput-underline:before': { borderBottomColor: props.color },
             "& .MuiInput-underline:after": { borderBottomColor: color },
           }}
           variant="standard"
@@ -65,7 +64,7 @@ export default function Search({id, windata, color}) {
         />
       </Stack>
       <Divider></Divider>
-      <ButtonActions inner={[[Count, {count_loading, count}]]}></ButtonActions>
+      <ButtonActions inner={[[Count, {label: "Number of results", loading: count_loading, count: count}]]}></ButtonActions>
       <Box sx={{ flexGrow: 1, flexDirection: "column" }}>
         <DocumentList
           loading={documents_loading}

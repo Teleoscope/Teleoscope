@@ -119,8 +119,6 @@ export default function Demo(props) {
     const onDrop = useCallback(
       (event) => {
         event.preventDefault();
-        const reactFlowBounds =
-          reactFlowWrapper.current.getBoundingClientRect();
         const id = event.dataTransfer.getData("application/reactflow/id");
         const type = event.dataTransfer.getData("application/reactflow/type");
 
@@ -129,9 +127,9 @@ export default function Demo(props) {
           return;
         }
 
-        const position = reactFlowInstance.project({
-          x: event.clientX - reactFlowBounds.left,
-          y: event.clientY - reactFlowBounds.top,
+        const position = reactFlowInstance.screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
         });
         const newNode = {
           id: id,
