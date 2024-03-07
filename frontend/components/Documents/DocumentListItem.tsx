@@ -28,6 +28,10 @@ export default function DocumentListItem(props) {
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const settings = useAppSelector((state) => state.windows.settings);
 
+  if (document_loading || document_error) {
+    return <div>Loading...</div>
+  }
+  
   const handleSetIndex = () => {
     if (props.setIndex) {
       props.setIndex(props.listIndex);
@@ -37,9 +41,6 @@ export default function DocumentListItem(props) {
     client.mark(document._id, session_id, !document.state.read);
   };
 
-  if (document_loading || document_error) {
-    return <div>Loading...</div>
-  }
 
   return (
     <div

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Stack, Typography } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import DocumentList from "@/components/Documents/DocumentList";
@@ -28,7 +28,7 @@ const Status = (node) => {
 
 // Additional props can be included as needed
 export default function SetOperation({ id, windata }) {
-  const [node_id] = useState(id.split("%")[0]);
+  const [ node_id, setNodeId] = useState(id.split("%")[0]);
   const swr = useSWRHook();
 
   const { node } = windata?.demo
@@ -37,6 +37,9 @@ export default function SetOperation({ id, windata }) {
 
   const doclists = node?.doclists;
   
+  useEffect(() => {
+    setNodeId(id.split("%")[0]);
+  }, [id]);
   
 
   return (
