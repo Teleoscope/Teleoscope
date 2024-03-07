@@ -23,7 +23,7 @@ import { onDragStart } from "@/util/drag";
 export default function DocumentListItem(props) {
   const client = useStomp();
   const swr = useSWRHook();
-  const { document } = swr.useSWRAbstract("document", `document/${props.id}`);
+  const { document, document_loading, document_error } = swr.useSWRAbstract("document", `document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;
   const session_id = useAppSelector((state) => state.activeSessionID.value);
   const settings = useAppSelector((state) => state.windows.settings);
@@ -36,6 +36,11 @@ export default function DocumentListItem(props) {
   const handleRead = () => {
     client.mark(document._id, session_id, !document.state.read);
   };
+
+  if (document_loading || document_error) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div
       draggable={true}
@@ -68,7 +73,7 @@ export default function DocumentListItem(props) {
             <BookmarkSelector id={props.id} />
             {props.showReadIcon ? (
               <IconButton onClick={handleRead}>
-                {document?.state.read ? (
+                {document?.state?.read ? (
                   <CircleOutlinedIcon sx={{ fontSize: 15 }} />
                 ) : (
                   <CircleIcon sx={{ fontSize: 15 }} />

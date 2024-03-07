@@ -105,7 +105,7 @@ export default function Teleoscope(props) {
      if (teleoscope.doclists.length > 0) {
        return (
         <Stack direction="row" sx={{ width: "100%" }} spacing={2} alignItems="center" justifyContent="center">
-          <Count loading={teleoscope ? false : true} count={teleoscope.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)} /> 
+          <Count label="Number of results" loading={teleoscope ? false : true} count={teleoscope.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)} /> 
           <Histogram data={teleoscope.doclists[0].ranked_documents}></Histogram>
           <DistanceSlider color={color} teleoscope={teleoscope} client={client} />
           

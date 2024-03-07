@@ -3,7 +3,7 @@ import DocViewer from "@/components/Sidebar/DocViewer";
 import GroupViewer from "@/components/Sidebar/GroupViewer";
 import NotesViewer from "@/components/Sidebar/NotesViewer";
 import TeleoscopeViewer from "@/components/Sidebar/TeleoscopeViewer";
-import ClusterViewer from "@/components/Sidebar/ClusterViewer";
+import ProjectionViewer from "@/components/Sidebar/ProjectionViewer";
 import OperationViewer from "./OperationViewer";
 
 export default function SelectionViewer(props) {
@@ -32,11 +32,11 @@ export default function SelectionViewer(props) {
         }
         if (node.data.type == "Projection" && !props.noGroup) {
           return (
-            <ClusterViewer
+            <ProjectionViewer
               compact={true}
               key={node.id.split("%")[0]}
               id={node.id.split("%")[0]}
-            ></ClusterViewer>
+            ></ProjectionViewer>
           );
         }
         if (node.data.type == "Note") {

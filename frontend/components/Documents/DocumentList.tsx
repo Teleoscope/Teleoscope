@@ -13,12 +13,10 @@ export default function DocumentList(props) {
   const data = props.data;
   const dispatch = useAppDispatch();
   const client = useStomp();
-  const session_id = useAppSelector(
-    (state) => state.activeSessionID.value
-  );
-  
+  const session_id = useAppSelector((state) => state.activeSessionID.value);
 
   const renderItem = (index, item, currentIndex, setIndex) => {
+
     if (!item) {
       return <>ok</>
     }
@@ -59,6 +57,11 @@ export default function DocumentList(props) {
   }
 
   return (
-    <ItemList data={data} render={renderItem} loadMore={handleLoadMore} onSelect={onSelect}></ItemList>
+    <ItemList 
+        data={data} 
+        render={renderItem} 
+        loadMore={handleLoadMore} 
+        onSelect={onSelect}>
+    </ItemList>
   );
 }

@@ -1,6 +1,6 @@
 import React from "react";
 // actions
-import { useAppDispatch, useWindowDefinitions } from "@/util/hooks";
+import { useWindowDefinitions } from "@/util/hooks";
 import { bookmark } from "@/actions/windows";
 import { GroupedVirtuoso } from "react-virtuoso";
 import { useSWRHook } from "@/util/swr";
@@ -8,7 +8,7 @@ import { Box } from "@mui/system";
 import { Button, Stack, Typography } from "@mui/material";
 import { onDragStart } from "@/util/drag";
 import { HiChevronDoubleDown } from 'react-icons/hi';
-
+import { useAppDispatch } from "@/util/hooks";
 
 
 const GroupLabel = ({ index, data, callback}) => {
@@ -38,7 +38,7 @@ const GroupLabel = ({ index, data, callback}) => {
   };
 
   if (data.length == 1) {
-    return <></>
+    return <div style={{ height: "1px" }}></div>
   }
   
   return (
@@ -123,11 +123,13 @@ export default function Itemlist({ onSelect, data, render, loadMore }) {
     
     <GroupedVirtuoso
       ref={ref}
+      initialItemCount={1}
       groupCounts={groupCounts}
       endReached={loadMore}
       itemContent={(index) => render(index, reduced_data?.at(index), currentItemIndex, handleSetCurrentItemIndex)}
-      scrollerRef={scrollerRef}
       groupContent={(index) => <GroupLabel callback={handleScroll} index={index} data={data} />}
+      scrollerRef={scrollerRef}
+      
     />
   );
 }
