@@ -49,6 +49,7 @@
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.0",
     "rgb-hex": "^4.1.0",
+    "sharp": "^0.33.2",
     "swr": "^2.2.5",
     "websocket-ts": "^2.1.5",
     "xlsx": "^0.18.5"
