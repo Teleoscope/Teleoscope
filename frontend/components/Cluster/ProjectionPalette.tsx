@@ -16,10 +16,7 @@ import { useStomp } from "@/util/Stomp";
 // Utilities
 import { onDragStart } from "@/util/drag";
 
-// Component Props Interface (if using TypeScript)
-interface ClustersProps {}
-
-export default function Clusters(props) {
+export default function ProjectionPalette(props) {
   const client = useStomp();
   const settings = useAppSelector((state: RootState) => state.windows.settings);
   const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
