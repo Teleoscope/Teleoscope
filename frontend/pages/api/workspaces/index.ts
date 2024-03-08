@@ -2,7 +2,7 @@ import withSecureSession from "@/util/withSecureSession";
 import { MongoClient } from "mongodb";
 import { ObjectId } from "bson";
 
-async function handler(req, res) {
+async function handler(req, res, session) {
 
   const client = await new MongoClient(process.env.MONGODB_REGISTRAR_URI).connect();
   const db = await client.db("users");
