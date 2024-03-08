@@ -3,6 +3,10 @@
   "packageManager": "yarn@3.5.1",
   "dependencies": {
     "dotenv": "^16.4.5",
-    "primereact": "^10.5.1"
+    "eslint-config-next": "latest",
+    "next": "latest",
+    "primereact": "^10.5.1",
+    "react": "latest",
+    "react-dom": "latest"
   }
 }
