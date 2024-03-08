@@ -17,6 +17,7 @@
     "@mui/material": "^5.15.12",
     "@reduxjs/toolkit": "^2.2.1",
     "@stomp/stompjs": "^7.0.0",
+    "amqplib": "^0.10.3",
     "bcryptjs": "^2.4.3",
     "bson": "^6.4.0",
     "color-space": "^2.0.1",
@@ -53,6 +54,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/amqplib": "^0",
     "@types/bcryptjs": "^2",
     "@types/draft-js": "^0",
     "@types/file-saver": "^2",
