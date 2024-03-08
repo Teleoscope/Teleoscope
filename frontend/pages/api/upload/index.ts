@@ -1,7 +1,6 @@
 // Import necessary modules
 import { promises as fs } from 'fs';
-import { authOptions } from 'pages/api/auth/[...nextauth]';
-import { getServerSession } from 'next-auth/next';
+import withSecureSession from "@/util/withSecureSession";
 import { IncomingForm } from 'formidable';
 import send from '@/util/amqp';
 
@@ -13,16 +12,8 @@ export const config = {
 };
 
 // Define the handler function as an async function
-const handler = async (req, res) => {
-  // Check for the session
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session) {
-    // If not authenticated, return 401 Unauthorized
-    return res.status(401).json({ message: "You must be logged in." });
-  } else {
-    console.log(session)
-  }
+const handler = async (req, res, session) => {
+  
 
   // Only allow POST method
   if (req.method !== 'POST') {
@@ -119,7 +110,7 @@ try {
 };
 
 // Export the handler as the default export
-export default handler;
+export default withSecureSession(handler)
 
 
 import readline from 'readline';

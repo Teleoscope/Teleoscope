@@ -5,18 +5,11 @@
  * returns: workspace object from MongoDB
  */
 
-import { authOptions } from 'pages/api/auth/[...nextauth]';
-import { getServerSession } from "next-auth/next";
+import withSecureSession from "@/util/withSecureSession";
 import { MongoClient } from "mongodb";
 import { ObjectId } from "bson";
 
-export default async function handler(req, res) {
-  const session = await getServerSession(req, res, authOptions)
-
-  if (!session) {
-    res.status(401).json({ message: "You must be logged in to access.", session: session });
-    return;
-  }
+async function handler(req, res, session) {
 
   const client = await new MongoClient(process.env.MONGODB_REGISTRAR_URI).connect();
   const db = await client.db("users");
@@ -29,3 +22,5 @@ export default async function handler(req, res) {
 
   return res.json(workspace)
 }
+
+export default withSecureSession(handler)

@@ -5,13 +5,13 @@
  * requires: authenticated user and user exists
  * returns: user object without hashed password
  */
-import { authOptions } from 'pages/api/auth/[...nextauth]';
-import { getServerSession } from "next-auth/next";
+
+import withSecureSession from "@/util/withSecureSession";
 import { ObjectId } from "bson";
 import { MongoClient } from 'mongodb';
 
-export default async function handler(req, res) {
-  const session = await getServerSession(req, res, authOptions)
+async function handler(req, res, session) {
+  
   
   const client = await new MongoClient(process.env.MONGODB_REGISTRAR_URI).connect();
   
@@ -22,11 +22,6 @@ export default async function handler(req, res) {
 
   client.close()
 
-  if (!session) {
-    res.status(401).json({ message: "You must be logged in."});
-    return;
-  }
-
   if (!user) {
     res.status(401).json({ message: "User not found."});
     return
@@ -34,3 +29,5 @@ export default async function handler(req, res) {
 
   return res.json(user)
 }
+
+export default withSecureSession(handler)

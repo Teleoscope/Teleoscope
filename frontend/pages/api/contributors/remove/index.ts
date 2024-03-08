@@ -5,24 +5,15 @@
  * returns: workspace object from MongoDB
  */
 
-import { authOptions } from 'pages/api/auth/[...nextauth]';
-import { getServerSession } from "next-auth/next";
+import withSecureSession from "@/util/withSecureSession";
 import send from '@/util/amqp';
 
-export default async function handler(req, res) {
+async function handler(req, res, session) {
   const args = req.body;
 
   if (req.method != "POST") {
     return null
   }
-  
-  const session = await getServerSession(req, res, authOptions)
-
-  if (!session) {
-    res.status(401).json({ message: "You must be logged in to access.", session: session });
-    return;
-  }
-
   
   args["userid"] = session.user.id
   
@@ -30,3 +21,5 @@ export default async function handler(req, res) {
 
   return res.json({"status": "success"})
 }
+
+export default withSecureSession(handler)
