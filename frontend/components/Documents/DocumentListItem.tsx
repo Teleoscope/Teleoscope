@@ -12,20 +12,21 @@ import BookmarkSelector from "@/components/BookmarkSelector";
 import DocumentTitle from "@/components/Documents/DocumentTitle";
 import Deleter from "@/components/Deleter";
 
+//actions
+import { mark, removeDocumentFromGroup } from "@/actions/windows";
+
 //utils
 import { useSWRHook } from "@/util/swr";
 import { PreprocessTitle } from "@/util/Preprocessers";
+import { useAppDispatch } from "@/util/hooks";
 
-// contexts
-import { useStomp } from "@/util/Stomp";
 import { onDragStart } from "@/util/drag";
 
 export default function DocumentListItem(props) {
-  const client = useStomp();
+  const dispatch = useAppDispatch()
   const swr = useSWRHook();
   const { document, document_loading, document_error } = swr.useSWRAbstract("document", `document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;
-  const session_id = useAppSelector((state) => state.activeSessionID.value);
   const settings = useAppSelector((state) => state.windows.settings);
 
   if (document_loading || document_error) {
@@ -38,7 +39,7 @@ export default function DocumentListItem(props) {
     }
   };
   const handleRead = () => {
-    client.mark(document._id, session_id, !document.state.read);
+    dispatch(mark({document_id: document._id, read: !document.state.read}));
   };
 
 
@@ -88,7 +89,7 @@ export default function DocumentListItem(props) {
 
         {props.ShowDeleteIcon ? (
           <Deleter 
-            callback={() => client.remove_document_from_group(props.group._id, props.id)} 
+            callback={() => dispatch(removeDocumentFromGroup({group_id: props.group._id, document_id: props.id}))} 
             color={settings.color}
           />    
         ) : (

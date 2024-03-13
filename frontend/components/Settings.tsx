@@ -7,14 +7,10 @@ import { useAppSelector, useAppDispatch } from "@/util/hooks";
 // custom components
 import { setSettings, setColor } from "@/actions/windows";
 import ColorPicker from "@/components/ColorPicker";
-import { useStomp } from "@/util/Stomp";
 
 export default function Settings(props) {
-  const client = useStomp();
-  const session_id = useAppSelector((state) => state.activeSessionID.value);
   const dispatch = useAppDispatch();
   const settings = useAppSelector((state) => state.windows.settings);
-
 
   const handleChange = (event, value, setting) => {
     const temp = { ...settings };
@@ -23,7 +19,7 @@ export default function Settings(props) {
   };
 
   const handleColorChange = (color) => {
-    dispatch(setColor({client: client, color: color, session_id: session_id}))
+    dispatch(setColor({color: color}))
   };
 
 

@@ -1,9 +1,9 @@
 import React from "react";
 
 // Creat an EditableText component
-function EditableText(props) {
+function EditableText({ initialValue, callback }) {
   const [showInputElement, setShowInputElement] = React.useState(false);
-  const [value, setValue] = React.useState(props.initialValue);
+  const [value, setValue] = React.useState(initialValue);
 
   const handleChange = (e) => {
     setValue(e.target.value);
@@ -21,7 +21,7 @@ function EditableText(props) {
             onChange={(e) => handleChange(e)}
             onBlur={() => {
               setShowInputElement(false);
-              props.callback(value);
+              callback(value);
             }}
             autoFocus
           />

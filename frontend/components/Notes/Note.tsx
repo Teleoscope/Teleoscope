@@ -9,9 +9,8 @@ import Card from "@mui/material/Card";
 
 //utils
 import { useSWRHook } from "@/util/swr";
-
-// contexts
-import { useStomp } from "@/util/Stomp";
+import { useAppDispatch } from "@/util/hooks";
+import { updateNote } from "@/actions/windows";
 
 
 const useDebounce = (callback) => {
@@ -42,7 +41,7 @@ export default function Note(props) {
     }
   });
 
-  const client = useStomp();
+  const dispatch = useAppDispatch()
   const editor = React.useRef(null);
  
   const handleLoad = (note) => {
@@ -71,7 +70,7 @@ export default function Note(props) {
   
   const debouncedRequest = useDebounce(() => {
     const content = editorState.getCurrentContent();
-    client.update_note(id, convertToRaw(content));
+    dispatch(updateNote({note_id: id, content: convertToRaw(content)}));
   });
 
   

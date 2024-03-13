@@ -25,7 +25,7 @@ export const Windows = createSlice({
   name: "windows",
   initialState: initialState,
   reducers: {
-    relabelSession: (state, action) => {
+    relabelWorkflow: (state, action) => {
       state.label = action.payload.label;
     },
     bookmark: (state, action) => {
@@ -33,7 +33,7 @@ export const Windows = createSlice({
       // doesn't actually mutate the state because it uses the Immer library,
       // which detects changes to a "draft state" and produces a brand new
       // immutable state based off those changes
-      var id = action.payload; // value of documentid
+      var id: string = action.payload; // value of documentid
       var temp = [...state.bookmarks];
       // add to workspace
       var i = temp.indexOf(id);
@@ -59,15 +59,6 @@ export const Windows = createSlice({
     },
     setLogicalClock: (state, action) => {
       state.logical_clock = action.payload;
-    },
-    setDefault: (state, action) => {
-      state.windows = initialState.windows;
-    },
-    dragged: (state, action) => {
-      state.dragged = action.payload;
-    },
-    collision: (state, action) => {
-      state.collision = action.payload;
     },
     removeWindow: (state, action) => {
       var temp_nodes = [...state.nodes];
@@ -294,15 +285,94 @@ export const Windows = createSlice({
       }
       
       state.nodes = temp;
-    }
-  },
+    },
+    // API reflections
+    makeGroupFromBookmarks: (state, action) => {
+      state.bookmarks = [];
+    },
+    copyDoclistsToGroups: (state, action) => {
+      // add any state changes here
+    },
+    updateNode: (state, action) => {
+      // add any state changes here
+    },
+    initializeTeleoscope: (state, action) => {
+      // add any state changes here
+    },
+    removeTeleoscope: (state, action) => {
+      // add any state changes here
+    },
+    relabelTeleoscope: (state, action) => {
+      // add any state changes here
+    },
+    removeCluster: (state, action) => {
+      // add any state changes here
+    },
+    initializeProjection: (state, action) => {
+      // add any state changes here
+    },
+    relabelProjection: (state, action) => {
+      // add any state changes here
+    },
+    removeProjection: (state, action) => {
+      // add any state changes here
+    },
+    removeWorkflow: (state, action) => {
+      // add any state changes here
+    },
+    initializeWorkflow: (state, action) => {
+      // add any state changes here
+    },
+    addGroup: (state, action) => {
+      // add any state changes here
+    },
+    removeGroup: (state, action) => {
+      // add any state changes here
+    },
+    recolorGroup: (state, action) => {
+      // add any state changes here
+    },
+    relabelGroup: (state, action) => {
+      // add any state changes here
+    },
+    mark: (state, action) => {
+      // add any state changes here
+    },
+    removeDocumentFromGroup: (state, action) => {
+      // add any state changes here
+    },
+    addDocumentToGroup: (state, action) => {
+      // add any state changes here
+    },
+    copyCluster: (state, action) => {
+      // add any state changes here
+    },
+    clusterByGroups: (state, action) => {
+      // add any state changes here
+    },
+    saveUIState: (state, action) => {
+      // add any state changes here
+    },
+    updateNote: (state, action) => {
+      // add any state changes here
+    },
+    addNote: (state, action) => {
+      // add any state changes here
+    },
+    relabelNote: (state, action) => {
+      // add any state changes here
+    },
+    removeNote: (state, action) => {
+      // add any state changes here
+    },
+  }
 });
 
 export const {
   // Responses from RabbitMQ
   OID_UID_SYNC,
   // Local actions
-  relabelSession,
+  relabelWorkflow,
   bookmark,
   loadBookmarkedDocuments,
   setColor,
@@ -316,10 +386,8 @@ export const {
   makeEdge,
   updateEdges,
   setNodes,
-  setDefault,
   removeWindow,
   loadWindows,
-  dragged,
   updateSearch,
   updateWindows,
   minimizeWindow,
@@ -329,6 +397,33 @@ export const {
   deselectAll,
   moveWindowToFront,
   setLogicalClock,
-  toggleMinMax
+  toggleMinMax,
+  makeGroupFromBookmarks,
+  copyDoclistsToGroups,
+  updateNode,
+  initializeTeleoscope,
+  removeTeleoscope,
+  relabelTeleoscope,
+  removeCluster,
+  initializeProjection,
+  relabelProjection,
+  removeProjection,
+  removeWorkflow,
+  initializeWorkflow,
+  addGroup,
+  removeGroup,
+  recolorGroup,
+  relabelGroup,
+  mark,
+  removeDocumentFromGroup,
+  addDocumentToGroup,
+  copyCluster,
+  clusterByGroups,
+  saveUIState,
+  updateNote,
+  addNote,
+  relabelNote,
+  removeNote
+
 } = Windows.actions;
 export default Windows.reducer;

@@ -57,7 +57,7 @@ export default function Uploader() {
   const settings = useAppSelector((state) => state.windows.settings);
 
   const database = useAppSelector((state) => state.activeSessionID.database);
-  const session_id = useAppSelector((state) => state.activeSessionID.value);
+  const workflow_id = useAppSelector((state) => state.activeSessionID.value);
 
   const handleChangeMultiple = (event) => {
     const { value } = event.target;
@@ -89,7 +89,7 @@ export default function Uploader() {
     const data = new FormData();
     data.append('file', file);
     data.append('database', database);
-    data.append('session_id', session_id);
+    data.append('workflow_id', workflow_id);
     data.append('headerLine', headerLine.toString());
     data.append('id', uniqueId);
     data.append('title', title);

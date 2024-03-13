@@ -14,13 +14,12 @@ import DocumentList from "@/components/Documents/DocumentList";
 // util
 import { useSWRHook } from "@/util/swr";
 import ButtonActions from "@/components/ButtonActions";
-import { useStomp } from "@/util/Stomp";
 import Count from "@/components/Count";
 
 export default function Search({id, windata, color}) {
   const [query, setQuery] = useState(windata?.query ? windata.query : "");
   const swr = useSWRHook();
-  const client = useStomp()
+
   const { documents, documents_loading } = swr.useSWRAbstract(
     "documents",
     `search/${query}`
@@ -42,7 +41,7 @@ export default function Search({id, windata, color}) {
 
   const handleSetQuery = (e) => {
     setQuery(e.target.value);
-    dispatch(updateSearch({ client: client, search_id: windata.oid, query: e.target.value }));
+    dispatch(updateSearch({ search_id: windata.oid, query: e.target.value }));
   };
 
   

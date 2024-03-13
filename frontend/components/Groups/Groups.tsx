@@ -79,7 +79,6 @@ import { useState } from "react";
 import { Divider } from "@mui/material";
 import { useSWRHook } from "@/util/swr";
 import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
-import { useStomp } from "@/util/Stomp";
 import randomColor from "randomcolor";
 import ButtonActions from "@/components/ButtonActions";
 import {
@@ -91,17 +90,19 @@ import {
 import { NewItemForm } from "@/components/NewItemForm";
 import { onDragStart } from "@/util/drag";
 import Deleter from "@/components/Deleter";
+import { useAppDispatch } from "@/util/hooks";
+import { addGroup, recolorGroup, relabelGroup, removeGroup } from "@/actions/windows";
 
 export default function Groups(props) {
   const swr = useSWRHook();
-  const client = useStomp();
-  const session_id = useAppSelector((state) => state.activeSessionID.value);
+  const dispatch = useAppDispatch()
+  const workflow_id = useAppSelector((state) => state.activeSessionID.value);
   const settings = useAppSelector((state) => state.windows.settings);
 
   const { groups } = props.demo
     ? props.demoGroups
-    : swr.useSWRAbstract("groups", `sessions/${session_id}/groups`);
-  const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
+    : swr.useSWRAbstract("groups", `sessions/${workflow_id}/groups`);
+  const { session } = swr.useSWRAbstract("session", `sessions/${workflow_id}`);
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   
@@ -127,7 +128,11 @@ export default function Groups(props) {
 
       <NewItemForm 
         label={"Create new group..."} 
-        HandleSubmit={(e) => client.add_group(e.target.value, randomColor(), session_id)} 
+        HandleSubmit={(e) => dispatch(addGroup({
+          label: e.target.value,
+          color: randomColor(),
+          documents: []
+        }))}
       />
 
       <Divider />
@@ -147,10 +152,10 @@ export default function Groups(props) {
         showColorPicker={showColorPicker}
         setShowColorPicker={setShowColorPicker}
         onDragStart={onDragStart}
-        removeGroup={(id) => client.remove_group(id, session_id)}
-        relabelGroup={(label, id) => client.relabel_group(label, id)}
+        removeGroup={(id) => dispatch(removeGroup({group_id: id}))}
+        relabelGroup={(label, id) => dispatch(relabelGroup({label: label, group_id: id}))}
         recolorGroup={(color, id) => {
-          client.recolor_group(color, id);
+          dispatch(recolorGroup({color: color, group_id: id}));
           setShowColorPicker(false);
         }}
         color={settings.color}

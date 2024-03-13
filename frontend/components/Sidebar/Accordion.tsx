@@ -9,7 +9,7 @@ import Workflows from "@/components/Sidebar/WorkflowViewer";
 import { useWindowDefinitions } from "@/util/hooks";
 import Uploader from "@/components/Uploader";
 
-export default function SimpleAccordion(props) {
+export default function SimpleAccordion({ compact }) {
   const wdefs = useWindowDefinitions();
   return (
     <Stack
@@ -21,42 +21,42 @@ export default function SimpleAccordion(props) {
             
       <div>
       <AccordionSection
-          compact={props.compact}
+          compact={compact}
           icon={wdefs.definitions()["Workflows"].icon()}
           text="Upload"
         >
           <Uploader />
         </AccordionSection>
         <AccordionSection
-          compact={props.compact}
+          compact={compact}
           icon={wdefs.definitions()["Workflows"].icon()}
           text="Workflows"
         >
           <Workflows />
         </AccordionSection>
         <AccordionSection
-          compact={props.compact}
+          compact={compact}
           icon={wdefs.definitions()["Groups"].icon()}
           text="Groups"
         >
           <Groups />
         </AccordionSection>
         <AccordionSection
-          compact={props.compact}
+          compact={compact}
           icon={wdefs.definitions()["Bookmarks"].icon()}
           text="Bookmarks"
         >
           <Bookmarks />
         </AccordionSection>
         <AccordionSection
-          compact={props.compact}
+          compact={compact}
           icon={wdefs.definitions()["Notes"].icon()}
           text="Notes"
         >
           <Notes />
         </AccordionSection>
         <AccordionSection
-          compact={props.compact}
+          compact={compact}
           icon={wdefs.definitions()["Settings"].icon()}
           text="Settings"
         >

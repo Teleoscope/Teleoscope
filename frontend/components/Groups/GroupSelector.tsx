@@ -9,24 +9,20 @@ import FolderIcon from "@mui/icons-material/Folder";
 import Tooltip from "@mui/material/Tooltip";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import FolderCopyIcon from "@mui/icons-material/FolderCopy";
-
-// actions
-import { useAppSelector } from "@/util/hooks";
-
-// contexts
-import { useStomp } from "@/util/Stomp";
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { removeDocumentFromGroup, addDocumentToGroup } from "@/actions/windows";
 
 //utils
 import { useSWRHook } from "@/util/swr";
 
 export default function GroupSelector(props) {
-  const client = useStomp();
+  const dispatch = useAppDispatch()
 
-  const session_id = useAppSelector((state) => state.activeSessionID.value);
+  const workflow_id = useAppSelector((state) => state.activeSessionID.value);
   const swr = useSWRHook();
   const { groups } = swr.useSWRAbstract(
     "groups",
-    `sessions/${session_id}/groups`
+    `sessions/${workflow_id}/groups`
   );
 
   const groups_this_document_belongs_to = groups
@@ -47,9 +43,9 @@ export default function GroupSelector(props) {
 
   const handleSelect = (group_id) => {
     if (groups_this_document_belongs_to.find((item) => item.id == props.id)) {
-      client.remove_document_from_group(group_id, props.id);
+      dispatch(removeDocumentFromGroup({group_id: group_id, document_id: props.id}));
     } else {
-      client.add_document_to_group(group_id, props.id);
+      dispatch(addDocumentToGroup({group_id: group_id, document_id: props.id}));
     }
     handleClose();
   };

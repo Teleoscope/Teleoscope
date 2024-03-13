@@ -8,15 +8,13 @@ import { Chip, Stack, Paper, Box, Divider } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { removeWindow, maximizeWindow } from "@/actions/windows";
 import { useEffect, useRef, useState } from "react";
-import { useStomp } from "@/util/Stomp";
 
 export default function Window({windata, id, size, title, icon, inner, color}) {
-  const client = useStomp()
   const w = windata;
   const dispatch = useDispatch();
 
   const handleDelete = () => {
-    dispatch(removeWindow({client: client, node: id}));
+    dispatch(removeWindow({node: id}));
   };
 
   const elRef = useRef();
@@ -50,7 +48,7 @@ export default function Window({windata, id, size, title, icon, inner, color}) {
         }}
         onDelete={handleDelete}
         sx={{
-          border: w.isChecked
+          border: w?.isChecked
             ? `2px solid ${color}`
             : "1px solid #DDDDDD",
           boxShadow: "1",

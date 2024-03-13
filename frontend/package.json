@@ -18,6 +18,7 @@
     "@reduxjs/toolkit": "^2.2.1",
     "@stomp/stompjs": "^7.0.0",
     "amqplib": "^0.10.3",
+    "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
     "bson": "^6.4.0",
     "color-space": "^2.0.1",

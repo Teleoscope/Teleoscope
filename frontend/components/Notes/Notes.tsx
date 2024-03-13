@@ -16,23 +16,23 @@ import Deleter from "@/components/Deleter";
 import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 
+import { addNote, relabelNote, removeNote } from "@/actions/windows";
+
 // utils
 import { useSWRHook } from "@/util/swr";
-import { useStomp } from "@/util/Stomp";
 import { NewItemForm } from "@/components/NewItemForm";
 import { onDragStart } from "@/util/drag";
 
 export default function Notes(props) {
-  const client = useStomp();
   const wdefs = useWindowDefinitions();
-  const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
+  const workflow_id = useAppSelector((state: RootState) => state.activeSessionID.value);
 
   const settings = useAppSelector((state) => state.windows.settings);
 
   const swr = useSWRHook();
   const { notes_raw } = swr.useSWRAbstract(
     "notes_raw",
-    `notes/${session_id}`
+    `notes/${workflow_id}`
   );
   const dispatch = useAppDispatch();
 
@@ -48,7 +48,8 @@ export default function Notes(props) {
 
     const handleNewNote = (e) => {
       const content = convertToRaw(ContentState.createFromText(" "));
-      client.add_note(session_id, e.target.value, content);
+
+      dispatch(addNote({label: e.target.value, content: content}));
     };
 
     
@@ -82,11 +83,11 @@ export default function Notes(props) {
 
                   <EditableText
                     initialValue={n.label}
-                    callback={(label) => client.relabel_note(n._id, label)}
+                    callback={(label) => dispatch(relabelNote({note_id: n._id, label: label}))}
                   />
                 </Stack>
                 <Deleter 
-                  callback={() => client.remove_note(n._id, session_id)} 
+                  callback={() => dispatch(removeNote({note_id: n._id}))} 
                   color={settings.color}
                 />    
               </Stack>

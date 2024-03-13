@@ -13,13 +13,12 @@ import { useSWRHook } from "@/util/swr";
 import { IconButton, Slider, Stack, Tooltip, Typography } from "@mui/material";
 import ButtonActions from "@/components/ButtonActions";
 import Histogram from "@/components/Histogram";
-import { useStomp } from "@/util/Stomp";
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
-import { useAppSelector } from "@/util/hooks";
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { copyDoclistsToGroups, updateNode } from "@/actions/windows";
 
 // Custom tooltip component
-function ValueLabelComponent(props) {
-  const { children, value } = props;
+function ValueLabelComponent({ children, value }) {
 
   return (
     <Tooltip 
@@ -32,11 +31,13 @@ function ValueLabelComponent(props) {
 }
 
 
-const DistanceSlider = ({teleoscope, client, color}) => {
-  const handleChange = (event, value) => {
-    client.update_node(teleoscope._id, {distance: value})
-  };
-
+const DistanceSlider = ({teleoscope, color}) => {
+  const dispatch = useAppDispatch()
+  const handleChange = (event, value) => dispatch(updateNode({
+    node_id: teleoscope._id,
+    parameters: {distance: value},
+  }))
+  
   return <Slider
   slots={{
     valueLabel: ValueLabelComponent,
@@ -58,43 +59,14 @@ const DistanceSlider = ({teleoscope, client, color}) => {
 />
 }
 
-const SimilaritySlider = ({teleoscope, client, color}) => {
-  const handleChange = (event, value) => {
-    client.update_node(teleoscope._id, {similarity: value})
-  };
-
-  return <Slider
-  slots={{
-    valueLabel: ValueLabelComponent,
-  }}
-  style={{
-    width: "25%"
-  }}
-  aria-label="Similarity"
-  defaultValue={teleoscope["parameters"]["similarity"] ? teleoscope["parameters"]["similarity"] : "0.4"}
-  valueLabelDisplay="auto"
-  step={0.1}
-  size="small"
-  min={0.1}
-  max={1}
-  sx={{ color: color }}
-  onChangeCommitted={(event, value) =>
-    handleChange(event, value)
-  }
-/>
-}
-
-
-export default function Teleoscope(props) {
+export default function Teleoscope({ id, windata }) {
   const debug = false;
-  const [teleoscope_id] = useState(props.id.split("%")[0]);
+  const [teleoscope_id] = useState(id.split("%")[0]);
   const swr = useSWRHook();
-  const client = useStomp();
-
 
   const color = useAppSelector((state) => state.windows.settings.color);
-  const { teleoscope } = props.windata?.demo
-    ? props.windata.demodata
+  const { teleoscope } = windata?.demo
+    ? windata.demodata
     : swr.useSWRAbstract("teleoscope", `graph/${teleoscope_id}`);
 
   const doclists = teleoscope?.doclists;
@@ -107,7 +79,7 @@ export default function Teleoscope(props) {
         <Stack direction="row" sx={{ width: "100%" }} spacing={2} alignItems="center" justifyContent="center">
           <Count label="Number of results" loading={teleoscope ? false : true} count={teleoscope.doclists.reduce((a, d) => a + d.ranked_documents.length, 0)} /> 
           <Histogram data={teleoscope.doclists[0].ranked_documents}></Histogram>
-          <DistanceSlider color={color} teleoscope={teleoscope} client={client} />
+          <DistanceSlider color={color} teleoscope={teleoscope} />
           
         </Stack>
         )
@@ -118,7 +90,7 @@ export default function Teleoscope(props) {
        </Stack>
      }
      else {
-      return <DistanceSlider color={color} teleoscope={teleoscope} client={client} />
+      return <DistanceSlider color={color} teleoscope={teleoscope} />
      }
 
 
@@ -127,12 +99,12 @@ export default function Teleoscope(props) {
     
     return null
    }
-
-
+  
    const CopyToGroup = (teleoscope) => {
+    const dispatch = useAppDispatch();
       return (
       <Tooltip title="Copy Doclists to Groups" key="Copy Doclists to Groups">
-      <IconButton onClick={() => client.copy_doclists_to_groups(teleoscope._id)}>
+      <IconButton onClick={() => dispatch(copyDoclistsToGroups({node_id: teleoscope._id}))}>
         <FolderCopyIcon fontSize="small" />
       </IconButton>
     </Tooltip>)

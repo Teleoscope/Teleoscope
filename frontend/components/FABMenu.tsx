@@ -9,17 +9,15 @@ import SpeedDialAction from "@mui/material/SpeedDialAction";
 import { makeNode } from "@/actions/windows";
 import { useSelector, useDispatch } from "react-redux";
 import { useSWRHook } from "@/util/swr";
-import { useStomp } from "@/util/Stomp";
 import { useWindowDefinitions } from "@/util/hooks";
 
-export default function FABMenu(props) {
+export default function FABMenu({ windata }) {
   const [open, setOpen] = React.useState(true);
   const dispatch = useDispatch();
-  const session_id = useSelector((state) => state.activeSessionID.value);
+  const workflow_id = useSelector((state) => state.activeSessionID.value);
   const swr = useSWRHook();
-  const client = useStomp();
   
-  const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
+  const { session } = swr.useSWRAbstract("session", `sessions/${workflow_id}`);
   
   const wdefs = useWindowDefinitions();
   const settings = useSelector((state) => state.windows.settings);
@@ -52,13 +50,12 @@ export default function FABMenu(props) {
 
   const handleAddNode = (type) => {
     dispatch(makeNode({
-      client: client,
       oid: type, 
       type: type,
       width: settings.default_document_width,
       height: settings.default_document_height,
-      x: props.windata.x + props.windata.width + 10, 
-      y: props.windata.y
+      x: windata.x + windata.width + 10, 
+      y: windata.y
     }));
   };
 

@@ -8,23 +8,26 @@ import { HiSortAscending } from "react-icons/hi";
 import { useSWRHook } from "@/util/swr";
 import DocumentList from "@/components/Documents/DocumentList";
 import ButtonActions from "../ButtonActions";
-import { useStomp } from "@/util/Stomp";
+import { useAppDispatch } from "@/util/hooks";
+import { updateNode } from "@/actions/windows";
+
 
 // Main Projection component
 export default function Projection({ id }) {
   // Extract projection ID from props and initialize state and hooks
   const projectionId = useState(id.split("%")[0])[0];
   const swr = useSWRHook();
-  const client = useStomp();
+  const dispatch = useAppDispatch()
 
   // Use SWR hook for data fetching
   const { projection } = swr.useSWRAbstract("projection", `graph/${projectionId}`);
   
   // Toggle group separation state and update backend
   const ToggleCollapse = () => {
-    const updateValue = (event, newValue) => {
-      client.update_node(projectionId, { separation: newValue });
-    };
+    const updateValue = (event, newValue) => dispatch(updateNode({
+        node_id: projectionId,
+        parameters: { separation: newValue },
+    }));
 
     return (
       <ToggleButtonGroup
@@ -55,10 +58,12 @@ export default function Projection({ id }) {
 
   // Toggle document ordering and update backend
   const ToggleOrder = () => {
-    const updateValue = (event, newValue) => {
-      client.update_node(projectionId, { ordering: newValue });
-    };
-
+    const updateValue = (event, newValue) => dispatch(updateNode({
+      node_id: projectionId,
+      parameters:  { ordering: newValue },
+  }));
+    
+  
     return (
       <ToggleButtonGroup
         value={projection?.parameters.ordering}

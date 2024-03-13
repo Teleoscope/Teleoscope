@@ -2,16 +2,14 @@ import Window from "@/components/WindowFolder/Window";
 import { useSWRHook } from "@/util/swr";
 import { useWindowDefinitions } from "@/util/hooks";
 
-export default function WindowFactory(props) {
-  const w = props.windata;
+export default function WindowFactory({ windata: w, ...props }) {
   const wdefs = useWindowDefinitions();
-  const type = w.type;
   const oid = w?.oid ? w.oid : w.i.split("%")[0];
 
   const uid = w?.uid ? w.uid : "000000"
-  const id = props?.id ? props.id : `${oid}%${uid}%${type}`;
+  const id = props?.id ? props.id : `${oid}%${uid}%${w.type}`;
 
-  const key = wdefs.apikeymap()[type];
+  const key = wdefs.apikeymap()[w.type];
   const swr = useSWRHook();
   const { data } = w?.demo 
     ? w.demodata

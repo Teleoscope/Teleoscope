@@ -4,24 +4,21 @@ import { useSWRHook } from "@/util/swr";
 import { List, ListItem, ListItemText, ListItemIcon, Stack } from "@mui/material"; // Combined @mui/material imports
 import FolderIcon from "@mui/icons-material/Folder";
 import LoadingButton from "@mui/lab/LoadingButton";
-import { useStomp } from "@/util/Stomp";
 import { onDragStart } from "@/util/drag";
 import { setSelection } from "@/actions/windows";
 import Deleter from "@/components/Deleter";
+import { removeCluster } from "@/actions/windows";
 
 export default function Clusters({ data: p_id }) {
   // Use Redux hooks for state management
-  const session_id = useAppSelector(state => state.activeSessionID.value);
   const settings = useAppSelector(state => state.windows.settings);
   const dispatch = useAppDispatch();
 
   // Initialize custom hooks for data fetching and WebSocket communication
   const swr = useSWRHook();
-  const client = useStomp();
 
   // Fetch clusters and groups data
   const { clusters } = swr.useSWRAbstract("clusters", `projections/${p_id}/clusters`);
-  const { groups } = swr.useSWRAbstract("groups", `sessions/${session_id}/groups`);
 
   // Local state for UI control
   const [highlightedItem, setHighlightedItem] = useState(null);
@@ -67,7 +64,7 @@ export default function Clusters({ data: p_id }) {
                   </ListItemIcon>
                   <ListItemText primary={cluster.history[0].label} secondary={cluster.history[0].description} />
                 </ListItem>
-                <Deleter callback={() => client.remove_cluster(cluster._id, p_id)} color={settings.color} />
+                <Deleter callback={() => dispatch(removeCluster({cluster_id: cluster._id, projection_id: p_id}))} color={settings.color} />
               </Stack>
             </div>
           );

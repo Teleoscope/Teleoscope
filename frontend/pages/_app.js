@@ -15,6 +15,7 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
 
   useEffect(() => {
     setClient(Stomp.getInstance({}))
+    
     const handleWindowClose = (e) => {
       Stomp.stop()
     }

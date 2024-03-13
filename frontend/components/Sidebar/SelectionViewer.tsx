@@ -6,7 +6,7 @@ import TeleoscopeViewer from "@/components/Sidebar/TeleoscopeViewer";
 import ProjectionViewer from "@/components/Sidebar/ProjectionViewer";
 import OperationViewer from "./OperationViewer";
 
-export default function SelectionViewer(props) {
+export default function SelectionViewer({ noGroup }) {
   const selection = useAppSelector((state) => state.windows.selection);
   return (
     <div>
@@ -21,7 +21,7 @@ export default function SelectionViewer(props) {
             ></DocViewer>
           );
         }
-        if (node.data.type == "Group" && !props.noGroup) {
+        if (node.data.type == "Group" && !noGroup) {
           return (
             <GroupViewer
               compact={true}
@@ -30,7 +30,7 @@ export default function SelectionViewer(props) {
             ></GroupViewer>
           );
         }
-        if (node.data.type == "Projection" && !props.noGroup) {
+        if (node.data.type == "Projection" && !noGroup) {
           return (
             <ProjectionViewer
               compact={true}
@@ -49,7 +49,7 @@ export default function SelectionViewer(props) {
           );
         }
 
-        if (node.data.type == "Teleoscope" && !props.noGroup) {
+        if (node.data.type == "Teleoscope" && !noGroup) {
           return (
             <TeleoscopeViewer
               compact={true}
@@ -59,7 +59,7 @@ export default function SelectionViewer(props) {
           );
         }
 
-        if ((node.data.type == "Union" || node.data.type == "Exclusion" || node.data.type == "Intersection" || node.data.type == "Difference") && !props.noGroup) {
+        if ((node.data.type == "Union" || node.data.type == "Exclusion" || node.data.type == "Intersection" || node.data.type == "Difference") && !noGroup) {
           return (
             <OperationViewer
               compact={true}

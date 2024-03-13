@@ -1,32 +1,24 @@
-import {
-  Button,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-} from "@mui/material";
+import { Button, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import { alpha } from "@mui/material";
 import randomColor from "randomcolor";
-import {
-  uniqueNamesGenerator,
-  adjectives,
-  colors,
-  animals,
-} from "unique-names-generator";
+import { uniqueNamesGenerator, adjectives, colors, animals } from "unique-names-generator";
+import { useAppDispatch } from "@/util/hooks";
+import { initializeWorkflow } from "@/actions/windows";
 
-export default function Session(props) {
+export default function Session({ sessions, user, users, workflow_id, handleSessionChange }) {
+  const dispatch = useAppDispatch();
   const randomName = uniqueNamesGenerator({
     dictionaries: [adjectives, colors, animals],
     length: 1,
   });
 
   const getSessions = (username) => {
-    if (props.sessions && props.users) {
-      for (const i in props.users) {
-        const user = props.users[i];
+    if (sessions && users) {
+      for (const i in users) {
+        const user = users[i];
         if (user["username"] === username && user["sessions"].length > 0) {
           return user["sessions"].map((s) => {
-            const temp = props.sessions.find((ss) => ss._id === s);
+            const temp = sessions.find((ss) => ss._id === s);
             return (
               <MenuItem key={s._id} value={s}>
                 {temp?.history[0].label}
@@ -40,13 +32,13 @@ export default function Session(props) {
   };
 
   const handleNewSession = () => {
-    props.client.initialize_workflow(
-      randomName,
-      randomColor({
+    dispatch(initializeWorkflow({
+      label: randomName,
+      color: randomColor({
         luminosity: "dark",
         hue: "random",
       })
-    );
+    }));
   };
 
   return (
@@ -58,12 +50,12 @@ export default function Session(props) {
       <Select
         labelId="demo-simple-select-label"
         id="demo-simple-select"
-        value={props.session_id}
-        label="Session ID"
+        value={workflow_id}
+        label="Workflow ID"
         size="small"
-        onChange={(event) => props.handleSessionChange(event.target.value)}
+        onChange={(event) => handleSessionChange(event.target.value)}
       >
-        {getSessions(props.user?.username)}
+        {getSessions(user?.username)}
         <Button
           size="small"
           variant="text"

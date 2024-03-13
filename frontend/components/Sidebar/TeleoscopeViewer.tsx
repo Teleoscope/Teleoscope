@@ -5,12 +5,9 @@ import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DocumentList from "../Documents/DocumentList";
 
-export default function TeleoscopeViewer(props) {
+export default function TeleoscopeViewer({ id }) {
   const swr = useSWRHook();
-  const { teleoscope } = swr.useSWRAbstract(
-    "teleoscope", 
-    `graph/${props.id}`
-  );
+  const { teleoscope } = swr.useSWRAbstract("teleoscope", `graph/${id}`);
   const settings = useAppSelector((state) => state.windows.settings);
   const wdefs = useWindowDefinitions();
 

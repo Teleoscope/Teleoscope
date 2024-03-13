@@ -6,9 +6,15 @@ export const ActiveSessionID = createSlice({
   initialState: {
     value: -1,
     workspace: -1,
-    database: -1
+    database: -1,
+    userid: -1,
+    username: -1,
+    replyToQueue: -1,
   },
   reducers: {
+    setReplyToQueue: (state, action) => { 
+      state.replyToQueue = action.payload; // string `${userid}%{randomuuid}`
+    },
     sessionActivator: (state, action) => {
       var id = action.payload; // value of documentid
       if (id) {
@@ -25,7 +31,7 @@ export const ActiveSessionID = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { sessionActivator, loadActiveSessionID, setUserId } =
+export const { sessionActivator, loadActiveSessionID, setUserId, setReplyToQueue } =
   ActiveSessionID.actions;
 
 export default ActiveSessionID.reducer;

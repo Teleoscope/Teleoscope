@@ -1,4 +1,4 @@
-import { useAppSelector, useAppDispatch } from "@/util/hooks";
+import { useAppDispatch } from "@/util/hooks";
 
 // material ui
 import LoadingButton from "@mui/lab/LoadingButton";
@@ -6,14 +6,10 @@ import LoadingButton from "@mui/lab/LoadingButton";
 // custom components
 import DocumentListItem from "@/components/Documents/DocumentListItem";
 import ItemList from "@/components/ItemList";
-import { setSelection } from "@/actions/windows";
-import { useStomp } from "@/util/Stomp";
+import { mark, setSelection } from "@/actions/windows";
 
-export default function DocumentList(props) {
-  const data = props.data;
+export default function DocumentList({ data, group, loading, loadMore, ...props }) {
   const dispatch = useAppDispatch();
-  const client = useStomp();
-  const session_id = useAppSelector((state) => state.activeSessionID.value);
 
   const renderItem = (index, item, currentIndex, setIndex) => {
 
@@ -25,7 +21,7 @@ export default function DocumentList(props) {
         showReadIcon={true}
         setIndex={setIndex}
         listIndex={index}
-        group={props.group}
+        group={group}
         highlight={index == currentIndex}
         id={item[0]}
         key={item[0] + "DocumentListItem"}
@@ -34,7 +30,7 @@ export default function DocumentList(props) {
     );
   };
 
-  if (props.loading) {
+  if (loading) {
     return <LoadingButton></LoadingButton>;
   }
 
@@ -46,13 +42,13 @@ export default function DocumentList(props) {
           edges: [],
         })
       );
-      client.mark(doc[0], session_id, true);
+      dispatch(mark({document_id: doc[0], read: true}))
     }
   };
 
   const handleLoadMore = () => {
-    if (props.loadMore) {
-      props.loadMore()
+    if (loadMore) {
+      loadMore()
     }
   }
 

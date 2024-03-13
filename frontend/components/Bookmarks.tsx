@@ -4,30 +4,25 @@ import { Stack, Box } from "@mui/material";
 // actions
 import { useAppSelector, useAppDispatch } from "@/util/hooks";
 import { RootState } from "@/stores/store";
-import { useStomp } from "@/util/Stomp";
 
 // custom components
 import DocumentListItem from "@/components/Documents/DocumentListItem";
-import { loadBookmarkedDocuments } from "@/actions/windows";
 import { NewItemForm } from "@/components/NewItemForm";
 import randomColor from "randomcolor";
+import { makeGroupFromBookmarks } from "@/actions/windows";
 
 export default function Bookmarks() {
   const bookmarks = useAppSelector((state: RootState) => state.windows.bookmarks);
-  const settings = useAppSelector((state: RootState) => state.windows.settings);
-    const dispatch = useAppDispatch();
-    const client = useStomp();
-    const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
+  const dispatch = useAppDispatch();
 
-    const handleMakeGroupFromBookmarks = (e) => {
-      client.add_group(
-        e.target.value,
-        randomColor(),
-        session_id,
-        bookmarks
-      );
-      dispatch(loadBookmarkedDocuments([]));
-    };
+  const handleMakeGroupFromBookmarks = (e) => {
+    dispatch(makeGroupFromBookmarks({
+      label: e.target.value,
+      color: randomColor(),
+      documents: bookmarks,
+    }))
+  }
+
   return (
     <Stack direction="column">
       {bookmarks.length > 0 ? 

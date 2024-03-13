@@ -1,6 +1,5 @@
 // Stomp.ts
 import { Client } from "@stomp/stompjs";
-import crypto from 'crypto';
 import { createContext, useContext } from "react";
 import { store } from "@/stores/store";
 import { OID_UID_SYNC } from "@/actions/windows";
@@ -112,6 +111,14 @@ export class Stomp {
     return this._workspace;
   }
 
+  public set replyToQueue(replyToQueue: string) {
+    this._replyToQueue = replyToQueue;
+  }
+
+  public get replyToQueue() {
+    return this._replyToQueue;
+  }
+
   async wait_for_client_connection(timeoutMs=2000) {
     // A function that returns a promise which will resolve when client is activated
     const checkConnection = () => {
@@ -201,7 +208,7 @@ await Promise.race([checkConnection(), timeout()]);
         host: process.env.NEXT_PUBLIC_RABBITMQ_VHOST!,
       },
       debug: function (str) {
-        // console.log("STOMP Debug:", str);
+        console.log("STOMP Debug:", str);
       },
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
@@ -231,9 +238,7 @@ await Promise.race([checkConnection(), timeout()]);
       Stomp.stomp.loaded = true;
       // Do something, all subscribes must be done is this callback
       // This is needed because this will be executed after a (re)connect
-      const queuehash = crypto.randomBytes(8).toString('hex');
-      this._replyToQueue = `${this.userId}%${queuehash}`
-
+      
       const headers = {
         "auto-delete": "true",
         "exclusive": "true"
@@ -281,7 +286,6 @@ await Promise.race([checkConnection(), timeout()]);
     body.args.database = this.database;
     body.args.workflow_id = this.workflow;
     body.args.workspace_id = body.args.workspace_id ? body.args.workspace_id : this.workspace;
-    body.args.message_id = crypto.randomBytes(8).toString('hex');
     body.args.replyTo = this._replyToQueue;
     
     ///////////////////////////////////////////////////////////////////////////
@@ -289,7 +293,6 @@ await Promise.race([checkConnection(), timeout()]);
     const headers = {
       "content_type": "application/json",
       "content_encoding": "utf-8",
-      // "reply-to": `${body["message_id"]}`
     };
 
     ///////////////////////////////////////////////////////////////////////////

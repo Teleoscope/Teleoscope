@@ -12,7 +12,6 @@ import {
   setSelection,
   toggleMinMax
 } from "@/actions/windows";
-import { useStomp } from "@/util/Stomp";
 import FlowProviderWrapper from "@/components/Flow/FlowProviderWrapper";
 import FlowWrapper from "@/components/Flow/FlowWrapper";
 import FlowUIComponents from "@/components/Flow/FlowUIComponents";
@@ -20,7 +19,7 @@ import ContextMenuHandler from "@/components/ContextMenuHandler";
 import FlowFABWrapper from "@/components/Flow/FlowFABWrapper";
 import "reactflow/dist/style.css";
 import lodash from 'lodash';
-import { setNodes, setEdges, setColor } from "@/actions/windows";
+import { setNodes, setEdges, setColor, addDocumentToGroup, copyCluster, saveUIState } from "@/actions/windows";
 import { loadBookmarkedDocuments } from "@/actions/windows";
 import WindowNode from "@/components/Nodes/WindowNode";
 import ButtonEdge from "@/components/Nodes/ButtonEdge";
@@ -39,7 +38,7 @@ function Flow(props) {
   const nodeTypes = useMemo(() => ({ windowNode: WindowNode, ...wdefs.nodeTypeDefs()}), []);
   const edgeTypes = useMemo(() => ({default: ButtonEdge}), []);
 
-  const client = useStomp();
+  const dispatch = useAppDispatch()
 
   const swr = useSWRHook();
   
@@ -57,7 +56,7 @@ function Flow(props) {
   const [contextMenu, setContextMenu] = useState<MouseCoords | null>(
     null
   );
-  const session_id = useAppSelector((state) => state.activeSessionID.value);
+  const workflow_id = useAppSelector((state) => state.activeSessionID.value);
   
   const { data, status } = useSession();
   const userid = data?.user?.id;
@@ -70,10 +69,9 @@ function Flow(props) {
 
   const { nodes, edges, logical_clock } = useAppSelector((state) => state.windows);
 
-  const { session } = swr.useSWRAbstract("session", `sessions/${session_id}`);
+  const { session } = swr.useSWRAbstract("session", `sessions/${workflow_id}`);
   const session_history_item = session?.history[0];
 
-  const dispatch = useAppDispatch();
 
 
   useEffect(() => {
@@ -108,8 +106,6 @@ function Flow(props) {
     
         dispatch(
           setColor({
-            client: client,
-            session_id: session_id,
             color: session_history_item.color,
           })
         );
@@ -135,11 +131,11 @@ function Flow(props) {
     if (node?.data?.type == "Document") {
       if (target) {
         if (target.data.type == "Group") {
-          client.add_document_to_group(
-            target.id.split("%")[0],
-            node.id.split("%")[0]
-          );
-          dispatch(removeWindow({client: client, node: node.id}));
+          dispatch(addDocumentToGroup({
+            group_id: target.id.split("%")[0],
+            document_id: node.id.split("%")[0]
+        }));
+          dispatch(removeWindow({node: node.id}));
         }
       }
     }
@@ -155,8 +151,8 @@ function Flow(props) {
     if (node?.data?.type == "Cluster") {
       if (target) {
         if (target.data.type == "Groups") {
-          client.copy_cluster(node.id.split("%")[0], session_id); // TODO: ADD index here
-          dispatch(removeWindow({client: client, node: node.id}));
+          dispatch(copyCluster({graph_id: node.id.split("%")[0], workflow_id: workflow_id})); // TODO: ADD index here
+          dispatch(removeWindow({node: node.id}));
         }
       }
     }
@@ -170,8 +166,8 @@ function Flow(props) {
   }, []);
 
   const onEdgesChange = useCallback((changes) => {
-    dispatch(updateEdges({client: client, changes: changes}));
-  }, [client]);
+    dispatch(updateEdges({changes: changes}));
+  }, []);
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
@@ -179,7 +175,6 @@ function Flow(props) {
   }, []);
 
   const onNodeDragStart = (evt, node) => { dragRef.current = node };
-
 
   const onNodeDoubleClick = useCallback((event, node) => {
     dispatch(toggleMinMax(node.id))
@@ -203,7 +198,6 @@ function Flow(props) {
       });
 
       dispatch(makeNode({
-        client: client,
         oid   : id,
         type  : type,
         width : settings.default_document_width,
@@ -251,7 +245,6 @@ function Flow(props) {
   const create_edge = (connection, curredges) => {
     const newEdges = addEdge(connection, []);
     dispatch(makeEdge({
-      client: client,
       connection: connection,
       edges: newEdges
     }));
@@ -281,7 +274,7 @@ function Flow(props) {
 
   const onConnect = useCallback((connection, curredges) => {
       create_edge(connection, curredges)
-  }, [client]);
+  }, []);
 
   const onSelectionChange = useCallback(({ nodes, edges }) => {
     dispatch(setSelection({ nodes: nodes, edges: edges }));
@@ -308,15 +301,15 @@ function Flow(props) {
     }
 
     const throttledSave = useRef(
-      lodash.throttle((client, sessionId, bookmarks, nodes, edges) => {
+      lodash.throttle((sessionId, bookmarks, nodes, edges) => {
         const node_size = new TextEncoder().encode(JSON.stringify(nodes)).length / 1024
         const edge_size = new TextEncoder().encode(JSON.stringify(edges)).length / 1024
-        client.save_UI_state(sessionId, bookmarks, nodes, edges);
+        dispatch(saveUIState({bookmakes: bookmarks, nodes: nodes, edges: edges}));
       }, 5000)  // waits 5000 ms after the last call
     ).current;
     
     const handleOnClick = () => {
-      throttledSave(client, session_id, bookmarks, nodes, edges)
+      throttledSave(workflow_id, bookmarks, nodes, edges)
     }
 
     useEffect(() => {

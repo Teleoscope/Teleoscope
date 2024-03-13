@@ -34,21 +34,21 @@ import CopyAllIcon from "@mui/icons-material/CopyAll";
 import { useSWRHook } from "@/util/swr";
 import { useAppSelector } from "@/util/hooks";
 
-// contexts
-import { useStomp } from "@/util/Stomp";
 import randomColor from "randomcolor";
 import { useCookies } from "react-cookie";
 import ColorPicker from "@/components/ColorPicker";
 import EditableText from "@/components/EditableText";
 import ButtonActions from "@/components/ButtonActions";
 import { onDragStart } from "@/util/drag";
+import { useAppDispatch } from "@/util/hooks";
+import { addGroup, removeGroup, relabelGroup, recolorGroup } from "@/actions/windows";
 
 // custom components
 export default function GroupsDemo(props) {
   const swr = useSWRHook();
   const { sessions } = swr.useSWRAbstract("sessions", `sessions/`);
   const { users } = swr.useSWRAbstract("users", `users/`);
-  const client = useStomp();
+  const dispatch = useAppDispatch()
   const [value, setValue] = React.useState(null);
   const [sessionValue, setSessionValue] = React.useState({ label: "" });
   const [groupValue, setGroupValue] = React.useState({ label: null });
@@ -56,27 +56,27 @@ export default function GroupsDemo(props) {
 
   const [cookies, setCookie] = useCookies(["user"]);
   const [open, toggleOpen] = React.useState(false);
-  const session_id = useAppSelector((state) => state.activeSessionID.value);
+  const workflow_id = useAppSelector((state) => state.activeSessionID.value);
 
-  const { groups } = swr.useSWRAbstract(
-    "groups",
-    `sessions/${session_id}/groups`
-  );
+  const { groups } = swr.useSWRAbstract("groups", `sessions/${workflow_id}/groups`);
 
   const [showGroupsBool, setShowGroupsBool] = React.useState(false);
   const [showSubmitBool, setShowSubmitBool] = React.useState(false);
   const [showColorPicker, setShowColorPicker] = React.useState(false);
 
   const runClusters = () => {
-    client.cluster_by_groups(
-      groups.map((g) => g._id),
-      session_id
-    );
   };
+
+
+       
 
   const keyChange = (e) => {
     if (e.code == "Enter") {
-      client.add_group(e.target.value, randomColor(), session_id);
+      dispatch(addGroup({
+        label: e.target.value,
+        color: randomColor(),
+        documents: []
+      }))
     }
   };
 
@@ -139,7 +139,6 @@ export default function GroupsDemo(props) {
 
   const submitCopyGroup = () => {
     if (groupValue.label && groupName.label) {
-      client.copy_group(groupName.label, groupValue.label._id, session_id);
       handleClose();
     }
   };
@@ -414,11 +413,13 @@ export default function GroupsDemo(props) {
 
                     <EditableText
                       initialValue={g.history[0].label}
-                      callback={(label) => client.relabel_group(label, g._id)}
+                      callback={(label) => dispatch(relabelGroup({label: label, group_id: g._id}))}
                     />
                   </Stack>
                   <IconButton
-                    onClick={() => client.remove_group(g._id, session_id)}
+                    onClick={() => dispatch(removeGroup({
+                      group_id: g._id,
+                    }))}
                   >
                     <DeleteIcon
                       sx={[
@@ -436,7 +437,7 @@ export default function GroupsDemo(props) {
                 <ColorPicker
                   defaultColor={g.history[0].color}
                   onChange={(color) => {
-                    client.recolor_group(color, g._id);
+                    dispatch(recolorGroup({color: color, group_id: g._id}));
                     setShowColorPicker(false);
                   }}
                 ></ColorPicker>

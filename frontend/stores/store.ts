@@ -1,9 +1,20 @@
 import { configureStore } from "@reduxjs/toolkit";
 import ActiveSessionID from "@/actions/activeSessionID";
-import Windows, { removeWindow, updateEdges, updateNodes, updateSearch } from "@/actions/windows";
-import { makeNode, makeEdge, setColor, relabelSession } from "@/actions/windows";
+import Windows, { removeWindow, updateEdges, updateNodes, updateSearch, makeGroupFromBookmarks, initializeProjection, removeCluster, relabelProjection, removeProjection, removeWorkflow, addGroup, removeGroup, recolorGroup, relabelGroup, mark, removeDocumentFromGroup, addDocumentToGroup, copyCluster, saveUIState, updateNote, addNote, relabelNote, removeNote } from "@/actions/windows";
+import { makeNode, makeEdge, setColor, relabelWorkflow } from "@/actions/windows";
 import crypto from 'crypto';
+import post from "@/util/client";
+import { copyDoclistsToGroups, initializeTeleoscope, relabelTeleoscope, removeTeleoscope, updateNode } from "../actions/windows";
 
+
+const headers = state => {
+  return {
+        replyTo: state.activeSessionID.replyToQueue,
+        database: state.activeSessionID.database,
+        userid: state.activeSessionID.userid,
+        workflow_id: state.activeSessionID.value,
+  }
+}
 
 // Custom middleware function for makeNode action
 const makeNodeMiddleware = store => next => action => {
@@ -28,14 +39,18 @@ const makeNodeMiddleware = store => next => action => {
     // Perform the action or side effect you want to do after the store update
     const updatedState = store.getState();
     
-    action.payload.client.add_item({
-      workflow_id: updatedState.activeSessionID.value,
-      oid: modifiedAction.payload.oid,
-      uid: modifiedAction.payload.uid,
-      type: modifiedAction.payload.type,
-      options: {index: modifiedAction.payload.index},
-      state: updatedState
-  });
+    post({
+      task: "add_item",
+      args: {
+        ...headers(updatedState),
+        
+        oid: modifiedAction.payload.oid,
+        uid: modifiedAction.payload.uid,
+        node_type: modifiedAction.payload.type,
+        options: {index: modifiedAction.payload.index},
+        state: updatedState
+      }
+    })
     
     return result;
   }
@@ -50,35 +65,21 @@ const makeNodeMiddleware = store => next => action => {
     const target_node = nodes.find(n => n.id === action.payload.connection.target)
     const handle_type = action.payload.connection.targetHandle.split("_").slice(-1)[0]
 
-    action.payload.client.make_edge({
-      session_id: updatedState.activeSessionID.value,
-      source_node: source_node,
-      target_node: target_node,
-      handle_type: handle_type,
-      connection: action.payload.connection,
-      ui_state: updatedState
-    })
+    post({
+      task: "make_edge", 
+      args: {
+        ...headers(updatedState),
+
+        session_id: updatedState.activeSessionID.value,
+        source_node: source_node,
+        target_node: target_node,
+        edge_type: handle_type,
+        connection: action.payload.connection,
+        ui_state: updatedState
+    }})
     return result
   }
   
-  if (action.type === setColor.type) {
-    const result = next(action);
-    action.payload.client.recolor_workflow(action.payload.color, action.payload.session_id);
-    return result
-  }
-
-  if (action.type === relabelSession.type) {
-    const result = next(action);
-    action.payload.client.relabel_workflow(action.payload.label, action.payload.session_id);
-    return result
-  }
-
-  if (action.type === updateSearch.type) {
-    const result = next(action);
-    action.payload.client.update_search(action.payload.search_id, action.payload.query);
-    return result
-  }
-
   if (action.type === removeWindow.type) {
     const node_id = action.payload.node;
     const state = store.getState();
@@ -87,7 +88,6 @@ const makeNodeMiddleware = store => next => action => {
     edges.forEach(edge => {
       store.dispatch(updateEdges(
         {
-          client: action.payload.client,
           changes: [{
             id: edge.id,
             type: "remove"
@@ -95,9 +95,6 @@ const makeNodeMiddleware = store => next => action => {
         }
       ))}
     )
-    
-    const result = next(action);
-    return result
   }
 
   if (action.type === updateNodes.type) {
@@ -110,7 +107,6 @@ const makeNodeMiddleware = store => next => action => {
         edges.forEach(edge => {
           store.dispatch(updateEdges(
             {
-              client: action.payload.client,
               changes: [{
                 id: edge.id,
                 type: "remove"
@@ -130,12 +126,108 @@ const makeNodeMiddleware = store => next => action => {
         const state = store.getState();
         const edges = state.windows.edges;
         const edge = edges.find(e => e.id == change.id)
-        action.payload.client.remove_edge(edge)
+
+        post({
+          task: "remove_edge",
+          args: {
+            ...headers(store.getState()),
+            edge: edge
+          }
+        })
       }
     })
-    const result = next(action);
-    // action.payload.client.update_search(action.payload.search_id, action.payload.query);
-    return result
+  }
+
+  const callPost = (task_name) => post({ 
+    task: task_name, 
+    args: { 
+      ...headers(store.getState()), 
+      ...action.payload 
+    } 
+  })
+  
+  switch (action.type) {
+    case setColor.type:
+        callPost("recolor_workflow")
+        break;
+    case relabelWorkflow.type:
+        callPost("relabel_workflow")
+        break;
+    case updateSearch.type:
+        callPost("update_search")
+        break;
+    case makeGroupFromBookmarks.type:
+        callPost("add_group")
+        break;
+    case copyDoclistsToGroups.type:
+        callPost("copy_doclists_to_groups")
+        break;
+    case updateNode.type:
+        callPost("update_node")
+        break;
+    case initializeTeleoscope.type:
+        callPost("initialize_teleoscope")
+        break;
+    case removeTeleoscope.type:
+        callPost("remove_teleoscope")
+        break;
+    case relabelTeleoscope.type:
+        callPost("relabel_teleoscope")
+        break;
+    case removeCluster.type:
+        callPost("remove_cluster")
+        break;
+    case initializeProjection.type:
+        callPost("initialize_projection")
+        break;
+    case relabelProjection.type:
+        callPost("relabel_projection")
+        break;
+    case removeProjection.type:
+        callPost("remove_projection")
+        break;
+    case removeWorkflow.type:
+        callPost("remove_workflow")
+        break;
+    case addGroup.type:
+        callPost("add_group") 
+        break;
+    case removeGroup.type:
+        callPost("remove_group") 
+        break;
+    case recolorGroup.type:
+        callPost("recolor_group")
+        break;
+    case relabelGroup.type:
+        callPost("relabel_group")
+        break;
+    case mark.type:
+        callPost("mark")
+        break;
+    case removeDocumentFromGroup.type:
+        callPost("remove_document_from_group")
+        break;
+    case addDocumentToGroup.type:
+        callPost("add_document_to_group")
+        break;
+    case copyCluster.type:
+        callPost("copy_cluster")
+        break;
+    case saveUIState.type:
+        callPost("save_UI_state")
+        break;
+    case updateNote.type:
+        callPost("update_note")
+        break;
+    case addNote.type:
+        callPost("add_note")
+        break;
+    case relabelNote.type:
+        callPost("relabel_note")
+        break;
+    case removeNote.type:
+        callPost("remove_note")
+        break;
   }
 
   // Call the next middleware or the reducer
@@ -143,25 +235,6 @@ const makeNodeMiddleware = store => next => action => {
   return result;
 };
 
-
-// let store;
-// const createStore = (preloadedState) => {
-//   if (typeof window === 'undefined') {
-//     return configureStore({
-//       reducer: { ... },
-//       preloadedState,
-//     });
-//   }
-
-//   if (!store) {
-//     store = configureStore({
-//       reducer: { ... },
-//       preloadedState,
-//     });
-//   }
-
-//   return store;
-// };
 
 export let store;
 const createStore = (preloadedState) => {

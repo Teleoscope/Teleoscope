@@ -1,8 +1,7 @@
 import { onDragStart } from "@/util/drag";
 
 const withDroppable = (DragItem) => {
-  return function DroppableComponent(props) {
-    const { id, type, typetag } = props;
+  return function DroppableComponent({ id, type, typetag, ...props }) {
     return (
       <div
         draggable={true}

@@ -59,25 +59,32 @@ export async function getServerSideProps(context) {
     settings: workflow.history[0].settings || {},
   } : {};
 
-  return {
-    props: {
-      workspace: workspace_id,
-      database: workspace.database,
-      session,
-      workflow: outflow,
-      workflow_id: workflow_id.toString(),
-    }
-  };
+
+const props = {
+  props: {
+    workspace: workspace_id,
+    database: workspace.database,
+    userid: session.user.id,
+    username: session.user.username,
+    workflow: outflow,
+    workflow_id: workflow_id.toString(),
+  }
+};
+
+  return props
 }
 
 // The main component for the page
-export default function Home({workspace, database, workflow, workflow_id}) {
+export default function Home({ workspace, database, userid, username, workflow, workflow_id }) {
   const { status } = useSession();
+  
   const store = createStore({ 
     "activeSessionID": { 
       value: workflow_id, 
       workspace: workspace,
-      database: database
+      database: database,
+      userid: userid,
+      username: username
     }, 
     "windows": workflow 
   });

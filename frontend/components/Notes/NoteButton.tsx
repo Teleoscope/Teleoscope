@@ -2,14 +2,12 @@
 import IconButton from "@mui/material/IconButton";
 import CommentIcon from "@mui/icons-material/Comment";
 
-// contexts
-import { useStomp } from "@/util/Stomp";
+import { useAppDispatch } from "@/util/hooks";
 
 export default function NoteButton(props) {
-  const client = useStomp();
+  const dispatch = useAppDispatch()
 
   const handleAddNote = () => {
-    client.add_note(props.id, props.type);
   };
 
   return (

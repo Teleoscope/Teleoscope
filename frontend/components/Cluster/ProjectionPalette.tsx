@@ -11,20 +11,22 @@ import { NewItemForm } from "../NewItemForm";
 import { useAppSelector } from "@/util/hooks";
 import { RootState } from "@/stores/store";
 import { useSWRHook } from "@/util/swr";
-import { useStomp } from "@/util/Stomp";
+import { useAppDispatch } from "@/util/hooks";
+import { initializeProjection } from "@/actions/windows";
 
 // Utilities
 import { onDragStart } from "@/util/drag";
+import { removeProjection, relabelProjection } from "@/actions/windows";
 
 export default function ProjectionPalette(props) {
-  const client = useStomp();
+  const dispatch = useAppDispatch()
   const settings = useAppSelector((state: RootState) => state.windows.settings);
-  const session_id = useAppSelector((state: RootState) => state.activeSessionID.value);
+  const workflow_id = useAppSelector((state: RootState) => state.activeSessionID.value);
   const swr = useSWRHook();
   
   const { projections_raw } = swr.useSWRAbstract(
     "projections_raw",
-    `sessions/${session_id}/projections`
+    `sessions/${workflow_id}/projections`
   );
 
   const projections = projections_raw?.map((p) => {
@@ -42,7 +44,9 @@ export default function ProjectionPalette(props) {
 
       <NewItemForm 
         label="Create new Projection"
-        HandleSubmit={(e) => client.initialize_projection(session_id, e.target.value)}      
+        HandleSubmit={(e) => dispatch(initializeProjection({
+          label: e.target.value,
+        }))}
       />
         <List>
           {projections?.map((p) => {
@@ -67,13 +71,17 @@ export default function ProjectionPalette(props) {
 
                       <EditableText
                         initialValue={p.label}
-                        callback={(label) =>
-                          client.relabel_projection(label, p._id)
+                        callback={(label) => dispatch(relabelProjection({
+                          label: label,
+                          projection_id: p._id,
+                        }))
                         }
                       />
                     </Stack>
                     <Deleter 
-                      callback={() => client.remove_projection(p._id, session_id)} 
+                      callback={() => dispatch(removeProjection({
+                        projection_id: p._id
+                      }))} 
                       color={settings.color}
                     />
                   </Stack>

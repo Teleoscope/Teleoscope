@@ -1,5 +1,5 @@
 import OperationViewer from "./OperationViewer";
 
-export default function ProjectionViewer(props) {
-  return <OperationViewer id={props.id} type="Projection" />
+export default function ProjectionViewer({ id }) {
+  return <OperationViewer id={id} type="Projection" />
 }

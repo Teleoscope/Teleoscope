@@ -1,14 +1,14 @@
 import React from "react";
 import { CompactPicker } from "react-color";
 
-export default function ColorPicker(props) {
+export default function ColorPicker({ defaultColor, onChange }) {
   const [state, setState] = React.useState({
-    background: props.defaultColor,
+    background: defaultColor,
   });
 
   const handleChangeComplete = (color) => {
     setState({ background: color.hex });
-    props.onChange(color.hex);
+    onChange(color.hex);
   };
 
   return (

@@ -7,14 +7,14 @@ import StarOutlinedIcon from "@mui/icons-material/StarOutlined";
 import { useSelector, useDispatch } from "react-redux";
 import { bookmark } from "@/actions/windows";
 
-export default function BookmarkSelector(props) {
+export default function BookmarkSelector({ id }) {
   const dispatch = useDispatch();
   const bookmarks = useSelector((state) => state.windows.bookmarks);
-  const marked = bookmarks.includes(props.id);
+  const marked = bookmarks.includes(id);
   const settings = useSelector((state) => state.windows.settings);
 
   return (
-    <IconButton onClick={() => dispatch(bookmark(props.id))}>
+    <IconButton onClick={() => dispatch(bookmark(id))}>
 
       {marked ? (
         <StarOutlinedIcon sx={{ color: settings.color, fontSize: 15 }} />

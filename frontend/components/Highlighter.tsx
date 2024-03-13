@@ -17,6 +17,7 @@ export default function Highlighter({ children }) {
         .reduce((acc, n) => n.length > 0 ? acc.concat(n) : acc, [])
 
     const highlight = (text) => {
+      if (!text) { return ""}
       const regstring = `(${query.join('|')})`;
       
       if (query.length === 0 || regstring == `/\b()\b/gi` || (query.length == 1 && query[0] == '') ) {
@@ -25,9 +26,7 @@ export default function Highlighter({ children }) {
       }
       
       const regex = new RegExp(regstring, 'gi');
-
       const replaced = text.replaceAll(regex, '<span>$1</span>')
-          
       return replaced
     }
 
@@ -40,15 +39,14 @@ export default function Highlighter({ children }) {
         p: ({ node, ...props }) => <Typography paragraph {...props} sx={{}} />,
         h1: ({ node, ...props }) => <Typography variant="h4" {...props} />,
         span: ({ node, ...props }) =><Typography variant="body" style={{ backgroundColor: "yellow"}} {...props} />,
-        code: (props) => {
-          const {children, className, node, ...rest} = props
+        code: ({children, className, node, ...props}) => {
           const match = /language-(\w+)/.exec(className || '')
           return (
             <Box sx={{ p: 0, borderRadius: "5px",  borderWidth: 1, overflow: "hidden", m: 0
               , borderColor: theme.palette.grey["100"], borderStyle: "solid"
             }}>
             <SyntaxHighlighter
-              {...rest}
+              {...props}
               PreTag="div"
               children={String(children).replace(/\n$/, '')}
               language={match ? match[1] : 'text'}

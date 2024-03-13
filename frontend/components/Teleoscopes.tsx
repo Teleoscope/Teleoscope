@@ -13,29 +13,27 @@ import EditableText from "@/components/EditableText";
 import Deleter from "@/components/Deleter";
 
 // actions
-import { useAppSelector } from "@/util/hooks";
 import { RootState } from "@/stores/store";
+import { useAppSelector, useAppDispatch } from "@/util/hooks";
 
 // utils
 import { useSWRHook } from "@/util/swr";
-import { useStomp } from "@/util/Stomp";
 import { NewItemForm } from "@/components/NewItemForm";
 import { onDragStart } from "@/util/drag";
+import { initializeTeleoscope, relabelTeleoscope, removeTeleoscope } from "@/actions/windows";
 
 
 export default function Teleoscopes(props) {
-  const client = useStomp();
+  const dispatch = useAppDispatch()
 
-  const session_id = useAppSelector(
+  const workflow_id = useAppSelector(
     (state: RootState) => state.activeSessionID.value
   );
-
- 
   
   const swr = useSWRHook();
   const { teleoscopes_raw } = swr.useSWRAbstract(
     "teleoscopes_raw",
-    `sessions/${session_id}/teleoscopes`
+    `sessions/${workflow_id}/teleoscopes`
   );
 
   const teleoscopes = teleoscopes_raw?.map((t) => {
@@ -46,7 +44,10 @@ export default function Teleoscopes(props) {
     return ret;
   });
 
-  const keyChange = (e) => client.initialize_teleoscope(session_id, e.target.value);
+  const keyChange = (e) => dispatch(initializeTeleoscope({
+    label: e.target.value,
+  },))
+  
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
@@ -74,12 +75,12 @@ export default function Teleoscopes(props) {
 
                     <EditableText
                       initialValue={t.label}
-                      callback={(label) =>
-                        client.relabel_teleoscope(label, t._id)
-                      }
+                      callback={(label) => dispatch(relabelTeleoscope({label: label, teleoscope_id: t._id}))}
                     />
                   </Stack>
-                  <Deleter callback={() => client.remove_teleoscope(t._id, session_id)} color={props.color}></Deleter>
+                  <Deleter 
+                    callback={() => dispatch(removeTeleoscope({teleoscope_id: t._id}))} 
+                    color={props.color} />
                 </Stack>
               </ListItem>
             </div>

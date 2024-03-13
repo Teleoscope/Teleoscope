@@ -11,11 +11,7 @@ import { useSelector } from "react-redux";
 // actions
 import { makeNode } from "@/actions/windows";
 
-// contexts
-import { useStomp } from "@/util/Stomp";
-
-export default function ContextMenu(props) {
-  const client = useStomp();
+export default function ContextMenu({ contextMenu, handleCloseContextMenu,  }) {
   const dispatch = useAppDispatch();
   
 
@@ -24,25 +20,24 @@ export default function ContextMenu(props) {
 
   const handleAddNode = (id, type) => {    
     dispatch(makeNode({
-      client: client,
       oid: id, 
       type: type,
       width: settings.default_document_width,
       height: settings.default_document_height,
-      x: props.contextMenu.worldX, 
-      y: props.contextMenu.worldY
+      x: contextMenu.worldX, 
+      y: contextMenu.worldY
     }));
   };
 
   const handleOpenNewWindow = (menu_action) => {
     const w = { ...wdefs.definitions()[menu_action] };
     handleAddNode(w.tag, w.type);
-    props.handleCloseContextMenu();
+    handleCloseContextMenu();
   };
 
 
   const handleClose = () => {
-    props.handleCloseContextMenu();
+    handleCloseContextMenu();
 
   };
 
@@ -50,12 +45,12 @@ export default function ContextMenu(props) {
 
   return (
     <Menu
-      open={props.contextMenu !== null}
+      open={contextMenu !== null}
       onClose={() => handleClose()}
       anchorReference="anchorPosition"
       anchorPosition={
-        props.contextMenu !== null
-          ? { top: props.contextMenu.mouseY, left: props.contextMenu.mouseX }
+        contextMenu !== null
+          ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
           : undefined
       }
     >

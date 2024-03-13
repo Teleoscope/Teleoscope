@@ -10,11 +10,11 @@ import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
 import { DocumentActions } from "@/components/Documents/DocumentActions";
 import Highlighter from "@/components/Highlighter";
 
-export default function DocViewer(props) {
+export default function DocViewer({ id, windata }) {
   const swr = useSWRHook(); 
-  const { document } = props.windata?.demo
-    ? props.windata.demodata
-    : swr.useSWRAbstract("document", `document/${props.id}`);
+  const { document } = windata?.demo
+    ? windata.demodata
+    : swr.useSWRAbstract("document", `document/${id}`);
   const settings = useAppSelector((state) => state.windows.settings);
   const wdefs = useWindowDefinitions();
   return (
