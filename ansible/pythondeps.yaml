@@ -45,4 +45,6 @@
           - pytest
           - pandas
           - spacy # python -m spacy download en_core_web_sm
+          - umap
+          - pymilvus
         executable: "{{ conda_prefix }}/envs/{{ conda_environment }}/bin/pip"
