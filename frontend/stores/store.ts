@@ -13,6 +13,7 @@ const headers = state => {
         database: state.activeSessionID.database,
         userid: state.activeSessionID.userid,
         workflow_id: state.activeSessionID.value,
+        workspace_id: state.activeSessionID.workspace
   }
 }
 
