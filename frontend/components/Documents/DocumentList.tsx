@@ -10,11 +10,13 @@ import { mark, setSelection } from "@/actions/windows";
 
 export default function DocumentList({ data, group, loading, loadMore, ...props }) {
   const dispatch = useAppDispatch();
+  if (loading) {
+    return <LoadingButton></LoadingButton>;
+  }
 
   const renderItem = (index, item, currentIndex, setIndex) => {
-
     if (!item) {
-      return <>ok</>
+      return <>Loading...</>
     }
     return (
       <DocumentListItem
@@ -30,9 +32,7 @@ export default function DocumentList({ data, group, loading, loadMore, ...props 
     );
   };
 
-  if (loading) {
-    return <LoadingButton></LoadingButton>;
-  }
+
 
   const onSelect = (doc) => {
     if (doc) {

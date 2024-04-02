@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import ActiveSessionID from "@/actions/activeSessionID";
-import Windows, { removeWindow, updateEdges, updateNodes, updateSearch, makeGroupFromBookmarks, initializeProjection, removeCluster, relabelProjection, removeProjection, removeWorkflow, addGroup, removeGroup, recolorGroup, relabelGroup, mark, removeDocumentFromGroup, addDocumentToGroup, copyCluster, saveUIState, updateNote, addNote, relabelNote, removeNote } from "@/actions/windows";
+import Windows, { removeWindow, updateEdges, updateNodes, updateSearch, makeGroupFromBookmarks, initializeProjection, removeCluster, relabelProjection, removeProjection, removeWorkflow, addGroup, removeGroup, recolorGroup, relabelGroup, mark, removeDocumentFromGroup, addDocumentToGroup, copyCluster, saveUIState, updateNote, addNote, relabelNote, removeNote, initializeWorkflow } from "@/actions/windows";
 import { makeNode, makeEdge, setColor, relabelWorkflow } from "@/actions/windows";
 import crypto from 'crypto';
 import post from "@/util/client";
@@ -147,6 +147,9 @@ const makeNodeMiddleware = store => next => action => {
   })
   
   switch (action.type) {
+    case initializeWorkflow.type:
+        callPost("initialize_workflow")
+        break;
     case setColor.type:
         callPost("recolor_workflow")
         break;
