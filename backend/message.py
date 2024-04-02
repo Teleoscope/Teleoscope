@@ -18,7 +18,7 @@ broker_url = f'amqp://{RABBITMQ_USERNAME}:{RABBITMQ_PASSWORD}@{RABBITMQ_HOST}/{R
 
 # Create the Celery application instance
 queue = Queue("embeddings", Exchange("embeddings"), "embeddings")
-app = Celery('messenger', backend='rpc://', broker=broker_url,include=['backend.tasks', 'backend.embeddings'])
+app = Celery('messenger', backend='rpc://', broker=broker_url, include=['backend.tasks', 'backend.embeddings'])
 
 app.conf.update(
     task_track_started=True,
