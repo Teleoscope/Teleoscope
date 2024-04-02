@@ -1513,6 +1513,8 @@ def file_upload(*args,
     # Initialize an empty set to store the combined unique values
     unique_values = set()
 
+    groups = [g for g in groups if g.strip() != ""]
+
     for column in groups:
         # Update the set with unique values from the current column
         unique_values.update(df[column].unique())
