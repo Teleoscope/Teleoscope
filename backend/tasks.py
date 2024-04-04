@@ -1149,16 +1149,11 @@ def make_edge(*args, database: str, userid: str, workflow_id: str,
     
     source_type = source_node["type"]
     target_type = target_node["type"]
-    source_oid = ""
-    target_oid = ""
 
-    try:
-        source_oid  = ObjectId(str(source_node["data"]["nodeid"]))
-        target_oid  = ObjectId(str(target_node["data"]["nodeid"]))
-    except:
-        source_oid  = ObjectId(str(source_node["data"]["oid"]))
-        target_oid  = ObjectId(str(target_node["data"]["oid"]))
-        
+    source_oid  = ObjectId(str(source_node["data"]["nodeid"]))
+    target_oid  = ObjectId(str(target_node["data"]["nodeid"]))
+
+
     
     graph.make_edge(db, workflow_id, source_oid, source_type, target_oid, target_type, edge_type)
 

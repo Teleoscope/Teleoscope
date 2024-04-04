@@ -17,8 +17,8 @@ const headers = state => {
   }
 }
 
-// Custom middleware function for makeNode action
-const makeNodeMiddleware = store => next => action => {
+// Custom middleware function for actions
+const actionMiddleWare = store => next => action => {
   if (action.type === makeNode.type) {
     const uid = crypto.randomBytes(8).toString('hex');
 
@@ -39,6 +39,11 @@ const makeNodeMiddleware = store => next => action => {
 
     // Perform the action or side effect you want to do after the store update
     const updatedState = store.getState();
+
+    // const response = await fetch(
+    //   `/api/${swr.subdomain}/document/${doc}`
+    // ).then((res) => res.json());
+    
     
     post({
       task: "add_item",
@@ -259,7 +264,7 @@ const createStore = (preloadedState) => {
             // Ignore these paths in the state
             ignoredPaths: ["items.dates"],
           },
-        }).concat(makeNodeMiddleware),
+        }).concat(actionMiddleWare),
     });
   }
 
@@ -280,7 +285,7 @@ const createStore = (preloadedState) => {
             // Ignore these paths in the state
             ignoredPaths: ["items.dates"],
           },
-        }).concat(makeNodeMiddleware),
+        }).concat(actionMiddleWare),
     });
   }
   return store
@@ -304,7 +309,7 @@ export const demoStore = configureStore({
         // Ignore these paths in the state
         ignoredPaths: ["items.dates"],
       },
-    }).concat(makeNodeMiddleware),
+    }).concat(actionMiddleWare),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
