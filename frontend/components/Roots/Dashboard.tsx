@@ -1,281 +1,116 @@
-import { Button, Chip, Divider, FormControl, IconButton, InputLabel, MenuItem, Paper, Select, Snackbar, TextField } from "@mui/material";
-import { Stack, Typography } from "@mui/material";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
 import useSWR from "swr";
-import space from 'color-space';
-import rgbHex from 'rgb-hex';
-import themeConfig from "theme.config";
-import CloseIcon from '@mui/icons-material/Close';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { WorkspaceSettings } from "../Workspaces/WorkspaceModal";
+import { WorkspaceCollaboratorsModal } from "../Workspaces/WorkspaceCollaboratorsModal";
+import { NewWorkspaceModal } from "../Workspaces/NewWorkspaceModal";
+import { EnterIcon } from "@radix-ui/react-icons";
+import { Button } from "../ui/button";
 
+const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
+const ExistingWorkspace = ({ workspace }) => {
+  // Use window.location to determine the host dynamically
+  // const protocol = window.location.protocol;
+  // const host = window.location.host; // Includes hostname and port if applicable
 
-const fetcher = (...args) => fetch(...args).then(res => res.json())
+  // const { data: coll } = useSWR(`/api/users/${contributor}`, fetcher)
+  return (
+    <Card className="w-full h-44 flex-shrink-0  flex flex-col cursor-pointer hover:border-primary-600">
+      <CardHeader className=" flex flex-row justify-between  w-full items-center border-b p-2 py-1 m-0 space-y-0">
+        <CardTitle className="text-md p-0 font-medium w-fit flex items-center gap-1 ">
+          {workspace.label}
+          <WorkspaceSettings id={workspace._id} name={workspace.label} />
+        </CardTitle>
 
-const ExistingWorkspace = ({workspace, color}) => {
-
-    // Use window.location to determine the host dynamically
-    // const protocol = window.location.protocol;
-    // const host = window.location.host; // Includes hostname and port if applicable
-
-    const [contributor, setContributor] = useState("");    
-    const { data: coll } = useSWR(`/api/users/${contributor}`, fetcher)
-    const [open, setOpen] = useState(false);
-
-    const handleTextChange = (event, ws) => {
-        setContributor(event.target.value)   
-    }
-
-
-    const handleClose = (event: React.SyntheticEvent | Event, reason?: string) => {
-        if (reason === 'clickaway') {
-          return;
-        }
-    
-        setOpen(false);
-      };
-
-
-
-    const action = (
-        <>
-          <IconButton
-            size="small"
-            aria-label="close"
-            color="inherit"
-            onClick={handleClose}
+        <Button variant="ghost" className="flex items-center ">
+          <Link
+            href={`/workspace/${workspace._id}`}
+            className=" font-bold flex items-center p-0"
           >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </>
-      );
-    
-    const handleDelete = (c) => {
-        fetch(`/api/contributors/remove`, {
-            method: 'POST',
-            body: JSON.stringify({contributor_id: c, workspace_id: workspace["_id"]}),
-            headers: { "Content-Type": "application/json" }
-        })
-    }
-
-    const handleKeyDown = (event) => {
-        if ((event.key === 'Return' || event.key === 'Enter' || event.keyCode === 13) && coll?.found) {
-            setOpen(true)
-            fetch(`/api/contributors/add`, {
-                method: 'POST',
-                body: JSON.stringify({contributor: contributor, workspace_id: workspace["_id"]}),
-                headers: { "Content-Type": "application/json" }
-            })
-        }
-    }
-
-    return (
-        <Paper elevation={1} sx={{width:"12em"}}>
-            <Stack spacing={2} sx={{margin: "1em"}}>
-            <Typography variant="h6">{workspace.label}</Typography>
-            <Divider></Divider>
-            <Typography variant="subtitle2">Collaborators</Typography>
-            {workspace?.contributors?.map(c => {
-                return <Chip label={c.username} onDelete={() => handleDelete(c.id)}/>
-            })}
-            <FormControl fullWidth>
-                <TextField 
-                    id="outlined-basic" 
-                    label="Add contributor" 
-                    variant="outlined"
-                    size="small"
-                    onKeyDown={handleKeyDown}
-                    onChange={(event) => handleTextChange(event, workspace)}
-                />
-            </FormControl>
-            <Button sx={{color: color}}><a href={`/workspace/${workspace._id}`} >Select workspace</a></Button>
-            </Stack>
-            <Snackbar
-            open={open}
-            autoHideDuration={6000}
-            onClose={handleClose}
-            message="Adding collaborator to workspace. This might take a few seconds."
-            action={action}
+            <EnterIcon />
+          </Link>
+        </Button>
+      </CardHeader>
+      <CardContent className="p-3 flex flex-col flex-1 ">
+        <CardDescription className="text-sm">
+          {workspace.description || "No description provided"}
+        </CardDescription>
+      </CardContent>
+      <CardFooter className="flex flex-col  justify-center items-center px-2 py-1 z-30">
+        <WorkspaceCollaboratorsModal
+          id={workspace._id}
+          name={workspace.label}
+          contributors={workspace.contributors || []}
         />
-        </Paper>
-    )
-}
+      </CardFooter>
+    </Card>
+  );
+};
 
-const NewWorkspace = ({color}) => {
-    const [newWorkspaceSource, setNewWorkspaceSource] = useState("blank");
-    const [label, setLabel] = useState("");
-    const [labelError, setLabelError] = useState("");
-    const [open, setOpen] = useState(false);
-
-
-    const handleChange = (event) => {
-        setNewWorkspaceSource(event?.target.value)
-    }
-
-    const handleLabelChange = (event) => {
-        validateLabel()
-        setLabel(event.target.value)
-    }
-
-    const handleClick = () => {
-        
-        if (!validateLabel()) {
-            fetch(`/api/workspace`, {
-                method: 'POST',
-                body: JSON.stringify({label: label, datasource: newWorkspaceSource}),
-                headers: { "Content-Type": "application/json" }
-            })
-            setOpen(true)
-        }
-    }
-
-    const validateLabel = () => {
-        const label_length = 3;
-        if (label.length < label_length) {
-            setLabelError(`Label must be at least ${label_length} characters long.`);
-            return true
-          }
-          else {
-            setLabelError('');
-            return false
-          }
-    }
-
-    
-      const handleClose = (event: React.SyntheticEvent | Event, reason?: string) => {
-        if (reason === 'clickaway') {
-          return;
-        }
-    
-        setOpen(false);
-      };
-
-
-
-    const action = (
-        <>
-          <IconButton
-            size="small"
-            aria-label="close"
-            color="inherit"
-            onClick={handleClose}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </>
-      );
-    
-
-    return (
-
-    <Paper elevation={1} sx={{width:"12em"}}>
-                <Stack spacing={2} sx={{margin: "1em"}}>
-                    <TextField 
-                        id="outlined-basic" 
-                        label="Workspace label" 
-                        variant="outlined" 
-                        onChange={handleLabelChange} 
-                        size="small"
-                        InputLabelProps={{
-                            sx: { "&.Mui-focused": { color: color } },
-                        }}
-                        sx={{
-                            width: "100%",
-                            margin: 1,
-                            "& .MuiInput-underline:after": { borderBottomColor: color },
-                        }}
-                        onBlur={validateLabel}
-                        error={!!labelError}
-                        helperText={labelError}
-                    />
-                    <Divider></Divider>
-                    <FormControl>
-                        <InputLabel id="demo-simple-select-label">Data source</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            value={newWorkspaceSource}
-                            label="Data source"
-                            onChange={handleChange}
-                            size="small"
-                        >   <MenuItem value={"blank"}>Blank</MenuItem>
-                            <MenuItem value={"nursing"}>r/nursing</MenuItem>
-                            <MenuItem value={"aita"}>r/AmITheAsshole</MenuItem>
-                        </Select>                    
-                    </FormControl>
-                    <Button onClick={handleClick} sx={{color: color}}>Add new workspace</Button>
-                    </Stack>
-                    {/* <Button onClick={handleClick}>Open simple snackbar</Button> */}
-        <Snackbar
-            open={open}
-            autoHideDuration={6000}
-            onClose={handleClose}
-            message="Creating new workspace. May take a few seconds."
-            action={action}
-        />
-    </Paper>
-    )
-    
-}
-
-const Workspaces = ({workspaces, color}) => {
-    return (
-        <Stack spacing={2} sx={{height: "100%", padding: "1em", overflow: "auto"}}>
-            <Typography>Workspaces</Typography>
-        
-            <Stack sx={{margin: "0.5em"}} spacing={2} direction="row">
-
-                <NewWorkspace color={color} />
-                {workspaces?.map(ws => <ExistingWorkspace workspace={ws} color={color} ></ExistingWorkspace>)}
-            </Stack>
-        </Stack>
-    )
-
-}
-
-
-
+const Workspaces = ({ workspaces }) => {
+  return (
+    <div className="flex flex-col h-full w-full p-2 py-4 border-y">
+      <div className="flex flex-row gap-2 justify-between items-center pb-4">
+        <h2 className="text-xl font-medium ">Workspaces</h2>
+        <NewWorkspaceModal />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 w-full grid-flow-row auto-cols-[minmax(0,300px)]">
+        {workspaces?.map((ws) => (
+          <ExistingWorkspace workspace={ws}></ExistingWorkspace>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default function Dashboard() {
-    const { data: session, status } = useSession();
-    const { data: user, error } = useSWR(`/api/user/${session?.user?.id}`, fetcher);
-    
-    const { data: workspaces } = useSWR(`/api/workspaces`, fetcher)
+  const { data: session, status } = useSession();
+  const { data: user, error } = useSWR(
+    `/api/user/${session?.user?.id}`,
+    fetcher
+  );
+  const { data: workspaces } = useSWR(`/api/workspaces`, fetcher);
 
-    if (error || status != "authenticated" || !session) {
-        return <div>Looks like you forgot to sign in. <Link href="/">Click here to return to the home page.</Link></div>
-    }
-
-    const rgb = space.hsl.rgb([themeConfig.primaryHue, 100, 50])
-    const color = `#${rgbHex(rgb[0], rgb[1], rgb[2])}`
-    const linkstyle = {
-        color: color
-    }
-
-    
-   
-
+  if (error || status != "authenticated" || !session) {
     return (
-        <Stack spacing={2} sx={{margin: "2em"}}>
-            <Stack direction="row" justifyContent="space-between" >
-                <Typography variant="h4">Welcome, {user?.username}.</Typography>
-                <Button onClick={() => signOut({ callbackUrl: `/` })}>Sign out</Button>
-            </Stack>
-            <Typography variant="h5">Start by creating a new workspace or accessing a previous one. </Typography>
-            <Typography>For now, we have two data sources from <Link style={linkstyle} href={"https://reddit.com"}>Reddit</Link> that are loaded and open to use: <Link style={linkstyle} href={"https://reddit.com/r/nursing"}>r/nursing</Link> and <Link style={linkstyle} href={"https://reddit.com/r/AmITheAsshole"}>r/AmITheAsshole</Link>. When you create a new workspace, you 
-            will get to choose which you would like to use as your data source. You can also add contributors by username below.</Typography>
-            <Typography variant="caption">If you'd like a different subreddit as a data source,
-            please email us at <Link style={linkstyle} href="mailto:hello@teleoscope.ca">hello@teleoscope.ca</Link> and we may be able to accommodate 
-            your request. Subreddits are provided courtesy of <Link style={linkstyle} href="https://pushshift.io/">pushshift.io</Link> and are up 
-            to date on their schedule, which is roughly within two months.</Typography>
-            
-            
+      <div>
+        Looks like you forgot to sign in.{" "}
+        <Link href="/">Click here to return to the home page.</Link>
+      </div>
+    );
+  }
 
-            <Workspaces workspaces={workspaces} color={color} />
+  return (
+    <section className="flex flex-col h-full w-full p-4 overflow-hidden">
+      <div className="flex flex-row justify-between pt-2 pb-6 items-center">
+        <div className="flex flex-col ">
+          <Link href={"/"} className="text-primary-600 font-semibold text-sm">
+            Teleoscope
+          </Link>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <span className="text-sm text-neutral-700 font-medium italic  px-1">
+            {user?.username || "User"}
+          </span>
+        </div>
 
-
-        </Stack>
-        
-    )
+        <Button
+          size={"sm"}
+          className="bg-neutral-900 text-white"
+          onClick={() => signOut({ callbackUrl: `/` })}
+        >
+          Sign out
+        </Button>
+      </div>
+      <Workspaces workspaces={workspaces} />
+    </section>
+  );
 }
