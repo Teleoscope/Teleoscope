@@ -370,18 +370,16 @@ def update_teleoscope_milvus(mdb: database.Database, teleoscope_node, sources: L
             # search for vectors with a distance greater than 0.8
             "radius": 1 - distance,
             # filter out most similar vectors with a distance greater than or equal to 1.0
-            "range_filter" : 1.0
+            "range_filter" : (1 - distance) + 1.0
         }
     }
 
     if len(sources) == 0:            
-        # Get results until distance has been met
-        n_results = 64
+        # Get results within radius
         results = milvus_collection.search(
             data=[search_vector],
             anns_field="text_vector",
             param=search_params,
-            limit=n_results
         )
 
         ranks = zip(results[0].ids, results[0].distances)
