@@ -37,9 +37,6 @@ const FormSchema = z.object({
   datasource: z.enum([
     "nursing",
     "aita",
-    "github",
-    "github-rust-issues",
-    "calcom_calcom_issues",
   ]),
 });
 
@@ -78,7 +75,7 @@ export function NewWorkspaceModal() {
       <DialogTrigger asChild>
         <Button
           variant="secondary"
-          className=" p-2   text-primary-500 flex gap-2 items-center hover:bg-primary-200 hover:text-primary-600  border "
+          className=" p-2 text-primary-500 flex gap-2 items-center hover:bg-primary-200 hover:text-primary-600  border "
         >
           <PlusIcon className=" w-full " />
           New workspace
@@ -161,13 +158,6 @@ export function NewWorkspaceModal() {
                           r/nursing
                         </SelectItem>
                         <SelectItem value="aita">r/AmITheAsshole</SelectItem>
-                        <SelectItem value="github">r/github</SelectItem>
-                        <SelectItem value="github-rust-issues">
-                          r/rust issues
-                        </SelectItem>
-                        <SelectItem value="calcom_calcom_issues">
-                          r/calcom_calcom issues
-                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

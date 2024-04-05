@@ -1,15 +1,15 @@
 const primaryColors = {
-  50: "#f2f7f9",
-  100: "#e6eff3",
-  200: "#bfd7e0",
-  300: "#99bfce",
-  400: "#4da0ab",
-  500: "#00718a",
-  600: "#00657b",
-  700: "#00444f",
-  800: "#00333c",
-  900: "#002227",
-} // Change these colors when you update the design tokens
+  50: "#f2e5ff",
+  100: "#e0bfff",
+  200: "#c699ff",
+  300: "#ac73ff",
+  400: "#924dff",
+  500: "#7827ff",
+  600: "#6b00e6",
+  700: "#5900b3",
+  800: "#470080",
+  900: "#35004d",
+}  // Change these colors when you update the design tokens
 
 const config = {
   darkMode: ["class"],
@@ -26,20 +26,27 @@ const config = {
       padding: "2rem",
       screens: {
         "2xl": "1400px",
+        "3xl": "1600px",
+        "4xl": "1800px",
+        "5xl": "2000px",
       },
+      
     },
     extend: {
+      fontSize: {
+        "2xs": "0.625rem"
+      },
       colors: {
-        primary: primaryColors,
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        // primary: {
-        //   DEFAULT: "hsl(var(--primary))",
-        //   foreground: "hsl(var(--primary-foreground))",
-        // },
+        primary: {
+          DEFAULT: primaryColors[500],
+          foreground: "hsl(var(--primary-foreground))",
+          ...primaryColors,
+        },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
