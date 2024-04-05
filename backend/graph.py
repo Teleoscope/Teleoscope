@@ -376,10 +376,12 @@ def update_teleoscope_milvus(mdb: database.Database, teleoscope_node, sources: L
 
     if len(sources) == 0:            
         # Get results within radius
+
         results = milvus_collection.search(
             data=[search_vector],
             anns_field="text_vector",
             param=search_params,
+            limit=10000
         )
 
         ranks = zip(results[0].ids, results[0].distances)
