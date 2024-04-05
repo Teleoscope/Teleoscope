@@ -512,7 +512,7 @@ def update_teleoscope(db: database.Database, teleoscope_node, sources: List, con
     if "rank_slice_length" in parameters:
         rank_slice_length = parameters["rank_slice_length"]
     
-    similarity = 0.4
+    similarity = 0.1
     if "similarity" in parameters:
         similarity = parameters["similarity"]
     
