@@ -1,5 +1,4 @@
 import Head from "next/head";
-import "@/styles/global.css";
 import "primereact/resources/themes/lara-light-cyan/theme.css";
 
 import { StrictMode, useState } from "react";
@@ -7,6 +6,8 @@ import { SessionProvider } from 'next-auth/react';
 import { Stomp, StompContext } from "@/util/Stomp";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
+import "@/styles/global.css";
+import { Toaster } from "@/components/ui/sonner"
 
 export default App;
 function App({ Component, pageProps: { session, ...pageProps } }) {
@@ -35,6 +36,7 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
       <Head>
         <title>Teleoscope</title>
       </Head>
+      <Toaster />
 
       <main>
         <StrictMode>
@@ -44,8 +46,8 @@ function App({ Component, pageProps: { session, ...pageProps } }) {
                 <Component {...pageProps} />
               </StompContext.Provider>
             </SessionProvider>
-          </div>
-        </StrictMode>
+          </div> 
+       </StrictMode>
       </main>
     </>
   );
