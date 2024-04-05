@@ -46,12 +46,12 @@ const DistanceSlider = ({teleoscope, color}) => {
     width: "25%"
   }}
   aria-label="Distance"
-  defaultValue={teleoscope["parameters"]["distance"] ? teleoscope["parameters"]["distance"] : "0.4"}
+  defaultValue={teleoscope["parameters"]["distance"] ? teleoscope["parameters"]["distance"] : "0.1"}
   valueLabelDisplay="auto"
   step={0.1}
   size="small"
   min={0.1}
-  max={1.5}
+  max={1}
   sx={{ color: color }}
   onChangeCommitted={(event, value) =>
     handleChange(event, value)
