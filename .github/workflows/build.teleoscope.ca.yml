@@ -50,6 +50,5 @@ jobs:
 
       - name: Build Teleoscope.ca
         run: 
-          pnpm ci
           pnpm run build
           pnpm test
