@@ -49,6 +49,7 @@ jobs:
         run: pnpm install
 
       - name: Build Teleoscope.ca
-        run: 
-          pnpm run build
-          pnpm test
+        run: pnpm run build
+          
+      - name: Test Teleoscope.ca
+        run: pnpm test
