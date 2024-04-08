@@ -51,5 +51,5 @@ jobs:
       - name: Build Teleoscope.ca
         run: 
           pnpm ci
-          pnpm run build --if-present
+          pnpm run build
           pnpm test
