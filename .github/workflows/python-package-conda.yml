@@ -1,41 +1,41 @@
 name: Python Package using Conda
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    defaults:
-           run:
-             working-directory: ./backend
-    strategy:
-      matrix:
-        python-version: [3.8.x]
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: create auth.py
-      shell: bash
-      env:
-        rabbitmq: ${{ secrets.RABBITMQ_CREDENTIALS }}
-        mongodb: ${{ secrets.MONGODB_CREDENTIALS }}
-      run: |
-        touch auth.py 
-        echo "rabbitmq = {'username': 'phb', 'password': '"$rabbitmq"', 'host': '192.168.79.58:5672:systopia', 'vhost': 'systopia' }" >> auth.py
-        echo "mongodb = { 'username': 'sol', 'password': '"$mongodb"','host': '192.168.79.58:27017'}" >> auth.py
-    - run: 
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-    - name: Install dependencies
-      run: |
-        conda env update --file environment.yml --name base
+#on:
+  #push:
+    #branches: [ main ]
+  #pull_request:
+    #branches: [ main ]
+#jobs:
+  #build-linux:
+    #runs-on: ubuntu-latest
+    #defaults:
+    #       run:
+    #         working-directory: ./backend
+    #strategy:
+    #  matrix:
+    #    python-version: [3.8.x]
+    #
+    #steps:
+    #- uses: actions/checkout@v3
+    #- name: Set up Python ${{ matrix.python-version }}
+    #  uses: actions/setup-python@v3
+    #  with:
+    #    python-version: ${{ matrix.python-version }}
+    #- name: create auth.py
+    #  shell: bash
+    #  env:
+    #    rabbitmq: ${{ secrets.RABBITMQ_CREDENTIALS }}
+    #    mongodb: ${{ secrets.MONGODB_CREDENTIALS }}
+    # run: |
+    #    touch auth.py 
+    #    echo "rabbitmq = {'username': 'phb', 'password': '"$rabbitmq"', 'host': '192.168.79.58:5672:systopia', 'vhost': 'systopia' }" >> auth.py
+    #    echo "mongodb = { 'username': 'sol', 'password': '"$mongodb"','host': '192.168.79.58:27017'}" >> auth.py
+    #- run: 
+    #    # $CONDA is an environment variable pointing to the root of the miniconda directory
+    #    echo $CONDA/bin >> $GITHUB_PATH
+    #- name: Install dependencies
+    #  run: |
+    #    conda env update --file environment.yml --name base
     # - name: Lint with flake8
     #  run: |
     #    conda install flake8
