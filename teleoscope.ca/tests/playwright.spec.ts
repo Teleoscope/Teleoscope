@@ -1,3 +1,4 @@
+// Keep this test to see if Playwright itself is broken
 import { test, expect } from '@playwright/test';
 
 test('has title', async ({ page }) => {
