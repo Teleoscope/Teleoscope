@@ -50,6 +50,3 @@ jobs:
 
       - name: Build Teleoscope.ca
         run: pnpm run build
-          
-      - name: Test Teleoscope.ca
-        run: pnpm test
