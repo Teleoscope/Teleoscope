@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import { MongoClient } from "mongodb";
 
 
-const cookiePrefix = "__Secure-";
+const cookiePrefix = "";
 
 
 export const authOptions = {
@@ -23,11 +23,12 @@ export const authOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: true,
+        secure: false
       },
     },
   },
   // Configure one or more authentication providers
+  secret: 'secret',
   providers: [  
     // GoogleProvider({
     //   clientId: process.env.GOOGLE_CLIENT_ID,

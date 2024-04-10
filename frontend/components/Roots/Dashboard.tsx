@@ -41,8 +41,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex flex-col h-full w-full p-4 overflow-hidden items-center">
-    <section className="flex flex-col h-full w-full p-4 max-w-[1800px] overflow-hidden items-center">
+    <div className="flex flex-col h-full w-full p-4  overflow-hidden items-center">
+    <section className="flex flex-col h-full w-full p-4 max-w-[2000px] overflow-hidden items-center">
       <div className="flex flex-row justify-between pt-2 pb-6 items-center w-full">
         <div className="flex flex-col ">
           <Link href={"/"} className="text-primary-600 font-semibold text-sm">

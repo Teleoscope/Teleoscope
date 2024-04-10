@@ -109,7 +109,7 @@ def initialize_workspace(
 
     dbname = utils.sanitize_db_name(f"{label}_{uuid_str}")
 
-    if datasource == "aita" or datasource == "nursing":
+    if datasource == "aita" or datasource == "nursing" or datasource == "calcom_calcom_issues":
         dbname = datasource
     
     obj = schemas.create_workspace_object(owner=userid, label=label, database=dbname)

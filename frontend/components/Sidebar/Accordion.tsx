@@ -1,4 +1,3 @@
-import Stack from "@mui/material/Stack";
 import Groups from "@/components/Groups/Groups";
 import Notes from "@/components/Notes/Notes";
 import Bookmarks from "@/components/Bookmarks";
@@ -6,20 +5,31 @@ import Setttings from "@/components/Settings";
 import AccordionSection from "@/components/Sidebar/AccordionSection";
 import SelectionViewer from "@/components/Sidebar/SelectionViewer";
 import Workflows from "@/components/Sidebar/WorkflowViewer";
-import { useWindowDefinitions } from "@/util/hooks";
 import Uploader from "@/components/Uploader";
+import { useAppSelector, useWindowDefinitions } from "@/util/hooks";
+import References from "@/components/Sidebar/RefViewer";
 
 export default function SimpleAccordion({ compact }) {
   const wdefs = useWindowDefinitions();
+  const selection = useAppSelector((state) => state.windows.selection);
+
   return (
-    <Stack
-      sx={{ height: "100%", width: "100%" }}
-      direction="column"
-      justifyContent="space-between"
-    >
-      <SelectionViewer></SelectionViewer>
+      <div className="flex flex-col flex-1  w-full  overflow-x-hidden text-black">
+      <SelectionViewer/>
             
-      <div>
+      <div className="flex flex-col   w-full  ">
+      {selection.nodes.length > 0 && selection.nodes.filter((n) => n.data.type == "Document").length > 0 ? (
+          <AccordionSection
+            compact={compact}
+            icon={wdefs.definitions()["Workflows"].icon()}
+            text="Connections"
+          >
+            <References />
+          </AccordionSection>
+        ) : (
+          ""
+        )}
+
       <AccordionSection
           compact={compact}
           icon={wdefs.definitions()["Workflows"].icon()}
@@ -63,6 +73,6 @@ export default function SimpleAccordion({ compact }) {
           <Setttings />
         </AccordionSection>
       </div>
-    </Stack>
+    </div>
   );
 }

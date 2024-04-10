@@ -48,6 +48,7 @@ MONGODB_PASSWORD = os.getenv('MONGODB_PASSWORD')
 MONGODB_HOST = os.getenv('MONGODB_HOST') 
 MONGODB_AUTHT = os.getenv('MONGODB_AUTHT')
 MONGODB_REPLICASET = os.getenv('MONGODB_REPLICASET')
+MONGODB_REGISTRAR_URI = os.getenv('MONGODB_REGISTRAR_URI')
 
 CHROMA_HOST = os.getenv('CHROMA_HOST') 
 CHROMA_PORT = os.getenv('CHROMA_PORT') 
@@ -61,18 +62,19 @@ db = "test"
 
 def make_client():
     # autht = "authSource=admin&authMechanism=SCRAM-SHA-256&tls=true" Added this to config as: MONGODB_AUTHT
-    connect_str = (
-        f'mongodb://'
-        f'{MONGODB_USERNAME}:'
-        f'{MONGODB_PASSWORD}@'
-        f'{MONGODB_HOST}/?'
-        f'{MONGODB_AUTHT}'
-    )
+    # connect_str = (
+    #     f'mongodb://'
+    #     f'{MONGODB_USERNAME}:'
+    #     f'{MONGODB_PASSWORD}@'
+    #     f'{MONGODB_HOST}/?'
+    #     f'{MONGODB_AUTHT}'
+    # )
     client = MongoClient(
-        connect_str, 
+        MONGODB_REGISTRAR_URI, 
         connectTimeoutMS = 50000, 
         serverSelectionTimeoutMS = 50000,
-        replicaSet = MONGODB_REPLICASET
+        directConnection=True,
+        # replicaSet = MONGODB_REPLICASET
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
     return client
