@@ -1,0 +1,35 @@
+# Database Schemas
+---
+# Allowed types:
+#  
+#
+
+bsonType: object
+title: Document Validation
+required:
+  - A
+  - B
+  - C
+properties:
+  A:
+    bsonType: int
+    description: This must be an int
+  B:
+    bsonType: 
+      - double
+    description: Ok this has been described
+
+
+
+
+bsonType: object
+title: Document Validation Schema
+required:
+  - document
+properties:
+  document:
+    bsonType: 
+      - object
+    description: "A list of paragraphs."
+    
+
