@@ -111,7 +111,7 @@ export default function Home({ workspace, database, userid, username, workflow, 
           <title>Teleoscope</title>
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <main>
+        <main className="flex flex-row h-screen w-screen">
           <Workspace database={database} workflow={workflow_id} workspace={workspace} />
         </main>
       </SWRConfig>

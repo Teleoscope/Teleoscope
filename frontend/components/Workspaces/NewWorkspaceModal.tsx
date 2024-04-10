@@ -151,12 +151,7 @@ export function NewWorkspaceModal() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem
-                          value="
-                        nursing"
-                        >
-                          r/nursing
-                        </SelectItem>
+                        <SelectItem value="nursing">r/nursing</SelectItem>
                         <SelectItem value="aita">r/AmITheAsshole</SelectItem>
                       </SelectContent>
                     </Select>

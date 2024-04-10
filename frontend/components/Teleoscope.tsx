@@ -65,9 +65,7 @@ export default function Teleoscope({ id, windata }) {
   const swr = useSWRHook();
 
   const color = useAppSelector((state) => state.windows.settings.color);
-  const { teleoscope } = windata?.demo
-    ? windata.demodata
-    : swr.useSWRAbstract("teleoscope", `graph/${teleoscope_id}`);
+  const { teleoscope } = swr.useSWRAbstract("teleoscope", `graph/${teleoscope_id}`);
 
   const doclists = teleoscope?.doclists;
 
@@ -113,6 +111,7 @@ export default function Teleoscope({ id, windata }) {
  
   return (
     <><ButtonActions inner={[[Status, teleoscope], [CopyToGroup, teleoscope]]}></ButtonActions>
+    <p>id used for API {teleoscope_id}</p>
       {teleoscope ? (
         <>{debug ? <p>{teleoscope._id}</p> : <></>}
         <DocumentList data={doclists} pagination={true}></DocumentList></>

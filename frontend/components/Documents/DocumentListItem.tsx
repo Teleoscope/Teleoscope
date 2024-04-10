@@ -25,7 +25,7 @@ import { onDragStart } from "@/util/drag";
 export default function DocumentListItem(props) {
   const dispatch = useAppDispatch()
   const swr = useSWRHook();
-  const { document, document_loading, document_error } = swr.useSWRAbstract("document", `document/${props.id}`);
+  const { document, document_loading, document_error } = props.index? swr.useSWRAbstract("document", `query?index=${props.index}&q=${props.id}`): swr.useSWRAbstract("document", `document/${props.id}`);
   const title = document ? PreprocessTitle(document.title) : false;
   const settings = useAppSelector((state) => state.windows.settings);
 
@@ -47,7 +47,7 @@ export default function DocumentListItem(props) {
     <div
       draggable={true}
       onClick={handleSetIndex}
-      onDragStart={(e) => onDragStart(e, props.id, "Document")}
+      onDragStart={(e) => onDragStart(e, document._id, "Document")}
       style={{
         ...props.style,
         position: "relative",
@@ -58,8 +58,8 @@ export default function DocumentListItem(props) {
         height: "100%",
         backgroundColor: props.highlight ? "#EEEEEE" : "white",
       }}
-      id={props.id}
-    >
+      id={document.id}
+    > 
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Stack
           direction="row"

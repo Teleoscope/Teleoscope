@@ -9,16 +9,15 @@ import OperationViewer from "./OperationViewer";
 export default function SelectionViewer({ noGroup }) {
   const selection = useAppSelector((state) => state.windows.selection);
   return (
-    <div>
+    <div className="flex flex-col flex-1 justify-between items-center w-full overflow-x-hidden [&>*]:w-full">
       {selection.nodes.map((node) => {
         if (node.data.type == "Document") {
           return (
             <DocViewer
-              compact={true}
               windata={node.data}
               key={node.id.split("%")[0]}
               id={node.id.split("%")[0]}
-            ></DocViewer>
+            />
           );
         }
         if (node.data.type == "Group" && !noGroup) {
