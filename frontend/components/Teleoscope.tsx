@@ -111,7 +111,6 @@ export default function Teleoscope({ id, windata }) {
  
   return (
     <><ButtonActions inner={[[Status, teleoscope], [CopyToGroup, teleoscope]]}></ButtonActions>
-    <p>id used for API {teleoscope_id}</p>
       {teleoscope ? (
         <>{debug ? <p>{teleoscope._id}</p> : <></>}
         <DocumentList data={doclists} pagination={true}></DocumentList></>
