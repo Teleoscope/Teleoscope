@@ -1,4 +1,4 @@
-import { AccountMenu } from "@/components/AccountMenu"
+import Menu from "@/components/CorporateMenu"
 
 export default function DashboardLayout(
   {
@@ -9,7 +9,7 @@ export default function DashboardLayout(
 ) {
   return (
     <section>
-      <AccountMenu />
+      <Menu />
       {children}
     </section>
   )
