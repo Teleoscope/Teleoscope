@@ -1,5 +1,3 @@
-import Menu from "@/components/CorporateMenu"
-
 export default function DashboardLayout(
   {
     children, // will be a page or nested layout
@@ -9,7 +7,6 @@ export default function DashboardLayout(
 ) {
   return (
     <section>
-      <Menu />
       {children}
     </section>
   )
