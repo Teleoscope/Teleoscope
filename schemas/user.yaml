@@ -1,0 +1,17 @@
+# User
+bsonType: object
+title: User
+required:
+  - _id
+  - email
+  - password
+properties:
+  _id:
+    bsonType: objectId
+    description: MongoDB auto-generated identifer
+  email:
+    bsonType: string
+    description: A valid email string
+  passsword:
+    bsonType: string
+    description: A salted hashed password string

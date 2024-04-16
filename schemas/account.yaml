@@ -1,0 +1,31 @@
+# Account Database Schema
+bsonType: object
+title: Account
+required:
+  - _id
+  - owner
+  - team
+  - plan
+properties:
+  _id:
+    bsonType: objectId
+    description: MongoDB auto-generated identifer
+  owner:
+    bsonType: objectId
+    description: The user who manages the account
+  team:
+    bsonType: array
+    description: A list of team members and permissions.
+    items:
+      bsonType: object
+      description: A team member and permissions.
+      required:
+        _id:
+          bsonType: objectId
+          description: the team member's MongoDB oid
+        permissions:
+          bsonType: array
+          description: The permissions for a team member
+          items:
+            bsonType: string
+            description: Permission strings for a team member
