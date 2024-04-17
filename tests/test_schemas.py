@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-load_dotenv
+load_dotenv()
+MONGODB_ATLAS_TESTING_URI = os.environ.get("MONGODB_ATLAS_TESTING_URI")
 
 schema_directory = "./schemas"
 
@@ -20,7 +21,7 @@ def test_create_MongoDB_schema():
     from pymongo.mongo_client import MongoClient
     from pymongo.server_api import ServerApi
 
-    uri = "mongodb+srv://paul:BhV8DmMFxx9E6zxg@teleoscopetesting.ubza1fk.mongodb.net/?retryWrites=true&w=majority&appName=TeleoscopeTesting"
+    uri = MONGODB_ATLAS_TESTING_URI
 
     # Create a new client and connect to the server
     client = MongoClient(uri, server_api=ServerApi('1'))
