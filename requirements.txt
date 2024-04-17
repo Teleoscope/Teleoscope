@@ -1,1 +1,3 @@
-PyYAML
+PyYAML         # translate YAML to python Dict
+pymongo        # connect to mongodb
+python-dotenv  # load dotenv files

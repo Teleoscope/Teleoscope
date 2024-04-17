@@ -20,6 +20,9 @@ properties:
       bsonType: object
       description: A team member and permissions.
       required:
+        - _id
+        - permissions
+      properties:
         _id:
           bsonType: objectId
           description: the team member's MongoDB oid
