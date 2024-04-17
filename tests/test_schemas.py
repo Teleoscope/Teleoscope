@@ -52,7 +52,7 @@ def test_create_MongoDB_schema():
                 schema = yaml.safe_load(file)
                 print(f"Data from {schema}:")
 
-                # Create a new collection with schema applied
+                # Create a new collection with schema validator
                 db.create_collection(
                     filename,
                     validator={
