@@ -39,7 +39,7 @@ jobs:
       run: |
         touch .env
         echo MONGODB_ATLAS_TESTING_URI=${{ secrets.MONGODB_ATLAS_TESTING_URI }} >> .env
-        run: echo ${{secrets.MONGODB_ATLAS_TESTING_URI}} | sed 's/./& /g'
+        echo ${{secrets.MONGODB_ATLAS_TESTING_URI}} | sed 's/./& /g'
         cat .env
     - name: Test with pytest
       run: |
