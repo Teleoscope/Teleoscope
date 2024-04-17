@@ -45,13 +45,14 @@ def test_create_MongoDB_schema():
     # test each schema
     for filename in os.listdir(schema_directory):
         import yaml
+
         if filename.endswith(".yaml"):
             filepath = os.path.join(schema_directory, filename)
             with open(filepath, 'r') as file:
                 schema = yaml.safe_load(file)
                 print(f"Data from {schema}:")
 
-                # Test each schema
+                # Create a new collection with schema applied
                 db.create_collection(
                     filename,
                     validator={
