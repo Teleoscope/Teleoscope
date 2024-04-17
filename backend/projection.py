@@ -470,13 +470,14 @@ class Projection:
         
         check = more = False
         
+
         # outlier label
         if hdbscan_label == -1:
             return 'outliers', '#ff1919', "outlier documents"
 
         # check if hdbscan_label was for a human cluster(s)
         for _name in given_labels:
-
+            name = ""
             label = given_labels[_name]
             
             if (hdbscan_label == label):
