@@ -32,3 +32,28 @@ properties:
           items:
             bsonType: string
             description: Permission strings for a team member
+  plan:
+    bsonType: object
+    description: Attributes for a plan
+    required:
+      - type
+      - tokens
+      - collaborators
+      - storage
+    properties:
+      type:
+        bsonType: string
+        description: The plan type
+      tokens:
+        bsonType: object
+        description: a token is a computational unit
+        required:
+          - used
+          - allotted
+        properties:
+          used:
+            bsonType: int
+            description: the number of tokens used in a monthly period
+          allotted:
+            bsonType: int
+            description: the number of tokens allotted in a monthly period
