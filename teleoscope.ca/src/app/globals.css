@@ -13,10 +13,10 @@
       --popover: 0 0% 100%;
       --popover-foreground: 222.2 84% 4.9%;
 
-      --primary: 222.2 47.4% 11.2%;
-      --primary-foreground: 210 40% 98%;
+      --primary: 222.2 4% 84%;
+      --primary-foreground: 210 40% 0%;
 
-      --secondary: 210 40% 96.1%;
+      --secondary: 360 100% 100%;
       --secondary-foreground: 222.2 47.4% 11.2%;
 
       --muted: 210 40% 96.1%;
@@ -27,6 +27,9 @@
 
       --destructive: 0 84.2% 60.2%;
       --destructive-foreground: 210 40% 98%;
+
+      --teleoscopeBlue: 217 91% 60%;
+      --teleoscopeBlue-foreground: 217 40% 0%;
 
       --border: 214.3 31.8% 91.4%;
       --input: 214.3 31.8% 91.4%;
@@ -59,6 +62,9 @@
 
       --destructive: 0 62.8% 30.6%;
       --destructive-foreground: 210 40% 98%;
+
+      --teleoscopeBlue: 217 91% 60%;
+      --teleoscopeBlue-foreground: 217 40% 0%;
 
       --border: 217.2 32.6% 17.5%;
       --input: 217.2 32.6% 17.5%;

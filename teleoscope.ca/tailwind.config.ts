@@ -52,6 +52,10 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        teleoscopeBlue: {
+          DEFAULT: "hsl(var(--teleoscopeBlue))",
+          foreground: "hsl(var(--teleoscopeBlue-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
