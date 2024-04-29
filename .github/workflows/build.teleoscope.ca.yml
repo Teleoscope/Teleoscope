@@ -49,6 +49,6 @@ jobs:
         run: pnpm install
 
       - name: Build Teleoscope.ca
-        run: | 
+        run: |
           echo MONGODB_URI=${{secrets.MONGODB_ATLAS_TESTING_URI}} >> .env.local
           pnpm run build
