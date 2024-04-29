@@ -4,8 +4,6 @@ title: Account
 required:
   - _id
   - owner
-  - team
-  - plan
 properties:
   _id:
     bsonType: objectId

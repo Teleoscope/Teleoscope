@@ -123,10 +123,14 @@ async function signup(formData: FormData): Promise<ActionResult> {
 	const hashedPassword = await new Argon2id().hash(password.toString());
 	const userId = generateIdFromEntropySize(10); // 16 characters long
 
-  await db.collection("users").insertOne({
+  const user_result = await db.collection("users").insertOne({
 		id: userId,
 		username: username,
 		hashed_password: hashedPassword
+	});
+
+  const account_result = await db.collection("accounts").insertOne({
+		owner: user_result.insertedId
 	});
 
 	const session = await lucia.createSession(userId, {});
