@@ -4,7 +4,7 @@ title: User
 required:
   - _id
   - email
-  - password
+  - hashed_password
 properties:
   _id:
     bsonType: objectId
@@ -12,6 +12,6 @@ properties:
   email:
     bsonType: string
     description: A valid email string
-  passsword:
+  hashed_passsword:
     bsonType: string
     description: A salted hashed password string
