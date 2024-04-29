@@ -66,7 +66,7 @@ export default function AuthenticationPage() {
                 Enter your email below to create your account
               </p>
             </div>
-            <UserAuthForm />
+            <UserAuthForm onLogin={signup} />
             <p className="px-8 text-center text-sm text-muted-foreground">
               By clicking continue, you agree to our{" "}
               <Link
@@ -91,13 +91,11 @@ export default function AuthenticationPage() {
   )
 }
 
+interface ActionResult {
+	error: string;
+}
 
-
-
-
-
-
-async function signup(_: any, formData: FormData): Promise<ActionResult> {
+async function signup(formData: FormData): Promise<ActionResult> {
 	"use server";
 	const username = formData.get("username");
 	// username must be between 4 ~ 31 characters, and only consists of lowercase letters, 0-9, -, and _
@@ -106,7 +104,7 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
 		typeof username !== "string" ||
 		username.length < 3 ||
 		username.length > 31 ||
-		!/^[a-z0-9_-]+$/.test(username)
+		!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(username)
 	) {
 		return {
 			error: "Invalid username"
@@ -122,8 +120,7 @@ async function signup(_: any, formData: FormData): Promise<ActionResult> {
 	const hashedPassword = await new Argon2id().hash(password);
 	const userId = generateIdFromEntropySize(10); // 16 characters long
 
-	// TODO: check if username is already used
-	await db.table("user").insert({
+  await db.collection("users").insertOne({
 		id: userId,
 		username: username,
 		hashed_password: hashedPassword
