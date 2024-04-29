@@ -9,6 +9,7 @@ import { cookies } from "next/headers"
 import { lucia } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { generateIdFromEntropySize } from "lucia"
+import { validateEmail, validatePassword } from "@/lib/validate"
 
 export const metadata: Metadata = {
   title: "Authentication",
@@ -98,26 +99,28 @@ interface ActionResult {
 async function signup(formData: FormData): Promise<ActionResult> {
 	"use server";
 	const username = formData.get("username");
+  const password = formData.get("password");
+  
+  if (!password || !username) {
+    return {
+			error: "Null username or password"
+		};
+	}
 	// username must be between 4 ~ 31 characters, and only consists of lowercase letters, 0-9, -, and _
 	// keep in mind some database (e.g. mysql) are case insensitive
-	if (
-		typeof username !== "string" ||
-		username.length < 3 ||
-		username.length > 31 ||
-		!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(username)
-	) {
+	if (!validateEmail(username)) {
 		return {
 			error: "Invalid username"
 		};
 	}
-	const password = formData.get("password");
-	if (typeof password !== "string" || password.length < 6 || password.length > 255) {
+	
+	if (!validatePassword(password)) {
 		return {
 			error: "Invalid password"
 		};
 	}
 
-	const hashedPassword = await new Argon2id().hash(password);
+	const hashedPassword = await new Argon2id().hash(password.toString());
 	const userId = generateIdFromEntropySize(10); // 16 characters long
 
   await db.collection("users").insertOne({

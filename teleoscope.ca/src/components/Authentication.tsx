@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { validateEmail, validatePassword } from "@/lib/validate";
 import { cn } from "@/lib/utils";
 import { Icons } from "@/components/Icons";
 import { Button } from "@/components/ui/button";
@@ -18,15 +19,7 @@ export function UserAuthForm({ className, onLogin, ...props }: UserAuthFormProps
   const [password, setPassword] = React.useState<string>("");
   const [errors, setErrors] = React.useState<{ email?: string; password?: string }>({});
 
-  const validateEmail = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
 
-  const validatePassword = (password: string) => {
-    const regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z\d]).{8,}$/;
-    return regex.test(password);
-  };
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
