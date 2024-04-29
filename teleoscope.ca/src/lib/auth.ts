@@ -1,15 +1,11 @@
 import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
 import { Collection } from "mongodb";
-import { Lucia } from "lucia";
+import { Lucia, RegisteredDatabaseUserAttributes } from "lucia";
 
 import { db } from "@/lib/db";
 
-const User = db.collection("users") as Collection<UserDoc>;
-const Session = db.collection("sessions") as Collection<SessionDoc>;
 
-const adapter = new MongodbAdapter(Session, User);
-
-interface UserDoc {
+interface UserDoc extends RegisteredDatabaseUserAttributes {
 	_id: string;
 }
 
@@ -18,6 +14,12 @@ interface SessionDoc {
 	expires_at: Date;
 	user_id: string;
 }
+
+const User = db.collection("users") as Collection<UserDoc>;
+const Session = db.collection("sessions") as Collection<SessionDoc>;
+
+const adapter = new MongodbAdapter(Session, User);
+
 
 export const lucia = new Lucia(adapter, {
 	sessionCookie: {
