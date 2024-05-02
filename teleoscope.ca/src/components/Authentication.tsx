@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { validateEmail, validatePassword } from "@/lib/validate";
+import { errors, validateEmail, validatePassword } from "@/lib/validate";
 import { cn } from "@/lib/utils";
 import { Icons } from "@/components/Icons";
 import { Button } from "@/components/ui/button";
@@ -10,16 +10,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
-  onLogin? (formData: FormData): Promise<any>;
+  buttonText: string,
+  onLogin? (formData: FormData): Promise<any>
 }
 
-export function UserAuthForm({ className, onLogin, ...props }: UserAuthFormProps) {
+export function UserAuthForm({ className, onLogin, buttonText, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [email, setEmail] = React.useState<string>("");
   const [password, setPassword] = React.useState<string>("");
-  const [errors, setErrors] = React.useState<{ email?: string; password?: string }>({});
-
-
+  const [errorMessages, setErrorMessages] = React.useState<{ email?: string; password?: string }>({});
+  
 
   async function onSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
@@ -38,22 +38,36 @@ export function UserAuthForm({ className, onLogin, ...props }: UserAuthFormProps
       newErrors.password = 'Password must be at least 8 characters and include uppercase, lowercase, numeric, and special characters.';
     }
 
-    setErrors(newErrors);
-
     if (!isValid) {
+      setErrorMessages(newErrors);
       setIsLoading(false);
       return;
     }
 
     const formData = new FormData();
-    formData.append("username", email);
+    formData.append("email", email);
     formData.append("password", password);
 
     if (onLogin) {
       const res = await onLogin(formData);
-      console.log(res);
-    }
+      if (res) {
+        console.log(res)
+        if (res.error == errors.exists.error) {
+          newErrors.email = 'Email already exists. Did you mean to sign in instead?';
+          setErrorMessages(newErrors);
+          setIsLoading(false);
+          return;
+        }
 
+        if (res.error == errors.incorrect.error) {
+          console.log("ere")
+          newErrors.email = 'Incorrect email or password.';
+          setErrorMessages(newErrors);
+          setIsLoading(false);
+          return;
+        }
+      }
+    }
     setIsLoading(false);
   }
 
@@ -74,7 +88,7 @@ export function UserAuthForm({ className, onLogin, ...props }: UserAuthFormProps
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
+            {errorMessages.email && <p className="text-red-500 text-xs">{errorMessages.email}</p>}
           </div>
           <div className="grid gap-1">
             <Label className="sr-only" htmlFor="password">Password</Label>
@@ -89,12 +103,12 @@ export function UserAuthForm({ className, onLogin, ...props }: UserAuthFormProps
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
+            {errorMessages.password && <p className="text-red-500 text-xs">{errorMessages.password}</p>}
           </div>
           <Button disabled={isLoading}>
             {isLoading ? (
               <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-            ) : "Sign Up with Email"}
+            ) : <>{buttonText}</>}
           </Button>
         </div>
       </form>

@@ -1,8 +1,9 @@
 import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
 import { Collection } from "mongodb";
-import { Lucia, RegisteredDatabaseUserAttributes } from "lucia";
+import { Lucia, RegisteredDatabaseUserAttributes, Session } from "lucia";
 
 import { db } from "@/lib/db";
+import { cookies } from "next/headers";
 
 
 interface UserDoc extends RegisteredDatabaseUserAttributes {
@@ -16,12 +17,11 @@ interface SessionDoc {
 }
 
 const User = db.collection("users") as Collection<UserDoc>;
-const Session = db.collection("sessions") as Collection<SessionDoc>;
+const SessionDocs = db.collection("sessions") as Collection<SessionDoc>;
 
-const adapter = new MongodbAdapter(Session, User);
+const adapter = new MongodbAdapter(SessionDocs, User);
 
-
-export const lucia = new Lucia(adapter, {
+const lucia = new Lucia(adapter, {
 	sessionCookie: {
 		expires: false,
 		attributes: {
@@ -45,4 +45,12 @@ declare module "lucia" {
 
 interface DatabaseUserAttributes {
 	username: string;
+}
+
+
+export async function authenticate(userId: string): Promise<Session> {
+	const session = await lucia.createSession(userId, {});
+	const sessionCookie = lucia.createSessionCookie(session.id);
+	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+	return session
 }

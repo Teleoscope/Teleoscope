@@ -5,11 +5,11 @@ import { buttonVariants } from "@/components/ui/button"
 import { UserAuthForm } from "@/components/Authentication"
 import { db } from "@/lib/db"
 import { Argon2id } from "oslo/password"
-import { cookies } from "next/headers"
-import { lucia } from "@/lib/auth"
+import { authenticate } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { generateIdFromEntropySize } from "lucia"
-import { validateEmail, validatePassword } from "@/lib/validate"
+import { validateEmail, validatePassword, ActionResult, errors } from "@/lib/validate"
+import { MongoError } from 'mongodb'
 
 export const metadata: Metadata = {
   title: "Authentication",
@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 }
 
 export default function AuthenticationPage() {
+  
   return (
     <>
       <div className="container relative hidden h-[800px] flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
@@ -67,7 +68,7 @@ export default function AuthenticationPage() {
                 Enter your email below to create your account
               </p>
             </div>
-            <UserAuthForm onLogin={signup} />
+            <UserAuthForm onLogin={signup} buttonText="Sign Up with Email" />
             <p className="px-8 text-center text-sm text-muted-foreground">
               By clicking continue, you agree to our{" "}
               <Link
@@ -92,49 +93,62 @@ export default function AuthenticationPage() {
   )
 }
 
-interface ActionResult {
-	error: string;
-}
-
 async function signup(formData: FormData): Promise<ActionResult> {
 	"use server";
-	const username = formData.get("username");
+	const email = formData.get("email");
   const password = formData.get("password");
-  
-  if (!password || !username) {
-    return {
-			error: "Null username or password"
-		};
+
+  if (!password || !email) {
+    return errors.missing;
 	}
-	// username must be between 4 ~ 31 characters, and only consists of lowercase letters, 0-9, -, and _
-	// keep in mind some database (e.g. mysql) are case insensitive
-	if (!validateEmail(username)) {
-		return {
-			error: "Invalid username"
-		};
+	if (!validateEmail(email)) {
+		return errors.email;
 	}
-	
 	if (!validatePassword(password)) {
-		return {
-			error: "Invalid password"
-		};
+		return errors.password;
 	}
 
+  
+  // ensure users collection exists
+  try {
+    db.createCollection("users");
+  } catch (error) {}
+  
+  // Ensure that emails are unique
+  const indexExists = await db.collection("users").indexExists("emails");
+  if (!indexExists) {
+    await db.collection("users").createIndex(
+      { "emails": 1 },
+      {
+        name: "emails",
+        unique: true
+      }
+    )
+  }
+  
 	const hashedPassword = await new Argon2id().hash(password.toString());
 	const userId = generateIdFromEntropySize(10); // 16 characters long
 
-  const user_result = await db.collection("users").insertOne({
-		id: userId,
-		username: username,
-		hashed_password: hashedPassword
-	});
-
-  const account_result = await db.collection("accounts").insertOne({
-		owner: user_result.insertedId
-	});
-
-	const session = await lucia.createSession(userId, {});
-	const sessionCookie = lucia.createSessionCookie(session.id);
-	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
-	return redirect("/");
+  try {
+    // Attempt to insert a new user
+    const user_result = await db.collection("users").insertOne({
+      id: userId,
+      emails: [email],
+      hashed_password: hashedPassword
+    });
+  
+    await db.collection("accounts").insertOne({
+      owner: user_result.insertedId
+    });
+    
+    await authenticate(userId);
+    
+  } catch (error) {
+    const mongoError = error as MongoError;
+    if (mongoError.code === 11000) {
+      return errors.exists;
+    }
+    return errors.unknown;
+  }
+	return redirect("/dashboard");
 }
