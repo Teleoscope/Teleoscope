@@ -138,7 +138,9 @@ async function signup(formData: FormData): Promise<ActionResult> {
     });
   
     await db.collection("accounts").insertOne({
-      owner: user_result.insertedId
+      users: {
+        owner: user_result.insertedId
+      }
     });
     
     await authenticate(userId);

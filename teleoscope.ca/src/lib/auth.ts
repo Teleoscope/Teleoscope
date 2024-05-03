@@ -16,10 +16,10 @@ interface SessionDoc {
 	user_id: string;
 }
 
-const User = db.collection("users") as Collection<UserDoc>;
-const SessionDocs = db.collection("sessions") as Collection<SessionDoc>;
+const UserCollection = db.collection("users") as Collection<UserDoc>;
+const SessionCollection = db.collection("sessions") as Collection<SessionDoc>;
 
-const adapter = new MongodbAdapter(SessionDocs, User);
+const adapter = new MongodbAdapter(SessionCollection, UserCollection);
 
 const lucia = new Lucia(adapter, {
 	sessionCookie: {

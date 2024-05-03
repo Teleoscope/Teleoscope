@@ -1,10 +1,10 @@
-# User
+# Users
 bsonType: object
-title: User
+title: user
 required:
   - _id
   - id
-  - email
+  - emails
   - hashed_password
 properties:
   _id:
@@ -12,10 +12,13 @@ properties:
     description: MongoDB auto-generated identifer
   id:
     bsonType: string
-    description: An auto-generated identifer for sessions (not _id for security)
-  email:
-    bsonType: string
-    description: A valid email string
+    description: An auto-generated identifer for Lucia sessions (not _id for security)
+  emails:
+    bsonType: array
+    description: An array of valid email strings
+    items:
+      bsonType: string
+      description: A valid email string
   hashed_passsword:
     bsonType: string
     description: A salted hashed password string

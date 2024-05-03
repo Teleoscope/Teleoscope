@@ -54,7 +54,7 @@ def test_create_MongoDB_schema():
 
                 # Create a new collection with schema validator
                 db.create_collection(
-                    filename,
+                    os.path.splitext(os.path.basename(filename))[0],
                     validator={
                         "$jsonSchema": schema
                     }
