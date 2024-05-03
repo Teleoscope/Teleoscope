@@ -60,12 +60,13 @@ export function UserAuthForm({ className, onLogin, buttonText, ...props }: UserA
         }
 
         if (res.error == errors.incorrect.error) {
-          console.log("ere")
           newErrors.email = 'Incorrect email or password.';
           setErrorMessages(newErrors);
           setIsLoading(false);
           return;
         }
+
+        
       }
     }
     setIsLoading(false);
@@ -84,6 +85,7 @@ export function UserAuthForm({ className, onLogin, buttonText, ...props }: UserA
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect="off"
+              aria-label="email input"
               disabled={isLoading}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -99,6 +101,7 @@ export function UserAuthForm({ className, onLogin, buttonText, ...props }: UserA
               hidden={true}
               autoCapitalize="none"
               autoCorrect="off"
+              aria-label="password input"
               disabled={isLoading}
               value={password}
               onChange={(e) => setPassword(e.target.value)}

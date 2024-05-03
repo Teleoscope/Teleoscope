@@ -146,11 +146,15 @@ async function signup(formData: FormData): Promise<ActionResult> {
     await authenticate(userId);
     
   } catch (error) {
-    const mongoError = error as MongoError;
-    if (mongoError.code === 11000) {
-      return errors.exists;
+    try { 
+      const mongoError = error as MongoError;
+      if (mongoError.code === 11000) {
+        return errors.exists;
+      }
+    } catch (e) {
+      throw e  
     }
-    return errors.unknown;
+    throw error
   }
 	return redirect("/dashboard");
 }

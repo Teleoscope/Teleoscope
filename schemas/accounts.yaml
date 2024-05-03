@@ -4,7 +4,6 @@ title: account
 required:
   - _id
   - users
-  - teams
 properties:
   _id:
     bsonType: objectId
