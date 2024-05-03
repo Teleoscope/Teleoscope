@@ -69,15 +69,14 @@ properties:
     bsonType: array
     description: workplace teams
     items:
-      team:
-        bsonType: object
-        description: a team
-        required:
-          - _id
-        properties:
-          _id:
-            bsonType: objectId
-            description: MongoDB auto-generated identifer
+      bsonType: object
+      description: a team
+      required:
+        - _id
+      properties:
+        _id:
+          bsonType: objectId
+          description: MongoDB auto-generated identifer
 
 
 
