@@ -1,0 +1,42 @@
+{
+    "$jsonSchema": {
+        "bsonType": "object",
+        "title": "user",
+        "required": [
+            "_id",
+            "id",
+            "emails",
+            "hashed_password"
+        ],
+        "properties": {
+            "_id": {
+                "bsonType": "objectId",
+                "description": "MongoDB auto-generated identifer"
+            },
+            "id": {
+                "bsonType": "string",
+                "description": "An auto-generated identifer for Lucia sessions (not _id for security)"
+            },
+            "emails": {
+                "bsonType": "array",
+                "description": "An array of valid email strings",
+                "items": {
+                    "bsonType": "string",
+                    "description": "A valid email string"
+                }
+            },
+            "hashed_passsword": {
+                "bsonType": "string",
+                "description": "A salted hashed password string"
+            },
+            "first_name": {
+                "bsonType": "string",
+                "description": "The user's first name"
+            },
+            "last_name": {
+                "bsonType": "string",
+                "description": "The user's last name"
+            }
+        }
+    }
+}

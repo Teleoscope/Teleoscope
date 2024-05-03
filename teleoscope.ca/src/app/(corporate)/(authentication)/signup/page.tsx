@@ -3,7 +3,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { UserAuthForm } from "@/components/Authentication"
-import { db } from "@/lib/db"
+import { db, ensure } from "@/lib/db"
 import { Argon2id } from "oslo/password"
 import { authenticate } from "@/lib/auth"
 import { redirect } from "next/navigation"
@@ -108,23 +108,13 @@ async function signup(formData: FormData): Promise<ActionResult> {
 		return errors.password;
 	}
 
-  
-  // ensure users collection exists
-  try {
-    db.createCollection("users");
-  } catch (error) {}
-  
-  // Ensure that emails are unique
-  const indexExists = await db.collection("users").indexExists("emails");
-  if (!indexExists) {
-    await db.collection("users").createIndex(
-      { "emails": 1 },
-      {
-        name: "emails",
-        unique: true
-      }
-    )
+  // Ensure db collections exist with current validation rules
+  // only run in dev or debug, otherwise the dbs should exist
+  if (process.env.NODE_ENV === 'development') {
+    // Code to run in development mode
+    ensure()
   }
+  
   
 	const hashedPassword = await new Argon2id().hash(password.toString());
 	const userId = generateIdFromEntropySize(10); // 16 characters long

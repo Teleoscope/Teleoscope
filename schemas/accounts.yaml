@@ -75,10 +75,11 @@ properties:
       properties:
         _id:
           bsonType: objectId
-          description: MongoDB auto-generated identifer
+          description: team _id
 
-
-
-
-      
-  
+  data:
+    bsonType: array
+    description: data storage units
+    items:
+      bsonType: objectId
+      description: storage _id

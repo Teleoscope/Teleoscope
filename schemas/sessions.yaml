@@ -7,11 +7,18 @@ required:
   - expires_at
 properties:
   _id:
-    bsonType: objectId
-    description: MongoDB auto-generated identifer
+    bsonType: string
+    description: Lucia generated session id
+  id:
+    bsonType: string
+    description: Lucia generated session id
   user_id:
     bsonType: string
     description: Lucia generated user id
   expires_at:
     bsonType: date
     description: The date when the session expires
+  fresh:
+    bsonType: bool
+    description: Whether the session is fresh
+

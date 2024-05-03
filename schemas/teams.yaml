@@ -1,0 +1,46 @@
+# Teams
+bsonType: object
+title: team
+required:
+  - _id
+  - account
+  - workspaces
+  - users
+properties:
+  _id:
+    bsonType: objectId
+    description: MongoDB auto-generated identifer
+  account:
+    bsonType: objectId
+    description: The account that this team belongs to
+  workspaces:
+    bsonType: array
+    description: An array of workspaces that this team owns
+    items:
+      bsonType: objectId
+      description: the workspace id
+  users:
+    bsonType: array
+    description: An array of workspaces that this team owns
+    items:
+      bsonType: object
+      description: the users and permissions for this team
+      required:
+        - _id
+        - permissions
+      properties:
+        _id: 
+          bsonType: objectId
+          description: the user id
+        permissions:
+          bsonType: objectId
+          description: permissions for the admin user
+          required:
+            - read
+          properties:
+            read:
+              bsonType: bool
+              description: whether a user can read the workspace (minimum permission level)
+            write:
+              bsonType: bool
+              description: whether a user can write to the workspace
