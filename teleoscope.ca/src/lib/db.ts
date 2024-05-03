@@ -8,18 +8,21 @@ import storage from "@/schemas/storage.json";
 import workflows from "@/schemas/workflows.json";
 import workspaces from "@/schemas/workspaces.json";
 
-const MONGODB_URI = process.env.MONGODB_URI;
-if (MONGODB_URI === undefined) {
-    throw new Error("Environment variable MONGODB_URI is not set");
+const MONGODB_URI = process.env.MONGODB_URI ? process.env.MONGODB_URI : "";
+
+async function connect(uri: string) {
+    const client = new MongoClient(uri);
+    await client.connect();
+    return client
 }
-const client = new MongoClient(MONGODB_URI);
 
-await client.connect();
-
-const db = client.db();
+async function mdb() {
+    return (await connect(MONGODB_URI)).db()
+}
 
 async function ensure() {
     console.log("Ensuring that DB collections are correct and consistent...")
+    const db = (await connect(MONGODB_URI)).db();
     const collections = await db.listCollections().toArray()
     const coll_names = collections.map(c => c.name)
     if (!coll_names.includes("users")) {
@@ -71,5 +74,5 @@ async function ensure() {
     }
 }
 
-export { db, ensure };
+export { mdb, connect, ensure };
 

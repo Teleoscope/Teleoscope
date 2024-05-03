@@ -3,7 +3,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { UserAuthForm } from "@/components/Authentication"
-import { db, ensure } from "@/lib/db"
+import { mdb, ensure } from "@/lib/db"
 import { Argon2id } from "oslo/password"
 import { authenticate } from "@/lib/auth"
 import { redirect } from "next/navigation"
@@ -120,6 +120,7 @@ async function signup(formData: FormData): Promise<ActionResult> {
 	const userId = generateIdFromEntropySize(10); // 16 characters long
 
   try {
+    const db = await mdb()
     // Attempt to insert a new user
     const user_result = await db.collection("users").insertOne({
       id: userId,

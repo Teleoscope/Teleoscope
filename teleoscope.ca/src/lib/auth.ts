@@ -2,7 +2,7 @@ import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
 import { Collection } from "mongodb";
 import { Lucia, RegisteredDatabaseUserAttributes, Session } from "lucia";
 
-import { db } from "@/lib/db";
+import { mdb } from "@/lib/db";
 import { cookies } from "next/headers";
 
 
@@ -16,6 +16,7 @@ interface SessionDoc {
 	user_id: string;
 }
 
+const db = await mdb()
 const UserCollection = db.collection("users") as Collection<UserDoc>;
 const SessionCollection = db.collection("sessions") as Collection<SessionDoc>;
 

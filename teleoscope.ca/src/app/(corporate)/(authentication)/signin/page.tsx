@@ -1,7 +1,7 @@
 import { UserAuthForm } from "@/components/Authentication";
 import { redirect } from "next/navigation";
 import { validateEmail, validatePassword, ActionResult, errors } from "@/lib/validate";
-import { db } from "@/lib/db";
+import { mdb } from "@/lib/db";
 import { verify } from "@node-rs/argon2";
 
 import { authenticate } from "@/lib/auth";
@@ -33,6 +33,7 @@ async function signin(formData: FormData): Promise<ActionResult> {
 		return errors.password
 	}
 
+  const db = await mdb()
   const existingUser = await db.collection("users").findOne({emails: [email]})
 	if (!existingUser) {
 		// NOTE:
