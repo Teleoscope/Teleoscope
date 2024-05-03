@@ -23,6 +23,11 @@ jobs:
       run: npm install -g pnpm && pnpm install
     - name: Install Playwright Browsers
       run: pnpm exec playwright install --with-deps
+    - name: Copy env variables
+      run: |
+        echo "MONGODB_URI=${{ secrets.MONGODB_ATLAS_TESTING_URI }}" >> .env.local
+        echo "TEST_EMAIL=test@test.test" >> .env.local
+        echo "TEST_PASSWORD=passWORD123!" >> .env.local
     - name: Run Playwright tests
       run: pnpm exec playwright test
     - uses: actions/upload-artifact@v4
