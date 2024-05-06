@@ -1,0 +1,15 @@
+{
+    "$jsonSchema": {
+        "bsonType": "object",
+        "title": "workflow",
+        "required": [
+            "label"
+        ],
+        "properties": {
+            "label": {
+                "bsonType": "string",
+                "description": "the label of the workflow"
+            }
+        }
+    }
+}
