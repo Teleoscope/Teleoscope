@@ -1,0 +1,85 @@
+# Accounts
+bsonType: object
+title: account
+required:
+  - _id
+  - users
+properties:
+  _id:
+    bsonType: objectId
+    description: MongoDB auto-generated identifer
+  users:
+    bsonType: object
+    description: Administrative users
+    required:
+      - owner
+    properties:  
+      owner:
+        bsonType: objectId
+        description: The user who manages the account
+      admins:
+        bsonType: array
+        description: a list of members with admin priveleges
+        items:
+          bsonType: object
+          description: admin members
+          required:
+            - _id
+            - permissions
+          properties:
+            _id:
+              bsonType: objectId
+              description: The user who has admin priveleges
+            permissions:
+              bsonType: objectId
+              description: permissions for the admin user
+              required:
+                - read
+              properties:
+                read:
+                  bsonType: bool
+                  description: whether a user can read the admin panel (minimum admin permission level)
+                write:
+                  bsonType: bool
+                  description: whether a user can write to the admin panel
+  resources:
+    bsonType: object
+    description: resources that this account currently has
+    required:
+      - amount_teams
+      - amount_tokens
+      - amount_seats
+      - amount_storage
+    properties:
+      amount_teams:
+        bsonType: int
+        description: the number of teams that an account can allocate
+      amount_tokens:
+        bsonType: int
+        description: the number of tokens that an account can allocate
+      amount_seats:
+        bsonType: int
+        description: the number of seats that an account can allocate
+      amount_storage:
+        bsonType: int
+        description: the amount of storage (GB) that an account can allocate
+
+  teams:
+    bsonType: array
+    description: workplace teams
+    items:
+      bsonType: object
+      description: a team
+      required:
+        - _id
+      properties:
+        _id:
+          bsonType: objectId
+          description: team _id
+
+  data:
+    bsonType: array
+    description: data storage units
+    items:
+      bsonType: objectId
+      description: storage _id

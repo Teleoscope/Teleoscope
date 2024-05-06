@@ -1,0 +1,10 @@
+# Workspace
+bsonType: object
+title: workspace
+required:
+  - label
+properties:
+  label:
+    bsonType: string
+    description: the label of the workspace
+  
