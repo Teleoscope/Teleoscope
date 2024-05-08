@@ -28,6 +28,7 @@ async function ensure() {
     if (!coll_names.includes("users")) {
         await db.createCollection("users", {
             validator: users
+            // TODO: validationLevel
         })
         await db.collection("users").createIndex(
             { "emails": 1 },
