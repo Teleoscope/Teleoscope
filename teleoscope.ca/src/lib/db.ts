@@ -8,7 +8,7 @@ import storage from "@/schemas/storage.json";
 import workflows from "@/schemas/workflows.json";
 import workspaces from "@/schemas/workspaces.json";
 
-const MONGODB_URI = process.env.MONGODB_URI ? process.env.MONGODB_URI : "";
+const MONGODB_URI = process.env.MONGODB_URI ? process.env.MONGODB_URI : "mongodb://";
 
 async function connect(uri: string) {
     const client = new MongoClient(uri);
@@ -28,6 +28,7 @@ async function ensure() {
     if (!coll_names.includes("users")) {
         await db.createCollection("users", {
             validator: users
+            // TODO: validationLevel
         })
         await db.collection("users").createIndex(
             { "emails": 1 },
