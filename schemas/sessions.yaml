@@ -9,9 +9,6 @@ properties:
   _id:
     bsonType: string
     description: Lucia generated session id
-  id:
-    bsonType: string
-    description: Lucia generated session id
   user_id:
     bsonType: string
     description: Lucia generated user id

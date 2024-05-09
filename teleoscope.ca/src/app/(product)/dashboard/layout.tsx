@@ -9,7 +9,9 @@ export default function DashboardLayout(
 ) {
   return (
     <section>
-      <AccountMenu />
+      <div className={"flex justify-center"}>
+        <AccountMenu />
+      </div>
       {children}
     </section>
   )

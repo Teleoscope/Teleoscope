@@ -4,18 +4,13 @@
         "title": "user",
         "required": [
             "_id",
-            "id",
             "emails",
             "hashed_password"
         ],
         "properties": {
             "_id": {
-                "bsonType": "objectId",
-                "description": "MongoDB auto-generated identifer"
-            },
-            "id": {
                 "bsonType": "string",
-                "description": "An auto-generated identifer for Lucia sessions (not _id for security)"
+                "description": "An auto-generated identifer for Lucia sessions"
             },
             "emails": {
                 "bsonType": "array",

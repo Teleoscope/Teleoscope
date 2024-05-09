@@ -28,7 +28,7 @@ properties:
             - permissions
           properties:
             _id:
-              bsonType: objectId
+              bsonType: string
               description: The user who has admin priveleges
             permissions:
               bsonType: objectId

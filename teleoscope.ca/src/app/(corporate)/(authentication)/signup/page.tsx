@@ -10,6 +10,7 @@ import { redirect } from "next/navigation"
 import { generateIdFromEntropySize } from "lucia"
 import { validateEmail, validatePassword, ActionResult, errors } from "@/lib/validate"
 import { MongoError } from 'mongodb'
+import { ensure } from "@/lib/db"
 
 export const metadata: Metadata = {
   title: "Authentication",
@@ -122,8 +123,10 @@ async function signup(formData: FormData): Promise<ActionResult> {
   try {
     const db = await mdb()
     // Attempt to insert a new user
+    
     const user_result = await db.collection("users").insertOne({
-      id: userId,
+      // @ts-ignore
+      _id: userId,
       emails: [email],
       hashed_password: hashedPassword
     });
