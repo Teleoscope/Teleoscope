@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 
 export default function Home() {
   /* State logic for modular header*/
-  const [activeHeaderSection, setActiveHeaderSection] = useState<string | null>(null);
+  const [activeHeaderSection, setActiveHeaderSection] = useState<string | null>("discover");
 
   const toggleHeaderSection = (sectionId: string) => {
     setActiveHeaderSection(sectionId === activeHeaderSection ? null : sectionId )
@@ -42,13 +42,13 @@ export default function Home() {
             </Button>
           </div>
           <div className="flex items-center justify-center">
-            <Button onClick={() => toggleHeaderSection('research')} variant={`${activeHeaderSection === 'research' ? 'teleoscopeBlue' : 'home'}`} size="home">
-              <h1 className="text-4xl px-16">Research</h1>
+            <Button onClick={() => toggleHeaderSection('organize')} variant={`${activeHeaderSection === 'organize' ? 'teleoscopeBlue' : 'home'}`} size="home">
+              <h1 className="text-4xl px-16">Organize</h1>
             </Button>
           </div>
           <div className="flex items-center justify-center">
-            <Button onClick={() => toggleHeaderSection('organize')} variant={`${activeHeaderSection === 'organize' ? 'teleoscopeBlue' : 'home'}`} size="home">
-              <h1 className="text-4xl px-16">Organize</h1>
+            <Button onClick={() => toggleHeaderSection('analyze')} variant={`${activeHeaderSection === 'analyze' ? 'teleoscopeBlue' : 'home'}`} size="home">
+              <h1 className="text-4xl px-16">Analyze</h1>
             </Button>
           </div>
           <div className="flex items-center justify-center">
@@ -64,27 +64,16 @@ export default function Home() {
             <div>
               <h1 className="text-4xl px-16 font-bold">Discover</h1>
               <ul className="px-16 py-4">
-                <li>
-                  <h3  className="text-lg font-bold">Effortless Navigation</h3>
-                  <p>Built around its whiteboard interface, Teleoscope’s interface allows you to navigate your data without rows and columns. Using its intuitive drop-down menus and accessible workflows, you gain the full depth of a research tool while spending less time searching for features, letting you focus on your data and analysis.</p>
+                <li className="py-8">
+                  <h3  className="text-lg font-bold">Semantic similarity</h3>
+                  <p>Keyword searches are based on textual similarites between words, making them ineffective for documents with semantically complicated insights.
+                    Teleoscope uses USE document embeddings to deliver semantic similarities.
+                  </p>
                 </li>
-                <li>
-                  <h3  className="text-lg font-bold">Traceable Results</h3>
-                  <p>Understanding the origins of your conclusions and being able to cite them is a key part of research. Teleoscope’s traceable workflows display exactly which data entries influenced the insights it generated, providing researchers a clear understanding of each result’s provenance.</p>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div id="research" className={`flex items-center justify-center p-8 ${activeHeaderSection === 'research' ? '' : 'hidden'}`}>
-          <div className="grid grid-cols-2 gap-8">
-            <div>
-              <h1 className="text-4xl px-16 font-bold">Research</h1>
-              <ul className="px-16 py-4">
-                <li>
-                  <h3  className="text-lg font-bold">Customized AI</h3>
-                  <p>Teleoscope is designed to be used by researchers and analysts working on all kinds of research projects. Teleoscope allows you to customize its machine learning model to work best for you and your team. Using its dynamic workflows, you can quickly tailor its AI model to match and filter through your data.</p>
+                <li className="py-8">
+                  <h3  className="text-lg font-bold">Seamless navigation</h3>
+                  <p>Teleoscope’s state of the art drag-and-drop interface enables seamless data navigation outside the confines of traditional rows and columns. 
+                    Our streamlined user experience empowers analysts to delve into their data with ease, allowing analysts to focus on data exploration over data parsing.</p>
                 </li>
               </ul>
             </div>
@@ -95,8 +84,32 @@ export default function Home() {
           <h1 className="text-4xl px-16">Organize</h1>
         </div>
 
+        <div id="analyze" className={`flex items-center justify-center p-8 ${activeHeaderSection === 'analyze' ? '' : 'hidden'}`}>
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <h1 className="text-4xl px-16 font-bold">Analyze</h1>
+              <ul className="px-16 py-4">
+                <li>
+                  <h3  className="text-lg font-bold">Customized AI</h3>
+                  <p>Teleoscope is designed to be used by researchers and analysts working on all kinds of research projects. Teleoscope allows you to customize its machine learning model to work best for you and your team. Using its dynamic workflows, you can quickly tailor its AI model to match and filter through your data.</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         <div id="collaborate" className={`flex items-center justify-center p-8 ${activeHeaderSection === 'collaborate' ? '' : 'hidden'}`}>
-          <h1 className="text-4xl px-16">Collaborate</h1>
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <h1 className="text-4xl px-16 font-bold">Collaborate</h1>
+              <ul className="px-16 py-4">
+                <li>
+                  <h3  className="text-lg font-bold">Traceable Results</h3>
+                  <p>Understanding the origins of your conclusions and being able to cite them is a key part of research. Teleoscope’s traceable workflows display exactly which data entries influenced the insights it generated, providing researchers a clear understanding of each result’s provenance.</p>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         

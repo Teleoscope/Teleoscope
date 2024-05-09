@@ -32,7 +32,7 @@ async function signin(formData: FormData): Promise<ActionResult> {
 	if (!validatePassword(password)) {
 		return errors.password
 	}
-
+	
   const db = await mdb()
   const existingUser = await db.collection("users").findOne({emails: [email]})
 	if (!existingUser) {

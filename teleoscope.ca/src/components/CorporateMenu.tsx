@@ -27,9 +27,9 @@ export default function Menu() {
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
-            <Link href="/features" legacyBehavior passHref>
+            <Link href="/about" legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                Features
+                How It Works
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
@@ -39,11 +39,11 @@ export default function Menu() {
                 Pricing
               </NavigationMenuLink>
             </Link>
-          </NavigationMenuItem>        
+          </NavigationMenuItem>
           <NavigationMenuItem>
-            <Link href="/about" legacyBehavior passHref>
+            <Link href="https://teleoscope.ca/" legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                About Us
+                Docs
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
