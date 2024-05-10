@@ -37,11 +37,11 @@
                     ],
                     "properties": {
                         "_id": {
-                            "bsonType": "objectId",
+                            "bsonType": "string",
                             "description": "the user id"
                         },
                         "permissions": {
-                            "bsonType": "objectId",
+                            "bsonType": "object",
                             "description": "permissions for the admin user",
                             "required": [
                                 "read"
