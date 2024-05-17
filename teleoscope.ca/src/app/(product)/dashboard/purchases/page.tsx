@@ -11,11 +11,9 @@ export default function Purchases() {
         fetchProducts()
     }, [])
 
-
     const fetchProducts = async () => {
         const { data } = await axios.get('/api/products')
         setProducts(data)
-        console.log("data", data)
     }
   
     const plan = "Student";

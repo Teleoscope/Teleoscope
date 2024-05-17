@@ -7,8 +7,7 @@ import { Argon2id } from "oslo/password"
 import { authenticate } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { generateIdFromEntropySize } from "lucia"
-import { validateEmail, validatePassword, ActionResult, errors } from "@/lib/validate"
-import { ensure } from "@/lib/db"
+import { validateEmail, validatePassword, emailExists, ActionResult, errors } from "@/lib/validate"
 import initialize_user from "@/lib/account"
 
 export const metadata: Metadata = {
@@ -108,17 +107,13 @@ async function signup(formData: FormData): Promise<ActionResult> {
 		return errors.password;
 	}
 
-  // Ensure db collections exist with current validation rules
-  // only run in dev or debug, otherwise the dbs should exist
-  if (process.env.NODE_ENV === 'development') {
-    // Code to run in development mode
-    ensure()
-  }
-  
+  const exists = await emailExists(email);
+  if (exists) {
+		return errors.exists;
+	}
   
 	const hashedPassword = await new Argon2id().hash(password.toString());
 	const userId = generateIdFromEntropySize(10); // 16 characters long
-
 
   await initialize_user(userId, hashedPassword, email)
   await authenticate(userId);

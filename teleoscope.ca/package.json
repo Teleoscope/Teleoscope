@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "export NODE_ENV=development; next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "schema": "python loadschemas.py",
-    "record": "npx playwright codegen"
+    "record": "npx playwright codegen",
+    "playwright": "pnpm schema; pnpm exec playwright test"
   },
   "dependencies": {
     "@lucia-auth/adapter-mongodb": "^1.0.3",
@@ -28,6 +29,7 @@
     "lucia": "^3.2.0",
     "lucide-react": "^0.365.0",
     "mongodb": "^6.5.0",
+    "mongodb-client-encryption": "^6.0.0",
     "oslo": "^1.2.0",
     "react": "^18",
     "react-dom": "^18",

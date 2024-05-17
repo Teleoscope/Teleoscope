@@ -1,5 +1,5 @@
 // Keep this test to see if Playwright itself is broken
-import { mdb } from '@/lib/db';
+import { client } from '@/lib/db';
 import { test, expect } from '@playwright/test';
 import { loadEnvConfig } from '@next/env';
 const projectDir = process.cwd()
@@ -16,7 +16,7 @@ test.beforeEach(async () => {
   ) {
     throw Error("Environment variables failed to load.")
   }  
-  const db = await mdb()
+  const db = (await client()).db()
   await db.dropDatabase()
 });
 

@@ -2,7 +2,7 @@
 import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
 import { Collection } from "mongodb";
 import { Lucia, RegisteredDatabaseUserAttributes, Session, User } from "lucia";
-import { mdb } from "@/lib/db";
+import { client } from "@/lib/db";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { validateEmail, validatePassword, ActionResult, errors } from "@/lib/validate";
@@ -19,7 +19,7 @@ interface SessionDoc {
 }
 
 async function getUsersAndSessionsCollections() {
-	const db = await mdb()
+    const db = (await client()).db()
 	const SessionCollection = db.collection("sessions") as Collection<SessionDoc>;
 	const UserCollection = db.collection("users") as Collection<UserDoc>;
 	return { Session: SessionCollection, User: UserCollection }
@@ -111,8 +111,8 @@ export async function signin(formData: FormData): Promise<ActionResult> {
 		  return errors.password
 	  }
   
-	const db = await mdb()
-	const existingUser = await db.collection("users").findOne({emails: [email]})
+	  const db = (await client()).db()
+	  const existingUser = await db.collection("users").findOne({emails: [email]})
 	  if (!existingUser) {
 		  // NOTE:
 		  // Returning immediately allows malicious actors to figure out valid usernames from response times,
