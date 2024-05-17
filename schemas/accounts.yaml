@@ -4,6 +4,7 @@ title: account
 required:
   - _id
   - users
+  - resources
 properties:
   _id:
     bsonType: objectId
@@ -46,23 +47,39 @@ properties:
     bsonType: object
     description: resources that this account currently has
     required:
-      - amount_teams
-      - amount_tokens
-      - amount_seats
-      - amount_storage
+      - amount_teams_available
+      - amount_tokens_available
+      - amount_seats_available
+      - amount_storage_available
+      - amount_teams_used
+      - amount_tokens_used
+      - amount_seats_used
+      - amount_storage_used
     properties:
-      amount_teams:
+      amount_teams_available:
         bsonType: int
         description: the number of teams that an account can allocate
-      amount_tokens:
+      amount_tokens_available:
         bsonType: int
-        description: the number of tokens that an account can allocate
-      amount_seats:
+        description_available: the number of tokens that an account can allocate
+      amount_seats_available:
         bsonType: int
         description: the number of seats that an account can allocate
-      amount_storage:
+      amount_storage_available:
         bsonType: int
         description: the amount of storage (GB) that an account can allocate
+      amount_teams_used:
+        bsonType: int
+        description: the number of teams that an account has allocated
+      amount_tokens_used:
+        bsonType: int
+        description_used: the number of tokens that an account has allocated (refreshes monthly)
+      amount_seats_used:
+        bsonType: int
+        description: the number of seats that an account has allocated
+      amount_storage_used:
+        bsonType: int
+        description: the amount of storage (GB) that an account has allocated
 
   teams:
     bsonType: array

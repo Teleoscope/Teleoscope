@@ -8,8 +8,6 @@ import { redirect } from "next/navigation";
 import { validateEmail, validatePassword, ActionResult, errors } from "@/lib/validate";
 import { verify } from "@node-rs/argon2";
 
-
-
 interface UserDoc extends RegisteredDatabaseUserAttributes {
 	_id: string;
 }

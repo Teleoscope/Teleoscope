@@ -8,7 +8,6 @@ import storage from "@/schemas/storage.json";
 import workflows from "@/schemas/workflows.json";
 import workspaces from "@/schemas/workspaces.json";
 
-const MONGODB_URI = process.env.MONGODB_URI ? process.env.MONGODB_URI : "mongodb://";
 
 async function connect(uri: string) {
     const client = new MongoClient(uri);
@@ -16,13 +15,17 @@ async function connect(uri: string) {
     return client
 }
 
+let client: MongoClient | null;
 async function mdb() {
-    return (await connect(MONGODB_URI)).db()
+    if (!client) {
+        client = await connect(process.env.MONGODB_URI!)
+    }
+    return client.db()
 }
 
 async function ensure() {
     console.log("Ensuring that DB collections are correct and consistent...")
-    const db = (await connect(MONGODB_URI)).db();
+    const db = (await connect(process.env.MONGODB_URI!)).db();
     const collections = await db.listCollections().toArray()
     const coll_names = collections.map(c => c.name)
     if (!coll_names.includes("users")) {
