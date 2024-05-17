@@ -95,8 +95,6 @@ export async function authenticate(userId: string): Promise<Session> {
 	return session
 }
 
-
-
 export async function signin(formData: FormData): Promise<ActionResult> {
 	const email = formData.get("email");
 	const password = formData.get("password");
