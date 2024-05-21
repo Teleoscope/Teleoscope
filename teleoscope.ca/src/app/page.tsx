@@ -36,7 +36,7 @@ export default function Home() {
           <h2 className="flex items-center justify-center text-xl">Use machine learning to accelerate your research and develop intelligent insights.</h2>
         </div>
 
-        <div className="grid grid-cols-4 gap-8 px-4 pb-24">
+        <div className="grid grid-cols-4 gap-8 px-4 pb-8">
           <div className="flex items-center justify-center">
             <Button onClick={() => toggleHeaderSection('discover')} variant={`${activeHeaderSection === 'discover' ? 'teleoscopeBlue' : 'home'}`} size="home">
               <h1 className="text-4xl px-16">Discover</h1>
@@ -60,18 +60,18 @@ export default function Home() {
         </div>
 
         {/* Modular Header Sections */}
-        <div id="discover" className={`flex p-8 ${activeHeaderSection === 'discover' ? '' : 'hidden'}`}>
+        <div id="discover" className={`flex items-center jusitfy-center p-8 ${activeHeaderSection === 'discover' ? '' : 'hidden'}`}>
           <div className="grid grid-cols-2 gap-8">
             <div>
               <h1 className="text-4xl px-16 font-bold">Discover</h1>
               <ul className="px-16 py-4">
-                <li className="py-8">
+                <li className="py-2">
                   <h3  className="text-lg font-bold">Semantic similarity</h3>
                   <p>Keyword searches are based on textual similarites between words, making them ineffective for documents with semantically complicated insights.
                     Teleoscope uses USE document embeddings to deliver semantic similarities.
                   </p>
                 </li>
-                <li className="py-8">
+                <li  className="py-2">
                   <h3  className="text-lg font-bold">Seamless navigation</h3>
                   <p>Teleoscope’s state of the art drag-and-drop interface enables seamless data navigation outside the confines of traditional rows and columns. 
                     Our streamlined user experience empowers analysts to delve into their data with ease, allowing analysts to focus on data exploration over data parsing.</p>
@@ -82,7 +82,17 @@ export default function Home() {
         </div>
 
         <div id="organize" className={`flex items-center justify-center p-8 ${activeHeaderSection === 'organize' ? '' : 'hidden'}`}>
-          <h1 className="text-4xl px-16">Organize</h1>
+          <div className="grid grid-cols-2 gap-8">
+            <div>
+              <h1 className="text-4xl px-16 font-bold">Organize</h1>
+              <ul className="px-16 py-4">
+                <li className="py-2">
+                  <h3  className="text-lg font-bold">Customized AI</h3>
+                  <p>Teleoscope is designed to be used by researchers and analysts working on all kinds of research projects. Teleoscope allows you to customize its machine learning model to work best for you and your team. Using its dynamic workflows, you can quickly tailor its AI model to match and filter through your data.</p>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <div id="analyze" className={`flex items-center justify-center p-8 ${activeHeaderSection === 'analyze' ? '' : 'hidden'}`}>
@@ -90,9 +100,9 @@ export default function Home() {
             <div>
               <h1 className="text-4xl px-16 font-bold">Analyze</h1>
               <ul className="px-16 py-4">
-                <li>
-                  <h3  className="text-lg font-bold">Customized AI</h3>
-                  <p>Teleoscope is designed to be used by researchers and analysts working on all kinds of research projects. Teleoscope allows you to customize its machine learning model to work best for you and your team. Using its dynamic workflows, you can quickly tailor its AI model to match and filter through your data.</p>
+                <li  className="py-2">
+                  <h3  className="text-lg font-bold">Dataset Navigation</h3>
+                  <p>Teleoscope is built with an extensive variety of options to make navigating your data easy. From basic searching to searches including or excluding a mix of terms, Teleoscope allows you to quickly explore your dataset while setting up your own intuitive search conditions.</p>
                 </li>
               </ul>
             </div>
@@ -104,9 +114,13 @@ export default function Home() {
             <div>
               <h1 className="text-4xl px-16 font-bold">Collaborate</h1>
               <ul className="px-16 py-4">
-                <li>
+                <li  className="py-2">
                   <h3  className="text-lg font-bold">Traceable Results</h3>
                   <p>Understanding the origins of your conclusions and being able to cite them is a key part of research. Teleoscope’s traceable workflows display exactly which data entries influenced the insights it generated, providing researchers a clear understanding of each result’s provenance.</p>
+                </li>
+                <li  className="py-2">
+                  <h3 className="text-lg font-bold">Open Ecosystem</h3>
+                  <p>Teleoscope is designed to work seamlessly with the existing suite of tools you and your team already use. From importing data from external sources to exporting your results and analyses. Teleoscope seamlessly integrates with your existing tools.</p>
                 </li>
               </ul>
             </div>
@@ -121,7 +135,7 @@ export default function Home() {
           </div>
           <div className="flex items-center justify-center p-4">
             <Button variant="secondary">
-              <Link href="/product-demonstrations" legacyBehavior passHref>
+              <Link href="/signup" legacyBehavior passHref>
                 <h1 className="text-lg">Book a demo</h1>
               </Link>
             </Button>

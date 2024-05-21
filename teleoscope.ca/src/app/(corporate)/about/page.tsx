@@ -8,6 +8,9 @@
 // <------------------------------- 80 chars -------------------------------> //
 // 456789|123456789|123456789|123456789|123456789|123456789|123456789|1234567890
 ////////////////////////////////////////////////////////////////////////////////
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+
 
 export default function About() {
   return (
@@ -18,8 +21,8 @@ export default function About() {
 
       <div className="grid grid-cols-2 grid-rows-3 p-8">
       <div className="flex items-center justify-center font-bold">
-        <h1 className="text-6xl p-4">1</h1>
-        <h2 className="text-4xl">Connect your data</h2>
+          <h1 className="text-6xl p-4">1</h1>
+          <h2 className="text-4xl">Connect your data</h2>
       </div>
       <div className="flex items-center justify-center p-4">
         <p> 
@@ -55,6 +58,14 @@ export default function About() {
       </div>
 
       </div>
+
+      <div className="flex items-center justify-center p-2">
+          <Button variant="teleoscopeBlue" size="xl">
+            <Link href="/signup" legacyBehavior passHref>
+              <h1 className="text-4xl">Discover Teleoscope</h1>
+            </Link>
+          </Button>
+        </div>
 
     </main>
   );
