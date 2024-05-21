@@ -3,14 +3,12 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { UserAuthForm } from "@/components/Authentication"
-import { mdb } from "@/lib/db"
 import { Argon2id } from "oslo/password"
 import { authenticate } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { generateIdFromEntropySize } from "lucia"
-import { validateEmail, validatePassword, ActionResult, errors } from "@/lib/validate"
-import { MongoError } from 'mongodb'
-import { ensure } from "@/lib/db"
+import { validateEmail, validatePassword, emailExists, ActionResult, errors } from "@/lib/validate"
+import initialize_user from "@/lib/account"
 
 export const metadata: Metadata = {
   title: "Authentication",
@@ -109,46 +107,16 @@ async function signup(formData: FormData): Promise<ActionResult> {
 		return errors.password;
 	}
 
-  // Ensure db collections exist with current validation rules
-  // only run in dev or debug, otherwise the dbs should exist
-  if (process.env.NODE_ENV === 'development') {
-    // Code to run in development mode
-    ensure()
-  }
-  
+  const exists = await emailExists(email);
+  if (exists) {
+		return errors.exists;
+	}
   
 	const hashedPassword = await new Argon2id().hash(password.toString());
 	const userId = generateIdFromEntropySize(10); // 16 characters long
 
-  try {
-    const db = await mdb()
-    // Attempt to insert a new user
-    
-    const user_result = await db.collection("users").insertOne({
-      // @ts-ignore
-      _id: userId,
-      emails: [email],
-      hashed_password: hashedPassword
-    });
-  
-    await db.collection("accounts").insertOne({
-      users: {
-        owner: user_result.insertedId
-      }
-    });
-    
-    await authenticate(userId);
-    
-  } catch (error) {
-    try { 
-      const mongoError = error as MongoError;
-      if (mongoError.code === 11000) {
-        return errors.exists;
-      }
-    } catch (e) {
-      throw e  
-    }
-    throw error
-  }
+  await initialize_user(userId, hashedPassword, email)
+  await authenticate(userId);
+
 	return redirect("/dashboard");
 }

@@ -4,6 +4,8 @@ title: account
 required:
   - _id
   - users
+  - resources
+  - plan
 properties:
   _id:
     bsonType: objectId
@@ -15,8 +17,8 @@ properties:
       - owner
     properties:  
       owner:
-        bsonType: objectId
-        description: The user who manages the account
+        bsonType: string
+        description: The _id of the user who manages the account
       admins:
         bsonType: array
         description: a list of members with admin priveleges
@@ -46,23 +48,39 @@ properties:
     bsonType: object
     description: resources that this account currently has
     required:
-      - amount_teams
-      - amount_tokens
-      - amount_seats
-      - amount_storage
+      - amount_teams_available
+      - amount_tokens_available
+      - amount_seats_available
+      - amount_storage_available
+      - amount_teams_used
+      - amount_tokens_used
+      - amount_seats_used
+      - amount_storage_used
     properties:
-      amount_teams:
+      amount_teams_available:
         bsonType: int
         description: the number of teams that an account can allocate
-      amount_tokens:
+      amount_tokens_available:
         bsonType: int
         description: the number of tokens that an account can allocate
-      amount_seats:
+      amount_seats_available:
         bsonType: int
         description: the number of seats that an account can allocate
-      amount_storage:
+      amount_storage_available:
         bsonType: int
-        description: the amount of storage (GB) that an account can allocate
+        description: the amount of storage (MB) that an account can allocate
+      amount_teams_used:
+        bsonType: int
+        description: the number of teams that an account has allocated
+      amount_tokens_used:
+        bsonType: int
+        description: the number of tokens that an account has allocated (refreshes monthly)
+      amount_seats_used:
+        bsonType: int
+        description: the number of seats that an account has allocated
+      amount_storage_used:
+        bsonType: int
+        description: the amount of storage (MB) that an account has allocated
 
   teams:
     bsonType: array
@@ -83,3 +101,70 @@ properties:
     items:
       bsonType: objectId
       description: storage _id
+
+  plan:
+    bsonType: object
+    description: the base subscription plan for a user
+    required:
+      - name
+      - plan_token_topup
+      - plan_team_amount
+      - plan_collaborator_amount
+      - plan_storage_amount
+      - note
+    properties:
+      name:
+        bsonType: string
+        description: the label for the plan
+      plan_token_topup:
+        bsonType: int
+        description: the amount of tokens that are replenished monthly
+      plan_team_amount:
+        bsonType: int
+        description: the amount of teams that an account can manage
+      plan_collaborator_amount:
+        bsonType: int
+        description: the amount of collaborators that an account can manage
+      plan_storage_amount:
+        bsonType: int
+        description: the amount of storage in MB that an account can manage
+      note:
+        bsonType: string
+        description: any special notes or instructions about this account
+
+  purchases:
+    bsonType: array
+    description: Full record of purchases
+    items:
+      bsonType: object
+      description: a single purchase record
+      required:
+        - resource
+        - unit
+        - amount
+        - recurrence
+        - date
+        - description
+        - metadata
+      properties:
+        resource:
+          bsonType: string
+          description: the name of the resource this impacts in {collaborators, teams, tokens, storage}
+        unit:
+          bsonType: string
+          description: the name of the resource's unit that is being modified (don't base logic on this)
+        amount:
+          bsonType: int
+          description: the amount of the resource's unit that is being modified
+        recurrence:
+          bsonType: string
+          description: how often the purchase renews in {once, monthly, annually}
+        date:
+          bsonType: date
+          description: the purchase date
+        description: 
+          bsonType: string
+          description: a description of the purchase
+        metadata:
+          bsonType: object
+          description: any arbitrary metadata (e.g., from stripe)

@@ -1,9 +1,9 @@
-import AccountDisplay from "@/components/AccountDisplay";
+import PurchaseDisplay from "@/components/PurchaseDisplay";
 import { validateRequest } from "@/lib/auth";
 import Link from "next/link";
 
 
-export default async function Account() {
+export default async function Purchases() {
   const { user } = await validateRequest()
 
 
@@ -12,7 +12,7 @@ export default async function Account() {
       <div>
         <h1>Account</h1>
         
-        <AccountDisplay owner={user!.id} />
+        <PurchaseDisplay owner={user!.id} />
 
         <Link href="/dashboard/purchases">Purchases</Link>
 
