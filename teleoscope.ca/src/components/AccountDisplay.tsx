@@ -1,8 +1,11 @@
 "use client";
+
 import useSWR from 'swr';
 import { fetcher } from "@/lib/swr";
+import { useUserContext } from '@/context/UserContext';
 
-export default function AccountDisplay({ owner }: { owner: string }) {
+export default function AccountDisplay() {
+  const { userId: owner } = useUserContext();
 
   const { data: account, error, isLoading } = useSWR(`/api/account?owner=${owner}`, fetcher)
 
@@ -12,11 +15,9 @@ export default function AccountDisplay({ owner }: { owner: string }) {
 
   const { 
     amount_teams_available,
-    amount_tokens_available,
     amount_seats_available,
     amount_storage_available,
     amount_teams_used,
-    amount_tokens_used,
     amount_seats_used,
     amount_storage_used
   } = account.resources;
@@ -37,9 +38,6 @@ export default function AccountDisplay({ owner }: { owner: string }) {
             <p>Number of megabytes of storage total: {amount_storage_available}</p>
             <p>Number of megabytes of storage used: {amount_storage_used}</p>
 
-            <h3>Tokens</h3>
-            <p>Number of tokens available this month: {amount_tokens_available}</p>
-            <p>Number of tokens used this month: {amount_tokens_used}</p>
         </div>
     )    
 }

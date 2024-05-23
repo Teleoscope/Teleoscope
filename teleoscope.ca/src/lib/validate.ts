@@ -8,7 +8,7 @@ export const validateEmail = (email: string | FormDataEntryValue): boolean => {
 export const emailExists = async (email: string | FormDataEntryValue): Promise<boolean> => {
 
   const { data } = await axios.get('/api/users', {
-    baseURL: process.env.TELEOSCOPE_API_URL!,
+    baseURL: process.env.TELEOSCOPE_BASE_URL!,
     params: {
       email: email.toString()
     }

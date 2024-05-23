@@ -8,6 +8,6 @@ export async function GET(request: NextRequest) {
         {
             "users.owner": request.nextUrl.searchParams.get("owner")
         }
-    )  
+    ) 
     return Response.json(result);
 }

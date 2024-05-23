@@ -11,7 +11,11 @@
         "properties": {
             "_id": {
                 "bsonType": "objectId",
-                "description": "MongoDB auto-generated identifer"
+                "description": "MongoDB auto-generated identifier"
+            },
+            "stripe_id": {
+                "bsonType": "string",
+                "description": "Stripe auto-generated identifier"
             },
             "users": {
                 "bsonType": "object",
@@ -66,11 +70,9 @@
                 "description": "resources that this account currently has",
                 "required": [
                     "amount_teams_available",
-                    "amount_tokens_available",
                     "amount_seats_available",
                     "amount_storage_available",
                     "amount_teams_used",
-                    "amount_tokens_used",
                     "amount_seats_used",
                     "amount_storage_used"
                 ],
@@ -78,10 +80,6 @@
                     "amount_teams_available": {
                         "bsonType": "int",
                         "description": "the number of teams that an account can allocate"
-                    },
-                    "amount_tokens_available": {
-                        "bsonType": "int",
-                        "description": "the number of tokens that an account can allocate"
                     },
                     "amount_seats_available": {
                         "bsonType": "int",
@@ -94,10 +92,6 @@
                     "amount_teams_used": {
                         "bsonType": "int",
                         "description": "the number of teams that an account has allocated"
-                    },
-                    "amount_tokens_used": {
-                        "bsonType": "int",
-                        "description": "the number of tokens that an account has allocated (refreshes monthly)"
                     },
                     "amount_seats_used": {
                         "bsonType": "int",
@@ -139,7 +133,6 @@
                 "description": "the base subscription plan for a user",
                 "required": [
                     "name",
-                    "plan_token_topup",
                     "plan_team_amount",
                     "plan_collaborator_amount",
                     "plan_storage_amount",
@@ -149,10 +142,6 @@
                     "name": {
                         "bsonType": "string",
                         "description": "the label for the plan"
-                    },
-                    "plan_token_topup": {
-                        "bsonType": "int",
-                        "description": "the amount of tokens that are replenished monthly"
                     },
                     "plan_team_amount": {
                         "bsonType": "int",

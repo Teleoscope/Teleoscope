@@ -1,27 +1,45 @@
-import axios from "axios";
+'use client';
 
-const ProductCard = ({ product, key }) => {
-// POST request 
-const handleSubscription = async (e: Event) => {
-  e.preventDefault();
-  const { data } = await axios.post('/api/payment',
-  {
-    product: product
-  },
-  {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  }
-  );
-  window.location.assign(data.url)
-}
-  return (
-    <div><button onClick={handleSubscription} key={key} >
-        {product.name}
-    </button>
-    </div>
-  )
-}
+import axios from 'axios';
+import { Button } from '@/components/ui/button';
+import Stripe from 'stripe';
+import { useUserContext } from '@/context/UserContext';
 
-export default ProductCard
+const ProductCard = ({
+    product,
+    key
+}: {
+    product: Stripe.Product;
+    key: string;
+}) => {
+    const { userId } = useUserContext()
+    // POST request
+    const handleSubscription = async (
+        e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    ) => {
+        e.preventDefault();
+
+        const { data } = await axios.post(
+            '/api/payment',
+            {
+                product: product,
+                userId: userId
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        window.location.assign(data.url);
+    };
+    return (
+        <div>
+            <Button onClick={(e) => handleSubscription(e)} key={key}>
+                {product.name}
+            </Button>
+        </div>
+    );
+};
+
+export default ProductCard;
