@@ -62,7 +62,7 @@
                                 },
                                 "write": {
                                     "bsonType": "bool",
-                                    "description": "whether a user can write to the workspace"
+                                    "description": "whether a user can administrate the workspace"
                                 }
                             }
                         }

@@ -20,7 +20,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    const db = (await client()).db();
+    const mongo_client = await client();
+    const session = mongo_client.startSession();
+
+    const db = mongo_client.db();
+
     const formData = await request.formData();
 
     const email = formData.get('email')?.toString();
@@ -38,9 +42,32 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Email doesn't correspond to a user" }, { status: 404 });
     }
 
-    const teamObjectId = new ObjectId(teamId);
 
-    const result = await db.collection('teams').updateOne(
+    const teamObjectId = new ObjectId(teamId);
+    const team = await db.collection('teams').findOne({
+        _id: teamObjectId
+    })
+
+    if (!team) {
+        return NextResponse.json({ error: 'Team not found.' }, { status: 404 });
+    }
+
+    const account = await db.collection('accounts').findOne({
+        _id: team.account
+    })
+
+    if (!account) {
+        return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
+    }
+
+    if (account.amount_seats_used >= account.amount_seats_available) {
+        return NextResponse.json({ error: 'Too many seats used.' }, { status: 404 });
+    }
+
+
+    session.startTransaction();
+
+    const team_result = await db.collection('teams').updateOne(
         {
             _id: teamObjectId
         },
@@ -53,12 +80,32 @@ export async function POST(request: NextRequest) {
                     }
                 }
             } as any // Explicitly cast to any to satisfy TypeScript
+        }, {
+            session
         }
     );
 
-    if (result.modifiedCount === 0) {
+    const account_result = await db.collection('accounts').updateOne(
+        {
+            _id: account._id
+        },
+        {
+            "resources.amount_seats_used": account.resources.amount_seats_used + 1
+        }, {
+            session
+        }
+    );
+
+    if (team_result.modifiedCount === 0) {
         return NextResponse.json({ error: 'Team not found or user already added' }, { status: 404 });
     }
+
+    if (account_result.modifiedCount === 0) {
+        return NextResponse.json({ error: 'Could not update account' }, { status: 404 });
+    }
+
+
+    await session.commitTransaction();
 
     return NextResponse.json({ success: true });
 }
