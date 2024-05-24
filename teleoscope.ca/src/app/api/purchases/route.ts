@@ -1,65 +1,12 @@
 import { client } from '@/lib/db';
-import { get_stripe } from '@/lib/stripe';
+import { get_stripe, resolve_subscriptions_by_customer_id } from '@/lib/stripe';
 
 // types
-import { Plans } from '@/lib/plans';
-import { Products } from '@/types/products';
-import { Db } from 'mongodb';
+
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 
-async function resolve_subscriptions(db: Db, stripe: Stripe, customer_id: string | Stripe.Customer | Stripe.DeletedCustomer | null) {
-    const { data: subscriptions } = await stripe.subscriptions.list({
-        customer: customer_id?.toString()
-    })
-
-    const accumulated_resources: Products = {
-        name: "accumulator",
-        resources: {
-            teams: 0,
-            seats: 0,
-            storage: 0
-        }
-    }
-    
-    for (const subscription of subscriptions) {
-        for (const { price } of subscription.items.data ) {
-            const product = await stripe.products.retrieve(price.product.toString())
-            const plan = Plans.find(plan => plan.name == product.name)
-            const resources = plan?.resources
-            if (resources) {
-                accumulated_resources.resources.teams = accumulated_resources.resources.teams + resources.teams;
-                accumulated_resources.resources.seats = accumulated_resources.resources.seats + resources.seats;
-                accumulated_resources.resources.storage = accumulated_resources.resources.storage + resources.storage;
-            } else {
-                throw new Error(`Error for plan ${product.name}.`)
-            }
-            
-        }
-    }
-    
-    const account = await db.collection("accounts").findOne({ stripe_id: customer_id})
-
-    if (account) {
-        const accout_update_result = await db.collection("accounts").updateOne({
-            _id: account._id,
-        }, {
-            $set: {
-                "resources.amount_teams_available": accumulated_resources.resources.teams,
-                "resources.amount_seats_available": accumulated_resources.resources.seats,
-                "resources.amount_storage_available": accumulated_resources.resources.storage,
-            }
-        })
-
-        if (!accout_update_result) {
-            throw new Error(`Error updating account for Teleoscope account: ${account._id}`)
-        }
-    } else {
-        throw new Error(`Error retrieving account for stripe customer: ${customer_id}.`)
-    }
-
-}
 
 export async function POST(request: NextRequest) {
     const db = (await client()).db();
@@ -70,8 +17,6 @@ export async function POST(request: NextRequest) {
     try {
         const buff = await readBody(request);
         const body = JSON.parse(buff);
-        
-
         const result = await db.collection('stripe_queue').insertOne(body);
 
         const event = await stripe.webhooks.constructEvent(
@@ -89,8 +34,11 @@ export async function POST(request: NextRequest) {
                     for Stripe Customer: ${invoice.customer} 
                     `
                 );
-                resolve_subscriptions(db, stripe, invoice.customer)
-                
+                if (invoice.customer) {
+                    resolve_subscriptions_by_customer_id(invoice.customer.toString())
+                } else {
+                    throw new Error(`Field "invoice.customer" null when executing response to "invoice.paid" event.`)
+                }
                 break;
             default:
                 console.log(`Unhandled event type ${event.type}`);

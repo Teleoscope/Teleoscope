@@ -11,13 +11,14 @@ import { Argon2id } from "oslo/password";
 import { redirect } from "next/navigation";
 import { generateIdFromEntropySize } from "lucia";
 import {
-	validateEmail,
-	validatePassword,
-	emailExists,
-	ActionResult,
-	errors,
+  validateEmail,
+  validatePassword,
+  emailExists,
+  ActionResult,
+  errors,
 } from "@/lib/validate";
 import initialize_user from "@/lib/account";
+import { resolve_subscriptions_by_user_id } from "./stripe";
 
 interface UserDoc extends RegisteredDatabaseUserAttributes {
   _id: string;
@@ -168,6 +169,9 @@ export async function signin(formData: FormData): Promise<ActionResult> {
 
   // @ts-ignore
   const session = await authenticate(existingUser._id);
+  
+  // reconcile accounts
+  const accounts = await resolve_subscriptions_by_user_id(existingUser._id.toString())
 
   return redirect("/dashboard");
 }
