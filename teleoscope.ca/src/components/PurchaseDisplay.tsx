@@ -1,7 +1,5 @@
-'use client';
-
-import useSWR from 'swr';
-import { fetcher } from '@/lib/swr';
+'use client';;
+import { useSWRF } from '@/lib/swr';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import ProductCard from '@/components/ProductCard';
@@ -20,11 +18,12 @@ export default function PurchaseDisplay() {
         const { data } = await axios.get('/api/products');
         setProducts(data);
     };
+    
     const {
         data: account,
         error,
         isLoading
-    } = useSWR(`/api/account?owner=${owner}`, fetcher);
+    } = useSWRF(`/api/account?owner=${owner}`);
 
     if (isLoading) {
         return <>Loading...</>;

@@ -1,13 +1,11 @@
-"use client";
-
-import useSWR from 'swr';
-import { fetcher } from "@/lib/swr";
+"use client";;
+import { useSWRF } from "@/lib/swr";
 import { useUserContext } from '@/context/UserContext';
 
 export default function AccountDisplay() {
   const { userId: owner } = useUserContext();
 
-  const { data: account, error, isLoading } = useSWR(`/api/account?owner=${owner}`, fetcher)
+  const { data: account, error, isLoading } = useSWRF(`/api/account?owner=${owner}`)
 
   if (isLoading) {
     return <>Loading...</>

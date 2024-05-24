@@ -1,7 +1,9 @@
 import { ObjectId } from "mongodb";
 
 export interface Teams {
-  _id: ObjectId;
+  _id?: ObjectId;
+  label: string;
+  owner: string;
   account: ObjectId;
   workspaces: Array<ObjectId>;
   users: Array<User>;
