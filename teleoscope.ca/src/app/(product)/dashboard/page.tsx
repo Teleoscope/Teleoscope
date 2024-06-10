@@ -6,7 +6,12 @@ export default async function Dashboard() {
     <main>
       <div>
         <h1>Dashboard</h1>
-        <Link href="/dashboard/account">Account</Link>
+        
+        <p><Link href="/dashboard/account">Account</Link></p>
+        <p><Link href="/dashboard/workspaces">Workspaces</Link></p>
+        <p><Link href="/dashboard/teams">Teams</Link></p>
+        
+        <p><Link href="/signout">Sign Out</Link></p>
       </div>
     </main>
   );

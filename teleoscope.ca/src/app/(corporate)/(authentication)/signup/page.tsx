@@ -1,22 +1,13 @@
-import { Metadata } from "next"
-import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
-import { UserAuthForm } from "@/components/Authentication"
-import { Argon2id } from "oslo/password"
-import { authenticate } from "@/lib/auth"
-import { redirect } from "next/navigation"
-import { generateIdFromEntropySize } from "lucia"
-import { validateEmail, validatePassword, emailExists, ActionResult, errors } from "@/lib/validate"
-import initialize_user from "@/lib/account"
+"use client";
 
-export const metadata: Metadata = {
-  title: "Authentication",
-  description: "Authentication forms built using the components.",
-}
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
+import { UserAuthForm } from "@/components/Authentication";
+import { signup } from "@/lib/auth";
 
 export default function AuthenticationPage() {
-  
+
   return (
     <>
       <div className="container relative hidden h-[800px] flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
@@ -90,33 +81,4 @@ export default function AuthenticationPage() {
       </div>
     </>
   )
-}
-
-async function signup(formData: FormData): Promise<ActionResult> {
-	"use server";
-	const email = formData.get("email");
-  const password = formData.get("password");
-
-  if (!password || !email) {
-    return errors.missing;
-	}
-	if (!validateEmail(email)) {
-		return errors.email;
-	}
-	if (!validatePassword(password)) {
-		return errors.password;
-	}
-
-  const exists = await emailExists(email);
-  if (exists) {
-		return errors.exists;
-	}
-  
-	const hashedPassword = await new Argon2id().hash(password.toString());
-	const userId = generateIdFromEntropySize(10); // 16 characters long
-
-  await initialize_user(userId, hashedPassword, email)
-  await authenticate(userId);
-
-	return redirect("/dashboard");
 }

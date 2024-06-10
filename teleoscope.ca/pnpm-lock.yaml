@@ -93,6 +93,7 @@ dependencies:
     specifier: ^3.23.7
     version: 3.23.7
 
+<<<<<<< HEAD
 devDependencies:
   '@playwright/test':
     specifier: ^1.43.0
@@ -130,6 +131,125 @@ devDependencies:
   typescript:
     specifier: ^5
     version: 5.4.5
+=======
+  .:
+    dependencies:
+      '@lucia-auth/adapter-mongodb':
+        specifier: ^1.0.3
+        version: 1.0.3(lucia@3.2.0)(mongodb@6.5.0(mongodb-client-encryption@6.0.0))
+      '@next/env':
+        specifier: ^14.2.3
+        version: 14.2.3
+      '@node-rs/argon2':
+        specifier: ^1.8.3
+        version: 1.8.3
+      '@node-rs/bcrypt':
+        specifier: ^1.10.4
+        version: 1.10.4
+      '@radix-ui/react-label':
+        specifier: ^2.0.2
+        version: 2.0.2(@types/react-dom@18.3.0)(@types/react@18.3.0)(react-dom@18.3.0(react@18.3.0))(react@18.3.0)
+      '@radix-ui/react-navigation-menu':
+        specifier: ^1.1.4
+        version: 1.1.4(@types/react-dom@18.3.0)(@types/react@18.3.0)(react-dom@18.3.0(react@18.3.0))(react@18.3.0)
+      '@radix-ui/react-slot':
+        specifier: ^1.0.2
+        version: 1.0.2(@types/react@18.3.0)(react@18.3.0)
+      '@stripe/react-stripe-js':
+        specifier: ^2.7.1
+        version: 2.7.1(@stripe/stripe-js@3.4.0)(react-dom@18.3.0(react@18.3.0))(react@18.3.0)
+      '@stripe/stripe-js':
+        specifier: ^3.4.0
+        version: 3.4.0
+      axios:
+        specifier: ^1.6.8
+        version: 1.6.8
+      class-variance-authority:
+        specifier: ^0.7.0
+        version: 0.7.0
+      clsx:
+        specifier: ^2.1.0
+        version: 2.1.1
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
+      file-loader:
+        specifier: ^6.2.0
+        version: 6.2.0(webpack@5.91.0)
+      lucia:
+        specifier: ^3.2.0
+        version: 3.2.0
+      lucide-react:
+        specifier: ^0.365.0
+        version: 0.365.0(react@18.3.0)
+      mongodb:
+        specifier: ^6.5.0
+        version: 6.5.0(mongodb-client-encryption@6.0.0)
+      mongodb-client-encryption:
+        specifier: ^6.0.0
+        version: 6.0.0
+      oslo:
+        specifier: ^1.2.0
+        version: 1.2.0
+      react:
+        specifier: ^18.3.0
+        version: 18.3.0
+      react-dom:
+        specifier: ^18.3.0
+        version: 18.3.0(react@18.3.0)
+      react-icons:
+        specifier: ^5.2.1
+        version: 5.2.1(react@18.3.0)
+      stripe:
+        specifier: ^15.6.0
+        version: 15.6.0
+      swr:
+        specifier: ^2.2.5
+        version: 2.2.5(react@18.3.0)
+      tailwind-merge:
+        specifier: ^2.2.2
+        version: 2.3.0
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@3.4.3)
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.43.0
+        version: 1.43.1
+      '@types/node':
+        specifier: ^20
+        version: 20.12.7
+      '@types/react':
+        specifier: ^18
+        version: 18.3.0
+      '@types/react-dom':
+        specifier: ^18
+        version: 18.3.0
+      autoprefixer:
+        specifier: ^10.0.1
+        version: 10.4.19(postcss@8.4.38)
+      eslint:
+        specifier: ^8
+        version: 8.57.0
+      eslint-config-next:
+        specifier: 14.1.4
+        version: 14.1.4(eslint@8.57.0)(typescript@5.4.5)
+      next:
+        specifier: ^14.1.4
+        version: 14.2.3(@playwright/test@1.43.1)(react-dom@18.3.0(react@18.3.0))(react@18.3.0)
+      node-loader:
+        specifier: ^2.0.0
+        version: 2.0.0(webpack@5.91.0)
+      postcss:
+        specifier: ^8
+        version: 8.4.38
+      tailwindcss:
+        specifier: ^3.3.0
+        version: 3.4.3
+      typescript:
+        specifier: ^5
+        version: 5.4.5
+>>>>>>> origin/main
 
 packages:
 
