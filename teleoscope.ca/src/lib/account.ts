@@ -29,7 +29,7 @@ export default async function initialize_user(
         _id: userId,
         emails: [email],
         hashed_password: hashedPassword
-    }, { session });
+    }, { session: session });
 
     const default_plan = Plans.find(plan => plan.name == "Default");
     if (!default_plan) {
@@ -65,7 +65,7 @@ export default async function initialize_user(
 
     const mongo_insert_result = await db
         .collection('accounts')
-        .insertOne(account_doc, { session });
+        .insertOne(account_doc, { session: session });
 
     if (mongo_insert_result) {
         const customer = await stripe.customers.search({
@@ -119,7 +119,7 @@ export default async function initialize_user(
                                 stripe_id: new_customer.id
                             }
                         },
-                        { session }
+                        { session: session }
                     );
                 
                 if (mongo_update_result) {

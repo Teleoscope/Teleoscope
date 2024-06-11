@@ -23,7 +23,7 @@ export default function PurchaseDisplay() {
         data: account,
         error,
         isLoading
-    } = useSWRF(`/api/account?owner=${owner}`);
+    } = useSWRF(`/api/account`);
 
     if (isLoading) {
         return <>Loading...</>;

@@ -3,12 +3,29 @@
         "bsonType": "object",
         "title": "workspace",
         "required": [
-            "label"
+            "label",
+            "team"
         ],
         "properties": {
+            "_id": {
+                "bsonType": "objectId",
+                "description": "auto-generated MongoDB id"
+            },
             "label": {
                 "bsonType": "string",
                 "description": "the label of the workspace"
+            },
+            "team": {
+                "bsonType": "objectId",
+                "description": "the oid of the team the workspace belongs to"
+            },
+            "workflows": {
+                "bsonType": "array",
+                "description": "all workflows that are part of this workspace",
+                "items": {
+                    "bsonType": "objectId",
+                    "description": "a workflow for this workspace"
+                }
             }
         }
     }

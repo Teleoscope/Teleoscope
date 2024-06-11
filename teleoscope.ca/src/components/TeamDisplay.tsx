@@ -84,9 +84,8 @@ const LabeledInput = ({
 };
 
 export default function TeamDisplay() {
-    const { userId: user } = useUserContext();
-    const { data: teams } = useSWRF(`/api/teams?user=${user}`);
-    const { data: accounts } = useSWRF(`/api/accounts?user=${user}`);
+    const { data: teams } = useSWRF(`/api/teams`); // gets the current session's user
+    const { data: accounts } = useSWRF(`/api/accounts`); // gets the current session's user
 
     return (
         <div>
