@@ -1,4 +1,7 @@
-import { InfoCardProps } from "./InfoCards";
+import { InfoCardProps } from "../LandingPageInfoCards";
+/**
+ * FeatureList is a list of features Teleoscope's landing page highlights. This list is used to generate the InfoCards component.
+ */
 export const featureList: InfoCardProps[] = [
     {
         title: "Discover hidden insights",

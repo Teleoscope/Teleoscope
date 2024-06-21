@@ -1,17 +1,17 @@
 import Menu from "@/components/CorporateMenu";
-import Hero from "@/components/landing/hero";
-import DemoCTA from "@/components/landing/demoCTA";
+import DemoCTA from "@/components/landing/DemoCTA";
+import LandingPageHero from "@/components/landing/LandingPageHero";
+import LandingPageInfoCards from "@/components/landing/LandingPageInfoCards";
 import Footer from "@/components/landing/footer";
-import InfoCards from "@/components/landing/InfoCards";
 
 export default function Home() {
   return (
     <main>
-        <Menu/>
-        <Hero/>
-        <InfoCards/>
-        <DemoCTA/>
-        <Footer/>
+      <Menu />
+      <LandingPageHero />
+      <LandingPageInfoCards />
+      <DemoCTA />
+      <Footer />
     </main>
   );
 }

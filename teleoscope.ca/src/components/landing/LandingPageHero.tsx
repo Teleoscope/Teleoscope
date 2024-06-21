@@ -1,8 +1,8 @@
 
 
-export default function Hero() {
+export default function LandingPageHero() {
     return (
-        <section className="hero h-[60vh] flex-shrink-0 bg-pink-50">
+        <section className="hero h-[60vh] flex-shrink-0 bg-neutral-50">
         <div className="flex flex-col items-center justify-center h-full gap-4">
         <span className="text-4xl font-bold">
             Empower your research with AI
@@ -13,4 +13,4 @@ export default function Hero() {
         </div>
         </section>
     );
-    }
+    }   

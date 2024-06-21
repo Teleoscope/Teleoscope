@@ -1,5 +1,5 @@
 import { InfoIcon } from "lucide-react";
-import { featureList } from "./FeatureList";
+import { featureList } from "./data/FeatureList";
 
 export type SubItem = {
     title : string;
@@ -13,7 +13,7 @@ export type InfoCardProps = {
     graphic: string;
 }
 
-export default function InfoCards() {
+export default function LandingPageInfoCards() {
     return (
         <div className="flex flex-col items-center gap-4 w-full py-10 ">
             {featureList.map((card) => (
