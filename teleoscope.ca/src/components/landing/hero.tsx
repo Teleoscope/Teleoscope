@@ -2,7 +2,7 @@
 
 export default function Hero() {
     return (
-        <section className="hero h-[60vh] flex-shrink-0 bg-red-50">
+        <section className="hero h-[60vh] flex-shrink-0 bg-pink-50">
         <div className="flex flex-col items-center justify-center h-full gap-4">
         <span className="text-4xl font-bold">
             Empower your research with AI
