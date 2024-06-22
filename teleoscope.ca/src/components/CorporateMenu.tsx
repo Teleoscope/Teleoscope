@@ -1,4 +1,3 @@
-"use client";
 
 import Link from "next/link";
 import {
@@ -36,8 +35,8 @@ const menuItems = [
 
 export default function Menu() {
   const menuStyle = "flex items-center justify-between px-2 gap-4";
-  const menuItemStyle = "flex-shrink-0 p-2 font-medium";
-  const meneItemPrimaryStyle = "flex-shrink-0  bg-pink-600 text-white rounded-sm";
+  const menuItemStyle = "flex-shrink-0 p-2 font-medium text-neutral-900 rounded hover:bg-neutral-100";
+  const meneItemPrimaryStyle = "flex-shrink-0  bg-neutral-900 text-white rounded p-2 font-medium hover:bg-neutral-800";
 
   return (
     <div className="flex items-center justify-between">

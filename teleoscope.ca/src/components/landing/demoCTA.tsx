@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Button } from "../ui/button";
 
 export default function DemoCTA() {
@@ -13,9 +12,9 @@ export default function DemoCTA() {
         </div>
         <div className="flex items-center justify-center p-4">
           <Button variant="secondary">
-            <Link href="/signup" legacyBehavior passHref>
+            <a href="/signup" >
               <h1 className="text-lg">Book a demo</h1>
-            </Link>
+            </a>
           </Button>
         </div>
       </div>
