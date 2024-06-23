@@ -42,7 +42,7 @@ export default function InfoCard({ title, subItems, graphic }: InfoCardProps) {
   return (
     <div
       ref={cardRef}
-      className={`flex flex-col items-center gap-4 w-full max-w-5xl pb-5`}
+      className={`flex flex-col items-center gap-4 w-full max-w-3xl pb-5`}
     >
       <div
         className={`flex gap-10 items-center w-full transition-all duration-700 ease-out

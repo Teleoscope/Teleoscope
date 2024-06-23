@@ -23,7 +23,6 @@ export default function LandingPageHero() {
 
 
 function HeroGraphics() {
-
     return (
         <div className="flex justify-center items-center w-screen h-screen absolute overflow-visible ">
         <Image

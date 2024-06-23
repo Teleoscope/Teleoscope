@@ -12,7 +12,7 @@ export default function NewsletterSection() {
             our community with our newsletter.
           </span>
         </div>
-        <form className="flex items-center justify-end p-4 gap-2">
+        <form className="flex items-center justify-end py-4 gap-2">
           <Input type="email" id="email" placeholder="Jane@doe.com" className="w-60 bg-neutral-50 min-w-fit" />
           <Button className=" bg-black text-white hover:text-white hover:shadow-xl hover:bg-black">Subscribe</Button>
         </form>

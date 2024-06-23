@@ -1,4 +1,4 @@
-import Menu from "@/components/CorporateMenu";
+import Menu from "@/components/landing/CorporateMenu";
 import DemoCTA from "@/components/landing/DemoCTA";
 import LandingPageHero from "@/components/landing/LandingPageHero";
 import LandingPageInfoCards from "@/components/landing/LandingPageInfoCards";
