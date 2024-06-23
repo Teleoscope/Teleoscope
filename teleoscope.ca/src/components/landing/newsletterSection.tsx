@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 // TODO: Add server action to subscribe to newsletter
 export default function NewsletterSection() {
   return (
-    <div className="flex items-center justify-between w-full  py-10 border-y">
+    <div className="flex items-center justify-between w-full  p-10 border-y ">
         <div className="flex flex-col  gap-2 w-full  py-2">
           <span className="text-lg font-bold">Stay in the loop</span>
           <span className="max-w-sm text-sm ">
