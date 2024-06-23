@@ -22,10 +22,6 @@ const menuItems = [
     href: "https://teleoscope.ca/",
   },
   {
-    label: "Sign In",
-    href: "/signin",
-  },
-  {
     label: "Get Started",
     href: "/signup",
     variant: "primary"

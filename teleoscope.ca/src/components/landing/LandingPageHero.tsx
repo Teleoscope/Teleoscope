@@ -8,7 +8,7 @@ export default function LandingPageHero() {
       <section className="hero h-screen flex-shrink-0  z-10">
         <div className="flex flex-col items-center justify-center h-full gap-4">
           <div className="flex flex-col items-center  h-[40vh] z-10 gap-10 ">
-            <span className="text-4xl font-bold z-10 ">
+            <span className="text-6xl font-bold z-10 px-20 ">
               Empower Your Research with <span>AI</span>
             </span>
             <span className="text-2xl font-medium ">

@@ -1,76 +1,21 @@
-"use client";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import Link from "next/link";
-
+// TODO: Add server action to subscribe to newsletter
 export default function NewsletterSection() {
-  const formSchema = z.object({
-    username: z.string().min(2).max(50),
-  });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      username: "youremail@example.com",
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-  }
-
   return (
-    <div className="flex items-center justify-center px-8 py-2">
-      <div className="grid grid-cols-3 gap-4 rounded bg-gray-200">
-        <div className="flex items-center justify-center text-xl p-4">
-          Stay up to date with the latest developments in research and join our
-          community with our newsletter.
+    <div className="flex items-center justify-between w-full  py-10 border-y">
+        <div className="flex flex-col  gap-2 w-full  py-2">
+          <span className="text-lg font-bold">Stay in the loop</span>
+          <span className="max-w-sm text-sm ">
+            Stay up to date with the latest developments in research and join
+            our community with our newsletter.
+          </span>
         </div>
-
-        <div className="p-8">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="shadcn" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      This is your public display name.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit">Submit</Button>
-            </form>
-          </Form>
-        </div>
-        <div className="flex items-center justify-center p-4">
-          <Button variant="teleoscopeBlue">
-            <Link href="/signup" legacyBehavior passHref>
-              <h2 className="text-lg">Sign Up</h2>
-            </Link>
-          </Button>
-        </div>
-      </div>
+        <form className="flex items-center justify-end p-4 gap-2">
+          <Input type="email" id="email" placeholder="Jane@doe.com" className="w-60 bg-neutral-50 min-w-fit" />
+          <Button className=" bg-black text-white hover:text-white hover:shadow-xl hover:bg-black">Subscribe</Button>
+        </form>
     </div>
   );
 }
