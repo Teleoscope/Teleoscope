@@ -15,11 +15,12 @@ async function connect(uri: string) {
     return client
 }
 
-let _client: MongoClient | null;
+// let _client: MongoClient | null;
 async function client() {
-    if (!_client) {
-        _client = await connect(process.env.MONGODB_URI!)
-    }
+    // if (!_client) {
+        // _client = await connect(process.env.MONGODB_URI!)
+    // }
+    const _client = await connect(process.env.MONGODB_URI!);
     return _client
 }
 

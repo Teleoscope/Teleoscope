@@ -5,7 +5,7 @@ import { useUserContext } from '@/context/UserContext';
 export default function AccountDisplay() {
   const { userId: owner } = useUserContext();
 
-  const { data: account, error, isLoading } = useSWRF(`/api/account?owner=${owner}`)
+  const { data: account, error, isLoading } = useSWRF(`/api/account`)
 
   if (isLoading) {
     return <>Loading...</>

@@ -3,12 +3,52 @@
         "bsonType": "object",
         "title": "workspace",
         "required": [
-            "label"
+            "label",
+            "team"
         ],
         "properties": {
+            "_id": {
+                "bsonType": "objectId",
+                "description": "auto-generated MongoDB id"
+            },
             "label": {
                 "bsonType": "string",
                 "description": "the label of the workspace"
+            },
+            "team": {
+                "bsonType": "objectId",
+                "description": "the oid of the team the workspace belongs to"
+            },
+            "settings": {
+                "bsonType": "object",
+                "description": "the workspace settings",
+                "required": [
+                    "document_width",
+                    "document_height",
+                    "expanded"
+                ],
+                "properties": {
+                    "document_width": {
+                        "bsonType": "int",
+                        "description": "the default width of a new open document"
+                    },
+                    "document_height": {
+                        "bsonType": "int",
+                        "description": "the default height of a new open document"
+                    },
+                    "expanded": {
+                        "bsonType": "bool",
+                        "description": "whether a new open document opens expanded or not"
+                    }
+                }
+            },
+            "workflows": {
+                "bsonType": "array",
+                "description": "all workflows that are part of this workspace",
+                "items": {
+                    "bsonType": "objectId",
+                    "description": "a workflow for this workspace"
+                }
             }
         }
     }

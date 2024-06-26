@@ -3,28 +3,26 @@ import { ObjectId } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-    const db = (await client()).db();
 
     const email = request.nextUrl.searchParams.get('email');
     if (!email) {
         return NextResponse.json({ error: 'Email parameter is required' }, { status: 400 });
     }
 
+    const mongo_client = await client()
+    const db = mongo_client.db()
+    
+
     const result = await db.collection('users').findOne({
         emails: email
     });
-
-    const exists = !!result;
-
+    mongo_client.close()
+    
+    const exists = !!result;    
     return NextResponse.json({ exists });
 }
 
 export async function POST(request: NextRequest) {
-    const mongo_client = await client();
-    const session = mongo_client.startSession();
-
-    const db = mongo_client.db();
-
     const formData = await request.formData();
 
     const email = formData.get('email')?.toString();
@@ -34,11 +32,17 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Email and teamId are required' }, { status: 400 });
     }
 
+
+    const mongo_client = await client();
+    const mongo_session = mongo_client.startSession();
+
+    const db = mongo_client.db();
     const user = await db.collection('users').findOne({
         emails: email
     });
 
     if (!user) {
+        mongo_client.close()
         return NextResponse.json({ error: "Email doesn't correspond to a user" }, { status: 404 });
     }
 
@@ -57,15 +61,17 @@ export async function POST(request: NextRequest) {
     })
 
     if (!account) {
+        mongo_client.close()
         return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
     }
 
     if (account.amount_seats_used >= account.amount_seats_available) {
+        mongo_client.close()
         return NextResponse.json({ error: 'Too many seats used.' }, { status: 404 });
     }
 
 
-    session.startTransaction();
+    mongo_session.startTransaction();
 
     const team_result = await db.collection('teams').updateOne(
         {
@@ -81,7 +87,7 @@ export async function POST(request: NextRequest) {
                 }
             } as any // Explicitly cast to any to satisfy TypeScript
         }, {
-            session
+            session: mongo_session
         }
     );
 
@@ -92,20 +98,23 @@ export async function POST(request: NextRequest) {
         {
             "resources.amount_seats_used": account.resources.amount_seats_used + 1
         }, {
-            session
+            session: mongo_session
         }
     );
 
     if (team_result.modifiedCount === 0) {
+        mongo_client.close()
         return NextResponse.json({ error: 'Team not found or user already added' }, { status: 404 });
     }
 
     if (account_result.modifiedCount === 0) {
+        mongo_client.close()
         return NextResponse.json({ error: 'Could not update account' }, { status: 404 });
     }
 
 
-    await session.commitTransaction();
+    await mongo_session.commitTransaction();
+    mongo_client.close()
 
     return NextResponse.json({ success: true });
 }

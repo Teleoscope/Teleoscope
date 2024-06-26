@@ -9,7 +9,9 @@ import Stripe from 'stripe';
 
 
 export async function POST(request: NextRequest) {
-    const db = (await client()).db();
+    const mongo_client = await client()
+    const db = mongo_client.db()
+    
     const endpointSecret = process.env.STRIPE_TESTING_ENDPOINT_SECRET;
     const sig = request.headers.get('stripe-signature');
     const stripe = await get_stripe()
@@ -47,6 +49,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(result);
     } catch (err) {
         console.error('Error handling webhook event', err);
+        mongo_client.close()
         return NextResponse.json({ error: 'Webhook Error' }, { status: 400 });
     }
 }

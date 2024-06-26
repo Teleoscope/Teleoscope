@@ -3,12 +3,123 @@
         "bsonType": "object",
         "title": "workflow",
         "required": [
-            "label"
+            "workspace",
+            "label",
+            "nodes",
+            "edges",
+            "bookmarks",
+            "selection",
+            "settings"
         ],
         "properties": {
+            "workspace": {
+                "bsonType": "objectId",
+                "description": "the workspace that this workflow belongs to"
+            },
             "label": {
                 "bsonType": "string",
                 "description": "the label of the workflow"
+            },
+            "nodes": {
+                "bsonType": "array",
+                "description": "the nodes in the workflow",
+                "items": {
+                    "bsonType": "object",
+                    "description": "a node in the workflow",
+                    "required": [
+                        "id",
+                        "position",
+                        "data"
+                    ],
+                    "properties": {
+                        "id": {
+                            "bsonType": "string",
+                            "description": "the id of the node"
+                        },
+                        "position": {
+                            "bsonType": "object",
+                            "description": "the x-y coordinates of the node on the workflow",
+                            "required": [
+                                "x",
+                                "y"
+                            ],
+                            "properties": {
+                                "x": {
+                                    "bsonType": "int",
+                                    "description": "the x-coordinate of the node on the workflow"
+                                },
+                                "y": {
+                                    "bsonType": "int",
+                                    "description": "the y-coordinate of the node on the workflow"
+                                }
+                            }
+                        },
+                        "data": {
+                            "bsonType": "object",
+                            "description": "the data of the object"
+                        }
+                    }
+                }
+            },
+            "edges": {
+                "bsonType": "array",
+                "description": "the edges in the workflow",
+                "items": {
+                    "bsonType": "object",
+                    "description": "an edge in the workflow"
+                }
+            },
+            "bookmarks": {
+                "bsonType": "array",
+                "description": "currently bookmarked documents",
+                "items": {
+                    "bsonType": "objectId",
+                    "description": "the mongodb oid of the bookmarked document"
+                }
+            },
+            "selection": {
+                "bsonType": "object",
+                "description": "currently selected nodes and edges",
+                "required": [
+                    "nodes",
+                    "edges"
+                ],
+                "properties": {
+                    "nodes": {
+                        "bsonType": "array",
+                        "description": "an array of selected nodes by id",
+                        "items": {
+                            "bsonType": "string",
+                            "description": "selected node ids"
+                        }
+                    },
+                    "edges": {
+                        "bsonType": "array",
+                        "description": "an array of selected edges by id",
+                        "items": {
+                            "bsonType": "string",
+                            "description": "selected edge ids"
+                        }
+                    }
+                }
+            },
+            "settings": {
+                "bsonType": "object",
+                "description": "the workspace settings",
+                "required": [
+                    "color",
+                    "title_length"
+                ],
+                "properties": {
+                    "color": {
+                        "bsonType": "string",
+                        "description": "the color of this workflow"
+                    },
+                    "title_length": {
+                        "bsonType": "int",
+                        "description": "the default length of the the displayed title"
+                    }
+                }
             }
         }
     }

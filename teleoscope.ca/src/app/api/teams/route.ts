@@ -1,16 +1,18 @@
+import { validateRequest } from '@/lib/auth';
 import { client } from '@/lib/db';
 import { Teams } from '@/types/teams';
 import { ObjectId } from 'mongodb';
 import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
-    const db = (await client()).db();
-
-    const user = request.nextUrl.searchParams.get('user')!
+    const mongo_client = await client()
+    const db = mongo_client.db()
+    
+    const { user, session } = await validateRequest()
 
     const result = await db.collection("teams").find({
         $or: [
-            { "owner": user },
+            { "owner": user?.id },
             {
                 "users": {
                     $elemMatch: {
@@ -22,13 +24,13 @@ export async function GET(request: NextRequest) {
         ]
     }).toArray();
 
-    console.log("teams", result)
-
     return Response.json(result);
 }
 
 export async function POST(request: NextRequest) {
-    const db = (await client()).db();
+    const mongo_client = await client()
+    const db = mongo_client.db()
+    
     const formData = await request.formData();
 
     const owner_id = formData.get('owner')?.toString()!;
@@ -44,5 +46,6 @@ export async function POST(request: NextRequest) {
     };
 
     const result = await db.collection('teams').insertOne(team);
+    mongo_client.close()
     return Response.json(result);
 }
