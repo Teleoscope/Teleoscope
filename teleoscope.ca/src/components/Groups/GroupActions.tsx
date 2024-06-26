@@ -3,7 +3,7 @@ import CopyAllIcon from "@mui/icons-material/CopyAll";
 import Tooltip from "@mui/material/Tooltip";
 
 import IconButton from "@mui/material/IconButton";
-import { MakeDocx } from "@/util/DocxMaker";
+import { MakeDocx } from "@/lib/DocxMaker";
 import { utils, writeFile } from "xlsx";
 
 import { BsFiletypeXlsx } from "react-icons/bs";

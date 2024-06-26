@@ -13,21 +13,19 @@ import DocumentTitle from "@/components/Documents/DocumentTitle";
 import Deleter from "@/components/Deleter";
 
 //actions
-import { mark, removeDocumentFromGroup } from "@/actions/windows";
+import { mark, removeDocumentFromGroup } from "@/actions/appState";
 
-//utils
-import { useSWRHook } from "@/util/swr";
-import { PreprocessTitle } from "@/util/Preprocessers";
+import { preprocessTitle } from "@/lib/preprocessers";
 import { useAppDispatch } from "@/lib/hooks";
 
-import { onDragStart } from "@/util/drag";
+import { onDragStart } from "@/lib/drag";
+import { useSWRF } from "@/lib/swr";
 
 export default function DocumentListItem(props) {
   const dispatch = useAppDispatch()
-  const swr = useSWRHook();
-  const { document, document_loading, document_error } = props.index? swr.useSWRAbstract("document", `query?index=${props.index}&q=${props.id}`): swr.useSWRAbstract("document", `document/${props.id}`);
-  const title = document ? PreprocessTitle(document.title) : false;
-  const settings = useAppSelector((state) => state.windows.settings);
+  const { data: document, error: document_error, isLoading: document_loading} = props.index? useSWRF(`query?index=${props.index}&q=${props.id}`): useSWRF(`document/${props.id}`)
+  const title = document ? preprocessTitle(document.title) : false;
+  const settings = useAppSelector((state) => state.appState.workflow.settings);
 
   if (document_loading || document_error) {
     return <div>Loading...</div>

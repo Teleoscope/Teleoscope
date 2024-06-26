@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const workspace_id = request.nextUrl.searchParams.get('workspace');
 
     if (!workspace_id) {
-        throw new Error(`Workspace ID problem for request: ${request.nextUrl}`)
+        throw new Error(`Workspace ID missing for request: ${request.nextUrl}`)
     }
 
     const workspace = new ObjectId(workspace_id)

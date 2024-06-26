@@ -6,7 +6,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 // custom components
 import DocumentListItem from "@/components/Documents/DocumentListItem";
 import ItemList from "@/components/ItemList";
-import { mark, setSelection } from "@/actions/windows";
+import { mark, setSelection } from "@/actions/appState";
 
 export default function DocumentList({ data, group, loading, loadMore, ...props }) {
   const dispatch = useAppDispatch();

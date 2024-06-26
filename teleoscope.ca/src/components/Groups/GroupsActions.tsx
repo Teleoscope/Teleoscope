@@ -1,4 +1,4 @@
-import { MakeDocx } from "@/util/DocxMaker";
+import { MakeDocx } from "@/lib/DocxMaker";
 import { IconButton, Tooltip } from "@mui/material";
 import {
   ContentCopy as ContentCopyIcon,
@@ -14,7 +14,7 @@ import { BsFiletypeXlsx } from "react-icons/bs";
 // Button Action Functions
 export const SaveDocxAction = (props) => {
   const { fetchgroups, session } = props;
-  const label = useSelector((state) => state.windows.label);
+  const label = useSelector((state) => state.appState.workflow.label);
   const createDocx = async () => {
     const groups = await fetchgroups();
     MakeDocx({
@@ -82,7 +82,7 @@ function replaceSpecialChars(str) {
 // Button Action Functions
 export const SaveXLSXAction = (props) => {
   const { fetchgroups, session } = props;
-  const label = useSelector((state) => state.windows.label);
+  const label = useSelector((state) => state.appState.workflow.label);
 
   const createXLSX = async (props) => {
     const groups = await fetchgroups();

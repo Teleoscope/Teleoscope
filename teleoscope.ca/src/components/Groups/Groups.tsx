@@ -77,32 +77,32 @@ export const GroupList = ({ groups, ...props }) => (
 
 import { useState } from "react";
 import { Divider } from "@mui/material";
-import { useSWRHook } from "@/util/swr";
+
 import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
 import randomColor from "randomcolor";
 import ButtonActions from "@/components/ButtonActions";
 import {
-  SaveXLSXAction,
-  SaveDocxAction,
-  CopyJsonAction,
-  CopyTextAction,
+    SaveXLSXAction,
+    SaveDocxAction,
+    CopyJsonAction,
+    CopyTextAction,
 } from "@/components/Groups/GroupsActions";
 import { NewItemForm } from "@/components/NewItemForm";
-import { onDragStart } from "@/util/drag";
+import { onDragStart } from "@/lib/drag";
 import Deleter from "@/components/Deleter";
 import { useAppDispatch } from "@/lib/hooks";
-import { addGroup, recolorGroup, relabelGroup, removeGroup } from "@/actions/windows";
+import { addGroup, recolorGroup, relabelGroup, removeGroup } from "@/actions/appState";
+import { useSWRF } from "@/lib/swr";
 
 export default function Groups(props) {
-  const swr = useSWRHook();
   const dispatch = useAppDispatch()
-  const workflow_id = useAppSelector((state) => state.activeSessionID.value);
-  const settings = useAppSelector((state) => state.windows.settings);
+  const workflow_id = useAppSelector((state) => state.appState.workflow._id);
+  const settings = useAppSelector((state) => state.appState.workflow.settings);
 
   const { groups } = props.demo
     ? props.demoGroups
-    : swr.useSWRAbstract("groups", `sessions/${workflow_id}/groups`);
-  const { session } = swr.useSWRAbstract("session", `sessions/${workflow_id}`);
+    : useSWRF(`sessions/${workflow_id}/groups`);
+  const { session } = useSWRF("session", `sessions/${workflow_id}`);
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   

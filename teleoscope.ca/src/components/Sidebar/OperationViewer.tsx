@@ -1,4 +1,3 @@
-import { useSWRHook } from "@/util/swr";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -6,11 +5,12 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Typography, Stack, Divider } from "@mui/material";
 import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
 import DocumentList from "@/components/Documents/DocumentList";
+import { useSWRF } from "@/lib/swr";
 
 export default function OperationViewer({id, type}) {
-  const swr = useSWRHook();
-  const { operation } = swr.useSWRAbstract("operation", `graph/${id}`);
-  const settings = useAppSelector((state) => state.windows.settings);
+  
+  const { data: operation } = useSWRF(`graph/${id}`);
+  const settings = useAppSelector((state) => state.appState.workflow.settings);
   const wdefs = useWindowDefinitions();
   
   const data = operation?.doclists

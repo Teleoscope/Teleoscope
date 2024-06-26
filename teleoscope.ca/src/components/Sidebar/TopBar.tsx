@@ -27,7 +27,7 @@ export default function TopBar({
     const settings = {
         color: '#FF0000'
     };
-    // const settings = useSelector((state) => state.windows.settings);
+    // const settings = useSelector((state) => state.appState.workflow.settings);
     const AccountMenu = () => {
         const [anchorEl, setAnchorEl] = React.useState(null);
         const [openMenu, setOpenMenu] = React.useState(false);

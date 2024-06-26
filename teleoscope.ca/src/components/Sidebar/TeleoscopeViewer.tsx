@@ -1,14 +1,14 @@
 import { Stack, Typography, Accordion, AccordionSummary, AccordionDetails, Divider } from "@mui/material";
-import { useSWRHook } from "@/util/swr";
 
 import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DocumentList from "../Documents/DocumentList";
+import { useSWRF } from "@/lib/swr";
 
 export default function TeleoscopeViewer({ id }) {
-  const swr = useSWRHook();
-  const { teleoscope } = swr.useSWRAbstract("teleoscope", `graph/${id}`);
-  const settings = useAppSelector((state) => state.windows.settings);
+  
+  const { data: teleoscope } = useSWRF(`graph/${id}`);
+  const settings = useAppSelector((state) => state.appState.workflow.settings);
   const wdefs = useWindowDefinitions();
 
   const handleLoadMore = () => { console.log("stub") }

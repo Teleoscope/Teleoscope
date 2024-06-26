@@ -1,23 +1,21 @@
 import React from "react";
 // actions
 import { useWindowDefinitions } from "@/lib/hooks";
-import { bookmark } from "@/actions/windows";
+import { bookmark } from "@/actions/appState";
 import { GroupedVirtuoso } from "react-virtuoso";
-import { useSWRHook } from "@/util/swr";
 import { Box } from "@mui/system";
 import { Button, Stack, Typography } from "@mui/material";
-import { onDragStart } from "@/util/drag";
+import { onDragStart } from "@/lib/drag";
 import { HiChevronDoubleDown } from 'react-icons/hi';
 import { useAppDispatch } from "@/lib/hooks";
-
+import { useSWRF } from "@/lib/swr";
 
 const GroupLabel = ({ index, data, callback}) => {
   const wdefs = useWindowDefinitions();
-  const swr = useSWRHook();
   const group = data[index];
   const key = wdefs.getAPIRoute(group.type);
 
-  const { item } = swr.useSWRAbstract("item", `${key}/${group.id}`);
+  const { data: item } = useSWRF(`${key}/${group.id}`);
 
   const title = (type) => {
     if (type === "Document") {

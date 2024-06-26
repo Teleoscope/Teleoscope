@@ -6,8 +6,8 @@ import TeleoscopeViewer from "@/components/Sidebar/TeleoscopeViewer";
 import ProjectionViewer from "@/components/Sidebar/ProjectionViewer";
 import OperationViewer from "./OperationViewer";
 
-export default function SelectionViewer({ noGroup }) {
-  const selection = useAppSelector((state) => state.windows.selection);
+export default function SelectionViewer({ noGroup = false }) {
+  const selection = useAppSelector((state) => state.appState.workflow.selection);
   return (
     <div className="flex flex-col flex-1 justify-between items-center w-full overflow-x-hidden [&>*]:w-full">
       {selection.nodes.map((node) => {

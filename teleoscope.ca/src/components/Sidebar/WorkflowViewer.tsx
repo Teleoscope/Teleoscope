@@ -3,13 +3,13 @@ import { Stack, TextField, List, ListItem, ListItemIcon } from "@mui/material";
 import Deleter from "@/components/Deleter";
 
 import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/lib/hooks";
-import { initializeWorkflow, relabelWorkflow, removeWorkflow } from "@/actions/windows";
+import { initializeWorkflow, relabelWorkflow, removeWorkflow } from "@/actions/appState";
 
 import EditableText from "@/components/EditableText";
 
 import randomColor from "randomcolor";
+import { useSWRF } from "@/lib/swr";
 
-import { useSWRHook } from "@/util/swr";
 
 const styles = {
   overflow: "auto", 
@@ -22,13 +22,13 @@ export default function Workflows(props) {
   const wdefs = useWindowDefinitions();
 
   const dispatch = useAppDispatch();
-  const swr = useSWRHook();
-  const color = useAppSelector((state) => state.windows.settings.color);
   
-  const workflow_id = useAppSelector((state) => state.activeSessionID.value);
-  const workspace_id = useAppSelector((state) => state.activeSessionID.workspace);
+  const color = useAppSelector((state) => state.appState.workflow.settings.color);
   
-  const { workflows } = swr.useSWRAbstract("workflows", `/workflows/${workspace_id}`)
+  const workflow_id = useAppSelector((state) => state.appState.workflow._id);
+  const workspace_id = useAppSelector((state) => state.appState.workspace._id);
+  
+  const { data: workflows } = useSWRF(`/workflows/${workspace_id}`)
   
 
   const [value, setValue] = useState(null);

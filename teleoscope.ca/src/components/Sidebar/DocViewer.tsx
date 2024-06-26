@@ -1,25 +1,25 @@
-import { useSWRHook } from "@/util/swr";
 import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
 import { DocumentActions } from "@/components/Documents/DocumentActions";
 import Highlighter from "@/components/Highlighter";
 import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { CaretSortIcon } from "@radix-ui/react-icons";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { useSWRF } from "@/lib/swr";
 
 export default function DocViewer({ id, windata }) {
   const [isOpen, setIsOpen] = useState(true);
 
-  const swr = useSWRHook();
-  const { document } = windata?.demo
+  
+  const { data: document } = windata?.demo
     ? windata.demodata
-    : swr.useSWRAbstract("document", `document/${id}`);
-  const settings = useAppSelector((state) => state.windows.settings);
+    : useSWRF(`document/${id}`);
+  const settings = useAppSelector((state) => state.appState.workflow.settings);
   const wdefs = useWindowDefinitions();
 
   return (

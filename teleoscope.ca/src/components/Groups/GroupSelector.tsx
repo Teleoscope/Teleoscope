@@ -10,20 +10,16 @@ import Tooltip from "@mui/material/Tooltip";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import FolderCopyIcon from "@mui/icons-material/FolderCopy";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
-import { removeDocumentFromGroup, addDocumentToGroup } from "@/actions/windows";
+import { removeDocumentFromGroup, addDocumentToGroup } from "@/actions/appState";
+import { useSWRF } from "@/lib/swr";
 
-//utils
-import { useSWRHook } from "@/util/swr";
 
 export default function GroupSelector(props) {
   const dispatch = useAppDispatch()
 
-  const workflow_id = useAppSelector((state) => state.activeSessionID.value);
-  const swr = useSWRHook();
-  const { groups } = swr.useSWRAbstract(
-    "groups",
-    `sessions/${workflow_id}/groups`
-  );
+  const workflow_id = useAppSelector((state) => state.appState.workflow._id);
+
+  const { data: groups } = useSWRF(`sessions/${workflow_id}/groups`)
 
   const groups_this_document_belongs_to = groups
     ? groups.filter((g) => {

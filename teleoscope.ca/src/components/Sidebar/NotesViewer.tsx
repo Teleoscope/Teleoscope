@@ -1,19 +1,18 @@
 import {
-    Stack,
-    Typography,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    Divider
+  Stack,
+  Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Divider
 } from "@mui/material";
-import { useSWRHook } from "@/util/swr";
 import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export default function NotesViewer({ id }) {
-  const swr = useSWRHook();
-  const { note } = swr.useSWRAbstract("note", `note/${id}`);
-  const settings = useAppSelector((state) => state.windows.settings);
+  
+  const { data: note } = useSWRF(`note/${id}`);
+  const settings = useAppSelector((state) => state.appState.workflow.settings);
   const wdefs = useWindowDefinitions();
 
   return (

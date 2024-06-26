@@ -5,23 +5,22 @@ import DocumentText from "@/components/Documents/DocumentText";
 import { Stack } from "@mui/material";
 
 //utils
-import { useSWRHook } from "@/util/swr";
-import { PreprocessText } from "@/util/Preprocessers";
+import { preprocessText } from "@/lib/preprocessers";
 import ButtonActions from "@/components/ButtonActions";
 import {
-  SaveXLSX,
-  SaveDocx,
-  CopyJson,
-  CopyText,
-  Link,
-  Group,
+    SaveXLSX,
+    SaveDocx,
+    CopyJson,
+    CopyText,
+    Link,
+    Group,
 } from "@/components/Documents/DocumentActions";
 
 export default function Document(props) {
   const id = props.id.split("%")[0];
-  const swr = useSWRHook();
-  const { document } = swr.useSWRAbstract("document", `document/${id}`);
-  const text = document ? PreprocessText(document.text) : false;
+  
+  const { document } = useSWRF("document", `document/${id}`);
+  const text = document ? preprocessText(document.text) : false;
 
   return (
     <Stack sx={{ height: "100%" }}>
