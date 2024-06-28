@@ -31,13 +31,13 @@ function HeroGraphics() {
             src={"/graphics/hero2.svg"}
             alt="Logo"
             fill
-            className=" animate-pulse delay-1000 duration-3000  opacity-50"
+            className=" animate-pulse delay-1000 duration-2000  opacity-50"
         />
          <Image
             src={"/graphics/hero.svg"}
             alt="Logo"
             fill
-            className="animate-pulse delay-500 duration-3000 opacity-50"
+            className="animate-pulse delay-200 duration-3000 opacity-60"
         />
         </div>
         <div className="flex justify-center items-center w-screen h-screen absolute top-0 overflow-visible ">
