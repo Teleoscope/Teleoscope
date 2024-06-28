@@ -24,25 +24,33 @@ export default function LandingPageHero() {
 
 function HeroGraphics() {
     return (
+      <Fragment>
         <div className="flex justify-center items-center w-screen h-screen absolute overflow-visible ">
-      <Image
-          src={"/graphics/hero.svg"}
-          alt="Logo"
-          fill
-          className="animate-pulse delay-100 duration-5000 opacity-90"
-      />
+          
         <Image
             src={"/graphics/hero2.svg"}
             alt="Logo"
             fill
-            className="animate-pulse delay-00 duration-10000 opacity-20"
+            className=" animate-pulse delay-1000 duration-3000  opacity-90"
         />
          <Image
-            src={"/graphics/hero2.svg"}
+            src={"/graphics/hero.svg"}
             alt="Logo"
             fill
-            className="animate-pulse delay-500 duration-5000 opacity-10"
+            className="animate-pulse delay-500 duration-3000 opacity-90"
         />
         </div>
+        <div className="flex justify-center items-center w-screen h-screen absolute top-0 overflow-visible ">
+
+        <Image
+            src={"/graphics/heroBlur.svg"}
+            alt="Logo"
+            fill
+            objectFit="cover"
+            className="opacity-40"
+        />
+            </div>
+
+      </Fragment>
     );
 }

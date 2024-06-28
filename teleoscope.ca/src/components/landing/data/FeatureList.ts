@@ -43,6 +43,6 @@ export const featureList: InfoCardProps[] = [
                 description: "Telescope is designed to work seamlessly with the existing suite of tools you and your team already use. From importing data from external sources to exporting your results and analyses. Telescope seamlessly integrates with your existing tools.",
             },
         ],
-        graphic: "DiscoverGraphic.svg",
+        graphic: "CollaborationGraphic.svg",
     }
 ]
