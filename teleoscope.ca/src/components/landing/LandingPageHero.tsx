@@ -11,7 +11,7 @@ export default function LandingPageHero() {
             <span className="text-6xl font-bold z-10 px-20 ">
               Empower Your Research with <span>AI</span>
             </span>
-            <span className="text-2xl font-medium ">
+            <span className="text-3xl font-medium ">
               AI Assisted Qualitative Analysis
             </span>
           </div>
