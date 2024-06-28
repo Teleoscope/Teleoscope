@@ -1,6 +1,6 @@
 import Image from "next/image";
+import DemoButton from "../DemoButton";
 
-const demoCTAHref = "mailto:hello@teleoscope.ca";
 const demoText =
   "Ready to see Teleoscope first hand? Schedule a demo with our team to discover how Teleoscope can empower your team.";
 
@@ -32,17 +32,11 @@ export default function DemoCTA() {
         <div className="text-lg md:text-xl font-medium">
           <p>{demoText}</p>
         </div>
-        <div className="flex items-center justify-center p-4">
-          <a
-            href={demoCTAHref}
-            target="_blank"
-            rel="noreferrer"
-            className="bg-primary hover:bg-secondary text-white rounded-full p-2 px-4 font-medium hover:bg-primary-600"
-          >
-            Book a demo
-          </a>
-        </div>
+        <DemoButton />
+        
       </div>
     </div>
   );
 }
+
+

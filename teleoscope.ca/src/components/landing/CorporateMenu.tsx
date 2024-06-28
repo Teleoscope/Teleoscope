@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import Image from "next/image";
+import GetStartedBtn from "../GetStartedBtn";
 
 const menuItems = [
   {
@@ -15,20 +15,12 @@ const menuItems = [
     label: "Resources",
     href: "https://teleoscope.ca/",
   },
-  {
-    label: "Get Started",
-    href: "/signup",
-    variant: "primary",
-  },
 ];
 
 export default function Menu() {
   const menuStyle = "flex items-center justify-between px-2 gap-4 ";
   const menuItemStyle =
     "flex-shrink-0 p-2 font-medium text-neutral-900 rounded hover:bg-neutral-100 hidden md:flex";
-  const menuItemPrimaryStyle =
-    "flex-shrink-0 bg-primary hover:bg-secondary rounded-full duration-500 text-white  p-2 px-4 font-medium  flex";
-
   return (
     <div className="flex items-center justify-between relative z-20">
       <div className="flex-shrink-0 p-4 font-bold">
@@ -45,17 +37,12 @@ export default function Menu() {
         <div className={menuStyle}>
           {menuItems.map((item) => (
             <div key={item.label}>
-              <Link
-                href={item.href}
-                className={cn(
-                  menuItemStyle,
-                  item.variant === "primary" && menuItemPrimaryStyle
-                )}
-              >
+              <Link href={item.href} className={menuItemStyle}>
                 {item.label}
               </Link>
             </div>
           ))}
+          <GetStartedBtn />
         </div>
       </section>
     </div>
