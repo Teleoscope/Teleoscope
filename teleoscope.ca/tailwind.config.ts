@@ -1,5 +1,31 @@
 import type { Config } from "tailwindcss"
 
+const appPrimary = {
+  50: "#e6e7ee",
+  100: "#bec3d7",
+  200: "#979dbc",
+  300: "#6f789f",
+  400: "#535c8d",
+  500: "#38417b",
+  600: "#353b74",
+  700: "#2c3267",
+  800: "#25295c",
+  900: "#191a45",
+};
+
+const appSecondary = {
+  50: "#ffe4eb",
+  100: "#ffbbce",
+  200: "#ff8eae",
+  300: "#ff5d8e",
+  400: "#fe3474",
+  500: "#fd005b",
+  600: "#ed015a",
+  700: "#d60056",
+  800: "#c20253",
+  900: "#9d0150",
+};
+
 const config = {
   darkMode: ["class"],
   content: [
@@ -25,17 +51,19 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
+          DEFAULT: appPrimary[900],
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
+          DEFAULT: appSecondary[400],
           foreground: "hsl(var(--secondary-foreground))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        appPrimary,
+        appSecondary,
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",

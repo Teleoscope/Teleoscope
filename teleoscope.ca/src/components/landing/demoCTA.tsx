@@ -25,7 +25,7 @@ export default function DemoCTA() {
           <p>{demoText}</p>
         </div>
         <div className="flex items-center justify-center p-4">
-          <a href={demoCTAHref} target="_blank" rel="noreferrer" className="bg-black text-white rounded-full p-2 px-4 font-medium hover:bg-primary-600">
+          <a href={demoCTAHref} target="_blank" rel="noreferrer" className="bg-primary text-white rounded-full p-2 px-4 font-medium hover:bg-primary-600">
            Book a demo
           </a>
         </div>

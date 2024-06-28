@@ -12,10 +12,10 @@ const initialState: { subscribeStatus: SubscribeStatus; message?: string } = {
   subscribeStatus: "not subscribed",
 };
 const defaultStyle =
-  "bg-black w-32 border-black text-white hover:text-white hover:shadow-xl hover:bg-black data[data-subscribe-status='not-subscribed']  data[data-subscribe-status='subscribed':animate-bounce]";
-const errorStyle = "border-red-500  data[data-subscribe-status='error']";
+  "bg-primary w-32 border-black text-white hover:text-white hover:shadow-xl hover:bg-black data[data-subscribe-status='not-subscribed']  data[data-subscribe-status='subscribed':animate-bounce]";
+const errorStyle = "data[data-subscribe-status='error']";
 const successStyle =
-  "bg-pink-600  data[data-subscribe-status='subscribed'] hover:bg-bg-pink-600 shadow-3xl shadow-[0_4px_8px_0_rgba(255,192,203,0.6)]";
+  "bg-secondary data[data-subscribe-status='subscribed'] shadow-3xl ";
 
 export default function NewsletterSection() {
   const [formState, formAction] = useFormState(

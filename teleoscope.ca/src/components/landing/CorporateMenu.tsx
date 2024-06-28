@@ -26,7 +26,7 @@ export default function Menu() {
   const menuItemStyle =
     "flex-shrink-0 p-2 font-medium text-neutral-900 rounded hover:bg-neutral-100";
   const menuItemPrimaryStyle =
-    "flex-shrink-0  bg-neutral-900 text-white rounded p-2 font-medium hover:bg-neutral-800";
+    "flex-shrink-0 bg-primary  text-white rounded p-2 font-medium ";
 
   return (
     <div className="flex items-center justify-between">
