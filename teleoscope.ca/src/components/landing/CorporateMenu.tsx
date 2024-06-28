@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const menuItems = [
   {
@@ -31,8 +32,13 @@ export default function Menu() {
   return (
     <div className="flex items-center justify-between">
       <div className="flex-shrink-0 p-4 font-bold">
-        <Link href="/" passHref className="hover:text-pink-600 ">
-          Teleoscope
+      <Link href="/" className="font-bold text-2xl  relative">
+        <Image
+            src={"/assets/TeleoscopeLogo.svg"}
+            alt="Logo"
+            width={100}
+            height={8}
+        />
         </Link>
       </div>
       <section>

@@ -29,7 +29,7 @@ export const featureList: InfoCardProps[] = [
                 description: "Telescope's state of the art drag-and-drop interface enables seamless data navigation outside the confines of traditional rows and columns. Our streamlined user experience empowers analysts to delve into their data with ease, allowing analysts to focus on data exploration over data parsing.",
             },
         ],
-        graphic: "DiscoverGraphic.svg",
+        graphic: "AnalyzeGraphic.svg",
     },
     {
         title: "Collaboration and Sharing",

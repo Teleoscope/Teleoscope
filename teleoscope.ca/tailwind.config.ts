@@ -3,7 +3,7 @@ import type { Config } from "tailwindcss"
 const appPrimary = {
   50: "#e6e7ee",
   100: "#bec3d7",
-  200: "#979dbc",
+  200: "#",
   300: "#6f789f",
   400: "#535c8d",
   500: "#38417b",

@@ -1,4 +1,6 @@
 import { GithubIcon, LinkedinIcon } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 const socialLinks = [
   {
@@ -56,9 +58,14 @@ export default function FooterLinks() {
   return (
     <div className="flex  gap-4 w-full py-5 px-10">
       <div className="flex flex-col gap-2 flex-1">
-        <a href="/" className="font-bold text-2xl">
-          Teleoscope
-        </a>
+        <Link href="/" className="font-bold text-2xl  relative">
+        <Image
+            src={"/assets/TeleoscopeLogo.svg"}
+            alt="Logo"
+            width={120}
+            height={20}
+        />
+        </Link>
         <div className="flex gap-2">
           {socialLinks.map((link) => (
             <a
