@@ -9,7 +9,6 @@ export default function Footer() {
         <NewsletterSection />
         <div className="flex justify-between w-full gap-2 px-10">
             <span className="text-sm">© 2024 Teleoscope. All rights reserved.</span>
-            <span className="text-sm">Made with 🩷 for researchers by researchers</span>
         </div>
       </section>
     </footer>

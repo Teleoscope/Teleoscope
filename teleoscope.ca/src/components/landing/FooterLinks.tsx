@@ -22,6 +22,11 @@ const links = [
         href: "/about",
       },
       {
+        label: "Get Started",
+        href: "/signup",
+        variant: "primary",
+      },
+      {
         label: "Pricing",
         href: "/pricing",
       },
@@ -29,24 +34,12 @@ const links = [
         label: "Resources",
         href: "https://teleoscope.ca/",
       },
-      {
-        label: "Get Started",
-        href: "/signup",
-        variant: "primary",
-      },
+
     ],
   },
   {
     groupLabel: "Company",
     links: [
-      {
-        label: "About Us",
-        href: "/about",
-      },
-      {
-        label: "Contact",
-        href: "/contact",
-      },
       {
         label: "Privacy Policy",
         href: "/privacy",

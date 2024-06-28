@@ -24,20 +24,20 @@ export default function NewsletterSection() {
   );
 
   return (
-    <div className="flex items-center justify-between w-full  p-10 border-y ">
-      <div className="flex flex-col  gap-2 w-full  py-2">
-        <span className="text-lg font-bold">Stay in the loop</span>
+    <div className="flex flex-col items-center justify-center w-full  p-10 border-y md:flex-row  ">
+      <div className="flex flex-col items-center md:items-start gap-2 w-full  py-2">
+        <span className="text-lg text-left font-bold">Stay in the loop</span>
         <span className="max-w-sm text-sm ">
           Stay up to date with the latest developments in research and join our
           community with our newsletter.
         </span>
       </div>
       <form
-        className="flex items-center justify-end py-4 gap-2"
+        className="flex items-center  justify-center py-4 gap-2"
         action={formAction}
       >
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
+        <div className="flex flex-col gap-2  justify-center items-center">
+          <div className="flex gap-2  justify-center items-center">
             <Input
               name="email"
               type="email"
@@ -64,14 +64,30 @@ export default function NewsletterSection() {
             </Button>
           </div>
           <span
-            className={`text-xs h-8 ${
-              formState.subscribeStatus === "error" && "text-red-500"
+            className={`text-xs text-left h-8 w-full ${
+              formState.subscribeStatus === "error" && "text-red-600"
             }`}
           >
-            {formState.message}
+            {formState.message ? formState.message : <DEFAULT_DISCLAIMER />}
           </span>
         </div>
       </form>
     </div>
   );
 }
+
+const DEFAULT_DISCLAIMER = () => {
+  return (
+    <span className="w-full text-xs h-8 text-left">
+      By subscribing, you agree to our{" "}
+      <a href="/privacy" className="underline">
+        Privacy Policy
+      </a>{" "}
+      and{" "}
+      <a href="/terms" className="underline">
+        Terms of Service
+      </a>
+      .
+    </span>
+  );
+};
