@@ -10,14 +10,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Raleway } from "next/font/google";
 import "@/app/globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const railwayFont = Raleway({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Teleoscope",
-  description: "AI assisted qualitative analysis.",
+  description: "AI assisted qualitative analysis."
 };
 
 export default function RootLayout({
@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={railwayFont.className}>
         {children}
       </body>
     </html>
