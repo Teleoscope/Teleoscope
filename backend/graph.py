@@ -4,9 +4,6 @@ from typing import List
 import numpy as np
 import logging
 import bcrypt
-import chromadb
-from chromadb import Documents, EmbeddingFunction, Embeddings
-from chromadb.config import Settings
 import pymilvus
 
 from . import schemas
@@ -17,8 +14,7 @@ from . import projection
 from dotenv import load_dotenv
 load_dotenv()  # This loads the variables from .env
 import os
-CHROMA_HOST = os.getenv('CHROMA_HOST') 
-CHROMA_PORT = os.getenv('CHROMA_PORT') 
+
 MILVUS_HOST = os.getenv('MILVUS_HOST') 
 MILVUS_PORT = os.getenv('MILVUS_PORT') 
 MILVUS_DATABASE = os.getenv('MILVUS_DATABASE') 
@@ -424,86 +420,6 @@ def update_teleoscope_milvus(mdb: database.Database, teleoscope_node, sources: L
     
     connections.disconnect("default")
 
-    return teleoscope_node
-
-
-
-def update_teleoscope_chroma(db: database.Database, teleoscope_node, sources: List, controls: List, parameters):
-    
-    if len(controls) == 0:
-        logging.info(f"No controls included. Returning original teleoscope node.")
-        return teleoscope_node
-
-    chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=Settings(anonymized_telemetry=False))
-    logging.debug("Connected to client {chroma_client}.")
-
-    chroma_collection = chroma_client.get_collection(db.name)
-    logging.debug("Found collection {chroma_colection}.")
-
-    control_oids = utils.get_oids(db, controls)
-
-    chroma_results = chroma_collection.get(ids=[str(control) for control in list(set(control_oids))], include=["embeddings"])
-    control_vectors = [np.array(v) for v in chroma_results["embeddings"]]
-    logging.debug("Found vectors {control_vectors} for controls {controls}.")
-
-    search_vector = np.average(control_vectors, axis=0)
-    logging.debug("Search vector is: {search_vector}.")
-
-    source_map = []
-    doclists = []
-    
-    if len(sources) == 0:
-        distance = 0.5
-        if "distance" in parameters:
-            distance = parameters["distance"]
-        
-        # Get results until distance has been met
-        n_results = 64
-        results = chroma_collection.query(query_embeddings=[list(search_vector)], n_results=n_results, include=["distances"])
-        while results["distances"][0][-1] < distance:
-            n_results = n_results * 2
-            results = chroma_collection.query(query_embeddings=[list(search_vector)], n_results=n_results, include=["distances"])    
-
-        # Cut results off at distance max
-        index = utils.binary_search(results["distances"][0], distance)
-        ranks = zip(results["ids"][0][0:index], results["distances"][0][0:index])
-        doclists.append({ "ranked_documents": list(ranks), "type": "All"})
-
-    else:
-        for source in sources:
-            match source["type"]:
-                case "Document":
-                    oids = [source["id"]]
-                    results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
-                    source_map.append((source, [ObjectId(oid) for oid in results["ids"]], results["embeddings"]))
-                case "Group":
-                    group = db.groups.find_one({"_id": source["id"]})
-                    oids = group["history"][0]["included_documents"]
-                    results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
-                    source_map.append((source, [ObjectId(oid) for oid in results["ids"]], results["embeddings"]))
-                case "Search":
-                    search = db.searches.find_one({"_id": source["id"]})
-                    cursor = db.documents.find(utils.make_query(search["history"][0]["query"]),projection={ "_id": 1})
-                    oids = [d["_id"] for d in list(cursor)]
-                    results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
-                    source_map.append((source, [ObjectId(oid) for oid in results["ids"]], results["embeddings"]))
-                case "Union" | "Difference" | "Intersection" | "Exclusion":
-                    node = db.graph.find_one({"_id": source["id"]})
-                    node_doclists = node["doclists"]
-                    for doclist in node_doclists:
-                        oids = [d[0] for d in doclist["ranked_documents"]]
-                        results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
-                        source_map.append((source, [ObjectId(oid) for oid in results["ids"]], results["embeddings"]))
-                case "Note":
-                    pass
-
-        for source, source_oids, source_vecs in source_map:
-            ranks = utils.rank(control_vectors, source_oids, source_vecs)
-            source["ranked_documents"] = ranks
-            doclists.append(source)
-
-    teleoscope_node["doclists"] = doclists
-    
     return teleoscope_node
 
 

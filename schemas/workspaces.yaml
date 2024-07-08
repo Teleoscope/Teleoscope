@@ -32,9 +32,16 @@ properties:
         bsonType: bool
         description: whether a new open document opens expanded or not
 
+  notes:
+    bsonType: array
+    description: all notes that are part of this workspace
+    items:
+      bsonType: objectId
+      description: a note in this workspace
+
   workflows:
-      bsonType: array
-      description: all workflows that are part of this workspace
-      items:
-        bsonType: objectId
-        description: a workflow for this workspace
+    bsonType: array
+    description: all workflows that are part of this workspace
+    items:
+      bsonType: objectId
+      description: a workflow for this workspace

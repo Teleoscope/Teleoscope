@@ -17,10 +17,7 @@ from json import JSONEncoder
 from typing import List
 import datetime
 import unicodedata
-import chromadb
-from chromadb import Documents, EmbeddingFunction, Embeddings
-from chromadb.config import Settings
-from chromadb.utils import embedding_functions
+
 
 
 # local files
@@ -46,7 +43,7 @@ RABBITMQ_HOST = os.getenv('RABBITMQ_HOST')
 MONGODB_USERNAME = os.getenv('MONGODB_USERNAME')
 MONGODB_PASSWORD = os.getenv('MONGODB_PASSWORD') 
 MONGODB_HOST = os.getenv('MONGODB_HOST') 
-MONGODB_AUTHT = os.getenv('MONGODB_AUTHT')
+MONGODB_OPTIONS = os.getenv('MONGODB_OPTIONS')
 MONGODB_REPLICASET = os.getenv('MONGODB_REPLICASET')
 
 CHROMA_HOST = os.getenv('CHROMA_HOST') 
@@ -66,7 +63,7 @@ def make_client():
         f'{MONGODB_USERNAME}:'
         f'{MONGODB_PASSWORD}@'
         f'{MONGODB_HOST}/?'
-        f'{MONGODB_AUTHT}'
+        f'{MONGODB_OPTIONS}'
     )
     client = MongoClient(
         connect_str, 
@@ -172,10 +169,6 @@ def rank_document_ids_by_similarity(documents_ids, scores):
     return sorted([document_id for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
 
 
-def get_chroma_client():
-    return chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=Settings(anonymized_telemetry=False))
-
-
 def get_embeddings(dbstring, oids):
     # chroma_client = get_chroma_client()
     # chroma_collection = chroma_client.get_collection(dbstring)
@@ -195,13 +188,6 @@ def get_embeddings(dbstring, oids):
     results = milvus_collection.query(expr=expression, output_fields=["text_vector"])
 
     return [res["text_vector"] for res in results]
-
-
-def get_documents_chromadb(dbstring, limit):
-    chroma_client = get_chroma_client()
-    chroma_collection = chroma_client.get_collection(dbstring)
-    results = chroma_collection.get(include=["embeddings"], limit=limit)
-    return results
 
 
 def get_documents_milvus(dbstring, limit):
@@ -481,20 +467,6 @@ def get_vectors(db: database.Database, controls, ids, all_vectors):
     out_vecs = filtered_vecs + note_vecs
     logging.info(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
     return out_vecs
-
-
-def add_chromadb(dbstring, ids=[], texts=[], metadatas=None):
-    chroma_client = get_chroma_client()
-    default_ef = embedding_functions.DefaultEmbeddingFunction()
-    chroma_collection = chroma_client.get_collection(dbstring, embedding_function=default_ef)
-    chroma_collection.add(ids=[str(id) for id in ids], documents=texts, metadatas=metadatas)
-
-
-def update_chromadb(dbstring, ids=[], texts=[], metadatas=None):
-    chroma_client = get_chroma_client()
-    default_ef = embedding_functions.DefaultEmbeddingFunction()
-    chroma_collection = chroma_client.get_collection(dbstring, embedding_function=default_ef)
-    chroma_collection.update(ids=[str(id) for id in ids], documents=texts, metadatas=metadatas)
 
 
 def sanitize_db_name(name):

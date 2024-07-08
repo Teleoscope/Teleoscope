@@ -7,6 +7,7 @@ required:
   - nodes
   - edges
   - bookmarks
+  - notes
   - selection
   - settings
 properties:
@@ -25,30 +26,6 @@ properties:
     items:
       bsonType: object
       description: a node in the workflow
-      required:
-        - id
-        - position
-        - data
-      properties:
-        id:
-          bsonType: string
-          description: the id of the node
-        position:
-          bsonType: object
-          description: the x-y coordinates of the node on the workflow
-          required:
-            - x
-            - y
-          properties:
-            x:
-              bsonType: int
-              description: the x-coordinate of the node on the workflow
-            y:
-              bsonType: int
-              description: the y-coordinate of the node on the workflow
-        data:
-          bsonType: object
-          description: the data of the object
   edges:
     bsonType: array
     description: the edges in the workflow
@@ -61,7 +38,7 @@ properties:
     description: currently bookmarked documents
     items:
       bsonType: objectId
-      description: the mongodb oid of the bookmarked document
+      description: the mongodb oid of the bookmarked document    
 
   selection:
     bsonType: object
@@ -73,15 +50,10 @@ properties:
       nodes:
         bsonType: array
         description: an array of selected nodes by id
-        items:
-          bsonType: string
-          description: selected node ids
       edges:
         bsonType: array
         description: an array of selected edges by id
-        items: 
-          bsonType: string
-          description: selected edge ids
+
   
   settings:
     bsonType: object
