@@ -2,10 +2,9 @@ import DemoCTA from "@/components/landing/DemoCTA";
 import Footer from "@/components/landing/Footer";
 import HowItWorksInfoCards from "@/components/landing/HowItWorksInfoCards";
 
-export default function Home() {
+export default function About() {
   return (
     <main>
-      {/* <LandingPageHero /> */}
       <HowItWorksInfoCards />
       <DemoCTA />
       <Footer />

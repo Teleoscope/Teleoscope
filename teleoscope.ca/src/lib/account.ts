@@ -81,8 +81,8 @@ export default async function initialize_user(
             team: team_result.insertedId,
             workflows: [],
             settings: {
-                document_height: 10,
-                document_width: 10,
+                document_height: 35,
+                document_width: 100,
                 expanded: false
             }
         };
@@ -104,6 +104,7 @@ export default async function initialize_user(
             label: 'Default workflow',
             nodes: [],
             edges: [],
+            notes: [],
             bookmarks: [],
             selection: {
                 nodes: [],
@@ -177,5 +178,6 @@ export default async function initialize_user(
         throw error;
     } finally {
         await session.endSession();
+        mongo_client.close()
     }
 }

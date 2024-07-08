@@ -20,8 +20,16 @@ export default function Projection({ id }) {
   const dispatch = useAppDispatch()
 
   // Use SWR hook for data fetching
-  const { data: projection } = useSWRF(`graph/${projectionId}`);
+  const { data: projection, isLoading, error } = useSWRF(`/api/graph/${projectionId}`);
   
+  if (isLoading) {
+    return <>Loading...</>
+  }
+
+  if (error) {
+    return  <>Error...</>
+  }
+
   // Toggle group separation state and update backend
   const ToggleCollapse = () => {
     const updateValue = (event, newValue) => dispatch(updateNode({

@@ -8,16 +8,17 @@ import {
 } from "@mui/material";
 import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useSWRF } from "@/lib/swr";
 
 export default function NotesViewer({ id }) {
   
-  const { data: note } = useSWRF(`note/${id}`);
-  const settings = useAppSelector((state) => state.appState.workflow.settings);
+  const { data: note } = useSWRF(`/api/note/${id}`);
+  const { settings } = useAppSelector((state) => state.appState.workspace);
   const wdefs = useWindowDefinitions();
 
   return (
     <Accordion
-      defaultExpanded={settings.defaultExpanded}
+      defaultExpanded={settings?.expanded}
       disableGutters={true}
       square={true}
     >

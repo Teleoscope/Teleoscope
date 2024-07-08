@@ -1,14 +1,12 @@
 import React from 'react';
 
 // material ui
-import { Divider, Menu, MenuItem, Stack, Typography } from '@mui/material';
+import { Menu, MenuItem, Stack, Typography } from '@mui/material';
 
 import { AccountCircle } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 
 import LogoutIcon from '@mui/icons-material/Logout';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import InfoIcon from '@mui/icons-material/Info';
 import { useUserContext } from '@/context/UserContext';
 import Link from 'next/link';
 
@@ -24,6 +22,7 @@ export default function TopBar({
     color: string;
 }) {
     const { userId } = useUserContext();
+
     const settings = {
         color: '#FF0000'
     };
@@ -72,20 +71,20 @@ export default function TopBar({
                             setOpenMenu(false);
                         }}
                     >
-                        <MenuItem>
+                        {/* <MenuItem>
                             <Link href={'/dashboard'}>
                                 <DashboardIcon sx={{ marginRight: '0.5em' }} />
                                 Go to Dashboard
                             </Link>
                         </MenuItem>
                         <MenuItem>
-                            <Link href={'/documentation'}>
+                            <Link href={'/resources'}>
                                 <InfoIcon sx={{ marginRight: '0.5em' }} />
-                                Go to Documentation
+                                Go to Resources
                             </Link>
                         </MenuItem>
 
-                        <Divider />
+                        <Divider /> */}
                         <MenuItem>
                             <Link href={'/signout'}>
                                 <LogoutIcon sx={{ marginRight: '0.5em' }} />

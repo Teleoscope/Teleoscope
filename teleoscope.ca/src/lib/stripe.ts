@@ -43,7 +43,8 @@ export async function get_stripe(): Promise<Stripe> {
  */
 export async function recreate_products() {
     const stripe = await get_stripe();
-    const db = (await client()).db();
+    const mongo_client = await client();
+    const db = mongo_client.db();
 
     for (const product of Plans) {
         const product_result = await stripe.products.create({
@@ -60,6 +61,7 @@ export async function recreate_products() {
             resources: product.resources
         });
     }
+    mongo_client.close()
 }
 
 
@@ -92,13 +94,17 @@ export async function resolve_subscriptions_by_user_id(user_id: string) {
 async function getAccountByUserId(userId: string) {
     const mongo_client = await client();
     const db = mongo_client.db();
-    return await db.collection('accounts').findOne({ "users.owner": userId });
+    const result = await db.collection('accounts').findOne({ "users.owner": userId });
+    mongo_client.close()
+    return result
 }
 
 async function getAccountByStripeId(customer_id: string) {
     const mongo_client = await client();
     const db = mongo_client.db();
-    return await db.collection('accounts').findOne({ stripe_id: customer_id });
+    const result = await db.collection('accounts').findOne({ stripe_id: customer_id });
+    mongo_client.close()
+    return result
 }
 
 async function accumulateResources(customer_id: string): Promise<Products> {
@@ -149,6 +155,8 @@ async function updateAccountResources(account: ObjectId, accumulated_resources: 
             }
         }
     );
+
+    mongo_client.close()
 
     if (!account_update_result) {
         throw new Error(`Error updating account for Teleoscope account: ${account}`);

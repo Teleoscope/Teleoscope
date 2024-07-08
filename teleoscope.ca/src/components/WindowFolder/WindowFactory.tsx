@@ -11,7 +11,7 @@ export default function WindowFactory({ windata: w, ...props }) {
 
   const key = wdefs.apikeymap()[w.type];
   
-  const { data } = useSWRF(`${key}/${oid}`);
+  const { data } = useSWRF(`/api/${key}/${oid}`);
 
   if (w.type == "FABMenu") {
     return <div>{wdefs.definitions()[w.type].component(w, id, "#FFFFFF")}</div>;

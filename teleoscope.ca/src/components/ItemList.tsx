@@ -15,7 +15,7 @@ const GroupLabel = ({ index, data, callback}) => {
   const group = data[index];
   const key = wdefs.getAPIRoute(group.type);
 
-  const { data: item } = useSWRF(`${key}/${group.id}`);
+  const { data: item } = useSWRF(`/api/${key}/${group.id}`);
 
   const title = (type) => {
     if (type === "Document") {

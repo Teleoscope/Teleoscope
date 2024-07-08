@@ -26,12 +26,26 @@ export default function Workflows(props) {
   const color = useAppSelector((state) => state.appState.workflow.settings.color);
   
   const workflow_id = useAppSelector((state) => state.appState.workflow._id);
-  const workspace_id = useAppSelector((state) => state.appState.workspace._id);
-  
-  const { data: workflows } = useSWRF(`/workflows/${workspace_id}`)
-  
+  const { workspace } = useAppSelector((state) => state.appState);
 
+  if (!workspace) {
+    throw Error("Big fucking problem")
+  }
+  
+  const { data: workflows, isLoading, error } = useSWRF(`/api/workflows?workflows=${workspace.workflows?.join(',')}`)
   const [value, setValue] = useState(null);
+  
+  if (isLoading) {
+    return <>Loading...</>
+  }
+
+  if (error) {
+    return <>Error</>
+  }
+
+  console.log("workflows", workflows)
+
+  
 
   const keyChange = (e) => {
     if (e.code === "Enter") {
@@ -67,22 +81,22 @@ export default function Workflows(props) {
             <div key={workflow._id} style={styles}>
               <ListItem
                 sx={{
-                  border: workflow._id === workflow_id ? `1px solid ${workflow.history[0].color}` : "",
+                  border: workflow._id === workflow_id ? `1px solid ${workflow.settings.color}` : "",
                 }}
               >
                 <Stack sx={{ width: "100%" }} direction="row" alignItems="center" justifyContent="space-between">
                   <Stack direction="row" alignItems="center">
                     <ListItemIcon>
-                      <a href={`/workspace/${workspace_id}/${workflow._id}`}>
+                      <a href={`/workspace/${workspace._id}/${workflow._id}`}>
                       
                         {wdefs.definitions()["Workflows"].icon([
-                          { color: workflow.history[0].settings.color },
-                          { "& .MuiChip-icon": { color: workflow.history[0].settings.color } },
+                          { color: workflow.settings.color },
+                          { "& .MuiChip-icon": { color: workflow.settings.color } },
                         ])}
                       </a>
                     </ListItemIcon>
                     <EditableText
-                      initialValue={workflow.history[0].label}
+                      initialValue={workflow.label}
                       callback={(label) =>
                         dispatch(relabelWorkflow({ relabeled_workflow_id: workflow_id, label: label }))
                       }

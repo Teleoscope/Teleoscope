@@ -1,10 +1,19 @@
-import axios from 'axios';
+"use server";
+// import axios from 'axios';
+// import send from './amqp';
 
-export default async function post(data) {
-  console.log("posting", data)
+interface Data {
+  task: any,
+  args: any
+}
+
+export default async function post(data: Data) {
+  // console.log("posting", data)
+  // send(data.task, data.args)
   try {
-    const response = await axios.post("/api/client", data);
-    console.log(response.data);
+
+    // const response = await axios.post("/api/client", data);
+    // console.log("response", response.data);
   } catch (error) {
     console.error(error);
   }

@@ -1,6 +1,4 @@
 'use client';;
-import { useState } from 'react';
-import HelpOverlay from '@/components/HelpOverlay';
 import {
     ResizableHandle,
     ResizablePanel,
@@ -8,14 +6,19 @@ import {
 } from '@/components/ui/resizable';
 import TopBar from '@/components/Sidebar/TopBar';
 import TeleoscopeLogo from '@/components/TeleoscopeLogo';
-import { DEFAULT_DRAWER_WIDTH, DEFAULT_GREY, DEFAULT_MIN_WIDTH } from '@/lib/defaults';
+import {
+    DEFAULT_DRAWER_WIDTH,
+    DEFAULT_GREY,
+    DEFAULT_MIN_WIDTH
+} from '@/lib/defaults';
 import SidebarAccordion from './Sidebar/Accordion';
 import { useAppSelector } from '@/lib/hooks';
 import { AppState } from '@/services/app';
-
+import Workflow from './Workflow/Workflow';
+import HelpOverlay from './HelpOverlay';
 
 interface WorkspaceProps {
-    workspace: string,
+    workspace: string;
     drawerWidth?: number;
     minWidth?: number;
     logoColor?: string;
@@ -35,27 +38,30 @@ export default function Workspace({
     topBarColor = DEFAULT_GREY,
     compact = false
 }: WorkspaceProps) {
-    const [width, setWidth] = useState(drawerWidth);
 
-    const { workspace, workflow }: AppState = useAppSelector((state) => state.appState);
-    
+    const { workspace, workflow }: AppState = useAppSelector(
+        (state) => state.appState
+    );
+
     if (!workflow || !workspace) {
-        return <>Loading...</>
+        return <>Loading...</>;
     }
-    
-    
+
     return (
-        <>
+        <div className="h-dvh" >
             <HelpOverlay />
             <ResizablePanelGroup
                 direction="horizontal"
                 className="flex flex-row overflow-hidden"
+
             >
                 <ResizablePanel
                     className="flex flex-col shadow-sm bg-white border w-full"
                     maxSize={100}
+                    defaultSize={10}
+                    collapsible={true}
                 >
-                    {/* <Flow drawerWidth={width} /> */}
+                    <Workflow />
                 </ResizablePanel>
                 <ResizableHandle
                     withHandle
@@ -77,7 +83,7 @@ export default function Workspace({
                             <TopBar
                                 compact={compact}
                                 label={workspace.label}
-                                team={workspace.team + ""}
+                                team={workspace.team + ''}
                                 color={topBarColor}
                             />
                         </div>
@@ -85,6 +91,6 @@ export default function Workspace({
                     </div>
                 </ResizablePanel>
             </ResizablePanelGroup>
-        </>
+        </div>
     );
 }

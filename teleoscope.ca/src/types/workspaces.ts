@@ -5,6 +5,7 @@ export interface Workspaces {
   label: string;
   team: ObjectId;
   settings?: Settings;
+  notes?: Array<ObjectId>;
   workflows?: Array<ObjectId>;
 }
 

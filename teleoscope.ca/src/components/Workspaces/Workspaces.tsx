@@ -16,7 +16,7 @@ export default function Workspaces() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-[auto-fill,minmax(0,300px)] gap-4 w-full grid-flow-row ">
         {teams?.map((team: Teams) => (
-          <WorkspaceGroup team={team}></WorkspaceGroup>
+          <WorkspaceGroup key={team._id?.toString()} team={team}></WorkspaceGroup>
         ))}
       </div>
     </div>

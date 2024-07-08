@@ -58,17 +58,12 @@ function Flow(props) {
   const workflow_id = useAppSelector((state) => state.appState.workflow._id);
   
   const { data, status } = useSession();
+  
   const userid = data?.user?.id;
-  
-  
-
   const bookmarks = useAppSelector((state: RootState) => state.appState.workflow.bookmarks);
-
-  const settings = useAppSelector((state) => state.appState.workflow.settings);
-
+  const { workflow, workspace } = useAppSelector((state) => state.appState);
   const { nodes, edges } = useAppSelector((state) => state.appState.workflow);
-
-  const { data: session } = useSWRF(`sessions/${workflow_id}`);
+  const { data: session } = useSWRF(`/api/sessions/${workflow_id}`);
   const session_history_item = session?.history[0];
 
 
@@ -199,14 +194,14 @@ function Flow(props) {
       dispatch(makeNode({
         oid   : id,
         type  : type,
-        width : settings.default_document_width,
-        height: settings.default_document_height,
+        width : workspace.settings?.document_width,
+        height: workspace.settings?.document_height,
         x     : position.x,
         y     : position.y,
         index : index 
       }));
     },
-    [reactFlowInstance, settings]
+    [reactFlowInstance, workspace]
   );
 
   

@@ -6,8 +6,6 @@ import { get_stripe, resolve_subscriptions_by_customer_id } from '@/lib/stripe';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-
-
 export async function POST(request: NextRequest) {
     const mongo_client = await client()
     const db = mongo_client.db()

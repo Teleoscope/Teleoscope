@@ -24,8 +24,6 @@ export default function WorkspacePage({
     
 
     
-    return (
-        <Workspace workspace={params.slug} />
-)
+    return <Workspace workspace={params.slug} />
     
 }

@@ -19,7 +19,7 @@ export default function GroupSelector(props) {
 
   const workflow_id = useAppSelector((state) => state.appState.workflow._id);
 
-  const { data: groups } = useSWRF(`sessions/${workflow_id}/groups`)
+  const { data: groups } = useSWRF(`/api/sessions/${workflow_id}/groups`)
 
   const groups_this_document_belongs_to = groups
     ? groups.filter((g) => {

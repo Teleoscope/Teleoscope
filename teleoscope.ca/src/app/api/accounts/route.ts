@@ -1,32 +1,32 @@
-import { validateRequest } from "@/lib/auth";
-import { client } from "@/lib/db";
-import { NextRequest } from "next/server";
+import { validateRequest } from '@/lib/auth';
+import { dbOp } from '@/lib/db';
+import { Db, MongoClient } from 'mongodb';
+import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
-    const mongo_client = await client()
-    const db = mongo_client.db()
-    
-    const { user, session } = await validateRequest()
-
+    const { user, session } = await validateRequest();
     if (!user) {
-        mongo_client.close()
-        return Response.json("No user signed in.");
+        return Response.json('No user signed in.');
     }
 
-    const result = await db.collection("accounts").find({
-        $or: [
-            { "users.owner": user.id },
-            {
-                "users.admins": {
-                    $elemMatch: {
-                        "permission.write": true,
-                        "_id": user.id
+    const result = await dbOp(async (client: MongoClient, db: Db) => {
+        return await db
+            .collection('accounts')
+            .find({
+                $or: [
+                    { 'users.owner': user.id },
+                    {
+                        'users.admins': {
+                            $elemMatch: {
+                                'permission.write': true,
+                                _id: user.id
+                            }
+                        }
                     }
-                }
-            }
-        ]
-    }).toArray();
-    
-    mongo_client.close()
+                ]
+            })
+            .toArray();
+    });
+
     return Response.json(result);
 }

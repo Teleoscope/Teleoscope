@@ -9,7 +9,7 @@ export default function Cluster({ id }) {
   // Initialize the SWR hook for data fetching
   
   // Use the SWR hook to fetch the cluster data based on the clusterId
-  const { data: cluster } = useSWRF(`clusters/${clusterId}`);
+  const { data: cluster } = useSWRF(`/api/clusters/${clusterId}`);
   
   // Format the data for the DocumentList component
   // Check if cluster history exists and map the documents to the required format

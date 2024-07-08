@@ -1,12 +1,12 @@
 import AccordionSection from '@/components/Sidebar/AccordionSection';
 import SelectionViewer from '@/components/Sidebar/SelectionViewer';
-import Uploader from '@/components/Uploader';
 import { useWindowDefinitions } from '@/lib/hooks';
 import Workflows from './WorkflowViewer';
 import Groups from '../Groups/Groups';
 import Bookmarks from '../Bookmarks';
 import Notes from '../Notes/Notes';
 import Settings from '../Settings';
+import DataHandler from './DataHandler';
 
 export default function SidebarAccordion({ compact = false }) {
     const wdefs = useWindowDefinitions();
@@ -14,7 +14,7 @@ export default function SidebarAccordion({ compact = false }) {
     // const selection = useAppSelector((state) => state.appState.workflow.selection.nodes);
 
     const sections = [
-        { key: 'Upload', component: <Uploader />, text: 'Upload' },
+        { key: 'Data', component: <DataHandler/>, text: 'Upload' },
         // {
         //     key: 'References',
         //     component: <References />,

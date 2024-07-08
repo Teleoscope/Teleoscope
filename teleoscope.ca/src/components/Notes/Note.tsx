@@ -35,7 +35,7 @@ const useDebounce = (callback) => {
 export default function Note(props) {
   const id = props.id.split("%")[0];
   
-  const { data: note } = useSWRF(`note/${id}`, {
+  const { data: note } = useSWRF(`/api/note/${id}`, {
     onSuccess: (data, key, config) => {
         setEditorState(handleLoad(data))
     }

@@ -10,37 +10,25 @@ import { demoStore } from "@/lib/store";
 
 import Bookmarks from "@/components/Bookmarks";
 
-import { SWR, swrContext } from "@/lib/swr";
-import { Stomp, StompContext } from "@/lib/Stomp";
 import ReactFlow, {
-    MiniMap,
-    Controls,
-    Background,
-    addEdge,
-    applyEdgeChanges,
-    applyNodeChanges,
+  MiniMap,
+  Controls,
+  Background,
+  addEdge,
+  applyEdgeChanges,
+  applyNodeChanges,
 } from "reactflow";
 import { setSelection } from "@/actions/appState";
 import WindowNode from "@/components/Nodes/WindowNode";
 import SelectionViewer from "@/components/Sidebar/SelectionViewer";
-import {
-    account_fights_teleoscope,
-    blocking_doc,
-    blocking_teleoscope,
-    taking_doc,
-    taking_teleoscope,
-} from "@/components/Demo/demoTeleoscopes";
 import WindowDefinitions from "../WindowFolder/WindowDefinitions";
-// API fetcher for SWR global config
-//const fetcher = (...args: Parameters<typeof fetch>) => fetch(...args).then((res) => res.json())
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
+
 
 const wdefs = new WindowDefinitions({settings: {color: "#D3D3D3"}})
 const nodeTypes = { windowNode: WindowNode, ...wdefs.nodeTypeDefs()}
-  
+
 export default function Demo(props) {
-  const mySWR = new SWR("aita");
-  const client = Stomp.getFakeClient();
+  
   const reactFlowWrapper = useRef(null);
   const exampleHeight = "450px";
 
@@ -572,7 +560,7 @@ export default function Demo(props) {
 
   };
 
-  if (props.type == "Teleoscope") {
+  if (props.type == "Rank") {
     const nodes = [doc1, doc2, teleoscopeNode];
     return (
       <Providers>

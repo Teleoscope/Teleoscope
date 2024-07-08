@@ -9,8 +9,8 @@ import { useSWRF } from "@/lib/swr";
 
 export default function OperationViewer({id, type}) {
   
-  const { data: operation } = useSWRF(`graph/${id}`);
-  const settings = useAppSelector((state) => state.appState.workflow.settings);
+  const { data: operation } = useSWRF(`/api/graph/${id}`);
+  const { settings } = useAppSelector((state) => state.appState.workspace);
   const wdefs = useWindowDefinitions();
   
   const data = operation?.doclists
@@ -20,7 +20,7 @@ export default function OperationViewer({id, type}) {
 
   return (
     <Accordion
-      defaultExpanded={settings.defaultExpanded}
+      defaultExpanded={settings?.expanded}
       disableGutters={true}
       square={true} 
     >

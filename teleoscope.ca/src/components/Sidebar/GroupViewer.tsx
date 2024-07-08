@@ -11,7 +11,7 @@ import { useSWRF } from "@/lib/swr";
 export default function DocViewer(props) {
    
   const { data: group } = useSWRF(`groups/${props.id}`);
-  const settings = useAppSelector((state) => state.appState.workflow.settings);
+  const { settings } = useAppSelector((state) => state.appState.workspace);
   const data = group?.history[0].included_documents.map((p) => {
     return [p, 1.0];
   });
@@ -21,7 +21,7 @@ export default function DocViewer(props) {
 
   return (
     <Accordion
-      defaultExpanded={settings.defaultExpanded}
+      defaultExpanded={settings?.expanded}
       disableGutters={true}
       square={true}
     >
@@ -44,7 +44,6 @@ export default function DocViewer(props) {
               [
                 SaveDocx,
                 {
-                  swr: swr,
                   data: data,
                   group: group,
                 },
@@ -52,7 +51,6 @@ export default function DocViewer(props) {
               [
                 CopyJson,
                 {
-                  swr: swr,
                   data: data,
                   group: group,
                 },
@@ -60,7 +58,6 @@ export default function DocViewer(props) {
               [
                 CopyText,
                 {
-                  swr: swr,
                   data: data,
                   group: group,
                 },

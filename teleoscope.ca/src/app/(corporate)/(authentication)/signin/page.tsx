@@ -1,7 +1,14 @@
 import { UserAuthForm } from "@/components/Authentication";
-import { signin } from "@/lib/auth";
+import { signin, validateRequest } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
-export default function SignIn() {
+export default async function SignIn() {
+    
+  const { user } = await validateRequest();
+	if (user) {
+		return redirect("/dashboard");
+	}
+  
   return (
     <main>
       <div className="flex items-center justify-center p-4">

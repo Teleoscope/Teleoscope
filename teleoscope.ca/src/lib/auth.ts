@@ -1,5 +1,4 @@
 'use server';
-
 import { Session, User } from 'lucia';
 import { client } from '@/lib/db';
 import { cookies } from 'next/headers';
@@ -9,19 +8,18 @@ import { Argon2id } from 'oslo/password';
 import { redirect } from 'next/navigation';
 import { generateIdFromEntropySize } from 'lucia';
 import {
-  validateEmail,
-  validatePassword,
-  emailExists,
-  ActionResult,
-  errors
+    validateEmail,
+    validatePassword,
+    emailExists,
+    ActionResult,
+    errors
 } from '@/lib/validate';
 import initialize_user from '@/lib/account';
 import { resolve_subscriptions_by_user_id } from './stripe';
 import { connect } from '@/lib/lucia';
-
 /**
  * Signout
- * @returns 
+ * @returns
  */
 export async function signout() {
     const lucia = await connect();
@@ -84,8 +82,8 @@ export const validateRequest = cache(
 
 /**
  * Authenticate
- * @param userId 
- * @returns 
+ * @param userId
+ * @returns
  */
 export async function authenticate(userId: string): Promise<Session> {
     const lucia = await connect();
@@ -101,8 +99,8 @@ export async function authenticate(userId: string): Promise<Session> {
 
 /**
  * signin
- * @param formData 
- * @returns 
+ * @param formData
+ * @returns
  */
 export async function signin(formData: FormData): Promise<ActionResult> {
     const email = formData.get('email');
@@ -118,7 +116,8 @@ export async function signin(formData: FormData): Promise<ActionResult> {
         return errors.password;
     }
 
-    const db = (await client()).db();
+    const mongo_client = await client();
+    const db = mongo_client.db();
     const existingUser = await db
         .collection('users')
         .findOne({ emails: [email] });
@@ -132,6 +131,7 @@ export async function signin(formData: FormData): Promise<ActionResult> {
         // Since protecting against this is non-trivial,
         // it is crucial your implementation is protected against brute-force attacks with login throttling etc.
         // If usernames are public, you may outright tell the user that the username is invalid.
+        mongo_client.close();
         return errors.incorrect;
     }
 
@@ -147,6 +147,7 @@ export async function signin(formData: FormData): Promise<ActionResult> {
     );
 
     if (!validPassword) {
+        mongo_client.close();
         return errors.incorrect;
     }
 
@@ -158,13 +159,14 @@ export async function signin(formData: FormData): Promise<ActionResult> {
         existingUser._id.toString()
     );
 
+    mongo_client.close();
     return redirect('/dashboard');
 }
 
 /**
  * signup
- * @param formData 
- * @returns 
+ * @param formData
+ * @returns
  */
 export async function signup(formData: FormData): Promise<ActionResult> {
     const email = formData.get('email');

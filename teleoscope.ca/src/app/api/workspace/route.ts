@@ -1,9 +1,9 @@
 import { validateRequest } from '@/lib/auth';
-import { client } from '@/lib/db';
 import { Workspaces } from '@/types/workspaces';
 import { ObjectId } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';
-
+import { dbOp } from "@/lib/db";
+import { Db, MongoClient } from "mongodb";
 export async function GET(request: NextRequest) {
     
     
@@ -20,14 +20,12 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: 'No user signed in.' });
     }
 
-    const mongo_client = await client()
-    const db = mongo_client.db()
+    const result = await dbOp(async (client: MongoClient, db: Db) => {
 
-    const result = await db
+    return await db
         .collection<Workspaces>('workspaces')
         .findOne({_id: workspace});
-
-    mongo_client.close()
+    })
 
     return NextResponse.json(result);
 }

@@ -4,31 +4,33 @@ import { Teams } from '@/types/teams';
 import { Workspaces } from '@/types/workspaces';
 import { ObjectId } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';
+import { dbOp } from '@/lib/db';
+import { Db, MongoClient } from 'mongodb';
 
 export async function GET(request: NextRequest) {
-    const db = (await client()).db();
     const { user } = await validateRequest();
 
     if (!user) {
         return NextResponse.json({ message: 'No user signed in.' });
     }
-
-    const result = await db
-        .collection('workspaces')
-        .find({
-            $or: [
-                { owner: user },
-                {
-                    users: {
-                        $elemMatch: {
-                            'permissions.read': true,
-                            _id: user
+    const result = await dbOp(async (client: MongoClient, db: Db) => {
+        return await db
+            .collection('workspaces')
+            .find({
+                $or: [
+                    { owner: user },
+                    {
+                        users: {
+                            $elemMatch: {
+                                'permissions.read': true,
+                                _id: user
+                            }
                         }
                     }
-                }
-            ]
-        })
-        .toArray();
+                ]
+            })
+            .toArray();
+    });
 
     return NextResponse.json(result);
 }
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     try {
         await mongo_session.withTransaction(async () => {
-            const data: { team: string, label: string } = await request.json();
+            const data: { team: string; label: string } = await request.json();
 
             const { user } = await validateRequest();
 
@@ -50,15 +52,15 @@ export async function POST(request: NextRequest) {
                 throw new Error('No user signed in.');
             }
 
-            const team = new ObjectId(data["team"]);
-            const label = data["label"];
+            const team = new ObjectId(data['team']);
+            const label = data['label'];
 
             const workspace: Workspaces = {
                 label: label,
                 team: team
             };
 
-            console.log("workspace", workspace);
+            console.log('workspace', workspace);
 
             const workspace_result = await db
                 .collection<Workspaces>('workspaces')
@@ -79,12 +81,17 @@ export async function POST(request: NextRequest) {
             );
 
             if (team_result.matchedCount === 0) {
-                throw new Error("Team update failed.");
+                throw new Error('Team update failed.');
             }
         });
     } catch (error) {
-        transactionError = (error as Error);
-        console.error('Transaction error:', transactionError ? transactionError.message : "Error during transaction.");
+        transactionError = error as Error;
+        console.error(
+            'Transaction error:',
+            transactionError
+                ? transactionError.message
+                : 'Error during transaction.'
+        );
     } finally {
         if (transactionError) {
             await mongo_session.abortTransaction();
@@ -94,7 +101,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (transactionError) {
-        return NextResponse.json({ message: 'Error', error: transactionError.message });
+        return NextResponse.json({
+            message: 'Error',
+            error: transactionError.message
+        });
     } else {
         return NextResponse.json({ message: 'Success' });
     }

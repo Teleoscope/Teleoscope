@@ -8,10 +8,15 @@
             "nodes",
             "edges",
             "bookmarks",
+            "notes",
             "selection",
             "settings"
         ],
         "properties": {
+            "_id": {
+                "bsonType": "objectId",
+                "description": "the MongoDB ID for this workflow"
+            },
             "workspace": {
                 "bsonType": "objectId",
                 "description": "the workspace that this workflow belongs to"
@@ -25,40 +30,7 @@
                 "description": "the nodes in the workflow",
                 "items": {
                     "bsonType": "object",
-                    "description": "a node in the workflow",
-                    "required": [
-                        "id",
-                        "position",
-                        "data"
-                    ],
-                    "properties": {
-                        "id": {
-                            "bsonType": "string",
-                            "description": "the id of the node"
-                        },
-                        "position": {
-                            "bsonType": "object",
-                            "description": "the x-y coordinates of the node on the workflow",
-                            "required": [
-                                "x",
-                                "y"
-                            ],
-                            "properties": {
-                                "x": {
-                                    "bsonType": "int",
-                                    "description": "the x-coordinate of the node on the workflow"
-                                },
-                                "y": {
-                                    "bsonType": "int",
-                                    "description": "the y-coordinate of the node on the workflow"
-                                }
-                            }
-                        },
-                        "data": {
-                            "bsonType": "object",
-                            "description": "the data of the object"
-                        }
-                    }
+                    "description": "a node in the workflow"
                 }
             },
             "edges": {
@@ -87,19 +59,11 @@
                 "properties": {
                     "nodes": {
                         "bsonType": "array",
-                        "description": "an array of selected nodes by id",
-                        "items": {
-                            "bsonType": "string",
-                            "description": "selected node ids"
-                        }
+                        "description": "an array of selected nodes by id"
                     },
                     "edges": {
                         "bsonType": "array",
-                        "description": "an array of selected edges by id",
-                        "items": {
-                            "bsonType": "string",
-                            "description": "selected edge ids"
-                        }
+                        "description": "an array of selected edges by id"
                     }
                 }
             },

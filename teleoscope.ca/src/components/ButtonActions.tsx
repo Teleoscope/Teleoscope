@@ -11,7 +11,12 @@ export default function ButtonActions(props) {
         alignItems="center"
         style={{ margin: 0 }}
       >
-        {props.inner.map(([Component, props]) => Component(props))}
+        {props.inner.map(([Component, componentProps], index) => {
+          console.log("component", Component, componentProps, index)
+          return (
+            <Component key={componentProps.id || index} {...componentProps} />
+          )
+        })}
       </Stack>
       <Divider />
     </>

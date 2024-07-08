@@ -1,20 +1,18 @@
 import { validateRequest } from "@/lib/auth";
-import { client } from "@/lib/db";
+import { dbOp } from "@/lib/db";
+import { Db, MongoClient } from "mongodb";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
-    const mongo_client = await client()
-    const db = mongo_client.db()
-    
     const { user, session } = await validateRequest()
 
+    const result = await dbOp(async (client: MongoClient, db: Db) => {
+        return await db.collection("accounts").findOne(
+            {
+                "users.owner": user?.id
+            }
+        ) 
+    })
 
-    const result = await db.collection("accounts").findOne(
-        {
-            "users.owner": user?.id
-        }
-    ) 
-
-    mongo_client.close()
     return Response.json(result);
 }

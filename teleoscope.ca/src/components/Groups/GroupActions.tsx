@@ -9,10 +9,10 @@ import { utils, writeFile } from "xlsx";
 import { BsFiletypeXlsx } from "react-icons/bs";
 import { BsFiletypeDocx } from "react-icons/bs";
 
-const fetchdocs = async ({ data, swr }) => {
+const fetchdocs = async ({ data }) => {
   let docs = [];
   for (const [pid, s] of data) {
-    const response = await fetch(`/api/${swr.subdomain}/document/${pid}`).then(
+    const response = await fetch(`/api/document/${pid}`).then(
       (res) => res.json() 
     );
     docs = docs.concat([response]);

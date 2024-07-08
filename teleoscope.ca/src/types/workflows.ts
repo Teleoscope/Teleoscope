@@ -1,30 +1,19 @@
 import { ObjectId } from "mongodb";
 
 export interface Workflows {
+  _id?: ObjectId;
   workspace: ObjectId;
   label: string;
-  nodes: Array<Node>;
+  nodes: Array<any>;
   edges: Array<any>;
   bookmarks: Array<ObjectId>;
   selection: Selection;
   settings: Settings;
 }
 
-interface Node {
-  id: string;
-  position: Position;
-  data: any;
-}
-
-interface Position {
-  x: number;
-  y: number;
-}
-
-
 interface Selection {
-  nodes: Array<string>;
-  edges: Array<string>;
+  nodes: any;
+  edges: any;
 }
 
 

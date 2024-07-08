@@ -1,6 +1,8 @@
 import { client } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';
+import { Db, MongoClient } from "mongodb";
+import { dbOp } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
 
@@ -9,14 +11,14 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Email parameter is required' }, { status: 400 });
     }
 
-    const mongo_client = await client()
-    const db = mongo_client.db()
-    
+    const result = await dbOp(async (client: MongoClient, db: Db) => {
 
-    const result = await db.collection('users').findOne({
-        emails: email
-    });
-    mongo_client.close()
+        return await db.collection('users').findOne({
+            emails: email
+        });
+    
+    })
+
     
     const exists = !!result;    
     return NextResponse.json({ exists });

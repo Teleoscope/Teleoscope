@@ -2,7 +2,7 @@ import { useAppSelector } from "@/lib/hooks";
 import DocViewer from "@/components/Sidebar/DocViewer";
 import GroupViewer from "@/components/Sidebar/GroupViewer";
 import NotesViewer from "@/components/Sidebar/NotesViewer";
-import TeleoscopeViewer from "@/components/Sidebar/TeleoscopeViewer";
+import RankViewer from "@/components/Sidebar/RankViewer";
 import ProjectionViewer from "@/components/Sidebar/ProjectionViewer";
 import OperationViewer from "./OperationViewer";
 
@@ -48,13 +48,13 @@ export default function SelectionViewer({ noGroup = false }) {
           );
         }
 
-        if (node.data.type == "Teleoscope" && !noGroup) {
+        if (node.data.type == "Rank" && !noGroup) {
           return (
-            <TeleoscopeViewer
+            <RankViewer
               compact={true}
               key={node.id.split("%")[0]}
               id={node.id.split("%")[0]}
-            ></TeleoscopeViewer>
+            ></RankViewer>
           );
         }
 

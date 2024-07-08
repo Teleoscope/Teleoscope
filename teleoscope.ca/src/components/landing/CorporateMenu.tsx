@@ -12,12 +12,16 @@ const menuItems = [
   },
   {
     label: "Resources",
-    href: "https://teleoscope.ca/",
+    href: "/resources",
   },
   {
     label: "Get Started",
     href: "/signup",
     variant: "primary",
+  },
+  {
+    label: "Sign In",
+    href: "/signin",
   },
 ];
 

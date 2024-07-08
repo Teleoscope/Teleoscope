@@ -9,7 +9,7 @@
         "properties": {
             "_id": {
                 "bsonType": "objectId",
-                "description": "auto-generated MongoDB id"
+                "description": "The MongoDB ID for this workspace"
             },
             "label": {
                 "bsonType": "string",
@@ -40,6 +40,14 @@
                         "bsonType": "bool",
                         "description": "whether a new open document opens expanded or not"
                     }
+                }
+            },
+            "notes": {
+                "bsonType": "array",
+                "description": "all notes that are part of this workspace",
+                "items": {
+                    "bsonType": "objectId",
+                    "description": "a note in this workspace"
                 }
             },
             "workflows": {

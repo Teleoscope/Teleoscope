@@ -20,11 +20,11 @@ export default function Search({id, windata, color}) {
   const [query, setQuery] = useState(windata?.query ? windata.query : "");
 
   const { data: documents, isLoading: documents_loading } = useSWRF(
-    `search/${query}`
+    `/api/search?query=${query}`
   );
 
   const { data: count, isLoading: count_loading } = useSWRF(
-    `count/${query}`
+    `/api/count?query=${query}`
   );
 
   const dispatch = useDispatch();

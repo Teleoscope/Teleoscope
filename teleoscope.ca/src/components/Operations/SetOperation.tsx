@@ -31,7 +31,15 @@ export default function SetOperation({ id, windata }) {
   const [ node_id, setNodeId] = useState(id.split("%")[0]);
   
 
-  const { data: node } = useSWRF(`graph/${node_id}`);
+  const { data: node, isLoading, error } = useSWRF(`/api/graph/${node_id}`);
+  if (isLoading) {
+    return <>Loading...</>
+  }
+
+  if (error) {
+    return  <>Error...</>
+  }
+
 
   const doclists = node?.doclists;
   

@@ -46,7 +46,7 @@ const renderPopupButton = (popupId, icon, children) => (
 export default function References(props) {
     const selection = useAppSelector((state) => state.appState.workflow.selection.nodes);
     const selected = selection.nodes.filter((n) => n.data.type == 'Document');
-    const { data: document } = useSWRF(`document/${selected[0].id.split('%')[0]}`)
+    const { data: document } = useSWRF(`/api/document/${selected[0].id.split('%')[0]}`)
     const { data, status } = useSession();
     const userid = data?.user?.id;
 

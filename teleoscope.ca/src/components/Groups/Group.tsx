@@ -4,20 +4,19 @@ import DocumentList from "@/components/Documents/DocumentList";
 import ButtonActions from "@/components/ButtonActions";
 import { SaveXLSX, CopyJson, CopyText, SaveDocx } from "@/components/Groups/GroupActions";
 import Count from "@/components/Count";
+import { useSWRF } from "@/lib/swr";
 
 
 export default function Group({ id: winId, windata }) {
   const id = winId.split("%")[0];
   
-  const { group } = windata.demo ? windata.demodata : useSWRF("group", `groups/${id}`);
+  const { group } = useSWRF(`/api/group?group=${id}`);
   
   // Prepare data for the DocumentList and ButtonActions
   const data = group?.history[0].included_documents.map(doc => [doc, 1.0]);
   
   // Button actions configuration
-  const buttonActionsConfig = { swr, data, group };
-
-
+  const buttonActionsConfig = { data, group };
 
   return (
     <Stack direction="column" sx={{ height: "100%" }}>

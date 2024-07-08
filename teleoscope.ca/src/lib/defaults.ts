@@ -15,8 +15,8 @@ export const DEFAULT_WORKSPACE: Workspaces = {
     team: undefined,
     workflows: [],
     settings: {
-        document_height: 10,
-        document_width: 10,
+        document_height: 35,
+        document_width: 100,
         expanded: false
     }
 }

@@ -1,16 +1,17 @@
 import amqp from 'amqplib';
 import { v4 as uuidv4 } from 'uuid';
 
-const username = process.env.NEXT_PUBLIC_RABBITMQ_USERNAME
-const password = process.env.NEXT_PUBLIC_RABBITMQ_PASSWORD
+const username = process.env.RABBITMQ_USERNAME
+const password = process.env.RABBITMQ_PASSWORD
 const host = process.env.RABBITMQ_HOST
 const port = process.env.RABBITMQ_PORT
-const vhost = process.env.NEXT_PUBLIC_RABBITMQ_VHOST
+const vhost = process.env.RABBITMQ_VHOST
 
 const rabbitMqUrl = `amqp://${username}:${password}@${host}:${port}/${vhost}`
 
+
 async function send(task, args) {
-    const queue = `${process.env.NEXT_PUBLIC_RABBITMQ_QUEUE}`;
+    const queue = `${process.env.RABBITMQ_QUEUE}`;
     console.log("task", task)
     console.log("args", args)
     try {    

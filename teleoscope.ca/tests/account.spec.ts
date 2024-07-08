@@ -16,8 +16,10 @@ test.beforeEach(async () => {
   ) {
     throw Error("Environment variables failed to load.")
   }  
-  const db = (await client()).db()
+  const mongo_client = await client()
+  const db = mongo_client.db()
   await db.dropDatabase()
+  mongo_client.close()
 });
 
 test('successful signup', async ({ page }) => {

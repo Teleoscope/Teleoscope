@@ -25,7 +25,7 @@ export default function ProjectionPalette(props) {
   
   
   const { data: projections_raw } = useSWRF(
-    `sessions/${workflow_id}/projections`
+    `workflow?workflow=${workflow_id}&projections`
   );
 
   const projections = projections_raw?.map((p) => {

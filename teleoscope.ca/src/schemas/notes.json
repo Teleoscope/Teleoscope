@@ -1,0 +1,19 @@
+{
+    "$jsonSchema": {
+        "bsonType": "object",
+        "title": "note",
+        "required": [
+            "label"
+        ],
+        "properties": {
+            "_id": {
+                "bsonType": "objectId",
+                "description": "the id of the note"
+            },
+            "label": {
+                "bsonType": "string",
+                "description": "the label of the note"
+            }
+        }
+    }
+}

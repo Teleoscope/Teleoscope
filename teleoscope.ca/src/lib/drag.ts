@@ -30,7 +30,7 @@ export const getClosestEdge = (node, nodes, edges) => {
   
   const closestNode = nodes.filter(
     n => 
-    n.data.type === "Teleoscope"   || 
+    n.data.type === "Rank"         || 
     n.data.type === "Projection"   ||
     n.data.type === "Exclusion"    ||
     n.data.type === "Intersection" ||

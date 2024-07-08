@@ -18,7 +18,7 @@ export default function DocViewer({ id, windata }) {
   
   const { data: document } = windata?.demo
     ? windata.demodata
-    : useSWRF(`document/${id}`);
+    : useSWRF(`/api/document/${id}`);
   const settings = useAppSelector((state) => state.appState.workflow.settings);
   const wdefs = useWindowDefinitions();
 

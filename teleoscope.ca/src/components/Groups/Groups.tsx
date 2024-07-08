@@ -82,10 +82,10 @@ import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
 import randomColor from "randomcolor";
 import ButtonActions from "@/components/ButtonActions";
 import {
-    SaveXLSXAction,
-    SaveDocxAction,
-    CopyJsonAction,
-    CopyTextAction,
+  SaveXLSXAction,
+  SaveDocxAction,
+  CopyJsonAction,
+  CopyTextAction,
 } from "@/components/Groups/GroupsActions";
 import { NewItemForm } from "@/components/NewItemForm";
 import { onDragStart } from "@/lib/drag";
@@ -96,13 +96,9 @@ import { useSWRF } from "@/lib/swr";
 
 export default function Groups(props) {
   const dispatch = useAppDispatch()
-  const workflow_id = useAppSelector((state) => state.appState.workflow._id);
-  const settings = useAppSelector((state) => state.appState.workflow.settings);
+  const { _id: workflow_id, settings } = useAppSelector((state) => state.appState.workflow);
+  const { groups } = useSWRF(`/api/groups`);
 
-  const { groups } = props.demo
-    ? props.demoGroups
-    : useSWRF(`sessions/${workflow_id}/groups`);
-  const { session } = useSWRF("session", `sessions/${workflow_id}`);
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   
@@ -139,8 +135,8 @@ export default function Groups(props) {
 
       <ButtonActions
         inner={[
-          [SaveXLSXAction, { fetchgroups, session }],
-          [SaveDocxAction, { fetchgroups, session }],
+          [SaveXLSXAction, { fetchgroups, workflow_id }],
+          [SaveDocxAction, { fetchgroups, workflow_id }],
           [CopyJsonAction, { fetchgroups }],
           [CopyTextAction, { fetchgroups }],
           // [ClusterButtonAction, { runClusters }],

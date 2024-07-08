@@ -27,8 +27,7 @@ import Note from "@/components/Notes/Note";
 import FABMenu from "@/components/FABMenu";
 import Group from "@/components/Groups/Group";
 import Document from "@/components/Documents/Document";
-import Teleoscopes from "@/components/Teleoscopes";
-import Teleoscope from "@/components/Teleoscope";
+import Rank from "@/components/Rank";
 import Search from "@/components/Search";
 import Groups from "@/components/Groups/Groups";
 import Clusters from "@/components/Cluster/Clusters";
@@ -112,25 +111,15 @@ export default class WindowDefinitions {
         icon:      () => <ShortTextIcon fontSize="inherit"  />,
         component: (w, id: string, color: string) => <Document id={id} windata={w} color={color} />,
       },
-      Teleoscope: {
-        tag:       "teleoscope",
-        type:      "Teleoscope",
+      Rank: {
+        tag:       "rank",
+        type:      "Rank",
         apipath:   "graph",
         nodetype:  TargetNode,      
         title:     (d) => "Rank",
         color:     (d) => this.color,
         icon:      (d) => <IconContext.Provider value={{size: "1em", color: this.color}}><HiSortDescending style={{ display: "inline" }} /></IconContext.Provider>,
-        component: (w, id: string, color: string) => <Teleoscope id={id} windata={w} color={color} />,
-      },
-      Teleoscopes: {
-        tag:       "teleoscopes",
-        type:      "Teleoscopes",
-        apipath:   "teleoscopes",
-        nodetype:  WindowNode,      
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><HiSortDescending style={{ display: "inline" }} /></IconContext.Provider>,
-        component: (w, id: string, color: string) => <Teleoscopes id={id} windata={w} color={color} />,
+        component: (w, id: string, color: string) => <Rank id={id} windata={w} color={color} />,
       },
       Cluster: {
         tag:       "cluster",
@@ -276,7 +265,6 @@ export default class WindowDefinitions {
   
     // Backwards compatibility
     config["Group Palette"] = config.Groups;
-    config["Teleoscope Palette"] = config.Teleoscopes;
     config["Note Palette"] = config.Notes;
     config["Settings Palette"] = config.Settings;
     config["Workflow Palette"] = config.Workflows;
