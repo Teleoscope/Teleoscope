@@ -36,6 +36,7 @@
     "react-dom": "^18.3.0",
     "react-hook-form": "^7.51.5",
     "react-icons": "^5.2.1",
+    "react-resizable-panels": "^2.0.20",
     "stripe": "^15.6.0",
     "swr": "^2.2.5",
     "tailwind-merge": "^2.2.2",
