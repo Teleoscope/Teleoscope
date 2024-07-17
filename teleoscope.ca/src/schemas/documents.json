@@ -1,0 +1,40 @@
+{
+    "$jsonSchema": {
+        "bsonType": "object",
+        "title": "document",
+        "required": [
+            "text",
+            "title",
+            "vectors",
+            "relationships",
+            "metadata",
+            "state"
+        ],
+        "properties": {
+            "text": {
+                "bsonType": "string",
+                "description": "text of the document"
+            },
+            "title": {
+                "bsonType": "string",
+                "description": "title of the document"
+            },
+            "vector": {
+                "bsonType": "string",
+                "description": "the milvus uid"
+            },
+            "relationships": {
+                "bsonType": "object",
+                "description": "document"
+            },
+            "metadata": {
+                "bsonType": "object",
+                "description": "document"
+            },
+            "state": {
+                "bsonType": "object",
+                "description": "document"
+            }
+        }
+    }
+}

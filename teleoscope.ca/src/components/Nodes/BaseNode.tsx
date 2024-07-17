@@ -2,6 +2,7 @@ import { useStore } from "reactflow";
 import WindowFactory from "@/components/WindowFolder/WindowFactory";
 import { NodeResizer } from "@reactflow/node-resizer";
 import { useAppSelector } from "@/lib/hooks";
+import { useSWRF } from "@/lib/swr";
 
 const defaultSize = (s, id) => {
   const node = s.nodeInternals.get(id);
@@ -25,8 +26,8 @@ function BaseNode({ data, id, selected }) {
   const size = useStore(s => defaultSize(s, id) );
   const windata = { ...data, ...size };
   const settings = useAppSelector((state) => state.appState.workflow.settings);
+  const { data: node } = useSWRF(`/api/graph?uid=${id}`)
   
-
   return (
       <>
       <NodeResizer
@@ -37,7 +38,7 @@ function BaseNode({ data, id, selected }) {
           handleStyle={handleCSS}
         />
         <WindowFactory 
-          size={size} windata={windata} id={id} />
+          size={size} windata={windata} id={id} node={node}/>
         </>
 
 

@@ -1,12 +1,12 @@
 import { ObjectId } from "mongodb";
 
 export interface Workspaces {
-  _id?: ObjectId;
+  _id?: any;
   label: string;
-  team: ObjectId;
+  team: any;
   settings?: Settings;
-  notes?: Array<ObjectId>;
-  workflows?: Array<ObjectId>;
+  notes?: Array<any>;
+  workflows?: Array<any>;
 }
 
 interface Settings {

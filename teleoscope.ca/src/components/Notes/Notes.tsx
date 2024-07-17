@@ -1,7 +1,7 @@
 // mui
 import { Stack, List, ListItem, ListItemIcon } from '@mui/material';
 
-import { ContentState, convertToRaw } from 'draft-js';
+// import { ContentState, convertToRaw } from 'draft-js';
 
 // custom
 import EditableText from '@/components/EditableText';
@@ -9,9 +9,9 @@ import Deleter from '@/components/Deleter';
 
 // actions
 import {
-  useAppSelector,
-  useAppDispatch,
-  useWindowDefinitions
+    useAppSelector,
+    useAppDispatch,
+    useWindowDefinitions
 } from '@/lib/hooks';
 import { RootState } from '@/lib/store';
 
@@ -45,9 +45,9 @@ export default function NotesList() {
     });
 
     const handleNewNote = (e) => {
-        const content = convertToRaw(ContentState.createFromText(' '));
+        // const content = convertToRaw(ContentState.createFromText(' '));
 
-        dispatch(addNote({ label: e.target.value, content: content }));
+        dispatch(addNote({ label: e.target.value, content: {} }));
     };
 
     return (

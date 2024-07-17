@@ -23,12 +23,12 @@ import { useSWRF } from "@/lib/swr";
 
 export default function DocumentListItem(props) {
   const dispatch = useAppDispatch()
-  const { data: document, error: document_error, isLoading: document_loading} = props.index? useSWRF(`/api/query?index=${props.index}&q=${props.id}`): useSWRF(`/api/document/${props.id}`)
+  const { data: document, error: document_error, isLoading: document_loading} = props.index? useSWRF(`/api/query?index=${props.index}&q=${props.id}`): useSWRF(`/api/document?document=${props.id}`)
   const title = document ? preprocessTitle(document.title) : false;
   const settings = useAppSelector((state) => state.appState.workflow.settings);
 
   if (document_loading || document_error) {
-    return <div>Loading...</div>
+    return <div>Document Loading...</div>
   }
   
   const handleSetIndex = () => {

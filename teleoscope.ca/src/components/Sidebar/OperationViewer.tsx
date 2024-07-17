@@ -9,7 +9,7 @@ import { useSWRF } from "@/lib/swr";
 
 export default function OperationViewer({id, type}) {
   
-  const { data: operation } = useSWRF(`/api/graph/${id}`);
+  const { data: operation } = useSWRF(`/api/graph?uid=${id}`);
   const { settings } = useAppSelector((state) => state.appState.workspace);
   const wdefs = useWindowDefinitions();
   

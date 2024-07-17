@@ -70,7 +70,6 @@ def load_yaml():
                 typescript_file_header = 'import { ObjectId } from "mongodb";\n\nexport '
                 typescript_output = typescript_file_header + typescript_interface
 
-                
                 # Create TypeScript file path
                 ts_filename = filename.replace('.yaml', '.ts')
                 ts_filepath = os.path.join(type_output_directory, ts_filename)

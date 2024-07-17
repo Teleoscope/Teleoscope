@@ -58,7 +58,7 @@ export default function ContextMenu({ contextMenu, handleCloseContextMenu,  }) {
         <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Group"].icon()}</span> New Group
       </MenuItem>
       <MenuItem onClick={() => handleOpenNewWindow("Rank")}>
-      <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Rank"].icon()}</span> New Teleoscope
+      <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Rank"].icon()}</span> New Rank
       </MenuItem>
       <MenuItem onClick={() => handleOpenNewWindow("Projection")}>
       <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Projection"].icon()}</span> New Projection

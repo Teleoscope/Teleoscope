@@ -1,3 +1,4 @@
+// Group.tsx
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import DocumentList from "@/components/Documents/DocumentList";
@@ -7,13 +8,12 @@ import Count from "@/components/Count";
 import { useSWRF } from "@/lib/swr";
 
 
-export default function Group({ id: winId, windata }) {
-  const id = winId.split("%")[0];
-  
-  const { group } = useSWRF(`/api/group?group=${id}`);
+export default function Group({ id, windata }) {
+
+  const { data: group } = useSWRF(`/api/group?group=${id}`);
   
   // Prepare data for the DocumentList and ButtonActions
-  const data = group?.history[0].included_documents.map(doc => [doc, 1.0]);
+  const data = group?.docs.map(doc => [doc, 1.0]);
   
   // Button actions configuration
   const buttonActionsConfig = { data, group };

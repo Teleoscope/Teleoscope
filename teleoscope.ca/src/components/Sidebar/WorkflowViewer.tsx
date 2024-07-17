@@ -29,7 +29,7 @@ export default function Workflows(props) {
   const { workspace } = useAppSelector((state) => state.appState);
 
   if (!workspace) {
-    throw Error("Big fucking problem")
+    throw Error("No workspace.")
   }
   
   const { data: workflows, isLoading, error } = useSWRF(`/api/workflows?workflows=${workspace.workflows?.join(',')}`)
@@ -43,7 +43,6 @@ export default function Workflows(props) {
     return <>Error</>
   }
 
-  console.log("workflows", workflows)
 
   
 

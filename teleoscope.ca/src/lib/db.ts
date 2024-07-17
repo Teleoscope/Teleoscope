@@ -8,7 +8,7 @@ import storage from "@/schemas/storage.json";
 import workflows from "@/schemas/workflows.json";
 import workspaces from "@/schemas/workspaces.json";
 import notes from "@/schemas/notes.json";
-
+import graph from "@/schemas/graph.json";
 
 
 async function connect(uri: string, options?: MongoClientOptions) {
@@ -116,6 +116,23 @@ async function ensure_db_collections_exist(db: Db) {
             validationLevel: "strict"
         })
     }
+
+    if (!coll_names.includes("graph")) {
+        await db.createCollection("graph", {
+            validator: graph,
+            validationLevel: "strict"
+        })
+        await db.collection("graph").createIndex(
+            { "uid": 1 },
+            {
+                name: "uid",
+                unique: true
+            }
+        )
+   
+    }
+
+    
 
 }
 

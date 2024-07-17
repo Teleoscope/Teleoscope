@@ -1,9 +1,9 @@
 import { MakeDocx } from "@/lib/DocxMaker";
 import { IconButton, Tooltip } from "@mui/material";
 import {
-  ContentCopy as ContentCopyIcon,
-  CopyAll as CopyAllIcon,
-  Diversity2 as Diversity2Icon,
+    ContentCopy as ContentCopyIcon,
+    CopyAll as CopyAllIcon,
+    Diversity2 as Diversity2Icon,
 } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { utils, writeFile } from "xlsx";
@@ -55,7 +55,7 @@ export const CopyTextAction = (props) => {
     const groups = await fetchgroups();
     let acc = "";
     for (const group of groups) {
-      acc = acc + `${group.history[0].label}\n`;
+      acc = acc + `${group.label}\n`;
       for (const text of group.documents) {
         acc = acc + text.title;
         acc = acc + text.text;
@@ -91,11 +91,11 @@ export const SaveXLSXAction = (props) => {
     groups.forEach((group) => {
       const docs = group.documents;  
       const doc_map = docs.map((doc) => {
-        const ret = { ...doc, ...doc.metadata, ...{ label: replaceSpecialChars(group.history[0].label) } };
+        const ret = { ...doc, ...doc.metadata, ...{ label: replaceSpecialChars(group.label) } };
         return ret
       });
       const worksheet = utils.json_to_sheet(doc_map);
-      utils.book_append_sheet(workbook, worksheet, replaceSpecialChars(group.history[0].label));
+      utils.book_append_sheet(workbook, worksheet, replaceSpecialChars(group.label));
     })
 
     writeFile(workbook, `${label}.xlsx`, { compression: true });  

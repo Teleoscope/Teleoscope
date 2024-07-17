@@ -8,28 +8,17 @@ import {
     useAppDispatch,
     useWindowDefinitions
 } from '@/lib/hooks';
-import {
-    updateNodes,
-    updateEdges,
-    makeEdge,
-    makeNode,
-    removeWindow,
-    setSelection,
-    toggleMinMax
-} from '@/actions/appState';
+import { updateNodes, updateEdges, makeEdge, setSelection, toggleMinMax, dropNode } from '@/actions/appState';
 import FlowWrapper from '@/components/Flow/FlowWrapper';
 import ContextMenuHandler from '@/components/ContextMenuHandler';
 import FlowFABWrapper from '@/components/Flow/FlowFABWrapper';
 import 'reactflow/dist/style.css';
 import lodash from 'lodash';
-import {
-    addDocumentToGroup,
-    copyCluster,
-    saveUIState
-} from '@/actions/appState';
+import { addDocumentToGroup, copyCluster } from '@/actions/appState';
 import WindowNode from '@/components/Nodes/WindowNode';
 import ButtonEdge from '@/components/Nodes/ButtonEdge';
 import { findTargetNode, getClosestEdge } from '@/lib/drag';
+import axios from 'axios';
 
 interface MouseCoords {
     mouseX: number;
@@ -60,6 +49,7 @@ function Flow({ drawerWidth }: { drawerWidth: number }) {
     // target is the node that the node is dragged over
     const [target, setTarget] = useState<Node | null>(null);
     const [contextMenu, setContextMenu] = useState<MouseCoords | null>(null);
+    
     const {
         _id: workflow_id,
         nodes,
@@ -69,7 +59,7 @@ function Flow({ drawerWidth }: { drawerWidth: number }) {
     } = useAppSelector((state) => state.appState.workflow);
 
 
-    const { workspace
+    const { workspace, workflow
     } = useAppSelector((state) => state.appState);
     
     const onNodeDragStop = (evt: DragEvent, node: Node) => {
@@ -82,7 +72,15 @@ function Flow({ drawerWidth }: { drawerWidth: number }) {
                             document_id: node.id.split('%')[0]
                         })
                     );
-                    dispatch(removeWindow({ node: node.id }));
+                    dispatch(updateNodes({
+                        changes: [
+                          {
+                            id: node.id,
+                            type: "remove"
+                          }
+                        ]
+                }))
+                    ;
                 }
             }
         }
@@ -96,7 +94,15 @@ function Flow({ drawerWidth }: { drawerWidth: number }) {
                             workflow_id: workflow_id
                         })
                     ); // TODO: ADD index here
-                    dispatch(removeWindow({ node: node.id }));
+                    dispatch(updateNodes({
+                        changes: [
+                          {
+                            id: node.id,
+                            type: "remove"
+                          }
+                        ]
+                }))
+
                 }
             }
         }
@@ -140,6 +146,7 @@ function Flow({ drawerWidth }: { drawerWidth: number }) {
             const index = event.dataTransfer.getData(
                 'application/reactflow/index'
             );
+            console.log("drop !!!", id, type, index)
 
             // check if the dropped element is valid
             if (typeof id === 'undefined' || !id) {
@@ -152,7 +159,7 @@ function Flow({ drawerWidth }: { drawerWidth: number }) {
             });
 
             dispatch(
-                makeNode({
+                dropNode({
                     oid: id,
                     type: type,
                     width: workspace.settings?.document_width,
@@ -254,23 +261,15 @@ function Flow({ drawerWidth }: { drawerWidth: number }) {
     };
 
     const throttledSave = useRef(
-        lodash.throttle((sessionId, bookmarks, nodes, edges) => {
-            const node_size =
-                new TextEncoder().encode(JSON.stringify(nodes)).length / 1024;
-            const edge_size =
-                new TextEncoder().encode(JSON.stringify(edges)).length / 1024;
-            dispatch(
-                saveUIState({
-                    bookmarks: bookmarks,
-                    nodes: nodes,
-                    edges: edges
-                })
-            );
+        lodash.throttle((wf) => {
+            const post_result = axios.post(`/api/workflow`, 
+                wf
+            )
         }, 5000) // waits 5000 ms after the last call
     ).current;
 
     const handleOnClick = () => {
-        throttledSave(workflow_id, bookmarks, nodes, edges);
+        throttledSave(workflow);
     };
 
     useEffect(() => {

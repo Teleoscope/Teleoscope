@@ -164,10 +164,62 @@ def remove_edge(db: database.Database,
     return
 
 
+def update_nodes(db: database.Database, node_uids: List[str]):
+    for node_uid in node_uids:
+        graph_uid(db, node_uid)
+    
+    # pass
+
+
+def graph_uid(db, uid):
+    db.graph.update_one({"uid": uid}, {"$set": {"doclists": []}})
+    node = db.graph.find_one({"uid": uid})
+    
+    sources  = node["edges"]["source"]
+    controls = node["edges"]["control"]
+    outputs  = node["edges"]["output"]
+
+    parameters = node["parameters"]
+    node_type = node["type"]
+
+    match node_type:
+        case "Document":
+            node = update_document(db, node, parameters)
+        case "Group":
+            node = update_group(db, node, parameters)
+        case "Search":
+            node = update_search(db, node, parameters)
+        case "Note":
+            node = update_note(db, node, parameters)
+        case "Teleoscope":
+            node = update_teleoscope_milvus(db, node, sources, controls, parameters)
+        case "Projection":
+            node = update_projection(db, node, sources, controls, parameters)
+        case "Union":
+            node = update_union(db, node, sources, controls, parameters)
+        case "Intersection":
+            node = update_intersection(db, node, sources, controls, parameters)
+        case "Exclusion":
+            node = update_exclusion(db, node, sources, controls, parameters)
+        case "Difference":
+            node = update_difference(db, node, sources, controls, parameters)
+        case "Filter":
+            node = update_filter(db, node, sources, controls, parameters)
+    
+    res = db.graph.replace_one({"uid": uid}, node)
+
+    # Calculate each node downstream to the right.
+    for edge in outputs:
+        graph(db, edge["nodeid"])
+
+    return res
+
+
 def graph(db: database.Database, node_oid: ObjectId):
     """Recalculates all nodes to the right of specified node.
     """
 
+    
     db.graph.update_one({"_id": ObjectId(str(node_oid))}, {"$set": {"doclists": []}})
     node = db.graph.find_one({"_id": ObjectId(str(node_oid))})
     
@@ -242,7 +294,7 @@ def update_document(db: database.Database, document_node, parameters):
     document_id = ObjectId(str(document_node["reference"]))
     doclist = {
         "id": document_id,
-        "nodeid": document_node["_id"],
+        "nodeid": document_node["uid"],
         "type": document_node["type"],
         "ranked_documents": [(document_id, 1.0)]
     }
@@ -261,7 +313,7 @@ def update_group(db: database.Database, group_node, parameters):
     
     doclist = {
         "id": group_id,
-        "nodeid": group_node["_id"],
+        "nodeid": group_node["uid"],
         "type": group_node["type"],
         "ranked_documents": [(d, 1.0) for d in documents]
     }
@@ -280,7 +332,7 @@ def update_note(db: database.Database, note_node, parameters):
     
     doclist = {
         "id": note_id,
-        "nodeid": note_node["_id"],
+        "nodeid": note_node["uid"],
         "type": note_node["type"],
         "ranked_documents": []
     }
@@ -304,7 +356,7 @@ def update_search(db: database.Database, search_node, parameters):
     )
     doclist = {
         "id": search_id,
-        "nodeid": search_node["_id"], 
+        "nodeid": search_node["uid"], 
         "type": search_node["type"],
         "ranked_documents": [(d["_id"], 1.0) for d in documents]
     }

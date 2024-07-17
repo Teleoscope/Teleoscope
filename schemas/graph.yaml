@@ -12,25 +12,28 @@ required:
 properties:
   uid:
     bsonType: string
-    description: workflow uid for node in graph
+    description: "workflow uid for node in graph"
   type:
     bsonType: string
-    description: type of the node
+    description: "type of the node"
   workflow:
     bsonType: objectId
-    description: the workflow this node belongs to 
+    description: "the workflow this node belongs to"
+  workspace:
+    bsonType: objectId
+    description: "the workflow this node belongs to"
   status:
     bsonType: string
-    description: for the graph
+    description: "status for the graph"
   reference:
-    bsonType: objectId
-    description: reference to non-graph object, e.g. document, search, group
+    bsonType: ['objectId', 'null']
+    description: "reference to non-graph object, e.g. document, search, group"
   doclists:
     bsonType: array
-    description: 
+    description: "list of document lists"
     items:
       bsonType: object
-      description: 
+      description: "doclist object"
       required:
         - id
         - nodeid
@@ -39,22 +42,22 @@ properties:
       properties:
         id:
           bsonType: string
-          description: id for this doclist 
+          description: "id for this doclist"
         nodeid:
           bsonType: string
-          description: on screen node id for this doclist 
+          description: "on screen node id for this doclist"
         type:
           bsonType: string
-          description: type of this doclist 
+          description: "type of this doclist"
         ranked_documents:
           bsonType: string
-          description: all documents in order accorting to rank in this doclist         
+          description: "all documents in order according to rank in this doclist"
   parameters:
     bsonType: object
-    description: parameters for the graph item
+    description: "parameters for the graph item"
   edges:
     bsonType: object
-    description: edges in and out of this graph item
+    description: "edges in and out of this graph item"
     required:
       - source
       - control
@@ -62,27 +65,10 @@ properties:
     properties:
       source:
         bsonType: array
-        description: a list of edges
+        description: "a list of source edges"
       control:
         bsonType: array
-        description: a list of edges
+        description: "a list of control edges"
       output:
         bsonType: array
-        description: a list of edges
-      
-    
-
-  
-
-#         "status": "loading",
-#         "matrix": None,
-#         "reference": oid,
-#         "columns": [],
-#         "doclists": [],
-#         "parameters": create_parameters(node_type),
-#         "edges": {
-#             "source": [],
-#             "control": [],
-#             "output": []
-#         }
-#     }
+        description: "a list of output edges"

@@ -1,12 +1,14 @@
 import { ObjectId } from "mongodb";
 
 export interface Workflows {
-  _id?: ObjectId;
-  workspace: ObjectId;
+  _id?: any;
+  last_update: any;
+  logical_clock: number;
+  workspace: any;
   label: string;
   nodes: Array<any>;
   edges: Array<any>;
-  bookmarks: Array<ObjectId>;
+  bookmarks: Array<any>;
   selection: Selection;
   settings: Settings;
 }

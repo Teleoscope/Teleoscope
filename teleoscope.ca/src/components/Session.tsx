@@ -21,7 +21,7 @@ export default function Session({ sessions, user, users, workflow_id, handleSess
             const temp = sessions.find((ss) => ss._id === s);
             return (
               <MenuItem key={s._id} value={s}>
-                {temp?.history[0].label}
+                {temp?.label}
               </MenuItem>
             );
           });

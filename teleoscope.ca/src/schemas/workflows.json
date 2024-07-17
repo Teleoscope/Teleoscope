@@ -3,22 +3,40 @@
         "bsonType": "object",
         "title": "workflow",
         "required": [
+            "last_update",
+            "logical_clock",
             "workspace",
             "label",
             "nodes",
             "edges",
             "bookmarks",
-            "notes",
             "selection",
             "settings"
         ],
         "properties": {
             "_id": {
-                "bsonType": "objectId",
+                "bsonType": [
+                    "objectId",
+                    "string"
+                ],
                 "description": "the MongoDB ID for this workflow"
             },
+            "last_update": {
+                "bsonType": [
+                    "date",
+                    "string"
+                ],
+                "description": "the last datetime this workflow was updated"
+            },
+            "logical_clock": {
+                "bsonType": "int",
+                "description": "the last logical time this workflow was updated"
+            },
             "workspace": {
-                "bsonType": "objectId",
+                "bsonType": [
+                    "objectId",
+                    "string"
+                ],
                 "description": "the workspace that this workflow belongs to"
             },
             "label": {
@@ -45,8 +63,11 @@
                 "bsonType": "array",
                 "description": "currently bookmarked documents",
                 "items": {
-                    "bsonType": "objectId",
-                    "description": "the mongodb oid of the bookmarked document"
+                    "bsonType": [
+                        "objectId",
+                        "string"
+                    ],
+                    "description": "the mongodb oid of the bookmarked document    "
                 }
             },
             "selection": {
@@ -77,7 +98,7 @@
                 "properties": {
                     "color": {
                         "bsonType": "string",
-                        "description": "the color of this workflow"
+                        "description": "the color of this workflow  "
                     },
                     "title_length": {
                         "bsonType": "int",

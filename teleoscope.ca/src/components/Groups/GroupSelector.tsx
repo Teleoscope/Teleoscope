@@ -17,13 +17,13 @@ import { useSWRF } from "@/lib/swr";
 export default function GroupSelector(props) {
   const dispatch = useAppDispatch()
 
-  const workflow_id = useAppSelector((state) => state.appState.workflow._id);
+  const workspace_id = useAppSelector((state) => state.appState.workspace._id);
 
-  const { data: groups } = useSWRF(`/api/sessions/${workflow_id}/groups`)
+  const { data: groups } = useSWRF(`/api/groups?workspace=${workspace_id}`)
 
   const groups_this_document_belongs_to = groups
     ? groups.filter((g) => {
-        return g.history[0].included_documents.includes(props.id);
+        return g.docs.includes(props.id);
       })
     : [];
 
@@ -49,7 +49,7 @@ export default function GroupSelector(props) {
   const GroupIconHandler = (props) => {
 
     if (props.groups.length >= 1) {
-      const g = props.groups[0].history[0];
+      const g = props.groups[0];
       return (
         <Tooltip title={g.label}>
           <IconButton onClick={handleClick}>
@@ -82,10 +82,10 @@ export default function GroupSelector(props) {
             return (
               <MenuItem key={_id} value={_id} onClick={() => handleSelect(_id)}>
                 <FolderIcon
-                  sx={{ color: g.history[0].color }}
+                  sx={{ color: g.color }}
                   style={{ fontSize: 15, marginRight: "1em" }}
                 />
-                <ListItemText primary={g.history[0].label} />
+                <ListItemText primary={g.label} />
               </MenuItem>
             );
           })

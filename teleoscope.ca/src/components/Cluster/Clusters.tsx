@@ -59,9 +59,9 @@ export default function Clusters({ data: p_id }) {
               <Stack direction="row" alignItems="center" justifyContent="space-between">
                 <ListItem>
                   <ListItemIcon>
-                    <FolderIcon sx={{ color: cluster.history[0].color }} />
+                    <FolderIcon sx={{ color: cluster.color }} />
                   </ListItemIcon>
-                  <ListItemText primary={cluster.history[0].label} secondary={cluster.history[0].description} />
+                  <ListItemText primary={cluster.label} secondary={cluster.description} />
                 </ListItem>
                 <Deleter callback={() => dispatch(removeCluster({cluster_id: cluster._id, projection_id: p_id}))} color={settings.color} />
               </Stack>

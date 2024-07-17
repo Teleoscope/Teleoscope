@@ -6,11 +6,12 @@ const password = process.env.RABBITMQ_PASSWORD
 const host = process.env.RABBITMQ_HOST
 const port = process.env.RABBITMQ_PORT
 const vhost = process.env.RABBITMQ_VHOST
+const database = process.env.MONGODB_DATABASE
 
 const rabbitMqUrl = `amqp://${username}:${password}@${host}:${port}/${vhost}`
 
 
-async function send(task, args) {
+async function send(task: string, args: any) {
     const queue = `${process.env.RABBITMQ_QUEUE}`;
     console.log("task", task)
     console.log("args", args)
@@ -28,7 +29,10 @@ async function send(task, args) {
             id: uuidv4(),
             task: task,
             args: args,
-            kwargs: args,
+            kwargs: {
+                ...args,
+                database: database
+            },
             retries: 0,
             eta: new Date().toISOString()
         };
@@ -41,7 +45,7 @@ async function send(task, args) {
         await channel.close();
         await connection.close();
 
-        console.log(`Sent ${msg} to RabbitMQ.`)
+        // console.log(`Sent ${msg} to RabbitMQ.`)
     } catch (error) {
         console.log(error)
 

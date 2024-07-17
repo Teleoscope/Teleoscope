@@ -7,6 +7,7 @@ import { Teams } from '@/types/teams';
 import { Workspaces } from '@/types/workspaces';
 import { Workflows } from '@/types/workflows';
 import { DEFAULT_GREY, DEFAULT_TITLE_LENGTH } from './defaults';
+import { MongoServerError } from 'mongodb';
 
 export default async function initialize_user(
     userId: string,
@@ -104,7 +105,6 @@ export default async function initialize_user(
             label: 'Default workflow',
             nodes: [],
             edges: [],
-            notes: [],
             bookmarks: [],
             selection: {
                 nodes: [],
@@ -113,7 +113,9 @@ export default async function initialize_user(
             settings: {
                 color: DEFAULT_GREY,
                 title_length: DEFAULT_TITLE_LENGTH
-            }
+            },
+            last_update: new Date().toISOString(),
+            logical_clock: 100
         };
 
         const workflow_result = await db
@@ -175,6 +177,9 @@ export default async function initialize_user(
     } catch (error) {
         await session.abortTransaction();
         console.error('Transaction aborted due to an error:', error);
+        if (error instanceof MongoServerError && error.code === 121) {
+            console.error('Document failed validation:', JSON.stringify(error, null, 2));
+        }
         throw error;
     } finally {
         await session.endSession();

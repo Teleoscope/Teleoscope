@@ -89,7 +89,7 @@ export default function FABMenu({ windata }) {
           icon={wdefs.definitions()[action].icon()}
           tooltipTitle={actionMap[action]}
           tooltipPlacement="right"
-          tooltipOpen={workspace.settings.showFABToolTip ? true : true}
+          tooltipOpen={workspace.settings.showFABToolTip}
           onClick={() =>
             handleAddNode(
               wdefs.definitions()[action].type

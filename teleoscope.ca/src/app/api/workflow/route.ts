@@ -35,14 +35,16 @@ export async function POST(request: NextRequest) {
     }
     const { _id, workspace, ...workflow } = await request.json()
 
-    console.log("request", _id, workspace, workflow)
-
+    const update = {
+        ...workflow
+    }
+    
     const result = await dbOp(async (client: MongoClient, db: Db) => {
         return await db
             .collection<Workflows>('workflows')
             .updateOne({ _id: new ObjectId(_id) }, {
                 $set: {
-                    ...workflow
+                    ...update
                 }
             });
     });

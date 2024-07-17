@@ -5,15 +5,15 @@ import { useSWRF } from "@/lib/swr";
 // Define the Cluster component with destructured props for cleaner access
 export default function Cluster({ id }) {
   // Extract the cluster ID from the props
-  const clusterId = id.split("%")[0];
+  const clusterId = id;
   // Initialize the SWR hook for data fetching
   
   // Use the SWR hook to fetch the cluster data based on the clusterId
-  const { data: cluster } = useSWRF(`/api/clusters/${clusterId}`);
+  const { data: cluster } = useSWRF(`/api/clusters?cluster=${clusterId}`);
   
   // Format the data for the DocumentList component
   // Check if cluster history exists and map the documents to the required format
-  const data = cluster?.history?.[0]?.included_documents.map(document => [document, 1.0]) || [];
+  const data = cluster?.docs.map(document => [document, 1.0]) || [];
 
   // Render the DocumentList component with the formatted data and various props
   return (

@@ -8,19 +8,20 @@ import { Stack } from "@mui/material";
 import { preprocessText } from "@/lib/preprocessers";
 import ButtonActions from "@/components/ButtonActions";
 import {
-    SaveXLSX,
-    SaveDocx,
-    CopyJson,
-    CopyText,
-    Link,
-    Group,
+  SaveXLSX,
+  SaveDocx,
+  CopyJson,
+  CopyText,
+  Link,
+  Group,
 } from "@/components/Documents/DocumentActions";
+import { useSWRF } from "@/lib/swr";
 
 export default function Document(props) {
-  const id = props.id.split("%")[0];
+  const id = props.id;
   
-  const { document } = useSWRF("document", `document/${id}`);
-  const text = document ? preprocessText(document.text) : false;
+  const { data: document } = useSWRF(`/api/document?document=${id}`);
+  const text = document ? preprocessText(document.text, new RegExp("")) : false;
 
   return (
     <Stack sx={{ height: "100%" }}>

@@ -15,12 +15,12 @@ import { useSWRF } from "@/lib/swr";
 // Main Projection component
 export default function Projection({ id }) {
   // Extract projection ID from props and initialize state and hooks
-  const projectionId = useState(id.split("%")[0])[0];
+  const projectionId = useState(id);
   
   const dispatch = useAppDispatch()
 
   // Use SWR hook for data fetching
-  const { data: projection, isLoading, error } = useSWRF(`/api/graph/${projectionId}`);
+  const { data: projection, isLoading, error } = useSWRF(`/api/graph?uid=${projectionId}`);
   
   if (isLoading) {
     return <>Loading...</>

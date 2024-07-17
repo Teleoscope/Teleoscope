@@ -60,8 +60,6 @@ export async function POST(request: NextRequest) {
                 team: team
             };
 
-            console.log('workspace', workspace);
-
             const workspace_result = await db
                 .collection<Workspaces>('workspaces')
                 .insertOne(workspace, { session: mongo_session });

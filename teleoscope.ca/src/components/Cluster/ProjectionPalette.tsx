@@ -31,7 +31,7 @@ export default function ProjectionPalette(props) {
   const projections = projections_raw?.map((p) => {
     const ret = {
       _id: p._id,
-      label: p.history[0].label,
+      label: p.label,
     };
     return ret;
   });

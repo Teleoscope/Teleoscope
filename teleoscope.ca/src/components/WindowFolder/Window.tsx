@@ -6,7 +6,7 @@ import { Chip, Stack, Paper, Box, Divider } from "@mui/material";
 
 // actions
 import { useDispatch } from "react-redux";
-import { removeWindow, maximizeWindow } from "@/actions/appState";
+import { maximizeWindow, updateNodes } from "@/actions/appState";
 import { useEffect, useRef, useState } from "react";
 
 export default function Window({windata, id, size, title, icon, inner, color}) {
@@ -14,7 +14,14 @@ export default function Window({windata, id, size, title, icon, inner, color}) {
   const dispatch = useDispatch();
 
   const handleDelete = () => {
-    dispatch(removeWindow({node: id}));
+    dispatch(updateNodes({
+      changes: [
+        {
+          id: id,
+          type: "remove"
+        }
+      ]
+  }))
   };
 
   const elRef = useRef();

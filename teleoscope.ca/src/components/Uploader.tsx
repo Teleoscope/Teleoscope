@@ -1,71 +1,30 @@
-'use client';
-
 import { useState } from 'react';
 import { Button, FormControl, InputLabel, Select, MenuItem, OutlinedInput, Chip, Typography } from '@mui/material';
-import { useAppSelector } from "@/lib/hooks";
+import axios from 'axios';
+import Table from '@/components/Table';
+import { useAppSelector } from '@/lib/hooks';
+import { previewFile } from '@/lib/filehandlers';
 
-import { read, utils } from 'xlsx';
-import Table from '@/components/Table'; // Ensure this component can handle the data format provided
-
-function previewFile(file, setHeaders, setPreviewData, headerLine) {
-
-  if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
-    previewCsv(file, setHeaders, setPreviewData, headerLine);
-  } else if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.name.endsWith('.xlsx')) {
-    previewXlsx(file, setHeaders, setPreviewData, headerLine);
-  }
-}
-
-function previewXlsx(file, setHeaders, setPreviewData, headerLine = 1) {
-  const reader = new FileReader();
-  reader.onload = function (event) {
-    const data = new Uint8Array(event.target.result);
-    const workbook = read(data, { type: 'array', sheetRows: headerLine + 4 });
-    const firstSheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[firstSheetName];
-    const json = utils.sheet_to_json(worksheet, { header: 1, range: headerLine - 1 }).slice(0, 5);
-    setHeaders(json[0]);
-    setPreviewData(json); // Exclude header row from preview data
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function previewCsv(file, setHeaders, setPreviewData, headerLine = 1) {
-  const reader = new FileReader();
-  reader.onload = function (event) {
-    const text = event.target.result;
-    const lines = text.split('\n').slice(headerLine - 1);
-    const headers = lines[0].split(',').map(header => header.trim());
-    const json = lines.slice(0,5).map(line => line.split(",").map(cell => cell.trim()));
-    setHeaders(headers);
-    setPreviewData(json);
-  };
-  reader.readAsText(file);
-}
-
-export default function Uploader() {
-  const [file, setFile] = useState(null);
-  const [headers, setHeaders] = useState([]);
-  const [previewData, setPreviewData] = useState([]);
+function Uploader() {
+  const [file, setFile] = useState<File | null>(null);
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [previewData, setPreviewData] = useState<any[]>([]);
   const [uniqueId, setUniqueId] = useState('');
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [error, setError] = useState('');
-  const [headerLine, setHeaderLine] = useState(1); // State for selecting header line
-  const [selectedHeaders, setSelectedHeaders] = useState([]); // State for multiselect
+  const [headerLine, setHeaderLine] = useState(1);
+  const [selectedHeaders, setSelectedHeaders] = useState<string[]>([]);
 
-  const settings = useAppSelector((state) => state.appState.workflow.settings);
-  const workflow_id = useAppSelector((state) => state.appState.workflow._id);
+  const { workflow, workspace } = useAppSelector((state) => state.appState);
+  const { _id: workspace_id} = workspace;
+  const { settings, _id: workflow_id} = workflow;
+  
 
-  const handleChangeMultiple = (event) => {
-    const { value } = event.target;
-    setSelectedHeaders(typeof value === 'string' ? value.split(',') : value);
-  };
-
-  const handleFileChange = (e) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFile = e.target.files?.[0];
     if (!newFile) {
-      setError("No file selected.");
+      setError('No file selected.');
       return;
     }
     setFile(newFile);
@@ -73,10 +32,12 @@ export default function Uploader() {
     previewFile(newFile, setHeaders, setPreviewData, headerLine);
   };
 
-  const handleHeaderChange = (e) => {
-    setHeaderLine(Number(e.target.value))
-    previewFile(file, setHeaders, setPreviewData, Number(e.target.value));
-  }
+  const handleHeaderChange = (e: React.ChangeEvent<{ value: unknown }>) => {
+    setHeaderLine(Number(e.target.value));
+    if (file) {
+      previewFile(file, setHeaders, setPreviewData, Number(e.target.value));
+    }
+  };
 
   const uploadFile = async () => {
     if (!file) {
@@ -87,20 +48,27 @@ export default function Uploader() {
     const data = new FormData();
     data.append('file', file);
     data.append('workflow_id', workflow_id);
-    data.append('headerLine', headerLine.toString());
-    data.append('id', uniqueId);
-    data.append('title', title);
-    data.append('text', text);
-    data.append('groups', selectedHeaders.toString());
+    data.append('workspace_id', workspace_id);
+    data.append('headerLine_row', headerLine.toString());
+    data.append('uid_column', uniqueId);
+    data.append('title_column', title);
+    data.append('text_column', text);
+    data.append('group_columns', selectedHeaders.toString());
 
     try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: data,
+      console.log("File uploading:", data)
+          // Log the FormData entries
+    for (const pair of data.entries()) {
+      console.log(`${pair[0]}: ${pair[1]}`);
+    }
+    console.log("File uploading:", data)
+      const response = await axios.post('/api/upload', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      if (!response.ok) throw new Error(await response.text());
+      if (response.status !== 200) throw new Error(response.statusText);
       setError('');
-      // Handle success
       alert('File uploaded successfully');
     } catch (error) {
       console.error(error);
@@ -111,7 +79,7 @@ export default function Uploader() {
   return (
     <div>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      <Button variant="contained" component="label" style={{ backgroundColor: settings.color}}>
+      <Button variant="contained" component="label" style={{ backgroundColor: settings.color }}>
         Choose File
         <input type="file" hidden onChange={handleFileChange} accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
       </Button>
@@ -121,14 +89,14 @@ export default function Uploader() {
         <Select
           value={headerLine}
           label="Header Line"
-          onChange={(e) => handleHeaderChange(e)}
+          onChange={handleHeaderChange}
         >
           {[...Array(10).keys()].map(line => (
             <MenuItem key={line} value={line + 1}>{line + 1}</MenuItem>
           ))}
         </Select>
       </FormControl>
-      <Button variant="contained" onClick={uploadFile} disabled={!file} style={{ backgroundColor: settings.color}}>
+      <Button variant="contained" onClick={uploadFile} disabled={!file} style={{ backgroundColor: settings.color, color: 'white' }}>
         Upload
       </Button>
 
@@ -174,27 +142,30 @@ export default function Uploader() {
           </FormControl>
 
           <FormControl fullWidth margin="normal">
-          <InputLabel>Group Data By Columns</InputLabel>
-          <Select
-            multiple
-            value={selectedHeaders}
-            onChange={handleChangeMultiple}
-            input={<OutlinedInput label="Header Columns" />}
-            renderValue={(selected) => (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {selected.map((value) => (
-                  <Chip key={value} label={value} />
-                ))}
-              </div>
-            )}
-          >
-            {headers.map((header) => (
-              <MenuItem key={header} value={header}>
-                {header}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            <InputLabel>Group Data By Columns</InputLabel>
+            <Select
+              multiple
+              value={selectedHeaders}
+              onChange={(e) => {
+                const { value } = e.target;
+                setSelectedHeaders(typeof value === 'string' ? value.split(',') : value as string[]);
+              }}
+              input={<OutlinedInput label="Header Columns" />}
+              renderValue={(selected) => (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => (
+                    <Chip key={value} label={value} />
+                  ))}
+                </div>
+              )}
+            >
+              {headers.map((header) => (
+                <MenuItem key={header} value={header}>
+                  {header}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
           <Table data={previewData} />
         </>
@@ -203,4 +174,4 @@ export default function Uploader() {
   );
 }
 
-
+export default Uploader;

@@ -40,7 +40,7 @@ return (
           </ListItemIcon>
 
           <EditableText
-            initialValue={g.history[0].label}
+            initialValue={g.label}
             callback={(label) => relabelGroup(label, g._id)}
           />
         </Stack>
@@ -51,7 +51,7 @@ return (
     </ListItem>
     {showColorPicker ? (
       <ColorPicker
-        defaultColor={g.history[0].color}
+        defaultColor={g.color}
         onChange={(color) => {
           recolorGroup(color, g._id);
           setShowColorPicker(false);
@@ -96,8 +96,9 @@ import { useSWRF } from "@/lib/swr";
 
 export default function Groups(props) {
   const dispatch = useAppDispatch()
+  const { _id: workspace_id } = useAppSelector((state) => state.appState.workspace);
   const { _id: workflow_id, settings } = useAppSelector((state) => state.appState.workflow);
-  const { groups } = useSWRF(`/api/groups`);
+  const { data: groups, isLoading } = useSWRF(`/api/groups?workspace=${workspace_id}`);
 
   const [showColorPicker, setShowColorPicker] = useState(false);
 
@@ -108,7 +109,7 @@ export default function Groups(props) {
     for (const group of groups) {
       const g = group;
       g["documents"] = [];
-      for (const doc of g.history[0].included_documents) {
+      for (const doc of g.docs) {
         const response = await fetch(
           `/api/${swr.subdomain}/document/${doc}`
         ).then((res) => res.json());
@@ -118,6 +119,10 @@ export default function Groups(props) {
     }
     return out;
   };
+
+  if (isLoading) {
+    return <>Loading groups...</>
+  }
 
   return (
     <div style={{ overflow: "auto", height: "100%" }}>

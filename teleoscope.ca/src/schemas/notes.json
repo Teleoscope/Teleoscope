@@ -13,6 +13,17 @@
             "label": {
                 "bsonType": "string",
                 "description": "the label of the note"
+            },
+            "content": {
+                "bsonType": "object",
+                "description": "the content of the note"
+            },
+            "workspace": {
+                "bsonType": [
+                    "objectId",
+                    "string"
+                ],
+                "description": "the workspace that this note belongs to"
             }
         }
     }

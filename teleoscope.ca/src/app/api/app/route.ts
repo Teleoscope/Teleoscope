@@ -31,6 +31,8 @@ export async function GET(request: NextRequest) {
 
         const workflow = workspace_result.workflows[0];
 
+
+
         const workflow_result = await db
             .collection<Workflows>('workflows')
             .findOne({ _id: workflow });
@@ -40,6 +42,7 @@ export async function GET(request: NextRequest) {
                 workspace: workspace_result,
                 workflow: workflow_result
             };
+
             return result;
         }
     });

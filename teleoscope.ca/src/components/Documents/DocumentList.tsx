@@ -16,7 +16,7 @@ export default function DocumentList({ data, group, loading, loadMore, ...props 
 
   const renderItem = (index, item, currentIndex, setIndex) => {
     if (!item) {
-      return <>Loading...</>
+      return <>Document Loading...</>
     }
     return (
       <DocumentListItem

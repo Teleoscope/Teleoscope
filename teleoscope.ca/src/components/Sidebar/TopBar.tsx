@@ -7,8 +7,20 @@ import { AccountCircle } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 
 import LogoutIcon from '@mui/icons-material/Logout';
-import { useUserContext } from '@/context/UserContext';
 import Link from 'next/link';
+import { useAppSelector } from '@/lib/hooks';
+import { useSWRF } from '@/lib/swr';
+import { Users } from '@/types/users';
+
+const Team = ({ oid }: { oid: string }) => {
+    const { data: team } = useSWRF(`/api/team?team=${oid}`);
+    return <>{team ? team.label : 'Team loading...'}</>;
+};
+
+const User = () => {
+    const { data: user } : {data: Users} = useSWRF(`/api/user`);
+    return <Typography noWrap>{user ? user.emails[0] : 'Not signed in'}</Typography>;
+};
 
 export default function TopBar({
     compact,
@@ -21,8 +33,6 @@ export default function TopBar({
     team: string;
     color: string;
 }) {
-    const { userId } = useUserContext();
-
     const settings = {
         color: '#FF0000'
     };
@@ -30,6 +40,9 @@ export default function TopBar({
     const AccountMenu = () => {
         const [anchorEl, setAnchorEl] = React.useState(null);
         const [openMenu, setOpenMenu] = React.useState(false);
+        const { workflow, workspace } = useAppSelector(
+            (state) => state.appState
+        );
 
         return (
             <Stack spacing={1} direction="column" alignItems="center">
@@ -47,19 +60,7 @@ export default function TopBar({
                             ></AccountCircle>
                         </IconButton>
 
-                        {compact ? (
-                            ''
-                        ) : (
-                            <Typography
-                                noWrap
-                                onClick={(event) => {
-                                    setAnchorEl(event.currentTarget);
-                                    setOpenMenu(true);
-                                }}
-                            >
-                                {userId ? userId : 'Not signed in'}
-                            </Typography>
-                        )}
+                        {compact ? '' : <User />}
                     </Stack>
 
                     <Menu
@@ -94,7 +95,11 @@ export default function TopBar({
                     </Menu>
                 </Stack>
                 <Typography>{label}</Typography>
-                <Typography>{team}</Typography>
+                <Typography>
+                    <Team oid={team}></Team>
+                </Typography>
+                {/* <Typography>Workflow: {workflow._id}</Typography>
+                <Typography>Clock count: {workflow.logical_clock}</Typography> */}
             </Stack>
         );
     };

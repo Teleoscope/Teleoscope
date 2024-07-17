@@ -2,15 +2,7 @@ import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { addEdge } from "reactflow";
 import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
-import {
-  updateNodes,
-  updateEdges,
-  makeEdge,
-  makeNode,
-  removeWindow,
-  setSelection,
-  toggleMinMax
-} from "@/actions/appState";
+import { updateNodes, updateEdges, makeEdge, makeNode, setSelection, toggleMinMax } from "@/actions/appState";
 import FlowProviderWrapper from "@/components/Flow/FlowProviderWrapper";
 import FlowWrapper from "@/components/Flow/FlowWrapper";
 import FlowUIComponents from "@/components/Flow/FlowUIComponents";
@@ -64,7 +56,7 @@ function Flow(props) {
   const { workflow, workspace } = useAppSelector((state) => state.appState);
   const { nodes, edges } = useAppSelector((state) => state.appState.workflow);
   const { data: session } = useSWRF(`/api/sessions/${workflow_id}`);
-  const session_history_item = session?.history[0];
+  const session_history_item = session?;
 
 
 
@@ -126,10 +118,19 @@ function Flow(props) {
       if (target) {
         if (target.data.type == "Group") {
           dispatch(addDocumentToGroup({
-            group_id: target.id.split("%")[0],
-            document_id: node.id.split("%")[0]
+            group_id: target.id,
+            document_id: node.id
         }));
-          dispatch(removeWindow({node: node.id}));
+
+        dispatch(updateNodes({
+          changes: [
+            {
+              id: node.id,
+              type: "remove"
+            }
+          ]
+        }))
+
         }
       }
     }
@@ -145,8 +146,15 @@ function Flow(props) {
     if (node?.data?.type == "Cluster") {
       if (target) {
         if (target.data.type == "Groups") {
-          dispatch(copyCluster({graph_id: node.id.split("%")[0], workflow_id: workflow_id})); // TODO: ADD index here
-          dispatch(removeWindow({node: node.id}));
+          dispatch(copyCluster({graph_id: node.id, workflow_id: workflow_id})); // TODO: ADD index here
+          dispatch(updateNodes({
+            changes: [
+              {
+                id: node.id,
+                type: "remove"
+              }
+            ]
+        }))
         }
       }
     }
@@ -176,11 +184,13 @@ function Flow(props) {
 
   const onDrop = useCallback(
     (event) => {
+      
       event.preventDefault();
       const id = event.dataTransfer.getData("application/reactflow/id");
       const type = event.dataTransfer.getData("application/reactflow/type");
       const index = event.dataTransfer.getData("application/reactflow/index");
 
+      
       // check if the dropped element is valid
       if (typeof id === "undefined" || !id) {
         return;

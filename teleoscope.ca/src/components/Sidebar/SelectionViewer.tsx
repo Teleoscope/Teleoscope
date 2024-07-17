@@ -5,18 +5,27 @@ import NotesViewer from "@/components/Sidebar/NotesViewer";
 import RankViewer from "@/components/Sidebar/RankViewer";
 import ProjectionViewer from "@/components/Sidebar/ProjectionViewer";
 import OperationViewer from "./OperationViewer";
+import { Node } from "reactflow";
+import { useSWRF } from "@/lib/swr";
+import { Graph } from "@/types/graph";
 
 export default function SelectionViewer({ noGroup = false }) {
   const selection = useAppSelector((state) => state.appState.workflow.selection);
+  const uids = selection.nodes.map((n: Node) => n.id).join(",")
+  const { data: nodes }:{ data: Array<Graph>} = useSWRF(`/api/graph?uids=${uids}`)
+  
   return (
     <div className="flex flex-col flex-1 justify-between items-center w-full overflow-x-hidden [&>*]:w-full">
-      {selection.nodes.map((node) => {
+      {selection.nodes.map((node: Node) => {
+        const graph_item = Array.isArray(nodes) ? nodes.find((n) => n.uid === node.id) : undefined;
+        const reference = graph_item?.reference
         if (node.data.type == "Document") {
           return (
             <DocViewer
               windata={node.data}
-              key={node.id.split("%")[0]}
-              id={node.id.split("%")[0]}
+              key={node.id}
+              id={node.id}
+              reference={reference}
             />
           );
         }
@@ -24,8 +33,9 @@ export default function SelectionViewer({ noGroup = false }) {
           return (
             <GroupViewer
               compact={true}
-              key={node.id.split("%")[0]}
-              id={node.id.split("%")[0]}
+              key={node.id}
+              id={node.id}
+              reference={reference}
             ></GroupViewer>
           );
         }
@@ -33,8 +43,8 @@ export default function SelectionViewer({ noGroup = false }) {
           return (
             <ProjectionViewer
               compact={true}
-              key={node.id.split("%")[0]}
-              id={node.id.split("%")[0]}
+              key={node.id}
+              id={node.id}
             ></ProjectionViewer>
           );
         }
@@ -42,8 +52,8 @@ export default function SelectionViewer({ noGroup = false }) {
           return (
             <NotesViewer
               compact={true}
-              key={node.id.split("%")[0]}
-              id={node.id.split("%")[0]}
+              key={node.id}
+              id={node.id}
             ></NotesViewer>
           );
         }
@@ -52,8 +62,8 @@ export default function SelectionViewer({ noGroup = false }) {
           return (
             <RankViewer
               compact={true}
-              key={node.id.split("%")[0]}
-              id={node.id.split("%")[0]}
+              key={node.id}
+              id={node.id}
             ></RankViewer>
           );
         }
@@ -63,8 +73,8 @@ export default function SelectionViewer({ noGroup = false }) {
             <OperationViewer
               compact={true}
               type={node.data.type}
-              key={node.id.split("%")[0]}
-              id={node.id.split("%")[0]}
+              key={node.id}
+              id={node.id}
             ></OperationViewer>
           );
         }

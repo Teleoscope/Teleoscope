@@ -12,7 +12,7 @@ import { BsFiletypeDocx } from "react-icons/bs";
 const fetchdocs = async ({ data }) => {
   let docs = [];
   for (const [pid, s] of data) {
-    const response = await fetch(`/api/document/${pid}`).then(
+    const response = await fetch(`/api/document?document=${pid}`).then(
       (res) => res.json() 
     );
     docs = docs.concat([response]);
@@ -26,7 +26,7 @@ const copyTextToClipboard = async (props) => {
     .map(({ title, text }) => {
       return `${title}\n${text}\n\n`;
     })
-    .reduce((acc, curr) => acc + curr, `${props.group?.history[0].label}\n`);
+    .reduce((acc, curr) => acc + curr, `${props.group?.label}\n`);
 
   navigator.clipboard.writeText(output);
 };
@@ -39,10 +39,10 @@ const createDocx = async (props) => {
   const docs = await fetchdocs(props);
   MakeDocx({
     tag: "Group",
-    title: props.group.history[0].label,
+    title: props.group.label,
     groups: [
       {
-        label: props.group.history[0].label,
+        label: props.group.label,
         documents: docs,
       },
     ],
@@ -54,13 +54,13 @@ const createXLSX = async (props) => {
   const docs = await fetchdocs(props);
   
   const doc_map = docs.map((doc) => {
-    const ret = { ...doc, ...doc.metadata, ...{ label: props.group.history[0]["label"] } };
+    const ret = { ...doc, ...doc.metadata, ...{ label: props.group["label"] } };
     return ret
   });
   const worksheet = utils.json_to_sheet(doc_map);
   const workbook = utils.book_new();
   utils.book_append_sheet(workbook, worksheet, "Document");
-  writeFile(workbook, `${props.group.history[0]["label"]}.xlsx`, { compression: true });  
+  writeFile(workbook, `${props.group["label"]}.xlsx`, { compression: true });  
 }
 
 export const CopyText = (props) => {

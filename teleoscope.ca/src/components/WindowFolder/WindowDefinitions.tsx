@@ -13,6 +13,7 @@ import { CgPathIntersect, CgPathExclude, CgPathFront, CgPathUnite } from 'react-
 import { RiBookmark3Line } from 'react-icons/ri';
 import { BsStickies, BsSticky } from 'react-icons/bs';
 import { HiSortDescending } from "react-icons/hi";
+import { FiUpload } from "react-icons/fi";
 
 import { IconContext } from "react-icons";
 
@@ -42,6 +43,7 @@ import Difference from "@/components/Operations/Difference";
 import { preprocessTitle } from "@/lib/preprocessers";
 import Bookmarks from "@/components/Bookmarks";
 import { AppState } from "@/services/app";
+import DataHandler from "../Sidebar/DataHandler";
 
 export default class WindowDefinitions {
   private color;
@@ -61,12 +63,22 @@ export default class WindowDefinitions {
 
   public definitions() {
     const config = {
+      Data: {
+        tag:       "data",
+        type:      "Data",
+        apipath:   "data",
+        nodetype:  SourceNode,      
+        title:     (d) => `Data`,
+        color:     () => this.color,
+        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><FiUpload style={{ display: "inline" }} /></IconContext.Provider>,
+        component: (w, id: string, color: string) => <DataHandler/>,
+      },
       Note: {
         tag:       "note",
         type:      "Note",
         apipath:   "note",
         nodetype:  SourceNode,      
-        title:     (d) => `Note: ${d?.history[0].label}`,
+        title:     (d) => `Note: ${d?.label}`,
         color:     () => this.color,
         icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><BsSticky style={{ display: "inline" }} /></IconContext.Provider>,
         component: (w, id: string, color: string) => <Note id={id} windata={w} color={color} />,
@@ -94,11 +106,11 @@ export default class WindowDefinitions {
       Group: {
         tag:       "group",
         type:      "Group",
-        apipath:   "groups",
+        apipath:   "group",
         nodetype:  SourceNode,      
-        title:     (d) => `Group: ${d?.history[0].label ? d?.history[0].label : "loading..."}`,
-        color:     (d) => d ? d?.history[0].color : this.color,
-        icon:      (d) => <FolderIcon sx={{ color: d ? d?.history[0].color : this.color  }} fontSize="inherit"  />,
+        title:     (d) => `Group: ${d?.label ? d?.label : "loading..."}`,
+        color:     (d) => d ? d?.color : this.color,
+        icon:      (d) => <FolderIcon sx={{ color: d ? d?.color : this.color  }} fontSize="inherit"  />,
         component: (w, id: string, color: string) => <Group id={id} windata={w} color={color} />,
       },
       Document: {
@@ -154,9 +166,9 @@ export default class WindowDefinitions {
       Search: {
         tag:       "search",
         type:      "Search",
-        apipath:   "searches",
+        apipath:   "search",
         nodetype:  SourceNode,  
-        title:     (d) => d?.history[0].query ? `Search: ${d?.history[0].query}`: `Search`,
+        title:     (d) => d?.query ? `Search: ${d?.query}`: `Search`,
         color:     () => this.color,
         icon:      () => <SearchIcon sx={this.style()} fontSize="inherit" />,
         component: (w, id: string, color: string) => <Search id={id} windata={w} color={color} />,
@@ -306,8 +318,8 @@ export default class WindowDefinitions {
       projection: "projections",
       projectionpalette: "projectionpalette",
       clusters: "clusters",
-      search: "searches",
-      searches: "searches",
+      search: "search",
+      searches: "search",
       groups: "groups",
       operation: "operation",
       intersection: "intersection",

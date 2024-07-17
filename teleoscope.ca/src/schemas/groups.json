@@ -1,0 +1,41 @@
+{
+    "$jsonSchema": {
+        "bsonType": "object",
+        "title": "group",
+        "required": [
+            "color",
+            "docs",
+            "label",
+            "workspace"
+        ],
+        "properties": {
+            "color": {
+                "bsonType": "string",
+                "description": "the color for the group"
+            },
+            "docs": {
+                "bsonType": "array",
+                "description": "the included documents for the group",
+                "items": {
+                    "bsonType": "objectId",
+                    "description": "the mongodb ID of the included document"
+                }
+            },
+            "label": {
+                "bsonType": "string",
+                "description": "the label for the group"
+            },
+            "description": {
+                "bsonType": "string",
+                "description": "the description for the group"
+            },
+            "workspace": {
+                "bsonType": [
+                    "objectId",
+                    "string"
+                ],
+                "description": "the workspace that this group belongs to"
+            }
+        }
+    }
+}

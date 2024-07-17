@@ -22,13 +22,13 @@ const GroupLabel = ({ index, data, callback}) => {
       return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Document")}>{item?.title}</span>;
     }
     if (type === "Group") {
-      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Group")}>{item?.history[0].label}</span>;
+      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Group")}>{item?.label}</span>;
     }
     if (type === "Search") {
-      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Search")}>{item?.history[0].query}</span>;
+      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Search")}>{item?.query}</span>;
     }
     if (type === "Note") {
-      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Note")}>{item?.history[0].label}</span>;
+      return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Note")}>{item?.label}</span>;
     }
     if (type === "Cluster") {
       return <span draggable={true} onDragStart={(e) => onDragStart(e, item?._id, "Cluster", index)}>{`${data[index]?.label} (${data[index]?.ranked_documents?.length} docs)`}</span>;

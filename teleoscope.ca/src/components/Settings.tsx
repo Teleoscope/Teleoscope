@@ -54,8 +54,8 @@ export default function Settings(props) {
       />
       <Typography>Automatically Expand Infopanel</Typography>
       <Switch
-        checked={workspace.settings.expanded}
-        onChange={(event) =>
+        checked={workspace.settings?.expanded}
+        onChange={(event, value) =>
           handleChange(event, { workspace: {settings: {expanded: value}}})
         }
         color="primary"
@@ -80,7 +80,7 @@ export default function Settings(props) {
         min={10}
         max={200}
         onChangeCommitted={(event, value) =>
-          handleChange(event, value, "default_title_length")
+          handleChange(event, { workflow: {settings: {title_length: value}}})
         }
         sx={{ color: workflow.settings.color }}
       />

@@ -28,10 +28,10 @@ const Status = (node) => {
 
 // Additional props can be included as needed
 export default function SetOperation({ id, windata }) {
-  const [ node_id, setNodeId] = useState(id.split("%")[0]);
+  const [ node_id, setNodeId] = useState(id);
   
 
-  const { data: node, isLoading, error } = useSWRF(`/api/graph/${node_id}`);
+  const { data: node, isLoading, error } = useSWRF(`/api/graph?uid=${node_id}`);
   if (isLoading) {
     return <>Loading...</>
   }
@@ -44,7 +44,7 @@ export default function SetOperation({ id, windata }) {
   const doclists = node?.doclists;
   
   useEffect(() => {
-    setNodeId(id.split("%")[0]);
+    setNodeId(id);
   }, [id]);
   
 

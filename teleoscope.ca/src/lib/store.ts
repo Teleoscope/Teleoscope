@@ -1,9 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { setupListeners } from '@reduxjs/toolkit/query';
 import crypto from 'crypto';
 import post from '@/lib/client';
 import appState, {
-    removeWindow,
     updateEdges,
     updateNodes,
     updateSearch,
@@ -30,21 +28,96 @@ import appState, {
     makeEdge,
     setColor,
     relabelWorkflow,
-    removeProjection
+    removeProjection,
+    updateTimestamps,
+    loadAppData,
+    dropNode
 } from '@/actions/appState';
 import { copyDoclistsToGroups, updateNode } from '../actions/appState';
-import { appApi, AppState } from '@/services/app';
 import axios from 'axios';
+import {
+    Edge,
+    EdgeAddChange,
+    EdgeChange,
+    EdgeRemoveChange,
+    NodeChange,
+    NodeRemoveChange
+} from 'reactflow';
+import { Workflows } from '@/types/workflows';
+import { Workspaces } from '@/types/workspaces';
 
-const headers = (state) => {
+interface AppState {
+    workflow: Workflows,
+    workspace: Workspaces
+}
+
+const headers = (appState: AppState) => {
     return {
-        workflow_id: state.appState.workflow._id,
-        workspace_id: state.appState.workspace._id
+        workflow_id: appState.workflow._id,
+        workspace_id: appState.workspace._id
     };
 };
 
 // Custom middleware function for actions
 const actionMiddleware = (store) => (next) => (action) => {
+    // Dispatch the updateTimestamp action
+    if (
+        action.type !== updateTimestamps.type &&
+        action.type !== loadAppData.type
+    ) {
+        const { appState }: { appState: AppState } = store.getState();
+        console.log(action.type, action.payload, appState.workflow.logical_clock, appState)
+        store.dispatch(updateTimestamps());
+    } else {
+        const { appState }: { appState: AppState } = store.getState();
+        console.log(action.type, action.payload, appState.workflow.logical_clock, appState)
+    }
+
+    if (action.type === loadAppData.type) {
+
+        console.log("before loadAppData", store.getState())
+        const result = next(action);
+        console.log("after loadAppData", store.getState(), result)
+        
+        return result
+
+    }
+
+    if (action.type === dropNode.type) {
+        const uid = crypto.randomBytes(8).toString('hex');
+
+        // Perform any necessary modifications to the action payload
+        const modifiedPayload = {
+            ...action.payload,
+            uid: uid
+        };
+
+        // Create a new action object with the modified payload
+        const modifiedAction = {
+            ...action,
+            payload: modifiedPayload
+        };
+
+        // Call the next middleware or the reducer with the modified action
+        const result = next(modifiedAction);
+
+        // Perform the action or side effect you want to do after the store update
+        const { appState }: { appState: AppState } = store.getState();
+
+        const post_workflow = axios.post(`/api/workflow`, appState.workflow);
+
+        const post_node = axios.post(`/api/graph/drop`, {
+            workflow_id: appState.workflow._id,
+            workspace_id: appState.workspace._id,
+            reference: action.payload.oid,
+            uid: modifiedAction.payload.uid,
+            type: modifiedAction.payload.type,
+            parameters: { index: modifiedAction.payload.index }
+        });
+
+        return result;
+    }
+
     if (action.type === makeNode.type) {
         const uid = crypto.randomBytes(8).toString('hex');
 
@@ -64,24 +137,18 @@ const actionMiddleware = (store) => (next) => (action) => {
         const result = next(modifiedAction);
 
         // Perform the action or side effect you want to do after the store update
-        const { appState } : { appState: AppState } = store.getState();
+        const { appState }: { appState: AppState } = store.getState();
 
-        const post_result = axios.post(`/api/workflow`, 
-            appState.workflow
-        )
+        const post_workflow = axios.post(`/api/workflow`, appState.workflow);
 
-        // post({
-        //     task: 'add_item',
-        //     args: {
-        //         ...headers(updatedState),
-
-        //         oid: modifiedAction.payload.oid,
-        //         uid: modifiedAction.payload.uid,
-        //         node_type: modifiedAction.payload.type,
-        //         options: { index: modifiedAction.payload.index },
-        //         state: updatedState.appState
-        //     }
-        // });
+        const post_node = axios.post(`/api/graph/add`, {
+            workflow_id: appState.workflow._id,
+            workspace_id: appState.workspace._id,
+            reference: action.payload.oid,
+            uid: modifiedAction.payload.uid,
+            type: modifiedAction.payload.type,
+            parameters: { index: modifiedAction.payload.index }
+        });
 
         return result;
     }
@@ -91,59 +158,32 @@ const actionMiddleware = (store) => (next) => (action) => {
         const result = next(action);
 
         // Perform the action or side effect you want to do after the store update
-        const { appState } : { appState: AppState } = store.getState();
-        const post_result = axios.post(`/api/workflow`, 
-            appState.workflow
-        )
+        const { appState }: { appState: AppState } = store.getState();
+        const post_result = axios.post(`/api/workflow`, appState.workflow);
 
-        const nodes = appState.workflow.nodes;
-        const source_node = nodes.find(
-            (n) => n.id === action.payload.connection.source
-        );
-        const target_node = nodes.find(
-            (n) => n.id === action.payload.connection.target
-        );
-        const handle_type = action.payload.connection.targetHandle
-            .split('_')
-            .slice(-1)[0];
+        const target = action.payload.connection.target;
+        const source = action.payload.connection.source;
+        const type = action.payload.connection.targetHandle.split('_')[1];
 
-        // post({
-        //     task: 'make_edge',
-        //     args: {
-        //         ...headers(appState),
+        // Connection:
+        //     source: string | null; (string is ID)
+        //     target: string | null; (string is ID)
+        //     sourceHandle: string | null;
+        //     targetHandle: string | null; (string is `${id}_${type}`)
 
-        //         session_id: appState.workflow._id,
-        //         source_node: source_node,
-        //         target_node: target_node,
-        //         edge_type: handle_type,
-        //         connection: action.payload.connection,
-        //         ui_state: appState
-        //     }
-        // });
-
+        const edge_add_result = axios.post(`/api/graph/edge/add`, {
+            workflow_id: appState.workflow._id,
+            workspace_id: appState.workspace._id,
+            changes: [
+                {
+                    source: source,
+                    target: target,
+                    type: type
+                }
+            ]
+        });
 
         return result;
-    }
-
-    if (action.type === removeWindow.type) {
-        const node_id = action.payload.node;
-        const { appState } : { appState: AppState } = store.getState();
-        const edges = appState.workflow.edges.filter(
-            (e) => e.target.includes(node_id) || e.source.includes(node_id)
-        );
-
-        edges.forEach((edge) => {
-            store.dispatch(
-                updateEdges({
-                    changes: [
-                        {
-                            id: edge.id,
-                            type: 'remove'
-                        }
-                    ]
-                })
-            );
-        });
     }
 
     if (action.type === updateNodes.type) {
@@ -151,62 +191,96 @@ const actionMiddleware = (store) => (next) => (action) => {
         const result = next(action);
 
         // Perform the action or side effect you want to do after the store update
-        const { appState } : { appState: AppState } = store.getState();
-        const post_result = axios.post(`/api/workflow`, 
-            appState.workflow
-        )
-        
-        const changes = action.payload.changes;
-        changes.forEach((change) => {
-            if (change.type == 'remove') {
-                const { appState } : { appState: AppState } = store.getState();
-                const edges = appState.workflow.edges.filter(
-                    (e) => e.target == change.id || e.source == change.id
-                );
-                edges.forEach((edge) => {
-                    store.dispatch(
-                        updateEdges({
-                            changes: [
-                                {
-                                    id: edge.id,
-                                    type: 'remove'
-                                }
-                            ]
-                        })
-                    );
-                });
-            }
+        const { appState }: { appState: AppState } = store.getState();
+        const post_result = axios.post(`/api/workflow`, appState.workflow);
+
+        const changes: Array<NodeChange> = action.payload.changes;
+
+        const removes: Array<NodeRemoveChange> = changes.filter(change => change.type == 'remove');
+        const remove_ids = removes.map(change => change.id);
+        const edgesToRemove = appState.workflow.edges.filter(
+            (edge: Edge) =>
+                edge.target in remove_ids || edge.source in remove_ids
+        );
+
+        store.dispatch(
+            updateEdges({
+                changes: edgesToRemove.map((edge: Edge) => {
+                    const change: EdgeRemoveChange =  {
+                        id: edge.id,
+                        type: 'remove'
+                    };
+                    return change
+                })
+            })
+        );
+
+        const remove_node = axios.post(`/api/graph/remove`, {
+            workflow_id: appState.workflow._id,
+            workspace_id: appState.workspace._id,
+            uids: remove_ids
         });
         return result;
     }
 
     if (action.type === updateEdges.type) {
-        const changes = action.payload.changes;
-        changes.forEach((change) => {
-            if (change.type == 'remove') {
-                const { appState } : { appState: AppState } = store.getState();
-                const edges = appState.workflow.edges;
-                const edge = edges.find((e) => e.id == change.id);
+        
 
-                post({
-                    task: 'remove_edge',
-                    args: {
-                        ...headers(store.getState()),
-                        edge: edge
-                    }
-                });
-            }
-        });
+        const { appState }: { appState: AppState } = store.getState();
+
+        const changes = action.payload.changes;
+
+        const adds: Array<EdgeAddChange> = changes.filter(
+            (change: EdgeChange) => change.type == 'add'
+        );
+
+        const removes = changes.filter(
+            (change: EdgeChange) => change.type == 'remove'
+        );
+
+
+        if (adds.length > 0) {
+            const add_edges = axios.post(`/api/graph/edge/add`, {
+                workflow_id: appState.workflow._id,
+                workspace_id: appState.workspace._id,
+                changes: adds.map((a) => {
+                    return {
+                        target: a.item.target,
+                        source: a.item.source,
+                        type: a.item.targetHandle?.split('_')[1]
+                    };
+                })
+            });
+        }
+
+
+        const remove_ids = removes.map((change: EdgeRemoveChange) => change.id);
+
+        const edges = appState.workflow.edges.filter((edge: Edge) => remove_ids.includes(edge.id));
+
+        if (remove_ids.length > 0) {
+            const remove_edge = axios.post(`/api/graph/edge/remove`, {
+                workflow_id: appState.workflow._id,
+                workspace_id: appState.workspace._id,
+                edges: edges
+            });
+        }
+        const result = next(action);
+        return result
+
+  
     }
 
-    const callPost = (task_name) =>
-        post({
+    const callPost = (task_name: string) => {
+        const { appState }: { appState: AppState } = store.getState();
+        return post({
             task: task_name,
             args: {
-                ...headers(store.getState()),
+                ...headers(appState),
                 ...action.payload
             }
         });
+    };
 
     switch (action.type) {
         case initializeWorkflow.type:
@@ -293,16 +367,14 @@ const actionMiddleware = (store) => (next) => (action) => {
 
 export const store = configureStore({
     reducer: {
-        [appApi.reducerPath]: appApi.reducer,
+        // [appApi.reducerPath]: appApi.reducer,
         appState: appState
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware()
-            .concat(appApi.middleware)
+            // .concat(appApi.middleware)
             .concat(actionMiddleware)
 });
-
-setupListeners(store.dispatch);
 
 export const makeStore = () => store;
 

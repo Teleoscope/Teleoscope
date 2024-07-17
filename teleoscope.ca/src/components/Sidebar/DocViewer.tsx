@@ -1,4 +1,4 @@
-import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
+import { useWindowDefinitions } from "@/lib/hooks";
 import { DocumentActions } from "@/components/Documents/DocumentActions";
 import Highlighter from "@/components/Highlighter";
 import {
@@ -12,15 +12,12 @@ import { CaretSortIcon } from "@radix-ui/react-icons";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useSWRF } from "@/lib/swr";
 
-export default function DocViewer({ id, windata }) {
+export default function DocViewer({ id, windata, reference }) {
   const [isOpen, setIsOpen] = useState(true);
+  const { data: document } = useSWRF(`/api/document?document=${reference}`);
 
-  
-  const { data: document } = windata?.demo
-    ? windata.demodata
-    : useSWRF(`/api/document/${id}`);
-  const settings = useAppSelector((state) => state.appState.workflow.settings);
   const wdefs = useWindowDefinitions();
+  
 
   return (
     <Collapsible

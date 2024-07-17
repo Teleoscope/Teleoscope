@@ -8,11 +8,12 @@ import DocumentList from "@/components/Documents/DocumentList";
 import { CopyJson, CopyText, SaveDocx } from "@/components/Groups/GroupActions";
 import ButtonActions from "@/components/ButtonActions";
 import { useSWRF } from "@/lib/swr";
-export default function DocViewer(props) {
+
+export default function GroupViewer({ reference }) {
    
-  const { data: group } = useSWRF(`groups/${props.id}`);
+  const { data: group } = useSWRF(`/api/group?group=${reference}`);
   const { settings } = useAppSelector((state) => state.appState.workspace);
-  const data = group?.history[0].included_documents.map((p) => {
+  const data = group?.docs.map((p) => {
     return [p, 1.0];
   });
 
@@ -32,12 +33,12 @@ export default function DocViewer(props) {
       >
         <Typography noWrap align="left">
           {wdefs.definitions()["Group"].icon(group)}
-          {`${group?.history[0].label}`}
+          {`${group?.label}`}
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
         <Stack spacing={1} sx={{ margin: "1em" }}>
-          <Typography variant="h5">{group?.history[0].label}</Typography>
+          <Typography variant="h5">{group?.label}</Typography>
           <Divider></Divider>
           <ButtonActions
             inner={[
@@ -65,12 +66,12 @@ export default function DocViewer(props) {
             ]}
           ></ButtonActions>
           {/* <List>
-            {group?.history[0].included_documents.map((docid) => (
+            {group?.docs.map((docid) => (
               <DocumentListItem key={docid} id={docid}></DocumentListItem>
             ))}
           </List> */}
           <div style={{height: "25vh"}}>
-            <DocumentList           data={[{ranked_documents: data}]} pagination={true} loadMore={handleLoadMore}></DocumentList>
+            <DocumentList data={[{ranked_documents: data}]} pagination={true} loadMore={handleLoadMore}></DocumentList>
           </div>
         </Stack>
       </AccordionDetails>

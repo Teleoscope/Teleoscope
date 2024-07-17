@@ -7,7 +7,7 @@ import { useSWRF } from "@/lib/swr";
 
 export default function RankViewer({ id }) {
   
-  const { data: rank } = useSWRF(`/api/graph/${id}`);
+  const { data: rank } = useSWRF(`/api/graph?uid=${id}`);
   const { settings } = useAppSelector((state) => state.appState.workspace);
   const wdefs = useWindowDefinitions();
 

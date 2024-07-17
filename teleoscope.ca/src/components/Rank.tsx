@@ -61,11 +61,11 @@ const DistanceSlider = ({rank, color}) => {
 
 export default function Rank({ id, windata }) {
   const debug = false;
-  const [rank_id] = useState(id.split("%")[0]);
+  const [rank_id] = useState(id);
   
 
   const color = useAppSelector((state) => state.appState.workflow.settings.color);
-  const { data: rank, isLoading, error } = useSWRF(`/api/graph/${rank_id}`);
+  const { data: rank, isLoading, error } = useSWRF(`/api/graph?uid=${rank_id}`);
 
   if (isLoading) {
     return <>Loading...</>

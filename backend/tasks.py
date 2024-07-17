@@ -1,35 +1,40 @@
-import logging, json, numpy as np
+import logging
+import json
+import numpy as np
 import uuid
 from warnings import simplefilter
 from celery import Celery
 from bson.objectid import ObjectId
-from kombu import  Exchange, Queue
+from kombu import Exchange, Queue
 from typing import List
 import os
 import itertools
 import pandas as pd
+import yaml
 
-# local imports
+import platform
+from multiprocessing import set_start_method
+
+# Local imports
+from backend import embeddings
 from . import utils
 from . import schemas
 from . import graph
-from backend.embeddings import milvus_import
 
-# environment variables
+# Environment variables
 from dotenv import load_dotenv
-load_dotenv()  # This loads the variables from .env
-import os
+load_dotenv()
+
 RABBITMQ_USERNAME = os.getenv('RABBITMQ_USERNAME') 
 RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD') 
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST') 
 RABBITMQ_VHOST = os.getenv('RABBITMQ_VHOST') 
-RABBITMQ_TASK_QUEUE = os.getenv('RABBITMQ_TASK_QUEUE') 
+RABBITMQ_TASK_QUEUE = os.getenv('RABBITMQ_TASK_QUEUE')
 
-# ignore all future warnings
+# Ignore all future warnings
 simplefilter(action='ignore', category=FutureWarning)
 
-
-# url: "amqp://myuser:mypassword@localhost:5672/myvhost"
+# Celery broker URL
 CELERY_BROKER_URL = (
     f'amqp://'
     f'{RABBITMQ_USERNAME}:'
@@ -38,6 +43,17 @@ CELERY_BROKER_URL = (
     f'{RABBITMQ_VHOST}'
 )
 
+
+# # Check the operating system and set configurations accordingly
+# if platform.system() == 'Darwin':  # macOS
+#     try:
+#         set_start_method('forkserver')
+#     except RuntimeError:
+#         pass  # Start method has already been set
+#     # Set environment variable to disable Objective-C fork safety check
+#     os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+
+# Celery app initialization
 queue = Queue(RABBITMQ_TASK_QUEUE, Exchange(RABBITMQ_TASK_QUEUE), RABBITMQ_TASK_QUEUE)
 app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
 
@@ -47,9 +63,9 @@ app.conf.update(
     result_serializer='pickle',
     task_queues=[queue],
     worker_concurrency=4,
-    worker_max_memory_per_child = 4000000
+    worker_max_memory_per_child=4000000,
+    worker_pool="solo"
 )
-
 
 ################################################################################
 # Account tasks
@@ -570,7 +586,7 @@ def update_search(
 
 @app.task 
 def add_group(
-    *args, database: str, userid: str, workflow_id: str, color: str, 
+    *args, database: str, userid: str, workspace: str, color: str, 
     label: str, description="A group", documents=[],
     **kwargs) -> ObjectId:
     """
@@ -584,47 +600,52 @@ def add_group(
     kwargs: 
         label: (string, arbitrary)
         color: (string, hex color)
-        workflow_id: (string, represents ObjectId)
+        workspace: (string, represents ObjectId)
     """
     #---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
     
     # handle ObjectID kwargs
-    workflow_id = ObjectId(str(workflow_id))
-    userid = ObjectId(str(userid))
+    workspace = ObjectId(str(workspace))
+    userid = str(userid)
     
     # log action to stdout
-    logging.info(f'Adding group {label} for'
-                 f'workflow {workflow_id} and user {userid}.')
+    logging.info(f'Adding group {label} for '
+                 f'workspace {workspace} and user {userid}.')
     #---------------------------------------------------------------------------
 
-    # Creating document to be inserted into mongoDB
-    obj = schemas.create_group_object(
-        color, 
-        [ObjectId(str(d)) for d in documents],
-        label, 
-        "Initialize group", 
-        userid, 
-        description, 
-        workflow_id
-    )
+    # # Creating document to be inserted into mongoDB
+    # obj = schemas.create_group_object(
+    #     color, 
+    #     [ObjectId(str(d)) for d in documents],
+    #     label, 
+    #     "Initialize group", 
+    #     userid, 
+    #     description, 
+    #     workflow_id
+    # )
     
     # Initialize group in database
-    groups_res = db.groups.insert_one(obj)
+    groups_res = db.groups.insert_one({
+        "color": color,
+        "label": label,
+        "workspace": workspace,
+        "docs": []
+    })
     
     # Add initialized group to session
-    session = db.sessions.find_one({'_id': workflow_id})
-    history_item = utils.update_history(
-        item=session["history"][0],
-        oid=groups_res.inserted_id,
-        action=f"Initialize new group: {label}",
-        user=userid,
-    )
+    # session = db.sessions.find_one({'_id': workflow_id})
+    # history_item = utils.update_history(
+    #     item=session["history"][0],
+    #     oid=groups_res.inserted_id,
+    #     action=f"Initialize new group: {label}",
+    #     user=userid,
+    # )
     
-    sessions_res = utils.push_history(db, "sessions", workflow_id, history_item)    
-    logging.info(f"Associated group {obj['history'][0]['label']} "
-                 f"with session {workflow_id} and result {sessions_res}.")
+    # sessions_res = utils.push_history(db, "sessions", workflow_id, history_item)    
+    # logging.info(f"Associated group {obj['history'][0]['label']} "
+    #              f"with session {workflow_id} and result {sessions_res}.")
 
     return groups_res.inserted_id
     
@@ -678,7 +699,6 @@ def add_document_to_group( *args, database: str, userid: str,
     
     # handle ObjectID kwargs
     group_id = ObjectId(str(group_id))
-    userid = ObjectId(str(userid))
     document_id = ObjectId(str(document_id))
     
     # log action to stdout
@@ -687,28 +707,29 @@ def add_document_to_group( *args, database: str, userid: str,
     #---------------------------------------------------------------------------
 
     group = db.groups.find_one({'_id': group_id})
-    documents = group["history"][0]["included_documents"]
+    documents = group["docs"]
     
     if document_id in documents or str(document_id) in documents:
-        logging.info(f'Document {document_id} already in group {group["history"][0]["label"]}.')
+        logging.info(f'Document {document_id} already in group {group["label"]}.')
         return
-    else:
-        documents.append(document_id),
+    
+    db.groups.update_one({'_id': group_id}, {"$push": {"docs": document_id}})
 
-    history_item = utils.update_history(
-        item=group["history"][0],
-        included_documents=documents,
-        oid=document_id,
-        action="Add document to group",
-        user=userid
-    )
+    # history_item = utils.update_history(
+    #     item=group["history"][0],
+    #     included_documents=documents,
+    #     oid=document_id,
+    #     action="Add document to group",
+    #     user=userid
+    # )
 
-    utils.push_history(db, "groups", group_id, history_item)
+    # utils.push_history(db, "groups", group_id, history_item)
     
     # update all graph items
     nodes = db.graph.find({"reference": group_id})
     for node in nodes:
-        graph.graph(db, node["_id"])
+        graph.graph_uid(db, node["uid"])
+        # graph.graph(db, node["_id"])
 
     return None
 
@@ -1287,6 +1308,11 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
     return res
 
 
+@app.task
+def update_nodes(*args, database: str, workflow_id: str, node_uids: List[str]):
+    transaction_session, db = utils.create_transaction_session(db=database)
+    workflow_id = ObjectId(str(workflow_id))
+    graph.update_nodes(db, node_uids)
 
 ################################################################################
 # Document importing tasks
@@ -1480,12 +1506,11 @@ def mark(*args, database: str, userid: str, workflow_id: str, workspace_id: str,
     utils.push_history(db, "teleoscopes", workflow_id, history_item)
 
 
-
 @app.task
 def file_upload(*args, 
                 database: str, 
                 userid: str,
-                workflow: str,
+                workspace: str,
                 path: str, 
                 mimetype: str, 
                 headerLine: int, 
@@ -1504,14 +1529,29 @@ def file_upload(*args,
     db = utils.connect(db=database)
     # Process each row
     for batch in itertools.batched(df.iterrows(), 1000):
+        
+        # schema = yaml.safe_load(file)
+
         documents = []
         for _, row in batch:
-            doc = schemas.create_document_object(row[title], [], row[text], metadata=json.loads(row.to_json()))
+            doc = {
+                'text': row[text],
+                'title': row[title],
+                'vector': str(uuid.uuid4()),
+                'relationships': {},
+                'metadata': json.loads(row.to_json()),
+                'state': {"read": False}
+            }
+            # doc = schemas.create_document_object(row[title], [], row[text], metadata=json.loads(row.to_json()))
             documents.append(doc)
-        db.documents.insert_many(documents)
+        inserted_result = db.documents.insert_many(documents)
     
-    inserted_documents = db.documents.find({})
+    inserted_documents = db.documents.find({"_id": { "$in": inserted_result.inserted_ids}})
+
+    logging.info(f"There were {len(inserted_result.inserted_ids)} documents uploaded.")
     
+    logging.info(inserted_result.inserted_ids)
+
     # Initialize an empty set to store the combined unique values
     unique_values = set()
 
@@ -1525,28 +1565,33 @@ def file_upload(*args,
 
     for group in unique_values:
         color = utils.random_color()
-        res = add_group(database=database, userid=userid, workflow_id=workflow,
-                        color=color, label=str(group), description="Imported group")
+
+        res = add_group(database=database, userid=userid, workspace=workspace,
+                        color=color, label=str(group))
         
         group_map[group] = res
     
     for inserted_doc in inserted_documents:
+        logging.info(f"Inserting {inserted_doc} to the right groups.")
         for group in unique_values:
             keys = [inserted_doc["metadata"][g] for g in groups]
             if group in keys:
                 add_document_to_group(database=database, userid=userid, 
                     group_id=group_map[group], document_id=inserted_doc["_id"])
 
-    import pymongo
     db.documents.create_index([('text', 'text')], background=True)
 
-
+    # milvus_import(database=database, userid=userid)
     milvus_import.apply_async(kwargs={
         'database': database,
         'userid': userid,
-    }, queue='embeddings')
+    }, queue=RABBITMQ_TASK_QUEUE)
 
 
+
+@app.task
+def milvus_import(*args, database, userid, **kwargs):
+    embeddings.milvus_import(database=database, userid=userid)
 
 
 @app.task

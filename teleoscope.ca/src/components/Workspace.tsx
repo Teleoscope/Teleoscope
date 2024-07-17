@@ -16,6 +16,10 @@ import { useAppSelector } from '@/lib/hooks';
 import { AppState } from '@/services/app';
 import Workflow from './Workflow/Workflow';
 import HelpOverlay from './HelpOverlay';
+import { loadAppData } from '@/actions/appState';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { useSWRF } from '@/lib/swr';
 
 interface WorkspaceProps {
     workspace: string;
@@ -38,6 +42,17 @@ export default function Workspace({
     topBarColor = DEFAULT_GREY,
     compact = false
 }: WorkspaceProps) {
+
+    // const { data: app, error, isLoading  } = useLoadWorkspaceQuery(workspace_id)
+    const { data: app, error, isLoading  } = useSWRF(`/api/app?workspace=${workspace_id}`)
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if (app) {
+          dispatch(loadAppData({ state: app }));
+        }
+      }, [app, dispatch]);
+    
 
     const { workspace, workflow }: AppState = useAppSelector(
         (state) => state.appState

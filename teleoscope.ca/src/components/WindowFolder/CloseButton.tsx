@@ -4,7 +4,7 @@ import IconButton from "@mui/material/IconButton";
 
 // actions
 import { useDispatch } from "react-redux";
-import { removeWindow } from "@/actions/appState";
+import { updateNodes } from "@/actions/appState";
 
 export default function CloseButton({ id, sx, ...props}) {
   const dispatch = useDispatch();
@@ -12,7 +12,14 @@ export default function CloseButton({ id, sx, ...props}) {
     <IconButton
       sx={sx}
       {...props}
-      onClick={() => dispatch(removeWindow({node: id}))}
+      onClick={() => dispatch(updateNodes({
+        changes: [
+          {
+            id: id,
+            type: "remove"
+          }
+        ]
+      }))}
     >
       <CloseIcon sx={sx} fontSize="inherit" />
     </IconButton>
