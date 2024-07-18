@@ -73,7 +73,7 @@ export default function Workspace({
                 <ResizablePanel
                     className="flex flex-col shadow-sm bg-white border w-full"
                     maxSize={100}
-                    defaultSize={10}
+                    defaultSize={5}
                     collapsible={true}
                 >
                     <Workflow />
@@ -85,7 +85,7 @@ export default function Workspace({
                 <ResizablePanel
                     className="flex flex-col shadow-sm bg-white border"
                     minSize={minWidth}
-                    defaultSize={30}
+                    defaultSize={5}
                 >
                     <div className="flex flex-col flex-1 overflow-y-scroll w-full overflow-x-hidden">
                         <div className="flex flex-col p-1 py-5 items-center justify-center border-b">

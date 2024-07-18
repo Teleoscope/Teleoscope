@@ -12,7 +12,7 @@ import { Graph } from "@/types/graph";
 export default function SelectionViewer({ noGroup = false }) {
   const selection = useAppSelector((state) => state.appState.workflow.selection);
   const uids = selection.nodes.map((n: Node) => n.id).join(",")
-  const { data: nodes }:{ data: Array<Graph>} = useSWRF(`/api/graph?uids=${uids}`)
+  const { data: nodes }:{ data: Array<Graph>} = useSWRF(uids ? `/api/graph?uids=${uids}` : null)
   
   return (
     <div className="flex flex-col flex-1 justify-between items-center w-full overflow-x-hidden [&>*]:w-full">

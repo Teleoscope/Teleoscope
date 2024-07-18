@@ -40,7 +40,6 @@ const AccordionSummary = styled((props: AccordionSummaryProps) => (
   },
 }));
 
-// <DocumentList data={data} pagination={true} loadMore={handleLoadMore}></DocumentList>
 
 const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
   padding: theme.spacing(2),

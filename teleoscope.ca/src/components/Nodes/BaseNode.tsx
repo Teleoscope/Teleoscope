@@ -26,7 +26,7 @@ function BaseNode({ data, id, selected }) {
   const size = useStore(s => defaultSize(s, id) );
   const windata = { ...data, ...size };
   const settings = useAppSelector((state) => state.appState.workflow.settings);
-  const { data: node } = useSWRF(`/api/graph?uid=${id}`)
+  const { data: node } = useSWRF(id ? `/api/graph?uid=${id}` : null)
   
   return (
       <>

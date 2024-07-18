@@ -27,7 +27,7 @@ interface MouseCoords {
     worldY: number;
 }
 
-function Flow({ drawerWidth }: { drawerWidth: number }) {
+function Workflow({ drawerWidth }: { drawerWidth: number }) {
     const wdefs = useWindowDefinitions();
     const nodeTypes = useMemo(
         () => ({ windowNode: WindowNode, ...wdefs.nodeTypeDefs() }),
@@ -329,4 +329,4 @@ function Flow({ drawerWidth }: { drawerWidth: number }) {
     );
 }
 
-export default Flow;
+export default Workflow;

@@ -7,8 +7,8 @@ import type { Workspaces } from "@/types/workspaces";
 class ObjectId {}
 
 export const DEFAULT_GREY = '#D3D3D3';
-export const DEFAULT_DRAWER_WIDTH = 200;
-export const DEFAULT_MIN_WIDTH = 34;
+export const DEFAULT_DRAWER_WIDTH = 100;
+export const DEFAULT_MIN_WIDTH = 15;
 export const DEFAULT_TITLE_LENGTH = 40;
 
 export const DEFAULT_TEAM_NAME = "Team loading...";

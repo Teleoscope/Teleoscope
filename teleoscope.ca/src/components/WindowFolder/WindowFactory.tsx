@@ -8,7 +8,7 @@ export default function WindowFactory({ windata: w, node, ...props }) {
 
   const key = wdefs.apikeymap()[w.type];
   
-  const { data } = useSWRF(`/api/${key}?${key}=${node?.reference}`);
+  const { data } = useSWRF(key && node?.reference ? `/api/${key}?${key}=${node?.reference}`: null);
 
   if (w.type == "FABMenu") {
     return <div>{wdefs.definitions()[w.type].component(w, oid, "#FFFFFF")}</div>;

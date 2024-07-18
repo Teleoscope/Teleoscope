@@ -15,7 +15,9 @@ const GroupLabel = ({ index, data, callback}) => {
   const group = data[index];
   const key = wdefs.getAPIRoute(group.type);
 
-  const { data: item } = useSWRF(`/api/${key}/${group.id}`);
+  console.log("group", data, group, key)
+
+  const { data: item } = useSWRF(`/api/${key}?${key}=${group.id}`);
 
   const title = (type) => {
     if (type === "Document") {
@@ -56,7 +58,7 @@ const GroupLabel = ({ index, data, callback}) => {
   );
 };
 
-export default function Itemlist({ onSelect, data, render, loadMore }) {
+export default function ItemList({ onSelect, data, render, loadMore }) {
   const ref = React.useRef(null);
   const [currentItemIndex, setCurrentItemIndex] = React.useState(-1);
   const listRef = React.useRef(null);
