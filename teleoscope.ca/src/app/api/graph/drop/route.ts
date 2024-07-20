@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         send('update_nodes', {
             workflow_id: workflow_id,
             workspace_id: workspace_id,
-            nodes: [uid]
+            node_uids: [uid]
         });
 
         return insert_result;

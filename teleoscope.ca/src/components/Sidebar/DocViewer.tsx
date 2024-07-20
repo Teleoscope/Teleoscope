@@ -1,4 +1,4 @@
-import { useWindowDefinitions } from "@/lib/hooks";
+
 import { DocumentActions } from "@/components/Documents/DocumentActions";
 import Highlighter from "@/components/Highlighter";
 import {
@@ -11,13 +11,13 @@ import { Button } from "../ui/button";
 import { CaretSortIcon } from "@radix-ui/react-icons";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useSWRF } from "@/lib/swr";
+import WindowDefinitions from "../WindowFolder/WindowDefinitions";
+import { useAppSelector } from "@/lib/hooks";
 
-export default function DocViewer({ id, windata, reference }) {
+export default function DocViewer({ reference }) {
   const [isOpen, setIsOpen] = useState(true);
-  const { data: document } = useSWRF(`/api/document?document=${reference}`);
-
-  const wdefs = useWindowDefinitions();
-  
+  const { data: document } = useSWRF(reference ? `/api/document?document=${reference}`:null);
+  const { color } = useAppSelector((state) => state.appState.workflow.settings);
 
   return (
     <Collapsible
@@ -27,7 +27,7 @@ export default function DocViewer({ id, windata, reference }) {
     >
       <div className="flex w-full items-center justify-between space-x-4 px-4 overflow-hidden">
         <h4 className="text-sm font-semibold flex items-center space-x-2 w-ful overflow-hidden">
-          {wdefs.definitions()["Document"].icon()}
+          {WindowDefinitions("Document").icon(color)}
           <span className="truncate   overflow-hidden whitespace-nowrap flex-shrink">
             {document?.title}
           </span>

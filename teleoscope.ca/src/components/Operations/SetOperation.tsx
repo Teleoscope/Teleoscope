@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
 import { Stack, Typography } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import DocumentList from "@/components/Documents/DocumentList";
 import Count from "@/components/Count";
 import Histogram from "@/components/Histogram";
 import ButtonActions from "@/components/ButtonActions";
-import { useSWRF } from "@/lib/swr";
+import { WindowProps } from "../WindowFolder/WindowFactory";
 
 
 const Status = (node) => {
@@ -27,26 +26,11 @@ const Status = (node) => {
 };
 
 // Additional props can be included as needed
-export default function SetOperation({ id, windata }) {
-  const [ node_id, setNodeId] = useState(id);
-  
-
-  const { data: node, isLoading, error } = useSWRF(`/api/graph?uid=${node_id}`);
-  if (isLoading) {
-    return <>Loading...</>
+export default function SetOperation({ data, reactflow_node, graph_node: node }: WindowProps) {
+  if (!node) {
+    return <>Loading operation...</>
   }
-
-  if (error) {
-    return  <>Error...</>
-  }
-
-
   const doclists = node?.doclists;
-  
-  useEffect(() => {
-    setNodeId(id);
-  }, [id]);
-  
 
   return (
     <>

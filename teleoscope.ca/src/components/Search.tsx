@@ -15,9 +15,12 @@ import DocumentList from "@/components/Documents/DocumentList";
 import ButtonActions from "@/components/ButtonActions";
 import Count from "@/components/Count";
 import { useSWRF } from "@/lib/swr";
+import { WindowProps } from "./WindowFolder/WindowFactory";
+import { useAppSelector } from "@/lib/hooks";
+import { RootState } from "@/lib/store";
 
-export default function Search({id, windata, color}) {
-  const [query, setQuery] = useState(windata?.query ? windata.query : "");
+export default function Search({ data: search, reactflow_node, graph_node }: WindowProps) {
+  const [query, setQuery] = useState(search?.query ? search.query : "");
 
   const { data: documents, isLoading: documents_loading } = useSWRF(
     `/api/search?query=${query}`
@@ -38,10 +41,10 @@ export default function Search({id, windata, color}) {
 
   const handleSetQuery = (e) => {
     setQuery(e.target.value);
-    dispatch(updateSearch({ search_id: windata.oid, query: e.target.value }));
+    dispatch(updateSearch({ search_id: reactflow_node.oid, query: e.target.value }));
   };
 
-  
+  const { color } = useAppSelector((state: RootState) => state.appState.workflow.settings.color);
 
   return (
     <Stack direction="column" sx={{ height: "100%" }}>
@@ -65,7 +68,7 @@ export default function Search({id, windata, color}) {
         <DocumentList
           loading={documents_loading}
           pagination={true}
-          data={[{id: id, ranked_documents: data}]}
+          data={[{id: reactflow_node.id, ranked_documents: data}]}
           showGroupIcon={true}
         />
       </Box>

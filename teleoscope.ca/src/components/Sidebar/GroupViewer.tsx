@@ -3,22 +3,24 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Typography, Stack, Divider } from "@mui/material";
-import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
+import { useAppSelector } from "@/lib/hooks";
 import DocumentList from "@/components/Documents/DocumentList";
 import { CopyJson, CopyText, SaveDocx } from "@/components/Groups/GroupActions";
 import ButtonActions from "@/components/ButtonActions";
 import { useSWRF } from "@/lib/swr";
+import WindowDefinitions from "../WindowFolder/WindowDefinitions";
 
 export default function GroupViewer({ reference }) {
    
   const { data: group } = useSWRF(`/api/group?group=${reference}`);
   const { settings } = useAppSelector((state) => state.appState.workspace);
+  const { color } = useAppSelector((state) => state.appState.workflow.settings.color);
+
   const data = group?.docs.map((p) => {
     return [p, 1.0];
   });
 
   const handleLoadMore = () => { console.log("stub") }
-  const wdefs = useWindowDefinitions();
 
   return (
     <Accordion
@@ -32,7 +34,7 @@ export default function GroupViewer({ reference }) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {wdefs.definitions()["Group"].icon(group)}
+          {WindowDefinitions("Group").icon(group ? group.color : color)}
           {`${group?.label}`}
         </Typography>
       </AccordionSummary>

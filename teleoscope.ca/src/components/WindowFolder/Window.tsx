@@ -7,34 +7,23 @@ import { Chip, Stack, Paper, Box, Divider } from "@mui/material";
 // actions
 import { useDispatch } from "react-redux";
 import { maximizeWindow, updateNodes } from "@/actions/appState";
-import { useEffect, useRef, useState } from "react";
 
-export default function Window({windata, id, size, title, icon, inner, color}) {
-  const w = windata;
+export default function Window({icon, title, inner, color, reactflow_node}) {
   const dispatch = useDispatch();
 
   const handleDelete = () => {
     dispatch(updateNodes({
       changes: [
         {
-          id: id,
+          id: reactflow_node.id,
           type: "remove"
         }
       ]
   }))
   };
 
-  const elRef = useRef();
-  const [height, setHeight] = useState(0);
 
-  useEffect(() => {
-    if (!elRef?.current?.clientHeight) {
-      return;
-    }
-    setHeight(elRef?.current?.clientHeight);
-  }, [elRef?.current?.clientHeight]);
-
-  if (size.width < size.minWidth + 1 || size.height < size.minHeight + 1) {
+  if (reactflow_node.width < reactflow_node.minWidth + 1 || reactflow_node.height < reactflow_node.minHeight + 1) {
     return (
       <Chip
         label={
@@ -42,7 +31,7 @@ export default function Window({windata, id, size, title, icon, inner, color}) {
             sx={{ 
               display: 'flex', 
               flexShrink: 2, 
-              width: size.width,
+              width: reactflow_node.width,
               paddingLeft: "2px"
             }}
           >{title}
@@ -51,11 +40,11 @@ export default function Window({windata, id, size, title, icon, inner, color}) {
         // variant="filled"
         avatar={<span style={{width: "1em", padding: "0.425em"}}>{icon}</span>}
         onDoubleClick={() => {
-          dispatch(maximizeWindow({ id: id }))
+          dispatch(maximizeWindow({ id: reactflow_node.id }))
         }}
         onDelete={handleDelete}
         sx={{
-          border: w?.isChecked
+          border: reactflow_node?.isChecked
             ? `2px solid ${color}`
             : "1px solid #DDDDDD",
           boxShadow: "1",
@@ -76,8 +65,8 @@ export default function Window({windata, id, size, title, icon, inner, color}) {
     <Paper
       variant="outlined"
       style={{
-        height: size.height,
-        width: size.width,
+        height: reactflow_node.height,
+        width: reactflow_node.width,
         overflow: "hidden",
       }}
       sx={{
@@ -86,13 +75,13 @@ export default function Window({windata, id, size, title, icon, inner, color}) {
     >
       <Stack
         style={{
-          height: size.height - 2,
-          width: size.width - 2,
+          height: reactflow_node.height - 2,
+          width: reactflow_node.width - 2,
         }}
       >
         <WindowTopBar
           title={title}
-          id={id}
+          reactflow_node_id={reactflow_node.id}
           icon={icon}
         />
         <Divider />

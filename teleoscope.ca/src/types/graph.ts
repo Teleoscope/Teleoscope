@@ -13,10 +13,10 @@ export interface Graph {
 }
 
 interface Doclist {
-  id: string;
-  nodeid: string;
+  uid: string;
+  reference: any;
   type: string;
-  ranked_documents: string;
+  ranked_documents: any;
 }
 
 

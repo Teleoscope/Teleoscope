@@ -23,7 +23,7 @@ import { useSWRF } from "@/lib/swr";
 
 export default function DocumentListItem(props) {
   const dispatch = useAppDispatch()
-  const { data: document, error: document_error, isLoading: document_loading} = props.index? useSWRF(`/api/query?index=${props.index}&q=${props.id}`): useSWRF(`/api/document?document=${props.id}`)
+  const { data: document, error: document_error, isLoading: document_loading} = useSWRF(props.id ? `/api/document?document=${props.id}` : null)
   const title = document ? preprocessTitle(document.title) : false;
   const settings = useAppSelector((state) => state.appState.workflow.settings);
 
@@ -56,7 +56,7 @@ export default function DocumentListItem(props) {
         height: "100%",
         backgroundColor: props.highlight ? "#EEEEEE" : "white",
       }}
-      id={document.id}
+      id={document?._id}
     > 
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Stack
@@ -87,7 +87,7 @@ export default function DocumentListItem(props) {
 
         {props.ShowDeleteIcon ? (
           <Deleter 
-            callback={() => dispatch(removeDocumentFromGroup({group_id: props.group._id, document_id: props.id}))} 
+            callback={() => dispatch(removeDocumentFromGroup({group_id: props.group._id, document_id: document._id}))} 
             color={settings.color}
           />    
         ) : (

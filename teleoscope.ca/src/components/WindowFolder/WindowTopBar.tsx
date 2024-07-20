@@ -9,7 +9,7 @@ import CloseButton from "@/components/WindowFolder/CloseButton";
 import { useDispatch } from "react-redux";
 import { minimizeWindow } from "@/actions/appState";
 
-export default function WindowTopBar({id, icon, title}) {
+export default function WindowTopBar({reactflow_node_id, icon, title}) {
   const dispatch = useDispatch();
   return (
     <Stack
@@ -17,13 +17,13 @@ export default function WindowTopBar({id, icon, title}) {
       direction="row"
       alignItems="flex-start"
       justifyContent="space-between"
-      onDoubleClick={() => dispatch(minimizeWindow({ id: id }))}
+      onDoubleClick={() => dispatch(minimizeWindow({id: reactflow_node_id }))}
     >
       
       <Typography variant="body1" component="div" sx={{ padding: 0.6 }}>
         {icon} {title}
       </Typography>
-      <CloseButton id={id} size="small" />
+      <CloseButton reactflow_node_id={reactflow_node_id} size="small" />
     </Stack>
   );
 }

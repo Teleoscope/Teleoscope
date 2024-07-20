@@ -120,6 +120,7 @@ function Uploader() {
             <Select
               value={title}
               label="Title"
+              required={true}
               onChange={(e) => setTitle(e.target.value)}
             >
               {headers.map((header, index) => (
@@ -133,6 +134,7 @@ function Uploader() {
             <Select
               value={text}
               label="Text"
+              required={true}
               onChange={(e) => setText(e.target.value)}
             >
               {headers.map((header, index) => (

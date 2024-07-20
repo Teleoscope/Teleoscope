@@ -1,31 +1,42 @@
 import Window from "@/components/WindowFolder/Window";
-import { useWindowDefinitions } from "@/lib/hooks";
+import { useAppSelector } from "@/lib/hooks";
+import { NodeData } from "../Nodes/BaseNode";
 import { useSWRF } from "@/lib/swr";
+import { Documents } from "@/types/documents";
+import { Groups } from "@/types/groups";
+import WindowDefinitions from "./WindowDefinitions";
+import { Search } from "@/types/search";
 
-export default function WindowFactory({ windata: w, node, ...props }) {
-  const wdefs = useWindowDefinitions();
-  const oid = node ? node.reference : ""
+export interface WindowProps extends NodeData {
+  data: Groups | Documents | Search | null
+}
 
-  const key = wdefs.apikeymap()[w.type];
+export default function WindowFactory({ reactflow_node: r, graph_node: g}: NodeData) {
+  const W = WindowDefinitions(r.type);
+  const oid = g?.reference
   
-  const { data } = useSWRF(key && node?.reference ? `/api/${key}?${key}=${node?.reference}`: null);
+  const { data } = useSWRF(oid ? `/api/${W.apipath}?${W.apipath}=${oid}` : null)
 
-  if (w.type == "FABMenu") {
-    return <div>{wdefs.definitions()[w.type].component(w, oid, "#FFFFFF")}</div>;
+  const default_color = useAppSelector((state: RootState) => state.appState.workflow.settings.color)
+  const color = data?.color ? data.color : default_color
+
+  const props: WindowProps = {
+    reactflow_node: r,
+    graph_node: g,
+    data: data
+  }
+
+  if (r.type == "FABMenu") {
+    return <div>{W.component(props)}</div>;
   }
 
   return (
     <Window
-      {...props}
-      id={oid}
-      icon={wdefs.definitions()[w.type].icon(data)}
-      inner={wdefs.definitions()[w.type].component(w, oid, wdefs.definitions()[w.type].color(data))}
-      showWindow={wdefs.definitions()[w.type].showWindow || w.showWindow}
-      data={data}
-      title={wdefs.definitions()[w.type].title(data)}
-      color={wdefs.definitions()[w.type].color(data)}
-      demo={w.demo}
-      demodata={w.demodata}
+      icon={W.icon(color)}
+      title={W.title(data)}
+      color={color}
+      inner={W.component(props)}
+      reactflow_node={r}
     />
   );
 }

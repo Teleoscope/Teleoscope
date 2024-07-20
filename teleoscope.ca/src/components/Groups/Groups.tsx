@@ -17,8 +17,9 @@ export const GroupItem = ({
   recolorGroup,
   color,
 }) => {
-const wdefs = useWindowDefinitions();
+  const { data: graph_item } = useSWRF(`/api/graph?oid=${g._id}`)
 return (
+  
   <div
     key={g._id}
     draggable={true}
@@ -35,7 +36,7 @@ return (
         <Stack direction="row" alignItems="center">
           <ListItemIcon>
             <IconButton onClick={() => setShowColorPicker(!showColorPicker)}>
-              {wdefs.definitions()["Group"].icon(g)}
+              {WindowDefinitions("Group").icon(g)}
             </IconButton>
           </ListItemIcon>
 
@@ -45,7 +46,10 @@ return (
           />
         </Stack>
         
-        <Deleter callback={() => removeGroup(g._id)} color={color} />
+        <Deleter callback={() => removeGroup({
+          oid: g._id,
+          uid: graph_item?.uid
+        })} color={color} />
         
       </Stack>
     </ListItem>
@@ -78,7 +82,7 @@ export const GroupList = ({ groups, ...props }) => (
 import { useState } from "react";
 import { Divider } from "@mui/material";
 
-import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
+import { useAppSelector } from "@/lib/hooks";
 import randomColor from "randomcolor";
 import ButtonActions from "@/components/ButtonActions";
 import {
@@ -93,12 +97,14 @@ import Deleter from "@/components/Deleter";
 import { useAppDispatch } from "@/lib/hooks";
 import { addGroup, recolorGroup, relabelGroup, removeGroup } from "@/actions/appState";
 import { useSWRF } from "@/lib/swr";
+import WindowDefinitions from "../WindowFolder/WindowDefinitions";
+import { Groups } from "@/types/groups";
 
 export default function Groups(props) {
   const dispatch = useAppDispatch()
   const { _id: workspace_id } = useAppSelector((state) => state.appState.workspace);
   const { _id: workflow_id, settings } = useAppSelector((state) => state.appState.workflow);
-  const { data: groups, isLoading } = useSWRF(`/api/groups?workspace=${workspace_id}`);
+  const { data: groups, isLoading } = useSWRF(workspace_id ? `/api/groups?workspace=${workspace_id}` : null);
 
   const [showColorPicker, setShowColorPicker] = useState(false);
 
@@ -111,7 +117,7 @@ export default function Groups(props) {
       g["documents"] = [];
       for (const doc of g.docs) {
         const response = await fetch(
-          `/api/${swr.subdomain}/document/${doc}`
+          `/api/document?document=${doc}`
         ).then((res) => res.json());
         g["documents"].push(response);
       }
@@ -124,16 +130,23 @@ export default function Groups(props) {
     return <>Loading groups...</>
   }
 
+  const handleAddGroup = (e) => {
+    const newGroup: Groups = {
+      label: e.target.value,
+      color: randomColor(),
+      docs: [],
+      workspace: workspace_id
+    }
+    dispatch(addGroup(newGroup))
+  }
+
+  
   return (
     <div style={{ overflow: "auto", height: "100%" }}>
 
       <NewItemForm 
         label={"Create new group..."} 
-        HandleSubmit={(e) => dispatch(addGroup({
-          label: e.target.value,
-          color: randomColor(),
-          documents: []
-        }))}
+        HandleSubmit={handleAddGroup}
       />
 
       <Divider />
@@ -153,7 +166,7 @@ export default function Groups(props) {
         showColorPicker={showColorPicker}
         setShowColorPicker={setShowColorPicker}
         onDragStart={onDragStart}
-        removeGroup={(id) => dispatch(removeGroup({group_id: id}))}
+        removeGroup={(params) => dispatch(removeGroup(params))}
         relabelGroup={(label, id) => dispatch(relabelGroup({label: label, group_id: id}))}
         recolorGroup={(color, id) => {
           dispatch(recolorGroup({color: color, group_id: id}));

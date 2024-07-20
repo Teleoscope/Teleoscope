@@ -9,6 +9,7 @@ import workflows from "@/schemas/workflows.json";
 import workspaces from "@/schemas/workspaces.json";
 import notes from "@/schemas/notes.json";
 import graph from "@/schemas/graph.json";
+import documents from "@/schemas/documents.json";
 
 
 async function connect(uri: string, options?: MongoClientOptions) {
@@ -115,6 +116,19 @@ async function ensure_db_collections_exist(db: Db) {
             validator: notes,
             validationLevel: "strict"
         })
+    }
+
+    if (!coll_names.includes("documents")) {
+        await db.createCollection("documents", {
+            validator: documents,
+            validationLevel: "strict"
+        })
+        await db.collection("documents").createIndex(
+            { "title": "text", "text": "text" },
+            {
+                name: "text",
+            }
+        )
     }
 
     if (!coll_names.includes("graph")) {

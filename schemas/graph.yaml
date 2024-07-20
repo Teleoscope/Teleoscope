@@ -35,22 +35,22 @@ properties:
       bsonType: object
       description: "doclist object"
       required:
-        - id
-        - nodeid
+        - uid
+        - reference
         - type
         - ranked_documents
       properties:
-        id:
+        uid:
           bsonType: string
-          description: "id for this doclist"
-        nodeid:
-          bsonType: string
-          description: "on screen node id for this doclist"
+          description: "on screen reactflow node id for this doclist"
+        reference:
+          bsonType: ["objectId", "string", "null"]
+          description: "reference if the item is a document, group, or search"
         type:
           bsonType: string
           description: "type of this doclist"
         ranked_documents:
-          bsonType: string
+          bsonType: array
           description: "all documents in order according to rank in this doclist"
   parameters:
     bsonType: object

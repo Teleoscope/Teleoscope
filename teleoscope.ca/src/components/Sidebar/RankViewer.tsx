@@ -1,15 +1,15 @@
 import { Stack, Typography, Accordion, AccordionSummary, AccordionDetails, Divider } from "@mui/material";
 
-import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
+import { useAppSelector } from "@/lib/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DocumentList from "../Documents/DocumentList";
 import { useSWRF } from "@/lib/swr";
+import WindowDefinitions from "../WindowFolder/WindowDefinitions";
 
 export default function RankViewer({ id }) {
   
   const { data: rank } = useSWRF(`/api/graph?uid=${id}`);
   const { settings } = useAppSelector((state) => state.appState.workspace);
-  const wdefs = useWindowDefinitions();
 
   const handleLoadMore = () => { console.log("stub") }
 
@@ -27,7 +27,7 @@ export default function RankViewer({ id }) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {wdefs.definitions()["Rank"].icon(rank)} Rank
+          {WindowDefinitions("Rank").icon(rank)} Rank
         </Typography>
       </AccordionSummary>
       <AccordionDetails>

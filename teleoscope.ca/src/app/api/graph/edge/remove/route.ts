@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
             send("update_nodes", {
                 workflow_id: workflow_id,
                 workspace_id: workspace_id,
-                nodes: graph_update_target_node_uids
+                node_uids: graph_update_target_node_uids
             });
 
             return delete_result;

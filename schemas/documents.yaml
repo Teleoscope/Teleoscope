@@ -4,7 +4,6 @@ title: document
 required:
   - text
   - title
-  - vectors
   - relationships
   - metadata
   - state
@@ -15,9 +14,6 @@ properties:
   title:
     bsonType: string
     description: title of the document
-  vector:
-    bsonType: string
-    description: the milvus uid
   relationships:
     bsonType: object
     description: document

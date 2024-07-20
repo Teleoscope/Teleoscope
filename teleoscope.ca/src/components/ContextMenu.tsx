@@ -1,4 +1,4 @@
-import { useAppDispatch, useAppSelector, useWindowDefinitions } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 // mui
 import Menu from "@mui/material/Menu";
@@ -7,25 +7,27 @@ import Divider from "@mui/material/Divider";
 
 // actions
 import { makeNode } from "@/actions/appState";
+import WindowDefinitions from "./WindowFolder/WindowDefinitions";
 
 export default function ContextMenu({ contextMenu, handleCloseContextMenu,  }) {
   const dispatch = useAppDispatch();
-  const wdefs = useWindowDefinitions();
-  const { settings } = useAppSelector((state) => state.appState.workspace);
+
+  const { workspace, workflow } = useAppSelector((state) => state.appState);
+  const { color } = workflow.settings
 
   const handleAddNode = (id, type) => {    
     dispatch(makeNode({
       oid: id, 
       type: type,
-      width: settings?.document_width,
-      height: settings?.document_height,
+      width: workspace.settings?.document_width,
+      height: workspace.settings?.document_height,
       x: contextMenu.worldX,
       y: contextMenu.worldY
     }));
   };
 
   const handleOpenNewWindow = (menu_action) => {
-    const w = { ...wdefs.definitions()[menu_action] };
+    const w = { ...WindowDefinitions(menu_action) };
     handleAddNode(w.tag, w.type);
     handleCloseContextMenu();
   };
@@ -52,19 +54,19 @@ export default function ContextMenu({ contextMenu, handleCloseContextMenu,  }) {
       
 
       <MenuItem onClick={() => handleOpenNewWindow("Search")}>
-        <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Search"].icon()}</span> New Search
+        <span style={{marginRight: "0.25em"}}>{WindowDefinitions("Search").icon(color)}</span> New Search
       </MenuItem>
       <MenuItem onClick={() => handleOpenNewWindow("Group")}>
-        <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Group"].icon()}</span> New Group
+        <span style={{marginRight: "0.25em"}}>{WindowDefinitions("Group").icon(color)}</span> New Group
       </MenuItem>
       <MenuItem onClick={() => handleOpenNewWindow("Rank")}>
-      <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Rank"].icon()}</span> New Rank
+      <span style={{marginRight: "0.25em"}}>{WindowDefinitions("Rank").icon(color)}</span> New Rank
       </MenuItem>
       <MenuItem onClick={() => handleOpenNewWindow("Projection")}>
-      <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Projection"].icon()}</span> New Projection
+      <span style={{marginRight: "0.25em"}}>{WindowDefinitions("Projection").icon(color)}</span> New Projection
       </MenuItem>
       <MenuItem onClick={() => handleOpenNewWindow("Note")}>
-      <span style={{marginRight: "0.25em"}}>{wdefs.definitions()["Note"].icon()}</span> New Note
+      <span style={{marginRight: "0.25em"}}>{WindowDefinitions("Note").icon(color)}</span> New Note
       </MenuItem>
       <Divider></Divider>
       

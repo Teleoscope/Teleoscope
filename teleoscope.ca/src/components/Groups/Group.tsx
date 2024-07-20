@@ -5,15 +5,13 @@ import DocumentList from "@/components/Documents/DocumentList";
 import ButtonActions from "@/components/ButtonActions";
 import { SaveXLSX, CopyJson, CopyText, SaveDocx } from "@/components/Groups/GroupActions";
 import Count from "@/components/Count";
-import { useSWRF } from "@/lib/swr";
+import { WindowProps } from "../WindowFolder/WindowFactory";
 
 
-export default function Group({ id, windata }) {
-
-  const { data: group } = useSWRF(`/api/group?group=${id}`);
-  
+export default function Group({ data: group, reactflow_node }: WindowProps) {
   // Prepare data for the DocumentList and ButtonActions
   const data = group?.docs.map(doc => [doc, 1.0]);
+  const id = reactflow_node.id
   
   // Button actions configuration
   const buttonActionsConfig = { data, group };

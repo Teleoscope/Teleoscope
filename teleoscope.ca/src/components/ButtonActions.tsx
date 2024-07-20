@@ -13,7 +13,7 @@ export default function ButtonActions(props) {
       >
         {props.inner.map(([Component, componentProps], index) => {
           return (
-            <Component key={componentProps.id || index} {...componentProps} />
+            <Component key={index} {...componentProps} />
           )
         })}
       </Stack>

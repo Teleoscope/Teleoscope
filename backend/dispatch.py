@@ -147,8 +147,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "file_upload":
                 res = tasks.file_upload.signature(args=(), kwargs=kwargs)
             
-            case "graph_update_on_edge_remove":
-                res = tasks.graph_update_on_edge_remove.signature(args=(), kwargs=kwargs)
+            case "update_nodes":
+                res = tasks.update_nodes.signature(args=(), kwargs=kwargs)
 
 
         try:

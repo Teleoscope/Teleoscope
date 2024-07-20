@@ -8,11 +8,7 @@ import EditableText from '@/components/EditableText';
 import Deleter from '@/components/Deleter';
 
 // actions
-import {
-    useAppSelector,
-    useAppDispatch,
-    useWindowDefinitions
-} from '@/lib/hooks';
+import { useAppSelector, useAppDispatch } from '@/lib/hooks';
 import { RootState } from '@/lib/store';
 
 import { addNote, relabelNote, removeNote } from '@/actions/appState';
@@ -22,9 +18,28 @@ import { NewItemForm } from '@/components/NewItemForm';
 import { onDragStart } from '@/lib/drag';
 import { useSWRF } from '@/lib/swr';
 import { Notes } from '@/types/notes';
+import WindowDefinitions from '../WindowFolder/WindowDefinitions';
+
+const DeleteItem = ({ id }: { id: string }) => {
+    const settings = useAppSelector(
+        (state) => state.appState.workflow.settings
+    );
+    const { data: graph_item } = useSWRF(`/api/graph?oid=${id}`);
+    const dispatch = useAppDispatch();
+    console.log("note", graph_item)
+
+    const uid = graph_item?.uid
+    return (
+        <Deleter
+            callback={() =>
+                dispatch(removeNote({ oid: id, uid: uid }))
+            }
+            color={settings.color}
+        />
+    );
+};
 
 export default function NotesList() {
-    const wdefs = useWindowDefinitions();
     const workspace = useAppSelector(
         (state: RootState) => state.appState.workspace._id
     );
@@ -47,7 +62,7 @@ export default function NotesList() {
     const handleNewNote = (e) => {
         // const content = convertToRaw(ContentState.createFromText(' '));
 
-        dispatch(addNote({ label: e.target.value, content: {} }));
+        dispatch(addNote({ label: e.target.value }));
     };
 
     return (
@@ -70,7 +85,9 @@ export default function NotesList() {
                             >
                                 <Stack direction="row" alignItems="center">
                                     <ListItemIcon>
-                                        {wdefs.definitions()['Note'].icon()}
+                                        {WindowDefinitions('Note').icon(
+                                            settings.color
+                                        )}
                                     </ListItemIcon>
 
                                     <EditableText
@@ -85,12 +102,7 @@ export default function NotesList() {
                                         }
                                     />
                                 </Stack>
-                                <Deleter
-                                    callback={() =>
-                                        dispatch(removeNote({ note_id: n._id }))
-                                    }
-                                    color={settings.color}
-                                />
+                                <DeleteItem id={n._id}></DeleteItem>
                             </Stack>
                         </ListItem>
                     </div>

@@ -10,7 +10,6 @@ import Card from "@mui/material/Card";
 
 //utils
 import { useAppDispatch } from "@/lib/hooks";
-import { useSWRF } from "@/lib/swr";
 
 const defaultState = EditorState.create({ schema });
 export function ProseMirrorEditor() {
@@ -52,9 +51,9 @@ export function ProseMirrorEditor() {
 //   marks: schema.spec.marks
 // })
 
-export default function Note({id}:{id: string}) {
+export default function Note({ data: note }) {
 
-  const { data: note } = useSWRF(`/api/note/${id}`)
+  // const { data: note } = useSWRF(`/api/note/${id}`)
 
   const dispatch = useAppDispatch()
   // const editor = React.useRef(null);

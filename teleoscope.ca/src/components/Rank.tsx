@@ -1,6 +1,3 @@
-// rank.js
-import { useState } from "react";
-
 // mui
 import LoadingButton from "@mui/lab/LoadingButton";
 
@@ -15,7 +12,7 @@ import Histogram from "@/components/Histogram";
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
 import { copyDoclistsToGroups, updateNode } from "@/actions/appState";
-import { useSWRF } from "@/lib/swr";
+import { WindowProps } from "./WindowFolder/WindowFactory";
 
 // Custom tooltip component
 function ValueLabelComponent({ children, value }) {
@@ -59,20 +56,12 @@ const DistanceSlider = ({rank, color}) => {
 />
 }
 
-export default function Rank({ id, windata }) {
+export default function Rank({ reactflow_node, graph_node: rank }: WindowProps) {
   const debug = false;
-  const [rank_id] = useState(id);
-  
+  const {color} = useAppSelector((state) => state.appState.workflow.settings);
 
-  const color = useAppSelector((state) => state.appState.workflow.settings.color);
-  const { data: rank, isLoading, error } = useSWRF(`/api/graph?uid=${rank_id}`);
-
-  if (isLoading) {
-    return <>Loading...</>
-  }
-
-  if (error) {
-    return  <>Error...</>
+  if (!rank) {
+    return  <>Loading Rank...</>
   }
 
   const doclists = rank?.doclists;

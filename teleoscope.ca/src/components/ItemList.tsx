@@ -1,6 +1,6 @@
 import React from "react";
 // actions
-import { useWindowDefinitions } from "@/lib/hooks";
+
 import { bookmark } from "@/actions/appState";
 import { GroupedVirtuoso } from "react-virtuoso";
 import { Box } from "@mui/system";
@@ -9,13 +9,11 @@ import { onDragStart } from "@/lib/drag";
 import { HiChevronDoubleDown } from 'react-icons/hi';
 import { useAppDispatch } from "@/lib/hooks";
 import { useSWRF } from "@/lib/swr";
+import WindowDefinitions from "./WindowFolder/WindowDefinitions";
 
 const GroupLabel = ({ index, data, callback}) => {
-  const wdefs = useWindowDefinitions();
   const group = data[index];
-  const key = wdefs.getAPIRoute(group.type);
-
-  console.log("group", data, group, key)
+  const key = WindowDefinitions(group.type).apipath;
 
   const { data: item } = useSWRF(`/api/${key}?${key}=${group.id}`);
 

@@ -15,13 +15,11 @@ import {
   Link,
   Group,
 } from "@/components/Documents/DocumentActions";
-import { useSWRF } from "@/lib/swr";
+import { WindowProps } from "../WindowFolder/WindowFactory";
 
-export default function Document(props) {
-  const id = props.id;
+export default function Document({ data: document }: WindowProps) {
   
-  const { data: document } = useSWRF(`/api/document?document=${id}`);
-  const text = document ? preprocessText(document.text, new RegExp("")) : false;
+  const text = document ? preprocessText(document.text, new RegExp("")) : "";
 
   return (
     <Stack sx={{ height: "100%" }}>
@@ -35,7 +33,7 @@ export default function Document(props) {
           [Group, { document: document }],
         ]}
       ></ButtonActions>
-      <DocumentText text={text} id={id} />
+      <DocumentText text={text} />
     </Stack>
   );
 }

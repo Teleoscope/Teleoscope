@@ -1,7 +1,6 @@
 import { useDispatch, useSelector, useStore } from "react-redux";
 
 import { useEffect, useState } from 'react';
-import WindowDefinitions from "@/components/WindowFolder/WindowDefinitions";
 
 import type { RootState, AppDispatch, AppStore } from '@/lib/store';
 
@@ -28,9 +27,4 @@ export const useGlobalMousePosition = () => {
   }, []);
 
   return position;
-};
-
-export const useWindowDefinitions = () => {
-  const windowState = useAppSelector((state: RootState) => state.appState);
-  return new WindowDefinitions(windowState);
 };

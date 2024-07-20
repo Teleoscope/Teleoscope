@@ -10,17 +10,22 @@ import DocumentListItem from "@/components/Documents/DocumentListItem";
 import { NewItemForm } from "@/components/NewItemForm";
 import randomColor from "randomcolor";
 import { makeGroupFromBookmarks } from "@/actions/appState";
+import { Groups } from "@/types/groups";
 
 export default function Bookmarks() {
-  const bookmarks = useAppSelector((state: RootState) => state.appState.workflow.bookmarks);
+  const { workflow, workspace } = useAppSelector((state: RootState) => state.appState);
+  const bookmarks = workflow.bookmarks
   const dispatch = useAppDispatch();
 
   const handleMakeGroupFromBookmarks = (e) => {
-    dispatch(makeGroupFromBookmarks({
+    const new_group: Groups = {
       label: e.target.value,
       color: randomColor(),
-      documents: bookmarks,
-    }))
+      docs: bookmarks,
+      workspace: workspace._id
+    }
+    
+    dispatch(makeGroupFromBookmarks(new_group))
   }
 
   return (

@@ -52,7 +52,10 @@ export const AppState = createSlice({
             };
         },
         setSelection: (state, action) => {
-            state.workflow.selection = action.payload;
+            state.workflow.selection = {
+                nodes: action.payload.nodes || [],
+                edges: action.payload.edges || []
+            };
         },
         moveWindowToFront: (state, action) => {
             const index = state.workflow.nodes.findIndex((w) => w.i === action.payload);
@@ -65,40 +68,57 @@ export const AppState = createSlice({
             const index = state.workflow.nodes.findIndex((w) => w.id === action.payload.id);
             if (index > -1) {
                 const node = state.workflow.nodes[index];
-                if (node.width > state.workspace.settings?.document_width ||
-                    node.height > state.workspace.settings?.document_height) {
-                    node.width = state.workspace.settings?.document_width;
-                    node.height = state.workspace.settings?.document_height;
-                    node.style.width = state.workspace.settings?.document_width;
-                    node.style.height = state.workspace.settings?.document_height;
-                } else {
-                    node.width = 300;
-                    node.height = 340;
-                    node.style.width = 300;
-                    node.style.height = 340;
-                }
+                const newNode = {
+                    ...node,
+                    width: (node.width > state.workspace.settings?.document_width || node.height > state.workspace.settings?.document_height)
+                        ? state.workspace.settings?.document_width : 300,
+                    height: (node.width > state.workspace.settings?.document_width || node.height > state.workspace.settings?.document_height)
+                        ? state.workspace.settings?.document_height : 340,
+                    style: {
+                        ...node.style,
+                        width: (node.width > state.workspace.settings?.document_width || node.height > state.workspace.settings?.document_height)
+                            ? state.workspace.settings?.document_width : 300,
+                        height: (node.width > state.workspace.settings?.document_width || node.height > state.workspace.settings?.document_height)
+                            ? state.workspace.settings?.document_height : 340
+                    }
+                };
+                state.workflow.nodes[index] = newNode;
             }
         },
         minimizeWindow: (state, action) => {
             const index = state.workflow.nodes.findIndex((w) => w.id === action.payload.id);
             if (index > -1) {
                 const node = state.workflow.nodes[index];
-                node.width = state.workspace.settings?.document_width;
-                node.height = state.workspace.settings?.document_height;
-                node.style.width = state.workspace.settings?.document_width;
-                node.style.height = state.workspace.settings?.document_height;
+                const newNode = {
+                    ...node,
+                    width: state.workspace.settings?.document_width,
+                    height: state.workspace.settings?.document_height,
+                    style: {
+                        ...node.style,
+                        width: state.workspace.settings?.document_width,
+                        height: state.workspace.settings?.document_height
+                    }
+                };
+                state.workflow.nodes[index] = newNode;
             }
-        },
+        },        
         maximizeWindow: (state, action) => {
             const index = state.workflow.nodes.findIndex((w) => w.id === action.payload.id);
             if (index > -1) {
                 const node = state.workflow.nodes[index];
-                node.width = 400;
-                node.height = 450;
-                node.style.width = 400;
-                node.style.height = 450;
+                const newNode = {
+                    ...node,
+                    width: 400,
+                    height: 450,
+                    style: {
+                        ...node.style,
+                        width: 400,
+                        height: 450
+                    }
+                };
+                state.workflow.nodes[index] = newNode;
             }
-        },
+        },        
         updateSearch: (state, action) => {
             const index = state.workflow.nodes.findIndex((n) => n.data.oid === action.payload.search_id);
             if (index > -1) {
@@ -169,7 +189,7 @@ export const AppState = createSlice({
                 state.workflow.edges = [...state.workflow.edges, ...action.payload.edges];
             }
         },
-        makeGroupFromBookmarks: (state) => {
+        makeGroupFromBookmarks: (state, action) => {
             state.workflow.bookmarks = [];
         },
         copyDoclistsToGroups: (state, action) => {

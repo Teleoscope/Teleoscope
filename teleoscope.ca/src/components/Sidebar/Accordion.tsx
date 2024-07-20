@@ -1,17 +1,16 @@
 import AccordionSection from '@/components/Sidebar/AccordionSection';
 import SelectionViewer from '@/components/Sidebar/SelectionViewer';
-import { useWindowDefinitions } from '@/lib/hooks';
 import Workflows from './WorkflowViewer';
 import Groups from '../Groups/Groups';
 import Bookmarks from '../Bookmarks';
 import Notes from '../Notes/Notes';
 import Settings from '../Settings';
 import DataHandler from './DataHandler';
+import WindowDefinitions from '../WindowFolder/WindowDefinitions';
+import { useAppSelector } from '@/lib/hooks';
 
 export default function SidebarAccordion({ compact = false }) {
-    const wdefs = useWindowDefinitions();
-    const definitions = wdefs.definitions();
-    // const selection = useAppSelector((state) => state.appState.workflow.selection.nodes);
+    const { color } = useAppSelector((state) => state.appState.workflow.settings);
 
     const sections = [
         { key: 'Data', component: <DataHandler/>, text: 'Upload' },
@@ -37,8 +36,8 @@ export default function SidebarAccordion({ compact = false }) {
             <div className="flex flex-col w-full">
                 {sections.map(({ key, component, text, condition }) => {
                     if (condition !== false) {
-                        const def = definitions[key]
-                        const icon = def ? def.icon() : <></>
+                        const def = WindowDefinitions(key)
+                        const icon = def ? def.icon(color) : <></>
                         return (
                             <AccordionSection
                                 key={key}

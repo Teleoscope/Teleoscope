@@ -22,7 +22,7 @@ export default function SelectionViewer({ noGroup = false }) {
         if (node.data.type == "Document") {
           return (
             <DocViewer
-              windata={node.data}
+              reactflow_node={node.data}
               key={node.id}
               id={node.id}
               reference={reference}

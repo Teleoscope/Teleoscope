@@ -3,11 +3,7 @@ import { EdgeChange, Node, NodeChange, addEdge } from 'reactflow';
 import { ReactFlowProvider } from 'reactflow';
 import { MiniMap, Controls, Background, Panel } from 'reactflow';
 
-import {
-    useAppSelector,
-    useAppDispatch,
-    useWindowDefinitions
-} from '@/lib/hooks';
+import { useAppSelector, useAppDispatch } from '@/lib/hooks';
 import { updateNodes, updateEdges, makeEdge, setSelection, toggleMinMax, dropNode } from '@/actions/appState';
 import FlowWrapper from '@/components/Flow/FlowWrapper';
 import ContextMenuHandler from '@/components/ContextMenuHandler';
@@ -19,6 +15,7 @@ import WindowNode from '@/components/Nodes/WindowNode';
 import ButtonEdge from '@/components/Nodes/ButtonEdge';
 import { findTargetNode, getClosestEdge } from '@/lib/drag';
 import axios from 'axios';
+import { WindowConfig } from '../WindowFolder/WindowDefinitions';
 
 interface MouseCoords {
     mouseX: number;
@@ -27,10 +24,17 @@ interface MouseCoords {
     worldY: number;
 }
 
+
+const nodeTypeDefs = () => Object.entries(WindowConfig).reduce((obj, [w, def]) => {
+      obj[w] = def.nodetype;
+      return obj;
+    })
+
 function Workflow({ drawerWidth }: { drawerWidth: number }) {
-    const wdefs = useWindowDefinitions();
+
+    
     const nodeTypes = useMemo(
-        () => ({ windowNode: WindowNode, ...wdefs.nodeTypeDefs() }),
+        () => ({ windowNode: WindowNode, ...nodeTypeDefs() }),
         []
     );
     const edgeTypes = useMemo(() => ({ default: ButtonEdge }), []);
@@ -68,19 +72,10 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
                 if (target.data.type == 'Group') {
                     dispatch(
                         addDocumentToGroup({
-                            group_id: target.id.split('%')[0],
-                            document_id: node.id.split('%')[0]
+                            group_id: target.id,
+                            document_id: node.id
                         })
-                    );
-                    dispatch(updateNodes({
-                        changes: [
-                          {
-                            id: node.id,
-                            type: "remove"
-                          }
-                        ]
-                }))
-                    ;
+                    )
                 }
             }
         }

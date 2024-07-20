@@ -42,295 +42,222 @@ import Difference from "@/components/Operations/Difference";
 
 import { preprocessTitle } from "@/lib/preprocessers";
 import Bookmarks from "@/components/Bookmarks";
-import { AppState } from "@/services/app";
 import DataHandler from "../Sidebar/DataHandler";
+import { WindowProps } from "./WindowFactory";
+import { Component } from "react";
 
-export default class WindowDefinitions {
-  private color;
+const style = (c: string) => [
+  { color: c },
+  { "& .MuiChip-icon": 
+    { color: c } 
+  },
+];
 
-  public constructor (appState: AppState) {
-    this.color = appState.workflow.settings.color;
-  }
 
-  private style() {
-    return [
-      { color: this.color },
-      { "& .MuiChip-icon": 
-        { color: this.color } 
-      },
-    ];
-  } 
-
-  public definitions() {
-    const config = {
-      Data: {
-        tag:       "data",
-        type:      "Data",
-        apipath:   "data",
-        nodetype:  SourceNode,      
-        title:     (d) => `Data`,
-        color:     () => this.color,
-        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><FiUpload style={{ display: "inline" }} /></IconContext.Provider>,
-        component: (w, id: string, color: string) => <DataHandler/>,
-      },
-      Note: {
-        tag:       "note",
-        type:      "Note",
-        apipath:   "note",
-        nodetype:  SourceNode,      
-        title:     (d) => `Note: ${d?.label}`,
-        color:     () => this.color,
-        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><BsSticky style={{ display: "inline" }} /></IconContext.Provider>,
-        component: (w, id: string, color: string) => <Note id={id} windata={w} color={color} />,
-      },
-      Notes: {
-        tag:       "notes",
-        type:      "Notes",
-        apipath:   "notes",
-        nodetype:  WindowNode,
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><BsStickies style={{ display: "inline" }} /></IconContext.Provider>,
-        component: (w, id: string, color: string) => <Notes id={id} windata={w} color={color} />,
-      },
-      FABMenu: {
-        tag:       "fabmenu",
-        type:      "FABMenu",
-        apipath:   "fabmenu",
-        nodetype:  WindowNode,      
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      () => <AddIcon fontSize="inherit" />,
-        component: (w, id: string, color: string) => <FABMenu id={id} windata={w} color={color} />,
-      },
-      Group: {
-        tag:       "group",
-        type:      "Group",
-        apipath:   "group",
-        nodetype:  SourceNode,      
-        title:     (d) => `Group: ${d?.label ? d?.label : "loading..."}`,
-        color:     (d) => d ? d?.color : this.color,
-        icon:      (d) => <FolderIcon sx={{ color: d ? d?.color : this.color  }} fontSize="inherit"  />,
-        component: (w, id: string, color: string) => <Group id={id} windata={w} color={color} />,
-      },
-      Document: {
-        tag:       "document",
-        type:      "Document",
-        apipath:   "document",
-        nodetype:  SourceNode,      
-        title:     (d) => preprocessTitle(d?.title),
-        color:     () => this.color,
-        icon:      () => <ShortTextIcon fontSize="inherit"  />,
-        component: (w, id: string, color: string) => <Document id={id} windata={w} color={color} />,
-      },
-      Rank: {
-        tag:       "rank",
-        type:      "Rank",
-        apipath:   "graph",
-        nodetype:  TargetNode,      
-        title:     (d) => "Rank",
-        color:     (d) => this.color,
-        icon:      (d) => <IconContext.Provider value={{size: "1em", color: this.color}}><HiSortDescending style={{ display: "inline" }} /></IconContext.Provider>,
-        component: (w, id: string, color: string) => <Rank id={id} windata={w} color={color} />,
-      },
-      Cluster: {
-        tag:       "cluster",
-        type:      "Cluster",
-        apipath:   "graph",
-        nodetype:  WindowNode,
-        title:     (d) => `Cluster`,
-        color:     () => this.color,
-        icon:      () => <FlareIcon sx={this.style()} fontSize="inherit" />,
-        component: (w, id: string, color: string) => <Group id={id} windata={w} color={color} />,
-      },
-      Projection: {
-        tag:       "projection",
-        type:      "Projection",
-        apipath:   "graph",
-        nodetype:  TargetNode,      
-        title:     (d) => d?.type,
-        color:     (d) => this.color,
-        icon:      (d) => <Diversity2Icon sx={{ color: this.color }}  fontSize="inherit" />,
-        component: (w, id: string, color: string) => <Projection id={id} windata={w} color={color} />,
-      },
-      Projections: {
-        tag:       "projectionpalette", // projections?
-        type:      "Projections",
-        apipath:   "projections",
-        nodetype:  WindowNode,      
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      () => <Diversity2Icon sx={this.style()} fontSize="inherit" />,
-        component: (w, id: string, color: string) => <ProjectionPalette id={id} windata={w} color={color} />,
-      },
-      Search: {
-        tag:       "search",
-        type:      "Search",
-        apipath:   "search",
-        nodetype:  SourceNode,  
-        title:     (d) => d?.query ? `Search: ${d?.query}`: `Search`,
-        color:     () => this.color,
-        icon:      () => <SearchIcon sx={this.style()} fontSize="inherit" />,
-        component: (w, id: string, color: string) => <Search id={id} windata={w} color={color} />,
-      },
-      Groups: {
-        tag:       "groups",
-        type:      "Groups",
-        apipath:   "groups",
-        nodetype:  WindowNode,      
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      () => <FolderCopyIcon sx={this.style()} fontSize="inherit" />,
-        component: (w, id: string, color: string) => <Groups id={id} windata={w} color={color} />,
-      },
-      Clusters: {
-        tag:       "clusters",
-        type:      "Clusters",
-        apipath:   "clusters",
-        nodetype:  WindowNode,      
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      () => <Diversity2Icon sx={this.style()} fontSize="inherit" />,
-        component: (w, id: string, color: string) => <Clusters id={id} windata={w} color={color} />,
-      },
-      Bookmarks: {
-        tag:       "bookmarks",
-        type:      "Bookmarks",
-        apipath:   "bookmarks",
-        nodetype:  WindowNode,      
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      () => <IconContext.Provider value={{size: "1em", color: this.color}}><RiBookmark3Line style={{ display: "inline" }} /></IconContext.Provider>,
-        component: (w, id: string, color: string) => <Bookmarks id={id} windata={w} color={color} />,
-      },
-      Settings: {
-        tag:       "settings",
-        type:      "Settings",
-        apipath:   "settings",
-        nodetype:  WindowNode,      
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      () => <SettingsIcon sx={this.style()} fontSize="inherit" />,
-        component: (w, id: string, color: string) => <Clusters id={id} windata={w} color={color} />,
-      },
-      Workflows: {
-        tag:       "workflows",
-        type:      "Workflows",
-        apipath:   "workflows",
-        nodetype:  WindowNode,
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      (sx = this.style()) => <AccountTreeIcon sx={sx} fontSize="inherit" />,
-        component: (w, id: string, color: string) => <Clusters id={id} windata={w} color={color} />,
-      },
-      Operation: {
-        tag:       "operation",
-        type:      "Operation",
-        apipath:   "operation",
-        nodetype: OperationNode,
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      (sx = this.style()) => <AccountTreeIcon sx={sx} fontSize="inherit"  />,
-        component: (w, id: string, color: string) => <Clusters id={id} windata={w} color={color} />,
-      },
-      Difference: {
-        tag:       "difference",
-        type:      "Difference",
-        apipath:   "graph",
-        nodetype: OperationNode,
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathFront style={{ display: "inline" }} /></IconContext.Provider>,
-        component: (w, id: string, color: string) => <Difference id={id} windata={w} color={color} />,
-      },
-      Intersection: {
-        tag:       "intersection",
-        type:      "Intersection",
-        apipath:   "graph",
-        nodetype: OperationNode,
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathIntersect style={{ display: "inline" }} /></IconContext.Provider>,
-        component: (w, id: string, color: string) => <Intersection id={id} windata={w} color={color} />,
-      },
-      Exclusion: {
-        tag:       "exclusion",
-        type:      "Exclusion",
-        apipath:   "graph",
-        nodetype: OperationNode,
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathExclude style={{ display: "inline" }} /></IconContext.Provider>,
-        component: (w, id: string, color: string) => <Exclusion id={id} windata={w} color={color} />,
-      },
-      Union: {
-        tag:       "union",
-        type:      "Union",
-        apipath:   "graph",
-        nodetype: OperationNode,
-        title:     function () {return this.type},
-        color:     () => this.color,
-        icon:      (sx = this.style()) => <IconContext.Provider value={{size: "1em", color: this.color}}><CgPathUnite style={{ display: "inline" }} /></IconContext.Provider>,
-        component: (w, id: string, color: string) => <Union id={id} windata={w} color={color} />,
-      },
-    };
-  
-    // Backwards compatibility
-    config["Group Palette"] = config.Groups;
-    config["Note Palette"] = config.Notes;
-    config["Settings Palette"] = config.Settings;
-    config["Workflow Palette"] = config.Workflows;
-  
-    return config;
-  }
-  
-  public nodeTypeDefs() {
-    return Object.entries(this.definitions()).reduce((obj, [w, def]) => {
-      obj[w] = def.nodetype;
-      return obj;
-    }, {})
-  } 
-
-  public paths() {
-    return Object.entries(this.definitions()).reduce((obj, [w, def]) => {
-      obj[w] = def.apipath;
-      return obj;
-    }, {}) 
-  }
-
-  public getAPIRoute(str) {
-    const keymap = this.apikeymap()
-    return keymap[str]
-  }
-
-  public apikeymap() {
-    return {
-      note: "note",
-      notes: "notes",
-      notepalette: "notes",
-      fabmenu: "fabmenu",
-      group: "groups",
-      grouppalette: "groups",
-      document: "document",
-      teleoscope: "teleoscopes",
-      teleoscopes: "teleoscopes",
-      teleoscopepalette: "teleoscopes",
-      projection: "projections",
-      projectionpalette: "projectionpalette",
-      clusters: "clusters",
-      search: "search",
-      searches: "search",
-      groups: "groups",
-      operation: "operation",
-      intersection: "intersection",
-      ...this.paths()
-    };
-  }
-
+interface Window {
+  type: string,
+  apipath: string,
+  nodetype: typeof SourceNode | typeof WindowNode | typeof OperationNode | typeof BaseNode,
+  title: string,
+  icon: Component,
+  component: Component
 }
 
+export const WindowConfig = {
+  Data: {
+    type:      "Data",
+    apipath:   "data",
+    nodetype:  SourceNode,      
+    title:     (d) => `Data`,
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><FiUpload style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <DataHandler/>,
+  },
+  Note: {
+    type:      "Note",
+    apipath:   "note",
+    nodetype:  SourceNode,      
+    title:     (d) => `Note: ${d?.label}`,
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><BsSticky style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <Note {...props} />,
+  },
+  Notes: {
+    type:      "Notes",
+    apipath:   "notes",
+    nodetype:  WindowNode,
+    title:     function () {return this.type},
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><BsStickies style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <Notes {...props} />,
+  },
+  FABMenu: {
+    type:      "FABMenu",
+    apipath:   "fabmenu",
+    nodetype:  WindowNode,      
+    title:     function () {return this.type},
+    icon:      (c: string) => <AddIcon fontSize="inherit" />,
+    component: (props: WindowProps) => <FABMenu {...props} />,
+  },
+  Group: {
+    type:      "Group",
+    apipath:   "group",
+    nodetype:  SourceNode,      
+    title:     (d) => `Group: ${d?.label ? d?.label : "loading..."}`,
+    color:     (d) => d ? d?.color : color,
+    icon:      (c: string) => <FolderIcon sx={{ color: c  }} fontSize="inherit"  />,
+    component: (props: WindowProps) => <Group {...props} />,
+  },
+  Document: {
+    type:      "Document",
+    apipath:   "document",
+    nodetype:  SourceNode,      
+    title:     (d) => preprocessTitle(d?.title),
+    icon:      (c: string) => <ShortTextIcon fontSize="inherit"  />,
+    component: (props: WindowProps) => <Document {...props} />,
+  },
+  Rank: {
+    type:      "Rank",
+    apipath:   "graph",
+    nodetype:  TargetNode,      
+    title:     (d) => "Rank",
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><HiSortDescending style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <Rank {...props} />,
+  },
+  Cluster: {
+    type:      "Cluster",
+    apipath:   "graph",
+    nodetype:  WindowNode,
+    title:     (d) => `Cluster`,
+    icon:      (c: string) => <FlareIcon sx={style(c)} fontSize="inherit" />,
+    component: (props: WindowProps) => <Group {...props} />,
+  },
+  Projection: {
+    type:      "Projection",
+    apipath:   "graph",
+    nodetype:  TargetNode,      
+    title:     (d) => d?.type,
+    icon:      (c: string) => <Diversity2Icon sx={{ color: c }}  fontSize="inherit" />,
+    component: (props: WindowProps) => <Projection {...props} />,
+  },
+  Projections: {
+    type:      "Projections",
+    apipath:   "projections",
+    nodetype:  WindowNode,      
+    title:     function () {return this.type},
+    icon:      (c: string) => <Diversity2Icon sx={style(c)} fontSize="inherit" />,
+    component: (props: WindowProps) => <ProjectionPalette {...props} />,
+  },
+  Search: {
+    type:      "Search",
+    apipath:   "search",
+    nodetype:  SourceNode,  
+    title:     (d) => d?.query ? `Search: ${d?.query}`: `Search`,
+    icon:      (c: string) => <SearchIcon sx={style(c)} fontSize="inherit" />,
+    component: (props: WindowProps) => <Search {...props} />,
+  },
+  Groups: {
+    type:      "Groups",
+    apipath:   "groups",
+    nodetype:  WindowNode,      
+    title:     function () {return this.type},
+    icon:      (c: string) => <FolderCopyIcon sx={style(c)} fontSize="inherit" />,
+    component: (props: WindowProps) => <Groups {...props} />,
+  },
+  Clusters: {
+    type:      "Clusters",
+    apipath:   "clusters",
+    nodetype:  WindowNode,      
+    title:     function () {return this.type},
+    icon:      (c: string) => <Diversity2Icon sx={style(c)} fontSize="inherit" />,
+    component: (props: WindowProps) => <Clusters {...props} />,
+  },
+  Bookmarks: {
+    type:      "Bookmarks",
+    apipath:   "bookmarks",
+    nodetype:  WindowNode,      
+    title:     function () {return this.type},
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><RiBookmark3Line style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <Bookmarks />,
+  },
+  Settings: {
+    type:      "Settings",
+    apipath:   "settings",
+    nodetype:  WindowNode,      
+    title:     function () {return this.type},
+    icon:      (c: string) => <SettingsIcon sx={style(c)} fontSize="inherit" />,
+    component: (props: WindowProps) => <Clusters {...props} />,
+  },
+  Workflows: {
+    type:      "Workflows",
+    apipath:   "workflows",
+    nodetype:  WindowNode,
+    title:     function () {return this.type},
+    icon:      (c: string) => <AccountTreeIcon sx={style(c)} fontSize="inherit" />,
+    component: (props: WindowProps) => <Clusters {...props} />,
+  },
+  Operation: {
+    type:      "Operation",
+    apipath:   "operation",
+    nodetype: OperationNode,
+    title:     function () {return this.type},
+    icon:      (c: string) => <AccountTreeIcon sx={style(c)} fontSize="inherit"  />,
+    component: (props: WindowProps) => <Clusters {...props} />,
+  },
+  Difference: {
+    type:      "Difference",
+    apipath:   "graph",
+    nodetype: OperationNode,
+    title:     function () {return this.type},
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><CgPathFront style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <Difference {...props} />,
+  },
+  Intersection: {
+    type:      "Intersection",
+    apipath:   "graph",
+    nodetype: OperationNode,
+    title:     function () {return this.type},
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><CgPathIntersect style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <Intersection {...props} />,
+  },
+  Exclusion: {
+    type:      "Exclusion",
+    apipath:   "graph",
+    nodetype: OperationNode,
+    title:     function () {return this.type},
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><CgPathExclude style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <Exclusion {...props} />,
+  },
+  Union: {
+    type:      "Union",
+    apipath:   "graph",
+    nodetype: OperationNode,
+    title:     function () {return this.type},
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><CgPathUnite style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <Union {...props} />,
+  },
+  undefined: {
+    type:      "boop",
+    apipath:   "blip",
+    nodetype: OperationNode,
+    title:     function () {return this.type},
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><CgPathUnite style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <Union {...props} />,
+  },
+}
 
+export type WindowConfigType = typeof WindowConfig.undefined;
 
+export default function WindowDefinitions(type: string): Window {
+  
+  // Check if the type exists in the baseConfig
+  if (!WindowConfig[type]) {
+    throw new Error(`Type '${type}' not found in config`);
+  }
 
+  // Dynamically generate the configuration based on the type
+  const config = {
+    ...WindowConfig[type],
+    color: () => color,
+  };
 
-
+  // Return the generated configuration
+  return config;
+}

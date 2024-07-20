@@ -13,8 +13,13 @@ const rabbitMqUrl = `amqp://${username}:${password}@${host}:${port}/${vhost}`
 
 async function send(task: string, args: any) {
     const queue = `${process.env.RABBITMQ_QUEUE}`;
+    
+    const kwargs = {
+        ...args,
+        database: database
+    }
     console.log("task", task)
-    console.log("args", args)
+    console.log("kwargs", kwargs)
     try {    
         // Connect to RabbitMQ server
         const connection = await amqp.connect(rabbitMqUrl);
@@ -28,14 +33,13 @@ async function send(task: string, args: any) {
         const message = {
             id: uuidv4(),
             task: task,
-            args: args,
-            kwargs: {
-                ...args,
-                database: database
-            },
+            args: kwargs,
+            kwargs: kwargs,
             retries: 0,
             eta: new Date().toISOString()
         };
+
+        console.log("message", message)
 
         const msg = JSON.stringify(message)
 

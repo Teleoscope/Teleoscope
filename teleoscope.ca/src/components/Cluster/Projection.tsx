@@ -1,5 +1,3 @@
-// Import necessary libraries and components
-import { useState } from "react";
 import { Box, Tooltip, Typography, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { BsArrowsCollapse, BsArrowsExpand } from "react-icons/bs";
@@ -9,26 +7,19 @@ import DocumentList from "@/components/Documents/DocumentList";
 import ButtonActions from "../ButtonActions";
 import { useAppDispatch } from "@/lib/hooks";
 import { updateNode } from "@/actions/appState";
-import { useSWRF } from "@/lib/swr";
+import { WindowProps } from "../WindowFolder/WindowFactory";
 
 
 // Main Projection component
-export default function Projection({ id }) {
+export default function Projection({data: projection}:WindowProps) {
   // Extract projection ID from props and initialize state and hooks
-  const projectionId = useState(id);
+  const projectionId = projection?._id
+
+  if (!projection) {
+    return <>Loading projection...</>
+  }
   
   const dispatch = useAppDispatch()
-
-  // Use SWR hook for data fetching
-  const { data: projection, isLoading, error } = useSWRF(`/api/graph?uid=${projectionId}`);
-  
-  if (isLoading) {
-    return <>Loading...</>
-  }
-
-  if (error) {
-    return  <>Error...</>
-  }
 
   // Toggle group separation state and update backend
   const ToggleCollapse = () => {

@@ -1,6 +1,7 @@
 # builtin modules
 import json
 import numpy as np
+import pymongo.collection
 from tqdm import tqdm
 import heapq
 import re
@@ -160,7 +161,7 @@ def rankDocumentsBySimilarity(document_ids, scores, n_top=1000):
     scores_and_ids = zip(scores, document_ids)
     top_n = heapq.nlargest(n_top, scores_and_ids)
     top_n_sorted = sorted(top_n, key=lambda x: x[0], reverse=True)
-    return [(doc_id, score) for score, doc_id in top_n_sorted]
+    return [(doc_id, score.item()) for score, doc_id in top_n_sorted]
 
 
 def rank_document_ids_by_similarity(documents_ids, scores):
@@ -304,6 +305,9 @@ def strip_emojis(text):
     return ''.join(c for c in text if unicodedata.name(c).startswith(('LATIN', 'DIGIT', 'SPACE', 'PUNCTUATION')))
 
 
+def get_vector_ids(db, oids):
+    return list(db.documents.find({"_id": {"$in": oids} }, projection={ "vector": 1}))
+
 def make_query(text):
     if len(text.strip()) == 0:
         return {}
@@ -392,52 +396,86 @@ def rank_similarity(control_vecs, ids, vecs, similarity):
     return ranks
 
 
-# {
-#     "type": "Document",
-#     "id": "65e6a782201a918bc772e05b"
-# }
+def get_collection(db: database.Database, type):
+    match type:
+        case "Document":
+            return db.documents
+        case "Group":
+            return db.groups
+        case "Search":
+            return db.searches
+        case "Notes":
+            return db.notes
+        case "Rank" | "Union" | "Difference" | "Intersection" | "Exclusion":
+            return db.graph
+        
 
+def get_oids(db: database.Database, source, exclude=["Note"]):
+    if source["type"] in exclude:
+        return []
 
-def get_oids(db: database.Database, sources, exclude=[]):
+    node = get_collection(db, source["type"]).find_one({"_id": source["reference"]})
+    match source["type"]:
+        case "Document" | "Note":
+            return [str(node["_id"])]
+        case "Group":
+            return [str(oid) for oid in node["docs"]]
+        case "Search":
+            cursor = db.documents.find(make_query(node["query"]), projection={"_id": 1})
+            return [str(d["_id"]) for d in list(cursor)]
+        case "Rank" | "Union" | "Difference" | "Intersection" | "Exclusion":
+            return [str(d[0]) for doclist in source["doclists"] for d in doclist["ranked_documents"]]
+
+def get_doc_oids(db: database.Database, sources):
+    sources = db.graph.find({"uid": {"$in": sources}})
     oids = []
-    for c in sources:
-        match c["type"]:
-            case "Document":
-                if not "Document" in exclude:
-                    oids.append(c["id"])
-            case "Group":
-                if not "Group" in exclude:
-                    group = db.groups.find_one({"_id": c["id"]})
-                    oids = oids + group["history"][0]["included_documents"]
-            case "Search":
-                if not "Search" in exclude:
-                    search = db.searches.find_one({"_id": c["id"]})
-                    cursor = db.documents.find(make_query(search["history"][0]["query"]),projection={ "_id": 1})
-                    oids = oids + [d["_id"] for d in list(cursor)]
-            case "Note":
-                if not "Note" in exclude:
-                    oids.append(c["id"])
-            case "Union":
-                if not "Union" in exclude:
-                    node = db.graph.find_one({"_id": c["id"]})
-                    for doclist in node["doclists"]:
-                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
-            case "Difference":
-                if not "Difference" in exclude:
-                    node = db.graph.find_one({"_id": c["id"]})
-                    for doclist in node["doclists"]:
-                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
-            case "Intersection": 
-                if not "Intersection" in exclude:
-                    node = db.graph.find_one({"_id": c["id"]})
-                    for doclist in node["doclists"]:
-                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
-            case "Exclusion":
-                if not "Exclusion" in exclude:
-                    node = db.graph.find_one({"_id": c["id"]})
-                    for doclist in node["doclists"]:
-                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
+    for source in sources:
+        oids.extend(get_oids(db, source))
     return oids
+                
+
+        
+
+# def get_oids(db: database.Database, sources, exclude=[]):
+#     oids = []
+#     for c in sources:
+#         match c["type"]:
+#             case "Document":
+#                 if not "Document" in exclude:
+#                     oids.append(c["id"])
+#             case "Group":
+#                 if not "Group" in exclude:
+#                     group = db.groups.find_one({"_id": c["id"]})
+#                     oids = oids + group["docs"]
+#             case "Search":
+#                 if not "Search" in exclude:
+#                     search = db.searches.find_one({"_id": c["id"]})
+#                     cursor = db.documents.find(make_query(search["query"]),projection={ "_id": 1})
+#                     oids = oids + [d["_id"] for d in list(cursor)]
+#             case "Note":
+#                 if not "Note" in exclude:
+#                     oids.append(c["id"])
+#             case "Union":
+#                 if not "Union" in exclude:
+#                     node = db.graph.find_one({"_id": c["id"]})
+#                     for doclist in node["doclists"]:
+#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
+#             case "Difference":
+#                 if not "Difference" in exclude:
+#                     node = db.graph.find_one({"_id": c["id"]})
+#                     for doclist in node["doclists"]:
+#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
+#             case "Intersection": 
+#                 if not "Intersection" in exclude:
+#                     node = db.graph.find_one({"_id": c["id"]})
+#                     for doclist in node["doclists"]:
+#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
+#             case "Exclusion":
+#                 if not "Exclusion" in exclude:
+#                     node = db.graph.find_one({"_id": c["id"]})
+#                     for doclist in node["doclists"]:
+#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
+#     return oids
 
 
 def get_vectors(db: database.Database, controls, ids, all_vectors):

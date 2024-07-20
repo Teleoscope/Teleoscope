@@ -3,15 +3,15 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Typography, Stack, Divider } from "@mui/material";
-import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
+import { useAppSelector } from "@/lib/hooks";
 import DocumentList from "@/components/Documents/DocumentList";
 import { useSWRF } from "@/lib/swr";
+import WindowDefinitions from "../WindowFolder/WindowDefinitions";
 
 export default function OperationViewer({id, type}) {
   
   const { data: operation } = useSWRF(`/api/graph?uid=${id}`);
   const { settings } = useAppSelector((state) => state.appState.workspace);
-  const wdefs = useWindowDefinitions();
   
   const data = operation?.doclists
 
@@ -30,7 +30,7 @@ export default function OperationViewer({id, type}) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {wdefs.definitions()[type].icon(operation)} {type}
+          {WindowDefinitions(type).icon(operation)} {type}
         </Typography>
       </AccordionSummary>
       <AccordionDetails>

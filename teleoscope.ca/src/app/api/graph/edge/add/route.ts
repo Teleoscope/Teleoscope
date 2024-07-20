@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
             send('update_nodes', {
                 workflow_id: workflow_id,
                 workspace_id: workspace_id,
-                nodes: changes.map((change: Change) => change.target)
+                node_uids: changes.map((change: Change) => change.target)
             });
         });
 

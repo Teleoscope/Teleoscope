@@ -8,12 +8,12 @@ import SpeedDialAction from "@mui/material/SpeedDialAction";
 // actions
 import { makeNode } from "@/actions/appState";
 import { useDispatch } from "react-redux";
-import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
+import { useAppSelector } from "@/lib/hooks";
+import WindowDefinitions from "./WindowFolder/WindowDefinitions";
 
-export default function FABMenu({ windata }) {
+export default function FABMenu({ reactflow_node }) {
   const [open, setOpen] = React.useState(true);
   const dispatch = useDispatch();  
-  const wdefs = useWindowDefinitions();
   const { workflow, workspace } = useAppSelector((state) => state.appState);
   
   const actions = [
@@ -48,8 +48,8 @@ export default function FABMenu({ windata }) {
       type: type,
       width: workspace.settings?.document_width,
       height: workspace.settings?.document_height,
-      x: windata.x + windata.width + 10, 
-      y: windata.y
+      x: reactflow_node.x + reactflow_node.width + 10, 
+      y: reactflow_node.y
     }));
   };
 
@@ -86,13 +86,13 @@ export default function FABMenu({ windata }) {
           return <SpeedDialAction
           sx={{ color: workflow.settings.color }}
           key={action}
-          icon={wdefs.definitions()[action].icon()}
+          icon={WindowDefinitions(action).icon(workflow.settings.color)}
           tooltipTitle={actionMap[action]}
           tooltipPlacement="right"
           tooltipOpen={workspace.settings.showFABToolTip}
           onClick={() =>
             handleAddNode(
-              wdefs.definitions()[action].type
+              WindowDefinitions(action).type
             )
           }
           />

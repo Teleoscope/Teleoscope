@@ -2,13 +2,14 @@ import { useState } from "react";
 import { Stack, TextField, List, ListItem, ListItemIcon } from "@mui/material";
 import Deleter from "@/components/Deleter";
 
-import { useAppSelector, useAppDispatch, useWindowDefinitions } from "@/lib/hooks";
+import { useAppSelector, useAppDispatch } from "@/lib/hooks";
 import { initializeWorkflow, relabelWorkflow, removeWorkflow } from "@/actions/appState";
 
 import EditableText from "@/components/EditableText";
 
 import randomColor from "randomcolor";
 import { useSWRF } from "@/lib/swr";
+import WindowDefinitions from "../WindowFolder/WindowDefinitions";
 
 
 const styles = {
@@ -19,7 +20,6 @@ const styles = {
 
 
 export default function Workflows(props) {
-  const wdefs = useWindowDefinitions();
 
   const dispatch = useAppDispatch();
   
@@ -88,7 +88,7 @@ export default function Workflows(props) {
                     <ListItemIcon>
                       <a href={`/workspace/${workspace._id}/${workflow._id}`}>
                       
-                        {wdefs.definitions()["Workflows"].icon([
+                        {WindowDefinitions("Workflows").icon([
                           { color: workflow.settings.color },
                           { "& .MuiChip-icon": { color: workflow.settings.color } },
                         ])}

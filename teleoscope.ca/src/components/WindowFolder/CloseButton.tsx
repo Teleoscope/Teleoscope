@@ -6,7 +6,7 @@ import IconButton from "@mui/material/IconButton";
 import { useDispatch } from "react-redux";
 import { updateNodes } from "@/actions/appState";
 
-export default function CloseButton({ id, sx, ...props}) {
+export default function CloseButton({ reactflow_node_id, sx, ...props}) {
   const dispatch = useDispatch();
   return (
     <IconButton
@@ -15,7 +15,7 @@ export default function CloseButton({ id, sx, ...props}) {
       onClick={() => dispatch(updateNodes({
         changes: [
           {
-            id: id,
+            id: reactflow_node_id,
             type: "remove"
           }
         ]

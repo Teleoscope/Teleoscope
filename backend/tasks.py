@@ -10,9 +10,7 @@ from typing import List
 import os
 import itertools
 import pandas as pd
-import yaml
 
-import platform
 from multiprocessing import set_start_method
 
 # Local imports
@@ -1309,7 +1307,7 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
 
 
 @app.task
-def update_nodes(*args, database: str, workflow_id: str, node_uids: List[str]):
+def update_nodes(*args, database: str, workflow_id: str, node_uids: List[str], **kwargs):
     transaction_session, db = utils.create_transaction_session(db=database)
     workflow_id = ObjectId(str(workflow_id))
     graph.update_nodes(db, node_uids)
@@ -1537,7 +1535,6 @@ def file_upload(*args,
             doc = {
                 'text': row[text],
                 'title': row[title],
-                'vector': str(uuid.uuid4()),
                 'relationships': {},
                 'metadata': json.loads(row.to_json()),
                 'state': {"read": False}
@@ -1579,8 +1576,7 @@ def file_upload(*args,
                 add_document_to_group(database=database, userid=userid, 
                     group_id=group_map[group], document_id=inserted_doc["_id"])
 
-    db.documents.create_index([('text', 'text')], background=True)
-
+        
     # milvus_import(database=database, userid=userid)
     milvus_import.apply_async(kwargs={
         'database': database,

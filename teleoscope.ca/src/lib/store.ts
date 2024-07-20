@@ -11,7 +11,6 @@ import appState, {
     relabelProjection,
     removeWorkflow,
     addGroup,
-    removeGroup,
     recolorGroup,
     relabelGroup,
     mark,
@@ -31,7 +30,8 @@ import appState, {
     removeProjection,
     updateTimestamps,
     loadAppData,
-    dropNode
+    dropNode,
+    removeGroup,
 } from '@/actions/appState';
 import { copyDoclistsToGroups, updateNode } from '../actions/appState';
 import axios from 'axios';
@@ -73,15 +73,6 @@ const actionMiddleware = (store) => (next) => (action) => {
         console.log(action.type, action.payload, appState.workflow.logical_clock, appState)
     }
 
-    if (action.type === loadAppData.type) {
-
-        console.log("before loadAppData", store.getState())
-        const result = next(action);
-        console.log("after loadAppData", store.getState(), result)
-        
-        return result
-
-    }
 
     if (action.type === dropNode.type) {
         const uid = crypto.randomBytes(8).toString('hex');
@@ -271,6 +262,94 @@ const actionMiddleware = (store) => (next) => (action) => {
   
     }
 
+    if (action.type === addGroup.type) {
+        const add_group = axios.post(`/api/group/add`, {
+            group: {...action.payload}
+        });
+    }
+
+    if (action.type === removeGroup.type) {
+        const remove_group = axios.post(`/api/group/remove`, {
+            group: action.payload.oid
+        });
+        store.dispatch(updateNodes({
+            changes: [{
+                id: action.payload.uid,
+                type: "remove"
+
+            }]
+        }));
+    }
+
+    if (action.type === addNote.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace
+        const add_note = axios.post(`/api/note/add`, {
+            workspace_id: workspace_id,
+            label: action.payload.label
+        });
+    }
+
+    if (action.type === removeNote.type) {
+        const remove_note = axios.post(`/api/note/remove`, {
+            note: action.payload.oid
+        });
+        store.dispatch(updateNodes({
+            changes: [{
+                id: action.payload.uid,
+                type: "remove"
+
+            }]
+        }));
+
+    }
+
+    if (action.type === makeGroupFromBookmarks.type) {
+        const add_group = axios.post(`/api/group/add`, {
+            group: {...action.payload}
+        });
+    }
+
+    if (action.type === addDocumentToGroup.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace
+        const { _id: workflow_id } = appState.workflow
+
+        const add_document = axios.post(`/api/group/doc/add`, {
+            group_id: action.payload.group_id,
+            document_id: action.payload.document_id,
+            workspace_id: workspace_id,
+            workflow_id: workflow_id
+
+        });
+
+        store.dispatch(updateNodes({
+            changes: [
+              {
+                id: action.payload.document_id,
+                type: "remove"
+              }
+            ]
+        }))
+    }
+
+    if (action.type === removeDocumentFromGroup.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace
+        const { _id: workflow_id } = appState.workflow
+        const remove_document = axios.post(`/api/group/doc/remove`, {
+            group_id: action.payload.group_id,
+            document_id: action.payload.document_id,
+            workspace_id: workspace_id,
+            workflow_id: workflow_id
+        });
+        
+    }
+
+    
+
+
+    
     const callPost = (task_name: string) => {
         const { appState }: { appState: AppState } = store.getState();
         return post({
@@ -295,9 +374,6 @@ const actionMiddleware = (store) => (next) => (action) => {
         case updateSearch.type:
             callPost('update_search');
             break;
-        case makeGroupFromBookmarks.type:
-            callPost('add_group');
-            break;
         case copyDoclistsToGroups.type:
             callPost('copy_doclists_to_groups');
             break;
@@ -319,12 +395,6 @@ const actionMiddleware = (store) => (next) => (action) => {
         case removeWorkflow.type:
             callPost('remove_workflow');
             break;
-        case addGroup.type:
-            callPost('add_group');
-            break;
-        case removeGroup.type:
-            callPost('remove_group');
-            break;
         case recolorGroup.type:
             callPost('recolor_group');
             break;
@@ -333,12 +403,6 @@ const actionMiddleware = (store) => (next) => (action) => {
             break;
         case mark.type:
             callPost('mark');
-            break;
-        case removeDocumentFromGroup.type:
-            callPost('remove_document_from_group');
-            break;
-        case addDocumentToGroup.type:
-            callPost('add_document_to_group');
             break;
         case copyCluster.type:
             callPost('copy_cluster');
@@ -349,15 +413,10 @@ const actionMiddleware = (store) => (next) => (action) => {
         case updateNote.type:
             callPost('update_note');
             break;
-        case addNote.type:
-            callPost('add_note');
-            break;
         case relabelNote.type:
             callPost('relabel_note');
             break;
-        case removeNote.type:
-            callPost('remove_note');
-            break;
+        
     }
 
     // Call the next middleware or the reducer

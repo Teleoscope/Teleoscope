@@ -7,5 +7,5 @@ export default function FABWrapper({reactFlowInstance}) {
       coords.x = vp.x;
       coords.y = vp.y;
     }
-    return <FABMenu windata={{ x: coords.x, y: coords.y, width: 1 }} />;
+    return <FABMenu reactflow_node={{ x: coords.x, y: coords.y, width: 1 }} />;
   }

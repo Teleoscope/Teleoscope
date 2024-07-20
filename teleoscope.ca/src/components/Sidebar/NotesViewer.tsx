@@ -1,21 +1,21 @@
 import {
-    Stack,
-    Typography,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    Divider
+  Stack,
+  Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Divider
 } from "@mui/material";
-import { useAppSelector, useWindowDefinitions } from "@/lib/hooks";
+import { useAppSelector } from "@/lib/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useSWRF } from "@/lib/swr";
+import WindowDefinitions from "../WindowFolder/WindowDefinitions";
 
 export default function NotesViewer({ id }) {
   
-  const { data: note } = useSWRF(`/api/note/${id}`);
+  const { data: note } = useSWRF(`/api/note?note=${id}`);
   const { settings } = useAppSelector((state) => state.appState.workspace);
-  const wdefs = useWindowDefinitions();
-
+  const { color } = useAppSelector((state) => state.appState.workflow.settings);
   return (
     <Accordion
       defaultExpanded={settings?.expanded}
@@ -28,7 +28,7 @@ export default function NotesViewer({ id }) {
         id="panel3a-header"
       >
         <Typography noWrap align="left">
-          {wdefs.definitions()["Note"].icon()}
+          {WindowDefinitions("Note").icon(color)}
           {`${note?.label}`}
         </Typography>
       </AccordionSummary>
