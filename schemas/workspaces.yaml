@@ -31,14 +31,15 @@ properties:
       expanded:
         bsonType: bool
         description: "whether a new open document opens expanded or not"
-
   notes:
     bsonType: array
     description: "all notes that are part of this workspace"
     items:
       bsonType: ["objectId", "string"]
       description: "a note in this workspace"
-
+  selected_workflow:
+    bsonType: ["objectId", "string"]
+    description: the selected workflow
   workflows:
     bsonType: array
     description: "all workflows that are part of this workspace"

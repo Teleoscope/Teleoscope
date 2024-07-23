@@ -11,11 +11,9 @@ export const DEFAULT_DRAWER_WIDTH = 100;
 export const DEFAULT_MIN_WIDTH = 15;
 export const DEFAULT_TITLE_LENGTH = 40;
 
-export const DEFAULT_TEAM_NAME = "Team loading...";
-
 export const DEFAULT_WORKSPACE: Workspaces = {
     label: "Workspace loading...",
-    team: "Team loading...",
+    team: null,
     workflows: [],
     settings: {
         document_height: 35,
@@ -25,7 +23,7 @@ export const DEFAULT_WORKSPACE: Workspaces = {
 }
 
 export const DEFAULT_WORKFLOW: Workflows = {
-    _id: "Workflow loading...",
+    _id: null,
     label: "Workflow loading...",
     nodes: [],
     edges: [],
@@ -40,7 +38,7 @@ export const DEFAULT_WORKFLOW: Workflows = {
     },
     last_update: new Date('December 17, 1995 03:24:00').toISOString(),
     logical_clock: 0,
-    workspace: "Workspace loading..."
+    workspace: null
 }
 
 export const DEFAULT_STATE = {

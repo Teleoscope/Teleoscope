@@ -29,7 +29,7 @@ const FlowWrapper = ({
   return (
     <ReactFlow
       nodes={nodes}
-      edges={edges.concat(tempEdges)}
+      edges={edges?.concat(tempEdges)}
       edgeTypes={edgeTypes}
       nodeTypes={nodeTypes}
       onNodesChange={onNodesChange}

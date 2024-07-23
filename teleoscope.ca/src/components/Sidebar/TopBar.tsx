@@ -13,7 +13,7 @@ import { useSWRF } from '@/lib/swr';
 import { Users } from '@/types/users';
 
 const Team = ({ oid }: { oid: string }) => {
-    const { data: team } = useSWRF(`/api/team?team=${oid}`);
+    const { data: team } = useSWRF(oid && typeof oid === 'string' ? `/api/team?team=${oid}` : null);
     return <>{team ? team.label : 'Team loading...'}</>;
 };
 

@@ -9,6 +9,7 @@ import { Groups } from '@/types/groups';
 import { Search } from '@/types/search';
 import { dbOp } from './db';
 import randomColor from 'randomcolor';
+import { Workflows } from '@/types/workflows';
 
 export const newNote = (workspace_id: string, label="New note") => {
     const mySchema = new Schema({
@@ -44,6 +45,28 @@ export const newGroup = (workspace_id: string, docs=[]) => {
         docs: docs
     };
     return group
+}
+
+export const newWorkflow = ({workspace_id, label}:{workspace_id: ObjectId | string, label: string
+}) => {
+    const new_workflow: Workflows = {
+        last_update: new Date().toISOString(),
+        logical_clock: 100,
+        workspace: ensureObjectId(workspace_id),
+        label: label,
+        nodes: [],
+        edges: [],
+        bookmarks: [],
+        selection: {
+            nodes: [],
+            edges: []
+        },
+        settings: {
+            color: randomColor(),
+            title_length: 100,
+        }
+    }
+    return new_workflow
 }
 
 export async function insert(

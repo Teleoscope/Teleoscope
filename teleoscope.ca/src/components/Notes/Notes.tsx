@@ -26,14 +26,12 @@ const DeleteItem = ({ id }: { id: string }) => {
     );
     const { data: graph_item } = useSWRF(`/api/graph?oid=${id}`);
     const dispatch = useAppDispatch();
-    console.log("note", graph_item)
 
-    const uid = graph_item?.uid
+
+    const uid = graph_item?.uid;
     return (
         <Deleter
-            callback={() =>
-                dispatch(removeNote({ oid: id, uid: uid }))
-            }
+            callback={() => dispatch(removeNote({ oid: id, uid: uid }))}
             color={settings.color}
         />
     );
@@ -48,7 +46,9 @@ export default function NotesList() {
         (state) => state.appState.workflow.settings
     );
 
-    const { data: notes_raw } = useSWRF(`/api/notes?workspace=${workspace}`);
+    const { data: notes_raw } = useSWRF(
+        workspace ? `/api/notes?workspace=${workspace}` : null
+    );
     const dispatch = useAppDispatch();
 
     const notes: Array<Notes> = notes_raw?.map((n: Notes) => {

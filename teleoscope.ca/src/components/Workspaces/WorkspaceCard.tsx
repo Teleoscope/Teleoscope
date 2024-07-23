@@ -14,7 +14,7 @@ import { ObjectId } from "mongodb";
 import { useSWRF } from "@/lib/swr";
 
 export const WorkspaceCard = ({ workspaceId } : { workspaceId:  string | ObjectId }) => {
-  const { data: workspace, error, isLoading } = useSWRF(`/api/workspace?workspace=${workspaceId}`)
+  const { data: workspace, error, isLoading } = useSWRF(workspaceId ? `/api/workspace?workspace=${workspaceId}`:null)
 
   if (error || isLoading) {
     return <>Loading...</>

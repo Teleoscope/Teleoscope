@@ -42,25 +42,30 @@ export default function Workspace({
     topBarColor = DEFAULT_GREY,
     compact = false
 }: WorkspaceProps) {
-
-    // const { data: app, error, isLoading  } = useLoadWorkspaceQuery(workspace_id)
-    const { data: app, error, isLoading  } = useSWRF(`/api/app?workspace=${workspace_id}`)
+    const { workspace, workflow }: AppState = useAppSelector(
+        (state) => state.appState
+    );
+    const first_workflow = workspace?.workflows?.length > 0 ? workspace?.workflows[0] : null
+    const selected = workspace?.selected_workflow ? workspace.selected_workflow : first_workflow
+    const query = selected ? `/api/app?workspace=${workspace_id}&workflow=${selected}` : `/api/app?workspace=${workspace_id}`
+    
+    const { data: app, error, isLoading  } = useSWRF(query)
+    console.log("query", query, app)
     const dispatch = useDispatch();
 
     useEffect(() => {
         if (app) {
           dispatch(loadAppData({ state: app }));
         }
-      }, [app, dispatch]);
+      }, [app, dispatch, query]);
     
 
-    const { workspace, workflow }: AppState = useAppSelector(
-        (state) => state.appState
-    );
 
-    if (!workflow || !workspace) {
+
+    if (!workflow || !workspace || isLoading) {
         return <>Loading...</>;
     }
+
 
     return (
         <div className="h-dvh" >

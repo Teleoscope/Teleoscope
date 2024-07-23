@@ -4,6 +4,23 @@ import { DEFAULT_STATE } from '@/lib/defaults';
 
 const initialState = DEFAULT_STATE;
 
+function updateObject(s, updates) {
+    const target = { ...s }
+    for (let key in updates) {
+      if (updates.hasOwnProperty(key)) {
+        if (updates[key] && typeof updates[key] === 'object' && !Array.isArray(updates[key])) {
+          if (!target[key] || typeof target[key] !== 'object') {
+            target[key] = {};
+          }
+          updateObject(target[key], updates[key]);
+        } else if (updates[key] !== undefined) {
+          target[key] = updates[key];
+        }
+      }
+    }
+    return target
+  }
+
 export const AppState = createSlice({
     name: 'app',
     initialState,
@@ -11,6 +28,10 @@ export const AppState = createSlice({
         updateTimestamps: (state) => {
             state.workflow.last_update = new Date().toISOString();
             state.workflow.logical_clock += 1;
+        },
+        resetTimestamps: (state) => {
+            // state.workflow.last_update = new Date().toISOString();
+            state.workflow.logical_clock = 0;
         },
         loadAppData: (state, action) => {
             const newState = action.payload.state;
@@ -45,11 +66,11 @@ export const AppState = createSlice({
         setColor: (state, action) => {
             state.workflow.settings.color = action.payload.color;
         },
-        setSettings: (state, action) => {
-            return {
-                ...state,
-                ...action.payload,
-            };
+        setWorkflowSettings: (state, action) => {
+            state.workflow.settings[action.payload.setting] = action.payload.value
+        },
+        setWorkspaceSettings: (state, action) => {
+            state.workflow.settings[action.payload.setting] = action.payload.value
         },
         setSelection: (state, action) => {
             state.workflow.selection = {
@@ -189,6 +210,9 @@ export const AppState = createSlice({
                 state.workflow.edges = [...state.workflow.edges, ...action.payload.edges];
             }
         },
+        loadWorkflow: (state, action) => {
+            state.workspace.selected_workflow = action.payload.workflow_id
+        },
         makeGroupFromBookmarks: (state, action) => {
             state.workflow.bookmarks = [];
         },
@@ -310,7 +334,11 @@ export const {
     removeNote,
     loadAppData,
     updateTimestamps,
-    dropNode
+    resetTimestamps,
+    dropNode,
+    loadWorkflow ,
+    setWorkspaceSettings,
+    setWorkflowSettings
 } = AppState.actions;
 
 export default AppState.reducer;

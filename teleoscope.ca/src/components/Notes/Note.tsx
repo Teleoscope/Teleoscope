@@ -12,15 +12,25 @@ import Card from "@mui/material/Card";
 import { useAppDispatch } from "@/lib/hooks";
 
 const defaultState = EditorState.create({ schema });
-export function ProseMirrorEditor() {
-  // It's important that mount is stored as state,
-  // rather than a ref, so that the ProseMirror component
-  // is re-rendered when it's set
+export function ProseMirrorEditor({data}) {
   const [mount, setMount] = useState<HTMLElement | null>(null);
+  const [state, setState] = useState(EditorState.create({ schema }));
+  // useEffect(()=> {
+  //   if (data) {
+  //     setState(EditorState.create(data.content))
+  //   }
+  // },[data])
 
   return (
-    <ProseMirror mount={mount} defaultState={defaultState}>
-      <div ref={setMount} style={{width: "100%"}} />
+    <ProseMirror
+      mount={mount}
+      defaultState={defaultState}
+      state={state}
+      dispatchTransaction={(tr) => {
+        setState((s) => s.apply(tr));
+      }}
+    >
+      <div ref={setMount} />
     </ProseMirror>
   );
 }
@@ -112,7 +122,7 @@ export default function Note({ data: note }) {
           onClick={focusEditor}
           style={{ marginLeft: "10px", width: "95%", height: "100%", cursor: "text" }}
         >
-          <ProseMirrorEditor></ProseMirrorEditor>
+          <ProseMirrorEditor data={note}></ProseMirrorEditor>
           {/* <Editor
             ref={editor}
             editorState={editorState}

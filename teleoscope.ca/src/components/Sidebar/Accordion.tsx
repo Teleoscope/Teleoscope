@@ -30,7 +30,9 @@ export default function SidebarAccordion({ compact = false }) {
     ];
 
     return (
-        <div className="flex flex-col flex-1 w-full overflow-x-hidden text-black">
+        <div className="flex flex-col flex-1 w-full overflow-x-hidden text-black"
+
+        >
             <SelectionViewer />
 
             <div className="flex flex-col w-full">

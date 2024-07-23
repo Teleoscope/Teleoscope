@@ -29,3 +29,24 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result);
 }
+
+
+export async function POST(request: NextRequest) {
+    const { user } = await validateRequest();
+    if (!user) {
+        return NextResponse.json({ message: 'No user signed in.' });
+    }
+    const { workspace_id, workflow_id } = await request.json()
+
+    
+    const result = await dbOp(async (client: MongoClient, db: Db) => {
+        return await db
+            .collection<Workspaces>('workspaces')
+            .updateOne({ _id: new ObjectId(workspace_id) }, {
+                $set: {
+                    selected_workflow: new ObjectId(workflow_id)
+                }
+            });
+    });
+    return NextResponse.json(result);
+}

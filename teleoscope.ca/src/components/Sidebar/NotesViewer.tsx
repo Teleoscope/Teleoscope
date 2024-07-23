@@ -10,10 +10,11 @@ import { useAppSelector } from "@/lib/hooks";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useSWRF } from "@/lib/swr";
 import WindowDefinitions from "../WindowFolder/WindowDefinitions";
+import Note from "../Notes/Note";
 
 export default function NotesViewer({ id }) {
   
-  const { data: note } = useSWRF(`/api/note?note=${id}`);
+  const { data: note } = useSWRF(`/api/note?uid=${id}`);
   const { settings } = useAppSelector((state) => state.appState.workspace);
   const { color } = useAppSelector((state) => state.appState.workflow.settings);
   return (
@@ -36,7 +37,7 @@ export default function NotesViewer({ id }) {
         <Stack spacing={1} sx={{ margin: "1em" }}>
           <Typography variant="h5">{note?.label}</Typography>
           <Divider></Divider>
-          <Typography variant="small">{note?.content.blocks[0].text}</Typography>
+          <Note data={note} ></Note>
         </Stack>
       </AccordionDetails>
     </Accordion>

@@ -86,7 +86,7 @@ export const WindowConfig = {
     nodetype:  WindowNode,
     title:     function () {return this.type},
     icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><BsStickies style={{ display: "inline" }} /></IconContext.Provider>,
-    component: (props: WindowProps) => <Notes {...props} />,
+    component: (props: WindowProps) => <Notes />,
   },
   FABMenu: {
     type:      "FABMenu",

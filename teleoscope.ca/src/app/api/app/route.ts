@@ -1,51 +1,55 @@
 import { validateRequest } from '@/lib/auth';
 import { dbOp } from '@/lib/db';
-import { AppState } from '@/services/app';
 import { Workflows } from '@/types/workflows';
 import { Workspaces } from '@/types/workspaces';
 import { Db, MongoClient, ObjectId } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-    const { user } = await validateRequest();
-    const workspace_id = request.nextUrl.searchParams.get('workspace');
+    try {
+        const { user } = await validateRequest();
+        const workspaceId = request.nextUrl.searchParams.get('workspace');
+        const workflowId = request.nextUrl.searchParams.get('workflow');
 
-    if (!workspace_id) {
-        throw new Error(`Workspace ID missing for request: ${request.nextUrl}`);
-    }
-
-    const workspace = new ObjectId(workspace_id);
-
-    if (!user) {
-        throw new Error(`User not signed in for request: ${request.nextUrl}`);
-    }
-
-    const result = await dbOp(async (client: MongoClient, db: Db) => {
-        const workspace_result = await db
-            .collection<Workspaces>('workspaces')
-            .findOne({ _id: workspace });
-
-        if (!workspace_result || !workspace_result.workflows) {
-            throw new Error(`Workspace ${workspace_id} not loading.`);
+        if (!workspaceId) {
+            return NextResponse.json({ error: 'Workspace ID missing.' }, { status: 400 });
         }
 
-        const workflow = workspace_result.workflows[0];
+        const workspaceObjectId = new ObjectId(workspaceId);
 
+        if (!user) {
+            return NextResponse.json({ error: 'User not signed in.' }, { status: 401 });
+        }
 
+        const result = await dbOp(async (client: MongoClient, db: Db) => {
+            const workspaceResult = await db
+                .collection<Workspaces>('workspaces')
+                .findOne({ _id: workspaceObjectId });
 
-        const workflow_result = await db
-            .collection<Workflows>('workflows')
-            .findOne({ _id: workflow });
+            if (!workspaceResult || !workspaceResult.workflows) {
+                throw new Error(`Workspace ${workspaceId} not found or has no workflows.`);
+            }
 
-        if (workflow_result && workspace_result) {
-            const result: AppState = {
-                workspace: workspace_result,
-                workflow: workflow_result
+            const workflowObjectId = workflowId ? new ObjectId(workflowId) : workspaceResult.workflows[0];
+
+            const workflowResult = await db
+                .collection<Workflows>('workflows')
+                .findOne({ _id: workflowObjectId });
+
+            if (!workflowResult) {
+                throw new Error(`Workflow ${workflowId || workspaceResult.workflows[0]} not found.`);
+            }
+
+            const appState = {
+                workspace: workspaceResult,
+                workflow: workflowResult
             };
 
-            return result;
-        }
-    });
+            return appState;
+        });
 
-    return NextResponse.json(result);
+        return NextResponse.json(result);
+    } catch (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 }

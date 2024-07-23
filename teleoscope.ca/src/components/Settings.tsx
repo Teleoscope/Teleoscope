@@ -5,15 +5,19 @@ import { Stack, Slider, Typography, Switch } from "@mui/material";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
 
 // custom components
-import { setSettings, setColor } from "@/actions/appState";
+import { setColor, setWorkflowSettings, setWorkspaceSettings } from "@/actions/appState";
 import ColorPicker from "@/components/ColorPicker";
 
 export default function Settings(props) {
   const dispatch = useAppDispatch();
   const { workspace, workflow } = useAppSelector((state) => state.appState);
 
-  const handleChange = (event, value) => {
-    dispatch(setSettings(value));
+  const handleWorkflowChange = (event, value) => {
+    dispatch(setWorkflowSettings(value));
+  };
+
+  const handleWorkspaceChange = (event, value) => {
+    dispatch(setWorkspaceSettings(value));
   };
 
   const handleColorChange = (color) => {
@@ -33,7 +37,7 @@ export default function Settings(props) {
         min={50}
         max={500}
         onChangeCommitted={(event, value) =>
-          handleChange(event, { workspace: {settings: {document_width: value}}})
+          handleWorkspaceChange(event, { setting: "document_width", value: value})
         }
         sx={{ color: workflow.settings.color }}
 
@@ -48,7 +52,7 @@ export default function Settings(props) {
         min={30}
         max={500}
         onChangeCommitted={(event, value) =>
-          handleChange(event, { workspace: {settings: {document_height: value}}})
+          handleWorkspaceChange(event, { setting: "document_height", value: value })
         }
         sx={{ color: workflow.settings.color }}
       />
@@ -56,7 +60,7 @@ export default function Settings(props) {
       <Switch
         checked={workspace.settings?.expanded}
         onChange={(event, value) =>
-          handleChange(event, { workspace: {settings: {expanded: value}}})
+          handleWorkspaceChange(event, { setting: "expanded", value: value})
         }
         color="primary"
         sx={{
@@ -80,7 +84,7 @@ export default function Settings(props) {
         min={10}
         max={200}
         onChangeCommitted={(event, value) =>
-          handleChange(event, { workflow: {settings: {title_length: value}}})
+          handleWorkflowChange(event, { setting: "title_length", value: value})
         }
         sx={{ color: workflow.settings.color }}
       />

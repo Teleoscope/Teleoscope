@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         return await db.collection<Groups>('groups').updateOne(
             { _id: new ObjectId(group?.reference) },
             {
-                $push: {
+                $addToSet: {
                     docs: new ObjectId(document?.reference)
                 }
             }

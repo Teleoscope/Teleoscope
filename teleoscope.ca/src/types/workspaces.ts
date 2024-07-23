@@ -6,6 +6,7 @@ export interface Workspaces {
   team: any;
   settings?: Settings;
   notes?: Array<any>;
+  selected_workflow?: any;
   workflows?: Array<any>;
 }
 

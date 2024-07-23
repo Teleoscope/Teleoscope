@@ -16,7 +16,7 @@ export default function SelectionViewer({ noGroup = false }) {
   
   return (
     <div className="flex flex-col flex-1 justify-between items-center w-full overflow-x-hidden [&>*]:w-full">
-      {selection.nodes.map((node: Node) => {
+      {selection?.nodes?.map((node: Node) => {
         const graph_item = Array.isArray(nodes) ? nodes.find((n) => n.uid === node.id) : undefined;
         const reference = graph_item?.reference
         if (node.data.type == "Document") {

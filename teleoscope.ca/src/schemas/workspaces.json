@@ -59,6 +59,13 @@
                     "description": "a note in this workspace"
                 }
             },
+            "selected_workflow": {
+                "bsonType": [
+                    "objectId",
+                    "string"
+                ],
+                "description": "the selected workflow"
+            },
             "workflows": {
                 "bsonType": "array",
                 "description": "all workflows that are part of this workspace",
