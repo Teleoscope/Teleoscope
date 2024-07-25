@@ -4,23 +4,6 @@ import { DEFAULT_STATE } from '@/lib/defaults';
 
 const initialState = DEFAULT_STATE;
 
-function updateObject(s, updates) {
-    const target = { ...s }
-    for (let key in updates) {
-      if (updates.hasOwnProperty(key)) {
-        if (updates[key] && typeof updates[key] === 'object' && !Array.isArray(updates[key])) {
-          if (!target[key] || typeof target[key] !== 'object') {
-            target[key] = {};
-          }
-          updateObject(target[key], updates[key]);
-        } else if (updates[key] !== undefined) {
-          target[key] = updates[key];
-        }
-      }
-    }
-    return target
-  }
-
 export const AppState = createSlice({
     name: 'app',
     initialState,
@@ -46,6 +29,13 @@ export const AppState = createSlice({
                     workspace: { ...newState.workspace },
                 };
             }
+        },
+        saveNote: (state, action) => {
+
+        },
+        loadState: (state, action) => {
+            console.log("fucking fuck fuck", action.payload)
+            return action.payload.state
         },
         relabelWorkflow: (state, action) => {
             state.workflow.label = action.payload.label;
@@ -216,10 +206,10 @@ export const AppState = createSlice({
         makeGroupFromBookmarks: (state, action) => {
             state.workflow.bookmarks = [];
         },
-        copyDoclistsToGroups: (state, action) => {
+        updateNode: (state, action) => {
             // Add any state changes here
         },
-        updateNode: (state, action) => {
+        copyDoclistsToGroups: (state, action) => {
             // Add any state changes here
         },
         removeCluster: (state, action) => {
@@ -292,7 +282,8 @@ export const {
     setColor,
     resetWorkspace,
     setSelection,
-    setSettings,
+    setWorkspaceSettings,
+    setWorkflowSettings,
     makeNode,
     setDraggable,
     updateNodes,
@@ -336,9 +327,9 @@ export const {
     updateTimestamps,
     resetTimestamps,
     dropNode,
-    loadWorkflow ,
-    setWorkspaceSettings,
-    setWorkflowSettings
+    loadWorkflow,
+    loadState,
+    saveNote
 } = AppState.actions;
 
 export default AppState.reducer;

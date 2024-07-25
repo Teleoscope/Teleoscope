@@ -18,11 +18,11 @@ const defaultSize = (s: ReactFlowState, id: string) => {
 };
 
 export type DefaultSizeType = ReturnType<typeof defaultSize>;
-export type ReactFlowNodeData = DefaultSizeType & Node["data"]
+export type ReactFlowNodeData = DefaultSizeType & Node['data'];
 export type NodeData = {
-    reactflow_node: ReactFlowNodeData,
-    graph_node: Graph | null
-}
+    reactflow_node: ReactFlowNodeData;
+    graph_node: Graph | null;
+};
 
 const handleCSS = {
     width: '10px',
@@ -30,15 +30,15 @@ const handleCSS = {
     borderRadius: '100%'
 };
 
-
-
 function BaseNode({ data, id, selected }: NodeProps) {
     const size = useStore((s) => defaultSize(s, id));
     const reactflow_node: ReactFlowNodeData = { id, ...data, ...size };
     const settings = useAppSelector(
         (state) => state.appState.workflow.settings
     );
-    const { data: graph_node }:{data: Graph} = useSWRF(id ? `/api/graph?uid=${id}` : null);
+    const { data: graph_node }: { data: Graph } = useSWRF(
+        id ? `/api/graph?uid=${id}` : null
+    );
 
     return (
         <>

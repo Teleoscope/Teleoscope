@@ -5,6 +5,7 @@ import numpy as np
 import logging
 from pymilvus import MilvusClient, DataType
 from pprint import pformat
+from functools import reduce
 
 from backend import embeddings
 from . import schemas
@@ -217,12 +218,11 @@ def graph_uid(db, uid):
         case "Filter":
             node = update_filter(db, node, sources, controls, parameters)
 
-    logging.info(f"Attempting to replace graph node {uid} with updated node {node}.")
     res = db.graph.replace_one({"uid": uid}, node)
 
     # Calculate each node downstream to the right.
     for edge in outputs:
-        graph_uid(db, edge["nodeid"])
+        graph_uid(db, edge["uid"])
 
     return res
 
@@ -380,6 +380,7 @@ def update_search(db: database.Database, search_node, parameters):
 # Update Rank
 ################################################################################
 
+
 def update_rank(
     mdb: database.Database, rank_node, sources: List, controls: List, parameters
 ):
@@ -390,29 +391,18 @@ def update_rank(
 
     # collection name should be something unique
     collection_name = mdb.name
-    
+
     # connect to Milvus
-    client = MilvusClient(
-        uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME
-    )
+    client = embeddings.connect()
 
-    # ensure the collection exists
-    embeddings.milvus_setup(client, collection_name=collection_name)
-
-    # load the collection into memory
-    client.load_collection(collection_name=collection_name)
-    logging.info(f"Connected to Milvus Collection {collection_name}.")
-    
     # get every document oid from the control nodes
-    control_oids = utils.get_doc_oids(mdb, controls)
+    control_oids = utils.get_doc_oids(mdb, controls, exclude=[])
     logging.info(f"Documents with oids {control_oids} found for controls {controls}.")
-    
+
     # get the vectors for each document vector id
-    milvus_results = client.get(
-        collection_name=collection_name, 
-        ids=[str(i) for i in control_oids], 
-        output_fields=["vector"]
-    )
+    milvus_results = embeddings.get_embeddings(client, collection_name, control_oids)
+
+    # unpack results
     control_vectors = [np.array(res["vector"]) for res in milvus_results]
     logging.info(f"Found vectors {control_vectors} for controls {control_oids}.")
 
@@ -424,12 +414,10 @@ def update_rank(
     distance = 0.5
     if "distance" in parameters:
         distance = parameters["distance"]
-        
+
     # get the index to search over
     index = client.describe_index(
-        collection_name=collection_name,
-        index_name="vector_index",
-        field_name="vector"
+        collection_name=collection_name, index_name="vector_index", field_name="vector"
     )
 
     # set up parameters for the vector search
@@ -444,7 +432,7 @@ def update_rank(
             "range_filter": (1 - distance) + 1.0,
         },
     }
-    
+
     # doclists to append to the graph node
     source_map = []
     doclists = []
@@ -470,17 +458,21 @@ def update_rank(
             if oids:
                 # results look like:
                 # [  { "vector": [ ... ], "id": 'oid0128409128394' }, ..., { ... }  ]
-                results = client.get(collection_name=collection_name, ids=oids, output_fields=["vector"])
+                results = client.get(
+                    collection_name=collection_name, ids=oids, output_fields=["vector"]
+                )
                 source_map.append((source, oids, [r["vector"] for r in results]))
 
         for source, source_oids, source_vecs in source_map:
             ranks = utils.rank(control_vectors, source_oids, source_vecs)
-            doclists.append({
-                "type": source["type"],
-                "uid": source["uid"],
-                "reference": source["reference"],
-                "ranked_documents": ranks
-            })
+            doclists.append(
+                {
+                    "type": source["type"],
+                    "uid": source["uid"],
+                    "reference": source["reference"],
+                    "ranked_documents": ranks,
+                }
+            )
 
     rank_node["doclists"] = doclists
 
@@ -506,29 +498,50 @@ def update_projection(
         logging.info(f"No sources included. Returning original projection node.")
         return projection_node
 
-    if len(controls) == 1:
-        match controls[0]["type"]:
+    source_graph_items = list(db.graph.find({"uid": {"$in": sources}}))
+    control_graph_items = list(db.graph.find({"uid": {"$in": controls}}))
+
+    if len(control_graph_items) == 1:
+        match control_graph_items[0]["type"]:
             case "Search" | "Note":
                 logging.info(
                     f"This node type cannot be the only control input. Returning original projection node."
                 )
                 return projection_node
+    
+    ranked_documents_count = sum([
+        sum(len(doclist['ranked_documents']) for doclist in control_graph_item['doclists'])
+        for control_graph_item in control_graph_items
+    ])
+
+    if ranked_documents_count <= 4:
+        logging.info(
+            f"Not enough control documents included. Returning original projection node."
+        )
+        return projection_node
 
     logging.info(f"Updating Projection id: {projection_node['_id']}")
 
-    ordering = parameters["ordering"]
-    separation = parameters["separation"]
+    # ordering = parameters["ordering"]
+    # separation = parameters["separation"]
 
-    logging.info(f"Running with {ordering} ordering and seperation = {separation}")
+    # logging.info(f"Running with {ordering} ordering and seperation = {separation}")
+    ordering = None
+    separation = None
 
     project = projection.Projection(
-        db, sources, controls, projection_node["_id"], ordering, separation
+        db,
+        source_graph_items,
+        control_graph_items,
+        projection_node["_id"],
+        ordering,
+        separation,
     )
-    doclists = project.clustering_task()
+    doclists = project.document_ordering()
 
-    for doclist in doclists:
-        doclist["id"] = projection_node["_id"]
-        doclist["nodeid"] = projection_node["_id"]
+    # for doclist in doclists:
+    #     doclist["id"] = projection_node["_id"]
+    #     doclist["nodeid"] = projection_node["_id"]
 
     projection_node["doclists"] = doclists
 
@@ -543,12 +556,14 @@ def update_boolean_doclists(db, sources: List, controls: List, operation):
     doclists = []
     source_lists = []
     control_oids = []
-    
+
     source_nodes = list(db.graph.find({"uid": {"$in": sources}}))
     control_nodes = list(db.graph.find({"uid": {"$in": controls}}))
-    
-    logging.info(f"Found source nodes {source_nodes} and control nodes {control_nodes}.")
-    
+
+    logging.info(
+        f"Found source nodes {source_nodes} and control nodes {control_nodes}."
+    )
+
     for control in control_nodes:
         control_oids.extend(utils.get_oids(db, control))
 
@@ -558,12 +573,14 @@ def update_boolean_doclists(db, sources: List, controls: List, operation):
 
     for source, source_oids in source_lists:
         ranks = [(oid, 1.0) for oid in source_oids]
-        doclists.append({
+        doclists.append(
+            {
                 "type": source["type"],
                 "uid": source["uid"],
                 "reference": source["reference"],
-                "ranked_documents": ranks
-        })
+                "ranked_documents": ranks,
+            }
+        )
     return doclists
 
 

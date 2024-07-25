@@ -102,6 +102,7 @@ def connect():
     client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
     return client
 
+
 def milvus_import(*args, 
                 database: str, 
                 userid: str,
@@ -113,19 +114,43 @@ def milvus_import(*args,
     mongo_db = utils.connect(db=database)
 
     documents = mongo_db.documents.find({})
-    
     for batch in itertools.batched(documents, 1000):
-        ids = [str(doc["_id"]) for doc in batch]
-        raw_embeddings = model.encode([doc['text'] for doc in batch])['dense_vecs']
-        embeddings = [embedding.tolist() for embedding in raw_embeddings]
-
-        logging.info(f"{len(embeddings)} embeddings created.")
-
-        data = [{"id": id_, "vector": embedding} for id_, embedding in zip(ids, embeddings)]
-
-        res = client.insert(collection_name=database, data=data)
+        data = vectorize(batch)
+        res = client.upsert(collection_name=database, data=data)
     return res
 
+
+def get_embeddings(client, collection_name, oids):
+    logging.info(f"Gathering document embeddings for {len(oids)} oids...")
+    # ensure the collection exists
+    milvus_setup(client, collection_name=collection_name)
+
+    # load the collection into memory
+    client.load_collection(collection_name=collection_name)
+    logging.info(f"Connected to Milvus Collection {collection_name}.")
+    
+    milvus_results = client.get(
+        collection_name=collection_name, 
+        ids=[str(i) for i in oids], 
+        output_fields=["vector"]
+    )
+    return milvus_results
+
+
+def update(database, documents):
+    client = connect()
+    milvus_setup(client, collection_name=database)
+    data = vectorize(documents)
+    client.upsert(collection_name=database, data=data)
+
+
+def vectorize(documents):
+    ids = [str(doc["_id"]) for doc in documents]
+    raw_embeddings = model.encode([doc['text'] for doc in documents])['dense_vecs']
+    embeddings = [embedding.tolist() for embedding in raw_embeddings]
+    logging.info(f"{len(embeddings)} embeddings created.")
+    data = [{"id": id_, "vector": embedding} for id_, embedding in zip(ids, embeddings)]
+    return data
 
 if __name__ == '__main__':
     worker = app.Worker(

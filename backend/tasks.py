@@ -1034,8 +1034,22 @@ def update_note(*args, database: str, userid: str, workflow_id: str,
     utils.update_chromadb(database, [note_id], text)
     logging.info(f"Updating note {note_id} embedding.")
 
-    
 
+@app.task
+def vectorize_note(*args, database: str, note_id: str, **kwargs) -> ObjectId:
+    transaction_session, db = utils.create_transaction_session(db=database)
+    note_id = ObjectId(str(note_id))
+
+    # log action to stdout
+    logging.info(f'Updating note {note_id} for'
+                 f'database {database}.')
+    #---------------------------------------------------------------------------
+    
+    note = db.notes.find_one({"_id": note_id})
+    if note:
+        embeddings.update(database, [note])
+    else:
+        raise Exception(f"Can't find note for {note_id}.")
 
 @app.task
 def relabel_note(*args, database: str, userid: str, workflow_id: str,

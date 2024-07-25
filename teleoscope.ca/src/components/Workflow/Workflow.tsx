@@ -141,7 +141,6 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
             const index = event.dataTransfer.getData(
                 'application/reactflow/index'
             );
-            console.log("drop !!!", id, type, index)
 
             // check if the dropped element is valid
             if (typeof id === 'undefined' || !id) {

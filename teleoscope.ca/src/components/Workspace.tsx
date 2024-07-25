@@ -50,7 +50,7 @@ export default function Workspace({
     const query = selected ? `/api/app?workspace=${workspace_id}&workflow=${selected}` : `/api/app?workspace=${workspace_id}`
     
     const { data: app, error, isLoading  } = useSWRF(query)
-    console.log("query", query, app)
+
     const dispatch = useDispatch();
 
     useEffect(() => {

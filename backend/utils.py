@@ -337,24 +337,6 @@ def message(queue: str, msg):
     logging.info(f"Sent to queue {queue} and with message {json.dumps(msg)}.")
 
 
-def get_collection(db: database.Database, node_type: schemas.NodeType):
-    """Return the collection for a node type.
-    """
-    collection_map = {
-        "Document": "documents",
-        "Group": "groups",
-        "Search": "searches",
-        "Note": "notes",
-        "Projection": "graph",
-        "Intersection": "graph",
-        "Exclusion": "graph",
-        "Union": "graph",
-        "Teleoscope": "graph",
-    }
-
-    return db.get_collection(collection_map[node_type])
-
-
 def binary_search(lst, number):
     left, right = 0, len(lst) - 1
     while left <= right:
@@ -404,11 +386,13 @@ def get_collection(db: database.Database, type):
             return db.groups
         case "Search":
             return db.searches
-        case "Notes":
+        case "Note":
             return db.notes
         case "Rank" | "Union" | "Difference" | "Intersection" | "Exclusion":
             return db.graph
         
+
+
 
 def get_oids(db: database.Database, source, exclude=["Note"]):
     if source["type"] in exclude:
@@ -416,7 +400,9 @@ def get_oids(db: database.Database, source, exclude=["Note"]):
 
     node = get_collection(db, source["type"]).find_one({"_id": source["reference"]})
     match source["type"]:
-        case "Document" | "Note":
+        case "Document":
+            return [str(node["_id"])]
+        case "Note":
             return [str(node["_id"])]
         case "Group":
             return [str(oid) for oid in node["docs"]]
@@ -426,11 +412,12 @@ def get_oids(db: database.Database, source, exclude=["Note"]):
         case "Rank" | "Union" | "Difference" | "Intersection" | "Exclusion":
             return [str(d[0]) for doclist in source["doclists"] for d in doclist["ranked_documents"]]
 
-def get_doc_oids(db: database.Database, sources):
+
+def get_doc_oids(db: database.Database, sources, exclude=["Note"]):
     sources = db.graph.find({"uid": {"$in": sources}})
     oids = []
     for source in sources:
-        oids.extend(get_oids(db, source))
+        oids.extend(get_oids(db, source, exclude=exclude))
     return oids
                 
 

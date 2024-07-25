@@ -53,7 +53,10 @@
                     ],
                     "properties": {
                         "uid": {
-                            "bsonType": "string",
+                            "bsonType": [
+                                "string",
+                                "null"
+                            ],
                             "description": "on screen reactflow node id for this doclist"
                         },
                         "reference": {

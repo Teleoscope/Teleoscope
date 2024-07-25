@@ -2,7 +2,10 @@ import { validateRequest } from '@/lib/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { dbOp } from '@/lib/db';
 import { Db, MongoClient } from 'mongodb';
-import { newNote } from '@/lib/schemas';
+import { newNote } from '@/lib/newnote';
+
+
+
 
 export async function POST(request: NextRequest) {
     const { user } = await validateRequest();

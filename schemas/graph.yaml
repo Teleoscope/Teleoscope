@@ -41,7 +41,7 @@ properties:
         - ranked_documents
       properties:
         uid:
-          bsonType: string
+          bsonType: ["string", "null"]
           description: "on screen reactflow node id for this doclist"
         reference:
           bsonType: ["objectId", "string", "null"]

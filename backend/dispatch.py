@@ -114,6 +114,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "update_note":
                 res = tasks.update_note.signature(args=(), kwargs=kwargs)
 
+            case "vectorize_note":
+                res = tasks.vectorize_note.signature(args=(), kwargs=kwargs)
+
             case "relabel_note":
                 res = tasks.relabel_note.signature(args=(), kwargs=kwargs)
 

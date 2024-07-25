@@ -35,7 +35,9 @@ import appState, {
     loadWorkflow,
     resetTimestamps,
     setWorkflowSettings,
-    setWorkspaceSettings
+    setWorkspaceSettings,
+    loadState,
+    saveNote
 } from '@/actions/appState';
 import { copyDoclistsToGroups, updateNode } from '../actions/appState';
 import axios from 'axios';
@@ -70,13 +72,14 @@ const actionMiddleware = (store) => (next) => (action) => {
     if (
         action.type !== resetTimestamps.type &&
         action.type !== updateTimestamps.type &&
-        action.type !== loadAppData.type
+        action.type !== loadAppData.type &&
+        action.type !== loadState.type
     ) {
         const { appState }: { appState: AppState } = store.getState();
         console.log(
             action.type,
             action.payload,
-            appState.workflow.logical_clock,
+            appState?.workflow?.logical_clock,
             appState
         );
         store.dispatch(updateTimestamps());
@@ -85,9 +88,16 @@ const actionMiddleware = (store) => (next) => (action) => {
         console.log(
             action.type,
             action.payload,
-            appState.workflow.logical_clock,
+            appState?.workflow?.logical_clock,
             appState
         );
+        const post_node = axios.post(`/api/history`, {
+            history: {
+                action: action.type,
+                payload: action.payload,
+                state: appState
+            }
+        });
     }
 
     if (action.type === dropNode.type) {
@@ -113,18 +123,24 @@ const actionMiddleware = (store) => (next) => (action) => {
 
         const post_workflow = axios.post(`/api/workflow`, appState.workflow);
 
-        const apipath = WindowDefinitions(modifiedAction.payload.type).apipath
+        const apipath = WindowDefinitions(modifiedAction.payload.type).apipath;
 
-        const post_node = axios.post(`/api/graph/drop`, {
-            workflow_id: appState.workflow._id,
-            workspace_id: appState.workspace._id,
-            reference: action.payload.oid,
-            uid: modifiedAction.payload.uid,
-            type: modifiedAction.payload.type,
-            parameters: { index: modifiedAction.payload.index }
-        }).then(()=>mutate(
-            (key) => typeof key === 'string' && key.startsWith(`/api/${apipath}`)
-        ));
+        const post_node = axios
+            .post(`/api/graph/drop`, {
+                workflow_id: appState.workflow._id,
+                workspace_id: appState.workspace._id,
+                reference: action.payload.oid,
+                uid: modifiedAction.payload.uid,
+                type: modifiedAction.payload.type,
+                parameters: { index: modifiedAction.payload.index }
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' &&
+                        key.startsWith(`/api/${apipath}`)
+                )
+            );
 
         return result;
     }
@@ -163,7 +179,8 @@ const actionMiddleware = (store) => (next) => (action) => {
             })
             .then(() =>
                 mutate(
-                    (key) => typeof key === 'string' && key.startsWith(`/api/`)
+                    (key) =>
+                        typeof key === 'string' && key.startsWith(`/api/work`)
                 )
             );
 
@@ -188,17 +205,25 @@ const actionMiddleware = (store) => (next) => (action) => {
         //     sourceHandle: string | null;
         //     targetHandle: string | null; (string is `${id}_${type}`)
 
-        const edge_add_result = axios.post(`/api/graph/edge/add`, {
-            workflow_id: appState.workflow._id,
-            workspace_id: appState.workspace._id,
-            changes: [
-                {
-                    source: source,
-                    target: target,
-                    type: type
-                }
-            ]
-        });
+        const edge_add_result = axios
+            .post(`/api/graph/edge/add`, {
+                workflow_id: appState.workflow._id,
+                workspace_id: appState.workspace._id,
+                changes: [
+                    {
+                        source: source,
+                        target: target,
+                        type: type
+                    }
+                ]
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' && key.startsWith(`/api/graph`)
+                    // (key) => typeof key === 'string' && key.startsWith(`/api/${apipath}`)
+                )
+            );
 
         return result;
     }
@@ -234,11 +259,14 @@ const actionMiddleware = (store) => (next) => (action) => {
             })
         );
 
-        const remove_node = axios.post(`/api/graph/remove`, {
-            workflow_id: appState.workflow._id,
-            workspace_id: appState.workspace._id,
-            uids: remove_ids
-        });
+        if (remove_ids.length > 0) {
+            const remove_node = axios.post(`/api/graph/remove`, {
+                workflow_id: appState.workflow._id,
+                workspace_id: appState.workspace._id,
+                uids: remove_ids
+            });
+        }
+
         return result;
     }
 
@@ -443,13 +471,17 @@ const actionMiddleware = (store) => (next) => (action) => {
     if (action.type === removeWorkflow.type) {
         const { appState }: { appState: AppState } = store.getState();
         const { _id: workspace_id } = appState.workspace;
-        const alt_wf = appState.workspace.workflows?.find((w: Workspaces) => w._id != action.payload.workflow_id)
-        
+        const alt_wf = appState.workspace.workflows?.find(
+            (w: Workspaces) => w._id != action.payload.workflow_id
+        );
+
         if (appState.workflow._id == workspace_id) {
-            store.dispatch(loadWorkflow({
-                workflow_id: alt_wf._id,
-                workspace_id: appState.workspace._id
-            }))
+            store.dispatch(
+                loadWorkflow({
+                    workflow_id: alt_wf._id,
+                    workspace_id: appState.workspace._id
+                })
+            );
         }
         const remove_workflow = axios
             .post(`/api/workflow/remove`, {
@@ -472,24 +504,63 @@ const actionMiddleware = (store) => (next) => (action) => {
                 workspace_id: workspace_id,
                 workflow_id: action.payload.workflow_id
             })
-            .then(() =>
-                {
-                    store.dispatch(resetTimestamps())
-                    mutate(
-                        (key) => typeof key === 'string' && key.startsWith(`/api/`)
-                    )
-                    
-            }
-
-                
-            );
+            .then((res) => {
+                store.dispatch(loadState({ state: res.data }));
+                mutate(
+                    (key) =>
+                        typeof key === 'string' && key.startsWith(`/api/work`)
+                );
+            });
     }
 
-    if (action.type === setColor.type || action.type === setWorkflowSettings.type || action.type === setWorkspaceSettings.type) {
+    if (
+        action.type === setColor.type ||
+        action.type === setWorkflowSettings.type ||
+        action.type === setWorkspaceSettings.type
+    ) {
         const result = next(action);
         // Perform the action or side effect you want to do after the store update
         const { appState }: { appState: AppState } = store.getState();
         const post_result = axios.post(`/api/workflow`, appState.workflow);
+    }
+
+    if (action.type === saveNote.type) {
+        const post_result = axios
+            .post(`/api/note/save`, {
+                note_id: action.payload.note._id,
+                content: action.payload.content,
+                text: action.payload.text
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' && key.startsWith(`/api/note`)
+                )
+            );
+        const result = next(action);
+    }
+
+    if (action.type === updateNode.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+
+        const apipath = WindowDefinitions(action.payload.node.type).apipath;
+
+        const post_result = axios
+            .post(`/api/graph/update`, {
+                workspace_id: workspace_id,
+                workflow_id: workflow_id,
+                parameters: action.payload.parameters,
+                uid: action.payload.node.uid
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' &&
+                        key.startsWith(`/api/${apipath}`)
+                )
+            );
     }
 
     const callPost = (task_name: string) => {
@@ -512,9 +583,6 @@ const actionMiddleware = (store) => (next) => (action) => {
             break;
         case copyDoclistsToGroups.type:
             // callPost('copy_doclists_to_groups');
-            break;
-        case updateNode.type:
-            // callPost('update_node');
             break;
         case removeCluster.type:
             // callPost('remove_cluster');
