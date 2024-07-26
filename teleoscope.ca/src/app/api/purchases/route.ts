@@ -67,9 +67,3 @@ async function readBody(request: NextRequest): Promise<string> {
 
     return Buffer.concat(chunks).toString('utf-8');
 }
-
-export const config = {
-    api: {
-        bodyParser: false
-    }
-};

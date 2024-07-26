@@ -1,5 +1,4 @@
 import { Notes } from "@/types/notes";
-import { ObjectId } from "bson";
 import { Schema } from "prosemirror-model";
 import { EditorState } from "prosemirror-state";
 
@@ -28,10 +27,10 @@ const schema = new Schema({
 });
 
 
-export const newNote = (workspace_id: string, label = 'New note'): Notes => {
+export const newNote = (workspace_id, label = 'New note'): Notes => {
     const state = EditorState.create({ schema });
     return {
-        workspace: new ObjectId(workspace_id),
+        workspace: workspace_id,
         label,
         content: state.toJSON()
     };

@@ -37,20 +37,20 @@ export async function POST(request: NextRequest) {
 
     const result = await dbOp(async (client: MongoClient, db: Db) => {
         let ref = null;
-        if (type == "Search") {
-            const search = newSearch()
+        if (type == 'Search') {
+            const search = newSearch();
             const res = await insert('searches', search);
-            ref = res.insertedId
+            ref = res.insertedId;
         }
-        if (type == "Group") {
-            const group = newGroup(workspace_id)
+        if (type == 'Group') {
+            const group = newGroup(new ObjectId(workspace_id));
             const res = await insert('groups', group);
-            ref = res.insertedId
+            ref = res.insertedId;
         }
-        if (type == "Note") {
-            const note = newNote(workspace_id)
+        if (type == 'Note') {
+            const note = newNote(new ObjectId(workspace_id));
             const res = await insert('notes', note);
-            ref = res.insertedId
+            ref = res.insertedId;
         }
         const doc: Graph = {
             uid: uid,

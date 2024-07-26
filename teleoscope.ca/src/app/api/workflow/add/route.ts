@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         }
 
         const new_workflow = newWorkflow({
-            workspace_id: workspace_id,
+            workspace_id: new ObjectId(workspace_id),
             label: label
         });
 

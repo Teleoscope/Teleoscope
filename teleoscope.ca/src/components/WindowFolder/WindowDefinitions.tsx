@@ -133,7 +133,7 @@ export const WindowConfig = {
     type:      "Projection",
     apipath:   "graph",
     nodetype:  TargetNode,      
-    title:     (d) => d?.type,
+    title:     (d) => `Projection`,
     icon:      (c: string) => <Diversity2Icon sx={{ color: c }}  fontSize="inherit" />,
     component: (props: WindowProps) => <Projection {...props} />,
   },

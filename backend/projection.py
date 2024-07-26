@@ -275,13 +275,25 @@ class Projection:
                 if i != j and control_groupings[i] == control_groupings[j]:
                     control_dm[i, j] *= INTRA_CLUSTER_DISTANCE
 
+
+        rows_A, cols_A = source_dm.shape
+        rows_B, cols_B = control_dm.shape
+
+        # Create a larger matrix
+        corner_matrix = np.ones((rows_A + rows_B, cols_A + cols_B))
+
+        # Place matrix A in the top-left corner
+        corner_matrix[:rows_A, :cols_A] = source_dm
+
+        # Place matrix B in the bottom-right corner
+        corner_matrix[rows_A:, cols_A:] = control_dm
+
         
         umap_model = umap.UMAP(metric='precomputed')
-        embedding = umap_model.fit_transform(control_dm)
-        trans = umap_model.transform(source_dm)
+        embedding = umap_model.fit_transform(corner_matrix)
 
         hdbscan_clusterer = hdbscan.HDBSCAN(min_cluster_size=2)
-        cluster_labels = hdbscan_clusterer.fit_predict(trans)
+        cluster_labels = hdbscan_clusterer.fit_predict(embedding)
         grouped_cluster_labels = [list(group) for key, group in groupby(cluster_labels)]
 
         doclists = []
