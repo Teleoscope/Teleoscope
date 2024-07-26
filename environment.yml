@@ -96,7 +96,6 @@ dependencies:
       - datasets
       - dill
       - dnspython
-      - en-core-web-sm
       - environs
       - filelock
       - flagembedding
