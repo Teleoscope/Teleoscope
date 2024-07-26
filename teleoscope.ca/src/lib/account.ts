@@ -166,7 +166,7 @@ export default async function initialize_user(
                 await session.commitTransaction();
                 console.log('Transaction committed. New user and customer created.');
             } else {
-                throw new Error('Default subscription not defined.');
+                throw new Error(`Stripe default subscriptions error: ${default_subscriptions}`);
             }
         } else {
             throw new Error('Customer already exists in Stripe.');
