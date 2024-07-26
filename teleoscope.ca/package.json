@@ -4,6 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "export NODE_ENV=development; next dev",
+        "run": "export NODE_ENV=development; next start",
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
