@@ -116,9 +116,10 @@ export function WorkspaceCollaboratorsModal(
     <Dialog>
       <DialogTrigger asChild>
         <div className="flex flex-row  items-center w-full justify-end p-2">
-          {activeContributors.slice(0, MAX_CONTRIBUTORS_DISPLAY).map((c) => (
+          {activeContributors.slice(0, MAX_CONTRIBUTORS_DISPLAY).map((c, i, a) => (
             <div
               id={c.id}
+              key={`${c.id}-${i}-contributor`}
               className=" border rounded-full w-6 h-6 p-1 text-2xs items-center justify-center flex -ml-2 z-0 shadow-sm bg-neutral-50"
             >
               <PersonIcon className="w-6 h-6 text-neutral-400" />
@@ -183,9 +184,10 @@ export function WorkspaceCollaboratorsModal(
           </h5>
 
           <div className="grid grid-cols-1 gap-2  px-1 divide-y divide-y-neutral-200">
-            {activeContributors.map((c) => {
+            {activeContributors.map((c, i, a) => {
               return (
-                <div className="flex flex-row gap-4 items-center  py-1 ">
+                <div key={`${c.id}-${i}-active-contributors`}
+                className="flex flex-row gap-4 items-center  py-1 ">
                   <Button
                     className="w-5 h-5 rounded-full p-0
                 bg-red-100 text-red-300 hover:bg-red-200 hover:text-red-600

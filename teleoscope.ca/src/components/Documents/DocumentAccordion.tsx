@@ -8,6 +8,7 @@ import MuiAccordionSummary, {
 import MuiAccordionDetails from '@mui/material/AccordionDetails';
 import Typography from '@mui/material/Typography';
 import DocumentList from './DocumentList';
+import { Doclist, Graph } from '@/types/graph';
 
 const Accordion = styled((props: AccordionProps) => (
   <MuiAccordion disableGutters elevation={0} square {...props} />
@@ -46,7 +47,7 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
   borderTop: '1px solid rgba(0, 0, 0, .125)',
 }));
 
-export default function CustomizedAccordions({doclists, node}) {
+export default function DocumentAccordion({doclists, node}: {doclists: Array<Doclist>, node: Graph}) {
   const [expanded, setExpanded] = React.useState<string | false>("");
 
   const handleChange = (panel: string) => (event: React.SyntheticEvent, newExpanded: boolean) => {
@@ -55,10 +56,10 @@ export default function CustomizedAccordions({doclists, node}) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        {doclists?.map(doclist => 
-        <Accordion style={{ flex: '1' }} expanded={expanded === doclist.nodeid} onChange={handleChange(doclist.nodeid)}>
+        {doclists?.map((doclist) => 
+        <Accordion key={`${doclist.uid}-doclist`} style={{ flex: '1' }} expanded={expanded === doclist.uid} onChange={handleChange(doclist.uid)}>
           <AccordionSummary aria-controls="panel1d-content" id="panel1d-header">
-          <Typography>{doclist.nodeid}</Typography>
+          <Typography>{doclist.uid}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <DocumentList data={doclist.ranked_documents} ></DocumentList>

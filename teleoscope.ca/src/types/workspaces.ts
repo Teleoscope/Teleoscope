@@ -10,7 +10,7 @@ export interface Workspaces {
   workflows?: Array<any>;
 }
 
-interface Settings {
+export interface Settings {
   document_width: number;
   document_height: number;
   expanded: boolean;

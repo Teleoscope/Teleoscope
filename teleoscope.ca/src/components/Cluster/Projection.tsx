@@ -1,9 +1,9 @@
 import {
-  Box,
-  Tooltip,
-  Typography,
-  ToggleButton,
-  ToggleButtonGroup
+    Box,
+    Tooltip,
+    Typography,
+    ToggleButton,
+    ToggleButtonGroup
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { BsArrowsCollapse, BsArrowsExpand } from 'react-icons/bs';
@@ -17,12 +17,13 @@ import { WindowProps } from '../WindowFolder/WindowFactory';
 
 // Main Projection component
 export default function Projection({ graph_node: projection }: WindowProps) {
-
+    const dispatch = useAppDispatch();
+    
     if (!projection) {
         return <>Loading projection...</>;
     }
 
-    const dispatch = useAppDispatch();
+    
 
     // Toggle group separation state and update backend
     const ToggleCollapse = () => {

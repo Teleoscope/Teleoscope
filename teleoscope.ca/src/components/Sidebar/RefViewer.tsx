@@ -43,7 +43,7 @@ const renderPopupButton = (popupId, icon, children) => (
     </PopupState>
 );
 
-export default function References(props) {
+export default function RefViewer(props) {
     const selection = useAppSelector((state) => state.appState.workflow.selection.nodes);
     const selected = selection.nodes.filter((n) => n.data.type == 'Document');
     const { data: document } = useSWRF(`/api/document?document=${selected[0].id.split('%')[0]}`)
@@ -88,8 +88,8 @@ export default function References(props) {
                             label="Type"
                             onChange={(e) => setSelectedGroup(e.target.value)}
                         >
-                            {Object.keys(referenceGroups).map((group) => (
-                                <MenuItem value={group}>{group}</MenuItem>
+                            {Object.keys(referenceGroups).map((group, i, a) => (
+                                <MenuItem key={`${i}-group`} value={group}>{group}</MenuItem>
                             ))}
                         </Select>
                     </FormControl>
@@ -144,8 +144,8 @@ export default function References(props) {
                 >
                     {referenceGroups[selectedGroup] &&
                         referenceGroups[selectedGroup][selectedGroupIndex].map(
-                            (reference) => (
-                                <Stack spacing={2} direction="column">
+                            (reference, i, a) => (
+                                <Stack key={`${i}-ref`} spacing={2} direction="column">
                                     <DocumentListItem
                                         showReadIcon={true}
                                         setIndex={1}

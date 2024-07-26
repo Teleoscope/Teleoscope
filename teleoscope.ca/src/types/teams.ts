@@ -9,12 +9,12 @@ export interface Teams {
   users: Array<User>;
 }
 
-interface User {
+export interface User {
   _id: string;
   permissions: Permissions;
 }
 
-interface Permissions {
+export interface Permissions {
   read: boolean;
   write?: boolean;
 }

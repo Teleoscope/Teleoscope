@@ -32,7 +32,7 @@ def json_schema_to_typescript(schema, interface_name: str):
                 ts_type = f'{prop_name}'.title()
         return ts_type
 
-    interface_code = f'interface {interface_name.title()} {{\n'
+    interface_code = f'export interface {interface_name.title()} {{\n'
     nested_interface_code = []
     for prop_name, prop in schema.get('properties', {}).items():
         ts_type = parse_property(prop_name, prop)
@@ -67,7 +67,7 @@ def load_yaml():
                 # Generate TypeScript interface
                 interface_name = filename.replace('.yaml', '')
                 typescript_interface = json_schema_to_typescript(schema, interface_name)
-                typescript_file_header = 'import { ObjectId } from "mongodb";\n\nexport '
+                typescript_file_header = 'import { ObjectId } from "mongodb";\n\n'
                 typescript_output = typescript_file_header + typescript_interface
 
                 # Create TypeScript file path

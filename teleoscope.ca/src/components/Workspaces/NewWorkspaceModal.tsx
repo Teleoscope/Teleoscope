@@ -34,9 +34,6 @@ import { Workspaces } from '@/types/workspaces';
 
 export function NewWorkspaceModal({ teams }: { teams: Array<Teams> }) {
     
-    if (!teams) {
-      return <>You need at least one team to make a workspace...</>
-    }
 
     const teamLabels: string[] = teams?.map((team: Teams) => team.label);
     const teamNames: [string, ...string[]] = [
@@ -58,14 +55,14 @@ export function NewWorkspaceModal({ teams }: { teams: Array<Teams> }) {
         }
     });
 
-
     function onSubmit(data: Workspaces) {
         const body = {
-            label: form.getValues()["label"],
-            team: teams[teamNames.indexOf(form.getValues()["team"])]._id?.toString(),
-        }
+            label: form.getValues()['label'],
+            team: teams[
+                teamNames.indexOf(form.getValues()['team'])
+            ]._id?.toString()
+        };
 
-        
         fetch(`/api/workspaces`, {
             method: 'POST',
             body: JSON.stringify(body),
@@ -81,6 +78,10 @@ export function NewWorkspaceModal({ teams }: { teams: Array<Teams> }) {
                 }
             }
         });
+    }
+
+    if (!teams) {
+        return <>You need at least one team to make a workspace...</>;
     }
 
     return (
@@ -141,8 +142,9 @@ export function NewWorkspaceModal({ teams }: { teams: Array<Teams> }) {
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {teams.map((team: Teams) => (
+                                                {teams.map((team: Teams, i, a) => (
                                                     <SelectItem
+                                                        key={`${i}-team-select`}
                                                         value={team.label}
                                                     >
                                                         {team.label}

@@ -34,7 +34,6 @@ export default function Highlighter({ children }) {
     <Markdown
       remarkPlugins={[ remarkGfm ]}
       rehypePlugins={[ rehypeRaw, rehypeSanitize ]}
-      children={highlight(children)}
       components={{
         p: ({ node, ...props }) => <Typography paragraph {...props} sx={{}} />,
         h1: ({ node, ...props }) => <Typography variant="h4" {...props} />,
@@ -60,6 +59,6 @@ export default function Highlighter({ children }) {
           );
         }
       }}
-    />
+    >{highlight(children)}</Markdown>
   );
 }

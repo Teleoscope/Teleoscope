@@ -13,13 +13,13 @@ export interface Workflows {
   settings: Settings;
 }
 
-interface Selection {
+export interface Selection {
   nodes: any;
   edges: any;
 }
 
 
-interface Settings {
+export interface Settings {
   color: string;
   title_length: number;
 }

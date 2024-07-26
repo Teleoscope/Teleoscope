@@ -6,7 +6,7 @@ export interface Products {
   resources: Resources;
 }
 
-interface Resources {
+export interface Resources {
   teams: number;
   seats: number;
   storage: number;

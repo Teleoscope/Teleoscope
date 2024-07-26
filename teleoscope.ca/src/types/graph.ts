@@ -12,7 +12,7 @@ export interface Graph {
   edges: Edges;
 }
 
-interface Doclist {
+export interface Doclist {
   uid: any;
   reference: any;
   type: string;
@@ -20,7 +20,7 @@ interface Doclist {
 }
 
 
-interface Edges {
+export interface Edges {
   source: any;
   control: any;
   output: any;

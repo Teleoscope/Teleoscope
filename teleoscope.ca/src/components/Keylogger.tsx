@@ -8,7 +8,7 @@ export default function Keylogger({callback}) {
   
     useEffect(() => {
       callback("/", spacePressed)
-    }, [spacePressed]);  
+    }, [spacePressed, callback]);  
 
     return <></>
 }

@@ -1,7 +1,7 @@
 
 import { useAppSelector } from "@/lib/hooks";
 
-export default ({
+export default function ConnectionLine ({
     fromX,
     fromY,
     fromPosition,
@@ -10,7 +10,7 @@ export default ({
     toPosition,
     connectionLineType,
     connectionLineStyle,
-  }) => {
+  }) {
     const settings = useAppSelector((state) => state.appState.workflow.settings);
 
     return (

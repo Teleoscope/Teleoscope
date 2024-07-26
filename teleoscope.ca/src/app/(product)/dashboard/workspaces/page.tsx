@@ -21,7 +21,7 @@ export default async function WorkspacesPage() {
                         </Link>
                         <h1 className="text-2xl font-bold">Dashboard</h1>
                         <span className="text-sm text-neutral-700 font-medium italic  px-1">
-                            {user ? <>user</> : <>"User"</>}
+                            {user ? <>{user}</> : <>User</>}
                         </span>
                     </div>
 
