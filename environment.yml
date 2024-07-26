@@ -62,7 +62,6 @@ dependencies:
   - setuptools
   - simplejson
   - six
-  - spacy=3.7.5
   - sqlalchemy
   - tbb
   - threadpoolctl
