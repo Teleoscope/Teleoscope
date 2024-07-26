@@ -1,3 +1,4 @@
+// Workflow.tsx
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { EdgeChange, Node, NodeChange, addEdge } from 'reactflow';
 import { ReactFlowProvider } from 'reactflow';
@@ -13,7 +14,7 @@ import lodash from 'lodash';
 import { addDocumentToGroup, copyCluster } from '@/actions/appState';
 import WindowNode from '@/components/Nodes/WindowNode';
 import ButtonEdge from '@/components/Nodes/ButtonEdge';
-import { findTargetNode, getClosestEdge } from '@/lib/drag';
+import { findTargetNode } from '@/lib/drag';
 import axios from 'axios';
 import { WindowConfig } from '../WindowFolder/WindowDefinitions';
 
@@ -108,11 +109,11 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
 
     const onNodesChange = useCallback((changes: NodeChange[]) => {
         dispatch(updateNodes({ changes: changes }));
-    }, []);
+    }, [dispatch]);
 
     const onEdgesChange = useCallback((changes: EdgeChange[]) => {
         dispatch(updateEdges({ changes: changes }));
-    }, []);
+    }, [dispatch]);
 
     const onDragOver = useCallback((event: DragEvent) => {
         if (event) {
@@ -129,7 +130,7 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
 
     const onNodeDoubleClick = useCallback((event: Event, node: Node) => {
         dispatch(toggleMinMax(node.id));
-    }, []);
+    }, [dispatch]);
 
     const onDrop = useCallback(
         (event) => {
@@ -164,7 +165,7 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
                 })
             );
         },
-        [reactFlowInstance, settings]
+        [reactFlowInstance, settings, dispatch, workspace]
     );
 
     const handleCloseContextMenu = () => setContextMenu(null);
@@ -226,11 +227,11 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
 
     const onConnect = useCallback((connection, curredges) => {
         create_edge(connection, curredges);
-    }, []);
+    }, [create_edge]);
 
     const onSelectionChange = useCallback(({ nodes, edges }) => {
         dispatch(setSelection({ nodes: nodes, edges: edges }));
-    }, []);
+    }, [dispatch]);
 
     const onNodeDrag = useCallback(
         (evt, node) => {
@@ -243,7 +244,7 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
                 handleTempEdge(evt, node);
             }
         },
-        [getClosestEdge, setTempEdges, nodes]
+        [nodes]
     );
 
     const handleTempEdge = (_, node) => {
@@ -270,7 +271,7 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
         return () => {
             throttledSave.cancel();
         };
-    }, []);
+    }, [throttledSave]);
 
     return (
         <div className="providerflow">
