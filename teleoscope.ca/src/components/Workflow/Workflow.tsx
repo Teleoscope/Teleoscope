@@ -165,7 +165,7 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
                 })
             );
         },
-        [reactFlowInstance, settings, dispatch, workspace]
+        [reactFlowInstance, dispatch, workspace]
     );
 
     const handleCloseContextMenu = () => setContextMenu(null);
@@ -192,15 +192,7 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
         );
     };
 
-    const create_edge = (connection, curredges) => {
-        const newEdges = addEdge(connection, []);
-        dispatch(
-            makeEdge({
-                connection: connection,
-                edges: newEdges
-            })
-        );
-    };
+    
 
     const isValidConnection = (connection) => {
         const source = nodes.find((n) => n.id == connection.source);
@@ -226,8 +218,17 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
     };
 
     const onConnect = useCallback((connection, curredges) => {
+        const create_edge = (connection, curredges) => {
+            const newEdges = addEdge(connection, []);
+            dispatch(
+                makeEdge({
+                    connection: connection,
+                    edges: newEdges
+                })
+            );
+        };
         create_edge(connection, curredges);
-    }, [create_edge]);
+    }, [dispatch]);
 
     const onSelectionChange = useCallback(({ nodes, edges }) => {
         dispatch(setSelection({ nodes: nodes, edges: edges }));

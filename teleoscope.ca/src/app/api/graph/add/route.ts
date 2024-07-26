@@ -11,7 +11,7 @@ import { Notes } from '@/types/notes';
 import { Groups } from '@/types/groups';
 import { Search } from '@/types/search';
 
-export async function insert(
+async function insert(
     coll: string,
     obj: Search | Groups | Notes | Graph
 ): Promise<InsertOneResult> {

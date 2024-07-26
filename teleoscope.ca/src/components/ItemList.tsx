@@ -89,7 +89,7 @@ export default function ItemList({ onSelect, data, render, loadMore }) {
       }
       onSelect(reduced_data[nextIndex]);
     },
-    [currentItemIndex, ref, setCurrentItemIndex, dispatch, dispatch, reduced_data]
+    [currentItemIndex, ref, setCurrentItemIndex, dispatch, dispatch, onSelect, reduced_data]
   );
 
   const scrollerRef = React.useCallback(
