@@ -51,7 +51,7 @@ dependencies:
   - pyopenssl
   - pysocks
   - pytest
-  - python
+  - python=3.12
   - python_abi
   - pytz
   - pyyaml
@@ -62,6 +62,7 @@ dependencies:
   - setuptools
   - simplejson
   - six
+  - spacy=3.7.5
   - sqlalchemy
   - tbb
   - threadpoolctl
@@ -148,9 +149,6 @@ dependencies:
       - sentence-transformers
       - shellingham
       - smart-open
-      - spacy
-      - spacy-legacy
-      - spacy-loggers
       - srsly
       - sympy
       - thinc
