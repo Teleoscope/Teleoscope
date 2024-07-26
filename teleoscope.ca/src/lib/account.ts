@@ -19,6 +19,7 @@ export default async function initialize_user(
     const db = mongo_client.db();
     const stripe = await get_stripe();
 
+    // Ensure database collections exist in development environment
     if (process.env.NODE_ENV === 'development') {
         await ensure_db_collections_exist(db);
     }
@@ -26,20 +27,21 @@ export default async function initialize_user(
     session.startTransaction();
 
     try {
+        // Insert the user document
         const user: Users = {
             _id: userId,
             emails: [email.toString()],
             hashed_password: hashedPassword
         };
-        const user_result = await db
-            .collection<Users>('users')
-            .insertOne(user, { session });
+        const user_result = await db.collection<Users>('users').insertOne(user, { session });
 
-        const default_plan = Plans.find((plan) => plan.name == 'Default');
+        // Find the default plan
+        const default_plan = Plans.find((plan) => plan.name === 'Default');
         if (!default_plan) {
             throw new Error('No Default plan available.');
         }
 
+        // Create an account document
         const account_doc = {
             users: {
                 owner: userId
@@ -61,10 +63,9 @@ export default async function initialize_user(
             }
         };
 
-        const account_result = await db
-            .collection('accounts')
-            .insertOne(account_doc, { session });
+        const account_result = await db.collection('accounts').insertOne(account_doc, { session });
 
+        // Create a default team
         const team: Teams = {
             owner: user._id,
             label: 'Default team',
@@ -72,11 +73,9 @@ export default async function initialize_user(
             workspaces: [],
             users: []
         };
+        const team_result = await db.collection('teams').insertOne(team, { session });
 
-        const team_result = await db
-            .collection('teams')
-            .insertOne(team, { session });
-
+        // Create a default workspace
         const workspace: Workspaces = {
             label: 'Default workspace',
             team: team_result.insertedId,
@@ -87,19 +86,16 @@ export default async function initialize_user(
                 expanded: false
             }
         };
+        const workspace_result = await db.collection<Workspaces>('workspaces').insertOne(workspace, { session });
 
-        const workspace_result = await db
-            .collection<Workspaces>('workspaces')
-            .insertOne(workspace, { session });
+        // Update the team with the new workspace
+        await db.collection<Teams>('teams').updateOne(
+            { _id: team_result.insertedId },
+            { $push: { workspaces: workspace_result.insertedId } },
+            { session }
+        );
 
-        await db
-            .collection<Teams>('teams')
-            .updateOne(
-                { _id: team_result.insertedId },
-                { $push: { workspaces: workspace_result.insertedId } },
-                { session }
-            );
-
+        // Create a default workflow
         const workflow: Workflows = {
             workspace: workspace_result.insertedId,
             label: 'Default workflow',
@@ -117,31 +113,30 @@ export default async function initialize_user(
             last_update: new Date().toISOString(),
             logical_clock: 100
         };
+        const workflow_result = await db.collection<Workflows>('workflows').insertOne(workflow, { session });
 
-        const workflow_result = await db
-            .collection<Workflows>('workflows')
-            .insertOne(workflow, { session });
+        // Update the workspace with the new workflow
+        await db.collection<Workspaces>('workspaces').updateOne(
+            { _id: workspace_result.insertedId },
+            { $push: { workflows: workflow_result.insertedId } },
+            { session }
+        );
 
-        await db
-            .collection<Workspaces>('workspaces')
-            .updateOne(
-                { _id: workspace_result.insertedId },
-                { $push: { workflows: workflow_result.insertedId } },
-                { session }
-            );
-
+        // Check if the customer already exists in Stripe
         const customer = await stripe.customers.search({
             query: `metadata["userId"]:"${userId}"`
         });
 
-        if (customer.data.length == 0) {
+        if (customer.data.length === 0) {
+            // Create a new Stripe customer
             const new_customer = await stripe.customers.create({
                 email: email.toString(),
                 metadata: { userId }
             });
 
+            // Search for the default subscription product in Stripe
             const default_subscriptions = await stripe.products.search({
-                query: 'name:"Default"'
+                query: 'name:\'Default\''
             });
 
             if (default_subscriptions.data.length > 0) {
@@ -151,6 +146,7 @@ export default async function initialize_user(
                     throw new Error('Default subscription price not defined.');
                 }
 
+                // Create a new subscription for the customer
                 const new_subscription = await stripe.subscriptions.create({
                     customer: new_customer.id,
                     items: [
@@ -160,18 +156,15 @@ export default async function initialize_user(
                     ]
                 });
 
-                await db
-                    .collection('accounts')
-                    .updateOne(
-                        { _id: account_result.insertedId },
-                        { $set: { stripe_id: new_customer.id } },
-                        { session }
-                    );
+                // Update the account with the Stripe customer ID
+                await db.collection('accounts').updateOne(
+                    { _id: account_result.insertedId },
+                    { $set: { stripe_id: new_customer.id } },
+                    { session }
+                );
 
                 await session.commitTransaction();
-                console.log(
-                    'Transaction committed. New user and customer created.'
-                );
+                console.log('Transaction committed. New user and customer created.');
             } else {
                 throw new Error('Default subscription not defined.');
             }
