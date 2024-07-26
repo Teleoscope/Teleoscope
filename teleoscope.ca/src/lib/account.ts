@@ -147,11 +147,15 @@ export default async function initialize_user(
             if (default_subscriptions.data.length > 0) {
                 const default_subscription = default_subscriptions.data[0];
 
+                if (!default_subscription.default_price) {
+                    throw new Error('Default subscription price not defined.');
+                }
+
                 const new_subscription = await stripe.subscriptions.create({
                     customer: new_customer.id,
                     items: [
                         {
-                            price: default_subscription.default_price?.toString()
+                            price: default_subscription.default_price
                         }
                     ]
                 });
