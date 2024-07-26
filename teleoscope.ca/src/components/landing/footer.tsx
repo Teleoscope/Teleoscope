@@ -1,5 +1,5 @@
 import FooterLinks from "./FooterLinks";
-import NewsletterSection from "./NewsletterSection";
+import NewsletterSection from "@/components/landing/newsletterSection";
 
 export default function Footer() {
   return (
