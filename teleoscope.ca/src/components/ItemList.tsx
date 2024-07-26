@@ -1,6 +1,6 @@
-import React from "react";
+// ItemList.tsx
+import React, { useCallback, useMemo, useRef, useState } from "react";
 // actions
-
 import { bookmark } from "@/actions/appState";
 import { GroupedVirtuoso } from "react-virtuoso";
 import { Box } from "@mui/system";
@@ -11,7 +11,7 @@ import { useAppDispatch } from "@/lib/hooks";
 import { useSWRF } from "@/lib/swr";
 import WindowDefinitions from "./WindowFolder/WindowDefinitions";
 
-const GroupLabel = ({ index, data, callback}) => {
+const GroupLabel = React.memo(({ index, data, callback }) => {
   const group = data[index];
   const key = WindowDefinitions(group.type).apipath;
 
@@ -35,10 +35,10 @@ const GroupLabel = ({ index, data, callback}) => {
     }
   };
 
-  if (data.length == 1) {
-    return <div style={{ height: "1px" }}></div>
+  if (data.length === 1) {
+    return <div style={{ height: "1px" }}></div>;
   }
-  
+
   return (
     <Box
       key={`${index}-${group.id}`}
@@ -50,22 +50,25 @@ const GroupLabel = ({ index, data, callback}) => {
     >
       <Stack direction="row" justifyContent="space-between">
         <Typography>{`${group.type}: `}{title(group.type)}</Typography>
-        <Button size="small" onClick={(e) => callback(e, index)} sx={{color: "#CCCCCC", width: "1em"}}><HiChevronDoubleDown /></Button>
+        <Button size="small" onClick={(e) => callback(e, index)} sx={{ color: "#CCCCCC", width: "1em" }}><HiChevronDoubleDown /></Button>
       </Stack>
     </Box>
   );
-};
+});
+
+GroupLabel.displayName = 'GroupLabel';
+
 
 export default function ItemList({ onSelect, data, render, loadMore }) {
-  const ref = React.useRef(null);
-  const [currentItemIndex, setCurrentItemIndex] = React.useState(-1);
-  const listRef = React.useRef(null);
+  const ref = useRef(null);
+  const [currentItemIndex, setCurrentItemIndex] = useState(-1);
+  const listRef = useRef(null);
   const dispatch = useAppDispatch();
 
-  const groupCounts = data ? data.map((d) => d?.ranked_documents?.length) : [];
-  const reduced_data = data ? data.reduce((acc, dl) => acc.concat(dl?.ranked_documents), []) : [];
+  const groupCounts = useMemo(() => data ? data.map((d) => d?.ranked_documents?.length) : [], [data]);
+  const reduced_data = useMemo(() => data ? data.reduce((acc, dl) => acc.concat(dl?.ranked_documents), []) : [], [data]);
 
-  const keyDownCallback = React.useCallback(
+  const keyDownCallback = useCallback(
     (e) => {
       let nextIndex = null;
 
@@ -89,15 +92,15 @@ export default function ItemList({ onSelect, data, render, loadMore }) {
       }
       onSelect(reduced_data[nextIndex]);
     },
-    [currentItemIndex, ref, setCurrentItemIndex, dispatch, dispatch, onSelect, reduced_data]
+    [currentItemIndex, ref, setCurrentItemIndex, dispatch, onSelect, reduced_data]
   );
 
-  const scrollerRef = React.useCallback(
+  const scrollerRef = useCallback(
     (element) => {
       if (element) {
         element.addEventListener("keydown", keyDownCallback);
         listRef.current = element;
-      } else {
+      } else if (listRef.current) {
         listRef.current.removeEventListener("keydown", keyDownCallback);
       }
     },
@@ -110,15 +113,14 @@ export default function ItemList({ onSelect, data, render, loadMore }) {
   };
 
   const handleScroll = (e, index) => {
-    e.preventDefault()
-    const total = groupCounts.reduce((acc, curr) => acc + curr, 0)
-    const i = groupCounts.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0)
+    e.preventDefault();
+    const total = groupCounts.reduce((acc, curr) => acc + curr, 0);
+    const i = groupCounts.slice(0, index + 1).reduce((acc, curr) => acc + curr, 0);
     const j = i >= total ? 0 : i;
-    ref?.current.scrollToIndex({index: j})
-  }
+    ref?.current.scrollToIndex({ index: j });
+  };
 
   return (
-    
     <GroupedVirtuoso
       ref={ref}
       initialItemCount={1}
@@ -127,7 +129,6 @@ export default function ItemList({ onSelect, data, render, loadMore }) {
       itemContent={(index) => render(index, reduced_data?.at(index), currentItemIndex, handleSetCurrentItemIndex)}
       groupContent={(index) => <GroupLabel callback={handleScroll} index={index} data={data} />}
       scrollerRef={scrollerRef}
-      
     />
   );
 }

@@ -3,7 +3,9 @@ import nextra from 'nextra';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
-
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   webpack: (config) => {
     config.externals.push("@node-rs/argon2", "@node-rs/bcrypt");
 

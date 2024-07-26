@@ -4,6 +4,7 @@ import { DEFAULT_STATE } from '@/lib/defaults';
 
 const initialState = DEFAULT_STATE;
 
+
 export const AppState = createSlice({
     name: 'app',
     initialState,

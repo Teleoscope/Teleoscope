@@ -13,7 +13,7 @@ export default function StoreProvider({
 }) {
   const storeRef = useRef<AppStore | null>(null)
   if (!storeRef.current) {
-    storeRef.current = makeStore({})
+    storeRef.current = makeStore()
     storeRef.current.dispatch(initializeCount(count))
   }
 
