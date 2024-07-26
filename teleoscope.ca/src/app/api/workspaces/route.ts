@@ -95,7 +95,6 @@ export async function POST(request: NextRequest) {
             await mongo_session.abortTransaction();
         }
         await mongo_session.endSession();
-        await mongo_client.close();
     }
 
     if (transactionError) {

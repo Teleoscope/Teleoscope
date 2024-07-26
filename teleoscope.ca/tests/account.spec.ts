@@ -19,7 +19,6 @@ test.beforeEach(async () => {
   const mongo_client = await client()
   const db = mongo_client.db()
   await db.dropDatabase()
-  mongo_client.close()
 });
 
 test('successful signup', async ({ page }) => {

@@ -131,7 +131,6 @@ export async function signin(formData: FormData): Promise<ActionResult> {
         // Since protecting against this is non-trivial,
         // it is crucial your implementation is protected against brute-force attacks with login throttling etc.
         // If usernames are public, you may outright tell the user that the username is invalid.
-        mongo_client.close();
         return errors.incorrect;
     }
 
@@ -147,7 +146,6 @@ export async function signin(formData: FormData): Promise<ActionResult> {
     );
 
     if (!validPassword) {
-        mongo_client.close();
         return errors.incorrect;
     }
 
@@ -159,7 +157,6 @@ export async function signin(formData: FormData): Promise<ActionResult> {
         existingUser._id.toString()
     );
 
-    mongo_client.close();
     return redirect('/dashboard');
 }
 

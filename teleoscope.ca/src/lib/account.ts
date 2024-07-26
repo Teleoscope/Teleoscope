@@ -183,6 +183,5 @@ export default async function initialize_user(
         throw error;
     } finally {
         await session.endSession();
-        mongo_client.close()
     }
 }

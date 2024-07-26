@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-        mongo_client.close()
         return NextResponse.json({ error: "Email doesn't correspond to a user" }, { status: 404 });
     }
 
@@ -63,12 +62,10 @@ export async function POST(request: NextRequest) {
     })
 
     if (!account) {
-        mongo_client.close()
         return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
     }
 
     if (account.amount_seats_used >= account.amount_seats_available) {
-        mongo_client.close()
         return NextResponse.json({ error: 'Too many seats used.' }, { status: 404 });
     }
 
@@ -105,18 +102,15 @@ export async function POST(request: NextRequest) {
     );
 
     if (team_result.modifiedCount === 0) {
-        mongo_client.close()
         return NextResponse.json({ error: 'Team not found or user already added' }, { status: 404 });
     }
 
     if (account_result.modifiedCount === 0) {
-        mongo_client.close()
         return NextResponse.json({ error: 'Could not update account' }, { status: 404 });
     }
 
 
     await mongo_session.commitTransaction();
-    mongo_client.close()
 
     return NextResponse.json({ success: true });
 }

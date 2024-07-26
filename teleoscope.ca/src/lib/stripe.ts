@@ -61,7 +61,6 @@ export async function recreate_products() {
             resources: product.resources
         });
     }
-    mongo_client.close()
 }
 
 
@@ -95,7 +94,6 @@ async function getAccountByUserId(userId: string) {
     const mongo_client = await client();
     const db = mongo_client.db();
     const result = await db.collection('accounts').findOne({ "users.owner": userId });
-    mongo_client.close()
     return result
 }
 
@@ -103,7 +101,6 @@ async function getAccountByStripeId(customer_id: string) {
     const mongo_client = await client();
     const db = mongo_client.db();
     const result = await db.collection('accounts').findOne({ stripe_id: customer_id });
-    mongo_client.close()
     return result
 }
 
@@ -155,8 +152,6 @@ async function updateAccountResources(account: ObjectId, accumulated_resources: 
             }
         }
     );
-
-    mongo_client.close()
 
     if (!account_update_result) {
         throw new Error(`Error updating account for Teleoscope account: ${account}`);

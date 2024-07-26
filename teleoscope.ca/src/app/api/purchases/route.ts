@@ -47,7 +47,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(result);
     } catch (err) {
         console.error('Error handling webhook event', err);
-        mongo_client.close()
         return NextResponse.json({ error: 'Webhook Error' }, { status: 400 });
     }
 }

@@ -43,9 +43,5 @@ export async function connect(): Promise<
     },
   });
 
-  
-
-  // mongo_client.close()
-
   return lucia;
 }
