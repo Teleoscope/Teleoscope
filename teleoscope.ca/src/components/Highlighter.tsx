@@ -47,14 +47,13 @@ export default function Highlighter({ children }) {
             <SyntaxHighlighter
               {...props}
               PreTag="div"
-              children={String(children).replace(/\n$/, '')}
               language={match ? match[1] : 'text'}
               showLineNumbers
               style={theme.palette.mode === 'dark' ? oneDark : oneLight}
               customStyle={{ padding: "0.9em", overflow: "auto", margin: 0,
                 fontSize: "0.8em"
               }}
-            />
+            >{String(children).replace(/\n$/, '')}</SyntaxHighlighter>
             </Box>
           );
         }

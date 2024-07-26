@@ -28,7 +28,7 @@ export default function HelpOverlay() {
                     <Divider sx={{bgcolor: "#555555", marginTop: "1em", marginBottom: "1em"}} />
                     
                     <Typography sx={{fontWeight: "bold"}}><ControlCameraIcon sx={{ fontSize: 15 }}/> Move</Typography>
-                    <Typography variant="body1">Move by clicking and dragging on a workspace item's titlebar.</Typography>
+                    <Typography variant="body1">Move by clicking and dragging on a workspace item titlebar.</Typography>
                     <Divider sx={{bgcolor: "#555555", marginTop: "1em", marginBottom: "1em"}} />
 
                     <Typography sx={{fontWeight: "bold"}}><GiResize sx={{ fontSize: 15 }}/> Resize</Typography>
@@ -45,7 +45,7 @@ export default function HelpOverlay() {
                     <Divider sx={{bgcolor: "#555555", marginTop: "1em", marginBottom: "1em"}} />   
                     
                     <Typography sx={{fontWeight: "bold"}}><TiDeleteOutline sx={{ fontSize: 15 }}/> Delete nodes and edges</Typography>
-                    <Typography variant="body1">Delete nodes and edges by clicking the "X" or pressing delete or backspace.</Typography>
+                    <Typography variant="body1">Delete nodes and edges by clicking the X or pressing delete or backspace.</Typography>
                     
                 </>
             }

@@ -41,7 +41,7 @@ export default function HelpMenu(props) {
                         <ControlCameraIcon sx={{ fontSize: 15 }} /> Move
                     </Typography>
                     <Typography variant="body">
-                        Move by clicking and dragging on a workspace item's
+                        Move by clicking and dragging on a workspace item
                         titlebar.
                     </Typography>
                     <Divider
@@ -101,7 +101,7 @@ export default function HelpMenu(props) {
                         and edges
                     </Typography>
                     <Typography variant="body">
-                        Delete nodes and edges by clicking the "X" or pressing
+                        Delete nodes and edges by clicking the X or pressing
                         delete or backspace.
                     </Typography>
                 </>
