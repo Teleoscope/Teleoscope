@@ -1,5 +1,5 @@
-import DemoCTA from "@/components/landing/DemoCTA";
-import Footer from "@/components/landing/Footer";
+import DemoCTA from "@/components/landing/demoCTA";
+import Footer from "@/components/landing/footer";
 import HowItWorksInfoCards from "@/components/landing/HowItWorksInfoCards";
 
 export default function About() {
