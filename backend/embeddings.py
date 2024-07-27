@@ -60,7 +60,8 @@ app.conf.update(
 
 from FlagEmbedding import BGEM3FlagModel
 model = BGEM3FlagModel('BAAI/bge-m3', use_fp16=True) # Setting use_fp16 to True speeds up computation with a slight performance degradation
-from pymilvus import MilvusClient, DataType
+from pymilvus import MilvusClient, DataType, MilvusException, connections, db
+
 
 def milvus_setup(client: MilvusClient, collection_name="teleoscope"):
     if not client.has_collection(collection_name):
@@ -99,7 +100,14 @@ def milvus_setup(client: MilvusClient, collection_name="teleoscope"):
         )
 
 def connect():
-    client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
+    client = None
+    try:
+        client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
+    except MilvusException as e:
+        connections.connect(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
+        database = db.create_database(MILVUS_DBNAME)
+        connections.disconnect(f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
+        client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
     return client
 
 
