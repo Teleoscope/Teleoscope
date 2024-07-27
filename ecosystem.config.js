@@ -16,8 +16,8 @@ module.exports = {
     },
     {
       name: "frontend",
-      cwd: "./frontend",
-      script: "npm run start",
+      cwd: "./teleoscope.ca",
+      script: "pnpm start",
       args: "",
       watch: false,
       interpreter: "",
