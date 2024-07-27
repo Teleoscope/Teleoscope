@@ -444,7 +444,7 @@ def update_rank(
             collection_name=collection_name,
             data=[search_vector],
             anns_field="vector",
-            param=search_params,
+            search_params=search_params,
             limit=10000,
         )
 
