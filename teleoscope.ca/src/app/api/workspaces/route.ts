@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
                     document_height: 100,
                     expanded: false
                 },
-                selected_workflow: undefined,
+                selected_workflow: "",
                 workflows: []
             };
 
