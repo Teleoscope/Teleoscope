@@ -116,7 +116,12 @@ export async function POST(request: NextRequest) {
                 .collection<Workspaces>('workspaces')
                 .updateOne(
                     { _id: workspace_result.insertedId },
-                    { $push: { workflows: workflow_result.insertedId } }
+                    {
+                        $push: { workflows: workflow_result.insertedId },
+                        $set: {
+                            selected_workflow: workflow_result.insertedId
+                        }
+                    }
                 );
         });
     } catch (error) {
