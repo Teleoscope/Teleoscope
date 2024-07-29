@@ -4,6 +4,9 @@ title: workspace
 required:
   - label
   - team
+  - settings
+  - selected_workflow
+  - workflows
 properties:
   _id:
     bsonType: ["objectId", "string"]
