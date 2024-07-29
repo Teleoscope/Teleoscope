@@ -12,7 +12,7 @@ import WindowDefinitions from "../WindowFolder/WindowDefinitions";
 
 export default function GroupViewer({ reference }) {
    
-  const { data: group } = useSWRF(`/api/group?group=${reference}`);
+  const { data: group } = useSWRF(reference ? `/api/group?group=${reference}`:null);
   const { settings } = useAppSelector((state) => state.appState.workspace);
   const { color } = useAppSelector((state) => state.appState.workflow.settings.color);
 

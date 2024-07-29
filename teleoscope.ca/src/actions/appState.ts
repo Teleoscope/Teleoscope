@@ -1,47 +1,57 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { applyNodeChanges, applyEdgeChanges } from 'reactflow';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { applyNodeChanges, applyEdgeChanges, Edge, Node } from 'reactflow';
 import { DEFAULT_STATE } from '@/lib/defaults';
+import { Workflows } from '@/types/workflows';
+import { Workspaces } from '@/types/workspaces';
 
-const initialState = DEFAULT_STATE;
+interface AppStateType {
+    workflow: Workflows;
+    workspace: Workspaces;
+}
 
+const initialState: AppStateType = DEFAULT_STATE;
 
 export const AppState = createSlice({
     name: 'app',
-    initialState,
+    initialState: AppStateType,
     reducers: {
         updateTimestamps: (state) => {
             state.workflow.last_update = new Date().toISOString();
             state.workflow.logical_clock += 1;
         },
         resetTimestamps: (state) => {
-            // state.workflow.last_update = new Date().toISOString();
             state.workflow.logical_clock = 0;
         },
-        loadAppData: (state, action) => {
+        loadAppData: (
+            state: AppStateType,
+            action: PayloadAction<{ state: AppStateType }>
+        ) => {
             const newState = action.payload.state;
             const currentLastUpdate = new Date(state.workflow.last_update);
             const newLastUpdate = new Date(newState.workflow.last_update);
 
-            if (newLastUpdate > currentLastUpdate || newState.workflow.logical_clock > state.workflow.logical_clock) {
+            if (
+                newLastUpdate > currentLastUpdate ||
+                newState.workflow.logical_clock > state.workflow.logical_clock
+            ) {
                 return {
                     ...state,
                     ...newState,
                     workflow: { ...newState.workflow },
-                    workspace: { ...newState.workspace },
+                    workspace: { ...newState.workspace }
                 };
             }
         },
-        saveNote: (state, action) => {
-
+        saveNote: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        loadState: (state, action) => {
-            console.log("fucking fuck fuck", action.payload)
-            return action.payload.state
+        loadState: (state: AppStateType, action: PayloadAction<{ state: AppStateType }>) => {
+            return action.payload.state;
         },
-        relabelWorkflow: (state, action) => {
+        relabelWorkflow: (state: AppStateType, action: PayloadAction<{ label: string }>) => {
             state.workflow.label = action.payload.label;
         },
-        bookmark: (state, action) => {
+        bookmark: (state: AppStateType, action: PayloadAction<string>) => {
             const id = action.payload;
             const index = state.workflow.bookmarks.indexOf(id);
             if (index > -1) {
@@ -50,55 +60,88 @@ export const AppState = createSlice({
                 state.workflow.bookmarks.push(id);
             }
         },
-        loadBookmarkedDocuments: (state, action) => {
+        loadBookmarkedDocuments: (state: AppStateType, action: PayloadAction<string[]>) => {
             state.workflow.bookmarks = action.payload;
         },
         resetWorkspace: () => initialState,
-        setColor: (state, action) => {
+        setColor: (state: AppStateType, action: PayloadAction<{ color: string }>) => {
             state.workflow.settings.color = action.payload.color;
         },
-        setWorkflowSettings: (state, action) => {
-            state.workflow.settings[action.payload.setting] = action.payload.value
+        setWorkflowSettings: (
+            state: AppStateType,
+            action: PayloadAction<{ setting: string; value: any }>
+        ) => {
+            state.workflow.settings[action.payload.setting] =
+                action.payload.value;
         },
-        setWorkspaceSettings: (state, action) => {
-            state.workflow.settings[action.payload.setting] = action.payload.value
+        setWorkspaceSettings: (
+            state: AppStateType,
+            action: PayloadAction<{ setting: string; value: any }>
+        ) => {
+            state.workspace.settings[action.payload.setting] =
+                action.payload.value;
         },
-        setSelection: (state, action) => {
+        setSelection: (
+            state: AppStateType,
+            action: PayloadAction<{ nodes: string[]; edges: string[] }>
+        ) => {
             state.workflow.selection = {
                 nodes: action.payload.nodes || [],
                 edges: action.payload.edges || []
             };
         },
-        moveWindowToFront: (state, action) => {
-            const index = state.workflow.nodes.findIndex((w) => w.i === action.payload);
+        moveWindowToFront: (state: AppStateType, action: PayloadAction<string>) => {
+            const index = state.workflow.nodes.findIndex(
+                (w) => w.id === action.payload
+            );
             if (index > -1) {
                 const [tempItem] = state.workflow.nodes.splice(index, 1);
                 state.workflow.nodes.push(tempItem);
             }
         },
-        toggleMinMax: (state, action) => {
-            const index = state.workflow.nodes.findIndex((w) => w.id === action.payload.id);
+        toggleMinMax: (state: AppStateType, action: PayloadAction<{ id: string }>) => {
+            const index = state.workflow.nodes.findIndex(
+                (w) => w.id === action.payload.id
+            );
             if (index > -1) {
                 const node = state.workflow.nodes[index];
                 const newNode = {
                     ...node,
-                    width: (node.width > state.workspace.settings?.document_width || node.height > state.workspace.settings?.document_height)
-                        ? state.workspace.settings?.document_width : 300,
-                    height: (node.width > state.workspace.settings?.document_width || node.height > state.workspace.settings?.document_height)
-                        ? state.workspace.settings?.document_height : 340,
+                    width:
+                        node.width > state.workspace.settings.document_width ||
+                        node.height > state.workspace.settings.document_height
+                            ? state.workspace.settings?.document_width
+                            : 300,
+                    height:
+                        node.width > state.workspace.settings.document_width ||
+                        node.height > state.workspace.settings.document_height
+                            ? state.workspace.settings?.document_height
+                            : 340,
                     style: {
                         ...node.style,
-                        width: (node.width > state.workspace.settings?.document_width || node.height > state.workspace.settings?.document_height)
-                            ? state.workspace.settings?.document_width : 300,
-                        height: (node.width > state.workspace.settings?.document_width || node.height > state.workspace.settings?.document_height)
-                            ? state.workspace.settings?.document_height : 340
+                        width:
+                            node.width >
+                                state.workspace.settings.document_width ||
+                            node.height >
+                                state.workspace.settings.document_height
+                                ? state.workspace.settings.document_width
+                                : 300,
+                        height:
+                            node.width >
+                                state.workspace.settings.document_width ||
+                            node.height >
+                                state.workspace.settings.document_height
+                                ? state.workspace.settings?.document_height
+                                : 340
                     }
                 };
                 state.workflow.nodes[index] = newNode;
             }
         },
-        minimizeWindow: (state, action) => {
-            const index = state.workflow.nodes.findIndex((w) => w.id === action.payload.id);
+        minimizeWindow: (state: AppStateType, action: PayloadAction<{ id: string }>) => {
+            const index = state.workflow.nodes.findIndex(
+                (w) => w.id === action.payload.id
+            );
             if (index > -1) {
                 const node = state.workflow.nodes[index];
                 const newNode = {
@@ -113,9 +156,11 @@ export const AppState = createSlice({
                 };
                 state.workflow.nodes[index] = newNode;
             }
-        },        
-        maximizeWindow: (state, action) => {
-            const index = state.workflow.nodes.findIndex((w) => w.id === action.payload.id);
+        },
+        maximizeWindow: (state: AppStateType, action: PayloadAction<{ id: string }>) => {
+            const index = state.workflow.nodes.findIndex(
+                (w) => w.id === action.payload.id
+            );
             if (index > -1) {
                 const node = state.workflow.nodes[index];
                 const newNode = {
@@ -130,15 +175,25 @@ export const AppState = createSlice({
                 };
                 state.workflow.nodes[index] = newNode;
             }
-        },        
-        updateSearch: (state, action) => {
-            const index = state.workflow.nodes.findIndex((n) => n.data.oid === action.payload.search_id);
+        },
+        updateSearch: (
+            state: AppStateType,
+            action: PayloadAction<{ search_id: string; query: string }>
+        ) => {
+            const index = state.workflow.nodes.findIndex(
+                (n) => n.data.uid === action.payload.search_id
+            );
             if (index > -1) {
                 state.workflow.nodes[index].data.query = action.payload.query;
             }
         },
-        checkWindow: (state, action) => {
-            const index = state.workflow.nodes.findIndex((w) => w.i === action.payload.i);
+        checkWindow: (
+            state: AppStateType,
+            action: PayloadAction<{ i: string; check: boolean }>
+        ) => {
+            const index = state.workflow.nodes.findIndex(
+                (w) => w.id === action.payload.i
+            );
             if (index > 0) {
                 state.workflow.nodes[index].isChecked = action.payload.check;
             }
@@ -155,123 +210,179 @@ export const AppState = createSlice({
                 }
             });
         },
-        loadWindows: (state, action) => {
+        loadWindows: (state: AppStateType, action: PayloadAction<Node[]>) => {
             state.workflow.nodes = action.payload;
         },
-        setNodes: (state, action) => {
+        setNodes: (state: AppStateType, action: PayloadAction<{ nodes: Node[] }>) => {
             state.workflow.nodes = action.payload.nodes;
         },
-        setEdges: (state, action) => {
+        setEdges: (state: AppStateType, action: PayloadAction<{ edges: Edge[] }>) => {
             state.workflow.edges = action.payload.edges;
         },
-        updateNodes: (state, action) => {
-            state.workflow.nodes = applyNodeChanges(action.payload.changes, state.workflow.nodes);
+        updateNodes: (state: AppStateType, action: PayloadAction<{ changes: any }>) => {
+            state.workflow.nodes = applyNodeChanges(
+                action.payload.changes,
+                state.workflow.nodes
+            );
         },
-        updateEdges: (state, action) => {
-            state.workflow.edges = applyEdgeChanges(action.payload.changes, state.workflow.edges);
+        updateEdges: (state: AppStateType, action: PayloadAction<{ changes: any }>) => {
+            state.workflow.edges = applyEdgeChanges(
+                action.payload.changes,
+                state.workflow.edges
+            );
         },
-        setDraggable: (state, action) => {
-            const index = state.workflow.nodes.findIndex((w) => w.id === action.payload.id);
+        setDraggable: (
+            state: AppStateType,
+            action: PayloadAction<{ id: string; draggable: boolean }>
+        ) => {
+            const index = state.workflow.nodes.findIndex(
+                (w) => w.id === action.payload.id
+            );
             if (index >= 0) {
-                state.workflow.nodes[index].draggable = action.payload.draggable;
+                state.workflow.nodes[index].draggable =
+                    action.payload.draggable;
             }
         },
-        dropNode: (state, action) => {
+        dropNode: (
+            state: AppStateType,
+            action: PayloadAction<{
+                uid: string;
+                type: string;
+                x: number;
+                y: number;
+                width: number;
+                height: number;
+            }>
+        ) => {
             state.workflow.nodes.push({
                 id: action.payload.uid,
                 type: action.payload.type,
                 position: { x: action.payload.x, y: action.payload.y },
                 positionAbsolute: { x: action.payload.x, y: action.payload.y },
-                style: { width: action.payload.width, height: action.payload.height },
-                data: { label: action.payload.uid, type: action.payload.type, uid: action.payload.uid },
+                style: {
+                    width: action.payload.width,
+                    height: action.payload.height
+                },
+                data: {
+                    label: action.payload.uid,
+                    type: action.payload.type,
+                    uid: action.payload.uid
+                }
             });
         },
-        makeNode: (state, action) => {
+        makeNode: (
+            state: AppStateType,
+            action: PayloadAction<{
+                uid: string;
+                type: string;
+                x: number;
+                y: number;
+                width: number;
+                height: number;
+            }>
+        ) => {
             state.workflow.nodes.push({
                 id: action.payload.uid,
                 type: action.payload.type,
                 position: { x: action.payload.x, y: action.payload.y },
                 positionAbsolute: { x: action.payload.x, y: action.payload.y },
-                style: { width: action.payload.width, height: action.payload.height },
-                data: { label: action.payload.uid, type: action.payload.type, uid: action.payload.uid },
+                style: {
+                    width: action.payload.width,
+                    height: action.payload.height
+                },
+                data: {
+                    label: action.payload.uid,
+                    type: action.payload.type,
+                    uid: action.payload.uid
+                }
             });
         },
-        makeEdge: (state, action) => {
-            if (!state.workflow.edges.some((se) => action.payload.edges.some((ae) => se.id === ae.id))) {
-                state.workflow.edges = [...state.workflow.edges, ...action.payload.edges];
+        makeEdge: (state: AppStateType, action: PayloadAction<{ edges: Edge[] }>) => {
+            if (
+                !state.workflow.edges.some((se) =>
+                    action.payload.edges.some((ae) => se.id === ae.id)
+                )
+            ) {
+                state.workflow.edges = [
+                    ...state.workflow.edges,
+                    ...action.payload.edges
+                ];
             }
         },
-        loadWorkflow: (state, action) => {
-            state.workspace.selected_workflow = action.payload.workflow_id
+        loadWorkflow: (
+            state: AppStateType,
+            action: PayloadAction<{ workflow_id: string }>
+        ) => {
+            state.workspace.selected_workflow = action.payload.workflow_id;
         },
-        makeGroupFromBookmarks: (state, action) => {
+        makeGroupFromBookmarks: (state) => {
             state.workflow.bookmarks = [];
         },
-        updateNode: (state, action) => {
-            // Add any state changes here
+        updateNode: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        copyDoclistsToGroups: (state, action) => {
-            // Add any state changes here
+        copyDoclistsToGroups: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        removeCluster: (state, action) => {
-            // Add any state changes here
+        removeCluster: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        initializeProjection: (state, action) => {
-            // Add any state changes here
+        initializeProjection: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        relabelProjection: (state, action) => {
-            // Add any state changes here
+        relabelProjection: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        removeProjection: (state, action) => {
-            // Add any state changes here
+        removeProjection: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        removeWorkflow: (state, action) => {
-            // Add any state changes here
+        removeWorkflow: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        initializeWorkflow: (state, action) => {
-            // Add any state changes here
+        initializeWorkflow: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        addGroup: (state, action) => {
-            // Add any state changes here
+        addGroup: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        removeGroup: (state, action) => {
-            // Add any state changes here
+        removeGroup: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        recolorGroup: (state, action) => {
-            // Add any state changes here
+        recolorGroup: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        relabelGroup: (state, action) => {
-            // Add any state changes here
+        relabelGroup: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        mark: (state, action) => {
-            // Add any state changes here
+        mark: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        removeDocumentFromGroup: (state, action) => {
-            // Add any state changes here
+        removeDocumentFromGroup: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        addDocumentToGroup: (state, action) => {
-            // Add any state changes here
+        addDocumentToGroup: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        copyCluster: (state, action) => {
-            // Add any state changes here
+        copyCluster: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        clusterByGroups: (state, action) => {
-            // Add any state changes here
+        clusterByGroups: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        saveUIState: (state, action) => {
-            // Add any state changes here
+        saveUIState: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        updateNote: (state, action) => {
-            // Add any state changes here
+        updateNote: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        addNote: (state, action) => {
-            // Add any state changes here
+        addNote: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        relabelNote: (state, action) => {
-            // Add any state changes here
+        relabelNote: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         },
-        removeNote: (state, action) => {
-            // Add any state changes here
+        removeNote: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
         }
     }
 });

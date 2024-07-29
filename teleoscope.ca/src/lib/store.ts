@@ -100,6 +100,16 @@ const actionMiddleware = (store) => (next) => (action) => {
         });
     }
 
+    if (action.type === updateNodes.type || 
+        action.type === updateEdges.type ||
+        action.type === updateNode.type ||
+        action.type === updateNote.type ||
+        action.type === makeEdge.type ||
+        action.type === addDocumentToGroup.type ||
+        action.type === removeDocumentFromGroup.type) {
+            
+        }
+
     if (action.type === dropNode.type) {
         const uid = crypto.randomBytes(8).toString('hex');
 
@@ -303,7 +313,7 @@ const actionMiddleware = (store) => (next) => (action) => {
             remove_ids.includes(edge.id)
         );
 
-        if (remove_ids.length > 0) {
+        if (remove_ids.length >= 0) {
             const remove_edge = axios.post(`/api/graph/edge/remove`, {
                 workflow_id: appState.workflow._id,
                 workspace_id: appState.workspace._id,

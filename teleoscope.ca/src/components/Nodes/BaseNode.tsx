@@ -37,7 +37,9 @@ function BaseNode({ data, id, selected }: NodeProps) {
         (state) => state.appState.workflow.settings
     );
     const { data: graph_node }: { data: Graph } = useSWRF(
-        id ? `/api/graph?uid=${id}` : null
+        id ? `/api/graph?uid=${id}` : null, {
+            refreshInterval: data?.updateInterval ? data.updateInterval : 0
+        }
     );
 
     return (

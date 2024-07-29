@@ -221,8 +221,8 @@ def graph_uid(db, uid):
     res = db.graph.replace_one({"uid": uid}, node)
 
     # Calculate each node downstream to the right.
-    for edge in outputs:
-        graph_uid(db, edge["uid"])
+    for edge_uid in outputs:
+        graph_uid(db, edge_uid)
 
     return res
 
@@ -404,11 +404,11 @@ def update_rank(
 
     # unpack results
     control_vectors = [np.array(res["vector"]) for res in milvus_results]
-    logging.info(f"Found vectors {control_vectors} for controls {control_oids}.")
+    logging.info(f"Found {len(control_vectors)} vectors for {len(control_oids)} controls.")
 
     # average the control vectors to create a rank search vector
     search_vector = np.average(control_vectors, axis=0)
-    logging.info(f"Search vector is: {search_vector}.")
+    logging.info(f"Search vector shape is {search_vector.shape}.")
 
     # set the distance from the search vector that we care to look
     distance = 0.5
@@ -561,7 +561,7 @@ def update_boolean_doclists(db, sources: List, controls: List, operation):
     control_nodes = list(db.graph.find({"uid": {"$in": controls}}))
 
     logging.info(
-        f"Found source nodes {source_nodes} and control nodes {control_nodes}."
+        f"Found {len(source_nodes)} source nodes and {len(control_nodes)} control nodes."
     )
 
     for control in control_nodes:
