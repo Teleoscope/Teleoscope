@@ -4,10 +4,10 @@ export interface Workspaces {
   _id?: any;
   label: string;
   team: any;
-  settings?: Settings;
+  settings: Settings;
   notes?: Array<any>;
-  selected_workflow?: any;
-  workflows?: Array<any>;
+  selected_workflow: any;
+  workflows: Array<any>;
 }
 
 export interface Settings {

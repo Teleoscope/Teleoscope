@@ -6,6 +6,8 @@ import { ObjectId } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';
 import { dbOp } from '@/lib/db';
 import { Db, MongoClient } from 'mongodb';
+import { Workflows } from '@/types/workflows';
+import randomColor from 'randomcolor';
 
 export async function GET(request: NextRequest) {
     const { user } = await validateRequest();
@@ -57,16 +59,44 @@ export async function POST(request: NextRequest) {
 
             const workspace: Workspaces = {
                 label: label,
-                team: team
+                team: team,
+                settings: {
+                    document_width: 100,
+                    document_height: 100,
+                    expanded: false
+                },
+                selected_workflow: undefined,
+                workflows: []
             };
 
             const workspace_result = await db
                 .collection<Workspaces>('workspaces')
                 .insertOne(workspace, { session: mongo_session });
 
-            if (!workspace_result.acknowledged) {
+            if (!workspace_result) {
                 throw new Error('Error inserting workspace');
             }
+
+            const workflow: Workflows = {
+                last_update: new Date().toISOString(),
+                logical_clock: 0,
+                workspace: workspace_result.insertedId,
+                label: 'Default workflow',
+                nodes: [],
+                edges: [],
+                bookmarks: [],
+                selection: {
+                    nodes: [],
+                    edges: []
+                },
+                settings: {
+                    color: randomColor(),
+                    title_length: 100
+                }
+            };
+            const workflow_result = await db
+                .collection<Workflows>('workflows')
+                .insertOne(workflow);
 
             const team_result = await db.collection<Teams>('teams').updateOne(
                 { _id: team },
@@ -81,6 +111,13 @@ export async function POST(request: NextRequest) {
             if (team_result.matchedCount === 0) {
                 throw new Error('Team update failed.');
             }
+
+            const workspace_update_result = await db
+                .collection<Workspaces>('workspaces')
+                .updateOne(
+                    { _id: workspace_result.insertedId },
+                    { $push: { workflows: workflow_result.insertedId } }
+                );
         });
     } catch (error) {
         transactionError = error as Error;

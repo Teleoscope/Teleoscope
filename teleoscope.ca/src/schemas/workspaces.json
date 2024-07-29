@@ -4,7 +4,10 @@
         "title": "workspace",
         "required": [
             "label",
-            "team"
+            "team",
+            "settings",
+            "selected_workflow",
+            "workflows"
         ],
         "properties": {
             "_id": {
