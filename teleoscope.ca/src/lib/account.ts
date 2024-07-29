@@ -8,6 +8,7 @@ import { Workspaces } from '@/types/workspaces';
 import { Workflows } from '@/types/workflows';
 import { DEFAULT_GREY, DEFAULT_TITLE_LENGTH } from './defaults';
 import { MongoServerError } from 'mongodb';
+import util from 'util';
 
 export default async function initialize_user(
     userId: string,
@@ -136,7 +137,7 @@ export default async function initialize_user(
 
             // Search for the default subscription product in Stripe
             const default_subscriptions = await stripe.products.search({
-                query: 'name:\'Default\''
+                query: `name:\'Default\'`
             });
 
             if (default_subscriptions.data.length > 0) {
@@ -166,7 +167,11 @@ export default async function initialize_user(
                 await session.commitTransaction();
                 console.log('Transaction committed. New user and customer created.');
             } else {
-                throw new Error(`Stripe default subscriptions error: ${default_subscriptions}`);
+
+
+                throw new Error(`Stripe default subscriptions error: 
+                    ${util.inspect(default_subscriptions, { showHidden: false, depth: 3, colors: true })}
+                `);
             }
         } else {
             throw new Error('Customer already exists in Stripe.');

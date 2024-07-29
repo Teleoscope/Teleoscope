@@ -13,7 +13,7 @@ const initialState: AppStateType = DEFAULT_STATE;
 
 export const AppState = createSlice({
     name: 'app',
-    initialState: AppStateType,
+    initialState: initialState,
     reducers: {
         updateTimestamps: (state) => {
             state.workflow.last_update = new Date().toISOString();

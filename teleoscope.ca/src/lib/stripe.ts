@@ -6,10 +6,9 @@ import { Plans } from '@/lib/plans';
 import { Products } from '@/types/products';
 import { ObjectId } from 'mongodb';
 
-const key =
-    process.env.NODE_ENV == 'production'
-        ? process.env.STRIPE_CLIENT_SECRET
-        : process.env.STRIPE_CLIENT_SECRET
+const key = process.env.STRIPE_TEST_SECRET_KEY
+    // process.env.NODE_ENV == 'production'
+        // ? process.env.STRIPE_CLIENT_SECRET
         // : process.env.STRIPE_TEST_SECRET_KEY;
 
 if (!process.env.STRIPE_TEST_SECRET_KEY) {
