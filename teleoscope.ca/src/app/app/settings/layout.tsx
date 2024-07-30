@@ -8,6 +8,7 @@ import {
   Users2Icon,
   Wallet2Icon,
 } from "lucide-react";
+import UserContextProvider from "@/context/UserContext";
 
 const navigationOptions = [
   {
@@ -56,8 +57,10 @@ export default async function DashboardLayout({
 }) {
   return (
     <div className="flex justify-center w-screen h-screen ">
+      <UserContextProvider userId="1">
       <Sidebar />
       <div className="flex-1 w-full">{children}</div>
+      </UserContextProvider>
     </div>
   );
 }

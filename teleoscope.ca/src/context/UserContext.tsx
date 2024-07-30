@@ -1,12 +1,14 @@
 "use client";
+import { useSWRF } from '@/lib/swr';
+import { User } from '@/lib/types/account';
 // UserContext.tsx
 import React, { createContext, useContext, ReactNode } from 'react';
 
 interface UserContextType {
-  userId: string;
+  user: User;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+export const UserContext = createContext<UserContextType>({} as UserContextType);
 
 export const useUserContext = () => {
   const context = useContext(UserContext);
@@ -21,11 +23,25 @@ interface UserContextProviderProps {
   children: ReactNode;
 }
 
-export const UserContextProvider: React.FC<UserContextProviderProps> = ({ userId, children }) => (
-  <UserContext.Provider value={{ userId }}>
+export const UserContextProvider: React.FC<UserContextProviderProps> = ({ userId, children }) => {
+  const { data: user, error, isLoading } = useSWRF(`/api/users?email=w@w.com`);
+
+  console.log('User:', user);
+
+  if (isLoading) {
+    return <>Loading...</>;
+  }
+  
+  if (error) {
+    return <>An error occurred: {error.message}</>;
+  }
+
+  
+ return (
+  <UserContext.Provider value={ { user: user}}>
     {children}
   </UserContext.Provider>
-);
+);}
 
 
 // export default UserContext;
