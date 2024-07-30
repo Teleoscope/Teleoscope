@@ -1,0 +1,20 @@
+{
+    "$jsonSchema": {
+        "bsonType": "object",
+        "title": "history",
+        "required": [
+            "userid",
+            "history"
+        ],
+        "properties": {
+            "userid": {
+                "bsonType": "string",
+                "description": "the user who updated the history"
+            },
+            "history": {
+                "bsonType": "object",
+                "description": "the action, payload, and state change"
+            }
+        }
+    }
+}

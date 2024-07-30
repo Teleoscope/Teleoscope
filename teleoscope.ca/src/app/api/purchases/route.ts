@@ -6,10 +6,10 @@ import { get_stripe, resolve_subscriptions_by_customer_id } from '@/lib/stripe';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-
-
 export async function POST(request: NextRequest) {
-    const db = (await client()).db();
+    const mongo_client = await client()
+    const db = mongo_client.db()
+    
     const endpointSecret = process.env.STRIPE_TESTING_ENDPOINT_SECRET;
     const sig = request.headers.get('stripe-signature');
     const stripe = await get_stripe()
@@ -66,9 +66,3 @@ async function readBody(request: NextRequest): Promise<string> {
 
     return Buffer.concat(chunks).toString('utf-8');
 }
-
-export const config = {
-    api: {
-        bodyParser: false
-    }
-};

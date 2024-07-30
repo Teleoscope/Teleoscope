@@ -3,12 +3,82 @@
         "bsonType": "object",
         "title": "workspace",
         "required": [
-            "label"
+            "label",
+            "team",
+            "settings",
+            "selected_workflow",
+            "workflows"
         ],
         "properties": {
+            "_id": {
+                "bsonType": [
+                    "objectId",
+                    "string"
+                ],
+                "description": "The MongoDB ID for this workspace"
+            },
             "label": {
                 "bsonType": "string",
                 "description": "the label of the workspace"
+            },
+            "team": {
+                "bsonType": [
+                    "objectId",
+                    "string"
+                ],
+                "description": "the oid of the team the workspace belongs to"
+            },
+            "settings": {
+                "bsonType": "object",
+                "description": "the workspace settings",
+                "required": [
+                    "document_width",
+                    "document_height",
+                    "expanded"
+                ],
+                "properties": {
+                    "document_width": {
+                        "bsonType": "int",
+                        "description": "the default width of a new open document"
+                    },
+                    "document_height": {
+                        "bsonType": "int",
+                        "description": "the default height of a new open document"
+                    },
+                    "expanded": {
+                        "bsonType": "bool",
+                        "description": "whether a new open document opens expanded or not"
+                    }
+                }
+            },
+            "notes": {
+                "bsonType": "array",
+                "description": "all notes that are part of this workspace",
+                "items": {
+                    "bsonType": [
+                        "objectId",
+                        "string"
+                    ],
+                    "description": "a note in this workspace"
+                }
+            },
+            "selected_workflow": {
+                "bsonType": [
+                    "objectId",
+                    "string"
+                ],
+                "description": "the selected workflow"
+            },
+            "workflows": {
+                "bsonType": "array",
+                "description": "all workflows that are part of this workspace",
+                "items": {
+                    "bsonType": [
+                        "objectId",
+                        "string"
+                    ],
+                    "description": "a workflow for this workspace"
+                }
             }
         }
     }

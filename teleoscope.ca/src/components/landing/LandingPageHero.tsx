@@ -11,7 +11,7 @@ export default function LandingPageHero() {
             <span className="text-6xl font-bold z-10 px-20 ">
               Empower Your Research with <span>AI</span>
             </span>
-            <span className="text-3xl font-medium ">
+            <span className="text-2xl font-medium ">
               AI Assisted Qualitative Analysis
             </span>
           </div>
@@ -24,33 +24,25 @@ export default function LandingPageHero() {
 
 function HeroGraphics() {
     return (
-      <Fragment>
         <div className="flex justify-center items-center w-screen h-screen absolute overflow-visible ">
-          
+        <Image
+            src={"/graphics/hero.svg"}
+            alt="Logo"
+            fill
+            className="animate-pulse delay-100 duration-5000"
+        />
         <Image
             src={"/graphics/hero2.svg"}
             alt="Logo"
             fill
-            className=" animate-pulse delay-1000 duration-2000  opacity-50"
+            className="animate-pulse delay-00 duration-10000"
         />
          <Image
-            src={"/graphics/hero.svg"}
+            src={"/graphics/hero2.svg"}
             alt="Logo"
             fill
-            className="animate-pulse delay-200 duration-3000 opacity-60"
+            className="animate-pulse delay-500 duration-5000"
         />
         </div>
-        <div className="flex justify-center items-center w-screen h-screen absolute top-0 overflow-visible ">
-
-        <Image
-            src={"/graphics/heroBlur.svg"}
-            alt="Logo"
-            fill
-            objectFit="cover"
-            className="opacity-30"
-        />
-            </div>
-
-      </Fragment>
     );
 }

@@ -1,0 +1,31 @@
+# Products
+bsonType: object
+title: products
+required:
+  - name
+  - resources
+properties:
+  name:
+    bsonType: string
+    description: the product's name
+  stripe_id:
+    bsonType: string
+    description: the product's stripe id
+  resources:
+    bsonType: object
+    description: the resources that a product can enable
+    required:
+      - teams
+      - seats
+      - storage
+    properties:
+      teams:
+        bsonType: int
+        description: the number of teams this product increases
+      seats:
+        bsonType: int
+        description: the number of seats this product increases
+      storage:
+        bsonType: int
+        description: the number of megabytes this product increases
+  

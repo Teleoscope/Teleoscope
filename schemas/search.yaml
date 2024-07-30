@@ -1,0 +1,9 @@
+# Searches
+bsonType: object
+title: Search
+required:
+  - query
+properties:
+  query:
+    bsonType: string
+    description: the string for the query

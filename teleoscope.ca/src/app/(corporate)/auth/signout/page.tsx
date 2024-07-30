@@ -1,16 +1,26 @@
+// signout/page.tsx
 "use client";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { signout } from "@/lib/auth";
 
 export default function SignOut() {
-    
-    return (
-      <main>
-        <div className="flex items-center justify-center p-4">
-          <h1 className="text-3xl font-bold">Sign Out</h1>
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Call signout only on the client side
+      signout();
+    }
+  }, []);
+
+  return (
+    <main>
+      <div className="flex items-center justify-center p-4">
+        <div>
+          <h1 className="text-3xl font-bold">Signing Out...</h1>
+          <h2>Click below if you are not automatically signed out...</h2>
+          <Button onClick={() => signout()}>Sign Out</Button>
         </div>
-          <Button onClick={(e) => signout()}>Sign Out</Button>
-      </main>
-    );
-  }
-  
+      </div>
+    </main>
+  );
+}

@@ -5,6 +5,7 @@ from bson.objectid import ObjectId
 from pymongo import database
 from random_object_id import generate
 import random
+from itertools import groupby
 
 # ml dependencies
 import umap
@@ -14,9 +15,7 @@ import spacy
 
 # local files
 from . import utils
-from . import tasks
-from . import schemas
-from . import graph
+from . import embeddings
 
 class Projection:
     """Semi-supervised Clustering 
@@ -25,6 +24,9 @@ class Projection:
     by the limit param plus the documents in the provided human clusters/groups.
     """
 
+    ##########################################################################
+    # 0.0 Class is initialized
+    ##########################################################################
     def __init__(
             self, 
             db: database.Database, 
@@ -60,7 +62,6 @@ class Projection:
         self.topic_label_length = topic_label_length
         self.ordering = ordering
         self.separation = separation
-        self.group_doc_indices = None
         self.groups = []
         self.pid = ObjectId(str(projection_id))
 
@@ -73,18 +74,21 @@ class Projection:
         self.doc_groups = []
 
 
+    ##########################################################################
+    # 1. Learn and build starts here
+    ##########################################################################
     def clustering_task(self):
         """Cluster documents using user-defined groups.
         """
 
-        # build distance matrix, run dimensionality reduction, run clustering
+        # Build distance matrix, run dimensionality reduction, run clustering
         try:
             self.learn_clusters()
         except Exception as e:
             self.log("Failure to learn clusters. Try again.")
             raise e
 
-        # iteratively add clusters (as groups) to database
+        # Iteratively add clusters (as groups) to database
         try:
             self.build_clusters()
         except Exception as e:
@@ -100,12 +104,19 @@ class Projection:
     def log(self, message):
         self.db.graph.update_one({"_id": self.pid}, { "$set": { "status": message} })
 
-
+    ##########################################################################
+    # 2. Learn clusters
+    ##########################################################################
     def learn_clusters(self):
-        """ Learn cluster labels: build distance matrix, run dimensionality reduction, run clustering
+        """ Learn cluster labels: 
+            2.1. Build distance matrix
+            2.2. Run dimensionality reduction
+            2.3. Run clustering
         """
 
-        # build training set
+        # 2.1 Create a square distance matrix for each document vector
+        #     where documents that are grouped together have min distance
+        #     and documents not grouped together optionally have max distance
         self.log("processing source input... (1/4)")
         dm = self.document_ordering()
 
@@ -124,10 +135,10 @@ class Projection:
                 - https://maartengr.github.io/BERTopic/getting_started/parameter%20tuning/parametertuning.html#umap
         """
 
+        # 2.2 Project down the rest of the space based on the distance matrix
         n_components = random.randint(7, 12) #7
         n_neighbors = random.randint(5, 15) #15 
         min_dist = random.uniform(1e-4, 0.05) # 0.029184 # 1e-4
-
 
         logging.info("Running UMAP Reduction...")
         self.log("projecting control input... (2/4)")
@@ -139,6 +150,7 @@ class Projection:
             min_dist=min_dist
         ).fit_transform(dm)
         
+        # 2.3 Cluster based on the projected vectors
         self.log("clustering... (3/4)")
 
         logging.info("Running HDBSCAN clustering...")
@@ -188,9 +200,6 @@ class Projection:
 
         self.log("labelling clusters... (4/4)")
 
-        # identify what machine label was given to each group
-        given_labels = self.get_given_labels()
-
         # keep track of all topic labels (for collisions)
         topic_labels = []
       
@@ -213,145 +222,16 @@ class Projection:
             # create list of document object ids that are in current hdbscan label
             documents = label_ids.tolist()
             
-            # create appropriate label for current hdbscan label
-            _label, _color, _description = self.get_label(hdbscan_label, given_labels)
-            
-            # learn a topic label for if current cluster is a machine cluster
-            if _label == 'machine':
-                limit = min(20, len(label_ids))
-                _label, _description = self.get_topic(label_ids[:limit], topic_labels)
-                topic_labels.append(_label)
+        
+            limit = min(20, len(label_ids))
+            _label, _description = self.get_topic(label_ids[:limit], topic_labels)
+            topic_labels.append(_label)
 
             # logging.info(f'Cluster: "{_label}" has {len(documents)} documents')
             logging.info('{:<20s}{:<4d}'.format(_label,len(documents)))
             
-            self.add_cluster(documents, _label, _color, _description)
-        
-        # clear any groups that were made for individual document inputs
-        for group in self.doc_groups:
-            self.db.groups.delete_one({"_id": group}) 
-
-
-    def get_given_labels(self):
-        """ Build the given_labels dictionary
-
-        Returns:
-            given_labels:
-                dict where keys are group names and values are the given hdbscan label
-        """
-        
-        given_labels = {}
-        for group in self.group_doc_indices:
-            
-            # list of labels given to docs in group
-            labels = self.hdbscan_labels[self.group_doc_indices[group]] 
-            # get non -1 label (if exists)
-            correct_label = -1 if len(labels) == 0 else max(labels)
-            
-            # if any documents were given -1, make sure they are set to correct_label
-            if -1 in labels:
-                for i in range(len(labels)):
-                    if labels[i] == -1:
-                        index = self.group_doc_indices[group][i]
-                        self.hdbscan_labels[index] = correct_label
-            
-            given_labels[group] = correct_label
-
-        return given_labels
+            self.add_cluster(documents, _label, utils.random_color(), _description)
     
-
-    def create_temp_groups(self):
-        for c in self.controls:
-            match c["type"]:
-                case "Document":
-                    # create temp group
-                    doc = self.db.documents.find_one({"_id": c["id"]})
-                    obj = schemas.create_group_object(
-                        "#FF0000", 
-                        [c["id"]], 
-                        f"{doc['title']}", 
-                        "Initialize group", 
-                        ObjectId(generate()), # random id
-                        "Group from Document",
-                        ObjectId(generate()), # random id
-                    )
-                    # Initialize group in database
-                    res = self.db.groups.insert_one(obj)
-                    oid = res.inserted_id
-                    group = self.db.groups.find_one({"_id": oid})
-                    self.doc_groups.append(oid)
-                    self.groups.append(group)
-
-                case "Group":
-                    group = self.db.groups.find_one({"_id": c["id"]})
-                    self.groups.append(group)
-
-                case "Union" | "Difference" | "Intersection" | "Exclusion":
-                    node = self.db.graph.find_one({"_id": c["id"]})
-                    node_doclists = node["doclists"]
-                    
-                    # TODO - doclists labels should include control type and title
-                    # label = f'{c["type"]} of ' 
-                    # for control in node["edges"]["control"]:
-                    #     match control["type"]:
-                    #         case "Document": 
-                    #             source = self.db.documents.find_one({"_id": control["id"]})
-                    #             title = source["title"]
-                    #             label += f'{control["type"]}: {title}'
-
-                    #         case "Group": 
-                    #             source = self.db.groups.find_one({"_id": control["id"]})
-                    #             title = source["history"][0]["label"]
-                    #             label += f'{control["type"]}: {title}'
-                            
-                    #         case "Search": 
-                    #             source = self.db.searches.find_one({"_id": control["id"]})
-                    #             title = source["history"][0]["query"]
-                    #             label += f'{control["type"]}: {title}'
-
-                    for doclist in node_doclists:
-                        ids = [d[0] for d in doclist["ranked_documents"]]
-                        
-                        label = f'{c["type"]} on ' 
-
-                        match doclist["type"]:
-                            case "Document": 
-                                source = self.db.documents.find_one({"_id": doclist["id"]})
-                                title = source["title"]
-                                label += f'{doclist["type"]}: {title}'
-
-                            case "Group": 
-                                source = self.db.groups.find_one({"_id": doclist["id"]})
-                                title = source["history"][0]["label"]
-                                label += f'{doclist["type"]}: {title}'
-                            
-                            case "Search": 
-                                source = self.db.searches.find_one({"_id": doclist["id"]})
-                                title = source["history"][0]["query"]
-                                label += f'{doclist["type"]}: {title}'
-
-                        obj = schemas.create_group_object(
-                            "#FF0000", 
-                            ids, 
-                            f"{label}", 
-                            "Initialize group", 
-                            ObjectId(generate()), # random id
-                            f'Group from {c["type"]}',
-                            ObjectId(generate()), # random id
-                        )
-                        # Initialize group in database
-                        res = self.db.groups.insert_one(obj)
-                        oid = res.inserted_id
-                        group = self.db.groups.find_one({"_id": oid})
-                        self.doc_groups.append(oid)
-                        self.groups.append(group)
-
-                case "Search":
-                    pass
-                case "Note":
-                    pass
-
-
 
     def document_ordering(self):
         """ Build a training set besed on the average of groups' document vectors
@@ -359,143 +239,157 @@ class Projection:
         Returns:
             dm:
                 a diagonal matrix containing where elements are distances between documents
+        """        
+        # Get unique document ids
+        # document_ids = list(set(utils.get_doc_oids(self.db, self.sources, exclude=["Note"])))
+        client = embeddings.connect()
+
+        source_oid_set = set()
+        for source in self.sources:
+            for doclist in source["doclists"]:
+                oids = [r[0] for r in doclist["ranked_documents"]]
+                source_oid_set.update(oids)
+        source_oids = list(source_oid_set)
+        source_embeddings = embeddings.get_embeddings(client, self.db.name, source_oids)
+        source_vectors = [s["vector"] for s in source_embeddings]
+        svs = np.array(source_vectors)
+        source_dm = utils.get_distance_matrix(svs, cosine_distances)
+        
+        control_groupings = []
+        control_vectors = []
+        for control in self.controls:
+            for doclist in control["doclists"]:
+                oids = [r[0] for r in doclist["ranked_documents"]]
+                embeds = embeddings.get_embeddings(client, self.db.name, oids)
+                for result in embeds:
+                    control_vectors.append(result["vector"])
+                    control_groupings.append(doclist["uid"])
+        
+        cvs = np.array(control_vectors)
+        control_dm = utils.get_distance_matrix(cvs, cosine_distances)
+        
+        # update distance matrix such that documents in the same group have distance ~0
+        INTRA_CLUSTER_DISTANCE = 1e-3
+        for i in range(len(control_vectors)):
+            for j in range(len(control_vectors)):
+                if i != j and control_groupings[i] == control_groupings[j]:
+                    control_dm[i, j] *= INTRA_CLUSTER_DISTANCE
+
+
+        rows_A, cols_A = source_dm.shape
+        rows_B, cols_B = control_dm.shape
+
+        # Create a larger matrix
+        corner_matrix = np.ones((rows_A + rows_B, cols_A + cols_B))
+
+        # Place matrix A in the top-left corner
+        corner_matrix[:rows_A, :cols_A] = source_dm
+
+        # Place matrix B in the bottom-right corner
+        corner_matrix[rows_A:, cols_A:] = control_dm
+
+        
+        umap_model = umap.UMAP(metric='precomputed')
+        embedding = umap_model.fit_transform(corner_matrix)
+
+        hdbscan_clusterer = hdbscan.HDBSCAN(min_cluster_size=2)
+        cluster_labels = hdbscan_clusterer.fit_predict(embedding)
+        grouped_cluster_labels = [list(group) for key, group in groupby(cluster_labels)]
+
+        doclists = []
+        acc = 0
+        for label_group in grouped_cluster_labels:
+            doclist = {
+                "reference": None,
+                "uid": None,
+                "type": "Cluster",
+                "label": label_group[0].item(),
+                "ranked_documents": []
+            }
+            for item in label_group:
+                doclist["ranked_documents"].append(
+                    [
+                        source_oids[acc],
+                        1.0
+                    ]
+                )
+                acc += 1
+            doclists.append(doclist)
+        
+        return doclists
+
         """
 
-        logging.info("Creating tempporary groups...")
-        self.create_temp_groups()
-        
-        # Get unique document ids
-        document_ids = list(set(utils.get_oids(self.db, self.sources, exclude=["Note"])))
-        self.n = len(document_ids)
-        logging.info(f"n = {self.n}")
- 
-        logging.info("Gathering document embeddings...")
-        
-        # grab all document data from embeddings
-        document_embeddings = utils.get_embeddings(self.db.name, document_ids)
-        
-        # if sources = 0: average ordering of conrolls for all[30000]
-        logging.info('Gathering Document IDs...')
+        # logging.info("HDBSCAN Results:")
+        # logging.info(cluster_labels)
+            
 
-        # if sources > 0: sources U controls 
-        logging.info(f'{len(self.sources)} sources. Combining docs from sources...')
+        
+        # dm = utils.get_distance_matrix(control_vectors, cosine_distances)
+
+
+ 
+        # grab all document data from embeddings
+        document_embeddings = embeddings.get_embeddings(self.db.name, source_oids)
 
         # Create a dictionary to store the indices of all_doc_ids
-        index_dict = {document_ids[i]: i for i in range(len(document_ids))}
+        index_dict = {source_oids[i]: i for i in range(len(source_oids))}
 
-        # Get the indices of document_ids using the dictionary
-        indices = [index_dict[i] for i in document_ids]
-
-        logging.info('Gathering Document Vectors...')
         # use indices of ranked ids to build sorted array of document vectors
-        document_vectors = np.array([document_embeddings[i] for i in indices])
-        if len(indices) == 0:
-            document_vectors = np.empty((0, 512))
-        # dict where keys are group names and values are indices of documents
-        group_doc_indices = {}
-        
-        # make sure documents in groups are included in training sets
-        logging.info("Appending documents from input groups...")
-        for group in self.groups:
-
-            group_document_ids = group["history"][0]["included_documents"]
-
-            indices = []
-
-            for str_id in group_document_ids:
-                id = ObjectId(str(str_id))
-                
-                # see if document is already in training sets
-                if id not in document_ids:
-                    vector = np.array(utils.get_embeddings(self.db.name, [id])[0])
-                    
-                    document_vectors = np.vstack((document_vectors, vector))
-                    # get index of document in group with respect to training sets    
-                    document_ids.append(id)
-                
-                indices.append(document_ids.index(id))
-                    
-
-            group_doc_indices[group["history"][0]["label"]] = indices
+        document_vectors = np.array([doc["vector"] for doc in document_embeddings])
 
         # build distance matrix
         logging.info("Building distance matrix...")
-        
         
         dm = utils.get_distance_matrix(document_vectors, cosine_distances)
         logging.info(f"Distance matrix has shape {dm.shape}.") # n-by-n symmetrical matrix
         logging.info(f"Max distance is {np.max(dm)} and min distance is {np.min(dm)}.")
 
-        # update distance matrix such that documents in the same group have distance ~0
-        INTRA_CLUSTER_DISTANCE = 1e-3
+        
 
-        for group, indices in group_doc_indices.items():
-            for i in indices:
-                dm[i, indices] *= INTRA_CLUSTER_DISTANCE
+        # build dm indices
+        for group in self.controls:
+            # figure out the dm matrix indices
+            indices = [index_dict[str(doc)] for doc in group["docs"]]
+            group["indices"] = indices
+        
+
+        # go through each group
+        for group in self.groups:
+            # go through each index and symmetrically update to minimum distance
+            for i in group["indices"]:
+                for j in group["indices"]:
+                    dm[i, j] *= INTRA_CLUSTER_DISTANCE
+                    dm[j, i] *= INTRA_CLUSTER_DISTANCE
 
         if self.separation:
             # update distance matrix such that documents in the differnet groups have distance 1
             logging.info("Separating control groups...")
 
             INTER_CLUSTER_DISTANCE = 1
+            
+            # go through each group to compare against each other group
+            for group_i in self.groups:
+                for group_j in self.groups:
+                    # if we're not comparing the same group
+                    if group_i["_id"] != group_j["_id"]:
+                        # grab the dm indices of each document in the group
+                        i_indices = group_i["indices"]
+                        j_indices = group_j["indices"]
+                        
+                        # set the distance to maximum if the doc is also not in the same group
+                        for i in i_indices:
+                            for j in j_indices:
+                                if i not in j_indices:
+                                    dm[i, j] = INTER_CLUSTER_DISTANCE
+                                if j not in i_indices:
+                                    dm[j, i] = INTER_CLUSTER_DISTANCE
 
-            for group_i, indices_i in group_doc_indices.items():
-                for group_j, indices_j in group_doc_indices.items():
-                    if group_i != group_j:
-                        for i in indices_i:
-                            for j in indices_j:
-                                dm[i, j] = INTER_CLUSTER_DISTANCE
-
-        self.group_doc_indices = group_doc_indices
         self.document_ids = document_ids
 
         return dm
 
-
-    def get_label(self, hdbscan_label, given_labels):
-        """Identify and produce label & colour for given hdbscan label
-
-        Args:
-            hdbscan_label:
-                An int that represents the given machine label 
-            given_labels:
-                dict where keys are group names and values are the given hdbscan label
-
-        Returns:
-            label:
-                A string that is the topic label for the machine cluster
-            colour:
-                A string of hex representing a colour
         """
-        
-        check = more = False
-        
-
-        # outlier label
-        if hdbscan_label == -1:
-            return 'outliers', '#ff1919', "outlier documents"
-
-        # check if hdbscan_label was for a human cluster(s)
-        for _name in given_labels:
-            name = ""
-            label = given_labels[_name]
-            
-            if (hdbscan_label == label):
-                
-                # append group labels if multiple human clusters are given the same hdbscan label
-                if more:
-                    name += " & " + _name 
-
-                # on first instance of label match, just return name
-                else:
-                    name = _name
-                    check = more = True
-        
-        if check:
-            return name, '#ff70e2', "your group"
-
-        # return for if label is newly generated machine cluster
-        return 'machine', '#737373', ''
 
 
     def get_topic(self, label_ids, topic_labels):

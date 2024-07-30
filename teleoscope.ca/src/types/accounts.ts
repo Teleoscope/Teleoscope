@@ -11,18 +11,18 @@ export interface Accounts {
   purchases?: Array<Purchase>;
 }
 
-interface Users {
+export interface Users {
   owner: string;
   admins?: Array<Admin>;
 }
 
-interface Admin {
+export interface Admin {
   _id: string;
   permissions: ObjectId;
 }
 
 
-interface Resources {
+export interface Resources {
   amount_teams_available: number;
   amount_seats_available: number;
   amount_storage_available: number;
@@ -32,12 +32,12 @@ interface Resources {
 }
 
 
-interface Team {
+export interface Team {
   _id: ObjectId;
 }
 
 
-interface Plan {
+export interface Plan {
   name: string;
   plan_team_amount: number;
   plan_collaborator_amount: number;
@@ -46,7 +46,7 @@ interface Plan {
 }
 
 
-interface Purchase {
+export interface Purchase {
   resource: string;
   unit: string;
   amount: number;

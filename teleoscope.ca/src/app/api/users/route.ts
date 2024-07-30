@@ -1,30 +1,30 @@
 import { client } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';
+import { Db, MongoClient } from "mongodb";
+import { dbOp } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
-    const db = (await client()).db();
 
     const email = request.nextUrl.searchParams.get('email');
     if (!email) {
         return NextResponse.json({ error: 'Email parameter is required' }, { status: 400 });
     }
 
-    const result = await db.collection('users').findOne({
-        emails: email
-    });
+    const result = await dbOp(async (client: MongoClient, db: Db) => {
 
-    const exists = !!result;
+        return await db.collection('users').findOne({
+            emails: email
+        });
+    
+    })
 
+    
+    const exists = !!result;    
     return NextResponse.json({ exists });
 }
 
 export async function POST(request: NextRequest) {
-    const mongo_client = await client();
-    const session = mongo_client.startSession();
-
-    const db = mongo_client.db();
-
     const formData = await request.formData();
 
     const email = formData.get('email')?.toString();
@@ -34,6 +34,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Email and teamId are required' }, { status: 400 });
     }
 
+
+    const mongo_client = await client();
+    const mongo_session = mongo_client.startSession();
+
+    const db = mongo_client.db();
     const user = await db.collection('users').findOne({
         emails: email
     });
@@ -65,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
 
-    session.startTransaction();
+    mongo_session.startTransaction();
 
     const team_result = await db.collection('teams').updateOne(
         {
@@ -81,7 +86,7 @@ export async function POST(request: NextRequest) {
                 }
             } as any // Explicitly cast to any to satisfy TypeScript
         }, {
-            session
+            session: mongo_session
         }
     );
 
@@ -92,7 +97,7 @@ export async function POST(request: NextRequest) {
         {
             "resources.amount_seats_used": account.resources.amount_seats_used + 1
         }, {
-            session
+            session: mongo_session
         }
     );
 
@@ -105,7 +110,7 @@ export async function POST(request: NextRequest) {
     }
 
 
-    await session.commitTransaction();
+    await mongo_session.commitTransaction();
 
     return NextResponse.json({ success: true });
 }

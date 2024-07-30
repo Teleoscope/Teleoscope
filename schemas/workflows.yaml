@@ -2,9 +2,76 @@
 bsonType: object
 title: workflow
 required:
+  - last_update
+  - logical_clock
+  - workspace
   - label
+  - nodes
+  - edges
+  - bookmarks
+  - selection
+  - settings
 properties:
+  _id:
+    bsonType: ["objectId", "string"]
+    description: "the MongoDB ID for this workflow"
+  last_update:
+    bsonType: ["date", "string"]
+    description: "the last datetime this workflow was updated"
+  logical_clock: 
+    bsonType: int
+    description: "the last logical time this workflow was updated"
+  workspace:
+    bsonType: ["objectId", "string"]
+    description: "the workspace that this workflow belongs to"
   label:
     bsonType: string
-    description: the label of the workflow
+    description: "the label of the workflow"
+  nodes:
+    bsonType: array
+    description: "the nodes in the workflow"
+    items:
+      bsonType: object
+      description: "a node in the workflow"
+  edges:
+    bsonType: array
+    description: "the edges in the workflow"
+    items:
+      bsonType: object
+      description: "an edge in the workflow"
   
+  bookmarks:
+    bsonType: array
+    description: "currently bookmarked documents"
+    items:
+      bsonType: ["objectId", "string"]
+      description: "the mongodb oid of the bookmarked document    "
+
+  selection:
+    bsonType: object
+    description: "currently selected nodes and edges"
+    required:
+      - nodes
+      - edges
+    properties:
+      nodes:
+        bsonType: array
+        description: "an array of selected nodes by id"
+      edges:
+        bsonType: array
+        description: "an array of selected edges by id"
+
+  
+  settings:
+    bsonType: object
+    description: "the workspace settings"
+    required:
+      - color
+      - title_length
+    properties:
+      color:
+        bsonType: string
+        description: "the color of this workflow  "
+      title_length:
+        bsonType: int
+        description: "the default length of the the displayed title"

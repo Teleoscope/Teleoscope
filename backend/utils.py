@@ -1,6 +1,7 @@
 # builtin modules
 import json
 import numpy as np
+import pymongo.collection
 from tqdm import tqdm
 import heapq
 import re
@@ -17,10 +18,7 @@ from json import JSONEncoder
 from typing import List
 import datetime
 import unicodedata
-import chromadb
-from chromadb import Documents, EmbeddingFunction, Embeddings
-from chromadb.config import Settings
-from chromadb.utils import embedding_functions
+
 
 
 # local files
@@ -46,7 +44,7 @@ RABBITMQ_HOST = os.getenv('RABBITMQ_HOST')
 MONGODB_USERNAME = os.getenv('MONGODB_USERNAME')
 MONGODB_PASSWORD = os.getenv('MONGODB_PASSWORD') 
 MONGODB_HOST = os.getenv('MONGODB_HOST') 
-MONGODB_AUTHT = os.getenv('MONGODB_AUTHT')
+MONGODB_OPTIONS = os.getenv('MONGODB_OPTIONS')
 MONGODB_REPLICASET = os.getenv('MONGODB_REPLICASET')
 
 CHROMA_HOST = os.getenv('CHROMA_HOST') 
@@ -66,7 +64,7 @@ def make_client():
         f'{MONGODB_USERNAME}:'
         f'{MONGODB_PASSWORD}@'
         f'{MONGODB_HOST}/?'
-        f'{MONGODB_AUTHT}'
+        f'{MONGODB_OPTIONS}'
     )
     client = MongoClient(
         connect_str, 
@@ -163,17 +161,13 @@ def rankDocumentsBySimilarity(document_ids, scores, n_top=1000):
     scores_and_ids = zip(scores, document_ids)
     top_n = heapq.nlargest(n_top, scores_and_ids)
     top_n_sorted = sorted(top_n, key=lambda x: x[0], reverse=True)
-    return [(doc_id, score) for score, doc_id in top_n_sorted]
+    return [(doc_id, score.item()) for score, doc_id in top_n_sorted]
 
 
 def rank_document_ids_by_similarity(documents_ids, scores):
     '''Create and return a list a document ids sorted by similarity score, high to low
     '''
     return sorted([document_id for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
-
-
-def get_chroma_client():
-    return chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT, settings=Settings(anonymized_telemetry=False))
 
 
 def get_embeddings(dbstring, oids):
@@ -195,13 +189,6 @@ def get_embeddings(dbstring, oids):
     results = milvus_collection.query(expr=expression, output_fields=["text_vector"])
 
     return [res["text_vector"] for res in results]
-
-
-def get_documents_chromadb(dbstring, limit):
-    chroma_client = get_chroma_client()
-    chroma_collection = chroma_client.get_collection(dbstring)
-    results = chroma_collection.get(include=["embeddings"], limit=limit)
-    return results
 
 
 def get_documents_milvus(dbstring, limit):
@@ -318,6 +305,9 @@ def strip_emojis(text):
     return ''.join(c for c in text if unicodedata.name(c).startswith(('LATIN', 'DIGIT', 'SPACE', 'PUNCTUATION')))
 
 
+def get_vector_ids(db, oids):
+    return list(db.documents.find({"_id": {"$in": oids} }, projection={ "vector": 1}))
+
 def make_query(text):
     if len(text.strip()) == 0:
         return {}
@@ -345,24 +335,6 @@ def message(queue: str, msg):
     channel = connection.channel()
     channel.basic_publish(exchange='', routing_key=queue, body=json.dumps(msg))
     logging.info(f"Sent to queue {queue} and with message {json.dumps(msg)}.")
-
-
-def get_collection(db: database.Database, node_type: schemas.NodeType):
-    """Return the collection for a node type.
-    """
-    collection_map = {
-        "Document": "documents",
-        "Group": "groups",
-        "Search": "searches",
-        "Note": "notes",
-        "Projection": "graph",
-        "Intersection": "graph",
-        "Exclusion": "graph",
-        "Union": "graph",
-        "Teleoscope": "graph",
-    }
-
-    return db.get_collection(collection_map[node_type])
 
 
 def binary_search(lst, number):
@@ -406,52 +378,91 @@ def rank_similarity(control_vecs, ids, vecs, similarity):
     return ranks
 
 
-# {
-#     "type": "Document",
-#     "id": "65e6a782201a918bc772e05b"
-# }
+def get_collection(db: database.Database, type):
+    match type:
+        case "Document":
+            return db.documents
+        case "Group":
+            return db.groups
+        case "Search":
+            return db.searches
+        case "Note":
+            return db.notes
+        case "Rank" | "Union" | "Difference" | "Intersection" | "Exclusion":
+            return db.graph
+        
 
 
-def get_oids(db: database.Database, sources, exclude=[]):
+
+def get_oids(db: database.Database, source, exclude=["Note"]):
+    if source["type"] in exclude:
+        return []
+
+    node = get_collection(db, source["type"]).find_one({"_id": source["reference"]})
+    match source["type"]:
+        case "Document":
+            return [str(node["_id"])]
+        case "Note":
+            return [str(node["_id"])]
+        case "Group":
+            return [str(oid) for oid in node["docs"]]
+        case "Search":
+            cursor = db.documents.find(make_query(node["query"]), projection={"_id": 1})
+            return [str(d["_id"]) for d in list(cursor)]
+        case "Rank" | "Union" | "Difference" | "Intersection" | "Exclusion":
+            return [str(d[0]) for doclist in source["doclists"] for d in doclist["ranked_documents"]]
+
+
+def get_doc_oids(db: database.Database, sources, exclude=["Note"]):
+    sources = db.graph.find({"uid": {"$in": sources}})
     oids = []
-    for c in sources:
-        match c["type"]:
-            case "Document":
-                if not "Document" in exclude:
-                    oids.append(c["id"])
-            case "Group":
-                if not "Group" in exclude:
-                    group = db.groups.find_one({"_id": c["id"]})
-                    oids = oids + group["history"][0]["included_documents"]
-            case "Search":
-                if not "Search" in exclude:
-                    search = db.searches.find_one({"_id": c["id"]})
-                    cursor = db.documents.find(make_query(search["history"][0]["query"]),projection={ "_id": 1})
-                    oids = oids + [d["_id"] for d in list(cursor)]
-            case "Note":
-                if not "Note" in exclude:
-                    oids.append(c["id"])
-            case "Union":
-                if not "Union" in exclude:
-                    node = db.graph.find_one({"_id": c["id"]})
-                    for doclist in node["doclists"]:
-                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
-            case "Difference":
-                if not "Difference" in exclude:
-                    node = db.graph.find_one({"_id": c["id"]})
-                    for doclist in node["doclists"]:
-                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
-            case "Intersection": 
-                if not "Intersection" in exclude:
-                    node = db.graph.find_one({"_id": c["id"]})
-                    for doclist in node["doclists"]:
-                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
-            case "Exclusion":
-                if not "Exclusion" in exclude:
-                    node = db.graph.find_one({"_id": c["id"]})
-                    for doclist in node["doclists"]:
-                            oids = oids + [d[0] for d in doclist["ranked_documents"]]
+    for source in sources:
+        oids.extend(get_oids(db, source, exclude=exclude))
     return oids
+                
+
+        
+
+# def get_oids(db: database.Database, sources, exclude=[]):
+#     oids = []
+#     for c in sources:
+#         match c["type"]:
+#             case "Document":
+#                 if not "Document" in exclude:
+#                     oids.append(c["id"])
+#             case "Group":
+#                 if not "Group" in exclude:
+#                     group = db.groups.find_one({"_id": c["id"]})
+#                     oids = oids + group["docs"]
+#             case "Search":
+#                 if not "Search" in exclude:
+#                     search = db.searches.find_one({"_id": c["id"]})
+#                     cursor = db.documents.find(make_query(search["query"]),projection={ "_id": 1})
+#                     oids = oids + [d["_id"] for d in list(cursor)]
+#             case "Note":
+#                 if not "Note" in exclude:
+#                     oids.append(c["id"])
+#             case "Union":
+#                 if not "Union" in exclude:
+#                     node = db.graph.find_one({"_id": c["id"]})
+#                     for doclist in node["doclists"]:
+#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
+#             case "Difference":
+#                 if not "Difference" in exclude:
+#                     node = db.graph.find_one({"_id": c["id"]})
+#                     for doclist in node["doclists"]:
+#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
+#             case "Intersection": 
+#                 if not "Intersection" in exclude:
+#                     node = db.graph.find_one({"_id": c["id"]})
+#                     for doclist in node["doclists"]:
+#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
+#             case "Exclusion":
+#                 if not "Exclusion" in exclude:
+#                     node = db.graph.find_one({"_id": c["id"]})
+#                     for doclist in node["doclists"]:
+#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
+#     return oids
 
 
 def get_vectors(db: database.Database, controls, ids, all_vectors):
@@ -481,20 +492,6 @@ def get_vectors(db: database.Database, controls, ids, all_vectors):
     out_vecs = filtered_vecs + note_vecs
     logging.info(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
     return out_vecs
-
-
-def add_chromadb(dbstring, ids=[], texts=[], metadatas=None):
-    chroma_client = get_chroma_client()
-    default_ef = embedding_functions.DefaultEmbeddingFunction()
-    chroma_collection = chroma_client.get_collection(dbstring, embedding_function=default_ef)
-    chroma_collection.add(ids=[str(id) for id in ids], documents=texts, metadatas=metadatas)
-
-
-def update_chromadb(dbstring, ids=[], texts=[], metadatas=None):
-    chroma_client = get_chroma_client()
-    default_ef = embedding_functions.DefaultEmbeddingFunction()
-    chroma_collection = chroma_client.get_collection(dbstring, embedding_function=default_ef)
-    chroma_collection.update(ids=[str(id) for id in ids], documents=texts, metadatas=metadatas)
 
 
 def sanitize_db_name(name):

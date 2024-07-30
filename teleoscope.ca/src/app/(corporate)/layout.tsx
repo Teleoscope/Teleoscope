@@ -9,6 +9,7 @@
 // 456789|123456789|123456789|123456789|123456789|123456789|123456789|1234567890
 ////////////////////////////////////////////////////////////////////////////////
 
+import Menu from "@/components/landing/CorporateMenu";
 
 
 export default function CorporateLayout({

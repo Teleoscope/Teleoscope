@@ -1,0 +1,35 @@
+{
+    "$jsonSchema": {
+        "bsonType": "object",
+        "title": "document",
+        "required": [
+            "text",
+            "title",
+            "relationships",
+            "metadata",
+            "state"
+        ],
+        "properties": {
+            "text": {
+                "bsonType": "string",
+                "description": "text of the document"
+            },
+            "title": {
+                "bsonType": "string",
+                "description": "title of the document"
+            },
+            "relationships": {
+                "bsonType": "object",
+                "description": "document"
+            },
+            "metadata": {
+                "bsonType": "object",
+                "description": "document"
+            },
+            "state": {
+                "bsonType": "object",
+                "description": "document"
+            }
+        }
+    }
+}

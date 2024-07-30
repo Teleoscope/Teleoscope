@@ -2,17 +2,24 @@
 bsonType: object
 title: team
 required:
-  - _id
   - account
   - workspaces
   - users
+  - label
+  - owner
 properties:
   _id:
     bsonType: objectId
     description: MongoDB auto-generated identifer
+  label:
+    bsonType: string
+    description: A label for the Team
+  owner:
+    bsonType: string
+    description: The owner of the Team
   account:
     bsonType: objectId
-    description: The account that this team belongs to
+    description: The account that this Team belongs to
   workspaces:
     bsonType: array
     description: An array of workspaces that this team owns
@@ -21,7 +28,7 @@ properties:
       description: the workspace id
   users:
     bsonType: array
-    description: An array of workspaces that this team owns
+    description: An array of users that belong to this team
     items:
       bsonType: object
       description: the users and permissions for this team
@@ -44,3 +51,6 @@ properties:
             write:
               bsonType: bool
               description: whether a user can write to the workspace
+            write:
+              bsonType: bool
+              description: whether a user can administrate the workspace
