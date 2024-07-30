@@ -99,7 +99,7 @@ export default function AccountSettings() {
           </form>
           
         </Form>
-        <section className="flex flex-col gap-4 py-4">
+        {/* <section className="flex flex-col gap-4 py-4">
           <h3 className="text-lg font-semibold">Security</h3>
           <section className="flex items-center gap-4 py-4">
             <Label>Password</Label>
@@ -107,7 +107,7 @@ export default function AccountSettings() {
               Change Password
             </Button>
           </section>
-        </section>
+        </section> */}
       </section>
     </div>
   );
