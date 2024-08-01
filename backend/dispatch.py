@@ -153,7 +153,8 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "update_nodes":
                 res = tasks.update_nodes.signature(args=(), kwargs=kwargs)
 
-
+            case "chunk_upload":
+                res = tasks.chunk_upload.signature(args=(), kwargs=kwargs)
         try:
             res.apply_async(queue=RABBITMQ_TASK_QUEUE)
         except Exception as e:

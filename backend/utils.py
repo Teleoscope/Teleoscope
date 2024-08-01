@@ -127,7 +127,6 @@ def push_history(db, collection_name, item_id, history_item, transaction_session
     )
     return res
 
-
 def calculateSimilarity(documentVectors, queryVector):
     '''Calculate similarity
     '''

@@ -13,6 +13,10 @@ import pandas as pd
 
 from multiprocessing import set_start_method
 
+from pymongo import UpdateOne
+from pymongo.errors import OperationFailure, ConfigurationError
+
+
 # Local imports
 from backend import embeddings
 from . import utils
@@ -1519,6 +1523,63 @@ def mark(*args, database: str, userid: str, workflow_id: str, workspace_id: str,
 
 
 @app.task
+def chunk_upload(*args, 
+                 database: str, 
+                 userid: str,
+                 workspace: str,
+                 data):
+    workspace = ObjectId(str(workspace))
+    db = utils.connect(db=database)
+    documents = []
+    rows = [row["values"] for row in data["rows"]]
+    for row in rows:
+        document = {
+            'text': row["text"],
+            'title': row["title"],
+            'relationships': {},
+            'metadata': json.loads(json.dumps(row)),  # Convert row to JSON
+            'state': {"read": False}
+        }
+        documents.append(document)
+    
+    session = db.client.start_session()
+
+    try:
+        with session.start_transaction():
+            inserted_ids = db.documents.insert_many(documents, session=session).inserted_ids
+            bulk_operations = []
+
+            for row, doc_id in zip(rows, inserted_ids):
+                if "group" in row:
+                    filter = {"label": row["group"], "workspace": workspace}
+                    update = {
+                        "$setOnInsert": {"label": row["group"], "workspace": workspace, "documents": []},
+                        "$addToSet": {"documents": ObjectId(doc_id)}
+                    }
+                    bulk_operations.append(UpdateOne(filter, update, upsert=True))
+
+            if len(bulk_operations) > 0:
+                result = db.groups.bulk_write(bulk_operations, session=session)
+                print(f"Inserted: {result.upserted_count}, Matched: {result.matched_count}")
+
+            milvus_chunk_import.apply_async(kwargs={
+                'database': database,
+                'userid': userid,
+                'documents': inserted_ids
+            }, queue=RABBITMQ_TASK_QUEUE)
+
+        session.commit_transaction()
+    except (OperationFailure, ConfigurationError) as e:
+        session.abort_transaction()
+        print(f"Transaction aborted due to: {e}")
+    finally:
+        session.end_session()
+
+    
+
+
+
+@app.task
 def file_upload(*args, 
                 database: str, 
                 userid: str,
@@ -1597,6 +1658,11 @@ def file_upload(*args,
         'userid': userid,
     }, queue=RABBITMQ_TASK_QUEUE)
 
+
+
+@app.task
+def milvus_chunk_import(*args, database, userid, documents, **kwargs):
+    embeddings.milvus_chunk_import(database=database, userid=userid, documents=documents)
 
 
 @app.task

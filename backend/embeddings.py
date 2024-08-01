@@ -1,5 +1,6 @@
 import logging
 import itertools
+from bson import ObjectId
 from celery import Celery
 from kombu import  Exchange, Queue
 import uuid
@@ -109,6 +110,15 @@ def connect():
         connections.disconnect(f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
         client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
     return client
+
+
+def milvus_chunk_import(database: str, userid: str, documents):
+    client = connect()
+    milvus_setup(client, collection_name=database)
+    mongo_db = utils.connect(db=database)
+    docs = mongo_db.documents.find({"_id": {"$in": [ObjectId(str(d)) for d in documents]} })
+    data = vectorize(list(docs))
+    res = client.upsert(collection_name=database, data=data)
 
 
 def milvus_import(*args, 
