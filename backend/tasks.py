@@ -25,24 +25,25 @@ from . import graph
 
 # Environment variables
 from dotenv import load_dotenv
+
 load_dotenv()
 
-RABBITMQ_USERNAME = os.getenv('RABBITMQ_USERNAME') 
-RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD') 
-RABBITMQ_HOST = os.getenv('RABBITMQ_HOST') 
-RABBITMQ_VHOST = os.getenv('RABBITMQ_VHOST') 
-RABBITMQ_TASK_QUEUE = os.getenv('RABBITMQ_TASK_QUEUE')
+RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
+RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
+RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST")
+RABBITMQ_TASK_QUEUE = os.getenv("RABBITMQ_TASK_QUEUE")
 
 # Ignore all future warnings
-simplefilter(action='ignore', category=FutureWarning)
+simplefilter(action="ignore", category=FutureWarning)
 
 # Celery broker URL
 CELERY_BROKER_URL = (
-    f'amqp://'
-    f'{RABBITMQ_USERNAME}:'
-    f'{RABBITMQ_PASSWORD}@'
-    f'{RABBITMQ_HOST}/'
-    f'{RABBITMQ_VHOST}'
+    f"amqp://"
+    f"{RABBITMQ_USERNAME}:"
+    f"{RABBITMQ_PASSWORD}@"
+    f"{RABBITMQ_HOST}/"
+    f"{RABBITMQ_VHOST}"
 )
 
 
@@ -57,79 +58,79 @@ CELERY_BROKER_URL = (
 
 # Celery app initialization
 queue = Queue(RABBITMQ_TASK_QUEUE, Exchange(RABBITMQ_TASK_QUEUE), RABBITMQ_TASK_QUEUE)
-app = Celery('tasks', backend='rpc://', broker=CELERY_BROKER_URL)
+app = Celery("tasks", backend="rpc://", broker=CELERY_BROKER_URL)
 
 app.conf.update(
-    task_serializer='pickle',
-    accept_content=['pickle', 'json'],  # Ignore other content
-    result_serializer='pickle',
+    task_serializer="pickle",
+    accept_content=["pickle", "json"],  # Ignore other content
+    result_serializer="pickle",
     task_queues=[queue],
     worker_concurrency=4,
     worker_max_memory_per_child=4000000,
-    worker_pool="solo"
+    worker_pool="solo",
 )
 
 ################################################################################
 # Account tasks
 ################################################################################
 
+
 @app.task
-def register_account(
-    *args, password: str, username: str, 
-    **kwargs) -> ObjectId:
+def register_account(*args, password: str, username: str, **kwargs) -> ObjectId:
     """
     Adds a newly registered user to users collection
     kwargs:
-        password: 
+        password:
             A hashed password.
-        username: 
+        username:
             The username.
     """
-    #---------------------------------------------------------------------------  
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db="users")
-    
+
     # log action to stdout
     logging.info(f"Adding user {username} to users.")
-    #---------------------------------------------------------------------------
-    
+    # ---------------------------------------------------------------------------
+
     # creating document to be inserted into mongoDB
     obj = schemas.create_user_object(username=username, password=password)
     users_res = db.users.insert_one(obj)
 
     return users_res.inserted_id
 
+
 ################################################################################
 # Workspace tasks
 ################################################################################
 @app.task
 def initialize_workspace(
-    *args, userid: str, label: str, datasource: str,
-    **kwargs) -> ObjectId:
+    *args, userid: str, label: str, datasource: str, **kwargs
+) -> ObjectId:
     """
     Initializes a workspace with userid as owner.
     """
-    #---------------------------------------------------------------------------  
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db="users")
-     
+
     # handle ObjectID kwargs
     userid = ObjectId(str(userid))
 
     # log action to stdout
     logging.info(f"Initializing workspace for user {userid}.")
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     # Every workspace should be initialized with one workflow
     color = utils.random_color()
 
-    uuid_str = str(uuid.uuid4()).replace('-', '_')
+    uuid_str = str(uuid.uuid4()).replace("-", "_")
 
     dbname = utils.sanitize_db_name(f"{label}_{uuid_str}")
 
     if datasource == "aita" or datasource == "nursing":
         dbname = datasource
-    
+
     obj = schemas.create_workspace_object(owner=userid, label=label, database=dbname)
     res = db.workspaces.insert_one(obj)
 
@@ -138,38 +139,40 @@ def initialize_workspace(
         userid=userid,
         label=label,
         color=color,
-        workspace_id=res.inserted_id
+        workspace_id=res.inserted_id,
     )
-    
+
     return res.inserted_id
+
 
 @app.task
 def remove_user_from_workspace(
-    *args, userid: str, workspace_id: str,
-    **kwargs) -> ObjectId:
+    *args, userid: str, workspace_id: str, **kwargs
+) -> ObjectId:
     """
-    Removes a workspace with userid as owner. 
+    Removes a workspace with userid as owner.
     Doesn't delete corresponding workflows.
 
     """
-    #---------------------------------------------------------------------------  
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db="users")
-     
+
     # handle ObjectID kwargs
     userid = ObjectId(str(userid))
     workspace_id = ObjectId(str(workspace_id))
 
     # log action to stdout
     logging.info(f"Removing user {userid} from workspace {workspace_id}.")
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     workspace = db.workspaces.find_one({"_id": workspace_id})
-    
 
     if workspace["owner"] == userid:
         workspace["owner"] = None
-    
-    workspace["contributors"] = [c for c in workspace["contributors"] if c["id"] != userid]
+
+    workspace["contributors"] = [
+        c for c in workspace["contributors"] if c["id"] != userid
+    ]
 
     if workspace["owner"] == None:
         if len(workspace["contributors"]) > 0:
@@ -184,14 +187,13 @@ def remove_user_from_workspace(
 
     # add contributor to session's userlist
     db.workspaces.update_one(
-        {"_id": workspace_id}, 
-        { 
-            "$set":
-                {
-                    "contributors": workspace["contributors"],
-                    "owner": workspace["owner"]
-                }
-        }, 
+        {"_id": workspace_id},
+        {
+            "$set": {
+                "contributors": workspace["contributors"],
+                "owner": workspace["owner"],
+            }
+        },
     )
 
     utils.push_history(db, "workspaces", workspace_id, history_item)
@@ -201,20 +203,20 @@ def remove_user_from_workspace(
 
 @app.task
 def add_contributor(
-    *args, workspace_id: str, userid: str, contributor: str,
-    **kwargs) -> ObjectId:
+    *args, workspace_id: str, userid: str, contributor: str, **kwargs
+) -> ObjectId:
     """
     Add new user to workspace's userlist. Provide read/write access.
     kwargs:
         contributor_id: OID of contributor to be added
-    
+
     Returns:
         contributor_id
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db="users")
-    
+
     # handle ObjectID kwargs
     workspace_id = ObjectId(str(workspace_id))
     userid = ObjectId(str(userid))
@@ -222,17 +224,19 @@ def add_contributor(
     contributor_id = contributor["_id"]
 
     # log action to stdout
-    logging.info(f'Adding contributor {contributor_id} by '
-                 f'user {userid} to workspace {workspace_id}.')
-    #---------------------------------------------------------------------------
+    logging.info(
+        f"Adding contributor {contributor_id} by "
+        f"user {userid} to workspace {workspace_id}."
+    )
+    # ---------------------------------------------------------------------------
 
-    workspace = db.workspaces.find_one({"_id": workspace_id})    
+    workspace = db.workspaces.find_one({"_id": workspace_id})
     contributors = [c["id"] for c in workspace["contributors"]]
 
     # check if user has already been added
     if contributor_id in contributors or contributor_id == userid:
-        logging.info(f'User {contributor_id} is already on userlist')
-        raise Exception(f'User {contributor_id} is already on userlist')
+        logging.info(f"User {contributor_id} is already on userlist")
+        raise Exception(f"User {contributor_id} is already on userlist")
 
     history_item = utils.update_history(
         item=workspace["history"][0],
@@ -243,11 +247,16 @@ def add_contributor(
 
     # add contributor to session's userlist
     db.workspaces.update_one(
-        {"_id": workspace_id}, 
-        {"$push": { 
-            "contributors": {"id": contributor_id, "username": contributor["username"]}
-        }, 
-    })
+        {"_id": workspace_id},
+        {
+            "$push": {
+                "contributors": {
+                    "id": contributor_id,
+                    "username": contributor["username"],
+                }
+            },
+        },
+    )
 
     utils.push_history(db, "workspaces", workspace_id, history_item)
 
@@ -256,32 +265,34 @@ def add_contributor(
 
 @app.task
 def remove_contributor(
-    *args, workspace_id: str, userid: str, contributor_id: str,
-    **kwargs) -> ObjectId:
+    *args, workspace_id: str, userid: str, contributor_id: str, **kwargs
+) -> ObjectId:
     """
     Add new user to workspace's userlist. Provide read/write access.
     kwargs:
         contributor_id: OID of contributor to be added
-    
+
     Returns:
         contributor_id
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db="users")
-    
+
     # handle ObjectID kwargs
     workspace_id = ObjectId(str(workspace_id))
     userid = ObjectId(str(userid))
     contributor_id = ObjectId(str(contributor_id))
-    
-    # log action to stdout
-    logging.info(f'Removing contributor {contributor_id} by '
-                 f'user {userid} to workspace {workspace_id}.')
-    #---------------------------------------------------------------------------
 
-    workspace = db.workspaces.find_one({"_id": workspace_id})    
-    
+    # log action to stdout
+    logging.info(
+        f"Removing contributor {contributor_id} by "
+        f"user {userid} to workspace {workspace_id}."
+    )
+    # ---------------------------------------------------------------------------
+
+    workspace = db.workspaces.find_one({"_id": workspace_id})
+
     history_item = utils.update_history(
         item=workspace["history"][0],
         oid=contributor_id,
@@ -291,65 +302,64 @@ def remove_contributor(
 
     # add contributor to session's userlist
     db.workspaces.update_one(
-        {"_id": workspace_id}, 
-        {"$pull": { 
-            "contributors": { "id": contributor_id }
-        }, 
-    })
+        {"_id": workspace_id},
+        {
+            "$pull": {"contributors": {"id": contributor_id}},
+        },
+    )
 
     utils.push_history(db, "workspaces", workspace_id, history_item)
 
     return contributor_id
 
+
 ################################################################################
 # Workflow tasks
 ################################################################################
 
+
 @app.task
 def initialize_workflow(
-    *args, database: str, userid: str, workspace_id: str, label: str, color: str, 
-    **kwargs) -> ObjectId:
+    *args,
+    database: str,
+    userid: str,
+    workspace_id: str,
+    label: str,
+    color: str,
+    **kwargs,
+) -> ObjectId:
     """Adds a workflow to the sessions collection.
-    
+
     Returns:
         Inserted userid.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-  
+
     # handle ObjectID kwargs
     userid = ObjectId(str(userid))
     workspace_id = ObjectId(str(workspace_id))
-    
+
     # log action to stdout
-    logging.info(f'Initializing workflow for user {userid}.')
-    #---------------------------------------------------------------------------
-    
-    obj = schemas.create_workflow_object(
-        userid=userid,
-        label=label,
-        color=color
-    )
+    logging.info(f"Initializing workflow for user {userid}.")
+    # ---------------------------------------------------------------------------
+
+    obj = schemas.create_workflow_object(userid=userid, label=label, color=color)
 
     result = db.sessions.insert_one(obj)
 
     user_db = utils.connect(db="users")
 
     user_db.workspaces.update_one(
-        {"_id": workspace_id},
-        {
-            "$push": {
-                "workflows": result.inserted_id
-            }
-        }
+        {"_id": workspace_id}, {"$push": {"workflows": result.inserted_id}}
     )
 
     history_item = utils.update_history(
         item=schemas.create_workspace_history_object(userid),
         oid=result.inserted_id,
         userid=userid,
-        action="Added workflow to workspace."
+        action="Added workflow to workspace.",
     )
 
     utils.push_history(user_db, "workspaces", workspace_id, history_item)
@@ -359,16 +369,16 @@ def initialize_workflow(
 
 @app.task
 def remove_workflow(
-    *args, database: str, workspace_id: str, workflow_id: str, userid: str, 
-    **kwargs) -> ObjectId:
+    *args, database: str, workspace_id: str, workflow_id: str, userid: str, **kwargs
+) -> ObjectId:
     """
-    Delete a workflow from the user. Workflow is not deleted from the whole 
+    Delete a workflow from the user. Workflow is not deleted from the whole
     system, just the user.
-    
+
     Returns:
         Removed workflow_id.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
 
@@ -378,24 +388,19 @@ def remove_workflow(
     workspace_id = ObjectId(str(workspace_id))
 
     # log action to stdout
-    logging.info(f'Removing workflow {workflow_id} for user {userid}.')
-    #---------------------------------------------------------------------------
-    
+    logging.info(f"Removing workflow {workflow_id} for user {userid}.")
+    # ---------------------------------------------------------------------------
+
     user_db = utils.connect(db="users")
     user_db.workspaces.update_one(
-        {"_id" : workspace_id},
-        {
-            "$pull": {
-                "workflows": workflow_id
-            }
-        }
+        {"_id": workspace_id}, {"$pull": {"workflows": workflow_id}}
     )
 
     history_item = utils.update_history(
         item=schemas.create_workspace_history_object(userid),
         oid=workflow_id,
         userid=userid,
-        action="Remove session from workspace."
+        action="Remove session from workspace.",
     )
 
     utils.push_history(user_db, "workspaces", workspace_id, history_item)
@@ -405,28 +410,29 @@ def remove_workflow(
 
 @app.task
 def recolor_workflow(
-    *args, database: str, workflow_id: str, userid: str, 
-    color: str,
-    **kwargs) -> ObjectId:
+    *args, database: str, workflow_id: str, userid: str, color: str, **kwargs
+) -> ObjectId:
     """
     Recolors a workflow.
 
     Returns:
         Updated workflow_id.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
 
     # handle ObjectID kwargs
     workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
-    
+
     # log action to stdout
-    logging.info(f'Recoloring workflow to color '
-                 f'{color} for {userid} and session {workflow_id}.')
-    #---------------------------------------------------------------------------
-    
+    logging.info(
+        f"Recoloring workflow to color "
+        f"{color} for {userid} and session {workflow_id}."
+    )
+    # ---------------------------------------------------------------------------
+
     session = db.sessions.find_one({"_id": workflow_id})
     settings = session["history"][0]["settings"]
     settings["color"] = color
@@ -434,23 +440,28 @@ def recolor_workflow(
         item=session["history"][0],
         settings=settings,
         userid=userid,
-        action="Recolor workflow."
+        action="Recolor workflow.",
     )
 
     utils.push_history(db, "sessions", workflow_id, history_item)
-        
+
     return workflow_id
 
 
 @app.task
 def relabel_workflow(
-    *args, database: str, workflow_id: str, userid: str, 
-    label: str, relabeled_workflow_id: str, 
-    **kwargs) -> ObjectId:
+    *args,
+    database: str,
+    workflow_id: str,
+    userid: str,
+    label: str,
+    relabeled_workflow_id: str,
+    **kwargs,
+) -> ObjectId:
     """
     Relabels a session.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
 
@@ -460,16 +471,15 @@ def relabel_workflow(
     relabeled_workflow_id = ObjectId(str(relabeled_workflow_id))
 
     # log action to stdout
-    logging.info(f'Relabeling workflow to label {label} '
-                 f'for {userid} and session {relabeled_workflow_id}.')
-    #---------------------------------------------------------------------------
-    
+    logging.info(
+        f"Relabeling workflow to label {label} "
+        f"for {userid} and session {relabeled_workflow_id}."
+    )
+    # ---------------------------------------------------------------------------
+
     session = db.sessions.find_one({"_id": relabeled_workflow_id})
     history_item = utils.update_history(
-        session["history"][0],
-        label=label,
-        user=userid,
-        action="Relabeled session"
+        session["history"][0], label=label, user=userid, action="Relabeled session"
     )
     utils.push_history(db, "sessions", relabeled_workflow_id, history_item)
     return relabeled_workflow_id
@@ -477,12 +487,18 @@ def relabel_workflow(
 
 @app.task
 def save_UI_state(
-    *args, database: str, workflow_id: str, userid: str,
-    bookmarks: List, nodes: List, edges: List,
-    **kwargs) -> ObjectId:
+    *args,
+    database: str,
+    workflow_id: str,
+    userid: str,
+    bookmarks: List,
+    nodes: List,
+    edges: List,
+    **kwargs,
+) -> ObjectId:
     """
     Updates a workflow document in the sessions collection.
-    
+
     kwargs:
         bookmarks:
             bookmarked documents
@@ -490,22 +506,21 @@ def save_UI_state(
             active workspace nodes
         edges:
             active workspace edges
-    
+
     Returns:
         workflow_id
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
 
     # log action to stdout
-    logging.info(f'Saving state for '
-                 f'session {workflow_id} and user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(f"Saving state for " f"session {workflow_id} and user {userid}.")
+    # ---------------------------------------------------------------------------
 
     session = db.sessions.find_one({"_id": workflow_id})
     history_item = utils.update_history(
@@ -514,66 +529,76 @@ def save_UI_state(
         nodes=nodes,
         edges=edges,
         action="Save UI state",
-        user=userid
+        user=userid,
     )
     utils.push_history(db, "sessions", workflow_id, history_item)
 
     return workflow_id
 
+
 ################################################################################
 # Search tasks
 ################################################################################
 
+
 @app.task
 def add_search(
-    *args, database: str, userid: str, workflow_id: str, query: str,
-    **kwargs) -> ObjectId:
-    #---------------------------------------------------------------------------
+    *args, database: str, userid: str, workflow_id: str, query: str, **kwargs
+) -> ObjectId:
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
-    
+
     # log action to stdout
-    logging.info(f'Adding search {query} for'
-                 f'workflow {workflow_id} and user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(
+        f"Adding search {query} for" f"workflow {workflow_id} and user {userid}."
+    )
+    # ---------------------------------------------------------------------------
     obj = schemas.create_search_object(userid=userid, query=query)
 
     res = db.searches.insert_one(obj)
-    
+
     return res.inserted_id
 
 
 @app.task
 def update_search(
-    *args, database: str, userid: str, workflow_id: str, search_id: str, 
-    query: str, **kwargs) -> ObjectId:
-    #---------------------------------------------------------------------------
+    *args,
+    database: str,
+    userid: str,
+    workflow_id: str,
+    search_id: str,
+    query: str,
+    **kwargs,
+) -> ObjectId:
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
     search_id = ObjectId(str(search_id))
-    
+
     # log action to stdout
-    logging.info(f'Updating search {query} for'
-                 f'workflow {workflow_id} and user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(
+        f"Updating search {query} for" f"workflow {workflow_id} and user {userid}."
+    )
+    # ---------------------------------------------------------------------------
     search = db.searches.find_one(search_id)
 
     history_item = utils.update_history(
         item=schemas.create_search_history_object(userid=userid, query=query),
         action="Update search query.",
         query=query,
-        user=userid
+        user=userid,
     )
     utils.push_history(db, "searches", search_id, history_item)
-    
+
     # update all graph items
     nodes = db.graph.find({"reference": search_id})
     for node in nodes:
@@ -586,56 +611,62 @@ def update_search(
 # Group tasks
 ################################################################################
 
-@app.task 
+
+@app.task
 def add_group(
-    *args, database: str, userid: str, workspace: str, color: str, 
-    label: str, description="A group", documents=[],
-    **kwargs) -> ObjectId:
+    *args,
+    database: str,
+    userid: str,
+    workspace: str,
+    color: str,
+    label: str,
+    description="A group",
+    documents=[],
+    **kwargs,
+) -> ObjectId:
     """
-    Adds a group to the group collection and links newly 
+    Adds a group to the group collection and links newly
     created group to corresponding session.
-    
-    args: 
+
+    args:
         description: topic label for cluster
         included documents: documents included in group
 
-    kwargs: 
+    kwargs:
         label: (string, arbitrary)
         color: (string, hex color)
         workspace: (string, represents ObjectId)
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     workspace = ObjectId(str(workspace))
     userid = str(userid)
-    
+
     # log action to stdout
-    logging.info(f'Adding group {label} for '
-                 f'workspace {workspace} and user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(
+        f"Adding group {label} for " f"workspace {workspace} and user {userid}."
+    )
+    # ---------------------------------------------------------------------------
 
     # # Creating document to be inserted into mongoDB
     # obj = schemas.create_group_object(
-    #     color, 
+    #     color,
     #     [ObjectId(str(d)) for d in documents],
-    #     label, 
-    #     "Initialize group", 
-    #     userid, 
-    #     description, 
+    #     label,
+    #     "Initialize group",
+    #     userid,
+    #     description,
     #     workflow_id
     # )
-    
+
     # Initialize group in database
-    groups_res = db.groups.insert_one({
-        "color": color,
-        "label": label,
-        "workspace": workspace,
-        "docs": []
-    })
-    
+    groups_res = db.groups.insert_one(
+        {"color": color, "label": label, "workspace": workspace, "docs": []}
+    )
+
     # Add initialized group to session
     # session = db.sessions.find_one({'_id': workflow_id})
     # history_item = utils.update_history(
@@ -644,34 +675,32 @@ def add_group(
     #     action=f"Initialize new group: {label}",
     #     user=userid,
     # )
-    
-    # sessions_res = utils.push_history(db, "sessions", workflow_id, history_item)    
+
+    # sessions_res = utils.push_history(db, "sessions", workflow_id, history_item)
     # logging.info(f"Associated group {obj['history'][0]['label']} "
     #              f"with session {workflow_id} and result {sessions_res}.")
 
     return groups_res.inserted_id
-    
-    
+
+
 @app.task
 def recolor_group(
-    *args, database: str, userid: str,
-    color: str, group_id: str,
-    **kwargs) -> ObjectId:
+    *args, database: str, userid: str, color: str, group_id: str, **kwargs
+) -> ObjectId:
     """
     Recolors a group.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     group_id = ObjectId(str(group_id))
     userid = ObjectId(str(userid))
-    
+
     # log action to stdout
-    logging.info(f'Recoloring group {group_id} to color {color} for '
-                 f'user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(f"Recoloring group {group_id} to color {color} for " f"user {userid}.")
+    # ---------------------------------------------------------------------------
 
     group = db.groups.find_one({"_id": group_id})
     history_item = utils.update_history(
@@ -686,8 +715,9 @@ def recolor_group(
 
 
 @app.task
-def add_document_to_group( *args, database: str, userid: str,
-    group_id: str, document_id: str, **kwargs):
+def add_document_to_group(
+    *args, database: str, userid: str, group_id: str, document_id: str, **kwargs
+):
     """
     Adds a document_id to a group.
 
@@ -695,27 +725,28 @@ def add_document_to_group( *args, database: str, userid: str,
         group_id: (int, represents ObjectId for a group)
         document_id: (string, arbitrary)
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     group_id = ObjectId(str(group_id))
     document_id = ObjectId(str(document_id))
-    
-    # log action to stdout
-    logging.info(f'Adding document {document_id} to group {group_id} for '
-                 f'user {userid}.')
-    #---------------------------------------------------------------------------
 
-    group = db.groups.find_one({'_id': group_id})
+    # log action to stdout
+    logging.info(
+        f"Adding document {document_id} to group {group_id} for " f"user {userid}."
+    )
+    # ---------------------------------------------------------------------------
+
+    group = db.groups.find_one({"_id": group_id})
     documents = group["docs"]
-    
+
     if document_id in documents or str(document_id) in documents:
         logging.info(f'Document {document_id} already in group {group["label"]}.')
         return
-    
-    db.groups.update_one({'_id': group_id}, {"$push": {"docs": document_id}})
+
+    db.groups.update_one({"_id": group_id}, {"$push": {"docs": document_id}})
 
     # history_item = utils.update_history(
     #     item=group["history"][0],
@@ -726,7 +757,7 @@ def add_document_to_group( *args, database: str, userid: str,
     # )
 
     # utils.push_history(db, "groups", group_id, history_item)
-    
+
     # update all graph items
     nodes = db.graph.find({"reference": group_id})
     for node in nodes:
@@ -738,14 +769,16 @@ def add_document_to_group( *args, database: str, userid: str,
 
 ######### Refactored to here ###########
 
+
 @app.task
-def relabel_group(*args, database: str, userid: str, 
-                  group_id: str, label: str, **kwargs):
+def relabel_group(
+    *args, database: str, userid: str, group_id: str, label: str, **kwargs
+):
     """
     Relabels a group.
     """
-    
-    #---------------------------------------------------------------------------
+
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
 
@@ -754,17 +787,13 @@ def relabel_group(*args, database: str, userid: str,
     userid = ObjectId(str(userid))
 
     # log action to stdout
-    logging.info(f'Relabelling group {group_id} to {label} for '
-                 f'user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(f"Relabelling group {group_id} to {label} for " f"user {userid}.")
+    # ---------------------------------------------------------------------------
 
     group = db.groups.find_one({"_id": group_id})
 
     history_item = utils.update_history(
-        item=group["history"][0],
-        label=label,
-        userid=userid,
-        action="Relabeled group."
+        item=group["history"][0], label=label, userid=userid, action="Relabeled group."
     )
 
     utils.push_history(db, "groups", group_id, history_item)
@@ -772,8 +801,15 @@ def relabel_group(*args, database: str, userid: str,
 
 
 @app.task
-def copy_group(*args, database: str, userid: str, workflow_id: str,
-               group_id: str, label: str, **kwargs):
+def copy_group(
+    *args,
+    database: str,
+    userid: str,
+    workflow_id: str,
+    group_id: str,
+    label: str,
+    **kwargs,
+):
     """
     copies a group
 
@@ -783,23 +819,21 @@ def copy_group(*args, database: str, userid: str, workflow_id: str,
         workflow_id:  (int, represent ObjectId for current session)
         group_id: (int, represent ObjectId for a group to be copies(
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     group_id = ObjectId(str(group_id))
     userid = ObjectId(str(userid))
     workflow_id = ObjectId(str(workflow_id))
-    
+
     # log action to stdout
-    logging.info(f'Copying group {group_id} to {label} for '
-                 f'user {userid}.')
-    #---------------------------------------------------------------------------
-    
-    group_to_copy = db.groups.find_one({'_id': group_id})
+    logging.info(f"Copying group {group_id} to {label} for " f"user {userid}.")
+    # ---------------------------------------------------------------------------
+
+    group_to_copy = db.groups.find_one({"_id": group_id})
     group_copy_history = group_to_copy["history"][0]
-    
 
     color = group_copy_history["color"]
     included_documents = group_copy_history["included_documents"]
@@ -807,21 +841,21 @@ def copy_group(*args, database: str, userid: str, workflow_id: str,
     # create a new group for the session
     group_new_id = add_group(
         database=database,
-        userid=userid, 
-        label=label, 
-        color=color, 
-        workflow_id=workflow_id, 
-        documents=included_documents
+        userid=userid,
+        label=label,
+        color=color,
+        workflow_id=workflow_id,
+        documents=included_documents,
     )
 
     workflow = db.sessions.find_one({"_id": workflow_id})
-    
+
     history_item = utils.update_history(
         item=workflow["history"][0],
         label=label,
         userid=userid,
         oid=group_new_id,
-        action="Copied group."
+        action="Copied group.",
     )
 
     utils.push_history(db, "sessions", workflow_id, history_item)
@@ -830,17 +864,19 @@ def copy_group(*args, database: str, userid: str, workflow_id: str,
 
 
 @app.task
-def remove_group(*args, database: str, group_id: str, workflow_id: str, userid: str, **kwargs):
+def remove_group(
+    *args, database: str, group_id: str, workflow_id: str, userid: str, **kwargs
+):
     """
-    Delete a group (not the documents within) from the session. 
+    Delete a group (not the documents within) from the session.
     Group is not deleted from the whole system, just the session.
     kwargs:
         group_id: ObjectId
         workflow_id: ObjectId
         user_id: ObjectId
     """
-    
-    #---------------------------------------------------------------------------
+
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
 
@@ -850,16 +886,14 @@ def remove_group(*args, database: str, group_id: str, workflow_id: str, userid: 
     userid = ObjectId(str(userid))
 
     # log action to stdout
-    logging.info(f'Removing group {group_id} from workflow {workflow_id} for '
-                 f'user {userid}.')
-    #---------------------------------------------------------------------------
-    
+    logging.info(
+        f"Removing group {group_id} from workflow {workflow_id} for " f"user {userid}."
+    )
+    # ---------------------------------------------------------------------------
+
     workflow = db.sessions.find_one({"_id": workflow_id})
     history_item = utils.update_history(
-        item=workflow["history"][0],
-        userid=userid,
-        oid=group_id,
-        action="Remove group."
+        item=workflow["history"][0], userid=userid, oid=group_id, action="Remove group."
     )
 
     db.groups.update_one({"_id": group_id}, {"$pull": {"sessions": workflow_id}})
@@ -870,7 +904,9 @@ def remove_group(*args, database: str, group_id: str, workflow_id: str, userid: 
 
 
 @app.task
-def remove_document_from_group(*args, database: str, group_id: str, document_id: str, userid: str, **kwargs):
+def remove_document_from_group(
+    *args, database: str, group_id: str, document_id: str, userid: str, **kwargs
+):
     """
     Remove the document_id from the included_documents of the specified group_id.
 
@@ -879,21 +915,22 @@ def remove_document_from_group(*args, database: str, group_id: str, document_id:
         document_id (string, arbitrary)
     """
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     group_id = ObjectId(str(group_id))
     document_id = ObjectId(str(document_id))
     userid = ObjectId(str(userid))
 
     # log action to stdout
-    logging.info(f'Removing document {document_id} from group {group_id} for '
-                 f'user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(
+        f"Removing document {document_id} from group {group_id} for " f"user {userid}."
+    )
+    # ---------------------------------------------------------------------------
 
-    group = db.groups.find_one({'_id': group_id})
+    group = db.groups.find_one({"_id": group_id})
     docs = group["history"][0]["included_documents"]
 
     docs.remove(document_id)
@@ -903,7 +940,7 @@ def remove_document_from_group(*args, database: str, group_id: str, document_id:
         userid=userid,
         oid=group_id,
         included_documents=docs,
-        action="Remove group."
+        action="Remove group.",
     )
     utils.push_history(db, "groups", group_id, history_item)
 
@@ -916,9 +953,11 @@ def remove_document_from_group(*args, database: str, group_id: str, document_id:
 
 
 @app.task
-def copy_doclists_to_groups(*args, database: str, workflow_id: str, node_id: str, userid: str, **kwargs):
+def copy_doclists_to_groups(
+    *args, database: str, workflow_id: str, node_id: str, userid: str, **kwargs
+):
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
 
@@ -928,12 +967,11 @@ def copy_doclists_to_groups(*args, database: str, workflow_id: str, node_id: str
     userid = ObjectId(str(userid))
 
     # log action to stdout
-    logging.info(f'Copying doclists from {node_id} to groups for '
-                 f'user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(f"Copying doclists from {node_id} to groups for " f"user {userid}.")
+    # ---------------------------------------------------------------------------
 
     node = db.graph.find_one({"_id": node_id})
-    
+
     acc = 0
     for doclist in node["doclists"]:
         acc = acc + 1
@@ -942,55 +980,54 @@ def copy_doclists_to_groups(*args, database: str, workflow_id: str, node_id: str
         # create a new group for the session
         group_new_id = add_group(
             database=database,
-            userid=userid, 
-            label=f'Group {acc} from graph item', 
-            color=utils.random_color(), 
-            workflow_id=workflow_id, 
-            documents=included_documents
+            userid=userid,
+            label=f"Group {acc} from graph item",
+            color=utils.random_color(),
+            workflow_id=workflow_id,
+            documents=included_documents,
         )
+
 
 ################################################################################
 # Note tasks
 ################################################################################
 
+
 @app.task
-def add_note(*args, database: str, userid: str, workflow_id: str,
-    label: str, content, **kwargs) -> ObjectId:
+def add_note(
+    *args, database: str, userid: str, workflow_id: str, label: str, content, **kwargs
+) -> ObjectId:
     """
     Adds a note to the note collection.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
-    
+
     # log action to stdout
-    logging.info(f'Adding note {label} for'
-                 f'workflow {workflow_id} and user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(
+        f"Adding note {label} for" f"workflow {workflow_id} and user {userid}."
+    )
+    # ---------------------------------------------------------------------------
 
     note = schemas.create_note_object(
-        workflow_id, 
-        userid, 
-        label, 
-        "", 
-        content, 
-        list(np.zeros(512))
+        workflow_id, userid, label, "", content, list(np.zeros(512))
     )
 
     res = db.notes.insert_one(note)
     utils.add_chromadb(database, ids=[res.inserted_id], texts=[""])
-    
+
     workflow = db.sessions.find_one({"_id": workflow_id})
-    
+
     history_item = utils.update_history(
         item=workflow["history"][0],
         user=userid,
         action="Add note.",
-        oid=res.inserted_id
+        oid=res.inserted_id,
     )
 
     utils.push_history(db, "sessions", workflow_id, history_item)
@@ -999,41 +1036,43 @@ def add_note(*args, database: str, userid: str, workflow_id: str,
 
 
 @app.task
-def update_note(*args, database: str, userid: str, workflow_id: str,
-    note_id: str, content, **kwargs) -> ObjectId:
+def update_note(
+    *args, database: str, userid: str, workflow_id: str, note_id: str, content, **kwargs
+) -> ObjectId:
     """
     Updates a note content.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
     note_id = ObjectId(str(note_id))
-    
+
     # log action to stdout
-    logging.info(f'Updating note {note_id} for'
-                 f'workflow {workflow_id} and user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(
+        f"Updating note {note_id} for" f"workflow {workflow_id} and user {userid}."
+    )
+    # ---------------------------------------------------------------------------
 
     note = db.notes.find_one({"_id": note_id})
     history_item = utils.update_history(
         item=note["history"][0],
         user=userid,
         action="Update note content.",
-        content=content
+        content=content,
     )
 
     res = utils.push_history(db, "notes", note_id, history_item)
-    
+
     text = " ".join([block["text"] for block in content["blocks"]])
-    
+
     # Ensure mongodb is updated
-    db.notes.update_one({"_id": note_id}, {"$set": { "text": text }})
+    db.notes.update_one({"_id": note_id}, {"$set": {"text": text}})
     logging.info(f"Updated note {note_id} with {res}.")
-    
+
     # Ensure embedding is updated
     utils.update_chromadb(database, [note_id], text)
     logging.info(f"Updating note {note_id} embedding.")
@@ -1045,41 +1084,51 @@ def vectorize_note(*args, database: str, note_id: str, **kwargs) -> ObjectId:
     note_id = ObjectId(str(note_id))
 
     # log action to stdout
-    logging.info(f'Updating note {note_id} for'
-                 f'database {database}.')
-    #---------------------------------------------------------------------------
-    
+    logging.info(f"Updating note {note_id} for" f"database {database}.")
+    # ---------------------------------------------------------------------------
+
     note = db.notes.find_one({"_id": note_id})
     if note:
-        embeddings.update(database, [note])
+        app.send_task(
+            "backend.vectorizer.update",  # Task name
+            args=[database, [note]],  # Replace with actual arguments
+            kwargs={"database": "your_database", "userid": "your_userid"},
+            queue="vectorizer",
+        )
     else:
         raise Exception(f"Can't find note for {note_id}.")
 
+
 @app.task
-def relabel_note(*args, database: str, userid: str, workflow_id: str,
-    note_id: str, label: str, **kwargs) -> ObjectId:
+def relabel_note(
+    *args,
+    database: str,
+    userid: str,
+    workflow_id: str,
+    note_id: str,
+    label: str,
+    **kwargs,
+) -> ObjectId:
     """
     Relabels a note.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
     note_id = ObjectId(str(note_id))
-    
+
     # log action to stdout
-    logging.info(f'Updating note {note_id} for'
-                 f'workflow {workflow_id} and user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(
+        f"Updating note {note_id} for" f"workflow {workflow_id} and user {userid}."
+    )
+    # ---------------------------------------------------------------------------
     note = db.notes.find_one({"_id": note_id})
     history_item = utils.update_history(
-        item=note["history"][0],
-        user=userid,
-        action="Update note label.",
-        label=label
+        item=note["history"][0], user=userid, action="Update note label.", label=label
     )
 
     res = utils.push_history(db, "notes", note_id, history_item)
@@ -1087,24 +1136,26 @@ def relabel_note(*args, database: str, userid: str, workflow_id: str,
 
 
 @app.task
-def remove_note(*args, database: str, userid: str, workflow_id: str,
-    note_id: str, **kwargs) -> ObjectId:
+def remove_note(
+    *args, database: str, userid: str, workflow_id: str, note_id: str, **kwargs
+) -> ObjectId:
     """
     Removes a note from the workflow but not the notes collection.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
     note_id = ObjectId(str(note_id))
-    
+
     # log action to stdout
-    logging.info(f'Removing note {note_id} from'
-                 f'workflow {workflow_id} by user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(
+        f"Removing note {note_id} from" f"workflow {workflow_id} by user {userid}."
+    )
+    # ---------------------------------------------------------------------------
 
     workflow = db.sessions.find_one({"_id": workflow_id})
 
@@ -1114,7 +1165,7 @@ def remove_note(*args, database: str, userid: str, workflow_id: str,
         item=workflow["history"][0],
         user=userid,
         action="Remove note from workflow.",
-        oid=note_id
+        oid=note_id,
     )
 
     utils.push_history(db, "sessions", workflow_id, history_item)
@@ -1126,31 +1177,34 @@ def remove_note(*args, database: str, userid: str, workflow_id: str,
 # Graph tasks
 ################################################################################
 
+
 @app.task
-def update_node(*args, database: str, userid: str, workflow_id: str,
-    node_id, parameters, **kwargs):
+def update_node(
+    *args, database: str, userid: str, workflow_id: str, node_id, parameters, **kwargs
+):
     """
     Updates node parameters.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
-    
+
     # log action to stdout
-    logging.info(f'Updating parameters for node in '
-                 f'workflow {workflow_id} by user {userid}.')
-    #---------------------------------------------------------------------------
-    
-    node_oid  = ObjectId(str(node_id))
+    logging.info(
+        f"Updating parameters for node in " f"workflow {workflow_id} by user {userid}."
+    )
+    # ---------------------------------------------------------------------------
+
+    node_oid = ObjectId(str(node_id))
     node = db.graph.find_one(node_oid)
-    
-    if (node == None):
+
+    if node == None:
         raise Exception("Node is None.")
-    
+
     graph.update_parameters(db, node, parameters)
     graph.graph(db, node_oid)
 
@@ -1162,37 +1216,47 @@ def update_node(*args, database: str, userid: str, workflow_id: str,
     )
 
     utils.push_history(db, "sessions", workflow_id, history_item)
-    
+
     return 200
 
+
 @app.task
-def make_edge(*args, database: str, userid: str, workflow_id: str,
-    source_node, target_node, edge_type: str, **kwargs):
+def make_edge(
+    *args,
+    database: str,
+    userid: str,
+    workflow_id: str,
+    source_node,
+    target_node,
+    edge_type: str,
+    **kwargs,
+):
     """
     Makes an edge between two nodes.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
-    
+
     # log action to stdout
-    logging.info(f'Making edge type {edge_type} for '
-                 f'workflow {workflow_id} by user {userid}.')
-    #---------------------------------------------------------------------------
-    
+    logging.info(
+        f"Making edge type {edge_type} for " f"workflow {workflow_id} by user {userid}."
+    )
+    # ---------------------------------------------------------------------------
+
     source_type = source_node["type"]
     target_type = target_node["type"]
 
-    source_oid  = ObjectId(str(source_node["data"]["nodeid"]))
-    target_oid  = ObjectId(str(target_node["data"]["nodeid"]))
+    source_oid = ObjectId(str(source_node["data"]["nodeid"]))
+    target_oid = ObjectId(str(target_node["data"]["nodeid"]))
 
-
-    
-    graph.make_edge(db, workflow_id, source_oid, source_type, target_oid, target_type, edge_type)
+    graph.make_edge(
+        db, workflow_id, source_oid, source_type, target_oid, target_type, edge_type
+    )
 
     workflow = db.sessions.find_one({"_id": workflow_id})
     history_item = utils.update_history(
@@ -1202,39 +1266,38 @@ def make_edge(*args, database: str, userid: str, workflow_id: str,
     )
 
     utils.push_history(db, "sessions", workflow_id, history_item)
-    
+
     return 200
 
+
 @app.task
-def remove_edge(*args, database: str, userid: str, workflow_id: str, 
-    edge, **kwargs):
+def remove_edge(*args, database: str, userid: str, workflow_id: str, edge, **kwargs):
     """
     Removes an edge.
     """
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     workflow_id = ObjectId(str(workflow_id))
     userid = ObjectId(str(userid))
-    
-    # log action to stdout
-    logging.info(f'Removing edge {edge} from'
-                 f'workflow {workflow_id} by user {userid}.')
-    #---------------------------------------------------------------------------
 
-    
+    # log action to stdout
+    logging.info(
+        f"Removing edge {edge} from" f"workflow {workflow_id} by user {userid}."
+    )
+    # ---------------------------------------------------------------------------
+
     source_oid = ObjectId(str(edge["source"].split("%")[0]))
     source_type = edge["source"].split("%")[-1].capitalize()
 
     target_oid = ObjectId(str(edge["target"].split("%")[0]))
     target_type = edge["target"].split("%")[-1].capitalize()
-    
-    edge_type = edge["targetHandle"].split("_")[-1]
-    
-    graph.remove_edge(db, source_oid, target_oid, edge_type)
 
+    edge_type = edge["targetHandle"].split("_")[-1]
+
+    graph.remove_edge(db, source_oid, target_oid, edge_type)
 
     workflow = db.sessions.find_one({"_id": workflow_id})
     history_item = utils.update_history(
@@ -1244,27 +1307,38 @@ def remove_edge(*args, database: str, userid: str, workflow_id: str,
     )
 
     utils.push_history(db, "sessions", workflow_id, history_item)
-    
+
     return 200
 
 
 @app.task
-def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
-             uid: str, node_type: str, oid: str, **kwargs) -> ObjectId:
+def add_item(
+    *args,
+    database: str,
+    userid: str,
+    replyTo: str,
+    workflow_id: str,
+    uid: str,
+    node_type: str,
+    oid: str,
+    **kwargs,
+) -> ObjectId:
     """Add graph item."""
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # connect to database
     transaction_session, db = utils.create_transaction_session(db=database)
-    
+
     # handle ObjectID kwargs
     userid = ObjectId(str(userid))
     workflow_id = ObjectId(str(workflow_id))
 
     # log action to stdout
-    logging.info(f'Adding item type {node_type} to graph for'
-                 f'workflow {workflow_id} by user {userid}.')
-    #---------------------------------------------------------------------------
+    logging.info(
+        f"Adding item type {node_type} to graph for"
+        f"workflow {workflow_id} by user {userid}."
+    )
+    # ---------------------------------------------------------------------------
 
     res = None
 
@@ -1275,43 +1349,72 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
             ranked_docs = cluster["ranked_documents"]
             documents = [d[0] for d in ranked_docs]
 
-            res = add_group(database=database, workflow_id=workflow_id, userid=userid,
-                            color=utils.random_color(), label=cluster["label"], documents=documents)
+            res = add_group(
+                database=database,
+                workflow_id=workflow_id,
+                userid=userid,
+                color=utils.random_color(),
+                label=cluster["label"],
+                documents=documents,
+            )
             node_type = "Group"
-            
+
         case "Document" | "Group" | "Search" | "Note":
             coll = utils.get_collection(db, node_type)
 
             if ObjectId.is_valid(oid):
-                found = coll.find_one({"_id" : ObjectId(str(oid))})
+                found = coll.find_one({"_id": ObjectId(str(oid))})
                 res = found["_id"]
-                
+
             else:
                 match node_type:
                     case "Group":
-                        res = add_group(database=database, workflow_id=workflow_id, userid=userid,
-                                        color=utils.random_color(), label="New Group")
+                        res = add_group(
+                            database=database,
+                            workflow_id=workflow_id,
+                            userid=userid,
+                            color=utils.random_color(),
+                            label="New Group",
+                        )
                     case "Search":
-                        res = add_search(database=database, workflow_id=workflow_id, userid=userid,
-                                         query="")
+                        res = add_search(
+                            database=database,
+                            workflow_id=workflow_id,
+                            userid=userid,
+                            query="",
+                        )
                     case "Note":
-                        res = add_note(database=database, workflow_id=workflow_id, userid=userid,
-                                       label="New Note", content=schemas.create_note_content())
-                    
+                        res = add_note(
+                            database=database,
+                            workflow_id=workflow_id,
+                            userid=userid,
+                            label="New Note",
+                            content=schemas.create_note_content(),
+                        )
 
     node = graph.make_node(db, workflow_id, res, node_type)
 
     match node_type:
-        case "Teleoscope" | "Projection" | "Difference" | "Intersection" | "Exclusion" | "Union":
+        case (
+            "Teleoscope"
+            | "Projection"
+            | "Difference"
+            | "Intersection"
+            | "Exclusion"
+            | "Union"
+        ):
             res = node["_id"]
 
-    utils.message(replyTo, {
+    utils.message(
+        replyTo,
+        {
             "oid": str(res),
             "uid": uid,
             "nodeid": str(node["_id"]),
             "action": "OID_UID_SYNC",
-            "description": "Associate OID with UID."
-    })
+            "description": "Associate OID with UID.",
+        },
+    )
 
     workflow = db.sessions.find_one({"_id": workflow_id})
     history_item = utils.update_history(
@@ -1325,116 +1428,128 @@ def add_item(*args, database: str, userid: str, replyTo: str, workflow_id: str,
 
 
 @app.task
-def update_nodes(*args, database: str, workflow_id: str, node_uids: List[str], **kwargs):
+def update_nodes(
+    *args, database: str, workflow_id: str, node_uids: List[str], **kwargs
+):
     transaction_session, db = utils.create_transaction_session(db=database)
     workflow_id = ObjectId(str(workflow_id))
     graph.update_nodes(db, node_uids)
+
 
 ################################################################################
 # Document importing tasks
 ################################################################################
 
+
 @app.task
 def read_document(path_to_document):
-    '''
+    """
     read_document
 
     input: String (Path to json file)
     output: Dict
     purpose: This function is used to read a single document from a json file to a database
-    '''
+    """
     try:
-        with open(path_to_document, 'r') as f:
+        with open(path_to_document, "r") as f:
             document = json.load(f)
     except Exception as e:
-        return {'error': str(e)}
+        return {"error": str(e)}
 
     return document
 
 
 @app.task
 def validate_document(data):
-    '''
+    """
     validate_document
 
     input: Dict (document)
     output: Dict
     purpose: This function is used to validate a single document.
             If the file is missing required fields, a dictionary with an error key is returned
-    '''
-    if data.get('text', "") == "" or data.get('title', "") == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
-        logging.info(f"Document {data['id']} is missing required fields. Document not imported.")
-        return {'error': 'Document is missing required fields.'}
+    """
+    if (
+        data.get("text", "") == ""
+        or data.get("title", "") == ""
+        or data["text"] == "[deleted]"
+        or data["text"] == "[removed]"
+    ):
+        logging.info(
+            f"Document {data['id']} is missing required fields. Document not imported."
+        )
+        return {"error": "Document is missing required fields."}
 
-    document = {
-            'id': data['id'],
-            'title': data['title'],
-            'text': data['text']}
+    document = {"id": data["id"], "title": data["title"], "text": data["text"]}
 
     return document
 
 
 @app.task
 def read_and_validate_document(path_to_document):
-    '''
+    """
     read_and_validate_document
 
     input: String (Path to json file)
     output: Dict
     purpose: This function is used to read and validate a single document from a json file to a database
             If the file is missing required fields, a dictionary with an error key is returned
-    '''
+    """
     with open(path_to_document) as f:
-            data = json.load(f)
-    if data['text'] == "" or data['title'] == "" or data['text'] == '[deleted]' or data['text'] == '[removed]':
-        logging.info(f"Document {data['id']} is missing required fields. Document not imported.")
-        return {'error': 'Document is missing required fields.'}
+        data = json.load(f)
+    if (
+        data["text"] == ""
+        or data["title"] == ""
+        or data["text"] == "[deleted]"
+        or data["text"] == "[removed]"
+    ):
+        logging.info(
+            f"Document {data['id']} is missing required fields. Document not imported."
+        )
+        return {"error": "Document is missing required fields."}
 
-    document = {
-            'id': data['id'],
-            'title': data['title'],
-            'text': data['text']
-    }
+    document = {"id": data["id"], "title": data["title"], "text": data["text"]}
 
     return document
 
+
 # Write a new function - vectorize_text -> to check that it's actually working
 @app.task
-def vectorize_document(document): #(text) -> Vector
-    '''
+def vectorize_document(document):  # (text) -> Vector
+    """
     vectorize_document
 
     input: Dict
     output: Dict
     purpose: This function is used to update the dictionary with a vectorized version of the title and text
             (Ignores dictionaries containing error keys)
-    '''
+    """
     ## Call vectorize_text in this function - based on the text that you're getting from the document - second step after vectorize_text works
     print("is this here")
-    if 'error' not in document:
-        document['vector'] = vectorize_text([document['title']])
-        document['textVector'] = vectorize_text([document['text']])
+    if "error" not in document:
+        document["vector"] = vectorize_text([document["title"]])
+        document["textVector"] = vectorize_text([document["text"]])
         return document
     else:
         return document
 
+
 @app.task
-def vectorize_text(text): #(text) -> Vector
-    '''
+def vectorize_text(text):  # (text) -> Vector
+    """
     vectorize_text
 
     input: string
     output: numpy
     purpose: This function is used to return a vectorized version of the text
             (Assumes the text is error free)
-    '''
+    """
     print("is this here 2")
 
-    # import tensorflow_hub as hub 
+    # import tensorflow_hub as hub
     # embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
     # vector = embed([text]).numpy()[0].tolist()
     # return vector
-    
 
 
 ################################################################################
@@ -1449,24 +1564,29 @@ def snippet(*args, **kwargs):
 
     workflow_id = ObjectId(str(kwargs["workflow_id"]))
     userid = ObjectId(str(kwargs["userid"]))
-    document_id =  ObjectId(str(kwargs["document_id"]))
+    document_id = ObjectId(str(kwargs["document_id"]))
     text = kwargs["text"]
-    
+
     snip = {
         "document_id": document_id,
         "userid": userid,
         "text": text,
-        "vector": vectorize_text([text])
+        "vector": vectorize_text([text]),
     }
     session = db.sessions.find_one({"_id": workflow_id})
     history_item = session["history"][0]
     history_item["user"] = userid
-    history_item["action"] = f"Add snippet for session {workflow_id} and document {document_id}."
+    history_item["action"] = (
+        f"Add snippet for session {workflow_id} and document {document_id}."
+    )
 
     with transaction_session.start_transaction():
-        utils.push_history(db, "sessions", workflow_id, history_item, transaction_session)
+        utils.push_history(
+            db, "sessions", workflow_id, history_item, transaction_session
+        )
         db.snippets.insert_one(snip, session=transaction_session)
         utils.commit_with_retry(transaction_session)
+
 
 @app.task
 def create_child(*args, **kwargs):
@@ -1479,94 +1599,114 @@ def create_child(*args, **kwargs):
     """
     database = kwargs["database"]
     transaction_session, db = utils.create_transaction_session(db=database)
-        # When you do transaction, you want to do it inside this transaction session
-    with transaction_session.start_transaction(): 
+    # When you do transaction, you want to do it inside this transaction session
+    with transaction_session.start_transaction():
         document_id = ObjectId(str(kwargs["document_id"]))
-        start_index = kwargs['start_index']
-        
-        end_index = kwargs['end_index']
+        start_index = kwargs["start_index"]
+
+        end_index = kwargs["end_index"]
         document = db.documents.find_one({"_id": document_id})
-        #check to see if the end_index is lesser than the document's last index
+        # check to see if the end_index is lesser than the document's last index
         length_document = len(document["text"])
         if end_index >= length_document:
-            raise Exception(f'End_index {end_index} is outside bounds of document')
-        child_text = document["text"][start_index:end_index] 
+            raise Exception(f"End_index {end_index} is outside bounds of document")
+        child_text = document["text"][start_index:end_index]
         child_title = document["title"] + " child"
         child_id = f"{str(document_id)}#{str(start_index)}#{str(end_index)}"
         child_vector = vectorize_text([child_text])
-        child_document = schemas.create_document_object(child_title, child_id, child_vector, child_text, document)
-        inserted_document = db.documents.insert_one(child_document, session=transaction_session)
+        child_document = schemas.create_document_object(
+            child_title, child_id, child_vector, child_text, document
+        )
+        inserted_document = db.documents.insert_one(
+            child_document, session=transaction_session
+        )
         new_id = inserted_document.inserted_id
         print(child_id)
         utils.commit_with_retry(transaction_session)
     return {child_id, new_id}
-    
-    
+
+
 @app.task
-def mark(*args, database: str, userid: str, workflow_id: str, workspace_id: str, 
-         document_id: str, read: str, **kwargs):
+def mark(
+    *args,
+    database: str,
+    userid: str,
+    workflow_id: str,
+    workspace_id: str,
+    document_id: str,
+    read: str,
+    **kwargs,
+):
 
     transaction_session, db = utils.create_transaction_session(db=database)
-    
-    userid      = ObjectId(str(userid))
+
+    userid = ObjectId(str(userid))
     document_id = ObjectId(str(document_id))
-    workflow_id  = ObjectId(str(workflow_id))
-    
-    session     = db.sessions.find_one({"_id": workflow_id})
+    workflow_id = ObjectId(str(workflow_id))
+
+    session = db.sessions.find_one({"_id": workflow_id})
     history_item = session["history"][0]
     history_item["userid"] = userid
     history_item["action"] = f"Mark document read set to {read}."
 
-
-    db.documents.update_one({"_id": document_id}, {"$set": {"state.read": read}})        
+    db.documents.update_one({"_id": document_id}, {"$set": {"state.read": read}})
     utils.push_history(db, "teleoscopes", workflow_id, history_item)
 
 
 @app.task
-def chunk_upload(*args, 
-                 database: str, 
-                 userid: str,
-                 workspace: str,
-                 data):
+def chunk_upload(*args, database: str, userid: str, workspace: str, data):
     workspace = ObjectId(str(workspace))
     db = utils.connect(db=database)
     documents = []
     rows = [row["values"] for row in data["rows"]]
     for row in rows:
         document = {
-            'text': row["text"],
-            'title': row["title"],
-            'relationships': {},
-            'metadata': json.loads(json.dumps(row)),  # Convert row to JSON
-            'state': {"read": False}
+            "text": row["text"],
+            "title": row["title"],
+            "relationships": {},
+            "metadata": json.loads(json.dumps(row)),  # Convert row to JSON
+            "state": {"read": False},
         }
         documents.append(document)
-    
+
     session = db.client.start_session()
 
     try:
         with session.start_transaction():
-            inserted_ids = db.documents.insert_many(documents, session=session).inserted_ids
+            inserted_ids = db.documents.insert_many(
+                documents, session=session
+            ).inserted_ids
             bulk_operations = []
 
             for row, doc_id in zip(rows, inserted_ids):
                 if "group" in row:
                     filter = {"label": row["group"], "workspace": workspace}
                     update = {
-                        "$setOnInsert": {"label": row["group"], "workspace": workspace, "documents": []},
-                        "$addToSet": {"documents": ObjectId(doc_id)}
+                        "$setOnInsert": {
+                            "label": row["group"],
+                            "workspace": workspace,
+                            "documents": [],
+                        },
+                        "$addToSet": {"documents": ObjectId(doc_id)},
                     }
                     bulk_operations.append(UpdateOne(filter, update, upsert=True))
 
             if len(bulk_operations) > 0:
                 result = db.groups.bulk_write(bulk_operations, session=session)
-                print(f"Inserted: {result.upserted_count}, Matched: {result.matched_count}")
+                print(
+                    f"Inserted: {result.upserted_count}, Matched: {result.matched_count}"
+                )
 
-            milvus_chunk_import.apply_async(kwargs={
-                'database': database,
-                'userid': userid,
-                'documents': inserted_ids
-            }, queue=RABBITMQ_TASK_QUEUE)
+            app.send_task(
+                "backend.vectorizer.milvus_chunk_import",
+                args=[],
+                kwargs={
+                    "database": database,
+                    "userid": userid,
+                    "documents": inserted_ids,
+                },
+                queue="vectorizer",
+            )
 
         session.commit_transaction()
     except (OperationFailure, ConfigurationError) as e:
@@ -1575,23 +1715,23 @@ def chunk_upload(*args,
     finally:
         session.end_session()
 
-    
-
-
 
 @app.task
-def file_upload(*args, 
-                database: str, 
-                userid: str,
-                workspace: str,
-                path: str, 
-                mimetype: str, 
-                headerLine: int, 
-                uniqueId: str, 
-                title: str, 
-                text: str, 
-                groups: list, **kwargs):
-    
+def file_upload(
+    *args,
+    database: str,
+    userid: str,
+    workspace: str,
+    path: str,
+    mimetype: str,
+    headerLine: int,
+    uniqueId: str,
+    title: str,
+    text: str,
+    groups: list,
+    **kwargs,
+):
+
     df = None
 
     if mimetype == "text/csv":
@@ -1602,26 +1742,28 @@ def file_upload(*args,
     db = utils.connect(db=database)
     # Process each row
     for batch in itertools.batched(df.iterrows(), 1000):
-        
+
         # schema = yaml.safe_load(file)
 
         documents = []
         for _, row in batch:
             doc = {
-                'text': row[text],
-                'title': row[title],
-                'relationships': {},
-                'metadata': json.loads(row.to_json()),
-                'state': {"read": False}
+                "text": row[text],
+                "title": row[title],
+                "relationships": {},
+                "metadata": json.loads(row.to_json()),
+                "state": {"read": False},
             }
             # doc = schemas.create_document_object(row[title], [], row[text], metadata=json.loads(row.to_json()))
             documents.append(doc)
         inserted_result = db.documents.insert_many(documents)
-    
-    inserted_documents = db.documents.find({"_id": { "$in": inserted_result.inserted_ids}})
+
+    inserted_documents = db.documents.find(
+        {"_id": {"$in": inserted_result.inserted_ids}}
+    )
 
     logging.info(f"There were {len(inserted_result.inserted_ids)} documents uploaded.")
-    
+
     logging.info(inserted_result.inserted_ids)
 
     # Initialize an empty set to store the combined unique values
@@ -1632,37 +1774,43 @@ def file_upload(*args,
     for column in groups:
         # Update the set with unique values from the current column
         unique_values.update(df[column].unique())
-    
+
     group_map = dict()
 
     for group in unique_values:
         color = utils.random_color()
 
-        res = add_group(database=database, userid=userid, workspace=workspace,
-                        color=color, label=str(group))
-        
+        res = add_group(
+            database=database,
+            userid=userid,
+            workspace=workspace,
+            color=color,
+            label=str(group),
+        )
+
         group_map[group] = res
-    
+
     for inserted_doc in inserted_documents:
         logging.info(f"Inserting {inserted_doc} to the right groups.")
         for group in unique_values:
             keys = [inserted_doc["metadata"][g] for g in groups]
             if group in keys:
-                add_document_to_group(database=database, userid=userid, 
-                    group_id=group_map[group], document_id=inserted_doc["_id"])
+                add_document_to_group(
+                    database=database,
+                    userid=userid,
+                    group_id=group_map[group],
+                    document_id=inserted_doc["_id"],
+                )
 
-        
-    # milvus_import(database=database, userid=userid)
-    milvus_import.apply_async(kwargs={
-        'database': database,
-        'userid': userid,
-    }, queue=RABBITMQ_TASK_QUEUE)
-
-
-
-@app.task
-def milvus_chunk_import(*args, database, userid, documents, **kwargs):
-    embeddings.milvus_chunk_import(database=database, userid=userid, documents=documents)
+    app.send_task(
+        "backend.vectorizer.milvus_import",
+        args=[],
+        kwargs={
+            "database": database,
+            "userid": userid,
+        },
+        queue="vectorizer",
+    )
 
 
 @app.task
@@ -1672,9 +1820,9 @@ def milvus_import(*args, database, userid, **kwargs):
 
 @app.task
 def ping(*args, database: str, userid: str, message: str, replyTo: str, **kwargs):
-    
+
     userid = ObjectId(str(userid))
-                      
+
     msg = f"ping queue for user {userid} and database {database} with {kwargs}"
     logging.info(f"Received a ping: {message}")
 
@@ -1685,16 +1833,17 @@ def ping(*args, database: str, userid: str, message: str, replyTo: str, **kwargs
 def ping_rabbit(msg):
     logging.info(msg)
 
+
 @app.task
-def vectorize_and_upload_text(text, database, id): #(text) -> Vector
-    '''
+def vectorize_and_upload_text(text, database, id):  # (text) -> Vector
+    """
     vectorize__and_upload_text
 
     input: string
     output: numpy
     purpose: This function is used to return a vectorized version of the text
             (Assumes the text is error free)
-    '''
+    """
     # import tensorflow_hub as hub
     # embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
 
@@ -1702,17 +1851,19 @@ def vectorize_and_upload_text(text, database, id): #(text) -> Vector
     db = utils.connect(db=database)
     db.documents.update_one(
         {"_id": ObjectId(str(id))},
-        { "$set": {
-            # "textVector" : vector
-        }}
+        {
+            "$set": {
+                # "textVector" : vector
+            }
+        },
     )
     print(f"Vectorized and uploaded {id}.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     worker = app.Worker(
-        include=['backend.tasks'], 
+        include=["backend.tasks"],
         hostname=f"tasks.{os.getlogin()}@%h{uuid.uuid4()}",
-        loglevel="INFO"
+        loglevel="INFO",
     )
     worker.start()
