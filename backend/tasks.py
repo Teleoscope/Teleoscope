@@ -1681,15 +1681,17 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, data):
             for row, doc_id in zip(rows, inserted_ids):
                 if "group" in row:
                     filter = {"label": row["group"], "workspace": workspace}
-                    update = {
+                    ensure_group = {
                         "$setOnInsert": {
                             "label": row["group"],
                             "workspace": workspace,
                             "documents": [],
                         },
-                        "$addToSet": {"documents": ObjectId(doc_id)},
                     }
-                    bulk_operations.append(UpdateOne(filter, update, upsert=True))
+                    bulk_operations.append(UpdateOne(filter, ensure_group, upsert=True))
+                    
+                    add_doc = {"$addToSet": {"documents": ObjectId(doc_id)}}
+                    bulk_operations.append(UpdateOne(filter, add_doc))
 
             if len(bulk_operations) > 0:
                 result = db.groups.bulk_write(bulk_operations, session=session)
