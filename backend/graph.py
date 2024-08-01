@@ -448,8 +448,13 @@ def update_rank(
             limit=10000,
         )
 
-        ranks = zip(results[0].ids, results[0].distances)
-        doclists.append({"ranked_documents": list(ranks), "type": "All"})
+        ranks = [(result["id"], float(result["distance"])) for result in results[0]]
+        doclists.append({
+            "reference": None,
+            "uid": None,
+            "ranked_documents": ranks,
+            "type": "All"
+        })
 
     else:
         source_nodes = mdb.graph.find({"uid": {"$in": sources}})

@@ -233,6 +233,14 @@ export const WindowConfig = {
     icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><CgPathUnite style={{ display: "inline" }} /></IconContext.Provider>,
     component: (props: WindowProps) => <Union {...props} />,
   },
+  All: {
+    type:      "All",
+    apipath:   "graph",
+    nodetype: OperationNode,
+    title:     function () {return this.type},
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><CgPathUnite style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <Union {...props} />,
+  },
   undefined: {
     type:      "boop",
     apipath:   "blip",

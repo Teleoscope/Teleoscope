@@ -34,7 +34,9 @@ export default async function initialize_user(
             emails: [email.toString()],
             hashed_password: hashedPassword
         };
-        const user_result = await db.collection<Users>('users').insertOne(user, { session });
+        const user_result = await db
+            .collection<Users>('users')
+            .insertOne(user, { session });
 
         // Find the default plan
         const default_plan = Plans.find((plan) => plan.name === 'Default');
@@ -64,7 +66,9 @@ export default async function initialize_user(
             }
         };
 
-        const account_result = await db.collection('accounts').insertOne(account_doc, { session });
+        const account_result = await db
+            .collection('accounts')
+            .insertOne(account_doc, { session });
 
         // Create a default team
         const team: Teams = {
@@ -74,7 +78,9 @@ export default async function initialize_user(
             workspaces: [],
             users: []
         };
-        const team_result = await db.collection('teams').insertOne(team, { session });
+        const team_result = await db
+            .collection('teams')
+            .insertOne(team, { session });
 
         // Create a default workspace
         const workspace: Workspaces = {
@@ -85,16 +91,21 @@ export default async function initialize_user(
                 document_height: 35,
                 document_width: 100,
                 expanded: false
-            }
+            },
+            selected_workflow: null
         };
-        const workspace_result = await db.collection<Workspaces>('workspaces').insertOne(workspace, { session });
+        const workspace_result = await db
+            .collection<Workspaces>('workspaces')
+            .insertOne(workspace, { session });
 
         // Update the team with the new workspace
-        await db.collection<Teams>('teams').updateOne(
-            { _id: team_result.insertedId },
-            { $push: { workspaces: workspace_result.insertedId } },
-            { session }
-        );
+        await db
+            .collection<Teams>('teams')
+            .updateOne(
+                { _id: team_result.insertedId },
+                { $push: { workspaces: workspace_result.insertedId } },
+                { session }
+            );
 
         // Create a default workflow
         const workflow: Workflows = {
@@ -114,12 +125,19 @@ export default async function initialize_user(
             last_update: new Date().toISOString(),
             logical_clock: 100
         };
-        const workflow_result = await db.collection<Workflows>('workflows').insertOne(workflow, { session });
+        const workflow_result = await db
+            .collection<Workflows>('workflows')
+            .insertOne(workflow, { session });
 
         // Update the workspace with the new workflow
         await db.collection<Workspaces>('workspaces').updateOne(
             { _id: workspace_result.insertedId },
-            { $push: { workflows: workflow_result.insertedId } },
+            {
+                $push: { workflows: workflow_result.insertedId },
+                $set: {
+                    selected_workflow: workflow_result.insertedId
+                }
+            },
             { session }
         );
 
@@ -158,19 +176,25 @@ export default async function initialize_user(
                 });
 
                 // Update the account with the Stripe customer ID
-                await db.collection('accounts').updateOne(
-                    { _id: account_result.insertedId },
-                    { $set: { stripe_id: new_customer.id } },
-                    { session }
-                );
+                await db
+                    .collection('accounts')
+                    .updateOne(
+                        { _id: account_result.insertedId },
+                        { $set: { stripe_id: new_customer.id } },
+                        { session }
+                    );
 
                 await session.commitTransaction();
-                console.log('Transaction committed. New user and customer created.');
+                console.log(
+                    'Transaction committed. New user and customer created.'
+                );
             } else {
-
-
                 throw new Error(`Stripe default subscriptions error: 
-                    ${util.inspect(default_subscriptions, { showHidden: false, depth: 3, colors: true })}
+                    ${util.inspect(default_subscriptions, {
+                        showHidden: false,
+                        depth: 3,
+                        colors: true
+                    })}
                 `);
             }
         } else {
@@ -180,7 +204,10 @@ export default async function initialize_user(
         await session.abortTransaction();
         console.error('Transaction aborted due to an error:', error);
         if (error instanceof MongoServerError && error.code === 121) {
-            console.error('Document failed validation:', JSON.stringify(error, null, 2));
+            console.error(
+                'Document failed validation:',
+                JSON.stringify(error, null, 2)
+            );
         }
         throw error;
     } finally {
