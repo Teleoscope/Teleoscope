@@ -1,14 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import crypto from 'crypto';
-import post from '@/lib/client';
 import appState, {
     updateEdges,
     updateNodes,
     updateSearch,
     makeGroupFromBookmarks,
-    initializeProjection,
     removeCluster,
-    relabelProjection,
     removeWorkflow,
     addGroup,
     recolorGroup,
@@ -17,8 +14,6 @@ import appState, {
     removeDocumentFromGroup,
     addDocumentToGroup,
     copyCluster,
-    saveUIState,
-    updateNote,
     addNote,
     relabelNote,
     removeNote,
@@ -27,7 +22,6 @@ import appState, {
     makeEdge,
     setColor,
     relabelWorkflow,
-    removeProjection,
     updateTimestamps,
     loadAppData,
     dropNode,
@@ -100,15 +94,15 @@ const actionMiddleware = (store) => (next) => (action) => {
         });
     }
 
-    if (action.type === updateNodes.type || 
-        action.type === updateEdges.type ||
-        action.type === updateNode.type ||
-        action.type === updateNote.type ||
-        action.type === makeEdge.type ||
-        action.type === addDocumentToGroup.type ||
-        action.type === removeDocumentFromGroup.type) {
-            
-        }
+    // if (action.type === updateNodes.type ||
+    //     action.type === updateEdges.type ||
+    //     action.type === updateNode.type ||
+    //     action.type === updateNote.type ||
+    //     action.type === makeEdge.type ||
+    //     action.type === addDocumentToGroup.type ||
+    //     action.type === removeDocumentFromGroup.type) {
+
+    // }
 
     if (action.type === dropNode.type) {
         const uid = crypto.randomBytes(8).toString('hex');
@@ -257,17 +251,19 @@ const actionMiddleware = (store) => (next) => (action) => {
                 edge.target in remove_ids || edge.source in remove_ids
         );
 
-        store.dispatch(
-            updateEdges({
-                changes: edgesToRemove.map((edge: Edge) => {
-                    const change: EdgeRemoveChange = {
-                        id: edge.id,
-                        type: 'remove'
-                    };
-                    return change;
+        if (edgesToRemove.length > 0) {
+            store.dispatch(
+                updateEdges({
+                    changes: edgesToRemove.map((edge: Edge) => {
+                        const change: EdgeRemoveChange = {
+                            id: edge.id,
+                            type: 'remove'
+                        };
+                        return change;
+                    })
                 })
-            })
-        );
+            );
+        }
 
         if (remove_ids.length > 0) {
             const remove_node = axios.post(`/api/graph/remove`, {
@@ -573,59 +569,108 @@ const actionMiddleware = (store) => (next) => (action) => {
             );
     }
 
-    const callPost = (task_name: string) => {
+    if (action.type === mark.type) {
         const { appState }: { appState: AppState } = store.getState();
-        return post({
-            task: task_name,
-            args: {
-                ...headers(appState),
-                ...action.payload
-            }
+        const { _id: workspace_id } = appState.workspace;
+        axios
+            .post(`/api/document/mark`, {
+                workspace_id: workspace_id,
+                read: action.payload.read,
+                document: action.payload.document_id
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' &&
+                        key.startsWith(
+                            `/api/document?document=${action.payload.document_id}`
+                        )
+                )
+            );
+    }
+
+    if (action.type === relabelWorkflow.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/workflow/relabel`, {
+            workspace_id: workspace_id,
+            workflow_id: workflow_id,
+            label: action.payload.document_id
         });
-    };
+    }
+
+    if (action.type === relabelNote.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/note/relabel`, {
+            workspace_id: workspace_id,
+            note_id: action.payload.note_id,
+            label: action.payload.label
+        }).then(() => mutate(
+            (key) =>
+                typeof key === 'string' &&
+                key.startsWith(
+                    `/api/note?note=${action.payload.note_id}`
+                )
+        ));;
+    }
+
+    if (action.type === relabelGroup.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/group/relabel`, {
+            workspace_id: workspace_id,
+            group_id: action.payload.group_id,
+            label: action.payload.label
+        }).then(() => mutate(
+            (key) =>
+                typeof key === 'string' &&
+                key.startsWith(
+                    `/api/group?group=${action.payload.group_id}`
+                )
+        ));
+    }
+
+    if (action.type === recolorGroup.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/group/recolor`, {
+            workspace_id: workspace_id,
+            group_id: action.payload.group_id,
+            color: action.payload.color
+        }).then(() => mutate(
+            (key) =>
+                typeof key === 'string' &&
+                key.startsWith(
+                    `/api/group?group=${action.payload.group_id}`
+                )
+        ));
+    }
+
+    if (action.type === updateSearch.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/search/update`, {
+            workspace_id: workspace_id,
+            search_id: action.payload.search_id,
+            query: action.payload.query
+        });
+    }
 
     switch (action.type) {
-        case relabelWorkflow.type:
-            // callPost('relabel_workflow');
-            break;
-        case updateSearch.type:
-            // callPost('update_search');
-            break;
         case copyDoclistsToGroups.type:
             // callPost('copy_doclists_to_groups');
             break;
         case removeCluster.type:
             // callPost('remove_cluster');
             break;
-        case initializeProjection.type:
-            // callPost('initialize_projection');
-            break;
-        case relabelProjection.type:
-            // callPost('relabel_projection');
-            break;
-        case removeProjection.type:
-            // callPost('remove_projection');
-            break;
-        case recolorGroup.type:
-            // callPost('recolor_group');
-            break;
-        case relabelGroup.type:
-            // callPost('relabel_group');
-            break;
-        case mark.type:
-            // callPost('mark');
-            break;
         case copyCluster.type:
             // callPost('copy_cluster');
-            break;
-        case saveUIState.type:
-            // callPost('save_UI_state');
-            break;
-        case updateNote.type:
-            // callPost('update_note');
-            break;
-        case relabelNote.type:
-            // callPost('relabel_note');
             break;
     }
 

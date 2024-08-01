@@ -86,7 +86,7 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
                 if (target.data.type == 'Groups') {
                     dispatch(
                         copyCluster({
-                            graph_id: node.id.split('%')[0],
+                            graph_id: node.id,
                             workflow_id: workflow_id
                         })
                     ); // TODO: ADD index here

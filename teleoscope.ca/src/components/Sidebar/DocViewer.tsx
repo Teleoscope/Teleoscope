@@ -14,9 +14,10 @@ import { useSWRF } from "@/lib/swr";
 import WindowDefinitions from "../WindowFolder/WindowDefinitions";
 import { useAppSelector } from "@/lib/hooks";
 
-export default function DocViewer({ reference }) {
+export default function DocViewer({ reference, id=null }: {reference: string, id: null | string}) {
   const [isOpen, setIsOpen] = useState(true);
-  const { data: document } = useSWRF(reference ? `/api/document?document=${reference}`:null);
+  const ref = reference ? reference : id
+  const { data: document } = useSWRF(ref ? `/api/document?document=${ref}`:null);
   const { color } = useAppSelector((state) => state.appState.workflow.settings);
 
   return (
