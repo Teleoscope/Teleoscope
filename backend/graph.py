@@ -77,13 +77,16 @@ app.conf.update(
 ################################################################################
 @app.task
 def update_nodes(*args, database: str, node_uids: List[str], **kwargs):
+    logging.info(f"Updating {len(node_uids)} nodes.")
     db = utils.connect(db=database)
     for node_uid in node_uids:
         graph_uid(db, node_uid)
+    return
 
 
 @app.task
 def milvus_chunk_import(database: str, userid: str, documents):
+    logging.info(f"Recieved an import chunk of length {len(documents)} for database {database}")
     client = embeddings.connect()
     embeddings.milvus_setup(client, collection_name=database)
     mongo_db = utils.connect(db=database)
@@ -100,6 +103,7 @@ def milvus_import(
     database: str,
     userid: str,
 ):
+    logging.info(f"Vectorizing all documents in database {database}.")
     client = embeddings.connect()
     embeddings.milvus_setup(client, collection_name=database)
 
@@ -114,6 +118,7 @@ def milvus_import(
 
 @app.task
 def update_vectors(database: str, documents):
+    logging.info(f"Updating {len(documents)} vectors in database {database}.")
     client = embeddings.connect()
     embeddings.milvus_setup(client, collection_name=database)
     data = vectorize(documents)
@@ -122,6 +127,7 @@ def update_vectors(database: str, documents):
 
 @app.task
 def vectorize(documents):
+    logging.info(f"Vectorizing {len(documents)} documents.")
     ids = [str(doc["_id"]) for doc in documents]
     raw_embeddings = model.encode([doc["text"] for doc in documents])["dense_vecs"]
     embeddings = [embedding.tolist() for embedding in raw_embeddings]
@@ -140,6 +146,8 @@ def graph_uid(db, uid):
     if not node:
         logging.info(f"No node found for {uid}.")
         return
+    else:
+        logging.info(f"Updating node {uid} with type {node["type"]}.")
 
     sources = node["edges"]["source"]
     controls = node["edges"]["control"]
