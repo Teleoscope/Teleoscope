@@ -664,13 +664,10 @@ const actionMiddleware = (store) => (next) => (action) => {
 
     switch (action.type) {
         case copyDoclistsToGroups.type:
-            // callPost('copy_doclists_to_groups');
             break;
         case removeCluster.type:
-            // callPost('remove_cluster');
             break;
         case copyCluster.type:
-            // callPost('copy_cluster');
             break;
     }
 

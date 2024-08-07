@@ -1,14 +1,10 @@
 from bson.objectid import ObjectId
-from pymongo import MongoClient, database
+from pymongo import database
 from typing import List
 import numpy as np
 import logging
-from pymilvus import MilvusClient, DataType
-from pprint import pformat
-from functools import reduce
 
 from backend import embeddings
-from . import schemas
 from . import utils
 from . import projection
 
@@ -18,168 +14,126 @@ from dotenv import load_dotenv
 load_dotenv()  # This loads the variables from .env
 import os
 
-MILVUS_HOST = os.getenv("MILVUS_HOST")
-MIVLUS_PORT = os.getenv("MIVLUS_PORT")
-MILVUS_USERNAME = os.getenv("MILVUS_USERNAME")
-MILVUS_PASSWORD = os.getenv("MILVUS_PASSWORD")
-MILVUS_DBNAME = os.getenv("MILVUS_DBNAME")
-MILVUS_METRIC_TYPE = os.getenv("MILVUS_METRIC_TYPE")
+
+
+import os
+import multiprocessing
+from platform import system
+from pymongo import database
+from typing import List
+
+# Set the multiprocessing start method at the very beginning
+if system() == "Darwin":  # macOS
+    multiprocessing.set_start_method("spawn", force=True)
+else:
+    multiprocessing.set_start_method("fork", force=True)
+
+from bson import ObjectId
+import logging
+import itertools
+import uuid
+from celery import Celery
+from kombu import Exchange, Queue
+
+from . import embeddings
+from . import utils
+
+from FlagEmbedding import BGEM3FlagModel
+
+# Define a global model variable
+model = None
+
+# RabbitMQ connection details
+RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
+RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
+RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST")
+RABBITMQ_TASK_QUEUE = os.getenv("RABBITMQ_TASK_QUEUE")
+
+# Broker URL for Celery
+CELERY_BROKER_URL = (
+    f"amqp://"
+    f"{RABBITMQ_USERNAME}:"
+    f"{RABBITMQ_PASSWORD}@"
+    f"{RABBITMQ_HOST}/"
+    f"{RABBITMQ_VHOST}"
+)
+
+# Queue and Celery app setup
+queue = Queue("graph", Exchange("graph"), "graph")
+app = Celery("backend.graph", backend="rpc://", broker=CELERY_BROKER_URL)
+
+app.conf.update(
+    task_serializer="pickle",
+    accept_content=["pickle", "json"],  # Ignore other content
+    result_serializer="pickle",
+    task_queues=[queue],
+    worker_concurrency=1,
+)
+
+
+################################################################################
+# Tasks to register
+################################################################################
+@app.task
+def update_nodes(*args, database: str, node_uids: List[str], **kwargs):
+    db = utils.connect(db=database)
+    for node_uid in node_uids:
+        graph_uid(db, node_uid)
+
+
+@app.task
+def milvus_chunk_import(database: str, userid: str, documents):
+    client = embeddings.connect()
+    embeddings.milvus_setup(client, collection_name=database)
+    mongo_db = utils.connect(db=database)
+    docs = mongo_db.documents.find(
+        {"_id": {"$in": [ObjectId(str(d)) for d in documents]}}
+    )
+    data = vectorize(list(docs))
+    res = client.upsert(collection_name=database, data=data)
+
+
+@app.task
+def milvus_import(
+    *args,
+    database: str,
+    userid: str,
+):
+    client = embeddings.connect()
+    embeddings.milvus_setup(client, collection_name=database)
+
+    mongo_db = utils.connect(db=database)
+
+    documents = mongo_db.documents.find({})
+    for batch in itertools.batched(documents, 1000):
+        data = vectorize(batch)
+        res = client.upsert(collection_name=database, data=data)
+    return res
+
+
+@app.task
+def update_vectors(database: str, documents):
+    client = embeddings.connect()
+    embeddings.milvus_setup(client, collection_name=database)
+    data = vectorize(documents)
+    client.upsert(collection_name=database, data=data)
+
+
+@app.task
+def vectorize(documents):
+    ids = [str(doc["_id"]) for doc in documents]
+    raw_embeddings = model.encode([doc["text"] for doc in documents])["dense_vecs"]
+    embeddings = [embedding.tolist() for embedding in raw_embeddings]
+    logging.info(f"{len(embeddings)} embeddings created.")
+    data = [{"id": id_, "vector": embedding} for id_, embedding in zip(ids, embeddings)]
+    return data
+
+
 
 ################################################################################
 # Graph API
 ################################################################################
-
-
-def make_node(
-    db: database.Database,
-    workflow_id: ObjectId,
-    oid: ObjectId,
-    node_type: schemas.NodeType,
-):
-    """Make a node in the graph.
-
-    Groups, Documents, and Searches are only sources.
-    Operations are sources or targets.
-
-    Every pure source has only one corresponding graph item.
-    Every operation can have as many graph items as nodes on graph.
-    You can convert any graph item into a group.
-
-    Args:
-        oid: The OID for the workspace item.
-        node_type: the type of node to create for the workspace item.
-
-    Returns:
-        The inserted graph node.
-    """
-
-    # make a default node
-    node = schemas.create_node(node_type, workflow_id, oid)
-    node["matrix"] = make_matrix(oid, node_type)
-    node["parameters"] = schemas.create_node_parameters(node_type)
-    res = db.graph.insert_one(node)
-    node = db.graph.find_one({"_id": res.inserted_id})
-
-    return node
-
-
-def make_edge(
-    db: database.Database,
-    workflow_id: ObjectId,
-    source_oid: ObjectId,
-    source_type: schemas.NodeType,
-    target_oid: ObjectId,
-    target_type: schemas.NodeType,
-    edge_type: schemas.EdgeType,
-):
-    """Makes a new edge in the graph.
-
-    Args:
-        source_oid:
-            The OID for the workspace item that is being connected from. Can
-            be either direct a graph node or a workspace item that doesn't
-            yet have a graph node.
-
-        source_type:
-            Type of the source workspace item or node.
-
-        target_oid:
-            The OID for the workspace item that is being connected to. All
-            targets must already exist as nodes in the graph.
-
-        target_type:
-            Type of the target node.
-
-        edge_type:
-            Type of the edge to create.
-
-    Effects:
-        Creates edges in the database between nodes.
-
-    Returns:
-        None
-    """
-
-    source = db.graph.find_one(source_oid)
-    target = db.graph.find_one(target_oid)
-
-    if type(source["reference"]) != ObjectId:
-        source["reference"] = source["_id"]
-
-    if type(target["reference"]) != ObjectId:
-        target["reference"] = target["_id"]
-
-    if source == None or target == None:
-        raise Exception("Source or target node is None.")
-
-    # Update source to include outgoing edge to target.
-    db.graph.update_one(
-        {"_id": source["_id"]},
-        {
-            "$addToSet": {
-                f"edges.output": schemas.create_edge(
-                    target["reference"], target_oid, target_type
-                )
-            }
-        },
-    )
-
-    # Update target to include incoming edge from source.
-    db.graph.update_one(
-        {"_id": target["_id"]},
-        {
-            "$addToSet": {
-                f"edges.{edge_type}": schemas.create_edge(
-                    source["reference"], source_oid, source_type
-                )
-            }
-        },
-    )
-
-    # recalculate the graph from this node on
-    graph(db, target_oid)
-
-
-def remove_edge(
-    db: database.Database,
-    source_oid: ObjectId,
-    target_oid: ObjectId,
-    edge_type: schemas.EdgeType,
-):
-    """Removes an edge from the graph."""
-
-    # There may be multiple corresponding nodes for this source_oid
-    # but there should be only one possible target_oid since each target is unique
-    source = db.graph.find_one(
-        {
-            "$or": [
-                {"reference": source_oid, "edges.output.nodeid": target_oid},
-                {"_id": source_oid, "edges.output.nodeid": target_oid},
-            ]
-        }
-    )
-
-    db.graph.update_one(
-        {"_id": source["_id"]}, {"$pull": {"edges.output": {"nodeid": target_oid}}}
-    )
-
-    db.graph.update_one(
-        {"_id": target_oid},
-        {"$pull": {f"edges.{edge_type}": {"nodeid": source["_id"]}}},
-    )
-
-    graph(db, target_oid)
-
-    return
-
-
-def update_nodes(db: database.Database, node_uids: List[str]):
-    for node_uid in node_uids:
-        graph_uid(db, node_uid)
-
-    # pass
-
-
 def graph_uid(db, uid):
     db.graph.update_one({"uid": uid}, {"$set": {"doclists": []}})
     node = db.graph.find_one({"uid": uid})
@@ -227,79 +181,9 @@ def graph_uid(db, uid):
     return res
 
 
-def graph(db: database.Database, node_oid: ObjectId):
-    """Recalculates all nodes to the right of specified node."""
-
-    db.graph.update_one({"_id": ObjectId(str(node_oid))}, {"$set": {"doclists": []}})
-    node = db.graph.find_one({"_id": ObjectId(str(node_oid))})
-
-    sources = node["edges"]["source"]
-    controls = node["edges"]["control"]
-    outputs = node["edges"]["output"]
-
-    parameters = node["parameters"]
-    node_type = node["type"]
-
-    match node_type:
-        case "Document":
-            node = update_document(db, node, parameters)
-        case "Group":
-            node = update_group(db, node, parameters)
-        case "Search":
-            node = update_search(db, node, parameters)
-        case "Note":
-            node = update_note(db, node, parameters)
-        case "Teleoscope":
-            node = update_teleoscope_milvus(db, node, sources, controls, parameters)
-        case "Projection":
-            node = update_projection(db, node, sources, controls, parameters)
-        case "Union":
-            node = update_union(db, node, sources, controls, parameters)
-        case "Intersection":
-            node = update_intersection(db, node, sources, controls, parameters)
-        case "Exclusion":
-            node = update_exclusion(db, node, sources, controls, parameters)
-        case "Difference":
-            node = update_difference(db, node, sources, controls, parameters)
-        case "Filter":
-            node = update_filter(db, node, sources, controls, parameters)
-
-    res = db.graph.replace_one({"_id": node_oid}, pformat(node))
-
-    # Calculate each node downstream to the right.
-    for edge in outputs:
-        graph(db, edge["nodeid"])
-
-    return res
-
-
-################################################################################
-# Helpers
-################################################################################
-def make_matrix(node_type: schemas.NodeType, oid: ObjectId):
-    return []
-
-
-def update_matrix(oid: ObjectId, node_type: schemas.NodeType, graph_oid: ObjectId):
-    return []
-
-
-def update_parameters(db, node, parameters):
-    collection = utils.get_collection(db, node["type"])
-    params = node["parameters"]
-
-    for key, value in parameters.items():
-        params[key] = value
-
-    res = collection.update_one({"_id": node["_id"]}, {"$set": {"parameters": params}})
-    return res
-
-
 ################################################################################
 # Update Document
 ################################################################################
-
-
 def update_document(db: database.Database, document_node, parameters):
     document_id = ObjectId(str(document_node["reference"]))
     doclist = {
@@ -315,8 +199,6 @@ def update_document(db: database.Database, document_node, parameters):
 ################################################################################
 # Update Group
 ################################################################################
-
-
 def update_group(db: database.Database, group_node, parameters):
     group_id = ObjectId(str(group_node["reference"]))
     group = db.groups.find_one(group_id)
@@ -335,8 +217,6 @@ def update_group(db: database.Database, group_node, parameters):
 ################################################################################
 # Update Note
 ################################################################################
-
-
 def update_note(db: database.Database, note_node, parameters):
     note_id = ObjectId(str(note_node["reference"]))
     note = db.notes.find_one(note_id)
@@ -356,8 +236,6 @@ def update_note(db: database.Database, note_node, parameters):
 ################################################################################
 # Update Search
 ################################################################################
-
-
 def update_search(db: database.Database, search_node, parameters):
     search_id = ObjectId(str(search_node["reference"]))
     search = db.searches.find_one(search_id)
@@ -379,8 +257,6 @@ def update_search(db: database.Database, search_node, parameters):
 ################################################################################
 # Update Rank
 ################################################################################
-
-
 def update_rank(
     mdb: database.Database, rank_node, sources: List, controls: List, parameters
 ):
@@ -404,7 +280,9 @@ def update_rank(
 
     # unpack results
     control_vectors = [np.array(res["vector"]) for res in milvus_results]
-    logging.info(f"Found {len(control_vectors)} vectors for {len(control_oids)} controls.")
+    logging.info(
+        f"Found {len(control_vectors)} vectors for {len(control_oids)} controls."
+    )
 
     # average the control vectors to create a rank search vector
     search_vector = np.average(control_vectors, axis=0)
@@ -449,12 +327,9 @@ def update_rank(
         )
 
         ranks = [(result["id"], float(result["distance"])) for result in results[0]]
-        doclists.append({
-            "reference": None,
-            "uid": None,
-            "ranked_documents": ranks,
-            "type": "All"
-        })
+        doclists.append(
+            {"reference": None, "uid": None, "ranked_documents": ranks, "type": "All"}
+        )
 
     else:
         source_nodes = mdb.graph.find({"uid": {"$in": sources}})
@@ -489,8 +364,6 @@ def update_rank(
 ################################################################################
 # Update Projection
 ################################################################################
-
-
 def update_projection(
     db: database.Database, projection_node, sources: List, controls: List, parameters
 ):
@@ -513,11 +386,16 @@ def update_projection(
                     f"This node type cannot be the only control input. Returning original projection node."
                 )
                 return projection_node
-    
-    ranked_documents_count = sum([
-        sum(len(doclist['ranked_documents']) for doclist in control_graph_item['doclists'])
-        for control_graph_item in control_graph_items
-    ])
+
+    ranked_documents_count = sum(
+        [
+            sum(
+                len(doclist["ranked_documents"])
+                for doclist in control_graph_item["doclists"]
+            )
+            for control_graph_item in control_graph_items
+        ]
+    )
 
     if ranked_documents_count <= 4:
         logging.info(
@@ -641,3 +519,26 @@ def update_exclusion(db, node, sources: List, controls: List, parameters):
 
 def update_filter(db, node, sources: List, controls: List, parameters):
     return node  # stub
+
+
+################################################################################
+# Main for Celery worker
+################################################################################
+if __name__ == "__main__":
+
+    if model is None:
+        model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
+
+    worker = app.Worker(
+        include=["backend.graph"],
+        hostname=f"graph.{os.getlogin()}@%h{uuid.uuid4()}",
+        loglevel="INFO",
+    )
+    worker.start()
+    (
+        [
+            "worker",
+            "--loglevel=INFO",
+            f"--hostname=graph.{os.getlogin()}@%h{uuid.uuid4()}",
+        ]
+    )

@@ -1,76 +1,62 @@
 # builtin modules
-import json
 import numpy as np
-import pymongo.collection
-from tqdm import tqdm
 import heapq
-import re
-import pika
 import os
-import pymilvus
 
 # installed modules
 from pymongo import MongoClient, database
-import pymongo.errors
-import logging 
-from bson.objectid import ObjectId
-from json import JSONEncoder
+import logging
 from typing import List
 import datetime
 import unicodedata
-
-
-
-# local files
-from . import schemas
 
 # environment variables
 from dotenv import load_dotenv
 import os
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-env_path = os.path.join(script_dir, '.env')
+env_path = os.path.join(script_dir, ".env")
 if os.path.isfile(env_path):
-    load_dotenv(env_path) # This loads the variables from module .env
+    load_dotenv(env_path)  # This loads the variables from module .env
 else:
     env_loaded = load_dotenv()  # This loads the variables from working directory .env
 
 
+RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
+RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
 
-RABBITMQ_USERNAME = os.getenv('RABBITMQ_USERNAME') 
-RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD') 
-RABBITMQ_HOST = os.getenv('RABBITMQ_HOST') 
+MONGODB_USERNAME = os.getenv("MONGODB_USERNAME")
+MONGODB_PASSWORD = os.getenv("MONGODB_PASSWORD")
+MONGODB_HOST = os.getenv("MONGODB_HOST")
+MONGODB_OPTIONS = os.getenv("MONGODB_OPTIONS")
+MONGODB_REPLICASET = os.getenv("MONGODB_REPLICASET")
 
-MONGODB_USERNAME = os.getenv('MONGODB_USERNAME')
-MONGODB_PASSWORD = os.getenv('MONGODB_PASSWORD') 
-MONGODB_HOST = os.getenv('MONGODB_HOST') 
-MONGODB_OPTIONS = os.getenv('MONGODB_OPTIONS')
-MONGODB_REPLICASET = os.getenv('MONGODB_REPLICASET')
+CHROMA_HOST = os.getenv("CHROMA_HOST")
+CHROMA_PORT = os.getenv("CHROMA_PORT")
 
-CHROMA_HOST = os.getenv('CHROMA_HOST') 
-CHROMA_PORT = os.getenv('CHROMA_PORT') 
-
-MILVUS_HOST = os.getenv('MILVUS_HOST') 
-MILVUS_PORT = os.getenv('MILVUS_PORT') 
-MILVUS_DATABASE = os.getenv('MILVUS_DATABASE') 
+MILVUS_HOST = os.getenv("MILVUS_HOST")
+MILVUS_PORT = os.getenv("MILVUS_PORT")
+MILVUS_DATABASE = os.getenv("MILVUS_DATABASE")
 
 
 db = "test"
 
+
 def make_client():
     # autht = "authSource=admin&authMechanism=SCRAM-SHA-256&tls=true" Added this to config as: MONGODB_AUTHT
     connect_str = (
-        f'mongodb://'
-        f'{MONGODB_USERNAME}:'
-        f'{MONGODB_PASSWORD}@'
-        f'{MONGODB_HOST}/?'
-        f'{MONGODB_OPTIONS}'
+        f"mongodb://"
+        f"{MONGODB_USERNAME}:"
+        f"{MONGODB_PASSWORD}@"
+        f"{MONGODB_HOST}/?"
+        f"{MONGODB_OPTIONS}"
     )
     client = MongoClient(
-        connect_str, 
-        connectTimeoutMS = 50000, 
-        serverSelectionTimeoutMS = 50000,
-        replicaSet = MONGODB_REPLICASET
+        connect_str,
+        connectTimeoutMS=50000,
+        serverSelectionTimeoutMS=50000,
+        replicaSet=MONGODB_REPLICASET,
         # read_preference = ReadPreference.PRIMARY_PREFERRED
     )
     return client
@@ -88,8 +74,9 @@ def create_transaction_session(db=db):
     return session, database
 
 
-def commit_with_retry(session, max_retries=10, retry_delay = 0.1):
+def commit_with_retry(session, max_retries=10, retry_delay=0.1):
     import time
+
     try_count = 0
     success = False
 
@@ -113,23 +100,27 @@ def update_history(item, *args, **kwargs):
     return item
 
 
-def push_history(db, collection_name, item_id, history_item, transaction_session = None):
+def push_history(db, collection_name, item_id, history_item, transaction_session=None):
     """
     Update one document and push a history item.
     """
-    db.history.insert_one({"collection": collection_name, "item": item_id, "history_item": history_item})
-    res = db[collection_name].update_one({"_id": item_id},
+    db.history.insert_one(
+        {"collection": collection_name, "item": item_id, "history_item": history_item}
+    )
+    res = db[collection_name].update_one(
+        {"_id": item_id},
         {
             "$set": {
                 "history": [history_item],
             }
-        }, session=transaction_session
+        },
+        session=transaction_session,
     )
     return res
 
+
 def calculateSimilarity(documentVectors, queryVector):
-    '''Calculate similarity
-    '''
+    """Calculate similarity"""
     # cosine similarity scores. (assumes vectors are normalized to unit length)
     if type(documentVectors) is list:
         arrays = [np.array(v) for v in documentVectors]
@@ -146,17 +137,17 @@ def rankDocumentsBySimilarityThreshold(document_ids, scores, threshold):
 
 
 def rankDocumentsBySimilarity(document_ids, scores, n_top=1000):
-    '''Create and return a list a tuples of (document_id, similarity_score) 
+    """Create and return a list a tuples of (document_id, similarity_score)
     sorted by similarity score, high to low, keeping only the top N documents.
 
     Args:
-    document_ids (List): The list of document IDs. 
-    scores (List): The corresponding similarity scores for each document. 
+    document_ids (List): The list of document IDs.
+    scores (List): The corresponding similarity scores for each document.
     n_top (int): The number of top documents to keep. Default is 1000.
 
     Returns:
     List[Tuple]: List of tuples, each containing a document_id and its corresponding similarity score, sorted in descending order by the similarity score, limited to the top N documents.
-    '''
+    """
     scores_and_ids = zip(scores, document_ids)
     top_n = heapq.nlargest(n_top, scores_and_ids)
     top_n_sorted = sorted(top_n, key=lambda x: x[0], reverse=True)
@@ -164,9 +155,12 @@ def rankDocumentsBySimilarity(document_ids, scores, n_top=1000):
 
 
 def rank_document_ids_by_similarity(documents_ids, scores):
-    '''Create and return a list a document ids sorted by similarity score, high to low
-    '''
-    return sorted([document_id for (document_id, score) in zip(documents_ids, scores)], key=lambda x:x[1], reverse=True)
+    """Create and return a list a document ids sorted by similarity score, high to low"""
+    return sorted(
+        [document_id for (document_id, score) in zip(documents_ids, scores)],
+        key=lambda x: x[1],
+        reverse=True,
+    )
 
 
 def get_embeddings(dbstring, oids):
@@ -174,7 +168,7 @@ def get_embeddings(dbstring, oids):
     # chroma_collection = chroma_client.get_collection(dbstring)
     # results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
     from pymilvus import connections, db, utility, Collection
-    
+
     connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
 
     db.using_database(MILVUS_DATABASE)
@@ -191,9 +185,9 @@ def get_embeddings(dbstring, oids):
 
 
 def get_documents_milvus(dbstring, limit):
-    
+
     from pymilvus import connections, db, utility, Collection
-    
+
     connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
 
     db.using_database(MILVUS_DATABASE)
@@ -215,97 +209,38 @@ def get_distance_matrix(vectors, distance):
 
 def get_documents(dbstring, rebuild=False, limit=None):
     return get_documents_milvus(dbstring, limit)
-    
-    '''
-    if dbstring == "aita" or dbstring == "brands":
-        get_documents_chromadb(dbstring, limit)
 
-    # cache embeddings
-    from pathlib import Path
-    import pickle
-    dir = Path(f'~/embeddings/{dbstring}/').expanduser()
-    dir.mkdir(parents=True, exist_ok=True)
-    npzpath = Path(f'~/embeddings/{dbstring}/embeddings.npz').expanduser()
-    pklpath = Path(f'~/embeddings/{dbstring}/ids.pkl').expanduser()
-
-    ids = []
-    vectors = []
-
-    if npzpath.exists() and pklpath.exists() and not rebuild:
-        logging.info(f"Attempting to retrieve cached documents for {dbstring}.")
-        
-        loadDocuments = np.load(npzpath.as_posix(), allow_pickle=False)
-        with open(pklpath.as_posix(), 'rb') as handle:
-            ids = pickle.load(handle)
-        vectors = loadDocuments['documents']
-
-        if len(vectors) > 0 and len(ids) > 0 and len(vectors) == len(ids):
-            return ids, vectors
-        else:
-            logging.info(f"Retrieving cached documents for {dbstring} failed.")
-
-    logging.info(f"Building cache now for {dbstring} where rebuild is {rebuild}.")
-    
-    db = connect(db=dbstring)
-
-    total_count = db.documents.count_documents({})
-    count = db.documents.count_documents({"textVector": {"$size": 512}})
-    logging.info(f"Connected to database {dbstring}. There are {count} documents with vectors and {total_count} left to vectorize.")
-
-    logging.info(f"Aggregating documents...")
-    documents = db.documents.aggregate(
-        [
-            # Filter documents where textVector has a size of 512
-            { "$match": { "textVector": { "$size": 512 } } },
-
-            # Only get IDs and vectors
-            { "$project": { "textVector": 1, "_id": 1 } },
-
-            # Ensure they're always in the same order
-            { "$sort" : { "_id" : 1 } }
-        ]
-    )
-
-
-    _ids = []
-    _vecs = []
-
-    logging.info(f"Retreiving documents...")
-    for doc in tqdm(documents, total=count):
-        _ids.append(doc["_id"])
-        _vecs.append(doc["textVector"])
-    vecs = np.array(_vecs)
-    ids = _ids
-    vectors = _vecs
-
-    logging.info(f'There are {len(ids)} ids and {len(vecs)} vectors in {dbstring} documents.')
-    
-    np.savez(npzpath.as_posix(), documents=vecs)
-    with open(pklpath.as_posix(), 'wb') as handle:
-        pickle.dump(ids, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        
-    return ids, vectors
-
-    '''
 
 def random_color():
     import random
+
     r = lambda: random.randint(0, 255)
-    color = '#{0:02X}{1:02X}{2:02X}'.format(r(), r(), r())
+    color = "#{0:02X}{1:02X}{2:02X}".format(r(), r(), r())
     return color
 
 
 def extract_special_characters(text):
     # Matches Emoji and other special Unicode characters
-    return [c for c in text if not unicodedata.name(c).startswith(('LATIN', 'DIGIT', 'SPACE', 'PUNCTUATION'))]
+    return [
+        c
+        for c in text
+        if not unicodedata.name(c).startswith(
+            ("LATIN", "DIGIT", "SPACE", "PUNCTUATION")
+        )
+    ]
 
 
 def strip_emojis(text):
-    return ''.join(c for c in text if unicodedata.name(c).startswith(('LATIN', 'DIGIT', 'SPACE', 'PUNCTUATION')))
+    return "".join(
+        c
+        for c in text
+        if unicodedata.name(c).startswith(("LATIN", "DIGIT", "SPACE", "PUNCTUATION"))
+    )
 
 
 def get_vector_ids(db, oids):
-    return list(db.documents.find({"_id": {"$in": oids} }, projection={ "vector": 1}))
+    return list(db.documents.find({"_id": {"$in": oids}}, projection={"vector": 1}))
+
 
 def make_query(text):
     if len(text.strip()) == 0:
@@ -314,26 +249,14 @@ def make_query(text):
     regex = extract_special_characters(buffer)
 
     if len(regex) == 0:
-        return { "$text": { "$search": buffer} }
+        return {"$text": {"$search": buffer}}
 
     if len(strip_emojis(buffer)) == 0:
-        return { "text": { "$regex": '|'.join(regex) } }
+        return {"text": {"$regex": "|".join(regex)}}
 
     return {
-        "$and": [
-            { "$text": { "$search": buffer } },
-            { "text": { "$regex": '|'.join(regex) } }
-        ]
+        "$and": [{"$text": {"$search": buffer}}, {"text": {"$regex": "|".join(regex)}}]
     }
-
-
-def message(queue: str, msg):
-    credentials = pika.PlainCredentials(RABBITMQ_USERNAME, RABBITMQ_PASSWORD)
-    parameters = pika.ConnectionParameters(host=RABBITMQ_HOST.split(":")[0], port=int(RABBITMQ_HOST.split(":")[1]), virtual_host='teleoscope', credentials=credentials)
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-    channel.basic_publish(exchange='', routing_key=queue, body=json.dumps(msg))
-    logging.info(f"Sent to queue {queue} and with message {json.dumps(msg)}.")
 
 
 def binary_search(lst, number):
@@ -361,7 +284,9 @@ def filter_vectors_by_oid(oids, ids, vectors):
 
 
 def rank(control_vecs, ids, source_vecs):
-    logging.info(f"There were {len(control_vecs)} control vecs and {len(source_vecs)} source vecs.")
+    logging.info(
+        f"There were {len(control_vecs)} control vecs and {len(source_vecs)} source vecs."
+    )
     vec = np.average(control_vecs, axis=0)
     scores = calculateSimilarity(source_vecs, vec)
     ranks = rankDocumentsBySimilarity(ids, scores)
@@ -389,8 +314,6 @@ def get_collection(db: database.Database, type):
             return db.notes
         case "Rank" | "Union" | "Difference" | "Intersection" | "Exclusion":
             return db.graph
-        
-
 
 
 def get_oids(db: database.Database, source, exclude=["Note"]):
@@ -409,7 +332,11 @@ def get_oids(db: database.Database, source, exclude=["Note"]):
             cursor = db.documents.find(make_query(node["query"]), projection={"_id": 1})
             return [str(d["_id"]) for d in list(cursor)]
         case "Rank" | "Union" | "Difference" | "Intersection" | "Exclusion":
-            return [str(d[0]) for doclist in source["doclists"] for d in doclist["ranked_documents"]]
+            return [
+                str(d[0])
+                for doclist in source["doclists"]
+                for d in doclist["ranked_documents"]
+            ]
 
 
 def get_doc_oids(db: database.Database, sources, exclude=["Note"]):
@@ -418,50 +345,6 @@ def get_doc_oids(db: database.Database, sources, exclude=["Note"]):
     for source in sources:
         oids.extend(get_oids(db, source, exclude=exclude))
     return oids
-                
-
-        
-
-# def get_oids(db: database.Database, sources, exclude=[]):
-#     oids = []
-#     for c in sources:
-#         match c["type"]:
-#             case "Document":
-#                 if not "Document" in exclude:
-#                     oids.append(c["id"])
-#             case "Group":
-#                 if not "Group" in exclude:
-#                     group = db.groups.find_one({"_id": c["id"]})
-#                     oids = oids + group["docs"]
-#             case "Search":
-#                 if not "Search" in exclude:
-#                     search = db.searches.find_one({"_id": c["id"]})
-#                     cursor = db.documents.find(make_query(search["query"]),projection={ "_id": 1})
-#                     oids = oids + [d["_id"] for d in list(cursor)]
-#             case "Note":
-#                 if not "Note" in exclude:
-#                     oids.append(c["id"])
-#             case "Union":
-#                 if not "Union" in exclude:
-#                     node = db.graph.find_one({"_id": c["id"]})
-#                     for doclist in node["doclists"]:
-#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
-#             case "Difference":
-#                 if not "Difference" in exclude:
-#                     node = db.graph.find_one({"_id": c["id"]})
-#                     for doclist in node["doclists"]:
-#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
-#             case "Intersection": 
-#                 if not "Intersection" in exclude:
-#                     node = db.graph.find_one({"_id": c["id"]})
-#                     for doclist in node["doclists"]:
-#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
-#             case "Exclusion":
-#                 if not "Exclusion" in exclude:
-#                     node = db.graph.find_one({"_id": c["id"]})
-#                     for doclist in node["doclists"]:
-#                             oids = oids + [d[0] for d in doclist["ranked_documents"]]
-#     return oids
 
 
 def get_vectors(db: database.Database, controls, ids, all_vectors):
@@ -476,7 +359,9 @@ def get_vectors(db: database.Database, controls, ids, all_vectors):
                 oids = oids + group["history"][0]["included_documents"]
             case "Search":
                 search = db.searches.find_one({"_id": c["id"]})
-                cursor = db.documents.find(make_query(search["history"][0]["query"]),projection={ "_id": 1})
+                cursor = db.documents.find(
+                    make_query(search["history"][0]["query"]), projection={"_id": 1}
+                )
                 oids = oids + [d["_id"] for d in list(cursor)]
             case "Note":
                 note = db.notes.find_one({"_id": c["id"]})
@@ -484,12 +369,14 @@ def get_vectors(db: database.Database, controls, ids, all_vectors):
             case "Union" | "Difference" | "Intersection" | "Exclusion":
                 node = db.graph.find_one({"_id": c["id"]})
                 for doclist in node["doclists"]:
-                        oids = oids + [d[0] for d in doclist["ranked_documents"]]
-                    
+                    oids = oids + [d[0] for d in doclist["ranked_documents"]]
+
     note_vecs = [np.array(note["textVector"]) for note in notes]
     filtered_vecs = filter_vectors_by_oid(oids, ids, all_vectors)
     out_vecs = filtered_vecs + note_vecs
-    logging.info(f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors.")
+    logging.info(
+        f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors."
+    )
     return out_vecs
 
 
@@ -498,16 +385,16 @@ def sanitize_db_name(name):
     forbidden_chars = " .$/\\"
     for char in forbidden_chars:
         name = name.replace(char, "_")
-    
+
     # Ensure the name is not too long
     max_length = 63  # 64 bytes - 1 for safety
-    if len(name.encode('utf-8')) > max_length:
+    if len(name.encode("utf-8")) > max_length:
         # Trim the name if it's too long, considering multibyte characters
-        while len(name.encode('utf-8')) > max_length:
+        while len(name.encode("utf-8")) > max_length:
             name = name[:-1]
-    
+
     # Ensure the name is not empty after removing forbidden characters
     if not name:
         raise ValueError("Database name cannot be empty after sanitization.")
-    
+
     return name
