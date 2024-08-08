@@ -129,6 +129,7 @@ def vectorize(documents):
         raw_embeddings = model.encode([doc["text"] for doc in documents])["dense_vecs"]
     except Exception as e:
             logging.error(f"Error during model encoding: {e}")
+            raise e
     logging.info("Model encoding complete.")
 
     embeddings = [embedding.tolist() for embedding in raw_embeddings]
@@ -532,6 +533,16 @@ def update_filter(db, node, sources: List, controls: List, parameters):
     return node  # stub
 
 
+def setup_logging():
+    logging.basicConfig(
+        level=logging.INFO,  # Set the desired log level
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.StreamHandler(),  # Logs to console
+            # Add more handlers here if needed, like FileHandler for logging to files
+        ],
+    )
+
 def load_model():
     global model
     if model is None:
@@ -555,6 +566,7 @@ def start_worker():
     )
 
 def main():
+    setup_logging()
     load_model()
     start_worker()
     
