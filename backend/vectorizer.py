@@ -24,17 +24,18 @@ class VectorResponse(BaseModel):
 
 @app.post('/vectorize', response_model=List[VectorResponse])
 def vectorize(documents: List[Document]):
-    logging.info(f"Received {len(documents)} documents. Vectorizing...")
+    logging.info(f"Received {len(documents)} documents.")
 
     try:
         texts = [doc.text for doc in documents]
 
+        logging.info(f"Vectorizing {len(documents)} documents...")
         raw_embeddings = model.encode(texts)['dense_vecs']
+        logging.info(f"Vectorized {len(documents)} documents.")
         
         embeddings = [embedding.tolist() for embedding in raw_embeddings]
 
         result = [{'id': doc.id, 'vector': embedding} for doc, embedding in zip(documents, embeddings)]
-        logging.info(f"Vectorizing {len(documents)} complete.")
         return result
 
     except Exception as e:

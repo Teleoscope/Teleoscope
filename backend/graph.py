@@ -132,7 +132,7 @@ def update_vectors(database: str, documents):
 ################################################################################
 
 def vectorize(documents):
-    process_documents(documents)
+    return process_documents(documents)
     # logging.info(f"Vectorizing {len(documents)} documents...")
     # ids = [str(doc["_id"]) for doc in documents]
     # docs = [doc["text"] for doc in documents]
@@ -158,12 +158,9 @@ def process_documents(documents):
         logging.info(f"Requesting vectorization of {len(formatted_documents)} documents.")
         response = requests.post('http://127.0.0.1:8000/vectorize', json=formatted_documents)
 
-        
         # Check the response status and return the result
         if response.status_code == 200:
-            
             result = response.json()
-            logging.info(f"Result: {result}.")
             return result
         else:
             logging.error(f"API request failed with status {response.status_code}: {response.text}")
