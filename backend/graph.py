@@ -78,6 +78,7 @@ def milvus_chunk_import(database: str, userid: str, documents):
     )
     data = vectorize(list(docs))
     res = client.upsert(collection_name=database, data=data)
+    client.close()
     return res
 
 
@@ -97,6 +98,7 @@ def milvus_import(
     for batch in itertools.batched(documents, 1000):
         data = vectorize(batch)
         res = client.upsert(collection_name=database, data=data)
+    client.close()
     return res
 
 
@@ -107,6 +109,7 @@ def update_vectors(database: str, documents):
     embeddings.milvus_setup(client, collection_name=database)
     data = vectorize(documents)
     res = client.upsert(collection_name=database, data=data)
+    client.close()
     return res
 
 
