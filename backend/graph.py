@@ -120,10 +120,7 @@ def update_vectors(database: str, documents):
 def vectorize(documents):
     logging.info(f"Vectorizing {len(documents)} documents...")
 
-    global model
-    if model is None:
-        logging.info(f"Loading the model...")
-        model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
+    load_model()
 
     ids = [str(doc["_id"]) for doc in documents]
 
@@ -532,14 +529,14 @@ def update_filter(db, node, sources: List, controls: List, parameters):
     return node  # stub
 
 
-################################################################################
-# Main for Celery worker
-################################################################################
-if __name__ == "__main__":
-
+def load_model():
+    global model
     if model is None:
+        logging.info(f"Loading the model...")
         model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
+        logging.info(f"Loaded the model.")
 
+def start_worker():
     worker = app.Worker(
         include=["backend.graph"],
         hostname=f"graph.{os.getlogin()}@%h{uuid.uuid4()}",
@@ -553,3 +550,16 @@ if __name__ == "__main__":
             f"--hostname=graph.{os.getlogin()}@%h{uuid.uuid4()}",
         ]
     )
+
+def main():
+    load_model()
+    start_worker()
+    
+
+
+################################################################################
+# Main for Celery worker
+################################################################################
+if __name__ == "__main__":
+
+    
