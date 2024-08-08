@@ -126,21 +126,20 @@ def update_vectors(database: str, documents):
     logging.info(f"Finished updating {len(documents)} vectors in database {database}.")
     return res
 
+################################################################################
+# Model functions
+################################################################################
 
-@app.task
 def vectorize(documents):
     logging.info(f"Vectorizing {len(documents)} documents...")
     ids = [str(doc["_id"]) for doc in documents]
-
-    try:
-        logging.info("Starting model encoding...")
-        raw_embeddings = model.encode([doc["text"] for doc in documents])["dense_vecs"]
-    except Exception as e:
-            logging.error(f"Error during model encoding: {e}")
-            raise e
+    docs = [doc["text"] for doc in documents]
+    logging.info("Starting model encoding...")
+    raw_embeddings = model.encode(docs)
     logging.info("Model encoding complete.")
-
-    embeddings = [embedding.tolist() for embedding in raw_embeddings]
+    
+    dense_vecs = raw_embeddings["dense_vecs"]
+    embeddings = [embedding.tolist() for embedding in dense_vecs]
 
     logging.info(f"{len(embeddings)} embeddings created.")
     data = [{"id": id_, "vector": embedding} for id_, embedding in zip(ids, embeddings)]
