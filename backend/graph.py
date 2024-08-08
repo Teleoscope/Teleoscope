@@ -353,6 +353,7 @@ def update_rank(
 
     # search defaults to the whole corpus
     if len(sources) == 0:
+        logging.info(f"No sources found, performing search.")
         # Get results within radius
         results = client.search(
             collection_name=collection_name,
@@ -368,7 +369,9 @@ def update_rank(
         )
 
     else:
-        source_nodes = mdb.graph.find({"uid": {"$in": sources}})
+        logging.info(f"{len(sources)} sources found, retrieving from database.")
+        source_nodes = list(mdb.graph.find({"uid": {"$in": sources}}))
+        logging.info(f"{len(source_nodes)} sources found, finding vectors.")
         for source in source_nodes:
             oids = utils.get_oids(mdb, source)
             if oids:
@@ -377,9 +380,11 @@ def update_rank(
                 results = client.get(
                     collection_name=collection_name, ids=oids, output_fields=["vector"]
                 )
+                logging.info(f"{len(results)} result vectors found.")
                 source_map.append((source, oids, [r["vector"] for r in results]))
 
-        for source, source_oids, source_vecs in source_map:
+        for source, source_oids, source_vecs in :
+            logging.info(f"Ranking {len(source_map)} sources.")
             ranks = utils.rank(control_vectors, source_oids, source_vecs)
             doclists.append(
                 {
