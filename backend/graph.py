@@ -21,11 +21,6 @@ from dotenv import load_dotenv
 
 load_dotenv()  # This loads the variables from .env
 
-from FlagEmbedding import BGEM3FlagModel
-
-# Define a global model variable
-# model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
-
 
 # RabbitMQ connection details
 RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
