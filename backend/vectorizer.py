@@ -15,7 +15,7 @@ logging.info("Model loaded successfully.")
 
 # Define request and response data models
 class Document(BaseModel):
-    _id: str
+    id: str
     text: str
 
 class VectorResponse(BaseModel):
@@ -26,14 +26,14 @@ class VectorResponse(BaseModel):
 def vectorize(documents: List[Document]):
     logging.info(f"Received documents: {documents}")
     for doc in documents:
-        logging.info(f"Document ID: {doc._id}, Text: {doc.text}")
+        logging.info(f"Document ID: {doc.id}, Text: {doc.text}")
 
     try:
         texts = [doc.text for doc in documents]
         raw_embeddings = model.encode(texts)['dense_vecs']
         embeddings = [embedding.tolist() for embedding in raw_embeddings]
 
-        result = [{'id': doc._id, 'vector': embedding} for doc, embedding in zip(documents, embeddings)]
+        result = [{'id': doc.id, 'vector': embedding} for doc, embedding in zip(documents, embeddings)]
         return result
 
     except Exception as e:

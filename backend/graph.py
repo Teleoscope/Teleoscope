@@ -152,7 +152,7 @@ def vectorize(documents):
 def process_documents(documents):
     try:
         # Prepare the payload as a list of dictionaries
-        formatted_documents = [{'_id': str(doc["_id"]), 'text': doc["text"]} for doc in documents]
+        formatted_documents = [{'id': str(doc["_id"]), 'text': doc["text"]} for doc in documents]
 
         # Send the request directly with the list of documents
         response = requests.post('http://127.0.0.1:8000/vectorize', json=formatted_documents)
