@@ -158,10 +158,12 @@ def process_documents(documents):
         logging.info(f"Requesting vectorization of {len(formatted_documents)} documents.")
         response = requests.post('http://127.0.0.1:8000/vectorize', json=formatted_documents)
 
-        logging.info(f"Repsonse: {response}.")
+        
         # Check the response status and return the result
         if response.status_code == 200:
+            
             result = response.json()
+            logging.info(f"Result: {result}.")
             return result
         else:
             logging.error(f"API request failed with status {response.status_code}: {response.text}")

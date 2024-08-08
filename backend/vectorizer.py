@@ -28,7 +28,9 @@ def vectorize(documents: List[Document]):
 
     try:
         texts = [doc.text for doc in documents]
+
         raw_embeddings = model.encode(texts)['dense_vecs']
+        
         embeddings = [embedding.tolist() for embedding in raw_embeddings]
 
         result = [{'id': doc.id, 'vector': embedding} for doc, embedding in zip(documents, embeddings)]
