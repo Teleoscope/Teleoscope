@@ -23,7 +23,8 @@ load_dotenv()  # This loads the variables from .env
 from FlagEmbedding import BGEM3FlagModel
 
 # Define a global model variable
-model = None
+model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
+
 
 # RabbitMQ connection details
 RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
@@ -129,12 +130,6 @@ def update_vectors(database: str, documents):
 @app.task
 def vectorize(documents):
     logging.info(f"Vectorizing {len(documents)} documents...")
-
-    load_model()
-
-    
-
-
     ids = [str(doc["_id"]) for doc in documents]
 
     try:
@@ -556,16 +551,6 @@ def setup_logging():
         ],
     )
 
-def load_model():
-    global model
-    if model is None:
-        logging.info(f"Loading the model...")
-        model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
-    logging.info(f"Loaded the model. Quick test:")
-    res = model.encode(["asdf"])
-    logging.info(f"Test vectorization returned {res}")
-    
-
 def start_worker():
     worker = app.Worker(
         include=["backend.graph"],
@@ -583,7 +568,6 @@ def start_worker():
 
 def main():
     setup_logging()
-    load_model()
     start_worker()
     
 
