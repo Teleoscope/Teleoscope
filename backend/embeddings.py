@@ -32,7 +32,9 @@ from pymilvus import MilvusClient, DataType, MilvusException, connections, db
 
 
 def milvus_setup(client: MilvusClient, collection_name="teleoscope"):
+    logging.info(f"Checking if collection exists...")
     if not client.has_collection(collection_name):
+        logging.info(f"It does not. Initializing collection {collection_name}...")
         # 2. Create schema
         # 2.1. Create schema
         schema = MilvusClient.create_schema(
@@ -66,12 +68,14 @@ def milvus_setup(client: MilvusClient, collection_name="teleoscope"):
             collection_name=collection_name,
             index_params=index_params
         )
+        logging.info(f"Initialized collection {collection_name}.")
 
 def connect():
     client = None
     try:
         client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
     except MilvusException as e:
+        logging.info(f"Exception {e} when creating Milvus client.")
         connections.connect(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
         database = db.create_database(MILVUS_DBNAME)
         connections.disconnect(f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
