@@ -125,7 +125,10 @@ def vectorize(documents):
     ids = [str(doc["_id"]) for doc in documents]
 
     logging.info("Starting model encoding...")
-    raw_embeddings = model.encode([doc["text"] for doc in documents])["dense_vecs"]
+    try:
+        raw_embeddings = model.encode([doc["text"] for doc in documents])["dense_vecs"]
+    except Exception as e:
+            logging.error(f"Error during model encoding: {e}")
     logging.info("Model encoding complete.")
 
     embeddings = [embedding.tolist() for embedding in raw_embeddings]
