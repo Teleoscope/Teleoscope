@@ -562,7 +562,7 @@ def load_model():
         logging.info(f"Loading the model...")
         model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
     logging.info(f"Loaded the model. Quick test:")
-    res = model.encode([{"_id":123,"text":"asdf"}]*12)
+    res = model.encode(["asdf"])
     logging.info("Test vectorization returned {res}")
     
 
