@@ -79,6 +79,7 @@ def milvus_chunk_import(database: str, userid: str, documents):
     data = vectorize(list(docs))
     res = client.upsert(collection_name=database, data=data)
     client.close()
+    logging.info(f"Finished processing an import chunk of length {len(documents)} for database {database}.")
     return res
 
 
@@ -88,7 +89,7 @@ def milvus_import(
     database: str,
     userid: str,
 ):
-    logging.info(f"Vectorizing all documents in database {database}.")
+    logging.info(f"Vectorizing all documents in database {database}...")
     client = embeddings.connect()
     embeddings.milvus_setup(client, collection_name=database)
 
@@ -99,28 +100,31 @@ def milvus_import(
         data = vectorize(batch)
         res = client.upsert(collection_name=database, data=data)
     client.close()
+    logging.info(f"Finished vectorizing all documents in database {database}.")
     return res
 
 
 @app.task
 def update_vectors(database: str, documents):
-    logging.info(f"Updating {len(documents)} vectors in database {database}.")
+    logging.info(f"Updating {len(documents)} vectors in database {database}...")
     client = embeddings.connect()
     embeddings.milvus_setup(client, collection_name=database)
     data = vectorize(documents)
     res = client.upsert(collection_name=database, data=data)
     client.close()
+    logging.info(f"Finished updating {len(documents)} vectors in database {database}.")
     return res
 
 
 @app.task
 def vectorize(documents):
-    logging.info(f"Vectorizing {len(documents)} documents.")
+    logging.info(f"Vectorizing {len(documents)} documents...")
     ids = [str(doc["_id"]) for doc in documents]
     raw_embeddings = model.encode([doc["text"] for doc in documents])["dense_vecs"]
     embeddings = [embedding.tolist() for embedding in raw_embeddings]
     logging.info(f"{len(embeddings)} embeddings created.")
     data = [{"id": id_, "vector": embedding} for id_, embedding in zip(ids, embeddings)]
+    logging.info(f"Finished vectorizing {len(documents)} documents.")
     return data
 
 
