@@ -3,6 +3,7 @@ from pymongo import database
 from typing import List
 import numpy as np
 import logging
+import requests
 
 import os
 import itertools
@@ -131,22 +132,42 @@ def update_vectors(database: str, documents):
 ################################################################################
 
 def vectorize(documents):
-    logging.info(f"Vectorizing {len(documents)} documents...")
-    ids = [str(doc["_id"]) for doc in documents]
-    docs = [doc["text"] for doc in documents]
-    logging.info("Starting model encoding...")
-    raw_embeddings = model.encode(docs)
-    logging.info("Model encoding complete.")
+    process_documents(documents)
+    # logging.info(f"Vectorizing {len(documents)} documents...")
+    # ids = [str(doc["_id"]) for doc in documents]
+    # docs = [doc["text"] for doc in documents]
+    # logging.info("Starting model encoding...")
+    # raw_embeddings = model.encode(docs)
+    # logging.info("Model encoding complete.")
     
-    dense_vecs = raw_embeddings["dense_vecs"]
-    embeddings = [embedding.tolist() for embedding in dense_vecs]
+    # dense_vecs = raw_embeddings["dense_vecs"]
+    # embeddings = [embedding.tolist() for embedding in dense_vecs]
 
-    logging.info(f"{len(embeddings)} embeddings created.")
-    data = [{"id": id_, "vector": embedding} for id_, embedding in zip(ids, embeddings)]
-    logging.info(f"Finished vectorizing {len(documents)} documents.")
-    return data
+    # logging.info(f"{len(embeddings)} embeddings created.")
+    # data = [{"id": id_, "vector": embedding} for id_, embedding in zip(ids, embeddings)]
+    # logging.info(f"Finished vectorizing {len(documents)} documents.")
+    # return data
 
 
+@app.task
+def process_documents(documents):
+    try:
+        # Send request to the local API service
+        response = requests.post('http://127.0.0.1:8000/vectorize', json={
+            'documents': documents
+        })
+
+        # Check the response status and return the result
+        if response.status_code == 200:
+            result = response.json()
+            return result
+        else:
+            logging.error(f"API request failed with status {response.status_code}: {response.text}")
+            raise Exception("Model service error")
+
+    except requests.RequestException as e:
+        logging.error(f"Request error: {e}")
+        raise Exception("Failed to connect to model service")
 
 ################################################################################
 # Graph API
