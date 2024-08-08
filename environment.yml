@@ -15,6 +15,7 @@ dependencies:
   - click
   - cryptography
   - cython
+  - fastapi
   - greenlet
   - hdbscan
   - idna
@@ -70,6 +71,7 @@ dependencies:
   - typing_extensions
   - umap-learn
   - urllib3
+  - uvicorn
   - wheel
   - xz
   - yaml

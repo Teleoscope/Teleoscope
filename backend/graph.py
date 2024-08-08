@@ -153,9 +153,9 @@ def vectorize(documents):
 def process_documents(documents):
     try:
         # Send request to the local API service
-        response = requests.post('http://127.0.0.1:8000/vectorize', json={
-            'documents': documents
-        })
+        # Align with FastAPI's expectations
+        docs = [{'text': doc["text"], '_id': str(doc["_id"])} for doc in documents]
+        response = requests.post('http://127.0.0.1:8000/vectorize', json={'documents': docs})
 
         # Check the response status and return the result
         if response.status_code == 200:
