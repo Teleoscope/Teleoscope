@@ -4,6 +4,13 @@ from typing import List
 import numpy as np
 import logging
 
+import os
+import itertools
+import uuid
+from celery import Celery
+from kombu import Exchange, Queue
+
+# package files
 from backend import embeddings
 from . import utils
 from . import projection
@@ -12,31 +19,7 @@ from . import projection
 from dotenv import load_dotenv
 
 load_dotenv()  # This loads the variables from .env
-import os
 
-
-
-import os
-import multiprocessing
-from platform import system
-from pymongo import database
-from typing import List
-
-# Set the multiprocessing start method at the very beginning
-if system() == "Darwin":  # macOS
-    multiprocessing.set_start_method("spawn", force=True)
-else:
-    multiprocessing.set_start_method("fork", force=True)
-
-from bson import ObjectId
-import logging
-import itertools
-import uuid
-from celery import Celery
-from kombu import Exchange, Queue
-
-from . import embeddings
-from . import utils
 
 from FlagEmbedding import BGEM3FlagModel
 
@@ -86,7 +69,7 @@ def update_nodes(*args, database: str, node_uids: List[str], **kwargs):
 
 @app.task
 def milvus_chunk_import(database: str, userid: str, documents):
-    logging.info(f"Recieved an import chunk of length {len(documents)} for database {database}")
+    logging.info(f"Recieved an import chunk of length {len(documents)} for database {database}.")
     client = embeddings.connect()
     embeddings.milvus_setup(client, collection_name=database)
     mongo_db = utils.connect(db=database)
@@ -95,6 +78,7 @@ def milvus_chunk_import(database: str, userid: str, documents):
     )
     data = vectorize(list(docs))
     res = client.upsert(collection_name=database, data=data)
+    return res
 
 
 @app.task
@@ -122,7 +106,8 @@ def update_vectors(database: str, documents):
     client = embeddings.connect()
     embeddings.milvus_setup(client, collection_name=database)
     data = vectorize(documents)
-    client.upsert(collection_name=database, data=data)
+    res = client.upsert(collection_name=database, data=data)
+    return res
 
 
 @app.task
