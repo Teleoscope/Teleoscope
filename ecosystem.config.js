@@ -24,22 +24,20 @@ module.exports = {
       max_memory_restart: "1G"
     },
     {
-      name:"chromadb",
-      cwd:"./backend",
-      script:"./chroma.sh",
+      name:"vectorizer",
+      script:"uvicorn backend.vectorizer:app --host 127.0.0.1 --port 8000",
       args:"",
       watch: false,
       interpreter: "",
-      // max_memory_restart: "1G"
     },
     {
-      name: "embeddings",
+      name: "graph",
       script: 'python',
-      args: ["-m", "backend.embeddings"],
+      args: ["-m", "backend.graph"],
       watch: false,
       interpreter: "",
       max_memory_restart: "16G",
-      instances: 1,
+      instances: 4,
     },
 
   ]
