@@ -23,14 +23,12 @@ class VectorResponse(BaseModel):
     vector: List[float]
 
 @app.post('/vectorize', response_model=List[VectorResponse])
-async def vectorize(documents: List[Document]):
+def vectorize(documents: List[Document]):
     try:
-        # Extract text from documents and perform model inference
         texts = [doc.text for doc in documents]
         raw_embeddings = model.encode(texts)['dense_vecs']
         embeddings = [embedding.tolist() for embedding in raw_embeddings]
 
-        # Prepare the response
         result = [{'id': doc._id, 'vector': embedding} for doc, embedding in zip(documents, embeddings)]
         return result
 

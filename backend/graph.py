@@ -148,14 +148,14 @@ def vectorize(documents):
     # logging.info(f"Finished vectorizing {len(documents)} documents.")
     # return data
 
+
 def process_documents(documents):
     try:
-        # Prepare the payload
+        # Prepare the payload as a list of dictionaries
         formatted_documents = [{'_id': str(doc["_id"]), 'text': doc["text"]} for doc in documents]
-        payload = {'documents': formatted_documents}
 
-        # Send the request to the local API service
-        response = requests.post('http://127.0.0.1:8000/vectorize', json=payload)
+        # Send the request directly with the list of documents
+        response = requests.post('http://127.0.0.1:8000/vectorize', json=formatted_documents)
 
         # Check the response status and return the result
         if response.status_code == 200:
