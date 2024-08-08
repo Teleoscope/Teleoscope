@@ -370,7 +370,7 @@ def update_rank(
 
     else:
         logging.info(f"{len(sources)} sources found, retrieving from database.")
-        source_nodes = list(mdb.graph.find({"uid": {"$in": [s["uid"] for s in sources]}}))
+        source_nodes = list(mdb.graph.find({"uid": {"$in": sources}}))
         logging.info(f"Finding vectors for {len(source_nodes)} sources found.")
         for source in source_nodes:
             oids = utils.get_oids(mdb, source)
