@@ -24,6 +24,10 @@ class VectorResponse(BaseModel):
 
 @app.post('/vectorize', response_model=List[VectorResponse])
 def vectorize(documents: List[Document]):
+    logging.info(f"Received documents: {documents}")
+    for doc in documents:
+        logging.info(f"Document ID: {doc._id}, Text: {doc.text}")
+
     try:
         texts = [doc.text for doc in documents]
         raw_embeddings = model.encode(texts)['dense_vecs']
