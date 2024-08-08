@@ -383,7 +383,7 @@ def update_rank(
                 logging.info(f"{len(results)} result vectors found.")
                 source_map.append((source, oids, [r["vector"] for r in results]))
 
-        for source, source_oids, source_vecs in :
+        for source, source_oids, source_vecs in source_map:
             logging.info(f"Ranking {len(source_map)} sources.")
             ranks = utils.rank(control_vectors, source_oids, source_vecs)
             doclists.append(
