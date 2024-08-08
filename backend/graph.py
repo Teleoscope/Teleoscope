@@ -122,11 +122,17 @@ def vectorize(documents):
 
     global model
     if model is None:
+        logging.info(f"Loading the model...")
         model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
 
     ids = [str(doc["_id"]) for doc in documents]
+
+    logging.info("Starting model encoding...")
     raw_embeddings = model.encode([doc["text"] for doc in documents])["dense_vecs"]
+    logging.info("Model encoding complete.")
+
     embeddings = [embedding.tolist() for embedding in raw_embeddings]
+
     logging.info(f"{len(embeddings)} embeddings created.")
     data = [{"id": id_, "vector": embedding} for id_, embedding in zip(ids, embeddings)]
     logging.info(f"Finished vectorizing {len(documents)} documents.")
