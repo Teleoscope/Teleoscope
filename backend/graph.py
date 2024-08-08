@@ -20,7 +20,6 @@ from dotenv import load_dotenv
 
 load_dotenv()  # This loads the variables from .env
 
-
 from FlagEmbedding import BGEM3FlagModel
 
 # Define a global model variable
@@ -32,6 +31,17 @@ RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
 RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST")
 RABBITMQ_TASK_QUEUE = os.getenv("RABBITMQ_TASK_QUEUE")
+
+if not RABBITMQ_USERNAME:
+    logging.info("Missing environment variable RABBITMQ_USERNAME")
+if not RABBITMQ_PASSWORD:
+    logging.info("Missing environment variable RABBITMQ_PASSWORD")
+if not RABBITMQ_HOST:
+    logging.info("Missing environment variable RABBITMQ_HOST")
+if not RABBITMQ_VHOST:
+    logging.info("Missing environment variable RABBITMQ_VHOST")
+if not RABBITMQ_TASK_QUEUE:
+    logging.info("Missing environment variable RABBITMQ_TASK_QUEUE")
 
 # Broker URL for Celery
 CELERY_BROKER_URL = (
@@ -122,10 +132,13 @@ def vectorize(documents):
 
     load_model()
 
+    
+
+
     ids = [str(doc["_id"]) for doc in documents]
 
-    logging.info("Starting model encoding...")
     try:
+        logging.info("Starting model encoding...")
         raw_embeddings = model.encode([doc["text"] for doc in documents])["dense_vecs"]
     except Exception as e:
             logging.error(f"Error during model encoding: {e}")
@@ -548,7 +561,10 @@ def load_model():
     if model is None:
         logging.info(f"Loading the model...")
         model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
-        logging.info(f"Loaded the model.")
+    logging.info(f"Loaded the model. Quick test:")
+    res = model.vectorize([{"_id":123,"text":"asdf"}]*12)
+    logging.info("Test vectorization returned {res}")
+    
 
 def start_worker():
     worker = app.Worker(
