@@ -1,4 +1,5 @@
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { v4 as uuidv4 } from 'uuid';
 
 // mui
 import Menu from "@mui/material/Menu";
@@ -17,7 +18,7 @@ export default function ContextMenu({ contextMenu, handleCloseContextMenu,  }) {
 
   const handleAddNode = (id, type) => {    
     dispatch(makeNode({
-      oid: id, 
+      uid: uuidv4(), 
       type: type,
       width: workspace.settings?.document_width,
       height: workspace.settings?.document_height,

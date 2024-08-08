@@ -4,14 +4,14 @@ import StarOutlineOutlinedIcon from "@mui/icons-material/StarOutlineOutlined";
 import StarOutlinedIcon from "@mui/icons-material/StarOutlined";
 
 // Actions
-import { useSelector, useDispatch } from "react-redux";
 import { bookmark } from "@/actions/appState";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 export default function BookmarkSelector({ id }) {
-  const dispatch = useDispatch();
-  const bookmarks = useSelector((state) => state.appState.workflow.bookmarks);
+  const dispatch = useAppDispatch();
+  const bookmarks = useAppSelector((state) => state.appState.workflow.bookmarks);
   const marked = bookmarks.includes(id);
-  const settings = useSelector((state) => state.appState.workflow.settings);
+  const settings = useAppSelector((state) => state.appState.workflow.settings);
 
   return (
     <IconButton onClick={() => dispatch(bookmark(id))}>

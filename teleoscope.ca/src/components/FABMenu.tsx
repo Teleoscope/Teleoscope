@@ -4,6 +4,7 @@ import React from "react";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
+import { v4 as uuidv4 } from 'uuid';
 
 // actions
 import { makeNode } from "@/actions/appState";
@@ -44,7 +45,7 @@ export default function FABMenu({ reactflow_node }) {
 
   const handleAddNode = (type) => {
     dispatch(makeNode({
-      oid: type, 
+      uid: uuidv4(), 
       type: type,
       width: workspace.settings?.document_width,
       height: workspace.settings?.document_height,

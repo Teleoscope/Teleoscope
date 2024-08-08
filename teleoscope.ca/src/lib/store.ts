@@ -1,5 +1,4 @@
 import { configureStore } from '@reduxjs/toolkit';
-import crypto from 'crypto';
 import appState, {
     updateEdges,
     updateNodes,
@@ -31,7 +30,9 @@ import appState, {
     setWorkflowSettings,
     setWorkspaceSettings,
     loadState,
-    saveNote
+    saveNote,
+    setRefreshInterval,
+    cancelRefreshInterval,
 } from '@/actions/appState';
 import { copyDoclistsToGroups, updateNode } from '../actions/appState';
 import axios from 'axios';
@@ -47,6 +48,9 @@ import { Workflows } from '@/types/workflows';
 import { Workspaces } from '@/types/workspaces';
 import { mutate } from 'swr';
 import WindowDefinitions from '@/components/WindowFolder/WindowDefinitions';
+import createSagaMiddleware from 'redux-saga';
+import rootSaga from './sagas';
+
 
 interface AppState {
     workflow: Workflows;
@@ -64,11 +68,15 @@ const headers = (appState: AppState) => {
 const actionMiddleware = (store) => (next) => (action) => {
     // Dispatch the updateTimestamp action
     if (
+        // if it's not a purely local state thing
         action.type !== resetTimestamps.type &&
         action.type !== updateTimestamps.type &&
         action.type !== loadAppData.type &&
-        action.type !== loadState.type
+        action.type !== loadState.type &&
+        action.type !== setRefreshInterval.type &&
+        action.type !== cancelRefreshInterval.type
     ) {
+        // update the timestamps and history
         const { appState }: { appState: AppState } = store.getState();
         console.log(
             action.type,
@@ -77,14 +85,6 @@ const actionMiddleware = (store) => (next) => (action) => {
             appState
         );
         store.dispatch(updateTimestamps());
-    } else {
-        const { appState }: { appState: AppState } = store.getState();
-        console.log(
-            action.type,
-            action.payload,
-            appState?.workflow?.logical_clock,
-            appState
-        );
         const post_node = axios.post(`/api/history`, {
             history: {
                 action: action.type,
@@ -92,51 +92,39 @@ const actionMiddleware = (store) => (next) => (action) => {
                 state: appState
             }
         });
+    } else {
+        // otherwise log for debug
+        const { appState }: { appState: AppState } = store.getState();
+        console.log(
+            action.type,
+            action.payload,
+            appState?.workflow?.logical_clock,
+            appState
+        );
+        
     }
 
-    // if (action.type === updateNodes.type ||
-    //     action.type === updateEdges.type ||
-    //     action.type === updateNode.type ||
-    //     action.type === updateNote.type ||
-    //     action.type === makeEdge.type ||
-    //     action.type === addDocumentToGroup.type ||
-    //     action.type === removeDocumentFromGroup.type) {
-
-    // }
+    
 
     if (action.type === dropNode.type) {
-        const uid = crypto.randomBytes(8).toString('hex');
-
-        // Perform any necessary modifications to the action payload
-        const modifiedPayload = {
-            ...action.payload,
-            uid: uid
-        };
-
-        // Create a new action object with the modified payload
-        const modifiedAction = {
-            ...action,
-            payload: modifiedPayload
-        };
-
         // Call the next middleware or the reducer with the modified action
-        const result = next(modifiedAction);
+        const result = next(action);
 
         // Perform the action or side effect you want to do after the store update
         const { appState }: { appState: AppState } = store.getState();
 
         const post_workflow = axios.post(`/api/workflow`, appState.workflow);
 
-        const apipath = WindowDefinitions(modifiedAction.payload.type).apipath;
+        const apipath = WindowDefinitions(action.payload.type).apipath;
 
         const post_node = axios
             .post(`/api/graph/drop`, {
                 workflow_id: appState.workflow._id,
                 workspace_id: appState.workspace._id,
                 reference: action.payload.oid,
-                uid: modifiedAction.payload.uid,
-                type: modifiedAction.payload.type,
-                parameters: { index: modifiedAction.payload.index }
+                uid: action.payload.uid,
+                type: action.payload.type,
+                parameters: { index: action.payload.index }
             })
             .then(() =>
                 mutate(
@@ -150,22 +138,8 @@ const actionMiddleware = (store) => (next) => (action) => {
     }
 
     if (action.type === makeNode.type) {
-        const uid = crypto.randomBytes(8).toString('hex');
-
-        // Perform any necessary modifications to the action payload
-        const modifiedPayload = {
-            ...action.payload,
-            uid: uid
-        };
-
-        // Create a new action object with the modified payload
-        const modifiedAction = {
-            ...action,
-            payload: modifiedPayload
-        };
-
         // Call the next middleware or the reducer with the modified action
-        const result = next(modifiedAction);
+        const result = next(action);
 
         // Perform the action or side effect you want to do after the store update
         const { appState }: { appState: AppState } = store.getState();
@@ -177,9 +151,9 @@ const actionMiddleware = (store) => (next) => (action) => {
                 workflow_id: appState.workflow._id,
                 workspace_id: appState.workspace._id,
                 reference: action.payload.oid,
-                uid: modifiedAction.payload.uid,
-                type: modifiedAction.payload.type,
-                parameters: { index: modifiedAction.payload.index }
+                uid: action.payload.uid,
+                type: action.payload.type,
+                parameters: { index: action.payload.index }
             })
             .then(() =>
                 mutate(
@@ -676,6 +650,7 @@ const actionMiddleware = (store) => (next) => (action) => {
     return result;
 };
 
+const sagaMiddleware = createSagaMiddleware();
 export const store = configureStore({
     reducer: {
         // [appApi.reducerPath]: appApi.reducer,
@@ -685,7 +660,10 @@ export const store = configureStore({
         getDefaultMiddleware()
             // .concat(appApi.middleware)
             .concat(actionMiddleware)
+            .concat(sagaMiddleware)
 });
+sagaMiddleware.run(rootSaga);
+
 
 export const makeStore = () => store;
 
