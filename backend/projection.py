@@ -1,6 +1,7 @@
 import numpy as np
 from random_object_id import generate
 from itertools import groupby
+import logging
 
 # ML dependencies
 import umap
@@ -108,6 +109,8 @@ def cluster_documents(embedding):
 
 def organize_clusters(cluster_labels, source_oids):
     """Organize documents into clusters."""
+    logging.info(f"There were {len(cluster_labels)} cluster labels:\n{cluster_labels}\n\n")
+    logging.info(f"There were {len(source_oids)} source OIDs:\n{source_oids}\n\n")
     grouped_cluster_labels = [list(group) for _, group in groupby(cluster_labels)]
     doclists = []
     acc = 0
