@@ -3,7 +3,8 @@ import {
     Tooltip,
     Typography,
     ToggleButton,
-    ToggleButtonGroup
+    ToggleButtonGroup,
+    Stack
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { BsArrowsCollapse, BsArrowsExpand } from 'react-icons/bs';
@@ -124,14 +125,17 @@ export default function Projection({ graph_node: projection }: WindowProps) {
         }
         return null;
     };
-
+    
+    const sum = projection?.doclists.map(d => d.ranked_documents.length).reduce(((a, c) => a + c))
+    const key = projection?.uid + sum;
+    
     // Main component render
     return (
-        <>
+        <Stack key={key} direction="column" sx={{ height: "100%" }}>
             <ButtonActions
                 inner={[
-                    [ToggleCollapse, {}],
-                    [ToggleOrder, {}]
+                    // [ToggleCollapse, {}],
+                    // [ToggleOrder, {}]
                 ]}
             />
             <ButtonActions inner={[[Status, projection]]} />
@@ -140,6 +144,6 @@ export default function Projection({ graph_node: projection }: WindowProps) {
             ) : (
                 <LoadingButton loading />
             )}
-        </>
+        </Stack>
     );
 }

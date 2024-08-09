@@ -177,7 +177,6 @@ export const AppState = createSlice({
             }
         },
         setRefreshInterval: (state: AppStateType, action: PayloadAction<{ uid: string, refreshInterval: number }>) => {
-            console.log("Setting refreshInterval", action.payload )
             const index = state.workflow.nodes.findIndex(
                 (w) => w.id === action.payload.uid
             );
