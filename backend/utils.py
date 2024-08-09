@@ -203,10 +203,6 @@ def get_documents_milvus(dbstring, limit):
     return [res["oid"] for res in results], [res["text_vector"] for res in results]
 
 
-def get_distance_matrix(vectors, distance):
-    return distance(vectors)
-
-
 def get_documents(dbstring, rebuild=False, limit=None):
     return get_documents_milvus(dbstring, limit)
 

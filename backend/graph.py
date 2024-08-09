@@ -452,24 +452,10 @@ def update_projection(
     # logging.info(f"Running with {ordering} ordering and seperation = {separation}")
     ordering = None
     separation = None
-
-    project = projection.Projection(
-        db,
-        source_graph_items,
-        control_graph_items,
-        projection_node["_id"],
-        ordering,
-        separation,
-    )
-    doclists = project.document_ordering()
-
-    # for doclist in doclists:
-    #     doclist["id"] = projection_node["_id"]
-    #     doclist["nodeid"] = projection_node["_id"]
-
+ 
+    doclists = projection.document_ordering(source_graph_items, control_graph_items, db.name)
     projection_node["doclists"] = doclists
 
-    # TODO: matrix
     return projection_node
 
 
