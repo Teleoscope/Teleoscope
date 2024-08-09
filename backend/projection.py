@@ -40,8 +40,11 @@ def document_ordering(sources, controls, dbname):
     embedding = umap_reduction(corner_matrix)
     cluster_labels = cluster_documents(embedding)
 
+    # Create a master list of OIDs
+    source_oids.extend(control_oids)
+
     # Organize documents into clusters
-    doclists = organize_clusters(cluster_labels, source_oids.extend(control_oids))
+    doclists = organize_clusters(cluster_labels, source_oids)
 
     return doclists
 
