@@ -124,7 +124,7 @@ def organize_clusters(cluster_labels, source_oids):
             "reference": None,
             "uid": None,
             "type": "Cluster",
-            "label": label_group[0],
+            "label": int(label_group[0]),
             "ranked_documents": []
         }
         for _ in label_group:
