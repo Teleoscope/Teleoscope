@@ -84,7 +84,7 @@ def connect():
 
 
 def get_embeddings(client, collection_name, oids):
-    logging.info(f"Gathering document embeddings for {len(oids)} oids...")
+    logging.info(f"Gathering document embeddings for {len(oids)} document oids...")
     # ensure the collection exists
     milvus_setup(client, collection_name=collection_name)
 

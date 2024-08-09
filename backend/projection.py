@@ -29,7 +29,7 @@ def document_ordering(sources, controls, dbname):
     source_dm = get_distance_matrix(source_vectors, cosine_distances)
 
     # Retrieve embeddings for control documents
-    control_groupings, control_vectors = retrieve_control_embeddings(client, dbname, controls)
+    control_groupings, control_vectors, control_oids = retrieve_control_embeddings(client, dbname, controls)
     control_dm = get_distance_matrix(control_vectors, cosine_distances)
     adjust_intra_cluster_distances(control_dm, control_groupings)
 
@@ -41,7 +41,7 @@ def document_ordering(sources, controls, dbname):
     cluster_labels = cluster_documents(embedding)
 
     # Organize documents into clusters
-    doclists = organize_clusters(cluster_labels, source_oids)
+    doclists = organize_clusters(cluster_labels, source_oids.extend(control_oids))
 
     return doclists
 
@@ -62,14 +62,16 @@ def retrieve_control_embeddings(client, dbname, controls):
     """Retrieve embeddings for control documents."""
     control_groupings = []
     control_vectors = []
+    control_oids = []
     for control in controls:
         for doclist in control["doclists"]:
             oids = [r[0] for r in doclist["ranked_documents"]]
+            control_oids.extend(oids)
             embeds = embeddings.get_embeddings(client, dbname, oids)
             for result in embeds:
                 control_vectors.append(result["vector"])
                 control_groupings.append(doclist["uid"])
-    return control_groupings, np.array(control_vectors)
+    return control_groupings, np.array(control_vectors), control_oids
 
 
 def get_distance_matrix(vectors, distance_func):
