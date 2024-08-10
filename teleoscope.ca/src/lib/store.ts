@@ -619,9 +619,9 @@ const actionMiddleware = (store) => (next) => (action) => {
         }).then(() => mutate(
             (key) =>
                 typeof key === 'string' &&
-                key.startsWith(
+                (key.startsWith(
                     `/api/group?group=${action.payload.group_id}`
-                )
+                ) || key.startsWith(`/api/groups`))
         ));
     }
 

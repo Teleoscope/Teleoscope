@@ -13,15 +13,7 @@ export default function SidebarAccordion({ compact = false }) {
     const { color } = useAppSelector((state) => state.appState.workflow.settings);
 
     const sections = [
-        { key: 'Data', component: <DataHandler/>, text: 'Upload' },
-        // {
-        //     key: 'References',
-        //     component: <References />,
-        //     text: 'References',
-        //     condition:
-        //         selection.nodes.length > 0 &&
-        //         selection.nodes.some((n: Node) => n.data.type === 'Document')
-        // },
+        { key: 'Data', component: <DataHandler/>, text: 'Data' },
         { key: 'Workflows', component: <Workflows />, text: 'Workflows' },
         { key: 'Groups', component: <Groups />, text: 'Groups' },
         { key: 'Bookmarks', component: <Bookmarks />, text: 'Bookmarks' },

@@ -18,8 +18,8 @@ async function send(task: string, args: any) {
         ...args,
         database: database
     }
-    console.log("task", task)
-    console.log("kwargs", kwargs)
+    // console.log("task", task)
+    // console.log("kwargs", kwargs)
     try {    
         // Connect to RabbitMQ server
         const connection = await amqp.connect(rabbitMqUrl);
@@ -38,8 +38,6 @@ async function send(task: string, args: any) {
             retries: 0,
             eta: new Date().toISOString()
         };
-
-        console.log("message", message)
 
         const msg = JSON.stringify(message)
 

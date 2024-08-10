@@ -9,7 +9,7 @@ from typing import List
 import os
 
 from pymongo import UpdateOne
-from pymongo.errors import OperationFailure, ConfigurationError
+from pymongo.errors import OperationFailure, ConfigurationError, WriteError
 
 
 # Local imports
@@ -96,68 +96,95 @@ def update_nodes(
 ################################################################################
 @app.task
 def chunk_upload(*args, database: str, userid: str, workspace: str, data):
-    workspace = ObjectId(str(workspace))
-    db = utils.connect(db=database)
-    documents = []
-    rows = [row["values"] for row in data["rows"]]
-    for row in rows:
-        document = {
-            "text": row["text"],
-            "title": row["title"],
-            "relationships": {},
-            "metadata": json.loads(json.dumps(row)),  # Convert row to JSON
-            "state": {"read": False},
-        }
-        documents.append(document)
-
-    session = db.client.start_session()
-
     try:
-        with session.start_transaction():
-            inserted_ids = db.documents.insert_many(
-                documents, session=session
-            ).inserted_ids
-            bulk_operations = []
+        workspace = ObjectId(str(workspace))
+        db = utils.connect(db=database)
+        documents = []
+        
+        # Validate incoming data
+        rows = [row["values"] for row in data.get("rows", [])]
+        for row in rows:
+            if "text" not in row or "title" not in row:
+                logging.error(f"Row missing required fields: {row}")
+                continue
 
-            for row, doc_id in zip(rows, inserted_ids):
-                if "group" in row:
-                    filter = {"label": row["group"], "workspace": workspace}
-                    ensure_group = {
-                        "$setOnInsert": {
-                            "label": row["group"],
-                            "workspace": workspace,
-                            "documents": [],
-                        },
-                    }
-                    bulk_operations.append(UpdateOne(filter, ensure_group, upsert=True))
-                    
-                    add_doc = {"$addToSet": {"documents": ObjectId(doc_id)}}
-                    bulk_operations.append(UpdateOne(filter, add_doc))
+            metadata = {k: v for k, v in row.items() if k not in {"text", "title"}}
 
-            if len(bulk_operations) > 0:
-                result = db.groups.bulk_write(bulk_operations, session=session)
-                print(
-                    f"Inserted: {result.upserted_count}, Matched: {result.matched_count}"
-                )
+            document = {
+                "text": row["text"],
+                "title": row["title"],
+                "relationships": {},
+                "metadata": json.loads(json.dumps(metadata)),  # Convert row to JSON
+                "state": {"read": False},
+            }
+            documents.append(document)
+        
+        if not documents:
+            logging.warning("No valid documents to insert.")
+            return
 
-            app.send_task(
-                "backend.graph.milvus_chunk_import",
-                args=[],
-                kwargs={
-                    "database": database,
-                    "userid": userid,
-                    "documents": inserted_ids,
+        inserted_ids = db.documents.insert_many(documents).inserted_ids
+        logging.info(f"Inserted {len(inserted_ids)} documents.")
+
+        app.send_task(
+            "backend.graph.milvus_chunk_import",
+            args=[],
+            kwargs={
+                "database": database,
+                "userid": userid,
+                "documents": inserted_ids,
+            },
+            queue="graph",
+        )
+
+        # Extract unique group names from rows
+        groups = {row.get("group") for row in rows if "group" in row}
+
+        # Create a dictionary to store document IDs for each group
+        group_docs = {group: [] for group in groups}
+        for row, doc_id in zip(rows, inserted_ids):
+            if "group" in row:
+                group_docs[row["group"]].append(ObjectId(doc_id))
+
+        # Prepare bulk operations
+        group_bulk_operations = []
+        for group in groups:
+            filter = {"label": group, "workspace": workspace}
+            ensure_group = {
+                "$setOnInsert": {
+                    "label": group,
+                    "color": utils.random_color(),
+                    "workspace": workspace,
+                    "docs": []  # Initialize 'docs' as an empty array if the document is new
                 },
-                queue="graph",
-            )
+            }
+            group_bulk_operations.append(UpdateOne(filter, ensure_group, upsert=True))
 
-        session.commit_transaction()
-    except (OperationFailure, ConfigurationError) as e:
-        session.abort_transaction()
-        print(f"Transaction aborted due to: {e}")
-    finally:
-        session.end_session()
+        # Execute bulk operations
+        if group_bulk_operations:
+            db.groups.bulk_write(group_bulk_operations)
+            logging.info(f"Updated {len(group_bulk_operations)} groups.")
 
+        # Prepare bulk operations
+        doc_bulk_operations = []
+        for group in groups:
+            filter = {"label": group, "workspace": workspace}
+            add_docs = {
+                "$addToSet": {
+                    "docs": {"$each": group_docs[group]}  # Add documents to the 'docs' array
+                }
+            }
+            doc_bulk_operations.append(UpdateOne(filter, add_docs, upsert=True))
+
+        # Execute bulk operations
+        if doc_bulk_operations:
+            db.groups.bulk_write(doc_bulk_operations)
+            logging.info(f"Updated {len(doc_bulk_operations)} doc sets in groups.")
+
+
+    except Exception as e:
+        logging.error(f"Error in chunk_upload: {e}")
+        raise
 
 if __name__ == "__main__":
     worker = app.Worker(

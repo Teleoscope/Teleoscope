@@ -32,9 +32,9 @@ from pymilvus import MilvusClient, DataType, MilvusException, connections, db
 
 
 def milvus_setup(client: MilvusClient, collection_name="teleoscope"):
-    logging.info(f"Checking if collection exists...")
+    logging.info(f"Checking if collection {collection_name} exists...")
     if not client.has_collection(collection_name):
-        logging.info(f"It does not. Initializing collection {collection_name}...")
+        logging.info(f"Collection {collection_name} does not exist. Initializing...")
         # 2. Create schema
         # 2.1. Create schema
         schema = MilvusClient.create_schema(

@@ -73,85 +73,38 @@ def update_nodes(*args, database: str, node_uids: List[str], **kwargs):
         graph_uid(db, node_uid)
     return
 
-
 @app.task
 def milvus_chunk_import(database: str, userid: str, documents):
     logging.info(f"Recieved an import chunk of length {len(documents)} for database {database}.")
-    client = embeddings.connect()
-    embeddings.milvus_setup(client, collection_name=database)
     mongo_db = utils.connect(db=database)
     docs = mongo_db.documents.find(
         {"_id": {"$in": [ObjectId(str(d)) for d in documents]}}
     )
-    data = vectorize(list(docs))
-    res = client.upsert(collection_name=database, data=data)
-    client.close()
-    logging.info(f"Finished processing an import chunk of length {len(documents)} for database {database}.")
-    return res
-
-
-@app.task
-def milvus_import(
-    *args,
-    database: str,
-    userid: str,
-):
-    logging.info(f"Vectorizing all documents in database {database}...")
-    client = embeddings.connect()
-    embeddings.milvus_setup(client, collection_name=database)
-
-    mongo_db = utils.connect(db=database)
-
-    documents = mongo_db.documents.find({})
-    for batch in itertools.batched(documents, 1000):
-        data = vectorize(batch)
-        res = client.upsert(collection_name=database, data=data)
-    client.close()
-    logging.info(f"Finished vectorizing all documents in database {database}.")
-    return res
-
+    process_documents(list(docs), database)
+    logging.info(f"Sending import chunk of length {len(documents)} for database {database} to be vectorized.")
+    return
 
 @app.task
 def update_vectors(database: str, documents):
     logging.info(f"Updating {len(documents)} vectors in database {database}...")
-    client = embeddings.connect()
-    embeddings.milvus_setup(client, collection_name=database)
-    data = vectorize(documents)
-    res = client.upsert(collection_name=database, data=data)
-    client.close()
-    logging.info(f"Finished updating {len(documents)} vectors in database {database}.")
-    return res
+    process_documents(documents, database)
+    logging.info(f"Sending an update for {len(documents)} vectors in database {database}.")
+    return
 
 ################################################################################
 # Model functions
 ################################################################################
-
-def vectorize(documents):
-    return process_documents(documents)
-    # logging.info(f"Vectorizing {len(documents)} documents...")
-    # ids = [str(doc["_id"]) for doc in documents]
-    # docs = [doc["text"] for doc in documents]
-    # logging.info("Starting model encoding...")
-    # raw_embeddings = model.encode(docs)
-    # logging.info("Model encoding complete.")
-    
-    # dense_vecs = raw_embeddings["dense_vecs"]
-    # embeddings = [embedding.tolist() for embedding in dense_vecs]
-
-    # logging.info(f"{len(embeddings)} embeddings created.")
-    # data = [{"id": id_, "vector": embedding} for id_, embedding in zip(ids, embeddings)]
-    # logging.info(f"Finished vectorizing {len(documents)} documents.")
-    # return data
-
-
-def process_documents(documents):
+def process_documents(documents, database):
     try:
         # Prepare the payload as a list of dictionaries
         formatted_documents = [{'id': str(doc["_id"]), 'text': doc["text"]} for doc in documents]
 
         # Send the request directly with the list of documents
         logging.info(f"Requesting vectorization of {len(formatted_documents)} documents.")
-        response = requests.post('http://127.0.0.1:8000/vectorize', json=formatted_documents)
+        response = requests.post('http://127.0.0.1:8000/vectorize', json={
+            "documents": formatted_documents,
+            "database": database
+        })
 
         # Check the response status and return the result
         if response.status_code == 200:

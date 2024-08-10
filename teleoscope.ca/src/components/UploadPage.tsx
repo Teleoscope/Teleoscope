@@ -33,7 +33,7 @@ const template = {
             name: 'Unique IDs',
             key: 'uid',
             description: 'Any existing unique IDs that you want used.',
-            suggested_mappings: ['uid', 'id', '_id', 'unique_id']
+            suggested_mappings: ['uid', 'id', '_id', 'unique_id', "metadata.uid"]
         }
     ]
 };

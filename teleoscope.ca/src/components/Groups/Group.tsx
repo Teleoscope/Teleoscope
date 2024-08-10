@@ -10,7 +10,7 @@ import { WindowProps } from "../WindowFolder/WindowFactory";
 
 export default function Group({ data: group, reactflow_node }: WindowProps) {
   // Prepare data for the DocumentList and ButtonActions
-  const data = group?.docs.map(doc => [doc, 1.0]);
+  const data = group?.docs?.map(doc => [doc, 1.0]);
   const id = reactflow_node.id
   
   // Button actions configuration

@@ -122,6 +122,9 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
+      loops:
+        specifier: ^3.0.0
+        version: 3.0.0
       lucia:
         specifier: ^3.2.0
         version: 3.2.0
@@ -4319,6 +4322,10 @@ packages:
 
   longest-streak@3.1.0:
     resolution: {integrity: sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g==}
+
+  loops@3.0.0:
+    resolution: {integrity: sha512-LVXHkxHqhHujZlgM0IADitGyEo3lT4e8DG/ltAU58Z4Ik0EMoj0wz+vzrtiH7Jv9tGshMQPnpBIDhzcgw5srbg==}
+    engines: {node: '>=18'}
 
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
@@ -10904,6 +10911,8 @@ snapshots:
   lodash@4.17.21: {}
 
   longest-streak@3.1.0: {}
+
+  loops@3.0.0: {}
 
   loose-envify@1.4.0:
     dependencies:
