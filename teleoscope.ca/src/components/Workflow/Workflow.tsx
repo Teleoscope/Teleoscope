@@ -3,6 +3,7 @@ import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { EdgeChange, Node, NodeChange, addEdge } from 'reactflow';
 import { ReactFlowProvider } from 'reactflow';
 import { MiniMap, Controls, Background, Panel } from 'reactflow';
+import { v4 as uuidv4 } from 'uuid';
 
 import { useAppSelector, useAppDispatch } from '@/lib/hooks';
 import { updateNodes, updateEdges, makeEdge, setSelection, toggleMinMax, dropNode } from '@/actions/appState';
@@ -86,7 +87,7 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
                 if (target.data.type == 'Groups') {
                     dispatch(
                         copyCluster({
-                            graph_id: node.id.split('%')[0],
+                            graph_id: node.id,
                             workflow_id: workflow_id
                         })
                     ); // TODO: ADD index here
@@ -156,12 +157,12 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
             dispatch(
                 dropNode({
                     oid: id,
+                    uid: uuidv4(),
                     type: type,
                     width: workspace.settings?.document_width,
                     height: workspace.settings?.document_height,
                     x: position.x,
-                    y: position.y,
-                    index: index
+                    y: position.y
                 })
             );
         },
@@ -222,6 +223,7 @@ function Workflow({ drawerWidth }: { drawerWidth: number }) {
             const newEdges = addEdge(connection, []);
             dispatch(
                 makeEdge({
+                    uid: connection.target,
                     connection: connection,
                     edges: newEdges
                 })

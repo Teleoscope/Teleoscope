@@ -1,7 +1,7 @@
 import { Node, NodeProps, ReactFlowState, useStore } from 'reactflow';
 import WindowFactory from '@/components/WindowFolder/WindowFactory';
 import { NodeResizer } from '@reactflow/node-resizer';
-import { useAppSelector } from '@/lib/hooks';
+import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { useSWRF } from '@/lib/swr';
 import { Graph } from '@/types/graph';
 
@@ -30,15 +30,19 @@ const handleCSS = {
     borderRadius: '100%'
 };
 
+
+
 function BaseNode({ data, id, selected }: NodeProps) {
     const size = useStore((s) => defaultSize(s, id));
     const reactflow_node: ReactFlowNodeData = { id, ...data, ...size };
     const settings = useAppSelector(
         (state) => state.appState.workflow.settings
     );
+    const dispatch = useAppDispatch();
     const { data: graph_node }: { data: Graph } = useSWRF(
         id ? `/api/graph?uid=${id}` : null, {
-            refreshInterval: data?.updateInterval ? data.updateInterval : 0
+            refreshInterval: data?.refreshInterval ? data.refreshInterval : 0,
+            // onSuccess: () => dispatch(cancelRefreshInterval({ uid: id}))
         }
     );
 

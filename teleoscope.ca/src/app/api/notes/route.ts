@@ -10,11 +10,16 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ message: 'No user signed in.' });
     }
     const workspace = request.nextUrl.searchParams.get('workspace');
+    const workspaceId =
+        workspace && ObjectId.isValid(workspace)
+            ? new ObjectId(workspace)
+            : workspace;
 
     const result = await dbOp(async (client: MongoClient, db: Db) => {
         return await db
             .collection('notes')
-            .find({workspace: new ObjectId(workspace!)}).toArray()
+            .find({ $or: [{ workspace: workspaceId }, { workspace }] })
+            .toArray();
     });
 
     return Response.json(result);

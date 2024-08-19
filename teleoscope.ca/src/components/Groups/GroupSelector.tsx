@@ -12,6 +12,7 @@ import FolderCopyIcon from "@mui/icons-material/FolderCopy";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
 import { removeDocumentFromGroup, addDocumentToGroup } from "@/actions/appState";
 import { useSWRF } from "@/lib/swr";
+import { Groups } from "@/types/groups";
 
 
 export default function GroupSelector(props) {
@@ -19,11 +20,11 @@ export default function GroupSelector(props) {
 
   const workspace_id = useAppSelector((state) => state.appState.workspace._id);
 
-  const { data: groups } = useSWRF(workspace_id ? `/api/groups?workspace=${workspace_id}` : null)
+  const { data: groups }:{data: Array<Groups>} = useSWRF(workspace_id ? `/api/groups?workspace=${workspace_id}` : null)
 
   const groups_this_document_belongs_to = groups
     ? groups.filter((g) => {
-        return g.docs.includes(props.id);
+        return g?.docs?.includes(props.id);
       })
     : [];
 

@@ -41,7 +41,7 @@ properties:
       bsonType: ["objectId", "string"]
       description: "a note in this workspace"
   selected_workflow:
-    bsonType: ["objectId", "string"]
+    bsonType: ["objectId", "string", "null"]
     description: the selected workflow
   workflows:
     bsonType: array

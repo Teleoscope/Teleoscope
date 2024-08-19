@@ -7,6 +7,7 @@ import type { Workspaces } from "@/types/workspaces";
 class ObjectId {}
 
 export const DEFAULT_GREY = '#D3D3D3';
+export const DEFAULT_SLATE = "#0C797D"
 export const DEFAULT_DRAWER_WIDTH = 100;
 export const DEFAULT_MIN_WIDTH = 15;
 export const DEFAULT_TITLE_LENGTH = 40;
@@ -19,7 +20,8 @@ export const DEFAULT_WORKSPACE: Workspaces = {
         document_height: 35,
         document_width: 100,
         expanded: false
-    }
+    },
+    selected_workflow: null
 }
 
 export const DEFAULT_WORKFLOW: Workflows = {
@@ -33,7 +35,7 @@ export const DEFAULT_WORKFLOW: Workflows = {
         edges: []
     },
     settings: {
-        color: DEFAULT_GREY,
+        color: DEFAULT_SLATE,
         title_length: 50
     },
     last_update: new Date('December 17, 1995 03:24:00').toISOString(),

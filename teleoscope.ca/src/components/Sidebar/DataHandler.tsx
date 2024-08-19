@@ -1,5 +1,5 @@
-import Uploader from "../Uploader";
+import UploadPage from "../UploadPage";
 
 export default function DataHandler() {
-    return <Uploader />
+    return <UploadPage />
 }

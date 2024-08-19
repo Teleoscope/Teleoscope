@@ -7,13 +7,17 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import DocumentListItem from '@/components/Documents/DocumentListItem';
 import ItemList from '@/components/ItemList';
 import { mark, setSelection } from '@/actions/appState';
+import { Doclist } from '@/types/graph';
 
 export default function DocumentList({
     data,
-    group,
     loading,
     loadMore,
     ...props
+}: {
+    data: Doclist[];
+    loading: boolean;
+    loadMore: any;
 }) {
     const dispatch = useAppDispatch();
     if (loading) {
@@ -29,7 +33,6 @@ export default function DocumentList({
                 showReadIcon={true}
                 setIndex={setIndex}
                 listIndex={index}
-                group={group}
                 highlight={index == currentIndex}
                 id={item[0]}
                 key={item[0] + 'DocumentListItem'}
@@ -39,6 +42,7 @@ export default function DocumentList({
     };
 
     const onSelect = (doc) => {
+        console.log("doc", doc)
         if (doc) {
             dispatch(
                 setSelection({

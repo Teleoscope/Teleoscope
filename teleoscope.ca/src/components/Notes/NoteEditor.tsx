@@ -121,7 +121,7 @@ export default function NoteEditor({ note }) {
                 throw Error(error);
             }
         }
-    }, [note, state]);
+    }, [note]);
 
     if (!note) {
         return <>Loading note...</>;

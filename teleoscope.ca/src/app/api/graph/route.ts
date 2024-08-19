@@ -36,7 +36,8 @@ export async function GET(request: NextRequest) {
             });
             return Response.json(result);
         }
-        throw new Error("No OID, UID or list of UIDs provided.")
+        return NextResponse.json(null)
+        // throw new Error("No OID, UID or list of UIDs provided.")
     } catch (error) {
         throw new Error(error, request)
     }    

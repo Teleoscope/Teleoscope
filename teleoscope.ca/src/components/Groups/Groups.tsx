@@ -9,15 +9,13 @@ import ColorPicker from "@/components/ColorPicker";
 
 export const GroupItem = ({
   g,
-  showColorPicker,
-  setShowColorPicker,
-  onDragStart,
   removeGroup,
   relabelGroup,
-  recolorGroup,
   color,
 }) => {
-  const { data: graph_item } = useSWRF(`/api/graph?oid=${g._id}`)
+  const { data: graph_item } = useSWRF(`/api/group?group=${g._id}`)
+  const [showColorPicker, setShowColorPicker] = useState(false)
+  const dispatch = useAppDispatch()
 return (
   
   <div
@@ -57,7 +55,7 @@ return (
       <ColorPicker
         defaultColor={g.color}
         onChange={(color) => {
-          recolorGroup(color, g._id);
+          dispatch(recolorGroup({color: color, group_id: g._id}));
           setShowColorPicker(false);
         }}
       ></ColorPicker>
@@ -104,22 +102,18 @@ export default function Groups(props) {
   const dispatch = useAppDispatch()
   const { _id: workspace_id } = useAppSelector((state) => state.appState.workspace);
   const { _id: workflow_id, settings } = useAppSelector((state) => state.appState.workflow);
-  const { data: groups, isLoading } = useSWRF(workspace_id ? `/api/groups?workspace=${workspace_id}` : null);
-
-  const [showColorPicker, setShowColorPicker] = useState(false);
-
-  
+  const { data: groups, isLoading } = useSWRF(workspace_id ? `/api/groups?workspace=${workspace_id}` : null);  
 
   const fetchgroups = async () => {
     const out = [];
     for (const group of groups) {
       const g = group;
-      g["documents"] = [];
+      g["docs"] = [];
       for (const doc of g.docs) {
         const response = await fetch(
           `/api/document?document=${doc}`
         ).then((res) => res.json());
-        g["documents"].push(response);
+        g["docs"].push(response);
       }
       out.push(g);
     }
@@ -163,15 +157,8 @@ export default function Groups(props) {
 
       <GroupList
         groups={groups}
-        showColorPicker={showColorPicker}
-        setShowColorPicker={setShowColorPicker}
-        onDragStart={onDragStart}
         removeGroup={(params) => dispatch(removeGroup(params))}
         relabelGroup={(label, id) => dispatch(relabelGroup({label: label, group_id: id}))}
-        recolorGroup={(color, id) => {
-          dispatch(recolorGroup({color: color, group_id: id}));
-          setShowColorPicker(false);
-        }}
         color={settings.color}
       />
     </div>

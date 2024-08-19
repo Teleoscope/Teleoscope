@@ -1,17 +1,22 @@
-// mui
-import LoadingButton from '@mui/lab/LoadingButton';
-
 // custom components
 import DocumentList from '@/components/Documents/DocumentList';
 import Count from '@/components/Count';
 
-import { IconButton, Slider, Stack, Tooltip, Typography } from '@mui/material';
+import {
+    Box,
+    IconButton,
+    Slider,
+    Stack,
+    Tooltip,
+    Typography
+} from '@mui/material';
 import ButtonActions from '@/components/ButtonActions';
 import Histogram from '@/components/Histogram';
 import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 import { useAppSelector, useAppDispatch } from '@/lib/hooks';
 import { copyDoclistsToGroups, updateNode } from '@/actions/appState';
 import { WindowProps } from './WindowFolder/WindowFactory';
+import { useEffect, useState } from 'react';
 
 // Custom tooltip component
 function ValueLabelComponent({ children, value }) {
@@ -61,16 +66,24 @@ export default function Rank({
     reactflow_node,
     graph_node: rank
 }: WindowProps) {
-
     const { color } = useAppSelector(
         (state) => state.appState.workflow.settings
     );
 
-    if (!rank) {
-        return <>Loading Rank...</>;
-    }
+    const [version, setVersion] = useState(0);
 
-    const doclists = rank?.doclists;
+    const doclists = rank?.doclists ? rank.doclists : [];
+
+    useEffect(() => {
+        setVersion((prevVersion) => prevVersion + 1);
+    }, [rank])
+
+    const key = rank?.uid + (doclists.length || 0);
+
+
+    if (!rank) {
+        return <>Rank loading...</>
+    }
 
     const Status = (rank) => {
         if (rank) {
@@ -142,23 +155,17 @@ export default function Rank({
     };
 
     return (
-        <>
+        <Stack key={key} direction="column" sx={{ height: "100%" }}>
+
             <ButtonActions
                 inner={[
                     [Status, rank],
                     [CopyToGroup, rank]
                 ]}
             ></ButtonActions>
-            {rank ? (
-                <>
-                    <DocumentList
-                        data={doclists}
-                        pagination={true}
-                    ></DocumentList>
-                </>
-            ) : (
-                <LoadingButton loading={true} />
-            )}
-        </>
+            <Box sx={{ flexGrow: 1, flexDirection: 'column' }}>
+                <DocumentList data={doclists} pagination={true}></DocumentList>
+            </Box>
+    </Stack>
     );
 }

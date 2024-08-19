@@ -3,7 +3,8 @@ import {
     Tooltip,
     Typography,
     ToggleButton,
-    ToggleButtonGroup
+    ToggleButtonGroup,
+    Stack
 } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { BsArrowsCollapse, BsArrowsExpand } from 'react-icons/bs';
@@ -104,17 +105,27 @@ export default function Projection({ graph_node: projection }: WindowProps) {
         if (projection?.doclists?.length > 0) {
             return (
                 <Typography
-                    sx={{ width: '100%' }}
+                    sx={{ width: '100%', margin: "1em" }}
                     align="center"
                     variant="caption"
                 >
                     Number of clusters: {projection.doclists.length}
                 </Typography>
             );
-        } else if (projection?.edges?.control?.length > 0) {
+        } else if (projection?.edges?.control?.length < 5) {
             return (
                 <Typography
-                    sx={{ width: '100%' }}
+                    sx={{ width: '100%', margin: "1em" }}
+                    align="center"
+                    variant="caption"
+                >
+                    {"Projections need at least 5 documents, and work better with more."}
+                </Typography>
+            );
+        } else if (projection?.edges?.control?.length > 5) {
+            return (
+                <Typography
+                    sx={{ width: '100%', margin: "1em" }}
                     align="center"
                     variant="caption"
                 >
@@ -124,14 +135,17 @@ export default function Projection({ graph_node: projection }: WindowProps) {
         }
         return null;
     };
-
+    
+    const sum = projection?.doclists.map(d => d.ranked_documents.length).reduce(((a, c) => a + c), 0)
+    const key = projection?.uid + sum;
+    
     // Main component render
     return (
-        <>
+        <Stack key={key} direction="column" sx={{ height: "100%" }}>
             <ButtonActions
                 inner={[
-                    [ToggleCollapse, {}],
-                    [ToggleOrder, {}]
+                    // [ToggleCollapse, {}],
+                    // [ToggleOrder, {}]
                 ]}
             />
             <ButtonActions inner={[[Status, projection]]} />
@@ -140,6 +154,6 @@ export default function Projection({ graph_node: projection }: WindowProps) {
             ) : (
                 <LoadingButton loading />
             )}
-        </>
+        </Stack>
     );
 }

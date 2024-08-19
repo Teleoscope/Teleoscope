@@ -1,14 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
-import crypto from 'crypto';
-import post from '@/lib/client';
 import appState, {
     updateEdges,
     updateNodes,
     updateSearch,
     makeGroupFromBookmarks,
-    initializeProjection,
     removeCluster,
-    relabelProjection,
     removeWorkflow,
     addGroup,
     recolorGroup,
@@ -17,8 +13,6 @@ import appState, {
     removeDocumentFromGroup,
     addDocumentToGroup,
     copyCluster,
-    saveUIState,
-    updateNote,
     addNote,
     relabelNote,
     removeNote,
@@ -27,7 +21,6 @@ import appState, {
     makeEdge,
     setColor,
     relabelWorkflow,
-    removeProjection,
     updateTimestamps,
     loadAppData,
     dropNode,
@@ -37,7 +30,9 @@ import appState, {
     setWorkflowSettings,
     setWorkspaceSettings,
     loadState,
-    saveNote
+    saveNote,
+    setRefreshInterval,
+    cancelRefreshInterval,
 } from '@/actions/appState';
 import { copyDoclistsToGroups, updateNode } from '../actions/appState';
 import axios from 'axios';
@@ -53,6 +48,9 @@ import { Workflows } from '@/types/workflows';
 import { Workspaces } from '@/types/workspaces';
 import { mutate } from 'swr';
 import WindowDefinitions from '@/components/WindowFolder/WindowDefinitions';
+import createSagaMiddleware from 'redux-saga';
+import rootSaga from './sagas';
+
 
 interface AppState {
     workflow: Workflows;
@@ -70,11 +68,15 @@ const headers = (appState: AppState) => {
 const actionMiddleware = (store) => (next) => (action) => {
     // Dispatch the updateTimestamp action
     if (
+        // if it's not a purely local state thing
         action.type !== resetTimestamps.type &&
         action.type !== updateTimestamps.type &&
         action.type !== loadAppData.type &&
-        action.type !== loadState.type
+        action.type !== loadState.type &&
+        action.type !== setRefreshInterval.type &&
+        action.type !== cancelRefreshInterval.type
     ) {
+        // update the timestamps and history
         const { appState }: { appState: AppState } = store.getState();
         console.log(
             action.type,
@@ -83,14 +85,6 @@ const actionMiddleware = (store) => (next) => (action) => {
             appState
         );
         store.dispatch(updateTimestamps());
-    } else {
-        const { appState }: { appState: AppState } = store.getState();
-        console.log(
-            action.type,
-            action.payload,
-            appState?.workflow?.logical_clock,
-            appState
-        );
         const post_node = axios.post(`/api/history`, {
             history: {
                 action: action.type,
@@ -98,51 +92,39 @@ const actionMiddleware = (store) => (next) => (action) => {
                 state: appState
             }
         });
+    } else {
+        // otherwise log for debug
+        const { appState }: { appState: AppState } = store.getState();
+        console.log(
+            action.type,
+            action.payload,
+            appState?.workflow?.logical_clock,
+            appState
+        );
+        
     }
 
-    if (action.type === updateNodes.type || 
-        action.type === updateEdges.type ||
-        action.type === updateNode.type ||
-        action.type === updateNote.type ||
-        action.type === makeEdge.type ||
-        action.type === addDocumentToGroup.type ||
-        action.type === removeDocumentFromGroup.type) {
-            
-        }
+    
 
     if (action.type === dropNode.type) {
-        const uid = crypto.randomBytes(8).toString('hex');
-
-        // Perform any necessary modifications to the action payload
-        const modifiedPayload = {
-            ...action.payload,
-            uid: uid
-        };
-
-        // Create a new action object with the modified payload
-        const modifiedAction = {
-            ...action,
-            payload: modifiedPayload
-        };
-
         // Call the next middleware or the reducer with the modified action
-        const result = next(modifiedAction);
+        const result = next(action);
 
         // Perform the action or side effect you want to do after the store update
         const { appState }: { appState: AppState } = store.getState();
 
         const post_workflow = axios.post(`/api/workflow`, appState.workflow);
 
-        const apipath = WindowDefinitions(modifiedAction.payload.type).apipath;
+        const apipath = WindowDefinitions(action.payload.type).apipath;
 
         const post_node = axios
             .post(`/api/graph/drop`, {
                 workflow_id: appState.workflow._id,
                 workspace_id: appState.workspace._id,
                 reference: action.payload.oid,
-                uid: modifiedAction.payload.uid,
-                type: modifiedAction.payload.type,
-                parameters: { index: modifiedAction.payload.index }
+                uid: action.payload.uid,
+                type: action.payload.type,
+                parameters: { index: action.payload.index }
             })
             .then(() =>
                 mutate(
@@ -156,22 +138,8 @@ const actionMiddleware = (store) => (next) => (action) => {
     }
 
     if (action.type === makeNode.type) {
-        const uid = crypto.randomBytes(8).toString('hex');
-
-        // Perform any necessary modifications to the action payload
-        const modifiedPayload = {
-            ...action.payload,
-            uid: uid
-        };
-
-        // Create a new action object with the modified payload
-        const modifiedAction = {
-            ...action,
-            payload: modifiedPayload
-        };
-
         // Call the next middleware or the reducer with the modified action
-        const result = next(modifiedAction);
+        const result = next(action);
 
         // Perform the action or side effect you want to do after the store update
         const { appState }: { appState: AppState } = store.getState();
@@ -183,9 +151,9 @@ const actionMiddleware = (store) => (next) => (action) => {
                 workflow_id: appState.workflow._id,
                 workspace_id: appState.workspace._id,
                 reference: action.payload.oid,
-                uid: modifiedAction.payload.uid,
-                type: modifiedAction.payload.type,
-                parameters: { index: modifiedAction.payload.index }
+                uid: action.payload.uid,
+                type: action.payload.type,
+                parameters: { index: action.payload.index }
             })
             .then(() =>
                 mutate(
@@ -257,17 +225,19 @@ const actionMiddleware = (store) => (next) => (action) => {
                 edge.target in remove_ids || edge.source in remove_ids
         );
 
-        store.dispatch(
-            updateEdges({
-                changes: edgesToRemove.map((edge: Edge) => {
-                    const change: EdgeRemoveChange = {
-                        id: edge.id,
-                        type: 'remove'
-                    };
-                    return change;
+        if (edgesToRemove.length > 0) {
+            store.dispatch(
+                updateEdges({
+                    changes: edgesToRemove.map((edge: Edge) => {
+                        const change: EdgeRemoveChange = {
+                            id: edge.id,
+                            type: 'remove'
+                        };
+                        return change;
+                    })
                 })
-            })
-        );
+            );
+        }
 
         if (remove_ids.length > 0) {
             const remove_node = axios.post(`/api/graph/remove`, {
@@ -573,59 +543,105 @@ const actionMiddleware = (store) => (next) => (action) => {
             );
     }
 
-    const callPost = (task_name: string) => {
+    if (action.type === mark.type) {
         const { appState }: { appState: AppState } = store.getState();
-        return post({
-            task: task_name,
-            args: {
-                ...headers(appState),
-                ...action.payload
-            }
+        const { _id: workspace_id } = appState.workspace;
+        axios
+            .post(`/api/document/mark`, {
+                workspace_id: workspace_id,
+                read: action.payload.read,
+                document: action.payload.document_id
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' &&
+                        key.startsWith(
+                            `/api/document?document=${action.payload.document_id}`
+                        )
+                )
+            );
+    }
+
+    if (action.type === relabelWorkflow.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/workflow/relabel`, {
+            workspace_id: workspace_id,
+            workflow_id: workflow_id,
+            label: action.payload.document_id
         });
-    };
+    }
+
+    if (action.type === relabelNote.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/note/relabel`, {
+            workspace_id: workspace_id,
+            note_id: action.payload.note_id,
+            label: action.payload.label
+        }).then(() => mutate(
+            (key) =>
+                typeof key === 'string' &&
+                key.startsWith(
+                    `/api/note?note=${action.payload.note_id}`
+                )
+        ));;
+    }
+
+    if (action.type === relabelGroup.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/group/relabel`, {
+            workspace_id: workspace_id,
+            group_id: action.payload.group_id,
+            label: action.payload.label
+        }).then(() => mutate(
+            (key) =>
+                typeof key === 'string' &&
+                key.startsWith(
+                    `/api/group?group=${action.payload.group_id}`
+                )
+        ));
+    }
+
+    if (action.type === recolorGroup.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/group/recolor`, {
+            workspace_id: workspace_id,
+            group_id: action.payload.group_id,
+            color: action.payload.color
+        }).then(() => mutate(
+            (key) =>
+                typeof key === 'string' &&
+                (key.startsWith(
+                    `/api/group?group=${action.payload.group_id}`
+                ) || key.startsWith(`/api/groups`))
+        ));
+    }
+
+    if (action.type === updateSearch.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/search/update`, {
+            workspace_id: workspace_id,
+            search_id: action.payload.search_id,
+            query: action.payload.query
+        });
+    }
 
     switch (action.type) {
-        case relabelWorkflow.type:
-            // callPost('relabel_workflow');
-            break;
-        case updateSearch.type:
-            // callPost('update_search');
-            break;
         case copyDoclistsToGroups.type:
-            // callPost('copy_doclists_to_groups');
             break;
         case removeCluster.type:
-            // callPost('remove_cluster');
-            break;
-        case initializeProjection.type:
-            // callPost('initialize_projection');
-            break;
-        case relabelProjection.type:
-            // callPost('relabel_projection');
-            break;
-        case removeProjection.type:
-            // callPost('remove_projection');
-            break;
-        case recolorGroup.type:
-            // callPost('recolor_group');
-            break;
-        case relabelGroup.type:
-            // callPost('relabel_group');
-            break;
-        case mark.type:
-            // callPost('mark');
             break;
         case copyCluster.type:
-            // callPost('copy_cluster');
-            break;
-        case saveUIState.type:
-            // callPost('save_UI_state');
-            break;
-        case updateNote.type:
-            // callPost('update_note');
-            break;
-        case relabelNote.type:
-            // callPost('relabel_note');
             break;
     }
 
@@ -634,6 +650,7 @@ const actionMiddleware = (store) => (next) => (action) => {
     return result;
 };
 
+const sagaMiddleware = createSagaMiddleware();
 export const store = configureStore({
     reducer: {
         // [appApi.reducerPath]: appApi.reducer,
@@ -643,7 +660,10 @@ export const store = configureStore({
         getDefaultMiddleware()
             // .concat(appApi.middleware)
             .concat(actionMiddleware)
+            .concat(sagaMiddleware)
 });
+sagaMiddleware.run(rootSaga);
+
 
 export const makeStore = () => store;
 

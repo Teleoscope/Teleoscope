@@ -16,7 +16,7 @@ export default function GroupViewer({ reference }) {
   const { settings } = useAppSelector((state) => state.appState.workspace);
   const { color } = useAppSelector((state) => state.appState.workflow.settings.color);
 
-  const data = group?.docs.map((p) => {
+  const data = group?.docs?.map((p) => {
     return [p, 1.0];
   });
 
@@ -67,11 +67,6 @@ export default function GroupViewer({ reference }) {
               ],
             ]}
           ></ButtonActions>
-          {/* <List>
-            {group?.docs.map((docid) => (
-              <DocumentListItem key={docid} id={docid}></DocumentListItem>
-            ))}
-          </List> */}
           <div style={{height: "25vh"}}>
             <DocumentList data={[{ranked_documents: data}]} pagination={true} loadMore={handleLoadMore}></DocumentList>
           </div>

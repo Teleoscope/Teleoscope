@@ -65,7 +65,8 @@
             "selected_workflow": {
                 "bsonType": [
                     "objectId",
-                    "string"
+                    "string",
+                    "null"
                 ],
                 "description": "the selected workflow"
             },

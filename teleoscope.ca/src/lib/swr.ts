@@ -3,7 +3,7 @@ import useSWR from 'swr';
 
 const defaultFetcher = (url: string) => axios.get(url).then((res) => res.data);
 const defaultConfig = {
-    refreshInterval: 60000, // update every minute
+    refreshInterval: 30000, // update every 30 seconds
     revalidateOnFocus: true,
     revalidateOnReconnect: true
 };

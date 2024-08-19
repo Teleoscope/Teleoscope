@@ -104,7 +104,7 @@ export const AppState = createSlice({
                 (w) => w.id === action.payload.id
             );
             if (index > -1) {
-                const node = state.workflow.nodes[index];
+                const node: Node = state.workflow.nodes[index];
                 const newNode = {
                     ...node,
                     width:
@@ -143,7 +143,7 @@ export const AppState = createSlice({
                 (w) => w.id === action.payload.id
             );
             if (index > -1) {
-                const node = state.workflow.nodes[index];
+                const node: Node = state.workflow.nodes[index];
                 const newNode = {
                     ...node,
                     width: state.workspace.settings?.document_width,
@@ -162,7 +162,7 @@ export const AppState = createSlice({
                 (w) => w.id === action.payload.id
             );
             if (index > -1) {
-                const node = state.workflow.nodes[index];
+                const node: Node = state.workflow.nodes[index];
                 const newNode = {
                     ...node,
                     width: 400,
@@ -171,6 +171,40 @@ export const AppState = createSlice({
                         ...node.style,
                         width: 400,
                         height: 450
+                    }
+                };
+                state.workflow.nodes[index] = newNode;
+            }
+        },
+        setRefreshInterval: (state: AppStateType, action: PayloadAction<{ uid: string, refreshInterval: number }>) => {
+            const index = state.workflow.nodes.findIndex(
+                (w) => w.id === action.payload.uid
+            );
+            if (index > -1) {
+                const node: Node = state.workflow.nodes[index];
+                const newNode = {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        refreshInterval: action.payload.refreshInterval,
+                        refreshing: true
+                    }
+                };
+                state.workflow.nodes[index] = newNode;
+            }
+        },
+        cancelRefreshInterval: (state, action: PayloadAction<{uid: string}>) => {
+            const index = state.workflow.nodes.findIndex(
+                (w) => w.id === action.payload.uid
+            );
+            if (index > -1) {
+                const node: Node = state.workflow.nodes[index];
+                const newNode = {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        refreshInterval: 0,
+                        refreshing: false
                     }
                 };
                 state.workflow.nodes[index] = newNode;
@@ -246,6 +280,7 @@ export const AppState = createSlice({
         dropNode: (
             state: AppStateType,
             action: PayloadAction<{
+                oid: string;
                 uid: string;
                 type: string;
                 x: number;
@@ -297,7 +332,7 @@ export const AppState = createSlice({
                 }
             });
         },
-        makeEdge: (state: AppStateType, action: PayloadAction<{ edges: Edge[] }>) => {
+        makeEdge: (state: AppStateType, action: PayloadAction<{ uid: string, edges: Edge[] }>) => {
             if (
                 !state.workflow.edges.some((se) =>
                     action.payload.edges.some((ae) => se.id === ae.id)
@@ -311,7 +346,7 @@ export const AppState = createSlice({
         },
         loadWorkflow: (
             state: AppStateType,
-            action: PayloadAction<{ workflow_id: string }>
+            action: PayloadAction<{ workflow_id: string, workspace_id: string }>
         ) => {
             state.workspace.selected_workflow = action.payload.workflow_id;
         },
@@ -441,7 +476,9 @@ export const {
     dropNode,
     loadWorkflow,
     loadState,
-    saveNote
+    saveNote,
+    setRefreshInterval,
+    cancelRefreshInterval
 } = AppState.actions;
 
 export default AppState.reducer;
