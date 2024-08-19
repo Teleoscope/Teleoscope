@@ -29,7 +29,7 @@ export const featureList: InfoCardProps[] = [
                 description: "Telescope's state of the art drag-and-drop interface enables seamless data navigation outside the confines of traditional rows and columns. Our streamlined user experience empowers analysts to delve into their data with ease, allowing analysts to focus on data exploration over data parsing.",
             },
         ],
-        graphic: "AnalyzeGraphic.svg",
+        graphic: "DiscoverGraphic.svg",
     },
     {
         title: "Collaboration and Sharing",
@@ -43,6 +43,6 @@ export const featureList: InfoCardProps[] = [
                 description: "Telescope is designed to work seamlessly with the existing suite of tools you and your team already use. From importing data from external sources to exporting your results and analyses. Telescope seamlessly integrates with your existing tools.",
             },
         ],
-        graphic: "CollaborationGraphic.svg",
+        graphic: "DiscoverGraphic.svg",
     }
 ]

@@ -1,6 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
-import GetStartedBtn from "../GetStartedBtn";
+import { cn } from "@/lib/utils";
 
 const menuItems = [
   {
@@ -13,36 +12,48 @@ const menuItems = [
   },
   {
     label: "Resources",
-    href: "https://teleoscope.ca/",
+    href: "/resources",
+  },
+  {
+    label: "Get Started",
+    href: "/signup",
+    variant: "primary",
+  },
+  {
+    label: "Sign In",
+    href: "/signin",
   },
 ];
 
 export default function Menu() {
-  const menuStyle = "flex items-center justify-between px-2 gap-4 ";
+  const menuStyle = "flex items-center justify-between px-2 gap-4";
   const menuItemStyle =
-    "flex-shrink-0 p-2 font-medium text-neutral-900 rounded hover:bg-neutral-100 hidden md:flex";
+    "flex-shrink-0 p-2 font-medium text-neutral-900 rounded hover:bg-neutral-100";
+  const menuItemPrimaryStyle =
+    "flex-shrink-0  bg-neutral-900 text-white rounded p-2 font-medium hover:bg-neutral-800";
+
   return (
-    <div className="flex items-center justify-between relative z-20">
+    <div className="flex items-center justify-between">
       <div className="flex-shrink-0 p-4 font-bold">
-        <Link href="/" className="font-bold text-2xl  relative ">
-          <Image
-            src={"/assets/TeleoscopeLogo.svg"}
-            alt="Logo"
-            width={90}
-            height={8}
-          />
+        <Link href="/" passHref className="hover:text-pink-600 ">
+          Teleoscope
         </Link>
       </div>
       <section>
         <div className={menuStyle}>
           {menuItems.map((item) => (
             <div key={item.label}>
-              <Link href={item.href} className={menuItemStyle}>
+              <Link
+                href={item.href}
+                className={cn(
+                  menuItemStyle,
+                  item.variant === "primary" && menuItemPrimaryStyle
+                )}
+              >
                 {item.label}
               </Link>
             </div>
           ))}
-          <GetStartedBtn />
         </div>
       </section>
     </div>

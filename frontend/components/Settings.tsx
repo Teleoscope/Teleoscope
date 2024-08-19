@@ -21,7 +21,10 @@ export default function Settings(props) {
   const handleColorChange = (color) => {
     dispatch(setColor({color: color}))
   };
-
+  
+          
+        
+          
 
   return (
     <Stack>
@@ -35,7 +38,7 @@ export default function Settings(props) {
         min={50}
         max={500}
         onChangeCommitted={(event, value) =>
-          handleChange(event, value, "default_document_width")
+          handleChange(event, { workspace: {settings: {document_width: value}}})
         }
         sx={{ color: settings.color }}
 
@@ -50,15 +53,15 @@ export default function Settings(props) {
         min={30}
         max={500}
         onChangeCommitted={(event, value) =>
-          handleChange(event, value, "default_document_height")
+          handleChange(event, { workspace: {settings: {document_height: value}}})
         }
         sx={{ color: settings.color }}
       />
       <Typography>Automatically Expand Infopanel</Typography>
       <Switch
         checked={settings.defaultExpanded}
-        onChange={(event) =>
-          handleChange(event, event.target.checked, "defaultExpanded")
+        onChange={(event, value) =>
+          handleChange(event, { workspace: {settings: {expanded: value}}})
         }
         color="primary"
         sx={{
@@ -82,7 +85,7 @@ export default function Settings(props) {
         min={10}
         max={200}
         onChangeCommitted={(event, value) =>
-          handleChange(event, value, "default_title_length")
+          handleChange(event, { workflow: {settings: {title_length: value}}})
         }
         sx={{ color: settings.color }}
       />

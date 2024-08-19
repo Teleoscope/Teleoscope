@@ -6,10 +6,10 @@ import { Plans } from '@/lib/plans';
 import { Products } from '@/types/products';
 import { ObjectId } from 'mongodb';
 
-const key =
-    process.env.NODE_ENV == 'production'
-        ? process.env.STRIPE_CLIENT_SECRET
-        : process.env.STRIPE_TEST_SECRET_KEY;
+const key = process.env.STRIPE_TEST_SECRET_KEY
+    // process.env.NODE_ENV == 'production'
+        // ? process.env.STRIPE_CLIENT_SECRET
+        // : process.env.STRIPE_TEST_SECRET_KEY;
 
 if (!process.env.STRIPE_TEST_SECRET_KEY) {
     // throw new Error(
@@ -43,7 +43,8 @@ export async function get_stripe(): Promise<Stripe> {
  */
 export async function recreate_products() {
     const stripe = await get_stripe();
-    const db = (await client()).db();
+    const mongo_client = await client();
+    const db = mongo_client.db();
 
     for (const product of Plans) {
         const product_result = await stripe.products.create({
@@ -92,13 +93,15 @@ export async function resolve_subscriptions_by_user_id(user_id: string) {
 async function getAccountByUserId(userId: string) {
     const mongo_client = await client();
     const db = mongo_client.db();
-    return await db.collection('accounts').findOne({ "users.owner": userId });
+    const result = await db.collection('accounts').findOne({ "users.owner": userId });
+    return result
 }
 
 async function getAccountByStripeId(customer_id: string) {
     const mongo_client = await client();
     const db = mongo_client.db();
-    return await db.collection('accounts').findOne({ stripe_id: customer_id });
+    const result = await db.collection('accounts').findOne({ stripe_id: customer_id });
+    return result
 }
 
 async function accumulateResources(customer_id: string): Promise<Products> {

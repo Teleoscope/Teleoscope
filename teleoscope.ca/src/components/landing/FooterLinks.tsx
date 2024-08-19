@@ -1,6 +1,4 @@
 import { GithubIcon, LinkedinIcon } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 
 const socialLinks = [
   {
@@ -24,11 +22,6 @@ const links = [
         href: "/about",
       },
       {
-        label: "Get Started",
-        href: "/signup",
-        variant: "primary",
-      },
-      {
         label: "Pricing",
         href: "/pricing",
       },
@@ -36,12 +29,24 @@ const links = [
         label: "Resources",
         href: "https://teleoscope.ca/",
       },
-
+      {
+        label: "Get Started",
+        href: "/signup",
+        variant: "primary",
+      },
     ],
   },
   {
     groupLabel: "Company",
     links: [
+      {
+        label: "About Us",
+        href: "/about",
+      },
+      {
+        label: "Contact",
+        href: "/contact",
+      },
       {
         label: "Privacy Policy",
         href: "/privacy",
@@ -58,14 +63,9 @@ export default function FooterLinks() {
   return (
     <div className="flex  gap-4 w-full py-5 px-10">
       <div className="flex flex-col gap-2 flex-1">
-        <Link href="/" className="font-bold text-2xl  relative">
-        <Image
-            src={"/assets/TeleoscopeLogo.svg"}
-            alt="Logo"
-            width={120}
-            height={20}
-        />
-        </Link>
+        <a href="/" className="font-bold text-2xl">
+          Teleoscope
+        </a>
         <div className="flex gap-2">
           {socialLinks.map((link) => (
             <a

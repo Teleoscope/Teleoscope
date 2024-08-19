@@ -1,0 +1,21 @@
+# Notes
+bsonType: object
+title: note
+required:
+  - label
+properties:
+  _id:
+    bsonType: objectId
+    description: the id of the note
+  label:
+    bsonType: string
+    description: the label of the note
+  content:
+    bsonType: object
+    description: the content of the note as json
+  text:
+    bsonType: string
+    description: the content of the note as plaintext
+  workspace:
+    bsonType: ["objectId", "string"]
+    description: the workspace that this note belongs to

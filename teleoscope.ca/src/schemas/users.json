@@ -20,7 +20,7 @@
                     "description": "A valid email string"
                 }
             },
-            "hashed_passsword": {
+            "hashed_password": {
                 "bsonType": "string",
                 "description": "A salted hashed password string"
             },

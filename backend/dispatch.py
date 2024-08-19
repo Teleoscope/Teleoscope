@@ -114,6 +114,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "update_note":
                 res = tasks.update_note.signature(args=(), kwargs=kwargs)
 
+            case "vectorize_note":
+                res = tasks.vectorize_note.signature(args=(), kwargs=kwargs)
+
             case "relabel_note":
                 res = tasks.relabel_note.signature(args=(), kwargs=kwargs)
 
@@ -146,6 +149,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             
             case "file_upload":
                 res = tasks.file_upload.signature(args=(), kwargs=kwargs)
+            
+            case "update_nodes":
+                res = tasks.update_nodes.signature(args=(), kwargs=kwargs)
 
 
         try:
@@ -156,6 +162,7 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
 
 tasks.app.steps["consumer"].add(WebTaskConsumer)
+
 
 
 if __name__ == '__main__':

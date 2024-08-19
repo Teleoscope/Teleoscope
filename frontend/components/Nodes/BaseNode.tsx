@@ -25,7 +25,6 @@ function BaseNode({ data, id, selected }) {
   const size = useStore(s => defaultSize(s, id) );
   const windata = { ...data, ...size };
   const settings = useAppSelector((state) => state.windows.settings);
-  
 
   return (
       <>
