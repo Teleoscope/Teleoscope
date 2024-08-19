@@ -20,7 +20,7 @@ export function WorkspaceSettings(props: WorkspaceSettingsProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost">
+        <Button variant="ghost" size={"icon"} className="p-0 w-full h-full">
           <DotsVerticalIcon />
         </Button>
       </DialogTrigger>

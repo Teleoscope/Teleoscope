@@ -3,9 +3,11 @@ import { useSWRF } from '@/lib/swr';
 import { User } from '@/lib/types/account';
 // UserContext.tsx
 import React, { createContext, useContext, ReactNode } from 'react';
+import {Accounts} from "@/types/accounts";
 
 interface UserContextType {
   user: User;
+  account: Accounts;
 }
 
 export const UserContext = createContext<UserContextType>({} as UserContextType);
@@ -25,20 +27,22 @@ interface UserContextProviderProps {
 
 export const UserContextProvider: React.FC<UserContextProviderProps> = ({ userId, children }) => {
   const { data: user, error, isLoading } = useSWRF(`/api/user?email=w@w.com`);
+    const { data: account, error: accountError, isLoading: accountIsLoading } = useSWRF(`/api/account`);
+    console.log('Account:', account);
 
   console.log('User:', user);
 
-  if (isLoading) {
+  if (isLoading || accountIsLoading) {
     return <>Loading...</>;
   }
   
-  if (error) {
+  if (error || accountError) {
     return <>An error occurred: {error.message}</>;
   }
 
   
  return (
-  <UserContext.Provider value={ { user: user}}>
+  <UserContext.Provider value={ { user: user, account: account } }>
     {children}
   </UserContext.Provider>
 );}

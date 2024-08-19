@@ -8,7 +8,6 @@ import {
     DialogTrigger
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { PlusIcon } from '@radix-ui/react-icons';
 import { toast } from 'sonner';
 import {
     FormField,
@@ -29,11 +28,17 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
-import { Teams, Workspaces } from '@/types';
+import { PlusIcon } from 'lucide-react';
+import { Teams } from '@/types/teams';
+import { Workspaces } from '@/types/workspaces';
+
 
 export function NewWorkspaceModal({ teams = [] }: { teams: Teams[] }) {
-    const teamLabels = teams.length > 0 ? teams.map(team => team.label) : [];
-    const teamNames = teamLabels.length > 0 ? [teamLabels[0], ...teamLabels.slice(1)] as [string, ...string[]] : [''];
+    const teamLabels = teams.length > 0 ? teams.map((team) => team.label) : [];
+    const teamNames =
+        teamLabels.length > 0
+            ? ([teamLabels[0], ...teamLabels.slice(1)] as [string, ...string[]])
+            : [''];
 
     const FormSchema = z.object({
         label: z.string().min(3, 'Label must be at least 3 characters long'),
@@ -55,7 +60,10 @@ export function NewWorkspaceModal({ teams = [] }: { teams: Teams[] }) {
         setLoading(true);
         const body = {
             label: form.getValues('label'),
-            team: teams[teamNames.indexOf(form.getValues('team'))]?._id.toString() || ''
+            team:
+                teams[
+                    teamNames.indexOf(form.getValues('team'))
+                ]?._id.toString() || ''
         };
 
         try {
@@ -87,18 +95,18 @@ export function NewWorkspaceModal({ teams = [] }: { teams: Teams[] }) {
     }
 
     if (teams.length === 0) {
-        return <>You need at least one team to make a workspace...</>;
+        return <></>;
     }
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button
-                    variant="secondary"
-                    className="p-2 text-primary-500 flex gap-2 items-center hover:bg-primary-200 hover:text-primary-600 border"
-                    disabled={!teams.length}
+                    className=" p-1  h-8 flex gap-2 items-center"
+                    // disabled={teams.length === 0}
                 >
-                    <PlusIcon className="w-full" />
+                    
+                    <PlusIcon className="w-full" size={20} />
                     New workspace
                 </Button>
             </DialogTrigger>

@@ -14,5 +14,6 @@ export async function GET(request: NextRequest) {
         ]
         // limit: 4,
     });
+
     return NextResponse.json(products.data.reverse());
 }

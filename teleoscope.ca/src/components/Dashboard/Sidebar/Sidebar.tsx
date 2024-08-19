@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import SidebarPlanUpgradeCard from "@/components/Dashboard/Sidebar/SidebarPlanUpgradeCard";
 
 
 export type SidebarOption = {
@@ -12,16 +13,19 @@ function capitalizeFirstLetter(text: string) {
     return text.charAt(0).toUpperCase() + text.slice(1);
   }
 
-export function Sidebar({children, sidebarOptions} : {sidebarOptions: Record<string, SidebarOption[]>, children: React.ReactNode}) {
+export function Sidebar({children, sidebarOptions,
+  haveSections = true
+
+} : {sidebarOptions: Record<string, SidebarOption[]>, children: React.ReactNode, haveSections: boolean}) {
     return (
-      <div className="flex flex-col h-screen bg-zinc-50 border-r  w-64 overflow-hidden">
+      <div className="flex flex-col h-screen bg-appPrimary-50 bg-opacity-20 border-r  w-64 overflow-hidden">
       {children}
         {Object.entries(sidebarOptions).map(([key, options]) => (
           <div className="flex flex-col pt-2  pb-6 " key={key}>
-            <span className="text-md font-semibold p-4 py-2 ">
+            {haveSections && <span className="text-md font-semibold p-4 py-2 ">
               {capitalizeFirstLetter(key)}
-            </span>
-            <div className="flex flex-col flex-1 px-2 ">
+            </span>}
+            <div className="flex flex-col gap-2 flex-1 px-2 ">
               {options.map((option) => (
                 <Link key={option.label} href={option.href}>
                   <span className="flex items-center gap-4 p-2 rounded-lg text-md hover:bg-gray-200 cursor-pointer">
@@ -33,8 +37,9 @@ export function Sidebar({children, sidebarOptions} : {sidebarOptions: Record<str
             </div>
           </div>
         ))}
-        <div className="flex flex-1 items-end justify-center  ">
-          <Link href="/" className="w-full border-t p-2 flex justify-center">
+        <div className="flex flex-col flex-1  justify-end  ">
+            <SidebarPlanUpgradeCard />
+          <Link href="/public" className="w-full border-t p-2 flex justify-center">
           <Image
             src={"/assets/TeleoscopeLogo.svg"}
             alt="Logo"
@@ -46,4 +51,3 @@ export function Sidebar({children, sidebarOptions} : {sidebarOptions: Record<str
       </div>
     );
   }
-  

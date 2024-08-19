@@ -115,18 +115,18 @@ export function WorkspaceCollaboratorsModal(
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="flex flex-row  items-center w-full justify-end p-2">
+        <div className="flex flex-row  items-center w-full justify-end ">
           {activeContributors.slice(0, MAX_CONTRIBUTORS_DISPLAY).map((c, i, a) => (
             <div
               id={c.id}
               key={`${c.id}-${i}-contributor`}
-              className=" border rounded-full w-6 h-6 p-1 text-2xs items-center justify-center flex -ml-2 z-0 shadow-sm bg-neutral-50"
+              className=" border rounded-full w-8 h-8 p-1 text-2xs items-center justify-center flex -ml-2 z-0 shadow-sm bg-neutral-50"
             >
-              <PersonIcon className="w-6 h-6 text-neutral-400" />
+              <PersonIcon className="w-8 h-8 text-neutral-400" />
             </div>
           ))}
           {activeContributors.length > MAX_CONTRIBUTORS_DISPLAY && (
-            <div className=" border rounded-full text-neutral-400 text-2xs w-6 h-6 p-1 text-xs items-center justify-center flex -ml-2 z-0 bg-neutral-50 shadow-sm">
+            <div className=" border rounded-full text-neutral-400 text-2xs w-8 h-8 p-1 text-xs items-center justify-center flex -ml-2 z-0 bg-neutral-50 shadow-sm">
               +{activeContributors.length - 3}
             </div>
           )}
@@ -134,7 +134,7 @@ export function WorkspaceCollaboratorsModal(
           <Button
             size="icon"
             variant="ghost"
-            className="border ml-1 p-0.5 w-6 h-6 z-10 rounded-full bg-white text-primary-500 hover:bg-primary-200 hover:text-primary-600 shadow-sm"
+            className="border ml-1 p-2 w-8 h-8 z-10 rounded-full bg-white hover:bg-primary-200 hover:text-primary-600 shadow-sm"
           >
             <PlusIcon className="w-6 h-6" />
           </Button>
