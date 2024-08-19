@@ -16,12 +16,12 @@ const menuItems = [
   },
   {
     label: "Get Started",
-    href: "/signup",
+    href: "/auth/signup",
     variant: "primary",
   },
   {
     label: "Sign In",
-    href: "/signin",
+    href: "/auth/signin",
   },
 ];
 

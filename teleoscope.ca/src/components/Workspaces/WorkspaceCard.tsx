@@ -25,7 +25,7 @@ export const WorkspaceCard = ({ workspaceId } : { workspaceId:  string | ObjectI
     <Card className=" relative flex-shrink-0 flex flex-col border-none shadow-none  overflow-hidden bg-transparent ">
       <CardContent className="p-0 flex flex-col flex-1 justify-center items-center min-w-40 min-h-40  h-40 w-44 relative flex-shrink-0  bg-white shadow overflow-hidden border  rounded-lg ">
           <Link
-            href={`/app/workspace/${workspace._id}`}
+            href={`/workspace/${workspace._id}`}
             className=" font-bold flex items-center p-0 from-appPrimary-50 to-zinc-50 bg-gradient-to-br bg-opacity-50 h-full w-full flex-1"
           >
              <div className="text-md p-0 font-semibold w-full justify-center flex items-center gap-1 ">

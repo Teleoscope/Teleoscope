@@ -27,10 +27,7 @@ interface UserContextProviderProps {
 
 export const UserContextProvider: React.FC<UserContextProviderProps> = ({ userId, children }) => {
   const { data: user, error, isLoading } = useSWRF(`/api/user?email=w@w.com`);
-    const { data: account, error: accountError, isLoading: accountIsLoading } = useSWRF(`/api/account`);
-    console.log('Account:', account);
-
-  console.log('User:', user);
+  const { data: account, error: accountError, isLoading: accountIsLoading } = useSWRF(`/api/account`);
 
   if (isLoading || accountIsLoading) {
     return <>Loading...</>;
