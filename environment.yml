@@ -42,6 +42,7 @@ dependencies:
   - numpy-base
   - openssl
   - packaging
+  - peft
   - pika
   - pip
   - platformdirs
