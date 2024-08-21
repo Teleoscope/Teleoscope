@@ -17,7 +17,7 @@ const railwayFont = Raleway({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Teleoscope",
-  description: "AI assisted qualitative analysis.",
+  description: "AI assisted qualitative analysis."
 };
 
 export default function RootLayout({

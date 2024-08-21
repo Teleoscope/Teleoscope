@@ -19,7 +19,6 @@ export default function CorporateLayout({
 }) {
   return (
     <section>
-      <Menu />
       {children}
     </section>
   )
