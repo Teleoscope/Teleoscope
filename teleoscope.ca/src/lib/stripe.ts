@@ -12,15 +12,15 @@ const key = process.env.STRIPE_TEST_SECRET_KEY
         // : process.env.STRIPE_TEST_SECRET_KEY;
 
 if (!process.env.STRIPE_TEST_SECRET_KEY) {
-    throw new Error(
-        'process.env.STRIPE_TEST_SECRET_KEY is missing. Please set the environment variable.'
-    );
+    // throw new Error(
+    //     'process.env.STRIPE_TEST_SECRET_KEY is missing. Please set the environment variable.'
+    // );
 }
 
 if (!process.env.STRIPE_CLIENT_SECRET) {
-    throw new Error(
-        'process.env.STRIPE_CLIENT_SECRET is missing. Please set the environment variable.'
-    );
+    // throw new Error(
+    //     'process.env.STRIPE_CLIENT_SECRET is missing. Please set the environment variable.'
+    // );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

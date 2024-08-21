@@ -157,7 +157,7 @@ export async function signin(formData: FormData): Promise<ActionResult> {
         existingUser._id.toString()
     );
 
-    return redirect('/dashboard');
+    return redirect('/app/dashboard');
 }
 
 /**

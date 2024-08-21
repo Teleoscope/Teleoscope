@@ -12,6 +12,7 @@ import { EnterIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { ObjectId } from "mongodb";
 import { useSWRF } from "@/lib/swr";
+import { WorkspaceCollaboratorsModal } from "./WorkspaceCollaboratorsModal";
 
 export const WorkspaceCard = ({ workspaceId } : { workspaceId:  string | ObjectId }) => {
   const { data: workspace, error, isLoading } = useSWRF(workspaceId ? `/api/workspace?workspace=${workspaceId}`:null)
@@ -20,35 +21,34 @@ export const WorkspaceCard = ({ workspaceId } : { workspaceId:  string | ObjectI
     return <>Loading...</>
   }
 
-  
   return (
-    <Card className="w-full h-40 flex-shrink-0 flex flex-col overflow-hidden border  rounded-lg">
-      <CardHeader className=" bg-neutral-50 flex flex-row justify-between  w-full items-center border-b p-2 py-1 m-0 space-y-0">
-        <CardTitle className="text-md p-0 font-medium w-fit flex items-center gap-1 ">
-          {workspace.label}
-          <WorkspaceSettings id={workspace._id} name={workspace.label} />
-        </CardTitle>
-
-        <Button variant="ghost" className="flex items-center ">
+    <Card className=" relative flex-shrink-0 flex flex-col border-none shadow-none  overflow-hidden bg-transparent ">
+      <CardContent className="p-0 flex flex-col flex-1 justify-center items-center min-w-40 min-h-40  h-40 w-44 relative flex-shrink-0  bg-white shadow overflow-hidden border  rounded-lg ">
           <Link
             href={`/workspace/${workspace._id}`}
-            className=" font-bold flex items-center p-0"
+            className=" font-bold flex items-center p-0 from-appPrimary-50 to-zinc-50 bg-gradient-to-br bg-opacity-50 h-full w-full flex-1"
           >
-            <EnterIcon />
+             <div className="text-md p-0 font-semibold w-full justify-center flex items-center gap-1 ">
+          {workspace.label}
+        </div>
           </Link>
-        </Button>
-      </CardHeader>
-      <CardContent className="p-3 flex flex-col flex-1 ">
-        <CardDescription className="text-sm">
-          {workspace.description || "No description"}
-        </CardDescription>
+ 
       </CardContent>
-      <CardFooter className="flex flex-col  justify-center items-center px-2 py-1 z-30">
-        {/* <WorkspaceCollaboratorsModal
+      <CardFooter className="flex items-center  w-full justify-between p-0 gap-1 py-1">
+        <WorkspaceCollaboratorsModal
           id={workspace._id}
           name={workspace.label}
           contributors={workspace.contributors || []}
-        /> */}
+        />
+
+
+
+<div className="flex flex-col bg-white shadow-sm  border w-8 h-8 justify-center items-center  rounded-full px-2 py-1">
+
+                  <WorkspaceSettings id={workspace._id} name={workspace.label} />
+                  </div>
+
+           
       </CardFooter>
     </Card>
   );
