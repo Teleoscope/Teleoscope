@@ -32,7 +32,6 @@ import { PlusIcon } from 'lucide-react';
 import { Teams } from '@/types/teams';
 import { Workspaces } from '@/types/workspaces';
 
-
 export function NewWorkspaceModal({ teams = [] }: { teams: Teams[] }) {
     const teamLabels = teams.length > 0 ? teams.map((team) => team.label) : [];
     const teamNames =
@@ -105,7 +104,6 @@ export function NewWorkspaceModal({ teams = [] }: { teams: Teams[] }) {
                     className=" p-1  h-8 flex gap-2 items-center"
                     // disabled={teams.length === 0}
                 >
-                    
                     <PlusIcon className="w-full" size={20} />
                     New workspace
                 </Button>
