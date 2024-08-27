@@ -31,7 +31,7 @@ const links = [
       },
       {
         label: "Get Started",
-        href: "/signup",
+        href: "/auth/signup",
         variant: "primary",
       },
     ],

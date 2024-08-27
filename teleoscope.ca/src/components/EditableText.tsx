@@ -1,8 +1,8 @@
 import React from "react";
 
 // Creat an EditableText component
-function EditableText({ initialValue, callback }) {
-  const [showInputElement, setShowInputElement] = React.useState(false);
+function EditableText({ initialValue, callback, startEditing = false }) {
+  const [showInputElement, setShowInputElement] = React.useState(startEditing);
   const [value, setValue] = React.useState(initialValue);
 
   const handleChange = (e) => {

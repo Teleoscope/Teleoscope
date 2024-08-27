@@ -8,6 +8,7 @@ export interface Workspaces {
   notes?: Array<any>;
   selected_workflow: any;
   workflows: Array<any>;
+  storage: Array<any>;
 }
 
 export interface Settings {

@@ -26,7 +26,7 @@ export default function TopBar(props) {
     }
 
     const handleDashboard = () => {
-      router.push("/dashboard")
+      router.push("/app/dashboard")
     }
 
     const handleDocumentation = () => {

@@ -142,6 +142,8 @@ def graph_uid(db, uid):
             node = update_document(db, node, parameters)
         case "Group":
             node = update_group(db, node, parameters)
+        case "Storage":
+            node = update_storage(db, node, parameters)
         case "Search":
             node = update_search(db, node, parameters)
         case "Note":
@@ -201,6 +203,24 @@ def update_group(db: database.Database, group_node, parameters):
     }
     group_node["doclists"] = [doclist]
     return group_node
+
+
+################################################################################
+# Update Storage
+################################################################################
+def update_storage(db: database.Database, storage_node, parameters):
+    storage_id = ObjectId(str(storage_node["reference"]))
+    storage = db.storage.find_one(storage_id)
+    documents = storage["docs"]
+
+    doclist = {
+        "reference": storage_id,
+        "uid": storage_node["uid"],
+        "type": storage_node["type"],
+        "ranked_documents": [(d, 1.0) for d in documents],
+    }
+    storage_node["doclists"] = [doclist]
+    return storage_node
 
 
 ################################################################################

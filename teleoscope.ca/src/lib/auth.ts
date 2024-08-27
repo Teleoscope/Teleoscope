@@ -190,5 +190,5 @@ export async function signup(formData: FormData): Promise<ActionResult> {
     await initialize_user(userId, hashedPassword, email);
     await authenticate(userId);
 
-    return redirect('/dashboard');
+    return redirect('/app/dashboard');
 }

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAppSelector } from "@/lib/hooks";
 
 // material ui
@@ -22,30 +23,36 @@ import { onDragStart } from "@/lib/drag";
 import { useSWRF } from "@/lib/swr";
 
 export default function DocumentListItem(props) {
-  const dispatch = useAppDispatch()
-  const { data: document, error: document_error, isLoading: document_loading} = useSWRF(props.id ? `/api/document?document=${props.id}` : null)
+  const dispatch = useAppDispatch();
+  const { data: document, error: document_error, isLoading: document_loading } = useSWRF(
+    props.id ? `/api/document?document=${props.id}` : null
+  );
   const title = document ? preprocessTitle(document.title) : false;
   const settings = useAppSelector((state) => state.appState.workflow.settings);
 
+  const [isHovered, setIsHovered] = useState(false);
+
   if (document_loading || document_error) {
-    return <div>Document Loading...</div>
+    return <div>Document Loading...</div>;
   }
-  
+
   const handleSetIndex = () => {
     if (props.setIndex) {
       props.setIndex(props.listIndex);
     }
   };
-  const handleRead = () => {
-    dispatch(mark({document_id: document._id, read: !document.state.read}));
-  };
 
+  const handleRead = () => {
+    dispatch(mark({ document_id: document._id, read: !document.state.read }));
+  };
 
   return (
     <div
       draggable={true}
       onClick={handleSetIndex}
       onDragStart={(e) => onDragStart(e, document._id, "Document")}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         ...props.style,
         position: "relative",
@@ -57,7 +64,7 @@ export default function DocumentListItem(props) {
         backgroundColor: props.highlight ? "#EEEEEE" : "white",
       }}
       id={document?._id}
-    > 
+    >
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Stack
           direction="row"
@@ -85,14 +92,21 @@ export default function DocumentListItem(props) {
           <DocumentTitle title={title} noWrap={false} />
         </Stack>
 
-        {props.ShowDeleteIcon ? (
-          <Deleter 
-            callback={() => dispatch(removeDocumentFromGroup({group_id: props.group._id, document_id: document._id}))} 
-            color={settings.color}
-          />    
-        ) : (
-          <></>
-        )}
+        <div style={{ width: "24px", height: "24px" }}>
+          {props.ShowDeleteIcon && isHovered ? (
+            <Deleter
+              callback={() =>
+                dispatch(
+                  removeDocumentFromGroup({
+                    group_id: props.group._id,
+                    document_id: document._id,
+                  })
+                )
+              }
+              color={settings.color}
+            />
+          ) : null}
+        </div>
       </Stack>
     </div>
   );

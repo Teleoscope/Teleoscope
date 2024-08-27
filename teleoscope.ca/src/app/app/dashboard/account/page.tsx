@@ -9,7 +9,7 @@ export default function Account() {
         
         <AccountDisplay />
 
-        <Link href="/dashboard/purchases">Purchases</Link>
+        <Link href="/app/dashboard/purchases">Purchases</Link>
       </div>
     </main>
   );

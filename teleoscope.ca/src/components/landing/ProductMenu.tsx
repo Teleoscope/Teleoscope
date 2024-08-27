@@ -8,24 +8,24 @@ import { cn } from "@/lib/utils";
 const menuItems = [
   {
     label: "Dashboard",
-    href: "/dashboard",
+    href: "/app/dashboard",
   },
   {
     label: "Account",
-    href: "/dashboard/account",
+    href: "/app/dashboard/account",
   },
   {
     label: "Teams",
-    href: "/dashboard/teams",
+    href: "/app/dashboard/teams",
   },
   {
     label: "Workspaces",
-    href: "/dashboard/workspaces",
+    href: "/app/dashboard/workspaces",
     variant: "primary",
   },
   {
     label: "Resources",
-    href: "/resources",
+    href: "/app/resources",
   },
   {
     label: "Sign Out",

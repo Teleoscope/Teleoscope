@@ -14,6 +14,7 @@ import { RiBookmark3Line } from 'react-icons/ri';
 import { BsStickies, BsSticky } from 'react-icons/bs';
 import { HiSortDescending } from "react-icons/hi";
 import { FiUpload } from "react-icons/fi";
+import { FaDatabase } from "react-icons/fa";
 
 import { IconContext } from "react-icons";
 
@@ -45,6 +46,8 @@ import Bookmarks from "@/components/Bookmarks";
 import DataHandler from "../Sidebar/DataHandler";
 import { WindowProps } from "./WindowFactory";
 import { Component } from "react";
+import SetOperation from "../Operations/SetOperation";
+import Storage from "../Storage";
 
 const style = (c: string) => [
   { color: c },
@@ -233,6 +236,14 @@ export const WindowConfig = {
     icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><CgPathUnite style={{ display: "inline" }} /></IconContext.Provider>,
     component: (props: WindowProps) => <Union {...props} />,
   },
+  Storage: {
+    type:      "Storage",
+    apipath:   "storage",
+    nodetype:  SourceNode,
+    title:     (d) => `${d?.label ? d?.label : "loading..."}`,
+    icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><FaDatabase style={{ display: "inline" }} /></IconContext.Provider>,
+    component: (props: WindowProps) => <Storage {...props} />,
+  },
   All: {
     type:      "All",
     apipath:   "graph",
@@ -247,7 +258,7 @@ export const WindowConfig = {
     nodetype: OperationNode,
     title:     function () {return this.type},
     icon:      (c: string) => <IconContext.Provider value={{size: "1em", color: c}}><CgPathUnite style={{ display: "inline" }} /></IconContext.Provider>,
-    component: (props: WindowProps) => <Union {...props} />,
+    component: (props: WindowProps) => <SetOperation {...props} />,
   },
 }
 

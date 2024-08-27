@@ -9,6 +9,21 @@
             "label": {
                 "bsonType": "string",
                 "description": "the label of the data"
+            },
+            "size": {
+                "bsonType": "int",
+                "description": "the size in MB of this upload, including vectors"
+            },
+            "docs": {
+                "bsonType": "array",
+                "description": "the documents that are part of this upload",
+                "items": {
+                    "bsonType": [
+                        "objectId",
+                        "string"
+                    ],
+                    "description": "a document for this upload"
+                }
             }
         }
     }

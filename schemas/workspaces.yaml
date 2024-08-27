@@ -7,6 +7,7 @@ required:
   - settings
   - selected_workflow
   - workflows
+  - storage
 properties:
   _id:
     bsonType: ["objectId", "string"]
@@ -49,3 +50,9 @@ properties:
     items:
       bsonType: ["objectId", "string"]
       description: "a workflow for this workspace"
+  storage:
+    bsonType: array
+    description: "all data that is part of this workspace"
+    items:
+      bsonType: ["objectId", "string"]
+      description: "a storage item for this workspace"

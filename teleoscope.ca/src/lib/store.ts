@@ -33,6 +33,7 @@ import appState, {
     saveNote,
     setRefreshInterval,
     cancelRefreshInterval,
+    relabelStorage,
 } from '@/actions/appState';
 import { copyDoclistsToGroups, updateNode } from '../actions/appState';
 import axios from 'axios';
@@ -624,6 +625,24 @@ const actionMiddleware = (store) => (next) => (action) => {
                 ) || key.startsWith(`/api/groups`))
         ));
     }
+
+    if (action.type === relabelStorage.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/storage/relabel`, {
+            workspace_id: workspace_id,
+            storage_id: action.payload.storage_id,
+            label: action.payload.label
+        }).then(() => mutate(
+            (key) =>
+                typeof key === 'string' &&
+                (key.startsWith(
+                    `/api/storage?storage=${action.payload.storage_id}`
+                ) || key.startsWith(`/api/storage`))
+        ));
+    }
+
 
     if (action.type === updateSearch.type) {
         const { appState }: { appState: AppState } = store.getState();

@@ -6,7 +6,7 @@ import { Users } from '@/types/users';
 import { Teams } from '@/types/teams';
 import { Workspaces } from '@/types/workspaces';
 import { Workflows } from '@/types/workflows';
-import { DEFAULT_GREY, DEFAULT_TITLE_LENGTH } from './defaults';
+import { DEFAULT_SLATE, DEFAULT_TITLE_LENGTH } from './defaults';
 import { MongoServerError } from 'mongodb';
 import util from 'util';
 
@@ -92,6 +92,7 @@ export default async function initialize_user(
                 document_width: 100,
                 expanded: false
             },
+            storage: [],
             selected_workflow: null
         };
         const workspace_result = await db
@@ -119,7 +120,7 @@ export default async function initialize_user(
                 edges: []
             },
             settings: {
-                color: DEFAULT_GREY,
+                color: DEFAULT_SLATE,
                 title_length: DEFAULT_TITLE_LENGTH
             },
             last_update: new Date().toISOString(),

@@ -3,9 +3,15 @@ import { useState } from 'react';
 import _ from 'lodash';
 import axios from 'axios';
 import { useAppSelector } from '@/lib/hooks';
+import { Button, Divider, Stack } from '@mui/material';
+import { useSWRF } from '@/lib/swr';
+import DataViewer from './Sidebar/DataViewer';
 
 // Adjust dynamic import based on the export type
-const CSVImporter = dynamic(() => import('csv-upload').then(mod => mod.CSVImporter), { ssr: false });
+const CSVImporter = dynamic(
+    () => import('csv-upload').then((mod) => mod.CSVImporter),
+    { ssr: false }
+);
 
 const template = {
     columns: [
@@ -33,16 +39,32 @@ const template = {
             name: 'Unique IDs',
             key: 'uid',
             description: 'Any existing unique IDs that you want used.',
-            suggested_mappings: ['uid', 'id', '_id', 'unique_id', "metadata.uid"]
+            suggested_mappings: [
+                'uid',
+                'id',
+                '_id',
+                'unique_id',
+                'metadata.uid'
+            ]
         }
     ]
 };
 
+function StorageItem({ oid }) {
+    const { data: storage } = useSWRF(`/api/storage?storage=${oid}`);
+    return <DataViewer id={oid} type="Storage"></DataViewer>
+        
+}
+
 export default function UploadPage() {
     const [isOpen, setIsOpen] = useState(false);
+    const [label, setLabel] = useState('');
+
     const { _id: workspace_id } = useAppSelector(
         (state) => state.appState.workspace
     );
+
+    const { storage } = useAppSelector((state) => state.appState.workspace);
 
     const handleComplete = (data) => {
         if (!data.error) {
@@ -58,27 +80,49 @@ export default function UploadPage() {
                 };
                 axios.post(`/api/upload/csv/chunk`, {
                     workspace_id: workspace_id,
-                    data: formatted_chunk
+                    data: formatted_chunk,
+                    label: label
                 });
             });
         }
     };
+    const handleOpenImporter = () => {
+        setIsOpen(true);
+        const date = new Date();
+        const formattedDate = date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric'
+        });
+        setLabel(formattedDate);
+    };
 
     return (
         <>
-            <button onClick={() => setIsOpen(true)}>Open CSV Importer</button>
-
-            {typeof window !== 'undefined' && (
-                <CSVImporter
-                    isModal={true}
-                    modalIsOpen={isOpen}
-                    darkMode={false}
-                    template={template}
-                    modalOnCloseTriggered={() => setIsOpen(false)}
-                    modalCloseOnOutsideClick={true}
-                    onComplete={handleComplete}
-                />
-            )}
+            <Stack direction="column" justifyContent="space-between">
+                <Button onClick={() => handleOpenImporter()}>
+                    Open CSV Importer
+                </Button>
+                {typeof window !== 'undefined' && (
+                    <CSVImporter
+                        isModal={true}
+                        modalIsOpen={isOpen}
+                        darkMode={false}
+                        template={template}
+                        modalOnCloseTriggered={() => setIsOpen(false)}
+                        modalCloseOnOutsideClick={true}
+                        onComplete={handleComplete}
+                    />
+                )}
+                <Divider></Divider>
+                {storage?.map((s) => {
+                    return <StorageItem oid={s} key={s} />;
+                })}
+            </Stack>
         </>
     );
 }

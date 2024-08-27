@@ -11,13 +11,14 @@ export const POST = async (request: NextRequest) => {
         return NextResponse.json({ message: 'No user signed in.' });
     }
     const req = await request.json();
-    const { workspace_id, data } = req;
+    const { workspace_id, data, label } = req;
 
     send('chunk_upload', {
         database: MONGODB_DATABASE,
         userid: user.id,
         workspace: workspace_id,
-        data: data
+        data: data,
+        label
     });
 
     return NextResponse.json({ status: 'success' });

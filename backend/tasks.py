@@ -56,6 +56,7 @@ app.conf.update(
 # Note tasks
 ################################################################################
 
+
 @app.task
 def vectorize_note(*args, database: str, note_id: str, **kwargs) -> ObjectId:
     db = utils.connect(db=database)
@@ -68,7 +69,7 @@ def vectorize_note(*args, database: str, note_id: str, **kwargs) -> ObjectId:
     note = db.notes.find_one({"_id": note_id})
     if note:
         app.send_task(
-            "backend.graph.update_vectors",   # Task name
+            "backend.graph.update_vectors",  # Task name
             args=[database, [note]],  # Replace with actual arguments
             kwargs={},
             queue="graph",
@@ -81,26 +82,25 @@ def vectorize_note(*args, database: str, note_id: str, **kwargs) -> ObjectId:
 # Graph tasks
 ################################################################################
 @app.task
-def update_nodes(
-    *args, database: str, node_uids: List[str], **kwargs
-):
+def update_nodes(*args, database: str, node_uids: List[str], **kwargs):
     app.send_task(
-            "backend.graph.update_nodes",
-            args=[],
-            kwargs={"database": database, "node_uids": node_uids},
-            queue="graph",
+        "backend.graph.update_nodes",
+        args=[],
+        kwargs={"database": database, "node_uids": node_uids},
+        queue="graph",
     )
+
 
 ################################################################################
 # Upload tasks
 ################################################################################
 @app.task
-def chunk_upload(*args, database: str, userid: str, workspace: str, data):
+def chunk_upload(*args, database: str, userid: str, workspace: str, label: str, data):
     try:
         workspace = ObjectId(str(workspace))
         db = utils.connect(db=database)
         documents = []
-        
+
         # Validate incoming data
         rows = [row["values"] for row in data.get("rows", [])]
         for row in rows:
@@ -118,13 +118,31 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, data):
                 "state": {"read": False},
             }
             documents.append(document)
-        
+
         if not documents:
             logging.warning("No valid documents to insert.")
             return
 
         inserted_ids = db.documents.insert_many(documents).inserted_ids
         logging.info(f"Inserted {len(inserted_ids)} documents.")
+
+        query = {"label": label}  # The condition to match the document
+        update = {
+            "$addToSet": {"docs": {"$each": inserted_ids}},
+            "$setOnInsert": {
+                "label": label,
+                "size": 0,
+            },
+        }
+
+        # Perform the update or insert operation
+        storage_result = db.storage.update_one(query, update, upsert=True)
+        db.workspaces.update_one({"_id": workspace}, {
+            "$addToSet": {
+                "storage": storage_result.upserted_id
+            }
+        })
+
 
         app.send_task(
             "backend.graph.milvus_chunk_import",
@@ -155,7 +173,7 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, data):
                     "label": group,
                     "color": utils.random_color(),
                     "workspace": workspace,
-                    "docs": []  # Initialize 'docs' as an empty array if the document is new
+                    "docs": [],  # Initialize 'docs' as an empty array if the document is new
                 },
             }
             group_bulk_operations.append(UpdateOne(filter, ensure_group, upsert=True))
@@ -171,7 +189,9 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, data):
             filter = {"label": group, "workspace": workspace}
             add_docs = {
                 "$addToSet": {
-                    "docs": {"$each": group_docs[group]}  # Add documents to the 'docs' array
+                    "docs": {
+                        "$each": group_docs[group]
+                    }  # Add documents to the 'docs' array
                 }
             }
             doc_bulk_operations.append(UpdateOne(filter, add_docs, upsert=True))
@@ -181,10 +201,10 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, data):
             db.groups.bulk_write(doc_bulk_operations)
             logging.info(f"Updated {len(doc_bulk_operations)} doc sets in groups.")
 
-
     except Exception as e:
         logging.error(f"Error in chunk_upload: {e}")
         raise
+
 
 if __name__ == "__main__":
     worker = app.Worker(
