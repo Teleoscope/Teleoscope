@@ -34,6 +34,7 @@ import appState, {
     setRefreshInterval,
     cancelRefreshInterval,
     relabelStorage,
+    removeStorage,
 } from '@/actions/appState';
 import { copyDoclistsToGroups, updateNode } from '../actions/appState';
 import axios from 'axios';
@@ -643,6 +644,20 @@ const actionMiddleware = (store) => (next) => (action) => {
         ));
     }
 
+    if (action.type === removeStorage.type) {
+        const { appState }: { appState: AppState } = store.getState();
+        const { _id: workspace_id } = appState.workspace;
+        const { _id: workflow_id } = appState.workflow;
+        axios.post(`/api/storage/remove`, {
+            workspace_id: workspace_id,
+            storage_id: action.payload.storage_id,
+        }).then(() => 
+            mutate(
+                (key) =>
+                    typeof key === 'string' &&
+                    (key.startsWith(`/api/storage`))
+            ));
+    }
 
     if (action.type === updateSearch.type) {
         const { appState }: { appState: AppState } = store.getState();

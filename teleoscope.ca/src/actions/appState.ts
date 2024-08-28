@@ -392,6 +392,9 @@ export const AppState = createSlice({
         relabelStorage: (state: AppStateType, action: PayloadAction<any>) => {
             // Implement the action
         },
+        removeStorage: (state: AppStateType, action: PayloadAction<any>) => {
+            // Implement the action
+        },
         mark: (state: AppStateType, action: PayloadAction<any>) => {
             // Implement the action
         },
@@ -464,6 +467,7 @@ export const {
     recolorGroup,
     relabelGroup,
     relabelStorage,
+    removeStorage,
     mark,
     removeDocumentFromGroup,
     addDocumentToGroup,

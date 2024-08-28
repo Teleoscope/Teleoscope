@@ -44,10 +44,10 @@ return (
           />
         </Stack>
         
-        <Deleter callback={() => removeGroup({
+        <Deleter callback={() => dispatch(removeGroup({
           oid: g._id,
           uid: graph_item?.uid
-        })} color={color} />
+        }))} color={color} />
         
       </Stack>
     </ListItem>

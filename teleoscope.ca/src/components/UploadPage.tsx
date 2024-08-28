@@ -51,7 +51,7 @@ const template = {
 };
 
 function StorageItem({ oid }) {
-    const { data: storage } = useSWRF(`/api/storage?storage=${oid}`);
+    const { data: storage } = useSWRF(oid ? `/api/storage?storage=${oid}`: null);
     return <DataViewer id={oid} type="Storage"></DataViewer>
         
 }
