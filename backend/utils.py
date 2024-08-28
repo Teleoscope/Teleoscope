@@ -306,6 +306,8 @@ def get_collection(db: database.Database, type):
             return db.groups
         case "Search":
             return db.searches
+        case "Storage":
+            return db.storage
         case "Note":
             return db.notes
         case "Rank" | "Union" | "Difference" | "Intersection" | "Exclusion":
@@ -324,6 +326,8 @@ def get_oids(db: database.Database, source, exclude=["Note"]):
             return [str(node["_id"])]
         case "Group":
             return [str(oid) for oid in node["docs"]]
+        case "Storage":
+            return [str(oid) for oid in node["docs"]]
         case "Search":
             cursor = db.documents.find(make_query(node["query"]), projection={"_id": 1})
             return [str(d["_id"]) for d in list(cursor)]
@@ -341,39 +345,6 @@ def get_doc_oids(db: database.Database, sources, exclude=["Note"]):
     for source in sources:
         oids.extend(get_oids(db, source, exclude=exclude))
     return oids
-
-
-def get_vectors(db: database.Database, controls, ids, all_vectors):
-    oids = []
-    notes = []
-    for c in controls:
-        match c["type"]:
-            case "Document":
-                oids.append(c["id"])
-            case "Group":
-                group = db.groups.find_one({"_id": c["id"]})
-                oids = oids + group["history"][0]["included_documents"]
-            case "Search":
-                search = db.searches.find_one({"_id": c["id"]})
-                cursor = db.documents.find(
-                    make_query(search["history"][0]["query"]), projection={"_id": 1}
-                )
-                oids = oids + [d["_id"] for d in list(cursor)]
-            case "Note":
-                note = db.notes.find_one({"_id": c["id"]})
-                notes.append(note)
-            case "Union" | "Difference" | "Intersection" | "Exclusion":
-                node = db.graph.find_one({"_id": c["id"]})
-                for doclist in node["doclists"]:
-                    oids = oids + [d[0] for d in doclist["ranked_documents"]]
-
-    note_vecs = [np.array(note["textVector"]) for note in notes]
-    filtered_vecs = filter_vectors_by_oid(oids, ids, all_vectors)
-    out_vecs = filtered_vecs + note_vecs
-    logging.info(
-        f"Got {len(oids)} as control vectors for controls {len(controls)}, with {len(ids)} ids and {len(all_vectors)} comparison vectors."
-    )
-    return out_vecs
 
 
 def sanitize_db_name(name):
