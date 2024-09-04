@@ -25,8 +25,15 @@ module.exports = {
     },
     {
       name:"vectorizer",
-      script:"uvicorn backend.vectorizer:app --host 127.0.0.1 --port 8000",
-      args:"",
+      script:"python",
+      args:["-m", "backend.vectorizer"],
+      watch: false,
+      interpreter: "",
+    },
+    {
+      name:"uploader",
+      script:"python",
+      args:["-m", "backend.uploader"],
       watch: false,
       interpreter: "",
     },
