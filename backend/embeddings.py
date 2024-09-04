@@ -70,6 +70,7 @@ def milvus_setup(client: MilvusClient, collection_name="teleoscope"):
         )
         logging.info(f"Initialized collection {collection_name}.")
 
+
 def connect():
     client = None
     try:
@@ -99,3 +100,11 @@ def get_embeddings(client, collection_name, oids):
     )
     return milvus_results
 
+
+def delete(collection_name, ids):
+    client = connect()
+    client.load_collection(collection_name=collection_name)
+    res = client.delete(
+        collection_name=collection_name,
+        ids=ids
+    )

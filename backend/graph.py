@@ -3,10 +3,9 @@ from pymongo import database
 from typing import List
 import numpy as np
 import logging
-import requests
+import json
 
 import os
-import itertools
 import uuid
 from celery import Celery
 from kombu import Exchange, Queue
@@ -28,6 +27,8 @@ RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
 RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST")
 RABBITMQ_TASK_QUEUE = os.getenv("RABBITMQ_TASK_QUEUE")
+RABBITMQ_VECTORIZE_QUEUE = os.getenv("RABBITMQ_VECTORIZE_QUEUE")
+RABBITMQ_UPLOAD_VECTOR_QUEUE = os.getenv("RABBITMQ_UPLOAD_VECTOR_QUEUE")
 
 if not RABBITMQ_USERNAME:
     logging.info("Missing environment variable RABBITMQ_USERNAME")
@@ -39,6 +40,10 @@ if not RABBITMQ_VHOST:
     logging.info("Missing environment variable RABBITMQ_VHOST")
 if not RABBITMQ_TASK_QUEUE:
     logging.info("Missing environment variable RABBITMQ_TASK_QUEUE")
+if not RABBITMQ_VECTORIZE_QUEUE:
+    logging.info("Missing environment variable RABBITMQ_VECTORIZE_QUEUE")
+if not RABBITMQ_UPLOAD_VECTOR_QUEUE:
+    logging.info("Missing environment variable RABBITMQ_UPLOAD_VECTOR_QUEUE")
 
 # Broker URL for Celery
 CELERY_BROKER_URL = (
@@ -80,44 +85,33 @@ def milvus_chunk_import(database: str, userid: str, documents):
     docs = mongo_db.documents.find(
         {"_id": {"$in": [ObjectId(str(d)) for d in documents]}}
     )
-    process_documents(list(docs), database)
+    send_documents_for_processing(list(docs), database)
     logging.info(f"Sending import chunk of length {len(documents)} for database {database} to be vectorized.")
     return
 
 @app.task
 def update_vectors(database: str, documents):
     logging.info(f"Updating {len(documents)} vectors in database {database}...")
-    process_documents(documents, database)
+    send_documents_for_processing(documents, database)
     logging.info(f"Sending an update for {len(documents)} vectors in database {database}.")
     return
 
 ################################################################################
 # Model functions
 ################################################################################
-def process_documents(documents, database):
-    try:
-        # Prepare the payload as a list of dictionaries
-        formatted_documents = [{'id': str(doc["_id"]), 'text': doc["text"]} for doc in documents]
+def send_documents_for_processing(documents, database):
+    # Prepare the payload as a list of dictionaries
+    formatted_documents = [{'id': str(doc["_id"]), 'text': doc["text"]} for doc in documents]
 
-        # Send the request directly with the list of documents
-        logging.info(f"Requesting vectorization of {len(formatted_documents)} documents.")
-        response = requests.post('http://127.0.0.1:8000/vectorize', json={
-            "documents": formatted_documents,
-            "database": database
-        })
-
-        # Check the response status and return the result
-        if response.status_code == 200:
-            result = response.json()
-            return result
-        else:
-            logging.error(f"API request failed with status {response.status_code}: {response.text}")
-            raise Exception("Model service error")
-
-    except requests.RequestException as e:
-        logging.error(f"Request error: {e}")
-        raise Exception("Failed to connect to model service")
-
+    # Send the request directly with the list of documents
+    body = {
+        "documents": formatted_documents,
+        "database": database
+    }
+    utils.publish(RABBITMQ_HOST, RABBITMQ_VECTORIZE_QUEUE, json.dumps(body))
+    logging.info(f"Requesting vectorization of {len(formatted_documents)} documents.")
+    return
+        
 ################################################################################
 # Graph API
 ################################################################################
@@ -373,7 +367,6 @@ def update_rank(
     client.close()
 
     return rank_node
-
 
 ################################################################################
 # Update Projection

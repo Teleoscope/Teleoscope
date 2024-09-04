@@ -9,6 +9,8 @@ import logging
 from typing import List
 import datetime
 import unicodedata
+import pika 
+from pymilvus import connections, db, utility, Collection
 
 # environment variables
 from dotenv import load_dotenv
@@ -164,14 +166,7 @@ def rank_document_ids_by_similarity(documents_ids, scores):
 
 
 def get_embeddings(dbstring, oids):
-    # chroma_client = get_chroma_client()
-    # chroma_collection = chroma_client.get_collection(dbstring)
-    # results = chroma_collection.get(ids=[str(oid) for oid in oids], include=["embeddings"])
-    from pymilvus import connections, db, utility, Collection
-
-    connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
-
-    db.using_database(MILVUS_DATABASE)
+    connect_milvus()
 
     milvus_collection = Collection(dbstring)
     milvus_collection.load()
@@ -184,13 +179,13 @@ def get_embeddings(dbstring, oids):
     return [res["text_vector"] for res in results]
 
 
-def get_documents_milvus(dbstring, limit):
-
-    from pymilvus import connections, db, utility, Collection
-
+def connect_milvus():
     connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
-
     db.using_database(MILVUS_DATABASE)
+
+
+def get_documents_milvus(dbstring, limit):
+    connect_milvus()
 
     milvus_collection = Collection(dbstring)
     milvus_collection.load()
@@ -365,3 +360,25 @@ def sanitize_db_name(name):
         raise ValueError("Database name cannot be empty after sanitization.")
 
     return name
+
+
+
+def publish(host, queue, message):
+    # Establish a connection to RabbitMQ server
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host))
+    channel = connection.channel()
+
+    # Declare a queue. If the queue already exists, it will not be recreated.
+    channel.queue_declare(queue=queue, durable=True)
+
+    # Publish the message to the queue
+    channel.basic_publish(
+        exchange='',  # Empty string means the default exchange
+        routing_key=queue,  # The name of the queue
+        body=message,
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # Make the message persistent
+        )
+    )
+    # Close the connection
+    connection.close()
