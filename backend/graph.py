@@ -1,3 +1,4 @@
+# graph.py
 from bson.objectid import ObjectId
 from pymongo import database
 from typing import List
@@ -122,7 +123,7 @@ def send_documents_for_processing(documents, database):
         "documents": formatted_documents,
         "database": database
     }
-    utils.publish(RABBITMQ_HOST, RABBITMQ_VECTORIZE_QUEUE, json.dumps(body))
+    utils.publish(RABBITMQ_VECTORIZE_QUEUE, json.dumps(body))
     logging.info(f"Requesting vectorization of {len(formatted_documents)} documents.")
     return
         

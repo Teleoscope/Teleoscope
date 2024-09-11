@@ -1,3 +1,4 @@
+# utils.py
 # builtin modules
 import numpy as np
 import heapq
@@ -27,6 +28,7 @@ else:
 RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
 RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
+RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST")
 RABBITMQ_PORT = os.getenv("RABBITMQ_PORT")
 
 MONGODB_USERNAME = os.getenv("MONGODB_USERNAME")
@@ -363,12 +365,36 @@ def sanitize_db_name(name):
     return name
 
 
+def pika_connect(
+        host=RABBITMQ_HOST, 
+        port=RABBITMQ_PORT, 
+        virtual_host=RABBITMQ_VHOST, 
+        username=RABBITMQ_USERNAME, 
+        password=RABBITMQ_PASSWORD, 
+        **kwargs):
+    # Update the default values with any provided in kwargs
+    host = kwargs.get('host', host)
+    port = kwargs.get('port', port)
+    virtual_host = kwargs.get('virtual_host', virtual_host)
+    username = kwargs.get('username', username)
+    password = kwargs.get('password', password)
 
-def publish(queue, message, host=RABBITMQ_HOST, port=RABBITMQ_PORT):
     # Establish a connection to RabbitMQ server
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host=host, 
+            port=port, 
+            virtual_host=virtual_host,
+            credentials=pika.PlainCredentials(username=username, password=password)
+        )
+    )
     channel = connection.channel()
+    return channel
 
+
+def publish(queue, message, **kwargs):
+    channel = pika_connect()
+    
     # Declare a queue. If the queue already exists, it will not be recreated.
     channel.queue_declare(queue=queue, durable=True)
 
@@ -382,4 +408,4 @@ def publish(queue, message, host=RABBITMQ_HOST, port=RABBITMQ_PORT):
         )
     )
     # Close the connection
-    connection.close()
+    channel.connection.close()

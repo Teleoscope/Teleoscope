@@ -1,3 +1,4 @@
+# tasks.py
 # builtin modules
 from warnings import simplefilter
 import json
@@ -48,9 +49,13 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
     def handle_message(self, body, message):
         logging.debug("Received message: {0!r}".format(body))
         message.ack()
-        msg = json.loads(body)
-        task = msg["task"]
-        kwargs = msg["args"]
+        if isinstance(body, str):
+            msg = json.loads(body)
+        else:
+            msg = body
+        task = msg.get("task", "None") 
+        args = msg.get("args", ())
+        kwargs = msg.get("kwargs", {})
         res = None
 
         # These should exactly implement the interface standard
@@ -58,24 +63,24 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
         match task:
             case "vectorize_note":
-                res = tasks.vectorize_note.signature(args=(), kwargs=kwargs)
+                res = tasks.vectorize_note.signature(args=args, kwargs=kwargs)
                         
             case "update_nodes":
-                res = tasks.update_nodes.signature(args=(), kwargs=kwargs)
+                res = tasks.update_nodes.signature(args=args, kwargs=kwargs)
 
             case "chunk_upload":
-                res = tasks.chunk_upload.signature(args=(), kwargs=kwargs)
+                res = tasks.chunk_upload.signature(args=args, kwargs=kwargs)
             
             case "delete_storage":
-                res = tasks.delete_storage.signature(args=(), kwargs=kwargs)
+                res = tasks.delete_storage.signature(args=args, kwargs=kwargs)
             
             case "acknowledge_vector_upload":
-                res = tasks.acknowledge_vector_upload.signature(args=(), kwargs=kwargs)
+                res = tasks.acknowledge_vector_upload.signature(args=args, kwargs=kwargs)
 
         try:
             res.apply_async(queue=RABBITMQ_TASK_QUEUE)
         except Exception as e:
-            logging.warning(f"Task {task} for kwargs {kwargs} raised exception {e}.")
+            logging.warning(f"Task {task} for args {args} and kwargs {kwargs} raised exception {e}.")
         return
 
 

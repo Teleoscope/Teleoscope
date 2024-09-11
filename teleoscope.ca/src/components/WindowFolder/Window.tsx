@@ -32,13 +32,14 @@ export default function Window({icon, title, inner, color, reactflow_node}) {
               display: 'flex', 
               flexShrink: 2, 
               width: reactflow_node.width,
-              paddingLeft: "2px"
+              paddingLeft: "2px",
+              verticalAlign: "middle"
             }}
           >{title}
           </Box>
         }
         // variant="filled"
-        avatar={<span style={{width: "1em", padding: "0.425em"}}>{icon}</span>}
+        avatar={<span style={{width: "1em", paddingLeft: "0.425em", paddingTop: "0.1em"}}>{icon}</span>}
         onDoubleClick={() => {
           dispatch(maximizeWindow({ id: reactflow_node.id }))
         }}
@@ -49,6 +50,7 @@ export default function Window({icon, title, inner, color, reactflow_node}) {
             : "1px solid #DDDDDD",
           boxShadow: "1",
           cursor: "move",
+          verticalAlign: "middle",
           
           backgroundColor: "white",
           [`& .MuiChip-icon`]: {

@@ -1,3 +1,4 @@
+# tasks.py
 import logging
 import json
 import uuid
@@ -98,7 +99,7 @@ def acknowledge_vector_upload(*args, database: str, ids: List[str], **kwargs):
     oids = [ObjectId(id) for id in ids]
     db.documents.update_many({"_id": {"$in": oids}}, {
         "$set": {
-             { "state": { "vectorized": True } }
+             "state.vectorized": True  
         }
     })
     logging.info(f"Acknowledged {len(ids)} vectorized and uploaded to database {database}.")
@@ -108,11 +109,11 @@ def acknowledge_vector_upload(*args, database: str, ids: List[str], **kwargs):
 # Storage tasks
 ################################################################################
 @app.task
-def delete_storage(*args, database: str, userid: str, workspace: str, storage_id: str):
+def delete_storage(*args, database: str, userid: str, workspace: str, storage: str):
     workspace = ObjectId(str(workspace))
-    storage_id = ObjectId(str(storage_id))
+    storage = ObjectId(str(storage))
     db = utils.connect(db=database)
-    storage_item = db.storage.find_one({"_id": storage_id})
+    storage_item = db.storage.find_one({"_id": storage})
     ids = [str(doc) for doc in storage_item["docs"]]
     
     app.send_task(
@@ -122,14 +123,14 @@ def delete_storage(*args, database: str, userid: str, workspace: str, storage_id
         queue="graph",
     )
 
-    db.storage.delete_one({"_id": storage_id})
+    db.storage.delete_one({"_id": storage})
     db.workspaces.update_one({"_id": workspace}, {
         "$pull": {
-            "storage": storage_id
+            "storage": storage
         }
     })
-    db.documents.delete_many({"_id": {"$in": {storage_item["docs"]}}})
-    logging.info(f"Deleted all documents from {storage_id} in database {database} and workspace {workspace}.")
+    db.documents.delete_many({"_id": {"$in": storage_item["docs"]}})
+    logging.info(f"Deleted all documents from {storage} in database {database} and workspace {workspace}.")
 
 
 
@@ -177,9 +178,11 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, label: str, 
 
         # Perform the update or insert operation
         storage_result = db.storage.update_one(query, update, upsert=True)
+        storage_id = storage_result.upserted_id if storage_result.upserted_id is not None else db.storage.find_one(query)["_id"]
+
         db.workspaces.update_one({"_id": workspace}, {
             "$addToSet": {
-                "storage": storage_result.upserted_id
+                "storage": storage_id
             }
         })
 

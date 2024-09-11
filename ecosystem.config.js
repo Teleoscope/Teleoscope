@@ -12,7 +12,7 @@ module.exports = {
       watch: false,
       interpreter: "",
       max_memory_restart: "16G",
-      instances: 4,
+      instances: 1,
     },
     {
       name: "frontend",
@@ -44,7 +44,7 @@ module.exports = {
       watch: false,
       interpreter: "",
       max_memory_restart: "16G",
-      instances: 4,
+      instances: 1,
     },
 
   ]

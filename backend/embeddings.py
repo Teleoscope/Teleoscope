@@ -1,3 +1,4 @@
+# embeddings.py
 import logging
 import os
 import hashlib
@@ -72,6 +73,7 @@ def milvus_setup(client: MilvusClient, collection_name="teleoscope"):
 
 
 def connect():
+    logging.info(f"Connecting to Milvus...")
     client = None
     try:
         client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
@@ -81,6 +83,7 @@ def connect():
         database = db.create_database(MILVUS_DBNAME)
         connections.disconnect(f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
         client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
+    logging.info(f"Connected to Milvus.")
     return client
 
 
