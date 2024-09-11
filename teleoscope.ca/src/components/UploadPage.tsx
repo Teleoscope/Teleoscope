@@ -25,7 +25,6 @@ const template = {
         {
             name: 'Title',
             key: 'title',
-            required: true,
             description: 'The title of the document that you want searched.',
             suggested_mappings: ['title']
         },

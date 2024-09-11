@@ -337,6 +337,12 @@ def get_oids(db: database.Database, source, exclude=["Note"]):
             ]
 
 
+def truncate_string(s, max_length):
+    if len(s) > max_length:
+        return s[:max_length - 3] + '...'
+    return s
+
+
 def get_doc_oids(db: database.Database, sources, exclude=["Note"]):
     sources = db.graph.find({"uid": {"$in": sources}})
     oids = []

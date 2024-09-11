@@ -150,9 +150,12 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, label: str, 
         # Validate incoming data
         rows = [row["values"] for row in data.get("rows", [])]
         for row in rows:
-            if "text" not in row or "title" not in row:
+            if "text" not in row:
                 logging.error(f"Row missing required fields: {row}")
                 continue
+
+            if "title" not in row:
+                row["title"] = utils.truncate_string(row["text"], 20)
 
             metadata = {k: v for k, v in row.items() if k not in {"text", "title"}}
 
