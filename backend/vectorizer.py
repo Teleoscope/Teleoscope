@@ -1,3 +1,4 @@
+# vectorizer.py
 import pika
 import logging
 import json
@@ -41,6 +42,10 @@ def publish_vectors(vector_data: list, database: str):
     try:
         channel = rabbitmq_pool.get_channel()
 
+        if not channel.is_open:
+            logging.info("Re-opening closed RabbitMQ channel...")
+            channel = rabbitmq_pool.get_channel()
+
         # Declare the vector queue in case it doesn't exist
         channel.queue_declare(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, durable=True)
 
@@ -61,8 +66,9 @@ def publish_vectors(vector_data: list, database: str):
     except Exception as e:
         logging.error(f"Error publishing vectors: {e}")
     finally:
-        if channel.connection and channel.connection.is_open:
-            channel.connection.close()
+        if channel and channel.is_open:
+            channel.close()
+
 
 # Callback function to handle incoming messages from RabbitMQ
 def vectorize_documents(ch, method, properties, body):
@@ -105,13 +111,13 @@ def vectorize_documents(ch, method, properties, body):
 def start_vectorization_worker():
     while True:
         try:
-            # Establish a connection to RabbitMQ
             channel = rabbitmq_pool.get_channel()
 
-            # Declare the document queue (ensure it is durable and survives RabbitMQ restarts)
-            channel.queue_declare(queue=RABBITMQ_VECTORIZE_QUEUE, durable=True)
+            if not channel.is_open:
+                logging.info("Re-opening closed RabbitMQ channel...")
+                channel = rabbitmq_pool.get_channel()
 
-            # Set up the consumer to process document batches
+            channel.queue_declare(queue=RABBITMQ_VECTORIZE_QUEUE, durable=True)
             channel.basic_consume(queue=RABBITMQ_VECTORIZE_QUEUE, on_message_callback=vectorize_documents)
 
             logging.info("Waiting for documents to vectorize...")
@@ -124,8 +130,9 @@ def start_vectorization_worker():
             logging.error(f"An unexpected error occurred: {e}")
             time.sleep(RETRY_DELAY)
         finally:
-            if 'connection' in locals() and channel.connection.is_open:
-                channel.connection.close()
+            if channel and channel.is_open:
+                channel.close()
+
 
 if __name__ == "__main__":
     start_vectorization_worker()

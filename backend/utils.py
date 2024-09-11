@@ -373,36 +373,45 @@ def sanitize_db_name(name):
 
     return name
 
-
+import time
 
 class RabbitMQConnectionPool:
-    def __init__(self):
+    def __init__(self, retry_delay=5, max_retries=5):
         self.connection = None
         self.channel = None
+        self.retry_delay = retry_delay
+        self.max_retries = max_retries
         self.connect()
 
     def connect(self):
-        """Establish a connection and create a channel."""
-        try:
-            logging.info("Connecting to RabbitMQ...")
-            credentials = pika.PlainCredentials(
-                username=RABBITMQ_USERNAME,
-                password=RABBITMQ_PASSWORD
-            )
-            parameters = pika.ConnectionParameters(
-                host=RABBITMQ_HOST,
-                port=RABBITMQ_PORT,
-                virtual_host=RABBITMQ_VHOST,
-                credentials=credentials,
-                heartbeat=600,  # Adjust heartbeat for long-running connections
-                blocked_connection_timeout=300
-            )
-            self.connection = pika.BlockingConnection(parameters)
-            self.channel = self.connection.channel()
-            logging.info("RabbitMQ connection and channel established.")
-        except pika.exceptions.AMQPConnectionError as e:
-            logging.error(f"Failed to connect to RabbitMQ: {e}")
-            raise
+        """Establish a connection and create a channel with retry logic."""
+        retries = 0
+        while retries < self.max_retries:
+            try:
+                logging.info(f"Connecting to RabbitMQ... Attempt {retries + 1}")
+                credentials = pika.PlainCredentials(
+                    username=RABBITMQ_USERNAME,
+                    password=RABBITMQ_PASSWORD
+                )
+                parameters = pika.ConnectionParameters(
+                    host=RABBITMQ_HOST,
+                    port=RABBITMQ_PORT,
+                    virtual_host=RABBITMQ_VHOST,
+                    credentials=credentials,
+                    heartbeat=600,  # Adjust heartbeat for long-running connections
+                    blocked_connection_timeout=300
+                )
+                self.connection = pika.BlockingConnection(parameters)
+                self.channel = self.connection.channel()
+                logging.info("RabbitMQ connection and channel established.")
+                return
+            except pika.exceptions.AMQPConnectionError as e:
+                retries += 1
+                logging.error(f"Failed to connect to RabbitMQ: {e}. Retrying in {self.retry_delay} seconds...")
+                time.sleep(self.retry_delay)
+                self.retry_delay *= 2  # Exponential backoff
+
+        raise ConnectionError("Maximum retries reached. Could not connect to RabbitMQ.")
 
     def get_channel(self):
         """Return an open channel. Reconnect if the connection or channel is closed."""
@@ -419,22 +428,36 @@ class RabbitMQConnectionPool:
         if self.connection and self.connection.is_open:
             self.connection.close()
 
+
 rabbitmq_pool = RabbitMQConnectionPool()
+
 
 def publish(queue, message, **kwargs):
     channel = rabbitmq_pool.get_channel()
-    
-    # Declare a queue. If the queue already exists, it will not be recreated.
-    channel.queue_declare(queue=queue, durable=True)
 
-    # Publish the message to the queue
-    channel.basic_publish(
-        exchange='',  # Empty string means the default exchange
-        routing_key=queue,  # The name of the queue
-        body=message,
-        properties=pika.BasicProperties(
-            delivery_mode=2,  # Make the message persistent
+    try:
+        # Enable publisher confirmations
+        channel.confirm_delivery()
+
+        # Declare a queue. If the queue already exists, it will not be recreated.
+        channel.queue_declare(queue=queue, durable=True)
+
+        # Publish the message to the queue
+        channel.basic_publish(
+            exchange='',  # Empty string means the default exchange
+            routing_key=queue,  # The name of the queue
+            body=message,
+            properties=pika.BasicProperties(
+                delivery_mode=2,  # Make the message persistent
+            )
         )
-    )
-    # Close the connection
-    channel.connection.close()
+        logging.info(f"Message published to {queue} successfully.")
+        
+    except pika.exceptions.UnroutableError as e:
+        logging.error(f"Message could not be routed to {queue}: {e}")
+    except Exception as e:
+        logging.error(f"An error occurred while publishing to {queue}: {e}")
+    finally:
+        # Always close the connection
+        if channel.connection and channel.connection.is_open:
+            channel.connection.close()

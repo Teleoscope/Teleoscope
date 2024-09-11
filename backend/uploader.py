@@ -57,7 +57,13 @@ def upload_vectors(ch, method, properties, body):
             logging.info(f"Dimensions of vectors are {len(vector_data[0].get("vector",[]))}.")
             logging.info(f"ID of first vector is {vector_data[0].get("id","")}.")
         res = client.upsert(collection_name=database, data=vector_data)
+        if not res:  # Check if result is None or contains error codes
+            logging.error(f"Vector upload to {database} failed.")
+        else:
+            logging.info(f"Successfully uploaded {len(vector_data)} vectors to {database}.")
+
         logging.info(f"Uploaded {len(vector_data)} vectors to {database}.")
+
     except Exception as e:
         logging.error(f"Error uploading vector data: {e}")
         logging.error(f"Pretty printing bad data: {pformat(message)}")
