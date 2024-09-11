@@ -10,8 +10,11 @@ import logging
 from typing import List
 import datetime
 import unicodedata
-import pika 
+
 from pymilvus import connections, db, utility, Collection
+
+import pika 
+logging.getLogger("pika").setLevel(logging.WARNING)
 
 # environment variables
 from dotenv import load_dotenv
@@ -25,11 +28,11 @@ else:
     env_loaded = load_dotenv()  # This loads the variables from working directory .env
 
 
-RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
-RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
-RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
-RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST")
-RABBITMQ_PORT = os.getenv("RABBITMQ_PORT")
+RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME", "guest")
+RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD", "guest")
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
+RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST", "/")
+RABBITMQ_PORT = os.getenv("RABBITMQ_PORT", 5672)
 
 MONGODB_USERNAME = os.getenv("MONGODB_USERNAME")
 MONGODB_PASSWORD = os.getenv("MONGODB_PASSWORD")
@@ -371,35 +374,55 @@ def sanitize_db_name(name):
     return name
 
 
-def pika_connect(
-        host=RABBITMQ_HOST, 
-        port=RABBITMQ_PORT, 
-        virtual_host=RABBITMQ_VHOST, 
-        username=RABBITMQ_USERNAME, 
-        password=RABBITMQ_PASSWORD, 
-        **kwargs):
-    # Update the default values with any provided in kwargs
-    host = kwargs.get('host', host)
-    port = kwargs.get('port', port)
-    virtual_host = kwargs.get('virtual_host', virtual_host)
-    username = kwargs.get('username', username)
-    password = kwargs.get('password', password)
 
-    # Establish a connection to RabbitMQ server
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(
-            host=host, 
-            port=port, 
-            virtual_host=virtual_host,
-            credentials=pika.PlainCredentials(username=username, password=password)
-        )
-    )
-    channel = connection.channel()
-    return channel
+class RabbitMQConnectionPool:
+    def __init__(self):
+        self.connection = None
+        self.channel = None
+        self.connect()
 
+    def connect(self):
+        """Establish a connection and create a channel."""
+        try:
+            logging.info("Connecting to RabbitMQ...")
+            credentials = pika.PlainCredentials(
+                username=RABBITMQ_USERNAME,
+                password=RABBITMQ_PASSWORD
+            )
+            parameters = pika.ConnectionParameters(
+                host=RABBITMQ_PORT,
+                port=RABBITMQ_PORT,
+                virtual_host=RABBITMQ_VHOST,
+                credentials=credentials,
+                heartbeat=600,  # Adjust heartbeat for long-running connections
+                blocked_connection_timeout=300
+            )
+            self.connection = pika.BlockingConnection(parameters)
+            self.channel = self.connection.channel()
+            logging.info("RabbitMQ connection and channel established.")
+        except pika.exceptions.AMQPConnectionError as e:
+            logging.error(f"Failed to connect to RabbitMQ: {e}")
+            raise
+
+    def get_channel(self):
+        """Return an open channel. Reconnect if the connection or channel is closed."""
+        if self.connection is None or self.connection.is_closed:
+            self.connect()
+        if self.channel is None or self.channel.is_closed:
+            self.channel = self.connection.channel()
+        return self.channel
+
+    def close(self):
+        """Close the channel and connection."""
+        if self.channel and self.channel.is_open:
+            self.channel.close()
+        if self.connection and self.connection.is_open:
+            self.connection.close()
+
+rabbitmq_pool = RabbitMQConnectionPool()
 
 def publish(queue, message, **kwargs):
-    channel = pika_connect()
+    channel = rabbitmq_pool.get_channel()
     
     # Declare a queue. If the queue already exists, it will not be recreated.
     channel.queue_declare(queue=queue, durable=True)

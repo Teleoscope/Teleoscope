@@ -34,11 +34,12 @@ RETRY_DELAY = 5  # seconds
 # Lazy initialization for the model
 model = None
 
+rabbitmq_pool = utils.RabbitMQConnectionPool()
+
 # Publish vectors to the upload vector queue
 def publish_vectors(vector_data: list, database: str):
-    connection = None
     try:
-        channel = utils.pika_connect()
+        channel = rabbitmq_pool.get_channel()
 
         # Declare the vector queue in case it doesn't exist
         channel.queue_declare(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, durable=True)

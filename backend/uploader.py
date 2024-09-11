@@ -34,6 +34,8 @@ RABBITMQ_VHOST = check_env_var("RABBITMQ_VHOST")
 RABBITMQ_VECTORIZE_QUEUE = check_env_var("RABBITMQ_VECTORIZE_QUEUE")
 RABBITMQ_UPLOAD_VECTOR_QUEUE = check_env_var("RABBITMQ_UPLOAD_VECTOR_QUEUE")
 
+rabbitmq_pool = utils.RabbitMQConnectionPool()
+
 # Function to handle vector uploads to Milvus
 def upload_vectors(ch, method, properties, body):
     message = json.loads(body.decode('utf-8'))
@@ -43,7 +45,6 @@ def upload_vectors(ch, method, properties, body):
     logging.info(f"Received vectors for {len(vector_data)} for database {database}.")
 
     # Connect to Milvus (or other storage)
-    
     client = embeddings.connect()
 
     embeddings.milvus_setup(client, collection_name=database)
@@ -80,7 +81,7 @@ def upload_vectors(ch, method, properties, body):
 
 # Start consuming messages from the vector queue
 def start_upload_worker():
-    channel = utils.pika_connect()
+    channel = rabbitmq_pool.get_channel()
 
     # Declare the vector queue
     channel.queue_declare(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, durable=True)

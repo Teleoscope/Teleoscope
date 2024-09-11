@@ -187,6 +187,7 @@ export default function UploadPage() {
     );
 
     const { storage } = useAppSelector((state) => state.appState.workspace);
+    const { color } = useAppSelector((state) => state.appState.workflow.settings);
 
     const handleComplete = (data) => {
         if (!data.error) {
@@ -232,7 +233,7 @@ export default function UploadPage() {
     return (
         <>
             <Stack direction="column" justifyContent="space-between">
-                <Button onClick={() => handleOpenImporter()}>
+                <Button color={color} onClick={() => handleOpenImporter()}>
                     Open CSV Importer
                 </Button>
                 {typeof window !== 'undefined' && (
