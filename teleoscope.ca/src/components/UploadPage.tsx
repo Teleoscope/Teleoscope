@@ -207,7 +207,7 @@ export default function UploadPage() {
                 }).then(()=>{
                     setTimeout(()=>{
                         mutate((key) =>
-                            typeof key === 'string' && key.startsWith(`/api/work`))
+                            typeof key === 'string' && key.startsWith(`/api/app`))
                     },1000);
                     })
                     

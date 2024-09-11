@@ -40,6 +40,12 @@ export const AppState = createSlice({
                     workflow: { ...newState.workflow },
                     workspace: { ...newState.workspace }
                 };
+            } else {
+                return {
+                    ...state,
+                    workflow: {...state.workflow},
+                    workspace: {...newState.workspace}
+                }
             }
         },
         saveNote: (state: AppStateType, action: PayloadAction<any>) => {
