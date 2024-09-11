@@ -155,7 +155,7 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, label: str, 
                 continue
 
             if "title" not in row:
-                row["title"] = utils.truncate_string(row["text"], 20)
+                row["title"] = utils.truncate_string(row["text"], 40)
 
             metadata = {k: v for k, v in row.items() if k not in {"text", "title"}}
 
