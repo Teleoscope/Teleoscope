@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import SidebarPlanUpgradeCard from "@/components/Dashboard/Sidebar/SidebarPlanUpgradeCard";
 
 
 export type SidebarOption = {
@@ -38,7 +37,7 @@ export function Sidebar({children, sidebarOptions,
           </div>
         ))}
         <div className="flex flex-col flex-1  justify-end  ">
-            <SidebarPlanUpgradeCard />
+            {/* <SidebarPlanUpgradeCard /> */}
           <Link href="/public" className="w-full border-t p-2 flex justify-center">
           <Image
             src={"/assets/TeleoscopeLogo.svg"}

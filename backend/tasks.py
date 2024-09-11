@@ -13,7 +13,7 @@ from pymongo.errors import OperationFailure, ConfigurationError, WriteError
 
 
 # Local imports
-from . import utils
+from backend import utils
 
 # Environment variables
 from dotenv import load_dotenv
@@ -55,8 +55,6 @@ app.conf.update(
 ################################################################################
 # Note tasks
 ################################################################################
-
-
 @app.task
 def vectorize_note(*args, database: str, note_id: str, **kwargs) -> ObjectId:
     db = utils.connect(db=database)
@@ -90,10 +88,35 @@ def update_nodes(*args, database: str, node_uids: List[str], **kwargs):
         queue="graph",
     )
 
+################################################################################
+# Vector tasks
+################################################################################
+@app.task
+def acknowledge_vector_upload(*args, database: str, ids: List[str], **kwargs):
+    db = utils.connect(db=database)
+    oids = [ObjectId(id) for id in ids]
+    db.documents.update_many({"_id": {"$in": oids}}, {
+        "$set": {
+             { "state": { "vectorized": True } }
+        }
+    })
+    logging.info(f"Acknowledged {len(ids)} vectorized and uploaded to database {database}.")
+
 
 ################################################################################
-# Upload tasks
+# Storage tasks
 ################################################################################
+@app.task
+def delete_storage(*args, database: str, userid: str, workspace: str, storage_id: str):
+    workspace = ObjectId(str(workspace))
+    storage_id = ObjectId(str(storage_id))
+    db = utils.connect(db=database)
+    storage_item = db.storage.find_one({"_id": storage_id})
+    
+
+
+
+
 @app.task
 def chunk_upload(*args, database: str, userid: str, workspace: str, label: str, data):
     try:

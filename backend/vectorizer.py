@@ -10,6 +10,7 @@ logging.basicConfig(
 )
 
 # Load the model once at startup
+logging.info("Loading model...")
 model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
 logging.info("Model loaded successfully.")
 

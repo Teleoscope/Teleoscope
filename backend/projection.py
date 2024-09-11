@@ -9,7 +9,7 @@ import hdbscan
 from sklearn.metrics.pairwise import cosine_distances
 
 # Local files
-from . import embeddings
+from backend import embeddings
 
 def document_ordering(sources, controls, dbname):
     """Build a training set based on the average of groups' document vectors.

@@ -32,6 +32,7 @@ import {
     SelectValue
 } from '@/components/ui/select';
 import { useState } from 'react';
+import { mutate } from 'swr';
 
 export default function NewTeamModalWrapper() {
     const [isOpen, setIsOpen] = useState(false);
@@ -81,6 +82,9 @@ export default function NewTeamModalWrapper() {
             body: formData,
         });
         if (res.status === 200) {
+            mutate((key) =>
+                typeof key === 'string' && (key.startsWith(`/api/workspace`) || key.startsWith(`/api/team`)))
+            setIsOpen(false)
             form.reset();
         } else {
             const data = await res.json();

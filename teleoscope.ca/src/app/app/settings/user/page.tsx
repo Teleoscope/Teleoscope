@@ -1,5 +1,4 @@
-'use client';
-
+'use client';;
 import { Button } from '@/components/ui/button';
 import {
     Form,
@@ -16,9 +15,6 @@ import { useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useSWRF } from '@/lib/swr';
-import { Accounts } from '@/types/accounts';
-import Link from "next/link";
 
 const formSchema = z.object({
     firstName: z.string().refine((v) => v.trim().length > 0, {
@@ -124,7 +120,7 @@ export default function AccountSettings() {
                     <h3 className="text-lg font-semibold">Security</h3>
                     <section className="flex items-center gap-4 py-4">
                         <Label>Password</Label>
-                        <Button variant={'outline'} className=" w-fit">
+                        <Button variant={'outline'} className=" w-fit" disabled={true}>
                             Change Password
                         </Button>
                     </section>
@@ -150,9 +146,9 @@ export default function AccountSettings() {
                         <Label>
                             Upgrade plan to expand collaboration and storage
                         </Label>
-                        <Link className=" border bg-appPrimary-600 p-1 px-2 text-white rounded-md flex items-center w-fit"
+                        {/* <Link className=" border bg-appPrimary-600 p-1 px-2 text-white rounded-md flex items-center w-fit"
                                 href="/pricing">
-                            View Plans</Link>
+                            View Plans</Link> */}
                     </div>
 
                 </section>

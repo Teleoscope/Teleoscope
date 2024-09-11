@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
                 .findOne({ _id: workflowObjectId });
 
             if (!workflowResult) {
-                throw new Error(`Workflow ${workflowId || workspaceResult.workflows[0]} not found.`);
+                throw new Error(`Workflow ${workflowObjectId} not found.`);
             }
 
             const appState = {

@@ -31,6 +31,7 @@ import { useState } from 'react';
 import { PlusIcon } from 'lucide-react';
 import { Teams } from '@/types/teams';
 import { Workspaces } from '@/types/workspaces';
+import { mutate } from 'swr';
 
 export function NewWorkspaceModal({ teams = [] }: { teams: Teams[] }) {
     const teamLabels = teams.length > 0 ? teams.map((team) => team.label) : [];
@@ -75,7 +76,8 @@ export function NewWorkspaceModal({ teams = [] }: { teams: Teams[] }) {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-
+            mutate((key) =>
+                typeof key === 'string' && (key.startsWith(`/api/workspace`) || key.startsWith(`/api/team`)))
             setIsOpen(false);
             toast('Workspace creation requested', {
                 description: 'Creating new workspace. May take a few seconds.',

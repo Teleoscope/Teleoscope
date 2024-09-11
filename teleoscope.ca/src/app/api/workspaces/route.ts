@@ -66,7 +66,8 @@ export async function POST(request: NextRequest) {
                     expanded: false
                 },
                 selected_workflow: "",
-                workflows: []
+                workflows: [],
+                storage: []
             };
 
             const workspace_result = await db

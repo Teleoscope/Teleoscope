@@ -12,8 +12,8 @@ from kombu import Exchange, Queue
 
 # package files
 from backend import embeddings
-from . import utils
-from . import projection
+from backend import utils
+from backend import projection
 
 # environment variables
 from dotenv import load_dotenv

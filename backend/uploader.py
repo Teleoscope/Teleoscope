@@ -1,8 +1,11 @@
 import pika
 import logging
 import json
-from . import embeddings
+
+from backend import utils
+from backend import embeddings
 import os
+import uuid 
 
 # Initialize logging
 logging.basicConfig(
@@ -18,14 +21,15 @@ load_dotenv()  # This loads the variables from .env
 # RabbitMQ connection details
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
 RABBITMQ_UPLOAD_VECTOR_QUEUE = os.getenv("RABBITMQ_UPLOAD_VECTOR_QUEUE")
+RABBITMQ_TASK_QUEUE = os.getenv("RABBITMQ_TASK_QUEUE")
 
 # Function to handle vector uploads to Milvus
-def upload_vector(ch, method, properties, body):
+def upload_vectors(ch, method, properties, body):
     message = json.loads(body.decode('utf-8'))
-    vector_data = message['vector']
+    vector_data = message['vector_data']
     database = message['database']
 
-    logging.info(f"Received vector for document ID {vector_data['id']} from queue.")
+    logging.info(f"Received vectors for {len(vector_data)} for database {database}.")
 
     # Connect to Milvus (or other storage)
     client = embeddings.connect()
@@ -39,6 +43,18 @@ def upload_vector(ch, method, properties, body):
         logging.error(f"Error uploading vector data: {e}")
     finally:
         client.close()
+    
+    task_data = {
+        'task': 'backend.tasks.acknowledge_vector_upload',  # Celery task name
+        'id': uuid.uuid4(),  # Unique ID for the task
+        'args': [],  # Arguments for the task
+        'kwargs': {
+            "database": database,
+            "ids": [vd["id"] for vd in vector_data]
+        },  # Keyword arguments if any
+    }
+
+    utils.publish(RABBITMQ_HOST, RABBITMQ_TASK_QUEUE, task_data)
 
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
@@ -52,7 +68,7 @@ def start_upload_worker():
     channel.queue_declare(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE)
 
     # Set up the consumer to upload vectors
-    channel.basic_consume(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, on_message_callback=upload_vector)
+    channel.basic_consume(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, on_message_callback=upload_vectors)
 
     logging.info("Waiting for vectors to upload...")
     channel.start_consuming()

@@ -10,7 +10,7 @@ from celery import bootsteps
 from kombu import Consumer, Exchange, Queue
 
 # local files
-from . import tasks
+from backend import tasks
 
 # environment variables
 from dotenv import load_dotenv
@@ -65,6 +65,13 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
 
             case "chunk_upload":
                 res = tasks.chunk_upload.signature(args=(), kwargs=kwargs)
+            
+            case "delete_storage":
+                res = tasks.delete_storage.signature(args=(), kwargs=kwargs)
+            
+            case "acknowledge_vector_upload":
+                res = tasks.acknowledge_vector_upload.signature(args=(), kwargs=kwargs)
+
         try:
             res.apply_async(queue=RABBITMQ_TASK_QUEUE)
         except Exception as e:
