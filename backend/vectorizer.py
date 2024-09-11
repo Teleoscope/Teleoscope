@@ -106,7 +106,7 @@ def start_vectorization_worker():
     while True:
         try:
             # Establish a connection to RabbitMQ
-            channel = utils.pika_connect()
+            channel = rabbitmq_pool.get_channel()
 
             # Declare the document queue (ensure it is durable and survives RabbitMQ restarts)
             channel.queue_declare(queue=RABBITMQ_VECTORIZE_QUEUE, durable=True)
