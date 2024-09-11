@@ -27,6 +27,7 @@ else:
 RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
 RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
+RABBITMQ_PORT = os.getenv("RABBITMQ_PORT")
 
 MONGODB_USERNAME = os.getenv("MONGODB_USERNAME")
 MONGODB_PASSWORD = os.getenv("MONGODB_PASSWORD")
@@ -363,9 +364,9 @@ def sanitize_db_name(name):
 
 
 
-def publish(host, queue, message):
+def publish(queue, message, host=RABBITMQ_HOST, port=RABBITMQ_PORT):
     # Establish a connection to RabbitMQ server
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
     channel = connection.channel()
 
     # Declare a queue. If the queue already exists, it will not be recreated.

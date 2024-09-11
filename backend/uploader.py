@@ -20,6 +20,7 @@ load_dotenv()  # This loads the variables from .env
 
 # RabbitMQ connection details
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
+RABBITMQ_PORT = os.getenv("RABBITMQ_PORT")
 RABBITMQ_UPLOAD_VECTOR_QUEUE = os.getenv("RABBITMQ_UPLOAD_VECTOR_QUEUE")
 RABBITMQ_TASK_QUEUE = os.getenv("RABBITMQ_TASK_QUEUE")
 
@@ -54,14 +55,14 @@ def upload_vectors(ch, method, properties, body):
         },  # Keyword arguments if any
     }
 
-    utils.publish(RABBITMQ_HOST, RABBITMQ_TASK_QUEUE, task_data)
+    utils.publish("tasks", task_data, RABBITMQ_HOST, RABBITMQ_TASK_QUEUE)
 
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 # Start consuming messages from the vector queue
 def start_upload_worker():
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST.split(":")[0]))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_PORT, port=RABBITMQ_PORT))
     channel = connection.channel()
 
     # Declare the vector queue

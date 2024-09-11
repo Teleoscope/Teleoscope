@@ -23,6 +23,7 @@ load_dotenv()
 RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
 RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
+RABBITMQ_PORT = os.getenv("RABBITMQ_PORT")
 RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST")
 RABBITMQ_TASK_QUEUE = os.getenv("RABBITMQ_TASK_QUEUE")
 
@@ -34,7 +35,7 @@ CELERY_BROKER_URL = (
     f"amqp://"
     f"{RABBITMQ_USERNAME}:"
     f"{RABBITMQ_PASSWORD}@"
-    f"{RABBITMQ_HOST}/"
+    f"{RABBITMQ_HOST}:{RABBITMQ_PORT}/"
     f"{RABBITMQ_VHOST}"
 )
 
@@ -112,7 +113,23 @@ def delete_storage(*args, database: str, userid: str, workspace: str, storage_id
     storage_id = ObjectId(str(storage_id))
     db = utils.connect(db=database)
     storage_item = db.storage.find_one({"_id": storage_id})
+    ids = [str(doc) for doc in storage_item["docs"]]
     
+    app.send_task(
+        "backend.graph.delete_vectors",
+        args=[],
+        kwargs={"database": database, "ids": ids},
+        queue="graph",
+    )
+
+    db.storage.delete_one({"_id": storage_id})
+    db.workspaces.update_one({"_id": workspace}, {
+        "$pull": {
+            "storage": storage_id
+        }
+    })
+    db.documents.delete_many({"_id": {"$in": {storage_item["docs"]}}})
+    logging.info(f"Deleted all documents from {storage_id} in database {database} and workspace {workspace}.")
 
 
 

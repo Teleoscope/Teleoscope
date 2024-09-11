@@ -25,6 +25,7 @@ load_dotenv()  # This loads the variables from .env
 RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
 RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
+RABBITMQ_PORT = os.getenv("RABBITMQ_PORT")
 RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST")
 RABBITMQ_TASK_QUEUE = os.getenv("RABBITMQ_TASK_QUEUE")
 RABBITMQ_VECTORIZE_QUEUE = os.getenv("RABBITMQ_VECTORIZE_QUEUE")
@@ -36,6 +37,8 @@ if not RABBITMQ_PASSWORD:
     logging.info("Missing environment variable RABBITMQ_PASSWORD")
 if not RABBITMQ_HOST:
     logging.info("Missing environment variable RABBITMQ_HOST")
+if not RABBITMQ_PORT:
+    logging.info("Missing environment variable RABBITMQ_PORT")
 if not RABBITMQ_VHOST:
     logging.info("Missing environment variable RABBITMQ_VHOST")
 if not RABBITMQ_TASK_QUEUE:
@@ -50,7 +53,7 @@ CELERY_BROKER_URL = (
     f"amqp://"
     f"{RABBITMQ_USERNAME}:"
     f"{RABBITMQ_PASSWORD}@"
-    f"{RABBITMQ_HOST}/"
+    f"{RABBITMQ_HOST}:{RABBITMQ_PORT}/"
     f"{RABBITMQ_VHOST}"
 )
 
@@ -78,6 +81,7 @@ def update_nodes(*args, database: str, node_uids: List[str], **kwargs):
         graph_uid(db, node_uid)
     return
 
+
 @app.task
 def milvus_chunk_import(database: str, userid: str, documents):
     logging.info(f"Recieved an import chunk of length {len(documents)} for database {database}.")
@@ -89,12 +93,22 @@ def milvus_chunk_import(database: str, userid: str, documents):
     logging.info(f"Sending import chunk of length {len(documents)} for database {database} to be vectorized.")
     return
 
+
 @app.task
 def update_vectors(database: str, documents):
     logging.info(f"Updating {len(documents)} vectors in database {database}...")
     send_documents_for_processing(documents, database)
     logging.info(f"Sending an update for {len(documents)} vectors in database {database}.")
     return
+
+
+@app.task
+def delete_vectors(database: str, ids):
+    logging.info(f"Deleting {len(ids)} vectors in database {database}...")
+    client = embeddings.connect()
+    client.delete(collection_name=database, ids=ids)
+    logging.info(f"Deleted {len(ids)} vectors in database {database}.")
+
 
 ################################################################################
 # Model functions
