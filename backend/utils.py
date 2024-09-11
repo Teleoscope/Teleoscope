@@ -390,7 +390,7 @@ class RabbitMQConnectionPool:
                 password=RABBITMQ_PASSWORD
             )
             parameters = pika.ConnectionParameters(
-                host=RABBITMQ_PORT,
+                host=RABBITMQ_HOST,
                 port=RABBITMQ_PORT,
                 virtual_host=RABBITMQ_VHOST,
                 credentials=credentials,
