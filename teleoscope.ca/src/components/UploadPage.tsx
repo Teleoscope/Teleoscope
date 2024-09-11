@@ -75,7 +75,8 @@ const template = {
         {
             name: 'Document Type',
             key: 'document_type',
-            description: 'The type or format of the document (e.g., PDF, Word).',
+            description:
+                'The type or format of the document (e.g., PDF, Word).',
             suggested_mappings: ['type', 'format', 'document_format']
         },
         {
@@ -87,7 +88,8 @@ const template = {
         {
             name: 'File Size',
             key: 'file_size',
-            description: 'The size of the document in bytes or human-readable format.',
+            description:
+                'The size of the document in bytes or human-readable format.',
             suggested_mappings: ['size', 'document_size']
         },
         {
@@ -171,11 +173,11 @@ const template = {
     ]
 };
 
-
-function StorageItem({ oid }) {
-    const { data: storage } = useSWRF(oid ? `/api/storage?storage=${oid}`: null);
-    return <DataViewer id={oid} type="Storage"></DataViewer>
-        
+function StorageItem({ oid }: { oid: string }) {
+    const { data: storage } = useSWRF(
+        oid ? `/api/storage?storage=${oid}` : null
+    );
+    return <DataViewer id={oid} type="Storage"></DataViewer>;
 }
 
 export default function UploadPage() {
@@ -187,7 +189,9 @@ export default function UploadPage() {
     );
 
     const { storage } = useAppSelector((state) => state.appState.workspace);
-    const { color } = useAppSelector((state) => state.appState.workflow.settings);
+    const { color } = useAppSelector(
+        (state) => state.appState.workflow.settings
+    );
 
     const handleComplete = (data) => {
         if (!data.error) {
@@ -201,17 +205,21 @@ export default function UploadPage() {
                     num_rows: chunk.length,
                     rows: chunk
                 };
-                axios.post(`/api/upload/csv/chunk`, {
-                    workspace_id: workspace_id,
-                    data: formatted_chunk,
-                    label: label
-                }).then(()=>{
-                    setTimeout(()=>{
-                        mutate((key) =>
-                            typeof key === 'string' && key.startsWith(`/api/app`))
-                    },1000);
+                axios
+                    .post(`/api/upload/csv/chunk`, {
+                        workspace_id: workspace_id,
+                        data: formatted_chunk,
+                        label: label
                     })
-                    
+                    .then(() => {
+                        setTimeout(() => {
+                            mutate(
+                                (key) =>
+                                    typeof key === 'string' &&
+                                    key.startsWith(`/api/app`)
+                            );
+                        }, 1000);
+                    });
             });
         }
     };
@@ -233,7 +241,16 @@ export default function UploadPage() {
     return (
         <>
             <Stack direction="column" justifyContent="space-between">
-                <Button color={color} onClick={() => handleOpenImporter()}>
+                <Button
+                    sx={{
+                        // backgroundColor: '#FFFFFF', // Custom background color
+                        color: color, // Custom text color
+                        // '&:hover': {
+                        //     backgroundColor: '#388e3c' // Custom hover color
+                        // }
+                    }}
+                    onClick={() => handleOpenImporter()}
+                >
                     Open CSV Importer
                 </Button>
                 {typeof window !== 'undefined' && (
