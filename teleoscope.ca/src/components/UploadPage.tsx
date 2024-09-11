@@ -6,6 +6,7 @@ import { useAppSelector } from '@/lib/hooks';
 import { Button, Divider, Stack } from '@mui/material';
 import { useSWRF } from '@/lib/swr';
 import DataViewer from './Sidebar/DataViewer';
+import { mutate } from 'swr';
 
 // Adjust dynamic import based on the export type
 const CSVImporter = dynamic(
@@ -203,7 +204,13 @@ export default function UploadPage() {
                     workspace_id: workspace_id,
                     data: formatted_chunk,
                     label: label
-                });
+                }).then(()=>{
+                    setTimeout(()=>{
+                        mutate((key) =>
+                            typeof key === 'string' && key.startsWith(`/api/work`))
+                    },1000);
+                    })
+                    
             });
         }
     };
