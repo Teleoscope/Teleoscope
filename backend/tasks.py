@@ -129,6 +129,11 @@ def delete_storage(*args, database: str, userid: str, workspace: str, storage: s
             "storage": storage
         }
     })
+    db.groups.update_many({},{
+        "$pull": {
+            "$in": storage_item["docs"]
+        }
+    })
     db.documents.delete_many({"_id": {"$in": storage_item["docs"]}})
     logging.info(f"Deleted all documents from {storage} in database {database} and workspace {workspace}.")
 
