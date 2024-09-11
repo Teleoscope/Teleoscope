@@ -30,13 +30,13 @@ const template = {
             suggested_mappings: ['title']
         },
         {
-            name: 'Groups',
+            name: 'Group',
             key: 'group',
             description: 'Any existing groups that you want created.',
             suggested_mappings: ['group']
         },
         {
-            name: 'Unique IDs',
+            name: 'Unique ID',
             key: 'uid',
             description: 'Any existing unique IDs that you want used.',
             suggested_mappings: [
@@ -95,6 +95,18 @@ const template = {
             key: 'version',
             description: 'The version number of the document, if applicable.',
             suggested_mappings: ['version_number', 'document_version']
+        },
+        {
+            name: 'Link',
+            key: 'link',
+            description: 'The link for the document.',
+            suggested_mappings: ['link', 'url']
+        },
+        {
+            name: 'Category',
+            key: 'category',
+            description: 'The category for the document.',
+            suggested_mappings: ['category']
         },
         {
             name: 'Metadata 1',
