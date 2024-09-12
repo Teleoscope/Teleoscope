@@ -2,18 +2,21 @@
 import logging
 import json
 from pprint import pformat
-
+import signal
+import sys
 from backend import utils
 from backend import embeddings
 import os
-import uuid 
+import uuid
 
 # Initialize logging    
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, 
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
 )
 
-# environment variables
+# Environment variables
 from dotenv import load_dotenv
 
 load_dotenv()  # This loads the variables from .env
@@ -34,7 +37,6 @@ RABBITMQ_VHOST = check_env_var("RABBITMQ_VHOST")
 RABBITMQ_VECTORIZE_QUEUE = check_env_var("RABBITMQ_VECTORIZE_QUEUE")
 RABBITMQ_UPLOAD_VECTOR_QUEUE = check_env_var("RABBITMQ_UPLOAD_VECTOR_QUEUE")
 
-rabbitmq_pool = utils.RabbitMQConnectionPool()
 
 # Function to handle vector uploads to Milvus
 def upload_vectors(ch, method, properties, body):
@@ -54,8 +56,8 @@ def upload_vectors(ch, method, properties, body):
         logging.info(f"Attempting to upload {len(vector_data)} vectors...")
         if (len(vector_data) > 0):
             logging.info(f"Keys of data are {vector_data[0].keys()}.")
-            logging.info(f"Dimensions of vectors are {len(vector_data[0].get("vector",[]))}.")
-            logging.info(f"ID of first vector is {vector_data[0].get("id","")}.")
+            logging.info(f"Dimensions of vectors are {len(vector_data[0].get('vector',[]))}.")
+            logging.info(f"ID of first vector is {vector_data[0].get('id','')}.")
         res = client.upsert(collection_name=database, data=vector_data)
         if not res:  # Check if result is None or contains error codes
             logging.error(f"Vector upload to {database} failed.")
@@ -84,10 +86,17 @@ def upload_vectors(ch, method, properties, body):
 
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
+# Graceful shutdown handler
+def graceful_shutdown(signum, frame):
+    logging.info(f"Received shutdown signal ({signum}). Closing RabbitMQ connections...")
+    sys.exit(0)
 
 # Start consuming messages from the vector queue
 def start_upload_worker():
-    channel = rabbitmq_pool.get_channel()
+    logging.info("Starting upload worker.")
+
+    connection = utils.get_connection()
+    channel = connection.channel()
 
     # Declare the vector queue
     channel.queue_declare(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, durable=True)
@@ -99,4 +108,15 @@ def start_upload_worker():
     channel.start_consuming()
 
 if __name__ == "__main__":
-    start_upload_worker()
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGTERM, graceful_shutdown)
+    signal.signal(signal.SIGINT, graceful_shutdown)  # Handle Ctrl+C (KeyboardInterrupt)
+
+    try:
+        start_upload_worker()
+    except KeyboardInterrupt:
+        logging.info("KeyboardInterrupt received. Shutting down gracefully...")
+        graceful_shutdown(signal.SIGINT, None)
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        graceful_shutdown(signal.SIGTERM, None)

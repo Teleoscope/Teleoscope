@@ -1,19 +1,22 @@
 # vectorizer.py
+
+import signal
 import pika
 import logging
 import json
 from FlagEmbedding import BGEM3FlagModel
 import os
+import sys
 import time
 from dotenv import load_dotenv
-
 from backend import utils
 
 # Initialize logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
 )
-
 # Load environment variables
 load_dotenv()
 
@@ -25,49 +28,34 @@ def check_env_var(var_name: str):
     return value
 
 # Check and load environment variables
-RABBITMQ_HOST = check_env_var("RABBITMQ_HOST")
-RABBITMQ_PORT = int(check_env_var("RABBITMQ_PORT"))
-RABBITMQ_VHOST = check_env_var("RABBITMQ_VHOST")
 RABBITMQ_VECTORIZE_QUEUE = check_env_var("RABBITMQ_VECTORIZE_QUEUE")
 RABBITMQ_UPLOAD_VECTOR_QUEUE = check_env_var("RABBITMQ_UPLOAD_VECTOR_QUEUE")
+
 RETRY_DELAY = 5  # seconds
 
 # Lazy initialization for the model
 model = None
 
-rabbitmq_pool = utils.RabbitMQConnectionPool()
-
 # Publish vectors to the upload vector queue
 def publish_vectors(vector_data: list, database: str):
-    try:
-        channel = rabbitmq_pool.get_channel()
 
-        if not channel.is_open:
-            logging.info("Re-opening closed RabbitMQ channel...")
-            channel = rabbitmq_pool.get_channel()
+    connection = utils.get_connection()
+    channel = connection.channel()
 
-        # Declare the vector queue in case it doesn't exist
-        channel.queue_declare(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, durable=True)
+    # Declare the vector queue in case it doesn't exist
+    channel.queue_declare(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, durable=True)
 
-        # Prepare the message
-        message = json.dumps({
-            'database': database,
-            'vector_data': vector_data
-        })
+    # Prepare the message
+    message = json.dumps({
+        'database': database,
+        'vector_data': vector_data
+    })
 
-        # Publish the message
-        channel.basic_publish(exchange='', routing_key=RABBITMQ_UPLOAD_VECTOR_QUEUE, body=message)
-        logging.info(f"Published vectors to vector upload queue.")
-        
-    except pika.exceptions.AMQPConnectionError as e:
-        logging.error(f"Connection error when publishing vectors: {e}. Retrying in {RETRY_DELAY} seconds...")
-        time.sleep(RETRY_DELAY)
-        publish_vectors(vector_data, database)  # Retry the publish
-    except Exception as e:
-        logging.error(f"Error publishing vectors: {e}")
-    finally:
-        if channel and channel.is_open:
-            channel.close()
+    # Publish the message
+    channel.basic_publish(exchange='', routing_key=RABBITMQ_UPLOAD_VECTOR_QUEUE, body=message)
+    logging.info(f"Published vectors to vector upload queue.")
+    
+
 
 
 # Callback function to handle incoming messages from RabbitMQ
@@ -109,30 +97,36 @@ def vectorize_documents(ch, method, properties, body):
 
 # Start consuming messages from the document queue
 def start_vectorization_worker():
-    while True:
-        try:
-            channel = rabbitmq_pool.get_channel()
+    logging.info("Starting vectorizer worker.")
+    
+    connection = utils.get_connection()
+    channel = connection.channel()
+    
+    channel.queue_declare(queue=RABBITMQ_VECTORIZE_QUEUE, durable=True)
+    logging.info("Setting up consumer...")
 
-            if not channel.is_open:
-                logging.info("Re-opening closed RabbitMQ channel...")
-                channel = rabbitmq_pool.get_channel()
+    channel.basic_consume(queue=RABBITMQ_VECTORIZE_QUEUE, on_message_callback=vectorize_documents)
 
-            channel.queue_declare(queue=RABBITMQ_VECTORIZE_QUEUE, durable=True)
-            channel.basic_consume(queue=RABBITMQ_VECTORIZE_QUEUE, on_message_callback=vectorize_documents)
+    logging.info("Waiting for documents to vectorize...")
+    channel.start_consuming()
 
-            logging.info("Waiting for documents to vectorize...")
-            channel.start_consuming()
 
-        except pika.exceptions.AMQPConnectionError as e:
-            logging.error(f"Connection to RabbitMQ failed: {e}. Retrying in {RETRY_DELAY} seconds...")
-            time.sleep(RETRY_DELAY)
-        except Exception as e:
-            logging.error(f"An unexpected error occurred: {e}")
-            time.sleep(RETRY_DELAY)
-        finally:
-            if channel and channel.is_open:
-                channel.close()
+# Graceful shutdown handler
+def graceful_shutdown(signum, frame):
+    logging.info(f"Received shutdown signal ({signum}). Closing RabbitMQ connections...")
+    sys.exit(0)
+
 
 
 if __name__ == "__main__":
-    start_vectorization_worker()
+    # Register signal handlers for SIGTERM and SIGINT
+    signal.signal(signal.SIGTERM, graceful_shutdown)
+    signal.signal(signal.SIGINT, graceful_shutdown)  # Handle Ctrl+C
+    try:
+        start_vectorization_worker()
+    except KeyboardInterrupt:
+        logging.info("KeyboardInterrupt received. Shutting down gracefully...")
+        graceful_shutdown(signal.SIGINT, None)
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
+        graceful_shutdown(signal.SIGTERM, None)
