@@ -71,19 +71,26 @@ def vectorize_documents(ch, method, properties, body):
     try:
         message = json.loads(body.decode('utf-8'))
         documents = message.get('documents', [])
+        workspace = message.get('workspace', '')
         database = message.get('database', 'default')
-
-        if not documents:
+        
+        if len(documents) == 0:
             logging.warning("No documents found in the message.")
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
+        
+        if workspace == '':
+            logging.warning("No workspace included.")
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+        
 
-        logging.info(f"Vectorizing {len(documents)} documents...")
+        logging.info(f"Vectorizing {len(documents)} documents for database {database} and workspace {workspace}...")
 
         # Extract texts and vectorize
         texts = [doc['text'] for doc in documents]
         raw_vecs = model.encode(texts)["dense_vecs"]
-        vector_data = [{'id': doc['id'], 'vector': vec.tolist()} for doc, vec in zip(documents, raw_vecs)]
+        vector_data = [{'id': doc['id'], workspace: workspace, 'vector': vec.tolist()} for doc, vec in zip(documents, raw_vecs)]
 
         logging.info(f"Vectorization completed. Sending vectors to vector queue.")
 

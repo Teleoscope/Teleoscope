@@ -32,7 +32,7 @@ def string_to_int(s):
 from pymilvus import MilvusClient, DataType, MilvusException, connections, db
 
 
-def milvus_setup(client: MilvusClient, collection_name="teleoscope"):
+def milvus_setup(client: MilvusClient, workspace_id, collection_name="teleoscope"):
     logging.info(f"Checking if collection {collection_name} exists...")
     if not client.has_collection(collection_name):
         logging.info(f"Collection {collection_name} does not exist. Initializing...")
@@ -70,6 +70,8 @@ def milvus_setup(client: MilvusClient, collection_name="teleoscope"):
             index_params=index_params
         )
         logging.info(f"Initialized collection {collection_name}.")
+    if not client.has_partition(collection_name=collection_name, partition_name=workspace_id):
+        client.create_partition(collection_name=collection_name, partition_name=workspace_id)
 
 
 def connect():
@@ -87,17 +89,18 @@ def connect():
     return client
 
 
-def get_embeddings(client, collection_name, oids):
+def get_embeddings(client: MilvusClient, collection_name, workspace_id, oids):
     logging.info(f"Gathering document embeddings for {len(oids)} document oids...")
     # ensure the collection exists
-    milvus_setup(client, collection_name=collection_name)
+    milvus_setup(client, workspace_id, collection_name=collection_name)
 
     # load the collection into memory
-    client.load_collection(collection_name=collection_name)
-    logging.info(f"Connected to Milvus Collection {collection_name}.")
+    client.load_partitions(collection_name=collection_name, partition_names=[workspace_id])
+    logging.info(f"Connected to Milvus Collection {collection_name} and partition {workspace_id}.")
     
     milvus_results = client.get(
-        collection_name=collection_name, 
+        collection_name=collection_name,
+        partition_names=[workspace_id],
         ids=[str(i) for i in oids], 
         output_fields=["vector"]
     )

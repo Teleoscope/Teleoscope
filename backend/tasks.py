@@ -82,11 +82,11 @@ def vectorize_note(*args, database: str, note_id: str, **kwargs) -> ObjectId:
 # Graph tasks
 ################################################################################
 @app.task
-def update_nodes(*args, database: str, node_uids: List[str], **kwargs):
+def update_nodes(*args, database: str, node_uids: List[str], workspace_id: str, **kwargs):
     app.send_task(
         "backend.graph.update_nodes",
         args=[],
-        kwargs={"database": database, "node_uids": node_uids},
+        kwargs={"database": database, "node_uids": node_uids, workspace_id: workspace_id},
         queue="graph",
     )
 
@@ -163,6 +163,7 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, label: str, 
                 "text": row["text"],
                 "title": row["title"],
                 "relationships": {},
+                "workspace": workspace,
                 "metadata": json.loads(json.dumps(metadata)),  # Convert row to JSON
                 "state": {"read": False},
             }
@@ -200,6 +201,7 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, label: str, 
             args=[],
             kwargs={
                 "database": database,
+                "workspace": workspace,
                 "userid": userid,
                 "documents": inserted_ids,
             },

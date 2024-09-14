@@ -5,6 +5,7 @@ export interface Documents {
   title: string;
   relationships: any;
   metadata: any;
+  workspace: ObjectId;
   state: any;
 }
 

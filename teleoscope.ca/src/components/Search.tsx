@@ -21,9 +21,9 @@ import { RootState } from "@/lib/store";
 
 export default function Search({ data: search, reactflow_node, graph_node }: WindowProps) {
   const [query, setQuery] = useState(search?.query ? search.query : "");
-
+  const { _id: workspace } = useAppSelector((state: RootState) => state.appState.workspace);
   const { data: documents, isLoading: documents_loading } = useSWRF(
-    `/api/search?query=${query}`
+    `/api/search?query=${query}&workspace=${workspace}`
   );
 
   const { data: count, isLoading: count_loading } = useSWRF(

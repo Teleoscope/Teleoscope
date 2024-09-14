@@ -74,22 +74,22 @@ app.conf.update(
 # Tasks to register
 ################################################################################
 @app.task
-def update_nodes(*args, database: str, node_uids: List[str], **kwargs):
+def update_nodes(*args, database: str, node_uids: List[str], workspace_id: str, **kwargs):
     logging.info(f"Updating {len(node_uids)} nodes.")
     db = utils.connect(db=database)
     for node_uid in node_uids:
-        graph_uid(db, node_uid)
+        graph_uid(db, workspace_id, node_uid)
     return
 
 
 @app.task
-def milvus_chunk_import(database: str, userid: str, documents):
+def milvus_chunk_import(database: str, workspace: str, userid: str, documents):
     logging.info(f"Recieved an import chunk of length {len(documents)} for database {database}.")
     mongo_db = utils.connect(db=database)
     docs = mongo_db.documents.find(
         {"_id": {"$in": [ObjectId(str(d)) for d in documents]}}
     )
-    send_documents_for_processing(list(docs), database)
+    send_documents_for_processing(list(docs), workspace, database)
     logging.info(f"Sending import chunk of length {len(documents)} for database {database} to be vectorized.")
     return
 
@@ -113,13 +113,14 @@ def delete_vectors(database: str, ids):
 ################################################################################
 # Model functions
 ################################################################################
-def send_documents_for_processing(documents, database):
+def send_documents_for_processing(documents, workspace, database):
     # Prepare the payload as a list of dictionaries
     formatted_documents = [{'id': str(doc["_id"]), 'text': doc["text"]} for doc in documents]
 
     # Send the request directly with the list of documents
     body = {
         "documents": formatted_documents,
+        "workspace":  workspace,
         "database": database
     }
     utils.publish(RABBITMQ_VECTORIZE_QUEUE, json.dumps(body))
@@ -129,7 +130,7 @@ def send_documents_for_processing(documents, database):
 ################################################################################
 # Graph API
 ################################################################################
-def graph_uid(db, uid):
+def graph_uid(db, workspace_id, uid):
     db.graph.update_one({"uid": uid}, {"$set": {"doclists": []}})
     node = db.graph.find_one({"uid": uid})
     if not node:
@@ -157,9 +158,9 @@ def graph_uid(db, uid):
         case "Note":
             node = update_note(db, node, parameters)
         case "Rank":
-            node = update_rank(db, node, sources, controls, parameters)
+            node = update_rank(db, node, sources, controls, parameters, workspace_id)
         case "Projection":
-            node = update_projection(db, node, sources, controls, parameters)
+            node = update_projection(db, node, sources, controls, parameters, workspace_id)
         case "Union":
             node = update_union(db, node, sources, controls, parameters)
         case "Intersection":
@@ -175,7 +176,7 @@ def graph_uid(db, uid):
 
     # Calculate each node downstream to the right.
     for edge_uid in outputs:
-        graph_uid(db, edge_uid)
+        graph_uid(db, workspace_id, edge_uid)
 
     return res
 
@@ -275,8 +276,8 @@ def update_search(db: database.Database, search_node, parameters):
 # Update Rank
 ################################################################################
 def update_rank(
-    mdb: database.Database, rank_node, sources: List, controls: List, parameters
-):
+    mdb: database.Database, rank_node, sources: List, controls: List, parameters, 
+    workspace_id ):
     # check if it's worth updating the node
     if len(controls) == 0:
         logging.info(f"No controls included. Returning original teleoscope node.")
@@ -293,7 +294,7 @@ def update_rank(
     logging.info(f"Documents with oids {control_oids} found for controls {controls}.")
 
     # get the vectors for each document vector id
-    milvus_results = embeddings.get_embeddings(client, collection_name, control_oids)
+    milvus_results = embeddings.get_embeddings(client, collection_name, workspace_id, control_oids)
 
     # unpack results
     control_vectors = [np.array(res["vector"]) for res in milvus_results]

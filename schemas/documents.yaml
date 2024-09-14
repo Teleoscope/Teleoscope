@@ -4,6 +4,7 @@ title: document
 required:
   - text
   - title
+  - workspace
   - relationships
   - metadata
   - state
@@ -20,6 +21,9 @@ properties:
   metadata:
     bsonType: object
     description: document
+  workspace:
+    bsonType: objectId
+    description: the oid of the workspace this belongs to
   state:
     bsonType: object
     description: document

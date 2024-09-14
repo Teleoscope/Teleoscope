@@ -5,6 +5,7 @@
         "required": [
             "text",
             "title",
+            "workspace",
             "relationships",
             "metadata",
             "state"
@@ -25,6 +26,10 @@
             "metadata": {
                 "bsonType": "object",
                 "description": "document"
+            },
+            "workspace": {
+                "bsonType": "objectId",
+                "description": "the oid of the workspace this belongs to"
             },
             "state": {
                 "bsonType": "object",
