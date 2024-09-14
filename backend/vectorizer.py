@@ -54,8 +54,6 @@ def publish_vectors(vector_data: list, database: str):
     # Publish the message
     channel.basic_publish(exchange='', routing_key=RABBITMQ_UPLOAD_VECTOR_QUEUE, body=message)
     logging.info(f"Published vectors to vector upload queue.")
-    
-
 
 
 # Callback function to handle incoming messages from RabbitMQ

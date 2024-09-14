@@ -86,7 +86,11 @@ def update_nodes(*args, database: str, node_uids: List[str], workspace_id: str, 
     app.send_task(
         "backend.graph.update_nodes",
         args=[],
-        kwargs={"database": database, "node_uids": node_uids, workspace_id: workspace_id},
+        kwargs={
+            "database": database, 
+            "node_uids": node_uids, 
+            "workspace_id": workspace_id
+        },
         queue="graph",
     )
 

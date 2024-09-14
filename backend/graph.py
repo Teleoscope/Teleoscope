@@ -120,7 +120,7 @@ def send_documents_for_processing(documents, workspace, database):
     # Send the request directly with the list of documents
     body = {
         "documents": formatted_documents,
-        "workspace":  workspace,
+        "workspace":  str(workspace),
         "database": database
     }
     utils.publish(RABBITMQ_VECTORIZE_QUEUE, json.dumps(body))
