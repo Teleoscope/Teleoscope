@@ -89,7 +89,7 @@ def vectorize_documents(ch, method, properties, body):
         # Extract texts and vectorize
         texts = [doc['text'] for doc in documents]
         raw_vecs = model.encode(texts)["dense_vecs"]
-        vector_data = [{'id': doc['id'], workspace: workspace, 'vector': vec.tolist()} for doc, vec in zip(documents, raw_vecs)]
+        vector_data = [{'id': doc['id'], 'vector': vec.tolist()} for doc, vec in zip(documents, raw_vecs)]
 
         logging.info(f"Vectorization completed. Sending vectors to vector queue.")
 
