@@ -46,8 +46,18 @@ RABBITMQ_UPLOAD_VECTOR_QUEUE = check_env_var("RABBITMQ_UPLOAD_VECTOR_QUEUE")
 def upload_vectors(ch, method, properties, body):
     message = json.loads(body.decode("utf-8"))
     vector_data = message.get("vector_data", [])
-    database = message["database"]
-    workspace_id = message["workspace_id"]
+    database = message.get("database", "default")
+    workspace_id = message.get("workspace_id", "")
+
+    if len(vector_data) == 0:
+        logging.warning("No documents found in the message.")
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        return
+
+    if workspace_id == "":
+        logging.warning("No workspace ID given.")
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        return
 
     logging.info(
         f"Received vectors for {len(vector_data)} for database {database} and workspace {workspace_id}."
