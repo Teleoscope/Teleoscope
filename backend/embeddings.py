@@ -94,6 +94,7 @@ def get_embeddings(client: MilvusClient, collection_name, workspace_id, oids):
     # ensure the collection exists
     milvus_setup(client, workspace_id, collection_name=collection_name)
 
+    client.using_database(db_name=MILVUS_DBNAME)
     # load the collection into memory
     client.load_partitions(collection_name=collection_name, partition_names=[workspace_id])
     logging.info(f"Connected to Milvus Collection {collection_name} and partition {workspace_id}.")

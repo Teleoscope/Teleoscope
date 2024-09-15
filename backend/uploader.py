@@ -36,6 +36,7 @@ def check_env_var(var_name: str):
 
 
 # Check and load environment variables
+MILVUS_DBNAME = check_env_var("MILVUS_DBNAME")
 RABBITMQ_TASK_QUEUE = check_env_var("RABBITMQ_TASK_QUEUE")
 RABBITMQ_DISPATCH_QUEUE = check_env_var("RABBITMQ_DISPATCH_QUEUE")
 RABBITMQ_HOST = check_env_var("RABBITMQ_HOST")
@@ -71,6 +72,8 @@ def upload_vectors(ch, method, properties, body):
 
     embeddings.milvus_setup(client, workspace_id, collection_name=database)
 
+    client.using_database(db_name=MILVUS_DBNAME)
+    
     try:
         # Upload vector to the database
         logging.info(f"Attempting to upload {len(vector_data)} vectors...")
