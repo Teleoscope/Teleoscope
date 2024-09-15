@@ -416,3 +416,27 @@ def publish(queue, message):
     finally:
         if connection.is_open:
             connection.close()  # Always clean up the connection
+
+
+
+def search_in_all_collections(db_name, search_value, field="_id"):
+    # Connect to MongoDB (change URI if necessary)
+    connect(db=db_name)
+
+    # Get all collection names in the database
+    collections = db.list_collection_names()
+
+    # Iterate through each collection and search for the value
+    for collection_name in collections:
+        collection = db[collection_name]
+        # Perform a search query (you can adjust the field based on your data)
+        query = { field: search_value }
+
+        results = list(collection.find(query))
+
+        if results:
+            print(f"Found in collection '{collection_name}':")
+            for result in results:
+                print(result)
+        else:
+            print(f"No results found in collection '{collection_name}'")
