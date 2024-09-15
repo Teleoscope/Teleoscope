@@ -12,9 +12,12 @@ import uuid
 # Initialize logging
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
+    format='[%(asctime)s: %(levelname)s/%(processName)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S,%f',
+    handlers=[logging.StreamHandler(sys.stdout)]
 )
+logging.getLogger('pika').setLevel(logging.WARNING)
+
 
 # Environment variables
 from dotenv import load_dotenv

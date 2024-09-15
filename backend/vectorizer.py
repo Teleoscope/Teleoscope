@@ -1,22 +1,22 @@
 # vectorizer.py
-
 import signal
-import pika
 import logging
 import json
 from FlagEmbedding import BGEM3FlagModel
-import os
 import sys
-import time
+import os
 from dotenv import load_dotenv
 from backend import utils
 
 # Initialize logging
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format='[%(asctime)s: %(levelname)s/%(processName)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S,%f',
     handlers=[logging.StreamHandler(sys.stdout)]
 )
+logging.getLogger('pika').setLevel(logging.WARNING)
+
 # Load environment variables
 load_dotenv()
 
