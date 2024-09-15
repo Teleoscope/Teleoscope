@@ -96,12 +96,12 @@ def get_embeddings(client: MilvusClient, collection_name, workspace_id, oids):
 
     client.using_database(db_name=MILVUS_DBNAME)
     # load the collection into memory
-    client.load_partitions(collection_name=collection_name, partition_names=[workspace_id])
+    client.load_partitions(collection_name=collection_name, partition_names=[str(workspace_id)])
     logging.info(f"Connected to Milvus Collection {collection_name} and partition {workspace_id}.")
     
     milvus_results = client.get(
         collection_name=collection_name,
-        partition_names=[workspace_id],
+        partition_names=[str(workspace_id)],
         ids=[str(i) for i in oids], 
         output_fields=["vector"]
     )

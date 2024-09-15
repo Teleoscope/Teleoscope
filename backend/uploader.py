@@ -83,7 +83,11 @@ def upload_vectors(ch, method, properties, body):
                 f"Dimensions of vectors are {len(vector_data[0].get('vector',[]))}."
             )
             logging.info(f"ID of first vector is {vector_data[0].get('id','')}.")
-        res = client.upsert(collection_name=database, data=vector_data)
+        res = client.upsert(
+            collection_name=database, 
+            data=vector_data,
+            partition_name=str(workspace_id)
+        )
         if not res:  # Check if result is None or contains error codes
             logging.error(f"Vector upload to {database} failed.")
         else:

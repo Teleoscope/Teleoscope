@@ -343,6 +343,7 @@ def update_rank(
             anns_field="vector",
             search_params=search_params,
             limit=10000,
+            partition_names=[str(workspace_id)]
         )
 
         ranks = [(result["id"], float(result["distance"])) for result in results[0]]
@@ -360,7 +361,10 @@ def update_rank(
                 # results look like:
                 # [  { "vector": [ ... ], "id": 'oid0128409128394' }, ..., { ... }  ]
                 results = client.get(
-                    collection_name=collection_name, ids=oids, output_fields=["vector"]
+                    collection_name=collection_name, 
+                    ids=oids, 
+                    output_fields=["vector"],
+                    partition_names=[str(workspace_id)]
                 )
                 logging.info(f"{len(results)} result vectors found.")
                 source_map.append((source, oids, [r["vector"] for r in results]))
