@@ -84,7 +84,7 @@ def vectorize_documents(ch, method, properties, body):
             return
         
 
-        logging.info(f"Vectorizing {len(documents)} documents for database {database} and workspace {workspace}...")
+        logging.info(f"Vectorizing {len(documents)} documents for database {database} and workspace {workspace_id}...")
 
         # Extract texts and vectorize
         texts = [doc['text'] for doc in documents]
