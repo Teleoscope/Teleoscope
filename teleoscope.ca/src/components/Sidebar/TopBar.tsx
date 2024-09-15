@@ -87,7 +87,7 @@ export default function TopBar({
 
                         <Divider /> */}
                         <MenuItem>
-                            <Link href={'/signout'}>
+                            <Link href={'auth/signin'}>
                                 <LogoutIcon sx={{ marginRight: '0.5em' }} />
                                 Sign out
                             </Link>

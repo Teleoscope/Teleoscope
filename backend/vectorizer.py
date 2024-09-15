@@ -37,7 +37,7 @@ RETRY_DELAY = 5  # seconds
 model = None
 
 # Publish vectors to the upload vector queue
-def publish_vectors(vector_data: list, database: str):
+def publish_vectors(vector_data: list, workspace_id: str, database: str):
 
     connection = utils.get_connection()
     channel = connection.channel()
@@ -48,7 +48,8 @@ def publish_vectors(vector_data: list, database: str):
     # Prepare the message
     message = json.dumps({
         'database': database,
-        'vector_data': vector_data
+        'vector_data': vector_data,
+        "workspace_id": workspace_id,
     })
 
     # Publish the message
@@ -69,7 +70,7 @@ def vectorize_documents(ch, method, properties, body):
     try:
         message = json.loads(body.decode('utf-8'))
         documents = message.get('documents', [])
-        workspace = message.get('workspace', '')
+        workspace_id = message.get('workspace_id', '')
         database = message.get('database', 'default')
         
         if len(documents) == 0:
@@ -77,7 +78,7 @@ def vectorize_documents(ch, method, properties, body):
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
-        if workspace == '':
+        if workspace_id == '':
             logging.warning("No workspace included.")
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
@@ -93,7 +94,7 @@ def vectorize_documents(ch, method, properties, body):
         logging.info(f"Vectorization completed. Sending vectors to vector queue.")
 
         # Publish the vectors
-        publish_vectors(vector_data, database)
+        publish_vectors(vector_data, workspace_id, database)
 
     except Exception as e:
         logging.error(f"Error during vectorization: {e}")

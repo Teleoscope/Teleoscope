@@ -113,14 +113,14 @@ def delete_vectors(database: str, ids):
 ################################################################################
 # Model functions
 ################################################################################
-def send_documents_for_processing(documents, workspace, database):
+def send_documents_for_processing(documents, workspace_id, database):
     # Prepare the payload as a list of dictionaries
     formatted_documents = [{'id': str(doc["_id"]), 'text': doc["text"]} for doc in documents]
 
     # Send the request directly with the list of documents
     body = {
         "documents": formatted_documents,
-        "workspace":  str(workspace),
+        "workspace_id":  str(workspace_id),
         "database": database
     }
     utils.publish(RABBITMQ_VECTORIZE_QUEUE, json.dumps(body))
