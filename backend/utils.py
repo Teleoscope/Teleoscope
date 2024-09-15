@@ -8,6 +8,7 @@ from threading import Lock
 
 # installed modules
 from pymongo import MongoClient, database
+from bson.objectid import ObjectId
 import logging
 from typing import List
 import datetime
@@ -421,7 +422,10 @@ def publish(queue, message):
 
 def search_in_all_collections(db_name, search_value, field="_id"):
     # Connect to MongoDB (change URI if necessary)
-    connect(db=db_name)
+    db = connect(db=db_name)
+
+    if field == "_id":
+        search_value = ObjectId(search_value)
 
     # Get all collection names in the database
     collections = db.list_collection_names()
