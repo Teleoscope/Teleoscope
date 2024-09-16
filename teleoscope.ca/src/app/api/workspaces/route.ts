@@ -122,7 +122,8 @@ export async function POST(request: NextRequest) {
                         $set: {
                             selected_workflow: workflow_result.insertedId
                         }
-                    }
+                    },
+                    { session: mongo_session }
                 );
         });
     } catch (error) {
