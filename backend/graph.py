@@ -391,7 +391,7 @@ def update_rank(
 # Update Projection
 ################################################################################
 def update_projection(
-    db: database.Database, projection_node, sources: List, controls: List, parameters
+    db: database.Database, projection_node, sources: List, controls: List, parameters, workspace_id: str
 ):
 
     if len(controls) == 0:
