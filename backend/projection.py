@@ -142,7 +142,7 @@ def cluster_documents(embedding):
         cluster_labels = hdbscan_clusterer.fit_predict(embedding)
         unique_labels = set(cluster_labels)
         logging.info(f"MCS {min_cluster_size} produced {len(unique_labels)} labels.")
-        if len(unique_labels) > 5 and len(unique_labels) < 25:
+        if len(unique_labels) >= 3 and len(unique_labels) < 25:
             return cluster_labels
 
     return cluster_labels
