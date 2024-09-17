@@ -438,7 +438,7 @@ def update_projection(
     ordering = None
     separation = None
  
-    doclists = projection.document_ordering(source_graph_items, control_graph_items, db.name)
+    doclists = projection.document_ordering(source_graph_items, control_graph_items, db.name, workspace_id)
     projection_node["doclists"] = doclists
 
     return projection_node

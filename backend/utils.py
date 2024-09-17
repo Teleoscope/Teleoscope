@@ -173,20 +173,6 @@ def rank_document_ids_by_similarity(documents_ids, scores):
     )
 
 
-def get_embeddings(dbstring, oids):
-    connect_milvus()
-
-    milvus_collection = Collection(dbstring)
-    milvus_collection.load()
-
-    logging.debug(f"Connected to Milvus Collection {milvus_collection}.")
-
-    expression = f"oid in {[str(oid) for oid in oids]}"
-    results = milvus_collection.query(expr=expression, output_fields=["text_vector"])
-
-    return [res["text_vector"] for res in results]
-
-
 def connect_milvus():
     connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
     db.using_database(MILVUS_DATABASE)

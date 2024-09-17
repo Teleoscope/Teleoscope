@@ -12,7 +12,7 @@ from sklearn.metrics.pairwise import cosine_distances
 # Local files
 from backend import embeddings
 
-def document_ordering(sources, controls, dbname):
+def document_ordering(sources, controls, dbname, workspace_id):
     """Build a training set based on the average of groups' document vectors.
 
     Args:
@@ -30,7 +30,7 @@ def document_ordering(sources, controls, dbname):
     source_dm = get_distance_matrix(source_vectors, cosine_distances)
 
     # Retrieve embeddings for control documents
-    control_groupings, control_vectors, control_oids = retrieve_control_embeddings(client, dbname, controls)
+    control_groupings, control_vectors, control_oids = retrieve_control_embeddings(client, dbname, workspace_id, controls)
     control_dm = get_distance_matrix(control_vectors, cosine_distances)
     adjust_intra_cluster_distances(control_dm, control_groupings)
 
@@ -62,7 +62,7 @@ def retrieve_embeddings(client, dbname, sources):
     return source_oids, np.array(source_vectors)
 
 
-def retrieve_control_embeddings(client, dbname, controls):
+def retrieve_control_embeddings(client, dbname, workspace_id, controls):
     """Retrieve embeddings for control documents."""
     control_groupings = []
     control_vectors = []
