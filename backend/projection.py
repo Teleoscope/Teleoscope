@@ -110,7 +110,7 @@ def umap_reduction(distance_matrix):
     umap_model = umap.UMAP(
         metric='precomputed',
         n_components=2,
-        n_neighbors=10, 
+        n_neighbors=100, 
         min_dist=0.05,
 
     )
@@ -119,7 +119,7 @@ def umap_reduction(distance_matrix):
 
 def cluster_documents(embedding):
     """Cluster documents using HDBSCAN."""
-    hdbscan_clusterer = hdbscan.HDBSCAN(min_cluster_size=10)
+    hdbscan_clusterer = hdbscan.HDBSCAN(min_cluster_size=5)
     return hdbscan_clusterer.fit_predict(embedding)
 
 
