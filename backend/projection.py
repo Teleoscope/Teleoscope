@@ -107,13 +107,19 @@ def combine_distance_matrices(source_dm, control_dm):
 
 def umap_reduction(distance_matrix):
     """Perform UMAP dimensionality reduction."""
-    umap_model = umap.UMAP(metric='precomputed')
+    umap_model = umap.UMAP(
+        metric='precomputed',
+        n_components=2,
+        n_neighbors=10, 
+        min_dist=0.05,
+
+    )
     return umap_model.fit_transform(distance_matrix)
 
 
 def cluster_documents(embedding):
     """Cluster documents using HDBSCAN."""
-    hdbscan_clusterer = hdbscan.HDBSCAN(min_cluster_size=2)
+    hdbscan_clusterer = hdbscan.HDBSCAN(min_cluster_size=10)
     return hdbscan_clusterer.fit_predict(embedding)
 
 
