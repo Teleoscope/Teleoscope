@@ -152,21 +152,21 @@ def organize_clusters(cluster_labels, source_oids):
     """Organize documents into clusters."""
     logging.info(f"There were {len(cluster_labels)} cluster labels.")
     logging.info(f"There were {len(source_oids)} source OIDs.")
-    grouped_cluster_labels = [list(group) for _, group in groupby(cluster_labels)]
-    doclists = []
-    acc = 0
-    for label_group in grouped_cluster_labels:
+    unique_labels = set(cluster_labels)
+    label_map = {}
+    for label in unique_labels:
         doclist = {
             "reference": None,
             "uid": None,
             "type": "Cluster",
-            "label": int(label_group[0]),
+            "label": str(label),
             "ranked_documents": []
         }
-        for _ in label_group:
-            doclist["ranked_documents"].append(
-                [source_oids[acc], 1.0]
-            )
-            acc += 1
-        doclists.append(doclist)
+        label_map[label] = doclist
+    
+    for acc, label in enumerate(cluster_labels):
+        label_map[label].doclist["ranked_documents"].append([source_oids[acc], 1.0])
+    
+    doclists = [label_map[label] for label in label_map.values()]
+
     return doclists
