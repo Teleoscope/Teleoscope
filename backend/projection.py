@@ -26,7 +26,7 @@ def document_ordering(sources, controls, dbname, workspace_id):
     client = embeddings.connect()
     
     # Retrieve embeddings for source documents
-    source_oids, source_vectors = retrieve_embeddings(client, dbname, sources)
+    source_oids, source_vectors = retrieve_embeddings(client, dbname, workspace_id, sources)
     source_dm = get_distance_matrix(source_vectors, cosine_distances)
 
     # Retrieve embeddings for control documents
@@ -50,14 +50,14 @@ def document_ordering(sources, controls, dbname, workspace_id):
     return doclists
 
 
-def retrieve_embeddings(client, dbname, sources):
+def retrieve_embeddings(client, dbname, workspace_id, sources):
     """Retrieve embeddings for source documents."""
     source_oids = []
     for source in sources:
         for doclist in source["doclists"]:
             oids = [r[0] for r in doclist["ranked_documents"]]
             source_oids.extend(oids)
-    source_embeddings = embeddings.get_embeddings(client, dbname, source_oids)
+    source_embeddings = embeddings.get_embeddings(client, dbname, workspace_id, source_oids)
     source_vectors = [s["vector"] for s in source_embeddings]
     return source_oids, np.array(source_vectors)
 
