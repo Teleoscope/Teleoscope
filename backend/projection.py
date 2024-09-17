@@ -140,9 +140,9 @@ def cluster_documents(embedding):
         logging.info(f"Running HDBSCAN with min cluster size of {min_cluster_size}.")
         hdbscan_clusterer.min_cluster_size = min_cluster_size
         cluster_labels = hdbscan_clusterer.fit_predict(embedding)
-        logging.info(f"MCS {min_cluster_size} produced {len(cluster_labels)} labels.")
-        if len(cluster_labels) > 5 and len(cluster_labels) < 25:
-            
+        unique_labels = set(cluster_labels)
+        logging.info(f"MCS {min_cluster_size} produced {len(unique_labels)} labels.")
+        if len(unique_labels) > 5 and len(unique_labels) < 25:
             return cluster_labels
 
     return cluster_labels
