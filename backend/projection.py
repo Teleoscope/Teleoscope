@@ -71,7 +71,7 @@ def retrieve_control_embeddings(client, dbname, workspace_id, controls):
         for doclist in control["doclists"]:
             oids = [r[0] for r in doclist["ranked_documents"]]
             control_oids.extend(oids)
-            embeds = embeddings.get_embeddings(client, dbname, oids)
+            embeds = embeddings.get_embeddings(client, dbname, workspace_id, oids)
             for result in embeds:
                 control_vectors.append(result["vector"])
                 control_groupings.append(doclist["uid"])
