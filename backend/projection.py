@@ -29,20 +29,24 @@ def document_ordering(sources, controls, dbname, workspace_id):
     source_oids, source_vectors = retrieve_embeddings(client, dbname, workspace_id, sources)
     source_dm = get_distance_matrix(source_vectors, cosine_distances)
 
-    # Retrieve embeddings for control documents
-    control_groupings, control_vectors, control_oids = retrieve_control_embeddings(client, dbname, workspace_id, controls)
-    control_dm = get_distance_matrix(control_vectors, cosine_distances)
-    adjust_intra_cluster_distances(control_dm, control_groupings)
-
-    # Combine distance matrices
-    corner_matrix = combine_distance_matrices(source_dm, control_dm)
+    if len(controls) > 1:
+        # Retrieve embeddings for control documents if they exist
+        control_groupings, control_vectors, control_oids = retrieve_control_embeddings(client, dbname, workspace_id, controls)
+        control_dm = get_distance_matrix(control_vectors, cosine_distances)
+        adjust_intra_cluster_distances(control_dm, control_groupings)
+        
+        # Combine distance matrices
+        corner_matrix = combine_distance_matrices(source_dm, control_dm)
+        
+        # Add control OIDs to the source OIDs list for clustering
+        source_oids.extend(control_oids)
+    else:
+        # If no controls, use only the source distance matrix
+        corner_matrix = source_dm
 
     # Perform dimensionality reduction and clustering
     embedding = umap_reduction(corner_matrix)
     cluster_labels = cluster_documents(embedding)
-
-    # Create a master list of OIDs
-    source_oids.extend(control_oids)
 
     # Organize documents into clusters
     doclists = organize_clusters(cluster_labels, source_oids)
