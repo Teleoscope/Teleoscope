@@ -393,41 +393,12 @@ def update_rank(
 def update_projection(
     db: database.Database, projection_node, sources: List, controls: List, parameters, workspace_id: str
 ):
-
-    if len(controls) == 0:
-        logging.info(f"No controls included. Returning original projection node.")
-        return projection_node
-
     if len(sources) == 0:
         logging.info(f"No sources included. Returning original projection node.")
         return projection_node
 
     source_graph_items = list(db.graph.find({"uid": {"$in": sources}}))
     control_graph_items = list(db.graph.find({"uid": {"$in": controls}}))
-
-    if len(control_graph_items) == 1:
-        match control_graph_items[0]["type"]:
-            case "Search" | "Note":
-                logging.info(
-                    f"This node type cannot be the only control input. Returning original projection node."
-                )
-                return projection_node
-
-    ranked_documents_count = sum(
-        [
-            sum(
-                len(doclist["ranked_documents"])
-                for doclist in control_graph_item["doclists"]
-            )
-            for control_graph_item in control_graph_items
-        ]
-    )
-
-    if ranked_documents_count <= 4:
-        logging.info(
-            f"Not enough control documents included. Returning original projection node."
-        )
-        return projection_node
 
     logging.info(f"Updating Projection id: {projection_node['_id']}")
 
