@@ -3,6 +3,8 @@ import numpy as np
 from random_object_id import generate
 from itertools import groupby
 import logging
+import os
+import joblib
 
 # ML dependencies
 import umap
@@ -11,6 +13,14 @@ from sklearn.metrics.pairwise import cosine_distances
 
 # Local files
 from backend import embeddings
+
+# Directory where intermediate results will be cached
+cache_dir = './hdbscan_cache'
+if not os.path.exists(cache_dir):
+    os.makedirs(cache_dir)
+
+# Create a joblib memory object
+memory = joblib.Memory(location=cache_dir, verbose=0)
 
 def document_ordering(sources, controls, dbname, workspace_id):
     """Build a training set based on the average of groups' document vectors.
@@ -119,8 +129,20 @@ def umap_reduction(distance_matrix):
 
 def cluster_documents(embedding):
     """Cluster documents using HDBSCAN."""
-    hdbscan_clusterer = hdbscan.HDBSCAN(min_cluster_size=25)
-    return hdbscan_clusterer.fit_predict(embedding)
+    hdbscan_clusterer = hdbscan.HDBSCAN(
+        min_cluster_size=20,
+        min_samples=5,
+        memory=memory,
+    )
+    hdbscan_clusterer.fit(embedding)
+
+    for min_cluster_size in [5, 10, 15, 20, 25, 30, 35, 40, 50]:
+        hdbscan_clusterer.min_cluster_size = min_cluster_size
+        cluster_labels = hdbscan_clusterer.fit_predict(embedding)
+        if len(cluster_labels) > 1 and len(cluster_labels) < 25:
+            return cluster_labels
+
+    return cluster_labels
 
 
 def organize_clusters(cluster_labels, source_oids):
