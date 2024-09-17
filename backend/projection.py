@@ -167,6 +167,6 @@ def organize_clusters(cluster_labels, source_oids):
     for acc, label in enumerate(cluster_labels):
         label_map[label]["ranked_documents"].append([source_oids[acc], 1.0])
     
-    doclists = [label_map[label] for label in label_map.values()]
+    doclists = list(label_map.values())
 
     return doclists
