@@ -27,7 +27,7 @@ export default function Search({ data: search, reactflow_node, graph_node }: Win
   );
 
   const { data: count, isLoading: count_loading } = useSWRF(
-    `/api/count?query=${query}`
+    `/api/count?query=${query}&workspace=${workspace}`
   );
 
   const dispatch = useDispatch();

@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     const skip = raw_skip ? parseInt(raw_skip) : 0;
 
     const result = await dbOp(async (client: MongoClient, db: Db) => {
-        const q = query ? { $text: { $search: query }, workspace: new ObjectId(workspace!) } : {};
+        const q = query ? { $text: { $search: query }, workspace: new ObjectId(workspace!) } : {workspace: new ObjectId(workspace!)};
 
         return await db
             .collection<Documents>('documents')

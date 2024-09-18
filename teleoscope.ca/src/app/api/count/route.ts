@@ -10,9 +10,10 @@ export async function GET(request: NextRequest) {
     }
 
     const query = request.nextUrl.searchParams.get('query');
+    const workspace = request.nextUrl.searchParams.get('workspace');
 
     const result = await dbOp(async (client: MongoClient, db: Db) => {
-        const q = query ? { $text: { $search: query } } : {}
+        const q = query ? { $text: { $search: query }, workspace: new ObjectId(workspace!) } : {workspace: new ObjectId(workspace!)}
         return await db
             .collection<Documents>('documents')
             .countDocuments(q)
