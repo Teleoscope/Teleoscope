@@ -2,7 +2,7 @@ import { validateRequest } from '@/lib/auth';
 import { Documents } from '@/types/documents';
 import { NextRequest, NextResponse } from 'next/server';
 import { dbOp } from '@/lib/db';
-import { Db, MongoClient } from 'mongodb';
+import { Db, MongoClient, ObjectId } from 'mongodb';
 export async function GET(request: NextRequest) {
     const { user } = await validateRequest();
     if (!user) {
