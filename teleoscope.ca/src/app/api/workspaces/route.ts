@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
                 team: team,
                 settings: {
                     document_width: 100,
-                    document_height: 100,
+                    document_height: 35,
                     expanded: false
                 },
                 selected_workflow: "",
