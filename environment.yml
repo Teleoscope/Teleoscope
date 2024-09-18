@@ -5,6 +5,7 @@ channels:
 dependencies:
   - bcrypt=3.2.0
   - blas
+  - boto3
   - brotli-python
   - brotlipy
   - bzip2

@@ -7,6 +7,7 @@ import sys
 import os
 from dotenv import load_dotenv
 from backend import utils
+import torch
 
 # Initialize logging
 logging.basicConfig(
@@ -57,15 +58,30 @@ def publish_vectors(vector_data: list, workspace_id: str, database: str):
     logging.info(f"Published vectors to vector upload queue.")
 
 
+def load_model():
+    if model is None:
+        logging.info("Loading model...")
+        model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
+        logging.info("Model loaded successfully.")
+
+                # Check if a GPU is available
+        if torch.cuda.is_available():
+            device = torch.device("cuda")
+            model = model.to(device)  # Move model to GPU
+
+            # If FP16 is enabled, use AMP (Automatic Mixed Precision)
+            model = model.half()  # FP16 precision for GPUs
+        else:
+            device = torch.device("cpu")
+            print("No GPU available. Using CPU.")
+            
+
 # Callback function to handle incoming messages from RabbitMQ
 def vectorize_documents(ch, method, properties, body):
     global model  # Ensure we refer to the global model variable
     
     # Lazy load the model if it's not already loaded
-    if model is None:
-        logging.info("Loading model...")
-        model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
-        logging.info("Model loaded successfully.")
+    load_model()
     
     try:
         message = json.loads(body.decode('utf-8'))
