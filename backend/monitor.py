@@ -75,7 +75,7 @@ def get_instance_status(instance_id):
 
 def monitor_queue(queue_name, check_interval):
     while True:
-        logging.info(f"Monitoring {queue_name} and {EC2_VECTORIZE_INSTANCE}.")
+        logging.info(f"Monitoring {queue_name} and instance {EC2_VECTORIZE_INSTANCE}.")
         queue_size = get_queue_size(queue_name)
         instance_status = get_instance_status(EC2_VECTORIZE_INSTANCE)
 

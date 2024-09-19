@@ -33,6 +33,7 @@ def check_env_var(var_name: str):
 # Check and load environment variables
 RABBITMQ_VECTORIZE_QUEUE = check_env_var("RABBITMQ_VECTORIZE_QUEUE")
 RABBITMQ_UPLOAD_VECTOR_QUEUE = check_env_var("RABBITMQ_UPLOAD_VECTOR_QUEUE")
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
 RETRY_DELAY = 5  # seconds
 IDLE_SHUTDOWN_TIME = 60 * 60  # 60 minutes in seconds
@@ -75,6 +76,16 @@ def load_model():
         model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True, device=device)
         logging.info("Model loaded successfully.")
 
+
+def batch_vectorize(texts, batch_size=16):
+    vectors = []
+    for i in range(0, len(texts), batch_size):
+        batch_texts = texts[i:i + batch_size]
+        batch_vecs = model.encode(batch_texts)["dense_vecs"]
+        vectors.extend(batch_vecs)
+    return vectors
+
+
 # Callback function to handle incoming messages from RabbitMQ
 def vectorize_documents(ch, method, properties, body):
     global model, last_processed_time  # Ensure we refer to the global model variable
@@ -102,7 +113,11 @@ def vectorize_documents(ch, method, properties, body):
 
         # Extract texts and vectorize
         texts = [doc['text'] for doc in documents]
-        raw_vecs = model.encode(texts)["dense_vecs"]
+        raw_vecs = batch_vectorize(texts)
+        
+        # Clear cache
+        torch.cuda.empty_cache()
+        
         vector_data = [{'id': doc['id'], 'vector': vec.tolist()} for doc, vec in zip(documents, raw_vecs)]
 
         logging.info(f"Vectorization completed. Sending vectors to vector queue.")
