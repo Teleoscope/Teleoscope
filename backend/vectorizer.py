@@ -120,17 +120,29 @@ def vectorize_documents(ch, method, properties, body):
         # Extract texts and vectorize
         batch_size = 128
         texts = [doc['text'] for doc in documents]
+        total_batches = (len(texts) + batch_size - 1) // batch_size  # Calculate the total number of batches
+
         for i in range(0, len(texts), batch_size):
-            logging.info(f"Vectorizing batch {i // batch_size} with size {batch_size}...")
-            batch_texts = texts[i:i + batch_size]
-            raw_vecs = model.encode(batch_texts)["dense_vecs"]
+            current_batch_size = min(batch_size, len(texts) - i)  # Adjust batch size for the last batch
+            logging.info(f"Vectorizing batch {i // batch_size + 1}/{total_batches} with size {current_batch_size}...")
+
+            batch_texts = texts[i:i + current_batch_size]
+            try:
+                raw_vecs = model.encode(batch_texts)["dense_vecs"]
+                vector_data = [{'id': doc['id'], 'vector': vec.tolist()} for doc, vec in zip(documents[i:i + current_batch_size], raw_vecs)]
+
+                logging.info(f"Batch {i // batch_size + 1}/{total_batches} vectorization completed. Sending vectors to vector queue.")
+                publish_vectors(vector_data, workspace_id, database)
             
-            vector_data = [{'id': doc['id'], 'vector': vec.tolist()} for doc, vec in zip(documents, raw_vecs)]
+            except Exception as e:
+                logging.error(f"Error in batch {i // batch_size + 1}/{total_batches}: {e}")
+                break  # Optionally handle or skip batches with errors
 
-            logging.info(f"Vectorization completed. Sending vectors to vector queue.")
+            finally:
+                del batch_texts, raw_vecs, vector_data  # Free up memory
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()  # Clear GPU memory
 
-            # Publish the vectors
-            publish_vectors(vector_data, workspace_id, database)
         
         # Update the last processed time    
         last_processed_time = time.time()
