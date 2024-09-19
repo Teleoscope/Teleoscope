@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from backend import utils
 import torch
 import time
+import pika
 import threading
 
 # Initialize logging
@@ -37,30 +38,41 @@ os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
 RETRY_DELAY = 5  # seconds
 IDLE_SHUTDOWN_TIME = 60 * 60  # 60 minutes in seconds
+MAX_RETRIES = 5
 
 # Lazy initialization for the model
 model = None
 last_processed_time = time.time()  # Record the time of the last document processed
 
 # Publish vectors to the upload vector queue
-def publish_vectors(vector_data: list, workspace_id: str, database: str):
-    connection = utils.get_connection()
-    channel = connection.channel()
+def publish_vectors(vector_data: list, workspace_id: str, database: str, retries = 0):
+    try:
+        connection = utils.get_connection()
+        channel = connection.channel()
 
-    # Declare the vector queue in case it doesn't exist
-    channel.queue_declare(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, durable=True)
+        # Declare the vector queue in case it doesn't exist
+        channel.queue_declare(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, durable=True)
 
-    # Prepare the message
-    message = json.dumps({
-        'database': database,
-        'vector_data': vector_data,
-        "workspace_id": workspace_id,
-    })
+        # Prepare the message
+        message = json.dumps({
+            'database': database,
+            'vector_data': vector_data,
+            "workspace_id": workspace_id,
+        })
+        # Publish the message
+        channel.basic_publish(exchange='', routing_key=RABBITMQ_UPLOAD_VECTOR_QUEUE, body=message)
+        logging.info(f"Published vectors to vector upload queue.")
 
-    # Publish the message
-    channel.basic_publish(exchange='', routing_key=RABBITMQ_UPLOAD_VECTOR_QUEUE, body=message)
-    logging.info(f"Published vectors to vector upload queue.")
+    except (pika.exceptions.ConnectionClosed, ConnectionResetError) as e:
+        logging.error(f"Error publishing to RabbitMQ: {e}")
+        time.sleep(RETRY_DELAY)
+        if (retries < MAX_RETRIES):
+            publish_vectors(vector_data, workspace_id, database, retries + 1)  # Retry logic
+    finally:
+        if connection:
+            connection.close()
 
+   
 def load_model():
     global model  # Ensure we refer to the global model variable
     if model is None:
@@ -110,6 +122,7 @@ def vectorize_documents(ch, method, properties, body):
         batch_size = 128
         texts = [doc['text'] for doc in documents]
         for i in range(0, len(texts), batch_size):
+            logging.info(f"Vectorizing batch {i} with size {batch_size}...")
             batch_texts = texts[i:i + batch_size]
             raw_vecs = model.encode(batch_texts)["dense_vecs"]
             
