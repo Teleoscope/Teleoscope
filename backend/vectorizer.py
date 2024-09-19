@@ -125,7 +125,7 @@ def vectorize_documents(ch, method, properties, body):
         batch_size = 128
         texts = [doc['text'] for doc in documents]
         for i in range(0, len(texts), batch_size):
-            logging.info(f"Vectorizing batch {i / batch_size} with size {batch_size}...")
+            logging.info(f"Vectorizing batch {i // batch_size} with size {batch_size}...")
             batch_texts = texts[i:i + batch_size]
             raw_vecs = model.encode(batch_texts)["dense_vecs"]
             
@@ -140,7 +140,8 @@ def vectorize_documents(ch, method, properties, body):
         last_processed_time = time.time()
         
         # Clear cache
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     except Exception as e:
         logging.error(f"Error during vectorization: {e}")
@@ -162,23 +163,27 @@ def idle_shutdown_watcher():
 
 # Start consuming messages from the document queue
 def start_vectorization_worker():
-    logging.info("Starting vectorizer worker.")
-    
-    connection = utils.get_connection()
-    channel = connection.channel()
-    
-    channel.queue_declare(queue=RABBITMQ_VECTORIZE_QUEUE, durable=True)
-    logging.info("Setting up consumer...")
-
-    channel.basic_consume(queue=RABBITMQ_VECTORIZE_QUEUE, on_message_callback=vectorize_documents)
-
-    logging.info("Waiting for documents to vectorize...")
-    
-    # Start the idle shutdown watcher in a separate thread
-    shutdown_thread = threading.Thread(target=idle_shutdown_watcher, daemon=True)
-    shutdown_thread.start()
-
-    channel.start_consuming()
+    while True:
+        try:
+            logging.info("Starting vectorizer worker.")
+            connection = utils.get_connection()
+            channel = connection.channel()
+            channel.queue_declare(queue=RABBITMQ_VECTORIZE_QUEUE, durable=True)
+            logging.info("Setting up consumer...")
+            channel.basic_consume(queue=RABBITMQ_VECTORIZE_QUEUE, on_message_callback=vectorize_documents)
+            logging.info("Waiting for documents to vectorize...")
+            
+            # Start idle shutdown watcher thread
+            shutdown_thread = threading.Thread(target=idle_shutdown_watcher, daemon=True)
+            shutdown_thread.start()
+            
+            channel.start_consuming()
+        except pika.exceptions.AMQPConnectionError as e:
+            logging.error(f"Connection lost: {e}. Reconnecting in {RETRY_DELAY} seconds...")
+            time.sleep(RETRY_DELAY)
+        finally:
+            if connection and not connection.is_closed:
+                connection.close()
 
 # Graceful shutdown handler
 def graceful_shutdown(signum, frame):
