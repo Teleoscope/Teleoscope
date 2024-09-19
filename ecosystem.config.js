@@ -46,6 +46,15 @@ module.exports = {
       max_memory_restart: "16G",
       instances: 1,
     },
+    {
+      name: "monitor",
+      script: 'python',
+      args: ["-m", "backend.monitor"],
+      watch: false,
+      interpreter: "",
+      max_memory_restart: "16G",
+      instances: 1,
+    },
 
   ]
 };
