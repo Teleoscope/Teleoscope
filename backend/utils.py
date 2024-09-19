@@ -375,7 +375,7 @@ def get_connection():
             virtual_host=RABBITMQ_VHOST,
             credentials=credentials,
             heartbeat=600,  # Keepalive for long connections
-            blocked_connection_timeout=300  # Optional timeout
+            blocked_connection_timeout=300,  # Optional timeout
             connection_attempts=5,  # Retry 5 times before giving up
             retry_delay=5,  # Delay in seconds between retries
         )
