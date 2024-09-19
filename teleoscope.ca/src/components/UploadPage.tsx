@@ -195,7 +195,7 @@ export default function UploadPage() {
 
     const handleComplete = (data) => {
         if (!data.error) {
-            const chunkSize = 1000;
+            const chunkSize = 128 * 4;
             const chunks = _.chunk(data.rows, chunkSize);
             chunks.forEach((chunk) => {
                 const formatted_chunk = {

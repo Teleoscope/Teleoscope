@@ -65,8 +65,8 @@ def publish_vectors(vector_data: list, workspace_id: str, database: str, retries
         channel.basic_publish(exchange='', routing_key=RABBITMQ_UPLOAD_VECTOR_QUEUE, body=message)
         logging.info(f"Published vectors to vector upload queue.")
 
-    except (pika.exceptions.ConnectionClosed, pika.exceptions.AMQPConnectionError, ConnectionResetError) as e:
-        logging.error(f"Error publishing to RabbitMQ: {e}")
+    except Exception as e:
+        logging.error(f"Unexpected error publishing to RabbitMQ: {e.__class__.__name__}: {e}")
         time.sleep(RETRY_DELAY)
         if retries < MAX_RETRIES:
             publish_vectors(vector_data, workspace_id, database, retries + 1)
