@@ -61,21 +61,17 @@ def publish_vectors(vector_data: list, workspace_id: str, database: str):
 def load_model():
     global model  # Ensure we refer to the global model variable
     if model is None:
-        logging.info("Loading model...")
-        model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
-        logging.info("Model loaded successfully.")
-
-                # Check if a GPU is available
+        logging.info("Checking for GPU...")
         if torch.cuda.is_available():
             device = torch.device("cuda")
-            model = model.to(device)  # Move model to GPU
-
-            # If FP16 is enabled, use AMP (Automatic Mixed Precision)
-            model = model.half()  # FP16 precision for GPUs
+            logging.info("Found GPU.")        
         else:
             device = torch.device("cpu")
-            print("No GPU available. Using CPU.")
-            
+            logging.info("No GPU available. Using CPU.")
+        
+        logging.info("Loading model...")
+        model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True, device=device)
+        logging.info("Model loaded successfully.")    
 
 # Callback function to handle incoming messages from RabbitMQ
 def vectorize_documents(ch, method, properties, body):
