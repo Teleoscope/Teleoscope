@@ -8,6 +8,8 @@ import os
 from dotenv import load_dotenv
 from backend import utils
 import torch
+import time
+import threading
 
 # Initialize logging
 logging.basicConfig(
@@ -33,13 +35,14 @@ RABBITMQ_VECTORIZE_QUEUE = check_env_var("RABBITMQ_VECTORIZE_QUEUE")
 RABBITMQ_UPLOAD_VECTOR_QUEUE = check_env_var("RABBITMQ_UPLOAD_VECTOR_QUEUE")
 
 RETRY_DELAY = 5  # seconds
+IDLE_SHUTDOWN_TIME = 60 * 60  # 60 minutes in seconds
 
 # Lazy initialization for the model
 model = None
+last_processed_time = time.time()  # Record the time of the last document processed
 
 # Publish vectors to the upload vector queue
 def publish_vectors(vector_data: list, workspace_id: str, database: str):
-
     connection = utils.get_connection()
     channel = connection.channel()
 
@@ -57,25 +60,24 @@ def publish_vectors(vector_data: list, workspace_id: str, database: str):
     channel.basic_publish(exchange='', routing_key=RABBITMQ_UPLOAD_VECTOR_QUEUE, body=message)
     logging.info(f"Published vectors to vector upload queue.")
 
-
 def load_model():
     global model  # Ensure we refer to the global model variable
     if model is None:
         logging.info("Checking for GPU...")
         if torch.cuda.is_available():
             device = torch.device("cuda")
-            logging.info("Found GPU.")        
+            logging.info("Found GPU.")
         else:
             device = torch.device("cpu")
             logging.info("No GPU available. Using CPU.")
         
         logging.info("Loading model...")
         model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True, device=device)
-        logging.info("Model loaded successfully.")    
+        logging.info("Model loaded successfully.")
 
 # Callback function to handle incoming messages from RabbitMQ
 def vectorize_documents(ch, method, properties, body):
-    global model  # Ensure we refer to the global model variable
+    global model, last_processed_time  # Ensure we refer to the global model variable
     
     # Lazy load the model if it's not already loaded
     load_model()
@@ -95,7 +97,6 @@ def vectorize_documents(ch, method, properties, body):
             logging.warning("No workspace included.")
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
-        
 
         logging.info(f"Vectorizing {len(documents)} documents for database {database} and workspace {workspace_id}...")
 
@@ -109,10 +110,26 @@ def vectorize_documents(ch, method, properties, body):
         # Publish the vectors
         publish_vectors(vector_data, workspace_id, database)
 
+        # Update the last processed time
+        last_processed_time = time.time()
+
     except Exception as e:
         logging.error(f"Error during vectorization: {e}")
     finally:
         ch.basic_ack(delivery_tag=method.delivery_tag)
+
+# Idle shutdown watcher thread
+def idle_shutdown_watcher():
+    while True:
+        idle_time = time.time() - last_processed_time
+        if idle_time >= IDLE_SHUTDOWN_TIME:
+            logging.info("No activity for 60 minutes. Initiating graceful shutdown.")
+            # Call the system's shutdown command with a 1-minute delay
+            os.system('sudo shutdown -h +1')  # Shutdown after 1 minute
+
+            graceful_shutdown(signal.SIGTERM, None)
+
+        time.sleep(60)  # Check every minute
 
 # Start consuming messages from the document queue
 def start_vectorization_worker():
@@ -127,15 +144,17 @@ def start_vectorization_worker():
     channel.basic_consume(queue=RABBITMQ_VECTORIZE_QUEUE, on_message_callback=vectorize_documents)
 
     logging.info("Waiting for documents to vectorize...")
-    channel.start_consuming()
+    
+    # Start the idle shutdown watcher in a separate thread
+    shutdown_thread = threading.Thread(target=idle_shutdown_watcher, daemon=True)
+    shutdown_thread.start()
 
+    channel.start_consuming()
 
 # Graceful shutdown handler
 def graceful_shutdown(signum, frame):
     logging.info(f"Received shutdown signal ({signum}). Closing RabbitMQ connections...")
     sys.exit(0)
-
-
 
 if __name__ == "__main__":
     # Register signal handlers for SIGTERM and SIGINT
