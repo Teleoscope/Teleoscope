@@ -92,10 +92,6 @@ def load_model():
         logging.info("Model loaded successfully.")
 
 
-
-    
-
-
 # Callback function to handle incoming messages from RabbitMQ
 def vectorize_documents(ch, method, properties, body):
     global model, last_processed_time  # Ensure we refer to the global model variable
@@ -163,27 +159,20 @@ def idle_shutdown_watcher():
 
 # Start consuming messages from the document queue
 def start_vectorization_worker():
-    while True:
-        try:
-            logging.info("Starting vectorizer worker.")
-            connection = utils.get_connection()
-            channel = connection.channel()
-            channel.queue_declare(queue=RABBITMQ_VECTORIZE_QUEUE, durable=True)
-            logging.info("Setting up consumer...")
-            channel.basic_consume(queue=RABBITMQ_VECTORIZE_QUEUE, on_message_callback=vectorize_documents)
-            logging.info("Waiting for documents to vectorize...")
-            
-            # Start idle shutdown watcher thread
-            shutdown_thread = threading.Thread(target=idle_shutdown_watcher, daemon=True)
-            shutdown_thread.start()
-            
-            channel.start_consuming()
-        except pika.exceptions.AMQPConnectionError as e:
-            logging.error(f"Connection lost: {e}. Reconnecting in {RETRY_DELAY} seconds...")
-            time.sleep(RETRY_DELAY)
-        finally:
-            if connection and not connection.is_closed:
-                connection.close()
+    logging.info("Starting vectorizer worker.")
+    connection = utils.get_connection()
+    channel = connection.channel()
+    channel.queue_declare(queue=RABBITMQ_VECTORIZE_QUEUE, durable=True)
+    logging.info("Setting up consumer...")
+    channel.basic_consume(queue=RABBITMQ_VECTORIZE_QUEUE, on_message_callback=vectorize_documents)
+    logging.info("Waiting for documents to vectorize...")
+    
+    # Start idle shutdown watcher thread
+    shutdown_thread = threading.Thread(target=idle_shutdown_watcher, daemon=True)
+    shutdown_thread.start()
+    
+    channel.start_consuming()
+
 
 # Graceful shutdown handler
 def graceful_shutdown(signum, frame):
