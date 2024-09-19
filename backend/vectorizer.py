@@ -59,6 +59,7 @@ def publish_vectors(vector_data: list, workspace_id: str, database: str):
 
 
 def load_model():
+    global model  # Ensure we refer to the global model variable
     if model is None:
         logging.info("Loading model...")
         model = BGEM3FlagModel("BAAI/bge-m3", use_fp16=True)
