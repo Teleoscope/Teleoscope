@@ -16,6 +16,17 @@ def check_env_var(var_name: str):
 # Check and load environment variables
 RABBITMQ_VECTORIZE_QUEUE = check_env_var("RABBITMQ_VECTORIZE_QUEUE")
 EC2_VECTORIZE_INSTANCE = check_env_var("EC2_VECTORIZE_INSTANCE")
+RABBITMQ_VHOST = check_env_var("RABBITMQ_VHOST")
+
+# Initialize logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s: %(levelname)s/%(processName)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S,%f',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
+logging.getLogger('pika').setLevel(logging.WARNING)
+
 
 ec2_client = boto3.client('ec2', region_name='ca-central-1')
 
@@ -64,14 +75,13 @@ def get_instance_status(instance_id):
 
 def monitor_queue(queue_name, check_interval):
     while True:
+        logging.info(f"Monitoring {queue_name} and {EC2_VECTORIZE_INSTANCE}.")
         queue_size = get_queue_size(queue_name)
         instance_status = get_instance_status(EC2_VECTORIZE_INSTANCE)
 
-        
         if queue_size is None:
             logging.error(f"Could not retrieve the size of queue '{queue_name}'")
             continue  # Skip the rest of the loop and retry on the next interval
-
 
         if queue_size > 0:
             if instance_status != 'running':
@@ -79,6 +89,8 @@ def monitor_queue(queue_name, check_interval):
                 start_ec2_instance(EC2_VECTORIZE_INSTANCE)
             else:
                 logging.info(f"Queue has {queue_size} messages, but EC2 instance {EC2_VECTORIZE_INSTANCE} is already running.")
+        
+        logging.info(f"Queue has {queue_size} messages, instances has status {instance_status}.")
         
         # Sleep for the specified interval before checking again
         time.sleep(check_interval)
@@ -88,17 +100,6 @@ if __name__ == "__main__":
     queue_name = RABBITMQ_VECTORIZE_QUEUE  # Replace with your queue name
     check_interval = 10  # Check every 10 seconds (can be adjusted)
 
-    # Setup logging
-    # Initialize logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='[%(asctime)s: %(levelname)s/%(processName)s] %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S,%f',
-        handlers=[logging.StreamHandler(sys.stdout)]
-    )
-    logging.getLogger('pika').setLevel(logging.WARNING)
-
-
     # Start monitoring the queue
-    logging.info(f"Starting queue size monitoring service for '{queue_name}' on '{RABBITMQ_VECTORIZE_QUEUE}'")
+    logging.info(f"Starting queue size monitoring service for '{queue_name}' on '{RABBITMQ_VHOST}'")
     monitor_queue(queue_name, check_interval)
