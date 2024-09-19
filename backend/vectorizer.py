@@ -77,13 +77,8 @@ def load_model():
         logging.info("Model loaded successfully.")
 
 
-def batch_vectorize(texts, batch_size=16):
-    vectors = []
-    for i in range(0, len(texts), batch_size):
-        batch_texts = texts[i:i + batch_size]
-        batch_vecs = model.encode(batch_texts)["dense_vecs"]
-        vectors.extend(batch_vecs)
-    return vectors
+
+    
 
 
 # Callback function to handle incoming messages from RabbitMQ
@@ -112,21 +107,24 @@ def vectorize_documents(ch, method, properties, body):
         logging.info(f"Vectorizing {len(documents)} documents for database {database} and workspace {workspace_id}...")
 
         # Extract texts and vectorize
+        batch_size = 128
         texts = [doc['text'] for doc in documents]
-        raw_vecs = batch_vectorize(texts)
+        for i in range(0, len(texts), batch_size):
+            batch_texts = texts[i:i + batch_size]
+            raw_vecs = model.encode(batch_texts)["dense_vecs"]
+            
+            vector_data = [{'id': doc['id'], 'vector': vec.tolist()} for doc, vec in zip(documents, raw_vecs)]
+
+            logging.info(f"Vectorization completed. Sending vectors to vector queue.")
+
+            # Publish the vectors
+            publish_vectors(vector_data, workspace_id, database)
+        
+        # Update the last processed time    
+        last_processed_time = time.time()
         
         # Clear cache
         torch.cuda.empty_cache()
-        
-        vector_data = [{'id': doc['id'], 'vector': vec.tolist()} for doc, vec in zip(documents, raw_vecs)]
-
-        logging.info(f"Vectorization completed. Sending vectors to vector queue.")
-
-        # Publish the vectors
-        publish_vectors(vector_data, workspace_id, database)
-
-        # Update the last processed time
-        last_processed_time = time.time()
 
     except Exception as e:
         logging.error(f"Error during vectorization: {e}")
