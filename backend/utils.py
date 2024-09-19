@@ -376,11 +376,23 @@ def get_connection():
             credentials=credentials,
             heartbeat=600,  # Keepalive for long connections
             blocked_connection_timeout=300  # Optional timeout
+            connection_attempts=5,  # Retry 5 times before giving up
+            retry_delay=5,  # Delay in seconds between retries
         )
         return pika.BlockingConnection(parameters)
+    
+    except pika.exceptions.AuthenticationError as e:
+        logging.error(f"Authentication failed: {e}")
+        raise ConnectionError("RabbitMQ authentication failed.")
+    
     except pika.exceptions.AMQPConnectionError as e:
         logging.error(f"Failed to connect to RabbitMQ: {e}")
         raise ConnectionError("Could not connect to RabbitMQ.")
+    
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        raise ConnectionError("An unexpected error occurred.")
+
 
 def publish(queue, message):
     """Publish a message to RabbitMQ."""

@@ -1,6 +1,7 @@
 import time
 import logging
 import os
+import sys
 import boto3
 from botocore.exceptions import ClientError
 from backend import utils
@@ -66,12 +67,20 @@ def monitor_queue(queue_name, check_interval):
         queue_size = get_queue_size(queue_name)
         instance_status = get_instance_status(EC2_VECTORIZE_INSTANCE)
 
-        if queue_size > 0 and instance_status != 'running':
-            logging.info(f"Queue has messages, starting EC2 instance {EC2_VECTORIZE_INSTANCE}...")
-            start_ec2_instance(EC2_VECTORIZE_INSTANCE)
-
-        else:
+        
+        if queue_size is None:
             logging.error(f"Could not retrieve the size of queue '{queue_name}'")
+            continue  # Skip the rest of the loop and retry on the next interval
+
+
+        if queue_size > 0 and instance_status != 'running':
+            if instance_status != 'running':
+                logging.info(f"Queue has messages, starting EC2 instance {EC2_VECTORIZE_INSTANCE}...")
+                start_ec2_instance(EC2_VECTORIZE_INSTANCE)
+            else:
+                logging.info(f"Queue has messages, but EC2 instance {EC2_VECTORIZE_INSTANCE} is already running.")
+        else:
+            logging.error(f"Could not retrieve the size of queue '{queue_name}'.")
 
         # Sleep for the specified interval before checking again
         time.sleep(check_interval)
@@ -82,7 +91,15 @@ if __name__ == "__main__":
     check_interval = 10  # Check every 10 seconds (can be adjusted)
 
     # Setup logging
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    # Initialize logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='[%(asctime)s: %(levelname)s/%(processName)s] %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S,%f',
+        handlers=[logging.StreamHandler(sys.stdout)]
+    )
+    logging.getLogger('pika').setLevel(logging.WARNING)
+
 
     # Start monitoring the queue
     logging.info(f"Starting queue size monitoring service for '{queue_name}' on '{RABBITMQ_VECTORIZE_QUEUE}'")
