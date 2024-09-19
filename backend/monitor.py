@@ -73,15 +73,13 @@ def monitor_queue(queue_name, check_interval):
             continue  # Skip the rest of the loop and retry on the next interval
 
 
-        if queue_size > 0 and instance_status != 'running':
+        if queue_size > 0:
             if instance_status != 'running':
-                logging.info(f"Queue has messages, starting EC2 instance {EC2_VECTORIZE_INSTANCE}...")
+                logging.info(f"Queue has {queue_size} messages, starting EC2 instance {EC2_VECTORIZE_INSTANCE}...")
                 start_ec2_instance(EC2_VECTORIZE_INSTANCE)
             else:
-                logging.info(f"Queue has messages, but EC2 instance {EC2_VECTORIZE_INSTANCE} is already running.")
-        else:
-            logging.error(f"Could not retrieve the size of queue '{queue_name}'.")
-
+                logging.info(f"Queue has {queue_size} messages, but EC2 instance {EC2_VECTORIZE_INSTANCE} is already running.")
+        
         # Sleep for the specified interval before checking again
         time.sleep(check_interval)
 
