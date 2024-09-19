@@ -44,10 +44,11 @@ MAX_RETRIES = 5
 model = None
 last_processed_time = time.time()  # Record the time of the last document processed
 
-# Publish vectors to the upload vector queue
-def publish_vectors(vector_data: list, workspace_id: str, database: str, retries = 0):
+
+def publish_vectors(vector_data: list, workspace_id: str, database: str, retries=0):
+    connection = None
     try:
-        connection = utils.get_connection()
+        connection = utils.get_connection()  # Your existing logic to get connection
         channel = connection.channel()
 
         # Declare the vector queue in case it doesn't exist
@@ -59,18 +60,20 @@ def publish_vectors(vector_data: list, workspace_id: str, database: str, retries
             'vector_data': vector_data,
             "workspace_id": workspace_id,
         })
+        
         # Publish the message
         channel.basic_publish(exchange='', routing_key=RABBITMQ_UPLOAD_VECTOR_QUEUE, body=message)
         logging.info(f"Published vectors to vector upload queue.")
 
-    except (pika.exceptions.ConnectionClosed, ConnectionResetError) as e:
+    except (pika.exceptions.ConnectionClosed, pika.exceptions.AMQPConnectionError, ConnectionResetError) as e:
         logging.error(f"Error publishing to RabbitMQ: {e}")
         time.sleep(RETRY_DELAY)
-        if (retries < MAX_RETRIES):
-            publish_vectors(vector_data, workspace_id, database, retries + 1)  # Retry logic
+        if retries < MAX_RETRIES:
+            publish_vectors(vector_data, workspace_id, database, retries + 1)
     finally:
-        if connection:
+        if connection and not connection.is_closed:
             connection.close()
+
 
    
 def load_model():
@@ -122,7 +125,7 @@ def vectorize_documents(ch, method, properties, body):
         batch_size = 128
         texts = [doc['text'] for doc in documents]
         for i in range(0, len(texts), batch_size):
-            logging.info(f"Vectorizing batch {i} with size {batch_size}...")
+            logging.info(f"Vectorizing batch {i / batch_size} with size {batch_size}...")
             batch_texts = texts[i:i + batch_size]
             raw_vecs = model.encode(batch_texts)["dense_vecs"]
             
