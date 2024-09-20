@@ -45,14 +45,14 @@ model = None
 last_processed_time = time.time()  # Record the time of the last document processed
 
 
-def publish_vectors(vector_data: list, workspace_id: str, database: str, retries=0):
-    connection = None
+def publish_vectors(ch, vector_data: list, workspace_id: str, database: str, retries=0):
+    # connection = None
     try:
-        connection = utils.get_connection()  # Your existing logic to get connection
-        channel = connection.channel()
+        # connection = utils.get_connection()  # Your existing logic to get connection
+        # channel = connection.channel()
 
         # Declare the vector queue in case it doesn't exist
-        channel.queue_declare(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, durable=True)
+        ch.queue_declare(queue=RABBITMQ_UPLOAD_VECTOR_QUEUE, durable=True)
 
         # Prepare the message
         message = json.dumps({
@@ -62,7 +62,7 @@ def publish_vectors(vector_data: list, workspace_id: str, database: str, retries
         })
         
         # Publish the message
-        channel.basic_publish(exchange='', routing_key=RABBITMQ_UPLOAD_VECTOR_QUEUE, body=message)
+        ch.basic_publish(exchange='', routing_key=RABBITMQ_UPLOAD_VECTOR_QUEUE, body=message)
         logging.info(f"Published vectors to vector upload queue.")
 
     except Exception as e:
@@ -70,9 +70,9 @@ def publish_vectors(vector_data: list, workspace_id: str, database: str, retries
         time.sleep(RETRY_DELAY)
         if retries < MAX_RETRIES:
             publish_vectors(vector_data, workspace_id, database, retries + 1)
-    finally:
-        if connection and not connection.is_closed:
-            connection.close()
+    # finally:
+    #     if connection and not connection.is_closed:
+    #         connection.close()
 
 
    
@@ -114,10 +114,9 @@ def vectorize_documents(ch, method, properties, body):
             logging.warning("No workspace included.")
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
-        
+
         logging.info(f"Vectorizing {len(documents)} documents for database {database} and workspace {workspace_id}...")
-        ch.basic_ack(delivery_tag=method.delivery_tag)
-        
+
         # Extract texts and vectorize
         batch_size = 128
         texts = [doc['text'] for doc in documents]
@@ -133,7 +132,7 @@ def vectorize_documents(ch, method, properties, body):
                 vector_data = [{'id': doc['id'], 'vector': vec.tolist()} for doc, vec in zip(documents[i:i + current_batch_size], raw_vecs)]
 
                 logging.info(f"Batch {i // batch_size + 1}/{total_batches} vectorization completed. Sending vectors to vector queue.")
-                publish_vectors(vector_data, workspace_id, database)
+                publish_vectors(ch, vector_data, workspace_id, database)
             
             except Exception as e:
                 logging.error(f"Error in batch {i // batch_size + 1}/{total_batches}: {e}")
@@ -154,7 +153,8 @@ def vectorize_documents(ch, method, properties, body):
 
     except Exception as e:
         logging.error(f"Error during vectorization: {e}")
-        
+    finally:
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
 # Idle shutdown watcher thread
 def idle_shutdown_watcher():
