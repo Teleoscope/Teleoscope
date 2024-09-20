@@ -114,9 +114,10 @@ def vectorize_documents(ch, method, properties, body):
             logging.warning("No workspace included.")
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
-
+        
         logging.info(f"Vectorizing {len(documents)} documents for database {database} and workspace {workspace_id}...")
-
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        
         # Extract texts and vectorize
         batch_size = 128
         texts = [doc['text'] for doc in documents]
@@ -153,8 +154,7 @@ def vectorize_documents(ch, method, properties, body):
 
     except Exception as e:
         logging.error(f"Error during vectorization: {e}")
-    finally:
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+        
 
 # Idle shutdown watcher thread
 def idle_shutdown_watcher():
