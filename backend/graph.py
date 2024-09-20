@@ -306,6 +306,9 @@ def update_rank(
     search_vector = np.average(control_vectors, axis=0)
     logging.info(f"Search vector shape is {search_vector.shape}.")
 
+    if np.isnan(search_vector):
+        logging.info(f"Search vector isn't a number: {search_vector}.")
+
     # set the distance from the search vector that we care to look
     distance = 0.5
     if "distance" in parameters:

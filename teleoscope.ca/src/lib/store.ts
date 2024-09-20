@@ -34,7 +34,7 @@ import appState, {
     setRefreshInterval,
     cancelRefreshInterval,
     relabelStorage,
-    removeStorage,
+    removeStorage
 } from '@/actions/appState';
 import { copyDoclistsToGroups, updateNode } from '../actions/appState';
 import axios from 'axios';
@@ -52,7 +52,6 @@ import { mutate } from 'swr';
 import WindowDefinitions from '@/components/WindowFolder/WindowDefinitions';
 import createSagaMiddleware from 'redux-saga';
 import rootSaga from './sagas';
-
 
 interface AppState {
     workflow: Workflows;
@@ -103,10 +102,7 @@ const actionMiddleware = (store) => (next) => (action) => {
             appState?.workflow?.logical_clock,
             appState
         );
-        
     }
-
-    
 
     if (action.type === dropNode.type) {
         // Call the next middleware or the reducer with the modified action
@@ -580,83 +576,105 @@ const actionMiddleware = (store) => (next) => (action) => {
         const { appState }: { appState: AppState } = store.getState();
         const { _id: workspace_id } = appState.workspace;
         const { _id: workflow_id } = appState.workflow;
-        axios.post(`/api/note/relabel`, {
-            workspace_id: workspace_id,
-            note_id: action.payload.note_id,
-            label: action.payload.label
-        }).then(() => mutate(
-            (key) =>
-                typeof key === 'string' &&
-                key.startsWith(
-                    `/api/note?note=${action.payload.note_id}`
+        axios
+            .post(`/api/note/relabel`, {
+                workspace_id: workspace_id,
+                note_id: action.payload.note_id,
+                label: action.payload.label
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' &&
+                        key.startsWith(
+                            `/api/note?note=${action.payload.note_id}`
+                        )
                 )
-        ));;
+            );
     }
 
     if (action.type === relabelGroup.type) {
         const { appState }: { appState: AppState } = store.getState();
         const { _id: workspace_id } = appState.workspace;
         const { _id: workflow_id } = appState.workflow;
-        axios.post(`/api/group/relabel`, {
-            workspace_id: workspace_id,
-            group_id: action.payload.group_id,
-            label: action.payload.label
-        }).then(() => mutate(
-            (key) =>
-                typeof key === 'string' &&
-                key.startsWith(
-                    `/api/group?group=${action.payload.group_id}`
+        axios
+            .post(`/api/group/relabel`, {
+                workspace_id: workspace_id,
+                group_id: action.payload.group_id,
+                label: action.payload.label
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' &&
+                        key.startsWith(
+                            `/api/group?group=${action.payload.group_id}`
+                        )
                 )
-        ));
+            );
     }
 
     if (action.type === recolorGroup.type) {
         const { appState }: { appState: AppState } = store.getState();
         const { _id: workspace_id } = appState.workspace;
         const { _id: workflow_id } = appState.workflow;
-        axios.post(`/api/group/recolor`, {
-            workspace_id: workspace_id,
-            group_id: action.payload.group_id,
-            color: action.payload.color
-        }).then(() => mutate(
-            (key) =>
-                typeof key === 'string' &&
-                (key.startsWith(
-                    `/api/group?group=${action.payload.group_id}`
-                ) || key.startsWith(`/api/groups`))
-        ));
+        axios
+            .post(`/api/group/recolor`, {
+                workspace_id: workspace_id,
+                group_id: action.payload.group_id,
+                color: action.payload.color
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' &&
+                        (key.startsWith(
+                            `/api/group?group=${action.payload.group_id}`
+                        ) ||
+                            key.startsWith(`/api/groups`))
+                )
+            );
     }
 
     if (action.type === relabelStorage.type) {
         const { appState }: { appState: AppState } = store.getState();
         const { _id: workspace_id } = appState.workspace;
         const { _id: workflow_id } = appState.workflow;
-        axios.post(`/api/storage/relabel`, {
-            workspace_id: workspace_id,
-            storage_id: action.payload.storage_id,
-            label: action.payload.label
-        }).then(() => mutate(
-            (key) =>
-                typeof key === 'string' &&
-                (key.startsWith(
-                    `/api/storage?storage=${action.payload.storage_id}`
-                ) || key.startsWith(`/api/storage`))
-        ));
+        axios
+            .post(`/api/storage/relabel`, {
+                workspace_id: workspace_id,
+                storage_id: action.payload.storage_id,
+                label: action.payload.label
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' &&
+                        (key.startsWith(
+                            `/api/storage?storage=${action.payload.storage_id}`
+                        ) ||
+                            key.startsWith(`/api/storage`))
+                )
+            );
     }
 
     if (action.type === removeStorage.type) {
         const { appState }: { appState: AppState } = store.getState();
         const { _id: workspace_id } = appState.workspace;
         const { _id: workflow_id } = appState.workflow;
-        axios.post(`/api/storage/remove`, {
-            workspace_id: workspace_id,
-            storage_id: action.payload.storage_id,
-        }).then(() => 
-            mutate(
-                (key) =>
-                    typeof key === 'string' &&
-                    (key.startsWith(`/api/storage`) || key.startsWith(`/api/app`))
-            ));
+        axios
+            .post(`/api/storage/remove`, {
+                workspace_id: workspace_id,
+                storage_id: action.payload.storage_id
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' &&
+                        (key.startsWith(`/api/storage`) ||
+                            key.startsWith(`/api/app`))
+                )
+            );
     }
 
     if (action.type === updateSearch.type) {
@@ -670,9 +688,19 @@ const actionMiddleware = (store) => (next) => (action) => {
         });
     }
 
+    if (action.type === copyDoclistsToGroups.type) {
+        const add_group = axios
+            .post(`/api/group/add`, {
+                group: { ...action.payload }
+            })
+            .then(() =>
+                mutate(
+                    (key) =>
+                        typeof key === 'string' && key.startsWith(`/api/group`)
+                )
+            );
+    }
     switch (action.type) {
-        case copyDoclistsToGroups.type:
-            break;
         case removeCluster.type:
             break;
         case copyCluster.type:
@@ -697,7 +725,6 @@ export const store = configureStore({
             .concat(sagaMiddleware)
 });
 sagaMiddleware.run(rootSaga);
-
 
 export const makeStore = () => store;
 

@@ -69,7 +69,7 @@ def publish_vectors(ch, vector_data: list, workspace_id: str, database: str, ret
         logging.error(f"Unexpected error publishing to RabbitMQ: {e.__class__.__name__}: {e}")
         time.sleep(RETRY_DELAY)
         if retries < MAX_RETRIES:
-            publish_vectors(vector_data, workspace_id, database, retries + 1)
+            publish_vectors(ch, vector_data, workspace_id, database, retries + 1)
     # finally:
     #     if connection and not connection.is_closed:
     #         connection.close()
@@ -131,7 +131,7 @@ def vectorize_documents(ch, method, properties, body):
                 raw_vecs = model.encode(batch_texts)["dense_vecs"]
                 vector_data = [{'id': doc['id'], 'vector': vec.tolist()} for doc, vec in zip(documents[i:i + current_batch_size], raw_vecs)]
 
-                logging.info(f"Batch {i // batch_size + 1}/{total_batches} vectorization completed. Sending vectors to vector queue.")
+                logging.info(f"Batch {i // batch_size + 1}/{total_batches} vectorization completed. Sending vectors to upload queue: {RABBITMQ_UPLOAD_VECTOR_QUEUE}.")
                 publish_vectors(ch, vector_data, workspace_id, database)
             
             except Exception as e:

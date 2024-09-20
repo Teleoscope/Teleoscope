@@ -2,21 +2,15 @@
 import DocumentList from '@/components/Documents/DocumentList';
 import Count from '@/components/Count';
 
-import {
-    Box,
-    IconButton,
-    Slider,
-    Stack,
-    Tooltip,
-    Typography
-} from '@mui/material';
+import { Box, Slider, Stack, Tooltip, Typography } from '@mui/material';
 import ButtonActions from '@/components/ButtonActions';
 import Histogram from '@/components/Histogram';
-import FolderCopyIcon from '@mui/icons-material/FolderCopy';
 import { useAppSelector, useAppDispatch } from '@/lib/hooks';
-import { copyDoclistsToGroups, updateNode } from '@/actions/appState';
+import { updateNode } from '@/actions/appState';
 import { WindowProps } from './WindowFolder/WindowFactory';
 import { useEffect, useState } from 'react';
+import { Graph } from '@/types/graph';
+import CopyToGroup from './CopyToGroup';
 
 // Custom tooltip component
 function ValueLabelComponent({ children, value }) {
@@ -27,12 +21,12 @@ function ValueLabelComponent({ children, value }) {
     );
 }
 
-const DistanceSlider = ({ rank, color }) => {
+const DistanceSlider = ({ rank, color }: { rank: Graph; color: string }) => {
     const dispatch = useAppDispatch();
     const handleChange = (event, value) =>
         dispatch(
             updateNode({
-                node_id: rank._id,
+                node_id: rank.uid,
                 parameters: { distance: value }
             })
         );
@@ -70,22 +64,25 @@ export default function Rank({
         (state) => state.appState.workflow.settings
     );
 
+    const { _id: workspace } = useAppSelector(
+        (state) => state.appState.workspace
+    );
+
     const [version, setVersion] = useState(0);
 
     const doclists = rank?.doclists ? rank.doclists : [];
 
     useEffect(() => {
         setVersion((prevVersion) => prevVersion + 1);
-    }, [rank])
+    }, [rank]);
 
-    const key = rank?.uid + (doclists.length || 0);
-
+    const key = `${rank?.uid}-${doclists.length || 0}`;
 
     if (!rank) {
-        return <>Rank loading...</>
+        return <>Rank loading...</>;
     }
 
-    const Status = (rank) => {
+    const Status = (rank: Graph) => {
         if (rank) {
             if (rank.doclists.length > 0) {
                 return (
@@ -136,36 +133,19 @@ export default function Rank({
         return null;
     };
 
-    const CopyToGroup = (rank) => {
-        const dispatch = useAppDispatch();
-        return (
-            <Tooltip
-                title="Copy Doclists to Groups"
-                key="Copy Doclists to Groups"
-            >
-                <IconButton
-                    onClick={() =>
-                        dispatch(copyDoclistsToGroups({ node_id: rank._id }))
-                    }
-                >
-                    <FolderCopyIcon fontSize="small" />
-                </IconButton>
-            </Tooltip>
-        );
-    };
+    
 
     return (
-        <Stack key={key} direction="column" sx={{ height: "100%" }}>
-
+        <Stack key={key} direction="column" sx={{ height: '100%' }}>
             <ButtonActions
                 inner={[
                     [Status, rank],
-                    [CopyToGroup, rank]
+                    [CopyToGroup, {rank: rank, workspace: workspace}]
                 ]}
             ></ButtonActions>
             <Box sx={{ flexGrow: 1, flexDirection: 'column' }}>
                 <DocumentList data={doclists} pagination={true}></DocumentList>
             </Box>
-    </Stack>
+        </Stack>
     );
 }
