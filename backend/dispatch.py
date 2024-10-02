@@ -62,6 +62,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
         # Make sure they look like Stomp
 
         match task:
+            case "ping":
+                res = tasks.ping.signature(args=args, kwargs=kwargs)
+
             case "vectorize_note":
                 res = tasks.vectorize_note.signature(args=args, kwargs=kwargs)
                         
