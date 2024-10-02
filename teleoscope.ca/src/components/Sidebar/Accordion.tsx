@@ -12,6 +12,8 @@ import { useAppSelector } from '@/lib/hooks';
 export default function SidebarAccordion({ compact = false }) {
     const { color } = useAppSelector((state) => state.appState.workflow.settings);
 
+    
+
     const sections = [
         { key: 'Data', component: <DataHandler/>, text: 'Data' },
         { key: 'Workflows', component: <Workflows />, text: 'Workflows' },
