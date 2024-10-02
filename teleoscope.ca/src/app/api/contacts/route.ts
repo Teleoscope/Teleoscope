@@ -19,5 +19,10 @@ export async function POST(request: NextRequest) {
     message?: string
   } = await loops.updateContact(email, contactProperties);
 
-  return NextResponse.json({ success: resp.success });
+  if (resp.success) {
+    return NextResponse.json({ success: resp.success });
+  } else {
+    return NextResponse.error();
+  }
+
 }
