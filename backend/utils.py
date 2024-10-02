@@ -4,6 +4,8 @@ import numpy as np
 import heapq
 import os
 import sys
+import json
+import uuid
 from threading import Lock
 
 # installed modules
@@ -35,6 +37,11 @@ RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD", "guest")
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
 RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST", "/")
 RABBITMQ_PORT = os.getenv("RABBITMQ_PORT", 5672)
+RABBITMQ_DISPATCH_QUEUE = os.getenv("RABBITMQ_DISPATCH_QUEUE", "")
+RABBITMQ_TASK_QUEUE = os.getenv("RABBITMQ_TASK_QUEUE", "")
+RABBITMQ_EMBEDDINGS_QUEUE = os.getenv("RABBITMQ_EMBEDDINGS_QUEUE", "")
+RABBITMQ_VECTORIZE_QUEUE = os.getenv("RABBITMQ_VECTORIZE_QUEUE", "")
+RABBITMQ_UPLOAD_VECTOR_QUEUE = os.getenv("RABBITMQ_UPLOAD_VECTOR_QUEUE", "")
 
 MONGODB_USERNAME = os.getenv("MONGODB_USERNAME")
 MONGODB_PASSWORD = os.getenv("MONGODB_PASSWORD")
@@ -416,6 +423,18 @@ def publish(queue, message):
         if connection.is_open:
             connection.close()  # Always clean up the connection
 
+
+def ping(queue=RABBITMQ_DISPATCH_QUEUE, args=[], kwargs={}, message={"hello": "world"}):
+    task_data = {
+        "task": "ping",  # Celery task name
+        "id": str(uuid.uuid4()),  # Unique ID for the task
+        "args": args,  # Arguments for the task
+        "kwargs": {
+            "message": message,
+            **kwargs
+        },  # Keyword arguments if any
+    }
+    publish(queue, json.dumps(task_data))
 
 
 def search_in_all_collections(db_name, search_value, field="_id"):
