@@ -13,7 +13,7 @@ export default function NewsletterSection() {
     e.preventDefault();
     
     try {
-      const response = await fetch('/api/contacts', {
+      const response = await fetch('/api/email/contacts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

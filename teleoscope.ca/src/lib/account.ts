@@ -9,6 +9,7 @@ import { Workflows } from '@/types/workflows';
 import { DEFAULT_SLATE, DEFAULT_TITLE_LENGTH } from './defaults';
 import { MongoServerError } from 'mongodb';
 import util from 'util';
+import { newUser } from './loops';
 
 export default async function initialize_user(
     userId: string,
@@ -201,6 +202,10 @@ export default async function initialize_user(
         } else {
             throw new Error('Customer already exists in Stripe.');
         }
+    
+    // Make a new user in loops
+    await newUser({email: email.toString()})
+
     } catch (error) {
         await session.abortTransaction();
         console.error('Transaction aborted due to an error:', error);
