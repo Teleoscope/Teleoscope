@@ -7,8 +7,6 @@ export default function WorkspacePage({
     params: { slug: string };
 }) {
 
-
-    
     return <Workspace workspace={params.slug} />
     
 }
