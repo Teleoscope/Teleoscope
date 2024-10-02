@@ -1,7 +1,9 @@
 # tasks.py
 import logging
 import json
+import datetime
 import uuid
+import pandas as pd
 from warnings import simplefilter
 from celery import Celery
 from bson.objectid import ObjectId
@@ -27,6 +29,8 @@ RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
 RABBITMQ_PORT = os.getenv("RABBITMQ_PORT")
 RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST")
 RABBITMQ_TASK_QUEUE = os.getenv("RABBITMQ_TASK_QUEUE")
+
+DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR")
 
 # Ignore all future warnings
 simplefilter(action="ignore", category=FutureWarning)
@@ -141,6 +145,96 @@ def delete_storage(*args, database: str, userid: str, workspace: str, storage: s
     db.documents.delete_many({"_id": {"$in": storage_item["docs"]}})
     logging.info(f"Deleted all documents from {storage} in database {database} and workspace {workspace}.")
 
+
+@app.task
+def generate_xlsx(*args, database: str, userid: str, workspace_id: str, group_ids: List[str], storage_ids: List[str]):
+    db = utils.connect(db=database)
+
+    # Optionally save to Excel (you can modify the path and filename)
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{userid}_{workspace_label}_documents_{timestamp}.xlsx"
+
+    file_result = db.files.insert_one({
+        "filename": filename,
+        "status": {
+            "description": "Processing data...",
+            "ready": False
+        }
+    })
+
+    # Workspace information (assuming workspace is passed as a dict with 'id' and 'label')
+    workspace = db.workspace.find({"_id": ObjectId(workspace_id)})
+    workspace_label = workspace.get("label", "")
+
+    # Combine group_ids and storage_ids for the $match stage
+    all_ids = [ObjectId(gid) for gid in group_ids] + [ObjectId(sid) for sid in storage_ids]
+
+    # Create the aggregation pipeline
+    pipeline = [
+        # Step 1: Match the groups and storage based on the provided group_ids and storage_ids
+        {
+            "$match": {
+                "_id": {"$in": all_ids}
+            }
+        },
+        
+        # Step 2: Lookup the documents in the 'documents' collection for both groups and storage
+        {
+            "$lookup": {
+                "from": "documents",  # Join with the 'documents' collection
+                "localField": "docs",  # Field in 'groups' and 'storage' (an array of ObjectIds in 'docs')
+                "foreignField": "_id",  # Field in 'documents' (match based on the '_id' field)
+                "as": "document_details"  # The output field for the matched documents
+            }
+        },
+
+        # Step 3: Unwind the document details to create a row per document
+        {"$unwind": "$document_details"},
+
+        # Step 4: Project the necessary fields from groups, storage, and documents
+        {
+            "$project": {
+                "document": "$document_details._id",  # The original document ID from documents
+                "group": "$label",  # Group label from the group document (if exists)
+                "storage": "$label",  # Storage label from the storage document (if exists)
+                "text": "$document_details.text",  # The text field from the document
+                "title": "$document_details.title",  # The title field from the document
+                "workspace_id": {"$literal": workspace_id},  # Static workspace_id
+                "workspace_label": {"$literal": workspace_label},  # Static workspace_label
+                "metadata": "$document_details.metadata"  # Arbitrary metadata from the document
+            }
+        }
+    ]
+
+    # Execute the aggregation pipeline
+    document_cursor = db.groups.aggregate(pipeline)
+
+    # Convert the results to a list of dictionaries to use for the DataFrame
+    data = list(document_cursor)
+
+    # Convert the list to a pandas DataFrame
+    df = pd.DataFrame(data)
+
+    # Dynamically add metadata fields to the DataFrame
+    if not df.empty:
+        metadata_cols = df['metadata'].apply(pd.Series)
+        df = pd.concat([df.drop(['metadata'], axis=1), metadata_cols], axis=1)
+
+    
+    file_path = os.path.join(DOWNLOAD_DIR, filename)
+
+    # Save the DataFrame to Excel
+    df.to_excel(file_path, index=False)
+
+    db.files.update_one({"_id": file_result.inserted_id}, 
+                        {
+                            "status": {
+                                "description": "The file is ready.",
+                                "ready": True
+                            }
+                        })
+
+    return df  # Return or save the DataFrame as needed
 
 
 

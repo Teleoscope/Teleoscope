@@ -68,6 +68,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "update_nodes":
                 res = tasks.update_nodes.signature(args=args, kwargs=kwargs)
 
+            case "generate_xlsx":
+                res = tasks.generate_xlsx.signature(args=args, kwargs=kwargs)
+
             case "chunk_upload":
                 res = tasks.chunk_upload.signature(args=args, kwargs=kwargs)
             
