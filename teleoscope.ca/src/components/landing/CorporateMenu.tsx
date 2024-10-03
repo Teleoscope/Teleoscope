@@ -7,10 +7,6 @@ const menuItems = [
     href: "/about",
   },
   {
-    label: "Pricing",
-    href: "/pricing",
-  },
-  {
     label: "Resources",
     href: "/resources",
   },
