@@ -51,4 +51,8 @@ jobs:
       - name: Build Teleoscope.ca
         run: |
           echo "MONGODB_URI=${{secrets.MONGODB_ATLAS_TESTING_URI}}" >> ./.env.local
+          echo "STRIPE_TEST_PUBLISHABLE_KEY=${{secrets.STRIPE_TEST_PUBLISHABLE_KEY}}" >> ./.env.local
+          echo "STRIPE_TEST_SECRET_KEY=${{secrets.STRIPE_TEST_SECRET_KEY}}" >> ./.env.local
+          echo "FRIGADE_API_PUBLIC=${{secrets.FRIGADE_API_PUBLIC}}" >> ./.env.local
+          echo "LOOPS_API_KEY=${{secrets.LOOPS_API_KEY}}" >> ./.env.local
           pnpm run build
