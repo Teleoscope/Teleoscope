@@ -5,9 +5,9 @@ name: Python Lint and Test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "backend" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "backend" ]
 
 permissions:
   contents: read
