@@ -35,7 +35,7 @@ test('successful signup', async ({ page }) => {
   await page.getByPlaceholder('name@example.com').press('Tab');
   await page.getByPlaceholder('password').fill(process.env.TEST_PASSWORD);
   await page.getByRole('button', { name: 'Sign Up with Email' }).click();
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Workspaces' })).toBeVisible();
 });
 
 
