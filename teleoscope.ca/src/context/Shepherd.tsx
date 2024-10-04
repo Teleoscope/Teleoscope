@@ -1,106 +1,126 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { useMemo } from 'react';
 import Shepherd from 'shepherd.js';
 
-// Shepherd context
-interface ShepherdContextType {
-  startTour: () => void;
-  cancelTour: () => void;
-}
-
-const ShepherdContext = createContext<ShepherdContextType | undefined>(undefined);
-
-interface ShepherdProviderProps {
-  children: ReactNode;  // Correct typing for children
-}
-
-const ShepherdProvider: React.FC<ShepherdProviderProps> = ({ children }) => {
-  const [tour, setTour] = useState<Shepherd.Tour | null>(null);
-
-  const steps = [
-    {
-      id: 'intro',
-      text: 'Welcome to the app! This is your first stop.',
-      attachTo: {
-        element: '.step-one',
-        on: 'right'
-      },
-      buttons: [
-        {
-          text: 'Next',
-          action: tour?.next
-        }
-      ]
-    },
-    {
-      id: 'feature',
-      text: 'This is an important feature to know.',
-      attachTo: {
-        element: '.step-two',
-        on: 'left'
-      },
-      buttons: [
-        {
-          text: 'Back',
-          action: tour?.back
-        },
-        {
-          text: 'Next',
-          action: tour?.next
-        }
-      ]
-    },
-    {
-      id: 'end',
-      text: 'And that’s it! Thanks for taking the tour.',
-      buttons: [
-        {
-          text: 'Finish',
-          action: tour?.complete
-        }
-      ]
-    }
-  ];
-
-  const initializeTour = () => {
-    const shepherdTour = new Shepherd.Tour({
-      useModalOverlay: true,
-      defaultStepOptions: {
-        cancelIcon: {
-          enabled: true
-        },
-        classes: 'shepherd-theme-arrows',
-        scrollTo: { behavior: 'smooth', block: 'center' }
-      }
-    });
-    shepherdTour.addSteps(steps);
-    setTour(shepherdTour);
-  };
-
-  const startTour = () => {
-    if (!tour) {
-      initializeTour();
-    }
-    tour?.start();
-  };
-
-  const cancelTour = () => {
-    tour?.cancel();
-  };
-
-  return (
-    <ShepherdContext.Provider value={{ startTour, cancelTour }}>
-      {children}
-    </ShepherdContext.Provider>
-  );
-};
-
-// Custom hook for using the Shepherd context
 export const useShepherd = () => {
-  const context = useContext(ShepherdContext);
-  if (!context) {
-    throw new Error('useShepherd must be used within a ShepherdProvider');
-  }
-  return context;
-};
+    const tourOptions = {
+        useModalOverlay: true,
+        defaultStepOptions: {
+            classes: 'shadow-md bg-purple-dark',
+            scrollTo: true
+        }
+    };
 
-export default ShepherdProvider;
+    const tourObject = useMemo(() => {
+        const tour = new Shepherd.Tour(tourOptions);
+
+        const steps = [
+            {
+                id: 'intro',
+                text: 'Welcome to the app! This is where you manage your workspaces.',
+                attachTo: {
+                    element: '.step-one',
+                    on: 'right'
+                },
+                buttons: [
+                    {
+                        text: 'Next',
+                        action: tour.next
+                    }
+                ]
+            },
+            {
+                id: 'resources',
+                text: 'You can manage your teams, costs and other resources here.',
+                attachTo: {
+                    element: '.step-two',
+                    on: 'right'
+                },
+                buttons: [
+                    {
+                        text: 'Back',
+                        action: tour.back
+                    },
+                    {
+                        text: 'Next',
+                        action: tour.next
+                    }
+                ]
+            },
+            {
+                id: 'settings',
+                text: 'All other account settings are managed here.',
+                attachTo: {
+                    element: '.step-three',
+                    on: 'right'
+                },
+                classes: 'steps',
+                buttons: [
+                    {
+                        text: 'Back',
+                        action: tour.back
+                    },
+                    {
+                        text: 'Next',
+                        action: tour.next
+                    }
+                ]
+            },
+            {
+              id: 'workspaces',
+              text: 'Workspaces contain your data and give you a place to organize and explore. You can upload your data, add collaborators, and create workflows here. If you want to get started right away, click on the Default Workspace.',
+              attachTo: {
+                  element: '.step-four',
+                  on: 'right'
+              },
+              classes: 'steps',
+              buttons: [
+                  {
+                      text: 'Back',
+                      action: tour.back
+                  },
+                  {
+                      text: 'Next',
+                      action: tour.next
+                  }
+              ]
+          },
+          {
+            id: 'new-workspace',
+            text: 'You can create a new workspace for new data or different collaborators here.',
+            attachTo: {
+                element: '.step-five',
+                on: 'right'
+            },
+            classes: 'steps',
+            buttons: [
+                {
+                    text: 'Back',
+                    action: tour.back
+                },
+                {
+                    text: 'Next',
+                    action: tour.next
+                }
+            ]
+        },
+          
+            
+            {
+                id: 'end',
+                text: 'Click on one of your workspaces to start!',
+                buttons: [
+                    {
+                        text: 'Finish',
+                        action: tour.complete
+                    }
+                ]
+            }
+        ];
+
+        tour.addSteps(steps);
+
+        return tour;
+    }, []);
+
+    return tourObject;
+};

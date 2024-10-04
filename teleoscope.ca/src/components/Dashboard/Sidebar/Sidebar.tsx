@@ -6,6 +6,7 @@ export type SidebarOption = {
   label: string;
   href: string;
   icon: React.ReactNode;
+  className: string;
 };
 
 function capitalizeFirstLetter(text: string) {
@@ -26,7 +27,7 @@ export function Sidebar({children, sidebarOptions,
             </span>}
             <div className="flex flex-col gap-2 flex-1 px-2 ">
               {options.map((option) => (
-                <Link key={option.label} href={option.href}>
+                <Link key={option.label} href={option.href} className={option.className}>
                   <span className="flex items-center gap-4 p-2 rounded-lg text-md hover:bg-gray-200 cursor-pointer">
                     {option.icon}
                     <span>{option.label}</span>

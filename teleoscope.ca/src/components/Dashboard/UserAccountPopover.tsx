@@ -1,4 +1,4 @@
-'use client';
+'use client';;
 import { useUserContext } from '@/context/UserContext';
 import {
     Popover,
@@ -8,13 +8,28 @@ import {
 import { Button } from '../ui/button';
 import { ChevronDown, DoorOpenIcon, UserIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useShepherd } from '@/context/Shepherd';
 
 export const UserAccountPopover = () => {
     const { user, account } = useUserContext();
     const userDisplayName = user?.firstName || user?.emails?.[0] || 'User';
+    const tour = useShepherd()
+    const handleClick = () => {
+        tour.start()
+    }
+
 
     return (
         <div className="flex items-center absolute top-2 right-2 justify-end w-full cursor-pointer p-2">
+            <div className="p-2">
+                <p className='text-sm p-2'> 
+                    New to Teleoscope?
+                    <span className='p-1'></span>
+                    <Button onClick={handleClick} className='text-sm' variant="outline" size="sm">
+                        Start Tour
+                    </Button>
+                </p>
+            </div>
             <Popover>
                 <PopoverTrigger>
                     <Button

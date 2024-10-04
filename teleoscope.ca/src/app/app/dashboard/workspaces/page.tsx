@@ -1,6 +1,5 @@
 import Workspaces from '@/components/Workspaces/Workspaces';
 import { validateRequest } from '@/lib/auth';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 export default async function WorkspacesPage() {
