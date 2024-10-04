@@ -1,6 +1,5 @@
-'use client';
+'use client';;
 import TeamDisplay from '@/components/Dashboard/Teams/TeamDisplay';
-import { Button } from '@/components/ui/button';
 import { useSWRF } from '@/lib/swr';
 import { Accounts } from '@/types/accounts';
 import MoreStorageModal from "@/components/Dashboard/Account/MoreStorageModal";
@@ -21,7 +20,7 @@ export default function ResourceUsagePage() {
                 <div className="flex flex-col w-full h-full  pt-4   2xl:p-6 rounded-lg">
                     <div className="flex flex-row gap-2 items-center pl-2 pb-4">
                         <h2 className="text-xl font-bold  text-primary">
-                            Resource Usage
+                            Teams and Resources
                         </h2>
                     </div>
 

@@ -103,7 +103,7 @@ export function NewWorkspaceModal({ teams = [] }: { teams: Teams[] }) {
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button
-                    className=" p-1  h-8 flex gap-2 items-center"
+                    className="steps step-five p-1  h-8 flex gap-2 items-center"
                     // disabled={teams.length === 0}
                 >
                     <PlusIcon className="w-full" size={20} />

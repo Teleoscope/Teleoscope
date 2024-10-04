@@ -3,22 +3,27 @@ import UserContextProvider from '@/context/UserContext';
 import { SidebarOption, Sidebar } from '@/components/Dashboard/Sidebar/Sidebar';
 import { UserAccountPopover } from '@/components/Dashboard/UserAccountPopover';
 import Image from 'next/image';
+import 'shepherd.js/dist/css/shepherd.css';
 
 const teamSettings = [
     {
         label: 'Workspaces',
         href: '/app/dashboard/workspaces',
-        icon: <BoxIcon size={16} />
+        icon: <BoxIcon size={16}  />,
+        className: "steps step-one"
+        
     },
     {
-        label: 'Resource Usage',
+        label: 'Teams and Resources',
         href: '/app/dashboard/resource-usage',
-        icon: <PieChartIcon size={16} />
+        icon: <PieChartIcon size={16} />,
+        className: "steps step-two"
     },
     {
         label: 'Settings',
         href: '/app/settings/user',
-        icon: <CogIcon size={16} />
+        icon: <CogIcon size={16} />,
+        className: "steps step-three"
     }
 ];
 
@@ -36,7 +41,7 @@ export default async function DashboardLayout({
             <UserContextProvider userId="1">
                 <Sidebar sidebarOptions={sidebarOptions} haveSections={false}>
                     <div className="flex flex-col items-center justify-center py-5 gap-2 px-1 ">
-                        <div className="  w-full flex items-center gap-2  px-2">
+                        <div className=" w-full flex items-center gap-2 px-2">
                             <Image
                                 src={'/assets/TeleoscopeStars.svg'}
                                 alt="Logo"
@@ -47,7 +52,7 @@ export default async function DashboardLayout({
                                 Teleoscope
                             </span>
                         </div>
-                        <div className="w-full px-1  rounded-xl   py-1">
+                        <div className="w-full px-1 rounded-xl py-1">
                             <input
                                 type="text"
                                 placeholder="Search"
@@ -56,7 +61,9 @@ export default async function DashboardLayout({
                         </div>
                     </div>
                 </Sidebar>
+                
                 <div className="flex-1 w-full flex-col">
+
                     <UserAccountPopover />
                     {children}
                 </div>
