@@ -159,6 +159,11 @@ def generate_xlsx(*args, database: str, userid: str, workspace_id: str, group_id
     db = utils.connect(db=database)
 
     # Optionally save to Excel (you can modify the path and filename)
+    
+    # Workspace information (assuming workspace is passed as a dict with 'id' and 'label')
+    workspace = db.workspace.find({"_id": ObjectId(workspace_id)})
+    workspace_label = workspace.get("label", "")
+    
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{userid}_{workspace_label}_documents_{timestamp}.xlsx"
 
@@ -169,10 +174,6 @@ def generate_xlsx(*args, database: str, userid: str, workspace_id: str, group_id
             "ready": False
         }
     })
-
-    # Workspace information (assuming workspace is passed as a dict with 'id' and 'label')
-    workspace = db.workspace.find({"_id": ObjectId(workspace_id)})
-    workspace_label = workspace.get("label", "")
 
     # Combine group_ids and storage_ids for the $match stage
     all_ids = [ObjectId(gid) for gid in group_ids] + [ObjectId(sid) for sid in storage_ids]

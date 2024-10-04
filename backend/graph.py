@@ -137,7 +137,7 @@ def graph_uid(db, workspace_id, uid):
         logging.info(f"No node found for {uid}.")
         return
     else:
-        logging.info(f"Updating node {uid} with type {node["type"]}.")
+        logging.info(f"Updating node {uid} with type {node['type']}.")
 
     sources = node["edges"]["source"]
     controls = node["edges"]["control"]
