@@ -25,13 +25,13 @@ jobs:
       run: pnpm exec playwright install --with-deps
     - name: Copy env variables
       run: |
-        echo "MONGODB_URI=${{secrets.MONGODB_ATLAS_TESTING_URI}}" >> .env.local
-        echo "STRIPE_TEST_PUBLISHABLE_KEY=${{secrets.STRIPE_TEST_PUBLISHABLE_KEY}}" >> .env.local
-        echo "STRIPE_TEST_SECRET_KEY=${{secrets.STRIPE_TEST_SECRET_KEY}}" >> .env.local
-        echo "FRIGADE_API_PUBLIC=${{secrets.FRIGADE_API_PUBLIC}}" >> .env.local
+        echo "MONGODB_URI=${{secrets.MONGODB_ATLAS_TESTING_URI}}" >> ./.env.local
+        echo "STRIPE_TEST_PUBLISHABLE_KEY=${{secrets.STRIPE_TEST_PUBLISHABLE_KEY}}" >> ./.env.local
+        echo "STRIPE_TEST_SECRET_KEY=${{secrets.STRIPE_TEST_SECRET_KEY}}" >> ./.env.local
+        echo "FRIGADE_API_PUBLIC=${{secrets.FRIGADE_API_PUBLIC}}" >> ./.env.local
         echo "LOOPS_API_KEY=${{secrets.LOOPS_API_KEY}}" >> ./.env.local
-        echo "TEST_EMAIL=test@test.test" >> .env.local
-        echo "TEST_PASSWORD=passWORD123!" >> .env.local
+        echo "TEST_EMAIL=test@test.test" >> ./.env.local
+        echo "TEST_PASSWORD=passWORD123!" >> ./.env.local
     - name: Run Playwright tests
       run: pnpm exec playwright test
     - uses: actions/upload-artifact@v4
