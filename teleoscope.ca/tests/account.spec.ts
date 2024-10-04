@@ -29,7 +29,7 @@ test('successful signup', async ({ page }) => {
   ) {
     throw Error("Environment variables failed to load.")
   }  
-  await page.goto('http://localhost:3000/signup');
+  await page.goto('http://localhost:3000/auth/signup');
   await page.getByPlaceholder('name@example.com').click();
   await page.getByPlaceholder('name@example.com').fill(process.env.TEST_EMAIL);
   await page.getByPlaceholder('name@example.com').press('Tab');
@@ -40,7 +40,7 @@ test('successful signup', async ({ page }) => {
 
 
 test('password validation fail', async ({ page }) => {
-  await page.goto('http://localhost:3000/signup');
+  await page.goto('http://localhost:3000/auth/signup');
   await page.getByPlaceholder('name@example.com').click();
   await page.getByPlaceholder('name@example.com').fill('test@test.test');
   await page.getByPlaceholder('name@example.com').press('Tab');
