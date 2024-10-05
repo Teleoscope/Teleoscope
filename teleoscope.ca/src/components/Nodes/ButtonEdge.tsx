@@ -77,7 +77,7 @@ export default function ButtonEdge({
           className="nodrag nopan"
         >
           <button style={buttonStyle} onClick={(event) => onEdgeClick(event, id)}>
-            ×
+            &times;
           </button>
         </div> : null}
          {/* <EdgeLabel

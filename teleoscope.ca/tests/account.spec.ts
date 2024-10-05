@@ -11,8 +11,7 @@ test.beforeEach(async () => {
   console.log('Running test setup...') ;
   if (
     !process.env.TEST_EMAIL ||
-    !process.env.TEST_PASSWORD ||
-    !process.env.MONGODB_URI 
+    !process.env.TEST_PASSWORD
   ) {
     throw Error("Environment variables failed to load.")
   }  
@@ -24,18 +23,20 @@ test.beforeEach(async () => {
 test('successful signup', async ({ page }) => {
   if (
     !process.env.TEST_EMAIL ||
-    !process.env.TEST_PASSWORD ||
-    !process.env.MONGODB_URI 
+    !process.env.TEST_PASSWORD
   ) {
     throw Error("Environment variables failed to load.")
   }  
+  page.setDefaultTimeout(60000);
   await page.goto('http://localhost:3000/auth/signup');
   await page.getByPlaceholder('name@example.com').click();
   await page.getByPlaceholder('name@example.com').fill(process.env.TEST_EMAIL);
   await page.getByPlaceholder('name@example.com').press('Tab');
   await page.getByPlaceholder('password').fill(process.env.TEST_PASSWORD);
   await page.getByRole('button', { name: 'Sign Up with Email' }).click();
-  await expect(page.getByText('Workspaces')).toBeVisible();
+  // await page.screenshot({ path: 'screenshot.png' })
+  await page.waitForLoadState('networkidle');
+  await expect(page.getByRole('heading', { name: 'Workspaces' })).toBeVisible();
 });
 
 

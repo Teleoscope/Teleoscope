@@ -31,11 +31,8 @@ export const dbOp = async (operation: Function) => {
     return result;
   };
 
-// let _client: MongoClient | null;
+
 async function client() {
-    // if (!_client) {
-    // _client = await connect(process.env.MONGODB_URI!)
-    // }
     const _client = await clientPromise
     return _client;
 }
