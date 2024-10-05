@@ -27,21 +27,24 @@ test('successful signup', async ({ page }) => {
   ) {
     throw Error("Environment variables failed to load.")
   }  
-  page.setDefaultTimeout(60000);
-  await page.goto('http://localhost:3000/auth/signup');
+
+
+  await page.goto('/auth/signup');
   await page.getByPlaceholder('name@example.com').click();
   await page.getByPlaceholder('name@example.com').fill(process.env.TEST_EMAIL);
   await page.getByPlaceholder('name@example.com').press('Tab');
   await page.getByPlaceholder('password').fill(process.env.TEST_PASSWORD);
   await page.getByRole('button', { name: 'Sign Up with Email' }).click();
-  // await page.screenshot({ path: 'screenshot.png' })
-  await page.waitForLoadState('networkidle');
+  await page.screenshot({ path: 'screenshot.png' })
+
+  await page.waitForURL('/app/dashboard/workspaces');
+
   await expect(page.getByRole('heading', { name: 'Workspaces' })).toBeVisible();
 });
 
 
 test('password validation fail', async ({ page }) => {
-  await page.goto('http://localhost:3000/auth/signup');
+  await page.goto('/auth/signup');
   await page.getByPlaceholder('name@example.com').click();
   await page.getByPlaceholder('name@example.com').fill('test@test.test');
   await page.getByPlaceholder('name@example.com').press('Tab');
