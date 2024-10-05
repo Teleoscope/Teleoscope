@@ -1,19 +1,6 @@
 import { MongoClient } from "mongodb";
 
-if (!process.env.MONGODB_URI) {
-  throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
-}
-if (!process.env.MONGODB_USERNAME) {
-  throw new Error('Invalid/Missing environment variable: "MONGODB_USERNAME"');
-}
-if (!process.env.MONGODB_HOST) {
-  throw new Error('Invalid/Missing environment variable: "MONGODB_HOST"');
-}
-if (!process.env.MONGODB_OPTIONS) {
-  throw new Error('Invalid/Missing environment variable: "MONGODB_OPTIONS"');
-}
-
-const uri = `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}/?${process.env.MONGODB_OPTIONS}`
+const uri = process.env.MONGODB_URI || `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}/?${process.env.MONGODB_OPTIONS}`
 const options = {
   serverSelectionTimeoutMS: 60000,
   maxIdleTimeMS: 60000, // 1.0 minute
