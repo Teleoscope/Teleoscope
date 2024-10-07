@@ -14,7 +14,7 @@ export default function SigninPage() {
           href="/auth/signup"
           className={cn(buttonVariants({ variant: "ghost" }), " ")}
         >
-          {"Don't an account? Sign up"}
+          {"Don't have an account? Sign up"}
         </Link>
       </div>
       <div className=" flex w-full p-8  lg:border flex-col justify-between  max-h-[500px] h-full space-y-6 rounded-lg shadow-sm border sm:w-[350px] md:max-w-lg md:w-full">

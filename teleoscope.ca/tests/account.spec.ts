@@ -35,7 +35,6 @@ test('successful signup', async ({ page }) => {
   await page.getByPlaceholder('name@example.com').press('Tab');
   await page.getByPlaceholder('password').fill(process.env.TEST_PASSWORD);
   await page.getByRole('button', { name: 'Sign Up with Email' }).click();
-  await page.screenshot({ path: 'screenshot.png' })
 
   await page.waitForURL('/app/dashboard/workspaces');
 

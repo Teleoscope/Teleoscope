@@ -54,15 +54,16 @@ jobs:
           echo "STRIPE_TEST_SECRET_KEY=${{secrets.STRIPE_TEST_SECRET_KEY}}" >> ./.env.local
           echo "FRIGADE_API_PUBLIC=${{secrets.FRIGADE_API_PUBLIC}}" >> ./.env.local
           echo "LOOPS_API_KEY=${{secrets.LOOPS_API_KEY}}" >> ./.env.local
+          echo "TELEOSCOPE_BASE_URL=localhost:3000" >> ./.env.local
           echo "TEST_EMAIL=test@test.test" >> ./.env.local
           echo "TEST_PASSWORD=passWORD123!" >> ./.env.local
           cat ./.env.local  # Add this to verify if the file is generated correctly
-          pnpm build
 
       - name: Run Playwright tests
         run: pnpm exec playwright test
         env:
           MONGODB_URI: ${{ secrets.MONGODB_ATLAS_TESTING_URI }}  # Ensure env variable in case .env.local isn't picked up
+          TELEOSCOPE_BASE_URL: "localhost:3000" # Ensure env variable in case .env.local isn't picked up
 
       - uses: actions/upload-artifact@v4
         if: always()
