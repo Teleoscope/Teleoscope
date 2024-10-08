@@ -58,7 +58,7 @@ jobs:
           pnpm run build
 
       - name: Trigger rebuild on server
-        if: success()  # Only trigger if the build and tests pass
+        if: success()  # Only trigger if the build passes
         run: |
           curl -X POST https://***/api/webhook \
             -H "Content-Type: application/json" \
