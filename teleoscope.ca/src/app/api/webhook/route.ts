@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import crypto from 'crypto';
 import { exec } from 'child_process';
 
-const secret = process.env.GITHUB_WEBHOOK_SECRET || 'webhook-secret';
+const secret = process.env.WEBHOOK_SECRET || 'webhook-secret';
 const build_command = process.env.BUILD_COMMAND || 'echo $(date) >> filename.txt'
 
 const verifySignature = (req: NextApiRequest, body: string) => {
