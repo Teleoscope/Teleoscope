@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { exec } from 'child_process';
 
 const secret = process.env.WEBHOOK_SECRET || 'webhook-secret';
-const build_command = process.env.BUILD_COMMAND || 'echo $(date) >> hookbuild.log'
+const build_command = process.env.BUILD_COMMAND || 'echo $(date) >> hookbuild.log' 
 
 const verifySignature = (req: NextApiRequest, body: string) => {
   const signature = req.headers['x-hub-signature-256'] as string;
