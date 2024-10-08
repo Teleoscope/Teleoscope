@@ -1,7 +1,7 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
-name: Build Teleoscope.ca 
+name: Build Test Rig for Teleoscope.ca 
 
 on:
   push:
@@ -60,8 +60,8 @@ jobs:
       - name: Trigger rebuild on server
         if: success()  # Only trigger if the build and tests pass
         run: |
-          curl -X POST https://${{secrets.FRONTEND_TEST_URL}}/api/webhook \
-          -H "Content-Type: application/json" \
-          -H "X-GitHub-Event: push" \
-          -d '{"ref": "refs/heads/frontend"}' \
-          -H "X-Hub-Signature-256: $(echo -n "{\"ref\": \"refs/heads/frontend\"}" | openssl dgst -sha256 -hmac ${{ secrets.GITHUB_WEBHOOK_SECRET }})'
+          curl -X POST https://***/api/webhook \
+            -H "Content-Type: application/json" \
+            -H "X-GitHub-Event: push" \
+            -d '{"ref": "refs/heads/frontend"}' \
+            -H "X-Hub-Signature-256: $(echo -n "{\"ref\": \"refs/heads/frontend\"}" | openssl dgst -sha256 -hmac ${{ secrets.WEBHOOK_SECRET }})"
