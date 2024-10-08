@@ -5,9 +5,9 @@ name: Build Teleoscope.ca
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "frontend" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "frontend" ]
 
 defaults:
   run:
@@ -56,3 +56,12 @@ jobs:
           echo "FRIGADE_API_PUBLIC=${{secrets.FRIGADE_API_PUBLIC}}" >> ./.env.local
           echo "LOOPS_API_KEY=${{secrets.LOOPS_API_KEY}}" >> ./.env.local
           pnpm run build
+
+      - name: Trigger rebuild on server
+        if: success()  # Only trigger if the build and tests pass
+        run: |
+          curl -X POST https://${{secrets.FRONTEND_TEST_URL}}/api/webhook \
+          -H "Content-Type: application/json" \
+          -H "X-GitHub-Event: push" \
+          -d '{"ref": "refs/heads/frontend"}' \
+          -H "X-Hub-Signature-256: $(echo -n "{\"ref\": \"refs/heads/frontend\"}" | openssl dgst -sha256 -hmac ${{ secrets.GITHUB_WEBHOOK_SECRET }})'
