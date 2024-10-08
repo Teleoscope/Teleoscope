@@ -5,9 +5,9 @@ name: Build Test Rig for Teleoscope.ca
 
 on:
   push:
-    branches: [ "main", "frontend" ]
+    branches: [ "frontend" ]
   pull_request:
-    branches: [ "main", "frontend" ]
+    branches: [ "frontend" ]
 
 defaults:
   run:

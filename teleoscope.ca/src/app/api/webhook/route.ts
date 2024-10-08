@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { exec } from 'child_process';
 
 const secret = process.env.WEBHOOK_SECRET || 'webhook-secret';
-const build_command = process.env.BUILD_COMMAND || 'echo $(date) >> filename.txt'
+const build_command = process.env.BUILD_COMMAND || 'echo $(date) >> hookbuild.log'
 
 const verifySignature = (req: NextApiRequest, body: string) => {
   const signature = req.headers['x-hub-signature-256'] as string;
@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { ref } = req.body;
 
     // Check if it's the main branch
-    if (ref === 'refs/heads/main') {
+    if (ref === 'refs/heads/frontend') {
       // Execute the rebuild process (adjust the command to fit your setup)
       exec(build_command, (error, stdout, stderr) => {
         if (error) {
