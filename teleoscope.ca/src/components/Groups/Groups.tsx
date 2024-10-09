@@ -85,9 +85,7 @@ import randomColor from "randomcolor";
 import ButtonActions from "@/components/ButtonActions";
 import {
   SaveXLSXAction,
-  SaveDocxAction,
-  CopyJsonAction,
-  CopyTextAction,
+  SaveDocxAction
 } from "@/components/Groups/GroupsActions";
 import { NewItemForm } from "@/components/NewItemForm";
 import { onDragStart } from "@/lib/drag";
@@ -103,22 +101,6 @@ export default function Groups(props) {
   const { _id: workspace_id } = useAppSelector((state) => state.appState.workspace);
   const { _id: workflow_id, settings } = useAppSelector((state) => state.appState.workflow);
   const { data: groups, isLoading } = useSWRF(workspace_id ? `/api/groups?workspace=${workspace_id}` : null);  
-
-  const fetchgroups = async () => {
-    const out = [];
-    for (const group of groups) {
-      const g = group;
-      g["docs"] = [];
-      for (const doc of g.docs) {
-        const response = await fetch(
-          `/api/document?document=${doc}`
-        ).then((res) => res.json());
-        g["docs"].push(response);
-      }
-      out.push(g);
-    }
-    return out;
-  };
 
   if (isLoading) {
     return <>Loading groups...</>
@@ -147,11 +129,8 @@ export default function Groups(props) {
 
       <ButtonActions
         inner={[
-          [SaveXLSXAction, { fetchgroups, workflow_id }],
-          [SaveDocxAction, { fetchgroups, workflow_id }],
-          [CopyJsonAction, { fetchgroups }],
-          [CopyTextAction, { fetchgroups }],
-          // [ClusterButtonAction, { runClusters }],
+          [SaveXLSXAction, {}],
+          [SaveDocxAction, {}],
         ]}
       />
 
