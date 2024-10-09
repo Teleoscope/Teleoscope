@@ -60,7 +60,7 @@ jobs:
       - name: Trigger rebuild on server
         if: success()  # Only trigger if the build passes
         run: |
-          curl -X POST https://${{secrets.FRONTEND_TEST_URL}}/api/webhook \
+          curl --max-time 300 -X POST https://${{secrets.FRONTEND_TEST_URL}}/api/webhook \
               -H "Content-Type: application/json" \
               -H "X-GitHub-Event: push" \
               -d '{"ref": "refs/heads/frontend"}' \
