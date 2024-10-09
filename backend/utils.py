@@ -4,6 +4,7 @@ import numpy as np
 import heapq
 import os
 import sys
+import re
 import json
 import uuid
 from threading import Lock
@@ -115,6 +116,12 @@ def test_data(db):
         "groups": test_groups(db)
     }
 
+
+def sanitize_filepath(filepath: str) -> str:
+    # Replace any character that is not alphanumeric, '.', '_', '/', or '-' with an underscore
+    sanitized = re.sub(r'[^\w\.\-/ ]', '_', filepath)  # First, replace weird characters with underscore
+    sanitized = sanitized.replace(" ", "_")  # Then replace spaces with underscores
+    return sanitized
 
 
 def connect(db=db):

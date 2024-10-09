@@ -4,6 +4,11 @@ import json
 import datetime
 import uuid
 import pandas as pd
+from docx import Document
+from docx.shared import Pt
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
+
 from warnings import simplefilter
 from celery import Celery
 from bson.objectid import ObjectId
@@ -34,6 +39,7 @@ DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR")
 
 # Ignore all future warnings
 simplefilter(action="ignore", category=FutureWarning)
+logging.getLogger('pandas').setLevel(logging.WARNING)
 
 # Celery broker URL
 CELERY_BROKER_URL = (
@@ -184,11 +190,13 @@ def generate_xlsx(
     workspace_label = workspace.get("label", "")
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{userid}_{workspace_label}_documents_{timestamp}.xlsx"
+    filename = utils.sanitize_filepath(f"{userid}_{workspace_label}_documents_{timestamp}.xlsx")
 
     file_result = db.files.insert_one(
         {
             "filename": filename,
+            "workspace": ObjectId(str(workspace_id)),
+            "user": userid,
             "status": {"message": "Processing data...", "ready": False},
         }
     )
@@ -257,7 +265,146 @@ def generate_xlsx(
         {"$set": {"status": {"message": "The file is ready.", "ready": True}}}
     )
 
+    logging.info(f"File saved to {file_path}")
+
     return df  # Return or save the DataFrame as needed
+
+@app.task
+def generate_docx(
+    *args,
+    database: str,
+    userid: str,
+    workspace_id: str,
+    group_ids: List[str] = [],
+    storage_ids: List[str] = [],
+):
+    """
+    Examples:
+        import backend.utils as utils
+        import backend.tasks as tasks
+        db = utils.connect()
+        data = utils.test_data(db)
+        docx = tasks.generate_docx(
+                database=db.name, 
+                userid=data["user"]["_id"], 
+                workspace_id=data["workspace"]["_id"], 
+                group_ids=[g["_id"] for g in data["groups"]], 
+                storage_ids=[]
+        )
+    """
+    db = utils.connect(db=database)
+
+    # Workspace information
+    workspace = db.workspaces.find_one({"_id": ObjectId(str(workspace_id))})
+    workspace_label = workspace.get("label", "")
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = utils.sanitize_filepath(f"{userid}_{workspace_label}_documents_{timestamp}.docx")
+
+    file_result = db.files.insert_one(
+        {
+            "filename": filename,
+            "workspace": ObjectId(str(workspace_id)),
+            "user": userid,
+            "status": {"message": "Processing data...", "ready": False},
+        }
+    )
+
+    # Combine group_ids and storage_ids for the $match stage
+    all_ids = [ObjectId(gid) for gid in group_ids] + [ObjectId(sid) for sid in storage_ids]
+
+    # Create the aggregation pipeline
+    pipeline = [
+        {"$match": {"_id": {"$in": all_ids}}},
+        {
+            "$lookup": {
+                "from": "documents",
+                "localField": "docs",
+                "foreignField": "_id",
+                "as": "document_details",
+            }
+        },
+        {"$unwind": "$document_details"},
+        {
+            "$project": {
+                "document": "$document_details._id",
+                "group": "$label",
+                "storage": "$label",
+                "text": "$document_details.text",
+                "title": "$document_details.title",
+                "workspace_id": {"$literal": workspace_id},
+                "workspace_label": {"$literal": workspace_label},
+                "metadata": "$document_details.metadata",
+            }
+        },
+    ]
+
+    # Execute the aggregation pipeline
+    document_cursor = db.groups.aggregate(pipeline)
+
+    # Convert the results to a list of dictionaries to use for processing
+    data = list(document_cursor)
+
+    # Convert the list to a pandas DataFrame
+    df = pd.DataFrame(data)
+
+    # Dynamically add metadata fields to the DataFrame
+    if not df.empty:
+        metadata_cols = df["metadata"].apply(pd.Series)
+        df = pd.concat([df.drop(["metadata"], axis=1), metadata_cols], axis=1)
+
+    doc = Document()
+
+    for index, row in df.iterrows():
+        # Add a page break if it's not the first document
+        if index > 0:
+            doc.add_page_break()
+
+        # Add document title as larger, bold text
+        title_paragraph = doc.add_paragraph()
+        title_run = title_paragraph.add_run(str(row["title"]))
+        title_run.bold = True
+        title_run.font.size = Pt(16)  # Larger font size
+
+        # Add document text as regular-sized text
+        text_paragraph = doc.add_paragraph()
+        text_run = text_paragraph.add_run(str(row["text"]))
+        text_run.font.size = Pt(12)  # Regular font size
+
+        # Add group as bold and regular-sized text
+        group_paragraph = doc.add_paragraph()
+        group_run = group_paragraph.add_run(f'Group: {str(row["group"])}')
+        group_run.bold = True
+        group_run.font.size = Pt(12)  # Regular font size
+        
+        # Add storage label
+        storage_paragraph = doc.add_paragraph(f'Storage: {str(row["storage"])}')
+
+        # Add metadata in smaller font
+        metadata_paragraph = doc.add_paragraph()
+        for metadata_key, metadata_value in row.items():
+            if metadata_key not in ['document', 'group', 'storage', 'text', 'title', 'workspace_id', 'workspace_label']:
+                metadata_run = metadata_paragraph.add_run(f'{metadata_key.capitalize()}: {metadata_value}\n')
+                metadata_run.font.size = Pt(8)  # Smaller font size for metadata
+
+    # Prepare the file path
+    file_path = os.path.join(DOWNLOAD_DIR, filename)
+
+    if not os.path.exists(DOWNLOAD_DIR):
+        os.makedirs(DOWNLOAD_DIR)
+
+    # Save the document
+    doc.save(file_path)
+
+    # Update file status in the database
+    db.files.update_one(
+        {"_id": file_result.inserted_id},
+        {"$set": {"status": {"message": "The file is ready.", "ready": True}}}
+    )
+
+    logging.info(f"File saved to {file_path}")
+
+    return file_path  # Return the file path or save as needed
 
 
 @app.task

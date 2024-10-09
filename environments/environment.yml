@@ -107,6 +107,7 @@ dependencies:
       - frozenlist
       - fsspec
       - grpcio
+      - gunicorn
       - huggingface-hub
       - humanfriendly
       - jinja2
@@ -144,6 +145,7 @@ dependencies:
       - pymongo
       - python-dateutil
       - python-dotenv
+      - python-docx
       - random-object-id
       - regex
       - requests

@@ -3,11 +3,19 @@ bsonType: object
 title: file
 required:
   - filename
+  - workspace
+  - user
   - status
 properties:
   _id:
     bsonType: objectId
     description: MongoDB auto-generated identifier
+  workspace:
+    bsonType: objectId
+    description: The workspace that this file belongs to
+  user:
+    bsonType: string
+    description: the user that this file belongs to
   filename:
     bsonType: string
     description: the timestamped filename
