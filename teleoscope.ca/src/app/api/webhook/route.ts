@@ -18,7 +18,7 @@ const restart_command = process.env.RESTART_COMMAND ||  'echo $(date) RESTART >>
 const logToFile = (message: string) => {
   const timestamp = new Date().toISOString();
   const logMessage = `${timestamp} - ${message}\n`;
-  console.log(logMessage);  // Debugging
+  console.log(logMessage);  // For debugging
   fs.appendFileSync(logFilePath, logMessage, { encoding: 'utf8' });
 };
 
@@ -62,9 +62,11 @@ export async function POST(request: NextRequest) {
         logToFile('Starting git pull...');
         const { stdout: gitPullOut, stderr: gitPullErr } = await execAsync(git_pull_command);
         logToFile(`Git pull stdout: ${gitPullOut}`);
+        logToFile(`Git pull stderr: ${gitPullErr}`);
+
+        // Proceed even if there's non-critical output in stderr
         if (gitPullErr) {
-          logToFile(`Git pull stderr: ${gitPullErr}`);
-          return NextResponse.json({ message: 'Git pull failed' }, { status: 500 });
+          logToFile(`Git pull warnings: ${gitPullErr}`);  // Only log it, don't stop the process
         }
 
         // Step 2: Run the build
