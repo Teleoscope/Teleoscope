@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { exec } from 'child_process';
 import fs from 'fs';
@@ -15,31 +15,31 @@ const logToFile = (message: string) => {
   fs.appendFileSync(logFilePath, logMessage, { encoding: 'utf8' });
 };
 
-const verifySignature = (req: NextApiRequest, body: string) => {
-  const signature = req.headers['x-hub-signature-256'] as string;
+const verifySignature = (req: NextRequest, body: string) => {
+  const signature = req.headers.get('x-hub-signature-256') as string;
   const hmac = crypto.createHmac('sha256', secret);
   const digest = `sha256=${hmac.update(body).digest('hex')}`;
 
   return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
+export async function POST(request: NextRequest) {
+  if (request.method !== 'POST') {
     logToFile('Invalid request method');
-    return res.status(405).send('Method Not Allowed');
+    return NextResponse.json({ message: 'Method Not Allowed' }, { status: 405 });
   }
 
-  const body = JSON.stringify(req.body);
-  if (!verifySignature(req, body)) {
+  const body = await request.text();
+  if (!verifySignature(request, body)) {
     logToFile('Invalid signature attempt');
-    return res.status(403).send('Invalid signature');
+    return NextResponse.json({ message: 'Invalid signature' }, { status: 403 });
   }
 
-  const event = req.headers['x-github-event'];
+  const event = request.headers.get('x-github-event');
 
   // Handle the push event
   if (event === 'push') {
-    const { ref } = req.body;
+    const { ref } = JSON.parse(body);
 
     // Check if it's the frontend branch
     if (ref === 'refs/heads/frontend') {
@@ -47,18 +47,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (error) {
           const errorMessage = `Error executing command: ${error.message}`;
           logToFile(errorMessage);
-          return res.status(500).send('Error during rebuild');
+          return NextResponse.json({ message: 'Error during rebuild' }, { status: 500 });
         }
 
         logToFile(`Rebuild triggered successfully. Output: ${stdout}, Stderr: ${stderr}`);
-        res.status(200).send('Rebuild triggered');
+        return NextResponse.json({ message: 'Rebuild triggered' }, { status: 200 });
       });
     } else {
       logToFile(`Push event not on frontend branch: ${ref}`);
-      res.status(200).send('Not the main branch');
+      return NextResponse.json({ message: 'Not the main branch' }, { status: 200 });
     }
   } else {
     logToFile(`Unhandled GitHub event: ${event}`);
-    res.status(400).send('Not a push event');
+    return NextResponse.json({ message: 'Not a push event' }, { status: 400 });
   }
 }
