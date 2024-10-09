@@ -74,6 +74,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "generate_xlsx":
                 res = tasks.generate_xlsx.signature(args=args, kwargs=kwargs)
 
+            case "generate_docx":
+                res = tasks.generate_docx.signature(args=args, kwargs=kwargs)
+
             case "chunk_upload":
                 res = tasks.chunk_upload.signature(args=args, kwargs=kwargs)
             

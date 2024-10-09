@@ -60,6 +60,16 @@ module.exports = {
       instances: 1,
       time: true,
     },
+    {
+      name: "files",
+      cwd: "backend",
+      script: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker files:app --bind 0.0.0.0:8000',
+      watch: false,
+      interpreter: "",
+      max_memory_restart: "16G",
+      instances: 1,
+      time: true,
+    },
 
   ]
 };
