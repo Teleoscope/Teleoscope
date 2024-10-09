@@ -1,0 +1,29 @@
+# Files
+bsonType: object
+title: file
+required:
+  - filename
+  - status
+properties:
+  _id:
+    bsonType: objectId
+    description: MongoDB auto-generated identifier
+  filename:
+    bsonType: string
+    description: the timestamped filename
+  status:
+    bsonType: object
+    description: the status of the file
+    required:
+      - message
+      - ready
+    properties:
+      message:
+        bsonType: string
+        description: user-friendly message to read
+      ready:
+        bsonType: bool
+        description: whether the file is ready to download
+
+
+    

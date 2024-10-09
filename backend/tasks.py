@@ -58,6 +58,7 @@ app.conf.update(
     worker_pool="solo",
 )
 
+
 ################################################################################
 # Ping tasks
 ################################################################################
@@ -94,17 +95,20 @@ def vectorize_note(*args, database: str, note_id: str, **kwargs) -> ObjectId:
 # Graph tasks
 ################################################################################
 @app.task
-def update_nodes(*args, database: str, node_uids: List[str], workspace_id: str, **kwargs):
+def update_nodes(
+    *args, database: str, node_uids: List[str], workspace_id: str, **kwargs
+):
     app.send_task(
         "backend.graph.update_nodes",
         args=[],
         kwargs={
-            "database": database, 
-            "node_uids": node_uids, 
-            "workspace_id": workspace_id
+            "database": database,
+            "node_uids": node_uids,
+            "workspace_id": workspace_id,
         },
         queue="graph",
     )
+
 
 ################################################################################
 # Vector tasks
@@ -113,12 +117,12 @@ def update_nodes(*args, database: str, node_uids: List[str], workspace_id: str, 
 def acknowledge_vector_upload(*args, database: str, ids: List[str], **kwargs):
     db = utils.connect(db=database)
     oids = [ObjectId(id) for id in ids]
-    db.documents.update_many({"_id": {"$in": oids}}, {
-        "$set": {
-             "state.vectorized": True  
-        }
-    })
-    logging.info(f"Acknowledged {len(ids)} vectorized and uploaded to database {database}.")
+    db.documents.update_many(
+        {"_id": {"$in": oids}}, {"$set": {"state.vectorized": True}}
+    )
+    logging.info(
+        f"Acknowledged {len(ids)} vectorized and uploaded to database {database}."
+    )
 
 
 ################################################################################
@@ -131,7 +135,7 @@ def delete_storage(*args, database: str, userid: str, workspace: str, storage: s
     db = utils.connect(db=database)
     storage_item = db.storage.find_one({"_id": storage})
     ids = [str(doc) for doc in storage_item["docs"]]
-    
+
     app.send_task(
         "backend.graph.delete_vectors",
         args=[],
@@ -140,66 +144,75 @@ def delete_storage(*args, database: str, userid: str, workspace: str, storage: s
     )
 
     db.storage.delete_one({"_id": storage})
-    db.workspaces.update_one({"_id": workspace}, {
-        "$pull": {
-            "storage": storage
-        }
-    })
-    db.groups.update_many({},{
-        "$pull": {
-            "$in": storage_item["docs"]
-        }
-    })
+    db.workspaces.update_one({"_id": workspace}, {"$pull": {"storage": storage}})
+    db.groups.update_many({}, {"$pull": {"$in": storage_item["docs"]}})
     db.documents.delete_many({"_id": {"$in": storage_item["docs"]}})
-    logging.info(f"Deleted all documents from {storage} in database {database} and workspace {workspace}.")
+    logging.info(
+        f"Deleted all documents from {storage} in database {database} and workspace {workspace}."
+    )
 
 
 @app.task
-def generate_xlsx(*args, database: str, userid: str, workspace_id: str, group_ids: List[str], storage_ids: List[str]):
+def generate_xlsx(
+    *args,
+    database: str,
+    userid: str,
+    workspace_id: str,
+    group_ids: List[str] = [],
+    storage_ids: List[str] = [],
+):
+    """
+    Examples:
+        import backend.utils as utils
+        import backend.tasks as tasks
+        db = utils.connect()
+        data = utils.test_data(db)
+        xlsx = tasks.generate_xlsx(
+                database=db.name, 
+                userid=data["user"]["_id"], 
+                workspace_id=data["workspace"]["_id"], 
+                group_ids=[g["_id"] for g in data["groups"]], 
+                storage_ids=[]
+        )
+    """ 
     db = utils.connect(db=database)
 
     # Optionally save to Excel (you can modify the path and filename)
-    
+
     # Workspace information (assuming workspace is passed as a dict with 'id' and 'label')
-    workspace = db.workspace.find({"_id": ObjectId(workspace_id)})
+    workspace = db.workspaces.find_one({"_id": ObjectId(str(workspace_id))})
     workspace_label = workspace.get("label", "")
-    
+
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{userid}_{workspace_label}_documents_{timestamp}.xlsx"
 
-    file_result = db.files.insert_one({
-        "filename": filename,
-        "status": {
-            "description": "Processing data...",
-            "ready": False
+    file_result = db.files.insert_one(
+        {
+            "filename": filename,
+            "status": {"message": "Processing data...", "ready": False},
         }
-    })
+    )
 
     # Combine group_ids and storage_ids for the $match stage
-    all_ids = [ObjectId(gid) for gid in group_ids] + [ObjectId(sid) for sid in storage_ids]
+    all_ids = [ObjectId(gid) for gid in group_ids] + [
+        ObjectId(sid) for sid in storage_ids
+    ]
 
     # Create the aggregation pipeline
     pipeline = [
         # Step 1: Match the groups and storage based on the provided group_ids and storage_ids
-        {
-            "$match": {
-                "_id": {"$in": all_ids}
-            }
-        },
-        
+        {"$match": {"_id": {"$in": all_ids}}},
         # Step 2: Lookup the documents in the 'documents' collection for both groups and storage
         {
             "$lookup": {
                 "from": "documents",  # Join with the 'documents' collection
                 "localField": "docs",  # Field in 'groups' and 'storage' (an array of ObjectIds in 'docs')
                 "foreignField": "_id",  # Field in 'documents' (match based on the '_id' field)
-                "as": "document_details"  # The output field for the matched documents
+                "as": "document_details",  # The output field for the matched documents
             }
         },
-
         # Step 3: Unwind the document details to create a row per document
         {"$unwind": "$document_details"},
-
         # Step 4: Project the necessary fields from groups, storage, and documents
         {
             "$project": {
@@ -209,10 +222,12 @@ def generate_xlsx(*args, database: str, userid: str, workspace_id: str, group_id
                 "text": "$document_details.text",  # The text field from the document
                 "title": "$document_details.title",  # The title field from the document
                 "workspace_id": {"$literal": workspace_id},  # Static workspace_id
-                "workspace_label": {"$literal": workspace_label},  # Static workspace_label
-                "metadata": "$document_details.metadata"  # Arbitrary metadata from the document
+                "workspace_label": {
+                    "$literal": workspace_label
+                },  # Static workspace_label
+                "metadata": "$document_details.metadata",  # Arbitrary metadata from the document
             }
-        }
+        },
     ]
 
     # Execute the aggregation pipeline
@@ -226,25 +241,23 @@ def generate_xlsx(*args, database: str, userid: str, workspace_id: str, group_id
 
     # Dynamically add metadata fields to the DataFrame
     if not df.empty:
-        metadata_cols = df['metadata'].apply(pd.Series)
-        df = pd.concat([df.drop(['metadata'], axis=1), metadata_cols], axis=1)
+        metadata_cols = df["metadata"].apply(pd.Series)
+        df = pd.concat([df.drop(["metadata"], axis=1), metadata_cols], axis=1)
 
-    
     file_path = os.path.join(DOWNLOAD_DIR, filename)
+
+    if not os.path.exists(DOWNLOAD_DIR):
+        os.makedirs(DOWNLOAD_DIR)
 
     # Save the DataFrame to Excel
     df.to_excel(file_path, index=False)
 
-    db.files.update_one({"_id": file_result.inserted_id}, 
-                        {
-                            "status": {
-                                "description": "The file is ready.",
-                                "ready": True
-                            }
-                        })
+    db.files.update_one(
+        {"_id": file_result.inserted_id},
+        {"$set": {"status": {"message": "The file is ready.", "ready": True}}}
+    )
 
     return df  # Return or save the DataFrame as needed
-
 
 
 @app.task
@@ -294,14 +307,15 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, label: str, 
 
         # Perform the update or insert operation
         storage_result = db.storage.update_one(query, update, upsert=True)
-        storage_id = storage_result.upserted_id if storage_result.upserted_id is not None else db.storage.find_one(query)["_id"]
+        storage_id = (
+            storage_result.upserted_id
+            if storage_result.upserted_id is not None
+            else db.storage.find_one(query)["_id"]
+        )
 
-        db.workspaces.update_one({"_id": workspace}, {
-            "$addToSet": {
-                "storage": storage_id
-            }
-        })
-
+        db.workspaces.update_one(
+            {"_id": workspace}, {"$addToSet": {"storage": storage_id}}
+        )
 
         app.send_task(
             "backend.graph.milvus_chunk_import",

@@ -79,6 +79,44 @@ def make_client():
     return client
 
 
+def test_user(db):
+    return db.users.find_one({"emails": "test@test.test"})
+
+def test_team(db):
+    return db.teams.find_one({"owner": test_user(db)["_id"]})
+
+def test_workspace(db):
+    return db.workspaces.find_one({"team": test_team(db)["_id"]})
+
+def test_workflow(db):
+    return db.workflows.find_one({"_id": test_workspace(db)["workflows"][0]})
+
+def test_groups(db):
+    return list(db.groups.find({"workspace":test_workspace(db)["_id"]}))
+
+def test_data(db):
+    """
+    Examples:
+        import backend.utils as utils
+        db = utils.connect()
+        pk = utils.test_package(db)
+        user = utils.test_user(db)
+        team = utils.test_team(db)
+        workspace = utils.test_workspace(db)
+        workflow = utils.test_workflow(db)
+        groups = utils.test_groups(db)
+        data = utils.test_data(db)
+    """
+    return {
+        "user": test_user(db),
+        "team": test_team(db),
+        "workspace": test_workspace(db),
+        "workflow": test_workflow(db),
+        "groups": test_groups(db)
+    }
+
+
+
 def connect(db=db):
     client = make_client()
     return client[db]
