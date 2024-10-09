@@ -16,9 +16,20 @@ const logToFile = (message: string) => {
 };
 
 const verifySignature = (req: NextRequest, body: string) => {
-  const signature = req.headers.get('x-hub-signature-256') as string;
+  const signature = req.headers.get('x-hub-signature-256');
+  if (!signature) {
+    logToFile('Missing x-hub-signature-256 header');
+    return false;
+  }
+
   const hmac = crypto.createHmac('sha256', secret);
   const digest = `sha256=${hmac.update(body).digest('hex')}`;
+
+  // Ensure both buffers have the same length
+  if (signature.length !== digest.length) {
+    logToFile(`Signature length mismatch: received ${signature.length} bytes, expected ${digest.length} bytes`);
+    return false;
+  }
 
   return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
 };
@@ -37,25 +48,26 @@ export async function POST(request: NextRequest) {
 
   const event = request.headers.get('x-github-event');
 
-  // Handle the push event
   if (event === 'push') {
     const { ref } = JSON.parse(body);
 
-    // Check if it's the frontend branch
     if (ref === 'refs/heads/frontend') {
-      exec(build_command, (error, stdout, stderr) => {
-        if (error) {
-          const errorMessage = `Error executing command: ${error.message}`;
-          logToFile(errorMessage);
-          return NextResponse.json({ message: 'Error during rebuild' }, { status: 500 });
-        }
+      return new Promise((resolve) => {
+        exec(build_command, (error, stdout, stderr) => {
+          if (error) {
+            const errorMessage = `Error executing command: ${error.message}`;
+            logToFile(errorMessage);
+            resolve(NextResponse.json({ message: 'Error during rebuild' }, { status: 500 }));
+            return;
+          }
 
-        logToFile(`Rebuild triggered successfully. Output: ${stdout}, Stderr: ${stderr}`);
-        return NextResponse.json({ message: 'Rebuild triggered' }, { status: 200 });
+          logToFile(`Rebuild triggered successfully. Output: ${stdout}, Stderr: ${stderr}`);
+          resolve(NextResponse.json({ message: 'Rebuild triggered' }, { status: 200 }));
+        });
       });
     } else {
       logToFile(`Push event not on frontend branch: ${ref}`);
-      return NextResponse.json({ message: 'Not the main branch' }, { status: 200 });
+      return NextResponse.json({ message: 'Not the frontend branch' }, { status: 200 });
     }
   } else {
     logToFile(`Unhandled GitHub event: ${event}`);
