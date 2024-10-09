@@ -61,7 +61,7 @@ jobs:
         if: success()  # Only trigger if the build passes
         run: |
           curl -X POST https://${{secrets.FRONTEND_TEST_URL}}/api/webhook \
-            -H "Content-Type: application/json" \
-            -H "X-GitHub-Event: push" \
-            -d '{"ref": "refs/heads/frontend"}' \
-            -H 'X-Hub-Signature-256: $(echo -n "{\"ref\": \"refs/heads/frontend\"}" | openssl dgst -sha256 -hmac ${{ secrets.WEBHOOK_SECRET }})'
+              -H "Content-Type: application/json" \
+              -H "X-GitHub-Event: push" \
+              -d '{"ref": "refs/heads/frontend"}' \
+              -H "X-Hub-Signature-256: sha256=$(echo -n '{"ref": "refs/heads/frontend"}' | openssl dgst -sha256 -hmac ${{ secrets.WEBHOOK_SECRET }} | sed 's/^.* //')"
