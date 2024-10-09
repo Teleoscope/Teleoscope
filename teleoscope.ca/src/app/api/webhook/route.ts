@@ -1,20 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { promisify } from 'util';
 import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
+const execAsync = promisify(exec);
+
 const secret = process.env.WEBHOOK_SECRET || 'webhook-secret';
-const build_command = process.env.BUILD_COMMAND || 'echo $(date) >> hookbuild.log'; 
-const logFilePath = path.join(process.cwd(), 'webhook.log');
+const logFilePath = path.join(process.cwd(), 'hookbuild.log');
+const build_command = process.env.BUILD_COMMAND || 'echo $(date) BUILD >> hookbuild.log';
+const git_pull_command = process.env.PULL_COMMAND || 'echo $(date) GIT PULL >> hookbuild.log'; 
+const restart_command = process.env.RESTART_COMMAND ||  'echo $(date) RESTART >> hookbuild.log';
+
 
 // Utility function to log messages
 const logToFile = (message: string) => {
   const timestamp = new Date().toISOString();
   const logMessage = `${timestamp} - ${message}\n`;
+  console.log(logMessage);  // Debugging
   fs.appendFileSync(logFilePath, logMessage, { encoding: 'utf8' });
 };
 
+// Verify the signature for security
 const verifySignature = (req: NextRequest, body: string) => {
   const signature = req.headers.get('x-hub-signature-256');
   if (!signature) {
@@ -35,11 +43,6 @@ const verifySignature = (req: NextRequest, body: string) => {
 };
 
 export async function POST(request: NextRequest) {
-  if (request.method !== 'POST') {
-    logToFile('Invalid request method');
-    return NextResponse.json({ message: 'Method Not Allowed' }, { status: 405 });
-  }
-
   const body = await request.text();
   if (!verifySignature(request, body)) {
     logToFile('Invalid signature attempt');
@@ -48,23 +51,48 @@ export async function POST(request: NextRequest) {
 
   const event = request.headers.get('x-github-event');
 
+  // Handle the push event
   if (event === 'push') {
     const { ref } = JSON.parse(body);
 
+    // Check if it's the frontend branch
     if (ref === 'refs/heads/frontend') {
-      return new Promise((resolve) => {
-        exec(build_command, (error, stdout, stderr) => {
-          if (error) {
-            const errorMessage = `Error executing command: ${error.message}`;
-            logToFile(errorMessage);
-            resolve(NextResponse.json({ message: 'Error during rebuild' }, { status: 500 }));
-            return;
-          }
+      try {
+        // Step 1: Pull the latest code
+        logToFile('Starting git pull...');
+        const { stdout: gitPullOut, stderr: gitPullErr } = await execAsync(git_pull_command);
+        logToFile(`Git pull stdout: ${gitPullOut}`);
+        if (gitPullErr) {
+          logToFile(`Git pull stderr: ${gitPullErr}`);
+          return NextResponse.json({ message: 'Git pull failed' }, { status: 500 });
+        }
 
-          logToFile(`Rebuild triggered successfully. Output: ${stdout}, Stderr: ${stderr}`);
-          resolve(NextResponse.json({ message: 'Rebuild triggered' }, { status: 200 }));
-        });
-      });
+        // Step 2: Run the build
+        logToFile('Starting build process...');
+        const { stdout: buildOut, stderr: buildErr } = await execAsync(build_command);
+        logToFile(`Build stdout: ${buildOut}`);
+        if (buildErr) {
+          logToFile(`Build stderr: ${buildErr}`);
+          return NextResponse.json({ message: 'Build failed' }, { status: 500 });
+        }
+
+        // Step 3: Restart the application if the build was successful
+        logToFile('Build successful, restarting frontend...');
+        const { stdout: restartOut, stderr: restartErr } = await execAsync(restart_command);
+        logToFile(`PM2 restart stdout: ${restartOut}`);
+        if (restartErr) {
+          logToFile(`PM2 restart stderr: ${restartErr}`);
+          return NextResponse.json({ message: 'Restart failed' }, { status: 500 });
+        }
+
+        logToFile('Frontend restarted successfully');
+        return NextResponse.json({ message: 'Rebuild and restart successful' }, { status: 200 });
+
+      } catch (error: any) {
+        const errorMessage = `Error during process: ${error.message}`;
+        logToFile(errorMessage);
+        return NextResponse.json({ message: 'Error during rebuild and restart process' }, { status: 500 });
+      }
     } else {
       logToFile(`Push event not on frontend branch: ${ref}`);
       return NextResponse.json({ message: 'Not the frontend branch' }, { status: 200 });
