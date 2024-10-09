@@ -34,6 +34,7 @@ export const dbOp = async (operation: Function) => {
 
 async function client() {
     const _client = await clientPromise
+    await _client.connect();
     return _client;
 }
 

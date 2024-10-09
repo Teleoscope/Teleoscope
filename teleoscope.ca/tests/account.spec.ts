@@ -13,6 +13,10 @@ test.beforeEach(async () => {
   }
 
   const mongo_client = await client();
+
+  // Ensure the client is connected (connect() is safe to call multiple times)
+  await mongo_client.connect();
+
   const db = mongo_client.db();
 
   // Optionally ensure collections exist in dev/test environment
@@ -26,7 +30,13 @@ test.beforeEach(async () => {
 test.afterEach(async () => {
   
   const mongo_client = await client();
+  
+  // Ensure the client is connected (connect() is safe to call multiple times)
+  await mongo_client.connect();
+  
   const db = mongo_client.db();
+
+
 
   let result = await db.collection('users').findOne({emails: process.env.TEST_EMAIL});
   let createdUserId = result?._id;
