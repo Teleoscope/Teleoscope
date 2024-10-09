@@ -13,6 +13,7 @@ module.exports = {
       interpreter: "",
       max_memory_restart: "16G",
       instances: 1,
+      time: true,
     },
     {
       name: "frontend",
@@ -21,7 +22,8 @@ module.exports = {
       args: "",
       watch: false,
       interpreter: "",
-      max_memory_restart: "1G"
+      max_memory_restart: "1G",
+      time: true,
     },
     {
       name:"vectorizer",
@@ -36,6 +38,7 @@ module.exports = {
       args:["-m", "backend.uploader"],
       watch: false,
       interpreter: "",
+      time: true,
     },
     {
       name: "graph",
@@ -45,6 +48,7 @@ module.exports = {
       interpreter: "",
       max_memory_restart: "16G",
       instances: 1,
+      time: true,
     },
     {
       name: "monitor",
@@ -54,6 +58,7 @@ module.exports = {
       interpreter: "",
       max_memory_restart: "16G",
       instances: 1,
+      time: true,
     },
 
   ]
