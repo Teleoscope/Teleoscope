@@ -158,15 +158,29 @@ def generate_xlsx(
     database: str,
     userid: str,
     workspace_id: str,
-    group_ids: List[str],
-    storage_ids: List[str],
+    group_ids: List[str] = [],
+    storage_ids: List[str] = [],
 ):
+    """
+    Examples:
+        import backend.utils as utils
+        import backend.tasks as tasks
+        db = utils.connect()
+        data = utils.test_data(db)
+        xlsx = tasks.generate_xlsx(
+                database=db.name, 
+                userid=data["user"]["_id"], 
+                workspace_id=data["workspace"]["_id"], 
+                group_ids=[g["_id"] for g in data["groups"]], 
+                storage_ids=[]
+        )
+    """ 
     db = utils.connect(db=database)
 
     # Optionally save to Excel (you can modify the path and filename)
 
     # Workspace information (assuming workspace is passed as a dict with 'id' and 'label')
-    workspace = db.workspace.find({"_id": ObjectId(workspace_id)})
+    workspace = db.workspaces.find_one({"_id": ObjectId(str(workspace_id))})
     workspace_label = workspace.get("label", "")
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -232,12 +246,15 @@ def generate_xlsx(
 
     file_path = os.path.join(DOWNLOAD_DIR, filename)
 
+    if not os.path.exists(DOWNLOAD_DIR):
+        os.makedirs(DOWNLOAD_DIR)
+
     # Save the DataFrame to Excel
     df.to_excel(file_path, index=False)
 
     db.files.update_one(
         {"_id": file_result.inserted_id},
-        {"status": {"message": "The file is ready.", "ready": True}},
+        {"$set": {"status": {"message": "The file is ready.", "ready": True}}}
     )
 
     return df  # Return or save the DataFrame as needed
