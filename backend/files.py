@@ -1,11 +1,13 @@
 import os
+
 import sys
 import logging
 from fastapi import FastAPI
 
 from dotenv import load_dotenv
-load_dotenv("~/Teleoscope")
-load_dotenv("./")
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'))
 load_dotenv()
 
 from fastapi.responses import FileResponse
