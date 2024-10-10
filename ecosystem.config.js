@@ -63,10 +63,11 @@ module.exports = {
     {
       name: "files",
       script: 'gunicorn',
+      cwd: "backend",
       args: [
         '-w', '1', // Number of workers
         '-k', 'uvicorn.workers.UvicornWorker', // Use Uvicorn worker class
-        'backend.files:app', // The FastAPI app (module:instance)
+        'files:app', // The FastAPI app (module:instance)
         '--bind', '0.0.0.0:8000'
       ],
       watch: false,
