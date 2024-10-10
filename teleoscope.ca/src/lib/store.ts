@@ -156,7 +156,10 @@ const actionMiddleware = (store) => (next) => (action) => {
             .then(() =>
                 mutate(
                     (key) =>
-                        typeof key === 'string' && key.startsWith(`/api/work`)
+                        typeof key === 'string' && (
+                            key.startsWith(`/api/work`) || 
+                            key.startsWith(`/api/group`)
+                        )
                 )
             );
 
