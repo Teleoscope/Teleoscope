@@ -2,12 +2,16 @@ import os
 
 import sys
 import logging
+
+from gunicorn.app.wsgiapp import WSGIApplication
+
 from fastapi import FastAPI
 
 from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
+load_dotenv(os.path.join("~/Teleoscope", '.env'))
 load_dotenv()
 
 from fastapi.responses import FileResponse
@@ -40,3 +44,4 @@ async def download_file(filename: str):
         return FileResponse(file_path, filename=filename)
     else:
         return {"error": "File not found"}
+
