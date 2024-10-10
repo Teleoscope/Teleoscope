@@ -530,7 +530,7 @@ def chunk_upload(*args, database: str, userid: str, workspace: str, label: str, 
 if __name__ == "__main__":
     worker = app.Worker(
         include=["backend.tasks"],
-        hostname=f"tasks.{os.getlogin()}@%h{uuid.uuid4()}",
+        hostname=f"tasks.{os.getenv('USER')}@%h{uuid.uuid4()}",
         loglevel="INFO",
     )
     worker.start()

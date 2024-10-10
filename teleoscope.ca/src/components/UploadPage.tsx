@@ -289,7 +289,7 @@ export default function UploadPage() {
                     <>
                         {files?.map((f: Files) => {
                             return (
-                                <Box sx={{ p: 2, border: '1px solid #D3D3D3', m: 2 }}>
+                                <Box key={`${f.filename}`} sx={{ p: 2, border: '1px solid #D3D3D3', m: 2 }}>
                                     <Typography
                                         sx={{
                                             whiteSpace: 'nowrap',

@@ -1,6 +1,8 @@
 import os
+
 import sys
 import logging
+
 from fastapi import FastAPI
 
 from dotenv import load_dotenv
@@ -18,15 +20,9 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 
-# Function to check if required environment variables are set
-def check_env_var(var_name: str):
-    value = os.getenv(var_name)
-    if not value:
-        raise EnvironmentError(f"{var_name} environment variable is not set. Please configure it before running the script.")
-    return value
 
 # Check and load environment variables
-DOWNLOAD_DIR = check_env_var("DOWNLOAD_DIR")
+DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "/tmp/teleoscope/downloads/")
 
 @app.get("/download/{filename}")
 async def download_file(filename: str):
@@ -36,3 +32,4 @@ async def download_file(filename: str):
         return FileResponse(file_path, filename=filename)
     else:
         return {"error": "File not found"}
+
