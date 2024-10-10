@@ -520,7 +520,7 @@ def setup_logging():
 def start_worker():
     worker = app.Worker(
         include=["backend.graph"],
-        hostname=f"graph.{os.getlogin()}@%h{uuid.uuid4()}",
+        hostname=f"graph.{os.getenv('USER')}@%h{uuid.uuid4()}",
         loglevel="INFO",
     )
     worker.start()
@@ -528,7 +528,7 @@ def start_worker():
         [
             "worker",
             "--loglevel=INFO",
-            f"--hostname=graph.{os.getlogin()}@%h{uuid.uuid4()}",
+            f"--hostname=graph.{os.getenv('USER')}@%h{uuid.uuid4()}",
         ]
     )
 

@@ -4,6 +4,8 @@ import logging
 from fastapi import FastAPI
 
 from dotenv import load_dotenv
+load_dotenv("~/Teleoscope")
+load_dotenv("./")
 load_dotenv()
 
 from fastapi.responses import FileResponse
