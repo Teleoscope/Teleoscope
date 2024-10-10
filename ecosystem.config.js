@@ -62,14 +62,8 @@ module.exports = {
     },
     {
       name: "files",
-      script: 'gunicorn',
       cwd: "backend",
-      args: [
-        '-w', '1', // Number of workers
-        '-k', 'uvicorn.workers.UvicornWorker', // Use Uvicorn worker class
-        'files:app', // The FastAPI app (module:instance)
-        '--bind', '0.0.0.0:8000'
-      ],
+      script: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker files:app --bind 0.0.0.0:8000',
       watch: false,
       interpreter: "",
       max_memory_restart: "16G",

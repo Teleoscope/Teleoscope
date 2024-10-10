@@ -3,15 +3,9 @@ import os
 import sys
 import logging
 
-from gunicorn.app.wsgiapp import WSGIApplication
-
 from fastapi import FastAPI
 
 from dotenv import load_dotenv
-
-basedir = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(basedir, '.env'))
-load_dotenv(os.path.join("~/Teleoscope", '.env'))
 load_dotenv()
 
 from fastapi.responses import FileResponse
@@ -34,7 +28,7 @@ def check_env_var(var_name: str):
     return value
 
 # Check and load environment variables
-DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "/tmp/teleoscope/downloads/")
+DOWNLOAD_DIR = check_env_var("DOWNLOAD_DIR")
 
 @app.get("/download/{filename}")
 async def download_file(filename: str):
