@@ -3,7 +3,14 @@ import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Typography, Stack, Divider, IconButton, Button } from '@mui/material';
+import {
+    Typography,
+    Stack,
+    Divider,
+    IconButton,
+    Button,
+    Box
+} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { useAppSelector, useAppDispatch } from '@/lib/hooks';
 import DocumentList from '@/components/Documents/DocumentList';
@@ -27,7 +34,9 @@ const DataViewer = ({ id, type }) => {
     ];
 
     const { settings } = useAppSelector((state) => state.appState.workspace);
-    const { color } = useAppSelector((state) => state.appState.workflow.settings);
+    const { color } = useAppSelector(
+        (state) => state.appState.workflow.settings
+    );
     const dispatch = useAppDispatch();
     const [isEditing, setIsEditing] = useState(false);
     const [tempLabel, setTempLabel] = useState('');
@@ -90,16 +99,43 @@ const DataViewer = ({ id, type }) => {
                 aria-controls="panel-content"
                 id="panel-header"
                 onDragStart={(event) => onDragStart(event, id, 'Storage')}
+                sx={{ display: 'flex', alignItems: 'center' }}
             >
-                <Typography noWrap align="left">
-                    {WindowDefinitions('Storage').icon(color)}{' '}
-                    {storage ? storage.label : 'Loading...'}
-                </Typography>
+                {/* Flex container for icon and text */}
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexGrow: 1,
+                        minWidth: 0,
+                        overflow: 'hidden'
+                    }}
+                >
+                    {/* Icon */}
+                    {WindowDefinitions('Storage').icon(color)}
+
+                    {/* Truncated text */}
+                    <Typography
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            marginLeft: 1,
+                            flexGrow: 1,
+                            minWidth: 0, // Key for ellipsis
+                            maxWidth: '90%'
+                        }}
+                    >
+                        {storage ? storage.label : 'Loading...'}
+                    </Typography>
+                </Box>
+
+                {/* Edit icon should not shrink */}
                 {!isEditing && (
                     <IconButton
                         size="small"
                         onClick={handleEditClick}
-                        sx={{ marginLeft: 'auto' }}
+                        sx={{ flexShrink: 0 }} // Prevent shrinking
                     >
                         <EditIcon />
                     </IconButton>
@@ -110,20 +146,35 @@ const DataViewer = ({ id, type }) => {
                 <AccordionDetails>
                     <Stack direction="column">
                         <Typography>Edit label</Typography>
-                        <Stack direction="row" justifyContent="space-between" spacing={2}>
+                        <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={2}
+                        >
                             <EditableText
                                 initialValue={tempLabel}
                                 callback={(label) => setTempLabel(label)}
                                 startEditing={true}
                             />
                             <Stack direction="row" spacing={1}>
-                                <Button variant="outlined" color="primary" onClick={handleSaveClick}>
+                                <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={handleSaveClick}
+                                >
                                     Save
                                 </Button>
-                                <Button variant="outlined" color="secondary" onClick={handleCancelClick}>
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    onClick={handleCancelClick}
+                                >
                                     Cancel
                                 </Button>
-                                <Deleter callback={handleDeleteClick} color={color} />
+                                <Deleter
+                                    callback={handleDeleteClick}
+                                    color={color}
+                                />
                             </Stack>
                         </Stack>
                     </Stack>

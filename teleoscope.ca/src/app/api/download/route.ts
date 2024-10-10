@@ -10,10 +10,10 @@ export async function GET(request: Request) {
 
   try {
     // Call the FastAPI backend to download the file
-    const fastapiResponse = await fetch(`http://${process.env.RABBITMQ_HOST}:8000/download/${filename}`);
+    const fileResponse = await fetch(`http://${process.env.RABBITMQ_HOST}:8000/download/${filename}`);
 
-    if (fastapiResponse.status === 200) {
-      const fileBlob = await fastapiResponse.blob();
+    if (fileResponse.status === 200) {
+      const fileBlob = await fileResponse.blob();
       const arrayBuffer = await fileBlob.arrayBuffer();
 
       // Return the file as a download with appropriate headers
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     } else {
       return NextResponse.json(
         { error: 'File not found' },
-        { status: fastapiResponse.status }
+        { status: fileResponse.status }
       );
     }
   } catch (error) {

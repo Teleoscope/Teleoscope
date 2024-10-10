@@ -3,10 +3,11 @@ import { useState } from 'react';
 import _ from 'lodash';
 import axios from 'axios';
 import { useAppSelector } from '@/lib/hooks';
-import { Button, Divider, Stack } from '@mui/material';
+import { Box, Button, Divider, Stack, Typography } from '@mui/material';
 import { useSWRF } from '@/lib/swr';
 import DataViewer from './Sidebar/DataViewer';
 import { mutate } from 'swr';
+import { Files } from '@/types/files';
 
 // Adjust dynamic import based on the export type
 const CSVImporter = dynamic(
@@ -174,9 +175,6 @@ const template = {
 };
 
 function StorageItem({ oid }: { oid: string }) {
-    const { data: storage } = useSWRF(
-        oid ? `/api/storage?storage=${oid}` : null
-    );
     return <DataViewer id={oid} type="Storage"></DataViewer>;
 }
 
@@ -189,9 +187,21 @@ export default function UploadPage() {
     );
 
     const { storage } = useAppSelector((state) => state.appState.workspace);
+
     const { color } = useAppSelector(
         (state) => state.appState.workflow.settings
     );
+
+    const { data: files } = useSWRF(
+        workspace_id ? `/api/download/files?workspace=${workspace_id}` : null
+    );
+
+    const handleDelete = (filename: string) => {
+        axios.post('/api/downloads/delete', {
+            workspace_id: workspace_id,
+            filename: filename
+        });
+    };
 
     const handleComplete = (data) => {
         if (!data.error) {
@@ -244,7 +254,7 @@ export default function UploadPage() {
                 <Button
                     sx={{
                         // backgroundColor: '#FFFFFF', // Custom background color
-                        color: color, // Custom text color
+                        color: color // Custom text color
                         // '&:hover': {
                         //     backgroundColor: '#388e3c' // Custom hover color
                         // }
@@ -264,10 +274,66 @@ export default function UploadPage() {
                         onComplete={handleComplete}
                     />
                 )}
-                <Divider></Divider>
-                {storage?.map((s) => {
-                    return <StorageItem oid={s} key={s} />;
-                })}
+
+                <Stack direction="column">
+                    <Typography variant="overline">Data Uploads</Typography>
+                    <Divider sx={{mb: 2}}> </Divider>
+                    <>
+                        {storage?.map((s) => {
+                            return <StorageItem oid={s} key={s} />;
+                        })}
+                    </>
+                    <Typography sx={{mt: 2}} variant="overline">Data Downloads</Typography>
+                    <Divider></Divider>
+
+                    <>
+                        {files?.map((f: Files) => {
+                            return (
+                                <Box sx={{ p: 2, border: '1px solid #D3D3D3', m: 2 }}>
+                                    <Typography
+                                        sx={{
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
+                                        }}
+                                    >
+                                        {f.filename}
+                                    </Typography>
+                                    {f.status.ready && (
+                                        <Stack direction="row">
+  
+                                            <Button
+                                                href={`/api/download?filename=${encodeURIComponent(
+                                                    f.filename
+                                                )}`}
+                                                download
+                                                sx={{
+                                                    textDecoration: 'none',
+                                                    color: color, // Use your custom color here if needed
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                Download
+                                            </Button>
+                                            <Button
+                                                sx={{
+                                                    textDecoration: 'none',
+                                                    color: color, // Use your custom color here if needed
+                                                    cursor: 'pointer'
+                                                }}
+                                                onClick={() =>
+                                                    handleDelete(f.filename)
+                                                }
+                                            >
+                                                Delete
+                                            </Button>
+                                            </Stack>
+                                    )}
+                                </Box>
+                            );
+                        })}
+                    </>
+                </Stack>
             </Stack>
         </>
     );
