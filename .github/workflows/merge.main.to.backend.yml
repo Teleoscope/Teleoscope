@@ -1,0 +1,35 @@
+name: Merge Main into Backend
+
+on:
+  schedule:
+    # Runs at 12:00 UTC every day
+    - cron: '0 6 * * *'
+
+jobs:
+  merge-branches:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Full clone to allow branch merging
+
+    - name: Set up Git user
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Fetch all branches
+      run: git fetch origin
+
+    - name: Checkout the backend branch
+      run: git checkout backend
+
+    - name: Merge main into backend
+      run: git merge origin/main
+
+    - name: Push changes to backend
+      run: git push origin backend
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
