@@ -197,7 +197,7 @@ export default function UploadPage() {
     );
 
     const handleDelete = (filename: string) => {
-        axios.post('/api/downloads/delete', {
+        axios.post('/api/download/delete', {
             workspace_id: workspace_id,
             filename: filename
         });
