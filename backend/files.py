@@ -34,7 +34,7 @@ def check_env_var(var_name: str):
     return value
 
 # Check and load environment variables
-DOWNLOAD_DIR = check_env_var("DOWNLOAD_DIR")
+DOWNLOAD_DIR = os.getenv("DOWNLOAD_DIR", "/tmp/teleoscope/downloads/")
 
 @app.get("/download/{filename}")
 async def download_file(filename: str):
