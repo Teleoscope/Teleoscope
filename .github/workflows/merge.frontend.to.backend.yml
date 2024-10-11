@@ -24,7 +24,7 @@ jobs:
       run: git fetch origin
 
     - name: Checkout the backend branch
-      run: git checkout backend
+      run: git checkout backend --
 
     - name: Merge frontend into backend
       run: git merge origin/frontend
