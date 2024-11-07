@@ -136,7 +136,7 @@ export default function AccountSettings() {
                                 Current plan: {account.plan.name}
                             </summary>
                             <ul className="flex flex-col px-4 p-2 gap-2">
-                                <li>{account.plan.plan_storage_amount} GB Storage</li>
+                                <li>{account.plan.plan_storage_amount} MB Storage</li>
                                 <li>{account.plan.plan_team_amount} Teams</li>
                                 <li>{account.plan.plan_collaborator_amount} Collaborators</li>
                             </ul>
