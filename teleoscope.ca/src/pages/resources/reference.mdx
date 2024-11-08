@@ -1,0 +1,148 @@
+import { WindowConfig } from "@/components/WindowFolder/WindowDefinitions";
+import StarOutlinedIcon from '@mui/icons-material/StarOutlined';
+export function WinIcon({ type }) {
+
+
+   return WindowConfig[type].icon("#AAAAAA")
+}
+
+# Reference
+This resource contains definitions of Teleoscope interface concepts and items.
+
+### <WinIcon type="Search" /> Search
+
+A Teleoscope workflow starts with a normal text search.
+You can use spaces for multiple search terms, quotes to search for exact phrases,
+and a minus sign to exclude words. The searches are case-insensitive and fuzzy,
+which means that suffixes such as `-ing` are ignored.
+
+Try copying the following search and clicking on a post to read it.
+
+```markdown copy
+"friendly" wedding -mother
+```
+
+import { Callout } from 'nextra-theme-docs';
+
+<Callout emoji="💡">
+    Use up ⬆️ or down ⬇️ to navigate the search results and `Enter` to
+    **bookmark**.
+</Callout>
+
+### <StarOutlinedIcon sx={{ color: "grey" }}/> Bookmarks
+
+You can choose documents that you'd like to save to read later by **bookmarking** them.
+Bookmarks are one of a few ways to **group** documents together.
+Try bookmarking by clicking on the ⭐ or by pressing `Enter` while a document is selected.
+
+<br />
+
+import GroupWorkIcon from '@mui/icons-material/GroupWork';
+export function GroupIcon() {
+    return <GroupWorkIcon />;
+}
+
+<Callout emoji="💡">
+    You can click the <GroupIcon /> to make a **group** from the existing
+    bookmarks.
+</Callout>
+
+### <WinIcon type="Group" /> Groups
+
+You can create **groups** of documents. At first, you can use this just to organize your documents.
+But, as you use the Teleoscope system more, you'll start to use groups as a primary interaction mechanism.
+
+<br />
+
+import PanToolIcon from '@mui/icons-material/PanTool';
+
+import ControlCameraIcon from '@mui/icons-material/ControlCamera';
+
+import ReadMoreIcon from '@mui/icons-material/ReadMore';
+
+import HeightIcon from '@mui/icons-material/Height';
+
+import RotateRightIcon from '@mui/icons-material/RotateRight';
+
+import MapIcon from '@mui/icons-material/Map';
+
+import AllOutIcon from '@mui/icons-material/AllOut';
+
+### Workspace
+
+All operations take place on the **Workspace**. You can:
+
+-   **Pan** by clicking and dragging on the background <PanToolIcon />
+-   **Move** by clicking and dragging on a workspace item's titlebar <ControlCameraIcon />
+-   **Resize** by clicking and dragging on the edge of a workspace item ↕️ ↔️
+-   **Drag and drop** by clicking on a document in the group and dragging it outside of the group <ReadMoreIcon />
+-   **Zoom in and out** by scrolling the mouse wheel <RotateRightIcon />
+
+There are also reset controls <AllOutIcon /> on the left and a minimap <MapIcon /> on the right if you get lost.
+
+
+
+### <WinIcon type="Rank" /> Ranking
+
+Keyword searches, like above, are great, but they don't get you documents that are
+**conceptually** similar but have different keywords. With Teleoscope, you search by _example_.
+The big idea with the Teleoscope that we mix your example documents together to get a much more
+interesting and relevant results. You connect examples of documents (or groups) to the Teleoscope.
+
+You can click and drag from **output** arrow of a document or group to the bottom **control input**
+arrow of a Rank. Think of mixing together examples like mixing together paints.
+The Rank produces a list of documents that are closest in concept (and math) to your example documents.
+
+You can also restrict the Rank to only rank documents from a particular source such as a
+search or group by connecting to the top **source input**.
+
+<br />
+
+![Teleoscope](/docs/teleoscope.gif)
+
+### <WinIcon type="Projection" /> Projections
+
+At some point, you might want groups to be automatically created for you.
+Similar to the Teleoscope function, you can use a **Projection** to automatically create clusters for you.
+![Projection](/docs/projection.gif)
+
+### <span><WinIcon type="Note" /></span> Notes
+
+You can write **notes** for yourself just to keep notes. However, note contents are **vectorized**.
+This means that you can use them as **controls** for Ranks.
+![Notes](/docs/note.gif)
+
+
+### Boolean Operations
+
+[Boolean](https://en.wikipedia.org/wiki/Boolean_algebra) operations are functions that operate
+on [sets of things](https://en.wikipedia.org/wiki/Set_theory). You can think of them as ways
+to join or filter document sources. They can be chained together to create more complex joins
+and filters. And you can use them as sources or controls for Ranks and Projections.
+
+#### <WinIcon type="Union" /> Union
+
+![Union](/docs/Union.gif)
+[Union](<https://en.wikipedia.org/wiki/Union_(set_theory)>) joins each source with all of
+the control documents. You can use it to join groups, searches, or single documents without
+merging the groups by hand. In the above figure, notice how each group alone has a single document.
+Both documents are present in the union's output.
+
+#### <WinIcon type="Difference" /> Difference
+
+![Difference](/docs/Difference.gif)
+[Difference](<https://en.wikipedia.org/wiki/Complement_(set_theory)#Relative_complement>) subtracts
+the control documents from the source. You can use it to filter out documents from a source.
+In the above example, the original group has two documents. One of the documents is being used
+to filter itself out of the group. This is a simple example for explanatory purposes; a more
+complex example is shown below in the [Example Workflow Patterns](#example-workflow-patterns) section.
+
+#### <WinIcon type="Intersection" /> Intersection
+
+![Intersection](/docs/Intersection.gif)
+[Intersection](<https://en.wikipedia.org/wiki/Intersection_(set_theory)>) produces only the documents that are present in **both** the source and control. You can use it wherever you would like to have more strict criteria for a source. In the above example, you can see that it gives the opposite result of the difference operation: the control document is retained, but the other documents are removed. Again, there is a more complex example in the [Example Workflow Patterns](#example-workflow-patterns) section.
+
+#### <WinIcon type="Exclusion" /> Exclusion
+
+![Exclusion](/docs/Exclusion.gif)
+[Exclusion](https://en.wikipedia.org/wiki/Symmetric_difference) produces only the documents that **are not in both** source and control. You can use this to find which documents are unique to each group. In the above example, we can see that because the control document is in the source group, it is removed from the exclusion output. Again, a more complex example is available in the [Example Workflow Patterns](#example-workflow-patterns) section.

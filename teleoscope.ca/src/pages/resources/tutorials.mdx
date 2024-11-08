@@ -1,0 +1,60 @@
+## How-To Guides
+
+The operations that we provide you are simple and can be chained together to achieve more complex results.
+Here are some design patterns that you can use if you want to achieve specific outcomes.
+
+### Focus on a snippet of text
+
+![Snippet](/docs/note-snippet.gif)
+Since notes can have arbitrary text, you can copy and paste a snippet of text
+into a note from a document. Connect the note to the control input of a Teleoscope
+to only use the snippet of text that you care about.
+
+### Ranking
+
+![Rank](/docs/rank-group.gif)
+The Teleoscope tool ranks documents according to a source document. If you want to sort a source
+(search, document, or group) by similarity to another source, you can connect the one you want
+to rank to to the top source input, and the other to the bottom control input.
+As you can see in this example, the document that the group is being sorted relative to is
+now at the top of the list.
+
+![Rank Search](/docs/rank-search-by-word.png)
+
+Similarly, here's a pattern where you can rank a search by word. On the left, you can see that the
+`pizza` search is unordered; by adding the Note as a control with the word `garlic`, the `pizza` search
+is now ordered by documents that are similar to the word `garlic`.
+
+### Filtering a Search
+
+![Search-Intersection](/docs/Search-Intersection.gif)
+If you want to filter a search by another seach, you can use the intersection operation.
+In the above example, the `jalapenos` search is filtered by the `pizza` search, which
+produces only documents that contain both `jalapenos` and `pizza`.
+
+### Chaining boolean operations
+
+![Intersection-Union](/docs/Intersection-Union.gif)
+Boolean operations can be chained indefinitely (although chaining more will update more slowly).
+In the above example, we see that the intersection is joined with the `Fishing` group by using union.
+All of documents that are in `Fishing` are now joined with the intersection results.
+
+![Long chain](/docs/long-chain.png)
+
+In this example, many operations are chained together to produce a desired outcome.
+The first intersection produces only documents that contain both `pizza` and `jalapenos`;
+the second intersection produces only documents that contain both `pizza` and `mushrooms`.
+The results are joined together, then ranked with a Teleoscope according to a search for `garlic`.
+
+![Long chain equivalence](/docs/long-chain-equivalence.png)
+
+Due to the logic of Boolean operations, you could get the same result by using the same
+operations in a different order. In the above, the searches are joined with union, and then the union
+is interesected with the `pizza` search.
+
+### Unequal Weighting
+
+![Weight](/docs/weight-teleoscope.gif)
+If you want to increase the influence of one source on the Teleoscope output, you can connect
+multiple copies of that source. Since the source vectors are averaged, having more copies of
+something allows you to weight the average.
