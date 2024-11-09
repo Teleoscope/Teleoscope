@@ -1,3 +1,3 @@
 module.exports = {
-    "index": "Example projects",
+    "index": "Examples overview",
 };

@@ -1,0 +1,203 @@
+
+# Embeddings and Document representation
+
+Document similarity is basically a measure of how many words, phrases,
+and sentences overlap between two documents. With Large Language Models (LLMs),
+the "overlap" might be a distance in a high-dimensional mathematical representation 
+of the document. That might sound very technical, but it's easy to build an intuition
+with simpler models.
+
+## Bag-of-words models
+
+We'll start with a [bag-of-words](https://en.wikipedia.org/wiki/Bag-of-words_model) model. 
+Let's say we are trying to figure out which of the following sentences are most similar.
+
+```
+sentence_1 = "The dog walked to the park."
+sentence_2 = "The dog chewed on a bone."
+sentence_3 = "The dog napped in the park."
+```
+
+Right off the bat, we would probably say that `sentence_1` and `sentence_3` are most similar because
+they both talk about dogs doing things in parks. Let's see how a bag-of-words model would approach
+encoding sentences as high-dimensional vectors.
+
+
+### Stemming and stop words
+For a bag-of-words model, we will transform words into their root form in a process called ([stemming](https://en.wikipedia.org/wiki/Stemming)).
+For example, all of `running`, `ran`, and `runs` would be turned into `run`. We also will get rid
+of common words by making a list of words to stop representing (called stop words). That would
+turn our original sentences into:
+
+```
+sentence_1 = "dog walk park"
+sentence_2 = "dog chew bone"
+sentence_3 = "dog nap park"
+```
+
+If we count the overlapping words, `sentence_1` and `sentence_3` are the most similar.
+That should make intuitive sense: they both have "dog" and "park" in them. If we wanted
+to use a vector representation to check similarity, we would create a vector where each
+entry mapped to a single word. We'll take all the words in all the sentences and put 
+them metaphorically in a big bag called a `set`.
+
+```
+bag of all words = {dog, walk, park, chew, bone, nap}
+```
+
+### Making bag-of-words embeddings
+Now we can create vectors where each entry of the vector (a.k.a. a dimension) represents whether
+or not the sentence has that word in it. We will put a `1` in the vector if the word exists in the sentence, and a `0` otherwise.
+
+```
+             dog walk park chew bone nap
+sentence_1 =   1    1    1    0    0   0
+sentence_2 =   1    0    0    1    1   0
+sentence_3 =   1    0    1    0    0   1
+```
+
+This simple example can help build intuition for how documents can be represented by a vector.
+By looking at the columns for `dog` and `park` we can see that a bag-of-words model would show that
+`sentence_1` and `sentence_3` are the most similar.
+
+That overlaps with our intution that "The dog napped in the park" and "The dog napped in the park" 
+are similar in conceptual content becase both talk about parks. In this case, the bag-of-words 
+model will give us answer that align with our intuition.
+
+We can embed new sentences into this model by following the same process. 
+
+The sentence "cats walk into mice" would look like the following with our current embeddings.
+
+```
+< 0 1 0 0 0 0 >
+```
+
+As you can see, our original model doesn't include anything about cats or mice, so the representation
+is a bit poor and throws away a lot of important data. Data we want to represent and reason about 
+later must be present in the training process. Machine learning models are very dependent on their training data.
+
+
+### Limitations of bag-of-words
+We can construct an example of where our simple bag-of-words model wouldn't help very much.
+Say we had the following sentences:
+
+```
+sentence_4 = "The dog chewed on the squeaky toy."
+sentence_5 = "The dog chewed on the stick."
+sentence_6 = "The dog toyed with a squeaky mouse."
+```
+
+Including the sentences in our training mmodel, our bag-of-words might look like this:
+
+```
+bag = {dog, walk, park, chew, bone, nap, squeaky, toy, mouse}
+```
+
+After stemming and getting rid of stop words, embedding our sentences in the model would give us:
+
+```
+   dog walk park chew bone nap squeaky toy stick mouse
+s1   1    1    1    0    0   0       0   0     0     0
+s2   1    0    0    1    1   0       0   0     0     0
+s3   1    0    1    0    0   1       0   0     0     0
+s4   1    0    0    1    0   0       1   1     0     0
+s5   1    0    0    1    0   0       0   0     1     0
+s6   1    0    0    0    0   0       1   1     0     1
+```
+
+The sentences with the highest overlap are sentences 4 and 6, but sentences 4 and 5 would be more similar
+if you think about the meaningful context of the sentences. That is, a dog chewing on a squeaky toy is 
+more similar to a dog chewing on a stick if you think about dogs and the contexts they would be in. 
+Therefore, we need to figure out a way to model context.
+
+### TF-IDF 
+Before we go on to context, let's prune our model a bit. We can see that there are certain terms that
+are not really helping us differentiate our sentences.
+
+```
+   dog walk park chew bone nap squeaky toy stick mouse
+s1   1    1    1    0    0   0       0   0     0     0
+s2   1    0    0    1    1   0       0   0     0     0
+s3   1    0    1    0    0   1       0   0     0     0
+s4   1    0    0    1    0   0       1   1     0     0
+s5   1    0    0    1    0   0       0   0     1     0
+s6   1    0    0    0    0   0       1   1     0     1
+```
+
+If we didn't represent the word `dog` it would not make a difference in our similarity scores.
+We can get rid of very common words, i.e., any word that every sentence has.
+
+```
+   walk park chew bone nap squeaky toy stick mouse
+s1    1    1    0    0   0       0   0     0     0
+s2    0    0    1    1   0       0   0     0     0
+s3    0    1    0    0   1       0   0     0     0
+s4    0    0    1    0   0       1   1     0     0
+s5    0    0    1    0   0       0   0     1     0
+s6    0    0    0    0   0       1   1     0     1
+```
+
+Similarly, a few words only appear in a single sentence. We can get rid of uncommon words, i.e.,
+words that only appear once in our sentences.
+
+
+```
+    park chew  squeaky toy 
+s1     1    0        0   0 
+s2     0    1        0   0 
+s3     1    0        0   0 
+s4     0    1        1   1 
+s5     0    1        0   0 
+s6     0    0        1   1 
+```
+
+Now we have a much smaller model that focuses only on high-information words.
+
+
+## Co-occurance models
+There are a lot of different techniques that can be used to improve the models. If we want to 
+figure out related word context, then we can count words that frequently occur in the same sentence.
+
+Let's imagine we have a large number of sentences taken from a bunch of books on dog walking, which
+we will call our corpus. We could count the frequency of each word across the corpus using our 
+bag-of-words model, prune out very common or uncommon words using TF-IDF, and create embeddings.
+
+If we wanted to figure out which words were similar, we could simply decide that words that 
+are in the sentence must be related to each other somehow. If the words "dog" and "walk" seem to occur 
+fairly often in our corpus, we would say that they are highly related.
+
+Autocorrect is often built off of these kinds of models. Lets say we are trying to predict the next 
+word in a sentence. If you say "I took the dog out for a ...", it would be pretty likely that walk was
+the next word. If our corpus has "took the dog out for a walk" occur 100 times, and 
+"took the dog out for a drive" 10 times, and "took the dog out for an ice cream" on time,
+we would predict that "walk" was the next most likely word. 
+
+Every co-occurance would make us rate the similarity of the words a bit higher. For example, if
+"took the dog out for a banana" never occurred, it would not be represented whatsoeever in our simple 
+co-occurance model vs. the single occurance of "ice cream".
+
+Large Language Models use this idea but continue to extend the concept out. Maybe "took the dog out for
+a banana" never occurs in a corpus, but "banana" and "ice cream" do occur in the same sentence. We could
+imagine building a model where "took the dog out for a banana" is more likely than zero because of 
+the relationship between "banana" and "ice cream". Again, only data that is present in the corpus will be 
+represented in the model.
+
+## Why Teleoscope uses existing LLMs
+
+In Teleoscope, we use open-source pre-built models (such as from [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding)) 
+which allows for more complex semantic similarity to be captured. These models are good for capturing 
+categorical similarities because they were trained on huge amounts of data.
+
+There is a core design trade-off between using a pre-built model vs. building a model off of
+the dataset that you're interested in studying. If you build your own model,
+you will create similarity scores based on how often words show up together in your own dataset.
+However, for words that most people would consider to be similar, you might not have enough data
+to create good similarity scores. For example, we might have a dataset where "dog" and "cat"
+do not appear very often near each other, or along with other conceptually similar words like "pet" or "fur".
+
+By starting with a model that has been trained on large amounts of data,
+we can capture semantics that a smaller model may not be able to.
+However, then we have the problem of determining similarities that might be present in our dataset,
+or in our minds, which may not be captured by the USE model.
+However, Teleoscope is model-agnostic. We can swap out models easily, since we can operate Teleoscope 
+on any embeddings.
