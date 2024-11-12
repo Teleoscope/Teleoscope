@@ -408,6 +408,24 @@ def generate_docx(
 
 
 @app.task
+def ensure_vectors(*args, database: str, userid: str, workspace: str, label: str, data):
+    db = utils.connect(db=database)
+    for batch in db.documents.find({ "state.vectorized": { "$exists": False } }).batch_size(128):
+        ids = [d["_id"] for d in batch]
+        app.send_task(
+            "backend.graph.milvus_chunk_import",
+            args=[],
+            kwargs={
+                "database": database,
+                "workspace": workspace,
+                "userid": userid,
+                "documents": ids,
+            },
+            queue="graph",
+        )
+
+
+@app.task
 def chunk_upload(*args, database: str, userid: str, workspace: str, label: str, data):
     try:
         workspace = ObjectId(str(workspace))
