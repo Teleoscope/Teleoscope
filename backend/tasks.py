@@ -411,7 +411,7 @@ def generate_docx(
 
 
 @app.task
-def ensure_vectors(*args, database: str, userid: str, workspace: str, label: str, data):
+def ensure_vectors(*args, database: str, userid: str, workspace: str):
     db = utils.connect(db=database)
     cursor = db.documents.find({ "state.vectorized": { "$exists": False } }, {
         "_id": 1,  # Include the document ID
