@@ -8,6 +8,7 @@ from docx import Document
 from docx.shared import Pt
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
+from itertools import batched
 
 from warnings import simplefilter
 from celery import Celery
@@ -15,6 +16,8 @@ from bson.objectid import ObjectId
 from kombu import Exchange, Queue
 from typing import List
 import os
+
+
 
 from pymongo import UpdateOne
 from pymongo.errors import OperationFailure, ConfigurationError, WriteError
@@ -410,7 +413,10 @@ def generate_docx(
 @app.task
 def ensure_vectors(*args, database: str, userid: str, workspace: str, label: str, data):
     db = utils.connect(db=database)
-    for batch in db.documents.find({ "state.vectorized": { "$exists": False } }).batch_size(128):
+    cursor = db.documents.find({ "state.vectorized": { "$exists": False } }, {
+        "_id": 1,  # Include the document ID
+    })
+    for batch in batched(cursor, 128):
         ids = [d["_id"] for d in batch]
         app.send_task(
             "backend.graph.milvus_chunk_import",
