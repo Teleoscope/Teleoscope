@@ -1,3 +1,5 @@
+import WinIcon from '@/components/WinIcon';
+
 # Exploring Camping and Hiking Brand Reddits
 
 If you are a camper or a hiker, you need to get the lowdown on the best gear. Your life may depend on it. 
@@ -9,7 +11,8 @@ Let's see how we can use Teleoscope to make sense of the thousands of documents 
 Using an old data dump, we have 8234 posts about *Arc'teryx* and 32089 posts in the general *r/CampingandHiking* subreddit. 
 That's about *40k* posts to go through. Teleoscope can make that a breeze.
 
-## Preparing Data
+## Getting our data prepared
+### Finding usable data
 Teleoscope is designed to work with any text data that is between one sentence and a few paragraphs. 
 Right now, the model only works with English and Chinese, but we will be updating to include more languages soon.
 For now, data needs to be in a `CSV` file to upload to Teleoscope. You can export from an Excel document. 
@@ -20,7 +23,7 @@ whatever data app you're using.
 
 All that Teleoscope needs at a minium is a `text` and `title` field. All the other metatdata is optional. 
 
-## Uploading Data
+### Uploading data to Teleoscope
 Once you have your data prepared, you can upload it to Teleoscope by going to the sidebar, 
 clicking on `Data` and then `Open CSV Uploader`.
 A window will pop up and allow you to browse for your file from your computer.
@@ -37,4 +40,81 @@ automatically chosen as a `Unique ID` column. It's not required, but can be help
 when sorting through your data.
 
 ![Arcteryx Map Screenshot](/docs/arcteryx-map.png)
+
+## Developing our curiosity
+### Browsing Data
+Now that we have our data uploaded, we can start to browse through to get an intuition for what might be interesting.
+
+The first post is a post from a moderator. The preview of the post is on the sidebar. We can skim to see that this 
+looks something like a recurring post that probably doesn't give us very much information about the brand itself.
+We can bookmark it for later, or just ignore it.
+
+![Arcteryx Browse Screenshot](/docs/arcteryx-browse.png)
+
+We can use the up ⬆️ or down ⬇️ arrows on our keyboard to quickly navigate through any list. 
+As the document is highlighted, the preview shows up in the sidebar.
+If there's anything interesting, we can bookmark with `Enter` or `Return` on the keyboard.
+From a quick read, it looks like the first few posts are about needs of police officers,
+repairs for burn holes, and care instructions for a jacket. Let's bookmark the post about
+police officers, then keep skimming.
+
+![Arcteryx Browse Animation](/docs/arcteryx-browsing.gif)
+
+After a minute or two of browsing, we can start to get an idea of initial **themes** that might be worth exploring.
+Without too much thinking or theorizing, we can see that a lot of posts are about *durability*, *style*, *weather-appropriateness*,
+*comfort*, and a variety of *specific use cases*, like our police officer.
+
+This gives us enough to start thinking about potential areas for further exploration. Each of these documents could be the
+nucleus of a new idea, theme, or search. Our intuition about this dataset could lead us to believe that the highest-value posts are going to be about 
+**brand threats** and **brand opportunities**. Let's start getting more specific.
+
+### Making a theme for broad categories
+Let's focus on broad categories first. The theme of *durability* seems to be present in the first few posts. Let's bookmark
+everything that has to do with durability. After about two minutes of browsing, we have a small sample of *durability-related* posts in our bookmarks.
+Let's make a group from them.
+
+![Arcteryx Bookmark Screenshot](/docs/arcteryx-bookmarks.png)
+![Arcteryx Durability Group Screenshot](/docs/arcteryx-durability.png)
+
+The point of creating this small sample of documents is that we can now use the <WinIcon type="Rank"/>
+[Rank](/resources/reference#-ranking) to find the most similar documents. 
+Let's connect the group to a <WinIcon type="Rank"/> [Rank](/resources/reference#-ranking). 
+Now all of the documents from the whole dataset are ordered from most to least similar in our 
+<WinIcon type="Rank"/> [Rank](/resources/reference#-ranking). We can browse again to see
+what themes might be popping up when the broad concept of durability is our focus.
+
+![Arcteryx Rank Screenshot](/docs/arcteryx-rank.png)
+
+### Using keyword <WinIcon type="Search"/> [Search](/resources/reference#-search) for concrete categories
+After skimming for less than a minute again, we can see that "delamination" and "wetting out" are two common phrases that
+come up when people talk about durability issues. To make sure that we look at every single instance where someone talks
+about "delamination", we can use a keyword <WinIcon type="Search"/> [Search](/resources/reference#-search).
+
+![Arcteryx Delamination Search Screenshot](/docs/arcteryx-delaminate.png)
+
+Now we have a concrete category of delamination-related issues because of a keyword. That's not the only durability
+issue, so we should keep on browsing and categorizing to develop other themes. 
+
+### Already getting reportable and analyzable data
+This is one possible stopping point for our Teleoscope thematic data exploration. As we can see from the search,
+there are 107 possible documents that we may want to drill down on. That could include using Teleoscope to drill down further, 
+exporting into a different software, or simply taking notes on all of the issues that customers face with delamination.
+If we wanted to report to the quality assurance department that delamination is a problem, we would have concrete data points
+to pass along to our engineers and designers now. If we wanted to report to the marketing department that this is a threat to
+our brand, we could summarize quotes. A quick skim would let us know that trusting the warranty is a big issue for customers 
+on this subreddit, and make recommendations 
+
+As a brief summary, we did the following:
+1. Started with an unknown dataset with a vague research question of figuring out what customers have say about this brand.
+2. Discovered a few potential themes within a few minutes of exploring the dataset.
+3. Drilled down on durability as a broad category to find "delamination" as a key problem that customers talk about.
+4. Filtered to a small dataset of 107 documents for further analysis from a dataset of over 40K posts.
+5. Found concrete reportable insights in less than 10 minutes.
+
+We went from having no idea about the dataset to something reportable within about 10 minutes total. That's very quick.
+Let's see what it looks like to keep going.
+
+
+
+
 
