@@ -1,0 +1,40 @@
+# Exploring Camping and Hiking Brand Reddits
+
+If you are a camper or a hiker, you need to get the lowdown on the best gear. Your life may depend on it. 
+[Reddit](https://reddit.com) has a lot of great community discussions about camping and hiking brands.
+The [r/CampingandHiking](https://www.reddit.com/r/CampingandHiking/) subreddit can answer a lot of questions.
+Specific brands like [Arc'teryx](https://www.reddit.com/r/arcteryx/) have subreddits dedicated to their products.
+
+Let's see how we can use Teleoscope to make sense of the thousands of documents that are in those subreddits. 
+Using an old data dump, we have 8234 posts about *Arc'teryx* and 32089 posts in the general *r/CampingandHiking* subreddit. 
+That's about *40k* posts to go through. Teleoscope can make that a breeze.
+
+## Preparing Data
+Teleoscope is designed to work with any text data that is between one sentence and a few paragraphs. 
+Right now, the model only works with English and Chinese, but we will be updating to include more languages soon.
+For now, data needs to be in a `CSV` file to upload to Teleoscope. You can export from an Excel document. 
+Many other apps also work directly with `CSV` documents, so see if there's a `CSV` export option from 
+whatever data app you're using.
+
+![Arcteryx Excel Screenshot](/docs/arcteryx-excel.png)
+
+All that Teleoscope needs at a minium is a `text` and `title` field. All the other metatdata is optional. 
+
+## Uploading Data
+Once you have your data prepared, you can upload it to Teleoscope by going to the sidebar, 
+clicking on `Data` and then `Open CSV Uploader`.
+A window will pop up and allow you to browse for your file from your computer.
+Once you have selected your file, a preview of your data will open in the same upload popup.
+![Arcteryx Import Screenshot](/docs/arcteryx-import.png)
+
+You can then choose which columms from your `CSV` will be used for the `text` and `title`. 
+The uploader will select anything called "text" or "title" by default, but you can choose
+any of your columns, no matter what they are named.
+
+Other options for metadata will automatically be selected as well, but they are not required.
+For example, the dataset below has a column called `metadata.id` and that has been 
+automatically chosen as a `Unique ID` column. It's not required, but can be helpful later
+when sorting through your data.
+
+![Arcteryx Map Screenshot](/docs/arcteryx-map.png)
+
