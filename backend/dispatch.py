@@ -86,6 +86,9 @@ class WebTaskConsumer(bootsteps.ConsumerStep):
             case "acknowledge_vector_upload":
                 res = tasks.acknowledge_vector_upload.signature(args=args, kwargs=kwargs)
 
+            case "ensure_vectors":
+                res = tasks.ensure_vectors.signature(args=args, kwargs=kwargs)
+
         try:
             res.apply_async(queue=RABBITMQ_TASK_QUEUE)
         except Exception as e:
