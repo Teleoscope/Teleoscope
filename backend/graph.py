@@ -280,6 +280,7 @@ def update_rank(
     workspace_id ):
     # check if it's worth updating the node
     if len(controls) == 0:
+        rank_node["status"] = "No controls included."
         logging.info(f"No controls included. Returning original teleoscope node.")
         return rank_node
 
@@ -302,12 +303,19 @@ def update_rank(
         f"Found {len(control_vectors)} vectors for {len(control_oids)} controls."
     )
 
+    if len(control_vectors) == 0:
+        logging.info(f"No control vectors found.")
+        rank_node["status"] = "No embeddings found."
+        return rank_node
+
     # average the control vectors to create a rank search vector
     search_vector = np.average(control_vectors, axis=0)
     logging.info(f"Search vector shape is {search_vector.shape}.")
 
-    if np.isnan(search_vector):
-        logging.info(f"Search vector isn't a number: {search_vector}.")
+    if np.isnan(search_vector).any():
+        logging.info(f"Search vector has an entry that isn't a number: {search_vector}.")
+        rank_node["status"] = "Invalid search vector."
+        return rank_node
 
     # set the distance from the search vector that we care to look
     distance = 0.5
@@ -384,6 +392,7 @@ def update_rank(
                 }
             )
 
+    rank_node["status"] = "Rank complete."
     rank_node["doclists"] = doclists
 
     client.close()
