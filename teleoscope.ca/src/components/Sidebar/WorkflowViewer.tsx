@@ -25,32 +25,29 @@ const styles = {
 export default function WorkflowViewer(props) {
     const dispatch = useAppDispatch();
 
-    const { workflow } = useAppSelector((state) => state.appState);
+    const state = useAppSelector((state) => state.appState);
+    const { workflow, workspace } = state;
+    
     const color = workflow.settings.color;
 
-    const { data: workspace } = useSWRF(
-        workflow?.workspace
-            ? `/api/workspace?workspace=${workflow.workspace}`
-            : null
-    );
-
     const { data: workflows } = useSWRF(
-        workspace
-            ? `/api/workflows?workflows=${workspace?.workflows.join(',')}`
+        state
+            ? `/api/workflows?workflows=${state.workspace.workflows.join(',')}`
             : null
     );
-
+    
     const [value, setValue] = useState("");
 
     const handleKeyDown = (e) => {
+        
         if (e.code === 'Enter') {
             dispatch(initializeWorkflow({ label: value }));
             setValue("")
         }
     };
 
-    const handleWorkflowChange = (wid) => {
-        dispatch(loadWorkflow({ workflow_id: wid }));
+    const handleWorkflowChange = (wid: string) => {
+        dispatch(loadWorkflow({ workflow_id: wid, workspace_id: workspace._id}));
     }
 
     return (
