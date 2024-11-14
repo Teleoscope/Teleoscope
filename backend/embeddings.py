@@ -89,7 +89,8 @@ def connect():
     return client
 
 
-def get_embeddings(client: MilvusClient, collection_name, workspace_id, oids):
+def get_embeddings(client: MilvusClient, collection_name, workspace_id, oids, limit=16384): # hard limit for milvus
+    oids = oids[0:limit]
     logging.info(f"Gathering document embeddings for {len(oids)} document oids...")
     # ensure the collection exists
     milvus_setup(client, workspace_id, collection_name=collection_name)
