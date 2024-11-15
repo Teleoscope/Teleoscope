@@ -64,7 +64,7 @@ export default function FooterLinks() {
     <div className="flex  gap-4 w-full py-5 px-10">
       <div className="flex flex-col gap-2 flex-1">
         <a href="/" className="font-bold text-2xl">
-          Teleoscope
+          <img src="/assets/LogoInc.svg" style={{ height: '50px' }} alt="Teleoscope corporate logo"/>
         </a>
         <div className="flex gap-2">
           {socialLinks.map((link) => (

@@ -1,6 +1,4 @@
 
-import { Flare } from "@mui/icons-material";
-
 export default {
   useNextSeoProps() {
     return {
@@ -14,10 +12,10 @@ export default {
     </>
   ),
   // editLink: null,
-  logo: <span>Teleoscope</span>,
+  logo: <img src="/assets/LogoInc.svg" style={{ height: '30px' }} alt="Teleoscope logo round"/>,
   project: {
     link: "https://teleoscope.ca",
-    icon: <Flare />,
+    icon: <img src="/assets/LogoRound.svg" style={{ height: '30px' }} alt="Teleoscope logo round"/>,
   },
   docsRepositoryBase: "https://example.com/",
   primaryHue: 268,

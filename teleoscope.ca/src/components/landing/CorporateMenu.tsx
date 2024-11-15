@@ -32,7 +32,7 @@ export default function Menu() {
     <div className="flex items-center justify-between">
       <div className="flex-shrink-0 p-4 font-bold">
         <Link href="/" passHref className="hover:text-pink-600 ">
-          Teleoscope
+          <img src="/assets/LogoProduct.svg" style={{ height: '30px' }} alt="Teleoscope product logo"/>
         </Link>
       </div>
       <section>

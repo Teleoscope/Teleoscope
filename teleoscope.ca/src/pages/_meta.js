@@ -1,6 +1,6 @@
 module.exports = {
-    "get-started" : "Get Started", 
-    "academics": "For Academics",
+    "get-started" : "⭐ Get Started", 
     "resources": "Resources",
+    "academics": "For Academics",
     "blog": "Blog"
 };
