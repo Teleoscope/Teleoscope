@@ -1,0 +1,44 @@
+import WinIcon from '@/components/WinIcon';
+
+# <WinIcon type="Rank" /> Ranking, Sorting or Ordering
+The <WinIcon type="Rank" /> [Rank](/resources/reference#-ranking) tool allows you to order
+a set of documents by similarity to one or more other documents. Let's see how it can be 
+used to achieve many different cookbook solutions for exploring data.
+
+![Rank](/docs/rank-group.gif)
+The Ran tool ranks documents according to a source document, group, or search. If you want to sort a 
+source by similarity to another source, you can connect the one you want to rank to to the top source 
+input, and the other to the bottom control input. As you can see in this example, the document that 
+the group is being sorted relative to is now at the top of the list.
+
+## Find the most similar documents in order
+Connecting a single document to the <WinIcon type="Rank" /> [Rank](/resources/reference#-ranking)
+tool will give back a list of the most similar documents to that document in order from most similar
+to least similar. 
+
+You can think of this as asking the computer to find you the documents that it thinks has the most
+overlap in content and theme based on words and phrases from each document. You might not agree 
+with the computer's assessment of similarity, but you're likely to find some similar enough documents.
+
+You might notice common words, phrases, or similar nouns. For example, a document with `wifi` given as 
+a control for the <WinIcon type="Rank" /> [Rank](/resources/reference#-ranking) might return documents 
+that talk about `wifi` specifically, or technology generally. That's because it's likely that people
+use similar phrases to talk about both `wifi` and, say, `netflix`.
+
+## Mix the meanings of documents
+Connecting multiple documents to the <WinIcon type="Rank" /> [Rank](/resources/reference#-ranking)
+will give you a list of the most similar documents to *all* documents you have connected. You can
+think of this as the computer finding the documents that it thinks is most similar to the average
+content of the documents. 
+
+## Ranking a specific source
+![Rank Search](/docs/rank-search-by-word.png)
+
+Here's a pattern where you can rank a search by word. On the left, you can see that the
+`pizza` search is unordered; by adding the Note as a control with the word `garlic`, the `pizza` search
+is now ordered by documents that are similar to the word `garlic`.
+
+## How to use this in your project
+You can use a <WinIcon type="Rank" /> [Rank](/resources/reference#-ranking) to discover new documents
+that you want to add to a theme. You can also use it to prove to yourself that documents do not exist
+within a particular data source, i.e., that you've reached a saturation point. 

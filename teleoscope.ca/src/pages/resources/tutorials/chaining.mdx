@@ -1,0 +1,19 @@
+# Chaining boolean operations
+
+![Intersection-Union](/docs/Intersection-Union.gif)
+Boolean operations can be chained indefinitely (although chaining more will update more slowly).
+In the above example, we see that the intersection is joined with the `Fishing` group by using union.
+All of documents that are in `Fishing` are now joined with the intersection results.
+
+![Long chain](/docs/long-chain.png)
+
+In this example, many operations are chained together to produce a desired outcome.
+The first intersection produces only documents that contain both `pizza` and `jalapenos`;
+the second intersection produces only documents that contain both `pizza` and `mushrooms`.
+The results are joined together, then ranked with a Teleoscope according to a search for `garlic`.
+
+![Long chain equivalence](/docs/long-chain-equivalence.png)
+
+Due to the logic of Boolean operations, you could get the same result by using the same
+operations in a different order. In the above, the searches are joined with union, and then the union
+is interesected with the `pizza` search.
