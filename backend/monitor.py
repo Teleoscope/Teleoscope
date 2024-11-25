@@ -16,6 +16,7 @@ def check_env_var(var_name: str):
 # Check and load environment variables
 RABBITMQ_VECTORIZE_QUEUE = check_env_var("RABBITMQ_VECTORIZE_QUEUE")
 EC2_VECTORIZE_INSTANCE = check_env_var("EC2_VECTORIZE_INSTANCE")
+EC2_VECTORDB_INSTANCE = check_env_var("EC2_VECTORDB_INSTANCE")
 RABBITMQ_VHOST = check_env_var("RABBITMQ_VHOST")
 
 # Initialize logging
@@ -91,7 +92,13 @@ def monitor_queue(queue_name, check_interval):
                 logging.info(f"Queue has {queue_size} messages, but EC2 instance {EC2_VECTORIZE_INSTANCE} is already running.")
         
         logging.info(f"Queue has {queue_size} messages, instances has status {instance_status}.")
-        
+
+        logging.info(f"Monitoring instance {EC2_VECTORDB_INSTANCE} for Vector DB liveness.")
+        vectordb_instance_status = get_instance_status(EC2_VECTORDB_INSTANCE)
+
+        if vectordb_instance_status != 'running':
+            start_ec2_instance(EC2_VECTORDB_INSTANCE)
+
         # Sleep for the specified interval before checking again
         time.sleep(check_interval)
 
