@@ -95,8 +95,10 @@ def monitor_queue(queue_name, check_interval):
 
         logging.info(f"Monitoring instance {EC2_VECTORDB_INSTANCE} for Vector DB liveness.")
         vectordb_instance_status = get_instance_status(EC2_VECTORDB_INSTANCE)
-
+        
+        logging.info(f"Instance {EC2_VECTORDB_INSTANCE} status {vectordb_instance_status}.")
         if vectordb_instance_status != 'running':
+            logging.info(f"Starting Vector DB instance {EC2_VECTORDB_INSTANCE}...")
             start_ec2_instance(EC2_VECTORDB_INSTANCE)
 
         # Sleep for the specified interval before checking again
