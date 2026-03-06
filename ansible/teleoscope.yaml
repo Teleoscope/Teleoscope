@@ -1,6 +1,6 @@
 - hosts: "{{ groups['newmachines'] }}"
   remote_user: "{{ ansible_user }}"
-  vars_files: 
+  vars_files:
     - ./vars/vars.yaml
 
   tasks:
@@ -8,10 +8,20 @@
       ansible.builtin.git:
         repo: 'https://github.com/Teleoscope/Teleoscope.git'
         dest: ~/Teleoscope
-    - name: npm install
-      ansible.builtin.shell: npm install
+    - name: Install pnpm
+      ansible.builtin.shell: npm install -g pnpm
+    - name: Install root dependencies
+      ansible.builtin.shell: pnpm install
       args:
-        chdir: ~/Teleoscope/frontend
+        chdir: ~/Teleoscope
+    - name: Install teleoscope.ca dependencies
+      ansible.builtin.shell: pnpm install
+      args:
+        chdir: ~/Teleoscope/teleoscope.ca
+    - name: Generate schemas
+      ansible.builtin.shell: pnpm schema
+      args:
+        chdir: ~/Teleoscope/teleoscope.ca
     - name: Copy auth.py
       ansible.builtin.template:
         src: ./auth.py.j2
@@ -19,7 +29,11 @@
     - name: Copy .env.local
       ansible.builtin.template:
         src: ./.env.local.j2
-        dest: ~/Teleoscope/frontend/.env.local
+        dest: ~/Teleoscope/teleoscope.ca/.env.local
+    - name: Copy backend .env
+      ansible.builtin.template:
+        src: ./.env.backend.j2
+        dest: ~/Teleoscope/.env
 
 - name: Install Python Dependencies
   ansible.builtin.import_playbook: pythondeps.yaml

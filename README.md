@@ -21,11 +21,76 @@ As shown in the above figure, that will give a set of results that are more sema
 The workflow for developing themes is as shown in the above figure. The user iteratively searches for keywords, reads the relevant documents, groups them together and selects the documents to train the Teleoscope system with, then repeats. There is also an experimental clustering feature that allows you to use the system to create groups automatically based on the groups you have given it so far.
 
 ## Installation
-Installation right now is oriented toward VM deployment, but if you want a local install, you can create an Ansible inventory which lists `localhost` as the target deployment.
 
-For general development, it's recommended to go through the full Ansible install locally.
+### Option 1: Docker (quickest)
 
-For frontend-only development, you can run `npm i` in `frontend` and then `npm run dev` to run the webpack development server on `localhost:3000`.
+Get the full stack running with one command:
+
+```bash
+cp .env.example .env
+docker compose up -d
+```
+
+The app will be at **http://localhost:3000**. MongoDB, RabbitMQ, Milvus, and all workers (dispatch, graph, vectorizer, uploader, tasks, files API) start automatically. After the stack is up, run `./scripts/test-stack.sh` to verify connectivity.
+
+**Tests:** The [test suite](TESTING.md) runs automatically in CI on every push/PR to `main` and guarantees the system runs and changes are valid. Run locally with `./scripts/run-all-tests.sh` (see [TESTING.md](TESTING.md)).
+
+> **Note:** First run will take several minutes to build images and pull the embedding model. For GPU acceleration (NVIDIA), use:
+> ```bash
+> docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+> ```
+> Requires [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
+
+### Option 2: Ansible (VM deployment)
+
+For production or VM deployment:
+
+1. Copy the example vars and inventory:
+   ```bash
+   cp ansible/vars/vars.yaml.example ansible/vars/vars.yaml
+   cp ansible/vars/inventory.yaml.example ansible/vars/inventory.yaml
+   ```
+
+2. Edit `ansible/vars/vars.yaml` with your MongoDB, RabbitMQ, and auth credentials.
+
+3. Run the full playbook:
+   ```bash
+   ansible-playbook -i ansible/vars/inventory.yaml ansible/newteleoscope.yaml
+   ```
+
+For a separate vectorizer machine, use `ansible/newvectorizer.yaml`.
+
+### Option 3: Frontend-only development
+
+Run the web app against a remote backend:
+
+```bash
+cd teleoscope.ca
+cp ../.env.example .env.local
+# Edit .env.local with your backend URLs
+pnpm install && pnpm schema && pnpm dev
+```
+
+### Option 4: Local stack without Docker (e.g. macOS in UTM)
+
+If you can't run Docker (e.g. hypervisor limits in a VM), run and test everything except the vector pipeline on this machine:
+
+1. **One-time:** `./scripts/setup-local-macos.sh` then `brew services start mongodb-community rabbitmq`
+2. **Start stack:** `mamba activate teleoscope && ./scripts/start-local-stack.sh`
+3. **Test:** Unit tests (pytest, vitest), `./scripts/test-stack.sh`, and Playwright for non-vector flows.
+
+Vector search and embedding require Milvus (no native macOS server); those are tested in CI or on a host with Docker. See [docs/TESTING-WITHOUT-DOCKER.md](docs/TESTING-WITHOUT-DOCKER.md).
+
+### Mamba/Conda environment
+
+If you use [mamba](https://mamba.readthedocs.io/) (or conda) to manage Node/Python per project:
+
+```bash
+mamba env create -f environment.yml
+mamba activate teleoscope
+```
+
+This gives you Node 22, pnpm, and Python 3.11 in an isolated env. Then run `pnpm install` in `teleoscope.ca` and `pip install -r backend/requirements.txt` for full backend deps.
 
 # Technical notes
 Teleoscope is designed from the ground-up to make use of distributed and cloud-based computing. This means that there is a steep learning curve for people who would like to become involved in the prokect. If you are just getting started, here are some of the technologies that you will need to learn:

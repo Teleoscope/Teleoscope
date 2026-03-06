@@ -11,11 +11,15 @@ load_dotenv()  # This loads the variables from .env
 import os
 
 
-MILVUS_HOST = os.getenv("MILVUS_HOST")
-MIVLUS_PORT = os.getenv("MIVLUS_PORT")
+MILVUS_HOST = os.getenv("MILVUS_HOST", "localhost")
+MIVLUS_PORT = os.getenv("MIVLUS_PORT", "19530")
 MILVUS_USERNAME = os.getenv("MILVUS_USERNAME")
 MILVUS_PASSWORD = os.getenv("MILVUS_PASSWORD")
-MILVUS_DBNAME = os.getenv("MILVUS_DBNAME")
+MILVUS_DBNAME = os.getenv("MILVUS_DBNAME", "teleoscope")
+# Server: MILVUS_URI or MILVUS_HOST:MIVLUS_PORT. Lite: MILVUS_LITE_PATH (file path).
+# Do not set MILVUS_URI to a file path — pymilvus orm validates URI at import time.
+MILVUS_URI = os.getenv("MILVUS_URI", "").strip()
+MILVUS_LITE_PATH = os.getenv("MILVUS_LITE_PATH", "").strip()
 
 
 # ignore all future warnings
@@ -74,9 +78,20 @@ def milvus_setup(client: MilvusClient, workspace_id, collection_name="teleoscope
         client.create_partition(collection_name=collection_name, partition_name=workspace_id)
 
 
+def _use_lite():
+    return bool(MILVUS_LITE_PATH)
+
 def connect():
-    logging.info(f"Connecting to Milvus...")
+    logging.info("Connecting to Milvus...")
     client = None
+    if _use_lite():
+        # Milvus Lite: local file, no server (runs without Docker). Use MILVUS_LITE_PATH so pymilvus orm is not given a file URI at import.
+        path = MILVUS_LITE_PATH
+        if path.startswith("file://"):
+            path = path[7:]
+        client = MilvusClient(uri=path)
+        logging.info("Connected to Milvus Lite.")
+        return client
     try:
         client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
     except MilvusException as e:
@@ -85,7 +100,7 @@ def connect():
         database = db.create_database(MILVUS_DBNAME)
         connections.disconnect(f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
         client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
-    logging.info(f"Connected to Milvus.")
+    logging.info("Connected to Milvus.")
     return client
 
 
@@ -95,7 +110,8 @@ def get_embeddings(client: MilvusClient, collection_name, workspace_id, oids, li
     # ensure the collection exists
     milvus_setup(client, workspace_id, collection_name=collection_name)
 
-    client.using_database(db_name=MILVUS_DBNAME)
+    if not _use_lite():
+        client.using_database(db_name=MILVUS_DBNAME)
     # load the collection into memory
     client.load_partitions(collection_name=collection_name, partition_names=[str(workspace_id)])
     logging.info(f"Connected to Milvus Collection {collection_name} and partition {workspace_id}.")

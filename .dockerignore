@@ -1,0 +1,38 @@
+# Git and IDE
+.git
+.gitignore
+.vscode
+.idea
+
+# Dependencies (reinstalled in container)
+node_modules
+**/node_modules
+.pnpm-store
+
+# Build outputs
+.next
+out
+dist
+build
+
+# Python
+__pycache__
+*.pyc
+.venv
+venv
+*.egg-info
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# Docs and misc
+*.md
+!README.md
+images/
+experiments/
+tests/
+
+# Ansible (not needed in containers)
+ansible/

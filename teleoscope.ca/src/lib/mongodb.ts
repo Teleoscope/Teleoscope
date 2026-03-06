@@ -1,6 +1,13 @@
 import { MongoClient } from "mongodb";
 
-const uri = process.env.MONGODB_URI || `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}/?${process.env.MONGODB_OPTIONS}`
+// E2E/Playwright: use localhost so tests work without Docker (Next may load .env.local with Docker host)
+const rawUri =
+  process.env.MONGODB_URI ||
+  `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}/?${process.env.MONGODB_OPTIONS}`;
+const uri =
+  process.env.PLAYWRIGHT_E2E === "1"
+    ? rawUri.replace(/(mongodb:\/\/)([^@\/]*@)?mongodb(:\d+)?/, "$1$2localhost$3")
+    : rawUri;
 const options = {
   serverSelectionTimeoutMS: 60000,
   maxIdleTimeMS: 60000, // 1.0 minute

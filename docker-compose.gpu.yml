@@ -1,0 +1,12 @@
+# GPU override for vectorizer - use with: docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+# Requires: nvidia-container-toolkit (https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+
+services:
+  vectorizer:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

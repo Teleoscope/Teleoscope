@@ -7,73 +7,52 @@ require("dotenv").config({ path: "./.env.local" });
  */
 // require('dotenv').config();
 
+/** E2E base URL. When set, no webServer is started (use your running app). Default: start app on 3099. */
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3099';
+/** MongoDB URI for app started by webServer (use localhost when env points at Docker host 'mongodb'). */
+const webServerMongoUri =
+  process.env.PLAYWRIGHT_MONGODB_URI ||
+  (process.env.MONGODB_URI || 'mongodb://localhost:27017').replace(
+    /(mongodb:\/\/)([^@\/]*@)?mongodb(:\d+)?/,
+    '$1$2localhost$3'
+  );
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   testDir: './tests',
-  /* Run tests in files in parallel */
+  testIgnore: process.env.PLAYWRIGHT_SKIP_ACCOUNT === '1' ? ['account.spec.ts'] : undefined,
   fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
   workers: 1,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'http://127.0.0.1:3000',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    baseURL,
     trace: 'on-first-retry',
   },
   expect: { timeout: 60000 },
 
-  /* Configure projects for major browsers */
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'pnpm dev',
-    url: 'http://127.0.0.1:3000',
-    reuseExistingServer: !process.env.CI,
-  },
+  /* Start app on 3099 when PLAYWRIGHT_BASE_URL not set (avoids conflict with dev on 3000). */
+  webServer: process.env.PLAYWRIGHT_BASE_URL
+    ? undefined
+    : {
+        command: 'bash scripts/dev-for-playwright.sh',
+        url: baseURL,
+        reuseExistingServer: !process.env.CI,
+        env: {
+          ...process.env,
+          PORT: '3099',
+          PLAYWRIGHT_E2E: '1',
+          MONGODB_URI: webServerMongoUri,
+          MONGODB_HOST: 'localhost',
+        },
+      },
 });

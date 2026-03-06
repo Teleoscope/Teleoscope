@@ -1,0 +1,22 @@
+# Ansible inventory - copy to inventory.yaml and adjust
+# Run: ansible-playbook -i vars/inventory.yaml ansible/newteleoscope.yaml
+
+all:
+  children:
+    newmachines:
+      hosts:
+        # For local deploy, use localhost (ensure SSH to self works)
+        localhost:
+          ansible_connection: local
+        # For remote VMs, add hosts:
+        # teleoscope-vm:
+        #   ansible_host: 192.168.1.100
+        #   ansible_user: ubuntu
+
+    # Optional: separate vectorizer machines
+    vectorizers:
+      hosts: []
+
+    # Optional: coordinator for EC2 auto-scaling
+    coordinators:
+      hosts: []
