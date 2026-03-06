@@ -1,0 +1,290 @@
+# Teleoscope - Docker Compose stack
+# Quick start: cp .env.example .env && docker compose up -d
+# App: http://localhost:3000
+
+services:
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin_password
+      MONGO_INITDB_DATABASE: teleoscope
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  milvus:
+    image: milvusdb/milvus:v2.3.3
+    restart: unless-stopped
+    command: ["milvus", "run", "standalone"]
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+    ports:
+      - "19530:19530"
+    depends_on:
+      etcd:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - milvus_data:/var/lib/milvus
+
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.5
+    restart: unless-stopped
+    environment:
+      ETCD_AUTO_COMPACTION_MODE: revision
+      ETCD_AUTO_COMPACTION_RETENTION: 1000
+      ETCD_QUOTA_BACKEND_BYTES: 4294967296
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    volumes:
+      - etcd_data:/etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    restart: unless-stopped
+    command: minio server /minio_data --console-address ":9001"
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    volumes:
+      - minio_data:/minio_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@mongodb:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
+      MONGODB_DATABASE: teleoscope
+      MONGODB_USERNAME: teleoscope
+      MONGODB_REGISTRAR_URI: mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@mongodb:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD:-teleoscope_dev_password}
+      MONGODB_HOST: mongodb
+      MONGODB_OPTIONS: directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_VHOST: /
+      RABBITMQ_QUEUE: teleoscope-dispatch
+      TELEOSCOPE_BASE_URL: ${TELEOSCOPE_BASE_URL:-http://localhost:3000}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-in-production}
+      UPLOAD_DIR: /tmp/teleoscope/uploads
+    env_file:
+      - .env
+    volumes:
+      - teleoscope_uploads:/tmp/teleoscope/uploads
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # Celery worker - main task queue
+  worker-tasks:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["python", "-m", "celery", "-A", "backend.tasks", "worker", "--loglevel=info", "-Q", "teleoscope-tasks"]
+    environment:
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_VHOST: /
+      RABBITMQ_TASK_QUEUE: teleoscope-tasks
+      MONGODB_USERNAME: teleoscope
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD:-teleoscope_dev_password}
+      MONGODB_HOST: mongodb
+      MONGODB_OPTIONS: directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
+      DOWNLOAD_DIR: /tmp/teleoscope/downloads
+      MILVUS_HOST: milvus
+      MIVLUS_PORT: 19530
+      MILVUS_DBNAME: teleoscope
+      RABBITMQ_DISPATCH_QUEUE: teleoscope-dispatch
+      RABBITMQ_VECTORIZE_QUEUE: teleoscope-vectorize
+      RABBITMQ_UPLOAD_VECTOR_QUEUE: teleoscope-upload-vector
+    volumes:
+      - teleoscope_downloads:/tmp/teleoscope/downloads
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+      - mongodb
+      - milvus
+
+  # Dispatch - routes incoming messages to Celery tasks
+  dispatch:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["python", "-m", "backend.dispatch"]
+    environment:
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_VHOST: /
+      RABBITMQ_TASK_QUEUE: teleoscope-tasks
+      RABBITMQ_DISPATCH_QUEUE: teleoscope-dispatch
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+
+  # Graph worker - UMAP, HDBSCAN, vector ops
+  worker-graph:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["python", "-m", "celery", "-A", "backend.graph", "worker", "--loglevel=info", "-Q", "graph"]
+    environment:
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_VHOST: /
+      RABBITMQ_TASK_QUEUE: teleoscope-tasks
+      RABBITMQ_VECTORIZE_QUEUE: teleoscope-vectorize
+      RABBITMQ_UPLOAD_VECTOR_QUEUE: teleoscope-upload-vector
+      MONGODB_USERNAME: teleoscope
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD:-teleoscope_dev_password}
+      MONGODB_HOST: mongodb
+      MONGODB_OPTIONS: directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
+      MILVUS_HOST: milvus
+      MIVLUS_PORT: 19530
+      MILVUS_DBNAME: teleoscope
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+      - mongodb
+      - milvus
+
+  # Vectorizer - BGEM3 embeddings
+  vectorizer:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["python", "-m", "backend.vectorizer"]
+    environment:
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_VHOST: /
+      RABBITMQ_VECTORIZE_QUEUE: teleoscope-vectorize
+      RABBITMQ_UPLOAD_VECTOR_QUEUE: teleoscope-upload-vector
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+
+  # Uploader - writes vectors to Milvus
+  uploader:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["python", "-m", "backend.uploader"]
+    environment:
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_VHOST: /
+      RABBITMQ_TASK_QUEUE: teleoscope-tasks
+      RABBITMQ_DISPATCH_QUEUE: teleoscope-dispatch
+      RABBITMQ_VECTORIZE_QUEUE: teleoscope-vectorize
+      RABBITMQ_UPLOAD_VECTOR_QUEUE: teleoscope-upload-vector
+      MILVUS_HOST: milvus
+      MIVLUS_PORT: 19530
+      MILVUS_DBNAME: teleoscope
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+      - milvus
+
+  # Files API - FastAPI for file downloads
+  files:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "files:app", "--bind", "0.0.0.0:8000"]
+    working_dir: /app/backend
+    ports:
+      - "8000:8000"
+    environment:
+      DOWNLOAD_DIR: /tmp/teleoscope/downloads
+    volumes:
+      - teleoscope_downloads:/tmp/teleoscope/downloads
+
+  # Monitor - EC2 auto-scaling (optional, requires AWS credentials)
+  # Uncomment and set EC2_VECTORIZE_INSTANCE, EC2_VECTORDB_INSTANCE for cloud deploy
+  # monitor:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.backend
+  #   command: ["python", "-m", "backend.monitor"]
+  #   environment:
+  #     RABBITMQ_VECTORIZE_QUEUE: teleoscope-vectorize
+  #     RABBITMQ_VHOST: /
+  #     EC2_VECTORIZE_INSTANCE: ${EC2_VECTORIZE_INSTANCE}
+  #     EC2_VECTORDB_INSTANCE: ${EC2_VECTORDB_INSTANCE}
+  #   env_file: .env
+  #   depends_on: [rabbitmq]
+
+volumes:
+  mongodb_data:
+  milvus_data:
+  etcd_data:
+  minio_data:
+  teleoscope_downloads:
+  teleoscope_uploads:

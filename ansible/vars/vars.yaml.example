@@ -1,0 +1,65 @@
+# Ansible variables - copy to vars.yaml and replace with your values
+# Required by all playbooks. Do not commit vars.yaml (add to .gitignore).
+
+# -----------------------------------------------------------------------------
+# General
+# -----------------------------------------------------------------------------
+ansible_user: ubuntu
+production: production
+remote_prefix: /home
+
+# Hostnames (use your domain or VM IP)
+teleoscope:
+  ca: teleoscope.ca
+
+# -----------------------------------------------------------------------------
+# MongoDB
+# -----------------------------------------------------------------------------
+mongodb_admin_name: example_admin
+mongodb_admin_password: admin_password
+mongodb_dev_name: example_dev
+mongodb_dev_password: dev_password
+mongodb_database: teleoscope
+mongodb_public_user: example_dev
+mongodb_public_password: dev_password
+mongodb_registrar_user: example_dev
+mongodb_registrar_password: dev_password
+
+# -----------------------------------------------------------------------------
+# RabbitMQ
+# -----------------------------------------------------------------------------
+rabbitmq_vhost: teleoscope
+rabbitmq_admin_username: example_admin
+rabbitmq_admin_password: admin_password
+rabbitmq_dev_username: example_dev
+rabbitmq_dev_password: dev_password
+rabbitmq_public_user: example_dev
+rabbitmq_public_password: dev_password
+rabbitmq_task_queue: teleoscope-tasks
+rabbitmq_dispatch_queue: teleoscope-dispatch
+
+# -----------------------------------------------------------------------------
+# Auth (NextAuth / Lucia)
+# -----------------------------------------------------------------------------
+nextauth_secret: generate-a-random-secret-for-production
+google_client_id: ""
+google_client_secret: ""
+
+# -----------------------------------------------------------------------------
+# Conda (Python environment)
+# -----------------------------------------------------------------------------
+conda_environment: teleoscope
+conda_prefix: /usr/share/miniconda3
+
+# -----------------------------------------------------------------------------
+# Node.js
+# -----------------------------------------------------------------------------
+nodejs_version: "19"
+ubuntu_version: jammy
+
+# -----------------------------------------------------------------------------
+# AWS (optional - for coordinator/monitor EC2 auto-scaling)
+# -----------------------------------------------------------------------------
+aws_access_key: ""
+aws_secret_key: ""
+default_aws_region: ca-central-1

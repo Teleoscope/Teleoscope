@@ -1,0 +1,24 @@
+# Teleoscope backend - Python workers (dispatch, graph, vectorizer, uploader, tasks, files)
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system deps for some Python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy backend requirements first for layer caching
+COPY backend/requirements.txt /app/backend/requirements.txt
+RUN pip install --no-cache-dir -r /app/backend/requirements.txt
+
+# Copy backend and schemas (graph/projection may reference schemas)
+COPY backend /app/backend
+COPY schemas /app/schemas
+
+# Ensure Python can find backend module
+ENV PYTHONPATH=/app
+
+# Default: run Celery tasks worker (override in compose)
+CMD ["python", "-m", "celery", "-A", "backend.tasks", "worker", "--loglevel=info"]

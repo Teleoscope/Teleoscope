@@ -25,14 +25,14 @@
         executable: "{{ conda_prefix }}/condabin/conda"
     - name: Install pip packages WITHIN a designated conda environment
       ansible.builtin.pip:
-        name: 
-          - celery 
+        name:
+          - celery
           - python-dotenv
           - boto3
-          - pymongo 
-          - hdbscan 
-          - tensorflow 
-          - tensorflow_hub 
+          - pymongo
+          - hdbscan
+          - FlagEmbedding
+          - torch
           - matplotlib
           - zstandard
           - pygithub
@@ -44,7 +44,13 @@
           - chromadb
           - pytest
           - pandas
-          - spacy # python -m spacy download en_core_web_sm
-          - umap
+          - spacy
+          - umap-learn
           - pymilvus
+          - fastapi
+          - uvicorn
+          - gunicorn
+          - docx
+          - openpyxl
+          - xlsxwriter
         executable: "{{ conda_prefix }}/envs/{{ conda_environment }}/bin/pip"

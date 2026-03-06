@@ -1,4 +1,5 @@
 import os
+import pytest
 from dotenv import load_dotenv
 load_dotenv()
 MONGODB_URI = os.environ.get("MONGODB_URI")
@@ -16,7 +17,8 @@ def test_load_yaml():
                 print(f"Data from {schema}:")
 
 
-# Test for creating the schema in Atlas
+# Test for creating the schema in Atlas (requires MongoDB)
+@pytest.mark.integration
 def test_create_MongoDB_schema():
     from pymongo.mongo_client import MongoClient
     from pymongo.server_api import ServerApi

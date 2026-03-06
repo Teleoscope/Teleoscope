@@ -157,8 +157,9 @@ experiments/data/
 *.npz
 
 
-# ansible
-ansible/vars/*
+# ansible (keep .example files, ignore actual secrets)
+ansible/vars/vars.yaml
+ansible/vars/inventory.yaml
 
 # yarn
 .yarn/*
@@ -187,3 +188,7 @@ frontend/yarn.lock
 
 .vscode
 idea
+
+# One-click test (no Docker) ephemera
+.mongodb-data/
+.local-stack-pids/

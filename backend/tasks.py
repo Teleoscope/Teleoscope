@@ -8,7 +8,14 @@ from docx import Document
 from docx.shared import Pt
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-from itertools import batched
+try:
+    from itertools import batched
+except ImportError:
+    def batched(iterable, n):
+        from itertools import islice
+        it = iter(iterable)
+        while batch := list(islice(it, n)):
+            yield batch
 
 from warnings import simplefilter
 from celery import Celery
