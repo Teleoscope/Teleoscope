@@ -1,9 +1,24 @@
 import { MongoClient } from "mongodb";
 
 // E2E/Playwright: use localhost so tests work without Docker (Next may load .env.local with Docker host)
-const rawUri =
-  process.env.MONGODB_URI ||
-  `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_HOST}/?${process.env.MONGODB_OPTIONS}`;
+const normalizeEnv = (value?: string) => {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  const lowered = trimmed.toLowerCase();
+  if (lowered === "undefined" || lowered === "null") return undefined;
+  return trimmed;
+};
+
+const directUri = normalizeEnv(process.env.MONGODB_URI);
+const username = normalizeEnv(process.env.MONGODB_USERNAME);
+const password = normalizeEnv(process.env.MONGODB_PASSWORD);
+const host = normalizeEnv(process.env.MONGODB_HOST);
+const optionsQuery = normalizeEnv(process.env.MONGODB_OPTIONS);
+const composedUri =
+  username && password && host
+    ? `mongodb://${username}:${password}@${host}/${optionsQuery ? `?${optionsQuery}` : ""}`
+    : undefined;
+const rawUri = directUri || composedUri || "mongodb://localhost:27017";
 const uri =
   process.env.PLAYWRIGHT_E2E === "1"
     ? rawUri.replace(/(mongodb:\/\/)([^@\/]*@)?mongodb(:\d+)?/, "$1$2localhost$3")
