@@ -89,6 +89,17 @@ pnpm test:unit
 
 This suite currently includes focused modular tests for `UploadPage` chunking + importer completion behavior.
 
+**API↔frontend contract consistency checks:**
+
+```bash
+cd teleoscope.ca
+PLAYWRIGHT_BASE_URL=http://localhost:3000 \
+PLAYWRIGHT_SKIP_ACCOUNT=1 \
+pnpm exec playwright test tests/api-frontend-contract.spec.ts tests/api.spec.ts -g "Frontend/API contract consistency|UI endpoint references resolve to backend routes" --project=chromium --retries=0
+```
+
+This verifies endpoint names and request-property naming/order alignment between frontend call sites and backend route handlers.
+
 **System UI e2e bundle (components + uploader + vectorization):**
 
 Requires full stack (app + MongoDB + RabbitMQ + Milvus + vector workers).

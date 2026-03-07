@@ -38,12 +38,8 @@ export default function AccountSettings() {
 
     async function onSubmit() {
         // TODO: Backend to support updating user information
-        //   const { firstName, lastName } = form.getValues();
-        //   // Update user
-        //   // await fetch(`/api/users/${user._id}`, {
-        //   //   method: "PATCH",
-        //   //   body: JSON.stringify({ firstName, lastName }),
-        //   // });
+        // const { firstName, lastName } = form.getValues();
+        // Submit profile update to the user settings API when implemented.
     }
 
     if (!account) {

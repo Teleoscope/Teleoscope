@@ -33,7 +33,7 @@ docker compose up -d
 
 The app will be at **http://localhost:3000**. MongoDB, RabbitMQ, Milvus, and all workers (dispatch, graph, vectorizer, uploader, tasks, files API) start automatically. After the stack is up, run `./scripts/test-stack.sh` to verify connectivity.
 
-**Tests:** CI includes fast frontend/backend checks plus a full-stack Playwright workflow (`.github/workflows/test.playwright.yml`) that runs sidebar-component e2e, CSV-uploader system e2e, and 1000-doc vectorization e2e. Modular frontend tests run with `cd teleoscope.ca && pnpm test:unit`. See [TESTING.md](TESTING.md) for all commands and env toggles.
+**Tests:** CI includes fast frontend/backend checks plus a full-stack Playwright workflow (`.github/workflows/test.playwright.yml`) that runs sidebar-component e2e, CSV-uploader system e2e, and 1000-doc vectorization e2e. Modular frontend tests run with `cd teleoscope.ca && pnpm test:unit`, and API/frontend contract alignment checks run with `tests/api-frontend-contract.spec.ts` + `tests/api.spec.ts` (see [TESTING.md](TESTING.md)).
 
 > **Note:** First run will take several minutes to build images and pull the embedding model. For GPU acceleration (NVIDIA), use:
 > ```bash

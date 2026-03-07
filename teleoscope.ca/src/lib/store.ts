@@ -571,7 +571,7 @@ const actionMiddleware = (store) => (next) => (action) => {
         axios.post(`/api/workflow/relabel`, {
             workspace_id: workspace_id,
             workflow_id: workflow_id,
-            label: action.payload.document_id
+            label: action.payload.label
         });
     }
 

@@ -78,14 +78,7 @@ const UI_SOURCE_ROOTS = [
   path.resolve(__dirname, '../src/app/app'),
 ];
 
-const KNOWN_LEGACY_UI_ENDPOINTS = [
-  '/api/clusters',
-  '/api/contributors/add',
-  '/api/contributors/remove',
-  '/api/upload/csv',
-  '/api/users/:param',
-  '/api/workspaces/:param',
-] as const;
+const KNOWN_LEGACY_UI_ENDPOINTS: string[] = [];
 
 function collectRouteFiles(dir: string): string[] {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
