@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { get_stripe } from "@/lib/stripe";
 import { NextRequest } from "next/server";
 

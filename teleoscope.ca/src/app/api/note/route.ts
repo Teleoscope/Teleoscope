@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { validateRequest } from '@/lib/auth';
 import { ObjectId } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';

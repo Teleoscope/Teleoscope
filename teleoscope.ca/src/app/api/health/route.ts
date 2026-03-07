@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 // pages/api/status.ts
 
 import { NextApiRequest, NextApiResponse } from 'next';

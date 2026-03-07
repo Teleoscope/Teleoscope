@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 // app/api/email/contacts/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
