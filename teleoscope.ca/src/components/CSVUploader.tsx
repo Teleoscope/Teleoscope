@@ -45,44 +45,31 @@ function Uploader() {
       return;
     }
     setError('');
-    const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
-    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('workflow_id', workflow_id);
+    formData.append('workspace_id', workspace_id);
+    formData.append('headerLine_row', headerLine.toString());
+    formData.append('uid_column', uniqueId);
+    formData.append('title_column', title);
+    formData.append('text_column', text);
+    formData.append('group_columns', selectedHeaders.toString());
 
-    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-      const start = chunkIndex * CHUNK_SIZE;
-      const end = Math.min(start + CHUNK_SIZE, file.size);
-      const chunk = file.slice(start, end);
-
-      const formData = new FormData();
-      formData.append('chunk', chunk);
-      formData.append('fileName', file.name);
-      formData.append('totalChunks', totalChunks.toString());
-      formData.append('currentChunkIndex', chunkIndex.toString());
-      formData.append('workflow_id', workflow_id);
-      formData.append('workspace_id', workspace_id);
-      formData.append('headerLine_row', headerLine.toString());
-      formData.append('uid_column', uniqueId);
-      formData.append('title_column', title);
-      formData.append('text_column', text);
-      formData.append('group_columns', selectedHeaders.toString());
-
-      try {
-        await axios.post('/api/upload/csv', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round(
-              ((chunkIndex * CHUNK_SIZE + progressEvent.loaded) * 100) / file.size
-            );
-            setUploadProgress(percentCompleted);
-          },
-        });
-      } catch (error) {
-        console.error('Upload error:', error);
-        setError('Failed to upload file.');
-        break;
-      }
+    try {
+      await axios.post('/api/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          const loaded = progressEvent.loaded ?? 0;
+          const total = progressEvent.total ?? file.size;
+          const percentCompleted = Math.round((loaded * 100) / total);
+          setUploadProgress(percentCompleted);
+        },
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      setError('Failed to upload file.');
     }
   };
 
