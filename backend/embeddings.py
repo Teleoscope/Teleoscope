@@ -33,7 +33,7 @@ def string_to_int(s):
     # Convert the hexadecimal string to an integer
     return int(hex_dig, 16)
 
-from pymilvus import MilvusClient, DataType, MilvusException, connections, db
+from pymilvus import MilvusClient, DataType, MilvusException
 
 
 def milvus_setup(client: MilvusClient, workspace_id, collection_name="teleoscope"):
@@ -93,13 +93,36 @@ def connect():
         logging.info("Connected to Milvus Lite.")
         return client
     try:
-        client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
+        client = MilvusClient(
+            uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME
+        )
+        # Probe one lightweight API call so invalid/unsupported db selection
+        # fails here and we can gracefully fall back to default DB.
+        try:
+            client.list_collections()
+        except Exception as probe_exc:
+            msg = str(probe_exc)
+            if (
+                "database" in msg.lower()
+                or "DescribeDatabase" in msg
+                or "UNIMPLEMENTED" in msg
+            ):
+                logging.warning(
+                    "Milvus database '%s' is unavailable or unsupported; "
+                    "falling back to default database.",
+                    MILVUS_DBNAME,
+                )
+                client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
+            else:
+                raise
     except MilvusException as e:
-        logging.info(f"Exception {e} when creating Milvus client.")
-        connections.connect(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
-        database = db.create_database(MILVUS_DBNAME)
-        connections.disconnect(f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
-        client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
+        logging.info(
+            "Exception %s when creating Milvus client with db '%s'; "
+            "using default database.",
+            e,
+            MILVUS_DBNAME,
+        )
+        client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
     logging.info("Connected to Milvus.")
     return client
 

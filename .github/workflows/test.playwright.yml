@@ -1,73 +1,67 @@
-name: Playwright Tests
+name: Playwright UI Vector E2E
 
 on:
   push:
-    branches: [ "main", "frontend" ]
+    branches: ["main", "frontend"]
   pull_request:
-    branches: [ "main", "frontend" ]
-
-defaults:
-  run:
-    working-directory: ./teleoscope.ca
+    branches: ["main", "frontend"]
 
 jobs:
-  cache-and-install:
+  ui-vectorization-e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 70
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "22"
 
-      - uses: pnpm/action-setup@v3
-        name: Install pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
-          run_install: false
+          version: 10
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-      - uses: actions/cache@v4
-        name: Setup pnpm cache
+      - name: Cache pnpm store
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_ENV
+        working-directory: teleoscope.ca
+
+      - name: Restore pnpm cache
+        uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('teleoscope.ca/pnpm-lock.yaml') }}
 
-      - name: Install dependencies
-        run: pnpm install
-      
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
-      
-      - name: Copy env variables and build
-        run: |
-          echo "MONGODB_URI=${{secrets.MONGODB_ATLAS_TESTING_URI}}" >> ./.env.local
-          echo "STRIPE_TEST_PUBLISHABLE_KEY=${{secrets.STRIPE_TEST_PUBLISHABLE_KEY}}" >> ./.env.local
-          echo "STRIPE_TEST_SECRET_KEY=${{secrets.STRIPE_TEST_SECRET_KEY}}" >> ./.env.local
-          echo "FRIGADE_API_PUBLIC=${{secrets.FRIGADE_API_PUBLIC}}" >> ./.env.local
-          echo "LOOPS_API_KEY=${{secrets.LOOPS_API_KEY}}" >> ./.env.local
-          echo "TELEOSCOPE_BASE_URL=http://127.0.0.1:3000" >> ./.env.local
-          echo "TEST_EMAIL=test@test.test" >> ./.env.local
-          echo "TEST_PASSWORD=passWORD123!" >> ./.env.local
-          cat ./.env.local  # Add this to verify if the file is generated correctly
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: teleoscope.ca
 
-      - name: Run Playwright tests
-        run: pnpm exec playwright test
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium --with-deps
+        working-directory: teleoscope.ca
+
+      - name: Start full stack
+        run: docker compose up -d --build
+
+      - name: Wait for stack readiness
+        run: ./scripts/test-stack.sh http://localhost:3000
+
+      - name: Run large UI vectorization e2e
+        run: pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0 --reporter=line
+        working-directory: teleoscope.ca
         env:
-          MONGODB_URI: ${{ secrets.MONGODB_ATLAS_TESTING_URI }}  # Ensure env variable in case .env.local isn't picked up
-          TELEOSCOPE_BASE_URL: "http://127.0.0.1:3000" # Ensure env variable in case .env.local isn't picked up
+          CI: "true"
+          PLAYWRIGHT_BASE_URL: "http://localhost:3000"
+          PLAYWRIGHT_SKIP_ACCOUNT: "1"
+          PLAYWRIGHT_UI_VECTOR_E2E: "1"
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Playwright report
         if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
+          name: playwright-report-ui-vectorization
+          path: teleoscope.ca/playwright-report/
+          retention-days: 14
