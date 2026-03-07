@@ -48,5 +48,6 @@ For RabbitMQ and Milvus, use `docker compose up -d rabbitmq etcd minio milvus` f
 | **Lint** | `cd teleoscope.ca && pnpm lint` |
 | **Backend unit tests** | `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v` |
 | **Playwright e2e** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test --project=chromium` |
+| **Playwright UI vector e2e (1000 docs)** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_VECTOR_E2E=1 pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0` |
 | **Dev server** | `cd teleoscope.ca && pnpm dev` |
 | **Full test suite** | See `TESTING.md` |

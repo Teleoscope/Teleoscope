@@ -4,17 +4,17 @@ The test suite is **automated** and runs on every push and pull request to `main
 
 ## What runs in CI
 
-- **Backend (unit)**  
-  - `pytest tests/ -m "not integration"`  
-  - No MongoDB, RabbitMQ, or Milvus required.  
-  - Covers: schema loading, `backend.utils` (sanitization, ranking, similarity), `backend.projection` (distance matrices, clustering helpers).
+- **Workflow: `Test suite`**  
+  - **Backend (unit):** `pytest tests/ -m "not integration"`  
+  - **Frontend (e2e smoke):** Playwright Chromium on baseline UI flows.  
+  - Keeps the fast merge gate green for everyday changes.
 
-- **Frontend (e2e)**  
-  - Playwright with Chromium only.  
-  - Starts the Next.js app via the Playwright webServer (port 3099).  
-  - Runs: landing page, smoke tests. Account/signup tests are skipped in CI unless `MONGODB_ATLAS_TESTING_URI` is set in repo secrets.
+- **Workflow: `Playwright UI Vector E2E`**  
+  - Starts the full Docker stack (MongoDB, RabbitMQ, Milvus, app, workers).  
+  - Runs `teleoscope.ca/tests/ui-vectorization-large.spec.ts` in Chromium.  
+  - This test creates a disposable account, uploads **1000 generated documents**, waits for vectorization, creates/connects graph nodes (Document, Rank, Union, Intersection, Difference, Exclusion), verifies ranking/set-operation outputs, and validates document visibility/selection in frontend node windows.
 
-**Required status:** Protect `main` with a branch rule that requires the **“Test suite”** workflow to pass before merge. Then changes cannot be merged if tests fail.
+**Required status:** Protect `main` with branch rules that require both **“Test suite”** and **“Playwright UI Vector E2E”** to pass before merge.
 
 ## Running locally
 
@@ -77,6 +77,22 @@ pnpm exec playwright install chromium   # once
 pnpm exec playwright test --project=chromium
 ```
 
+**Large UI vectorization e2e (1000 docs):**
+
+Requires full stack (app + MongoDB + RabbitMQ + Milvus + vector workers).
+
+```bash
+docker compose up -d --build
+./scripts/test-stack.sh http://localhost:3000
+cd teleoscope.ca
+PLAYWRIGHT_BASE_URL=http://localhost:3000 \
+PLAYWRIGHT_SKIP_ACCOUNT=1 \
+PLAYWRIGHT_UI_VECTOR_E2E=1 \
+pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0
+```
+
+Expected signal: `1 passed` for `ui-vectorization-large.spec.ts`.
+
 ## Adding tests
 
 - **Backend:** Add `tests/test_*.py` or `tests/test_<module>.py`. Use `@pytest.mark.integration` for tests that need MongoDB or other services. Keep the default suite fast and service-free.
@@ -84,12 +100,14 @@ pnpm exec playwright test --project=chromium
 
 ## CI workflow file
 
-The single workflow that defines the gate is:
+Primary merge-gate workflows:
 
-**`.github/workflows/test-suite.yml`**
+- **`.github/workflows/test-suite.yml`**  
+  - Runs on `push`/`pull_request` to `main`.  
+  - Jobs: `backend` (unit), `frontend` (Playwright Chromium smoke).
 
-- Runs on `push` and `pull_request` to `main`.
-- Jobs: `backend` (unit), `frontend` (Playwright Chromium).
-- No optional steps: if either job fails, the suite fails.
+- **`.github/workflows/test.playwright.yml`**  
+  - Runs on `push`/`pull_request` to `main` and `frontend`.  
+  - Job: full-stack Playwright vectorization e2e (`tests/ui-vectorization-large.spec.ts`).
 
-Other workflows (e.g. `python.lint.and.test.yml`, `test.playwright.yml`) can remain for branch-specific or full-browser runs, but **Test suite** is the one to require for merge.
+If either required workflow fails, the branch should not merge.

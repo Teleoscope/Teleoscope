@@ -98,7 +98,7 @@ mamba activate teleoscope
 ./scripts/start-local-stack.sh
 ```
 
-Then open **http://localhost:3000** and use the app. The script starts: Celery tasks worker, dispatch, files API, and the Next.js app. It does **not** start vectorizer, uploader, or graph (they need Milvus).
+Then open **http://localhost:3000** and use the app. The script always starts: Celery tasks worker, dispatch, files API, and the Next.js app. If `MILVUS_LITE_PATH` is set, it also starts vectorizer, uploader, and graph worker (full vector pipeline via Milvus Lite).
 
 ---
 
@@ -127,22 +127,31 @@ This checks: app `/api/hello`, RabbitMQ management, files API, MongoDB and (if p
 
 ### 3. E2E (Playwright)
 
-With the local stack running and the app at http://localhost:3000:
+With the local stack running and the app at http://localhost:3000, run smoke tests:
 
 ```bash
 cd teleoscope.ca
-pnpm exec playwright test
+PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm exec playwright test --project=chromium
 ```
 
-Run only tests that don’t rely on vector features (e.g. login, navigation, document list). Tests that need embedding/vector search will fail without Milvus.
+Run the large vector UI e2e (1000 docs):
+
+```bash
+cd teleoscope.ca
+PLAYWRIGHT_BASE_URL=http://localhost:3000 \
+PLAYWRIGHT_SKIP_ACCOUNT=1 \
+PLAYWRIGHT_UI_VECTOR_E2E=1 \
+pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0
+```
+
+The large test requires `MILVUS_LITE_PATH` plus vector workers (or Docker Milvus/stack).
 
 ### 4. What’s not tested without Docker
 
-- Vectorization of documents
-- Search-by-example (semantic search)
-- Clustering (UMAP/HDBSCAN) and graph workers that depend on Milvus
+- Anything that depends on external container networking/features not reproduced locally.
+- Vector/search flows **only** when `MILVUS_LITE_PATH` is not configured.
 
-Those are covered in CI (Docker) or on a host where Docker + Milvus run.
+If `MILVUS_LITE_PATH` is configured, vectorization/search/ranking flows can be validated locally too.
 
 ---
 
@@ -153,7 +162,7 @@ Those are covered in CI (Docker) or on a host where Docker + Milvus run.
 | Backend unit     | `PYTHONPATH=. pytest tests/ -m "not integration"` | No           |
 | Frontend unit    | `cd teleoscope.ca && pnpm test:run`        | No           |
 | Connectivity     | `./scripts/test-stack.sh`                  | Yes          |
-| E2E (non-vector) | `cd teleoscope.ca && pnpm exec playwright test` | Yes          |
-| Vector pipeline  | Use Docker on another machine or CI        | Milvus       |
+| E2E (smoke)      | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm exec playwright test --project=chromium` | Yes |
+| E2E (vector, 1000 docs) | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_VECTOR_E2E=1 pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0` | Yes + Milvus Lite |
 
-You can run the full test plan for **everything that doesn’t require Milvus** on this machine; the rest stays in Docker/CI.
+With `MILVUS_LITE_PATH` configured, this machine can run both smoke and vector UI e2e coverage without Docker.
