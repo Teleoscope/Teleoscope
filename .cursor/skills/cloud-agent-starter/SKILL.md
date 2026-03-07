@@ -49,6 +49,8 @@ Use these to quickly adapt tests to limited environments.
   Run the browser target used in CI.
 - `PLAYWRIGHT_UI_COMPONENT_E2E=1`  
   Enable sidebar component system e2e (`sidebar-components-e2e.spec.ts`).
+- `PLAYWRIGHT_UI_EXPORT_E2E=1`  
+  Enable export button system e2e (`export-buttons-ui.spec.ts`).
 - `PLAYWRIGHT_UI_UPLOADER_E2E=1`  
   Enable CSV uploader system e2e (`csv-uploader-ui.spec.ts`).
 - `PLAYWRIGHT_UI_VECTOR_E2E=1`  
@@ -93,9 +95,9 @@ API/frontend contract consistency checks:
 1. `cd teleoscope.ca`
 2. `PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test tests/api-frontend-contract.spec.ts tests/api.spec.ts -g "Frontend/API contract consistency|UI endpoint references resolve to backend routes" --project=chromium --retries=0`
 
-Full system UI e2e bundle (components + uploader + 1000-doc vectorization):
+Full system UI e2e bundle (components + export + uploader + 1000-doc vectorization):
 1. Ensure Docker stack is healthy (`./scripts/test-stack.sh http://localhost:3000`).
-2. `PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_COMPONENT_E2E=1 PLAYWRIGHT_UI_UPLOADER_E2E=1 PLAYWRIGHT_UI_VECTOR_E2E=1 pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/csv-uploader-ui.spec.ts tests/ui-vectorization-large.spec.ts --project=chromium --retries=0`
+2. `PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_COMPONENT_E2E=1 PLAYWRIGHT_UI_EXPORT_E2E=1 PLAYWRIGHT_UI_UPLOADER_E2E=1 PLAYWRIGHT_UI_VECTOR_E2E=1 pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/ui-vectorization-large.spec.ts --project=chromium --retries=0`
 
 ### Area C: Backend core (`backend/` + `tests/`)
 Primary use: fast Python correctness checks and service-backed integration tests.

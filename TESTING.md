@@ -11,8 +11,9 @@ The test suite is **automated** and runs on every push and pull request to `main
 
 - **Workflow: `Playwright UI System E2E`**  
   - Starts the full Docker stack (MongoDB, RabbitMQ, Milvus, app, workers).  
-  - Runs three Chromium e2e specs:
+  - Runs four Chromium e2e specs:
     - `tests/sidebar-components-e2e.spec.ts` (system coverage across primary sidebar components)
+    - `tests/export-buttons-ui.spec.ts` (export button behavior in groups panel)
     - `tests/csv-uploader-ui.spec.ts` (CSV uploader UI flow through the modal/importer)
     - `tests/ui-vectorization-large.spec.ts` (1000-doc upload/vectorization/rank/set operations)
   - Together these validate both component-level UI integration and full vector pipeline behavior.
@@ -100,7 +101,7 @@ pnpm exec playwright test tests/api-frontend-contract.spec.ts tests/api.spec.ts 
 
 This verifies endpoint names and request-property naming/order alignment between frontend call sites and backend route handlers.
 
-**System UI e2e bundle (components + uploader + vectorization):**
+**System UI e2e bundle (components + export + uploader + vectorization):**
 
 Requires full stack (app + MongoDB + RabbitMQ + Milvus + vector workers).
 
@@ -111,12 +112,13 @@ cd teleoscope.ca
 PLAYWRIGHT_BASE_URL=http://localhost:3000 \
 PLAYWRIGHT_SKIP_ACCOUNT=1 \
 PLAYWRIGHT_UI_COMPONENT_E2E=1 \
+PLAYWRIGHT_UI_EXPORT_E2E=1 \
 PLAYWRIGHT_UI_UPLOADER_E2E=1 \
 PLAYWRIGHT_UI_VECTOR_E2E=1 \
-pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/csv-uploader-ui.spec.ts tests/ui-vectorization-large.spec.ts --project=chromium --retries=0
+pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/ui-vectorization-large.spec.ts --project=chromium --retries=0
 ```
 
-Expected signal: `3 passed` for the three specs above.
+Expected signal: `4 passed` for the four specs above.
 
 ## Adding tests
 
@@ -133,6 +135,6 @@ Primary merge-gate workflows:
 
 - **`.github/workflows/test.playwright.yml`**  
   - Runs on `push`/`pull_request` to `main` and `frontend`.  
-  - Job: full-stack Playwright component/uploader/vectorization e2e (three specs listed above).
+  - Job: full-stack Playwright component/export/uploader/vectorization e2e (four specs listed above).
 
 If either required workflow fails, the branch should not merge.
