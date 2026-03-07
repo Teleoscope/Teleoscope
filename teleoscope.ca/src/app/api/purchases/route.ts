@@ -8,12 +8,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
 export async function POST(request: NextRequest) {
-    const mongo_client = await client()
-    const db = mongo_client.db()
-    
+    const mongo_client = await client();
+    const db = mongo_client.db();
+
     const endpointSecret = process.env.STRIPE_TESTING_ENDPOINT_SECRET;
     const sig = request.headers.get('stripe-signature');
-    const stripe = await get_stripe()
+    const stripe = await get_stripe();
+    if (!stripe || !endpointSecret) {
+        return NextResponse.json(
+            { error: 'Stripe integration is disabled.' },
+            { status: 503 }
+        );
+    }
 
     try {
         const buff = await readBody(request);
