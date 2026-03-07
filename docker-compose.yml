@@ -6,6 +6,13 @@ services:
   mongodb:
     image: mongo:7
     restart: unless-stopped
+    entrypoint: >
+      bash -c '
+        openssl rand -base64 756 > /tmp/mongo-keyfile
+        chmod 400 /tmp/mongo-keyfile
+        chown 999:999 /tmp/mongo-keyfile
+        exec docker-entrypoint.sh mongod --replSet rs0 --keyFile /tmp/mongo-keyfile
+      '
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin_password
@@ -16,10 +23,39 @@ services:
       - mongodb_data:/data/db
       - ./docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "-u", "admin", "-p", "admin_password", "--eval", "try { rs.status().ok } catch(e) { 0 }"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
+
+  # One-shot: initializes the replica set on first start
+  mongodb-init:
+    image: mongo:7
+    depends_on:
+      mongodb:
+        condition: service_started
+    restart: "no"
+    entrypoint: >
+      bash -c '
+        echo "Waiting for MongoDB to accept connections..."
+        for i in $$(seq 1 30); do
+          if mongosh --host mongodb -u admin -p admin_password --quiet --eval "db.adminCommand({ping:1})" 2>/dev/null; then
+            break
+          fi
+          sleep 2
+        done
+        echo "Initiating replica set..."
+        mongosh --host mongodb -u admin -p admin_password --eval "
+          try {
+            var status = rs.status();
+            print(\"Replica set already initialized: \" + status.set);
+          } catch(e) {
+            rs.initiate({ _id: \"rs0\", members: [{ _id: 0, host: \"mongodb:27017\" }] });
+            print(\"Replica set initiated.\");
+          }
+        "
+      '
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -94,10 +130,10 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      MONGODB_URI: mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@mongodb:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
+      MONGODB_URI: mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@mongodb:27017/teleoscope?directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
       MONGODB_DATABASE: teleoscope
       MONGODB_USERNAME: teleoscope
-      MONGODB_REGISTRAR_URI: mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@mongodb:27017/?directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
+      MONGODB_REGISTRAR_URI: mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@mongodb:27017/teleoscope?directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
       MONGODB_PASSWORD: ${MONGODB_PASSWORD:-teleoscope_dev_password}
       MONGODB_HOST: mongodb
       MONGODB_OPTIONS: directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
@@ -118,6 +154,8 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      mongodb-init:
+        condition: service_completed_successfully
       rabbitmq:
         condition: service_healthy
 
@@ -129,6 +167,7 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "celery", "-A", "backend.tasks", "worker", "--loglevel=info", "-Q", "teleoscope-tasks"]
     environment:
+      C_FORCE_ROOT: 1
       RABBITMQ_USERNAME: guest
       RABBITMQ_PASSWORD: guest
       RABBITMQ_HOST: rabbitmq
@@ -163,6 +202,7 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "backend.dispatch"]
     environment:
+      C_FORCE_ROOT: 1
       RABBITMQ_USERNAME: guest
       RABBITMQ_PASSWORD: guest
       RABBITMQ_HOST: rabbitmq
@@ -183,6 +223,7 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "celery", "-A", "backend.graph", "worker", "--loglevel=info", "-Q", "graph"]
     environment:
+      C_FORCE_ROOT: 1
       RABBITMQ_USERNAME: guest
       RABBITMQ_PASSWORD: guest
       RABBITMQ_HOST: rabbitmq
