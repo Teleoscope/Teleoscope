@@ -41,6 +41,10 @@ For RabbitMQ and Milvus, use `docker compose up -d rabbitmq etcd minio milvus` f
 - **`MIVLUS_PORT` typo**: The env var for Milvus port is intentionally `MIVLUS_PORT` (not `MILVUS_PORT`) in docker-compose and `backend/embeddings.py`. Do not "fix" the typo in one place without the other.
 - **Celery workers in Docker need `C_FORCE_ROOT=1`**: Since containers run as root, Celery requires this env var.
 
+### Pre-installed Tools
+
+The VM update script installs: `python3.12-venv`, `python3-dev`, `build-essential`, `pip-audit`, Playwright Chromium + system deps, and all Python backend/test deps. Node 22 and pnpm 10 are pre-installed via nvm.
+
 ### Common Commands
 
 | Task | Command |
@@ -48,5 +52,8 @@ For RabbitMQ and Milvus, use `docker compose up -d rabbitmq etcd minio milvus` f
 | **Lint** | `cd teleoscope.ca && pnpm lint` |
 | **Backend unit tests** | `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v` |
 | **Playwright e2e** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test --project=chromium` |
+| **All Playwright (incl. account)** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 MONGODB_URI=mongodb://teleoscope:teleoscope_dev_password@localhost:27017/teleoscope?directConnection=true&serverSelectionTimeoutMS=5000&authSource=admin MONGODB_HOST=localhost pnpm exec playwright test --project=chromium` |
 | **Dev server** | `cd teleoscope.ca && pnpm dev` |
-| **Full test suite** | See `TESTING.md` |
+| **Full test suite** | `./scripts/run-all-tests.sh` (see also `TESTING.md`) |
+| **Seed test data** | `PYTHONPATH=. python scripts/seed-test-data.py` (creates user `test@test.test`, team, workspace, 10 sample docs) |
+| **Docker full stack** | `cp .env.example .env && docker compose up -d` |
