@@ -33,7 +33,7 @@ docker compose up -d
 
 The app will be at **http://localhost:3000**. MongoDB, RabbitMQ, Milvus, and all workers (dispatch, graph, vectorizer, uploader, tasks, files API) start automatically. After the stack is up, run `./scripts/test-stack.sh` to verify connectivity.
 
-**Tests:** CI includes the fast [test suite](TESTING.md) plus a full-stack Playwright vectorization workflow (`.github/workflows/test.playwright.yml`) that uploads 1000 docs and verifies rank/set operations end-to-end. Run locally with `./scripts/run-all-tests.sh`, or run only the large UI vectorization e2e from `teleoscope.ca/` with `PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_VECTOR_E2E=1 pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium` (see [TESTING.md](TESTING.md)).
+**Tests:** CI includes fast frontend/backend checks plus a full-stack Playwright workflow (`.github/workflows/test.playwright.yml`) that runs sidebar-component e2e, CSV-uploader system e2e, and 1000-doc vectorization e2e. Modular frontend tests run with `cd teleoscope.ca && pnpm test:unit`. See [TESTING.md](TESTING.md) for all commands and env toggles.
 
 > **Note:** First run will take several minutes to build images and pull the embedding model. For GPU acceleration (NVIDIA), use:
 > ```bash

@@ -9,12 +9,15 @@ The test suite is **automated** and runs on every push and pull request to `main
   - **Frontend (e2e smoke):** Playwright Chromium on baseline UI flows.  
   - Keeps the fast merge gate green for everyday changes.
 
-- **Workflow: `Playwright UI Vector E2E`**  
+- **Workflow: `Playwright UI System E2E`**  
   - Starts the full Docker stack (MongoDB, RabbitMQ, Milvus, app, workers).  
-  - Runs `teleoscope.ca/tests/ui-vectorization-large.spec.ts` in Chromium.  
-  - This test creates a disposable account, uploads **1000 generated documents**, waits for vectorization, creates/connects graph nodes (Document, Rank, Union, Intersection, Difference, Exclusion), verifies ranking/set-operation outputs, and validates document visibility/selection in frontend node windows.
+  - Runs three Chromium e2e specs:
+    - `tests/sidebar-components-e2e.spec.ts` (system coverage across primary sidebar components)
+    - `tests/csv-uploader-ui.spec.ts` (CSV uploader UI flow through the modal/importer)
+    - `tests/ui-vectorization-large.spec.ts` (1000-doc upload/vectorization/rank/set operations)
+  - Together these validate both component-level UI integration and full vector pipeline behavior.
 
-**Required status:** Protect `main` with branch rules that require both **“Test suite”** and **“Playwright UI Vector E2E”** to pass before merge.
+**Required status:** Protect `main` with branch rules that require both **“Test suite”** and **“Playwright UI System E2E”** to pass before merge.
 
 ## Running locally
 
@@ -77,7 +80,16 @@ pnpm exec playwright install chromium   # once
 pnpm exec playwright test --project=chromium
 ```
 
-**Large UI vectorization e2e (1000 docs):**
+**Frontend modular tests (Vitest + RTL):**
+
+```bash
+cd teleoscope.ca
+pnpm test:unit
+```
+
+This suite currently includes focused modular tests for `UploadPage` chunking + importer completion behavior.
+
+**System UI e2e bundle (components + uploader + vectorization):**
 
 Requires full stack (app + MongoDB + RabbitMQ + Milvus + vector workers).
 
@@ -87,11 +99,13 @@ docker compose up -d --build
 cd teleoscope.ca
 PLAYWRIGHT_BASE_URL=http://localhost:3000 \
 PLAYWRIGHT_SKIP_ACCOUNT=1 \
+PLAYWRIGHT_UI_COMPONENT_E2E=1 \
+PLAYWRIGHT_UI_UPLOADER_E2E=1 \
 PLAYWRIGHT_UI_VECTOR_E2E=1 \
-pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0
+pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/csv-uploader-ui.spec.ts tests/ui-vectorization-large.spec.ts --project=chromium --retries=0
 ```
 
-Expected signal: `1 passed` for `ui-vectorization-large.spec.ts`.
+Expected signal: `3 passed` for the three specs above.
 
 ## Adding tests
 
@@ -108,6 +122,6 @@ Primary merge-gate workflows:
 
 - **`.github/workflows/test.playwright.yml`**  
   - Runs on `push`/`pull_request` to `main` and `frontend`.  
-  - Job: full-stack Playwright vectorization e2e (`tests/ui-vectorization-large.spec.ts`).
+  - Job: full-stack Playwright component/uploader/vectorization e2e (three specs listed above).
 
 If either required workflow fails, the branch should not merge.

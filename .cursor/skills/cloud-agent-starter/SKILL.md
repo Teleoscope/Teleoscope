@@ -47,6 +47,10 @@ Use these to quickly adapt tests to limited environments.
   Skip account signup tests when Mongo/test credentials are not ready.
 - `PLAYWRIGHT_PROJECT=chromium`  
   Run the browser target used in CI.
+- `PLAYWRIGHT_UI_COMPONENT_E2E=1`  
+  Enable sidebar component system e2e (`sidebar-components-e2e.spec.ts`).
+- `PLAYWRIGHT_UI_UPLOADER_E2E=1`  
+  Enable CSV uploader system e2e (`csv-uploader-ui.spec.ts`).
 - `PLAYWRIGHT_UI_VECTOR_E2E=1`  
   Enable the large UI vectorization e2e test (`ui-vectorization-large.spec.ts`).
 - `RUN_E2E=1`  
@@ -81,9 +85,13 @@ Account/auth flow test:
 If app is already running on 3000:
 - `PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm exec playwright test --project=chromium`
 
-Large UI vectorization e2e (1000 docs, full stack):
+Frontend modular uploader/component tests:
+1. `cd teleoscope.ca`
+2. `pnpm test:unit`
+
+Full system UI e2e bundle (components + uploader + 1000-doc vectorization):
 1. Ensure Docker stack is healthy (`./scripts/test-stack.sh http://localhost:3000`).
-2. `PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_VECTOR_E2E=1 pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0`
+2. `PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_COMPONENT_E2E=1 PLAYWRIGHT_UI_UPLOADER_E2E=1 PLAYWRIGHT_UI_VECTOR_E2E=1 pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/csv-uploader-ui.spec.ts tests/ui-vectorization-large.spec.ts --project=chromium --retries=0`
 
 ### Area C: Backend core (`backend/` + `tests/`)
 Primary use: fast Python correctness checks and service-backed integration tests.
