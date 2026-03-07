@@ -72,7 +72,7 @@ def upload_vectors(ch, method, properties, body):
 
     embeddings.milvus_setup(client, workspace_id, collection_name=database)
 
-    client.using_database(db_name=MILVUS_DBNAME)
+    embeddings.use_database_if_supported(client)
     
     try:
         # Upload vector to the database

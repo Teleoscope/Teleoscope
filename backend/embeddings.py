@@ -104,14 +104,32 @@ def connect():
     return client
 
 
+def use_database_if_supported(client: MilvusClient):
+    """
+    Switch Milvus database when supported by the server.
+    Older Milvus deployments may not implement DescribeDatabase/using_database.
+    """
+    if _use_lite():
+        return
+    try:
+        client.using_database(db_name=MILVUS_DBNAME)
+    except Exception as exc:
+        msg = str(exc)
+        if "DescribeDatabase" in msg or "UNIMPLEMENTED" in msg:
+            logging.warning(
+                "Milvus server does not support database switching; continuing on default database."
+            )
+            return
+        raise
+
+
 def get_embeddings(client: MilvusClient, collection_name, workspace_id, oids, limit=16384): # hard limit for milvus
     oids = oids[0:limit]
     logging.info(f"Gathering document embeddings for {len(oids)} document oids...")
     # ensure the collection exists
     milvus_setup(client, workspace_id, collection_name=collection_name)
 
-    if not _use_lite():
-        client.using_database(db_name=MILVUS_DBNAME)
+    use_database_if_supported(client)
     # load the collection into memory
     client.load_partitions(collection_name=collection_name, partition_names=[str(workspace_id)])
     logging.info(f"Connected to Milvus Collection {collection_name} and partition {workspace_id}.")
