@@ -39,6 +39,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+    const data: { team: string; label: string } = await request.json();
+    const { user } = await validateRequest();
+    if (!user) {
+        return NextResponse.json(
+            { message: 'Error', error: 'No user signed in.' },
+            { status: 401 }
+        );
+    }
+
     const mongo_client = await client();
     const db = mongo_client.db();
     const mongo_session = mongo_client.startSession();
@@ -47,14 +56,6 @@ export async function POST(request: NextRequest) {
 
     try {
         await mongo_session.withTransaction(async () => {
-            const data: { team: string; label: string } = await request.json();
-
-            const { user } = await validateRequest();
-
-            if (!user) {
-                throw new Error('No user signed in.');
-            }
-
             const team = new ObjectId(data['team']);
             const label = data['label'];
 
@@ -136,17 +137,17 @@ export async function POST(request: NextRequest) {
                 : 'Error during transaction.'
         );
     } finally {
-        if (transactionError) {
-            await mongo_session.abortTransaction();
-        }
         await mongo_session.endSession();
     }
 
     if (transactionError) {
-        return NextResponse.json({
-            message: 'Error',
-            error: transactionError.message
-        });
+        return NextResponse.json(
+            {
+                message: 'Error',
+                error: transactionError.message
+            },
+            { status: 500 }
+        );
     } else {
         return NextResponse.json({ message: 'Success' });
     }

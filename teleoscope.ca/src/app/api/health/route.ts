@@ -1,50 +1,38 @@
 export const dynamic = 'force-dynamic';
-// pages/api/status.ts
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextApiRequest, NextApiResponse } from 'next';
+function unauthorized() {
+    return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401, headers: { 'WWW-Authenticate': 'Basic' } }
+    );
+}
 
-// Authentication middleware
-const basicAuth = (req: NextApiRequest, res: NextApiResponse) => {
-  const auth = req.headers.authorization;
+export async function GET(request: NextRequest) {
+    const auth = request.headers.get('authorization');
+    if (!auth) {
+        return unauthorized();
+    }
 
-  if (!auth) {
-    res.setHeader('WWW-Authenticate', 'Basic');
-    res.status(401).json({ message: 'Unauthorized' });
-    return false;
-  }
+    const [scheme, encoded] = auth.split(' ');
+    if (scheme !== 'Basic' || !encoded) {
+        return unauthorized();
+    }
 
-  // Extract user and pass from Basic Auth header
-  const [scheme, encoded] = auth.split(' ');
-  if (scheme !== 'Basic') {
-    res.status(401).json({ message: 'Unauthorized' });
-    return false;
-  }
+    const [user, pass] = Buffer.from(encoded, 'base64')
+        .toString('utf-8')
+        .split(':');
+    if (
+        user !== process.env.HEALTH_AUTH_USER ||
+        pass !== process.env.HEALTH_AUTH_PASS
+    ) {
+        return unauthorized();
+    }
 
-  const buff = Buffer.from(encoded, 'base64');
-  const [user, pass] = buff.toString('utf-8').split(':');
-
-  // Check if the user and pass match
-  if (user !== process.env.HEALTH_AUTH_USER || pass !== process.env.HEALTH_AUTH_PASS) {
-    res.status(401).json({ message: 'Unauthorized' });
-    return false;
-  }
-
-  return true;
-};
-
-const statusHandler = (req: NextApiRequest, res: NextApiResponse) => {
-  // Check authentication first
-  if (!basicAuth(req, res)) {
-    return;
-  }
-
-  // Perform server status checks (for simplicity, just returning "OK" here)
-  res.status(200).json({
-    status: 'OK',
-    uptime: process.uptime(),
-    message: 'Server is healthy',
-    timestamp: new Date(),
-  });
-};
-
-export default statusHandler;
+    return NextResponse.json({
+        status: 'OK',
+        uptime: process.uptime(),
+        message: 'Server is healthy',
+        timestamp: new Date().toISOString()
+    });
+}
