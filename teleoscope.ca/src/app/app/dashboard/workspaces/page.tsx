@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import Workspaces from '@/components/Workspaces/Workspaces';
 import { validateRequest } from '@/lib/auth';
 import { redirect } from 'next/navigation';

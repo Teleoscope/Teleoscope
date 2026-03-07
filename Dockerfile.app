@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
-COPY teleoscope.ca/package.json ./teleoscope.ca/
+COPY teleoscope.ca/package.json teleoscope.ca/pnpm-lock.yaml ./teleoscope.ca/
 
 # Install root deps (react-joyride)
 RUN pnpm install --frozen-lockfile
@@ -22,7 +22,7 @@ COPY schemas /app/schemas
 COPY teleoscope.ca ./
 
 # Generate schemas (loadschemas.py expects ../schemas)
-RUN apk add --no-cache python3 py3-pip && pip3 install pyyaml
+RUN apk add --no-cache python3 py3-pip py3-yaml
 RUN python3 loadschemas.py
 
 # Build

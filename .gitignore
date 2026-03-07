@@ -174,8 +174,12 @@ ansible/vars/inventory.yaml
 */yarn.lock
 
 # .env
-*.env*
-**/.env*
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
 
 
 # next.js

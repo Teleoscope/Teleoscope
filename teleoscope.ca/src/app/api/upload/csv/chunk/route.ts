@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 // app/api/upload/route.js
 import { NextRequest, NextResponse } from 'next/server';
 import { validateRequest } from '@/lib/auth';

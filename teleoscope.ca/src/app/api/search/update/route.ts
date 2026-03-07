@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { validateRequest } from '@/lib/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { dbOp } from '@/lib/db';
