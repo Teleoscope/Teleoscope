@@ -71,6 +71,22 @@ const DEFAULT_HEADERS = {
   'x-api-route-test': '1',
 };
 
+const UI_SOURCE_ROOTS = [
+  path.resolve(__dirname, '../src/components'),
+  path.resolve(__dirname, '../src/lib'),
+  path.resolve(__dirname, '../src/context'),
+  path.resolve(__dirname, '../src/app/app'),
+];
+
+const KNOWN_LEGACY_UI_ENDPOINTS = [
+  '/api/clusters',
+  '/api/contributors/add',
+  '/api/contributors/remove',
+  '/api/upload/csv',
+  '/api/users/:param',
+  '/api/workspaces/:param',
+] as const;
+
 function collectRouteFiles(dir: string): string[] {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   const files: string[] = [];
@@ -83,6 +99,64 @@ function collectRouteFiles(dir: string): string[] {
     }
   }
   return files;
+}
+
+function collectCodeFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const files: string[] = [];
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...collectCodeFiles(fullPath));
+    } else if (entry.isFile() && /\.(ts|tsx|js|jsx)$/.test(entry.name)) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+function normalizeRoutePath(rawPath: string): string {
+  const noQuery = rawPath.split('?')[0];
+  return noQuery.replace(/\$\{[^}]+\}/g, ':param').replace(/\[[^\]]+\]/g, ':param');
+}
+
+function collectUiEndpointReferences(): Map<string, Set<string>> {
+  const references = new Map<string, Set<string>>();
+  const files = UI_SOURCE_ROOTS.flatMap((root) => collectCodeFiles(root));
+  const patterns = [
+    /fetch\(\s*([`'"])(\/api\/[^`'"]+)\1/g,
+    /axios\.(?:get|post|put|delete|patch)\(\s*([`'"])(\/api\/[^`'"]+)\1/g,
+    /useSWRF\(\s*([`'"])(\/api\/[^`'"]+)\1/g,
+  ];
+
+  for (const file of files) {
+    const source = fs.readFileSync(file, 'utf8');
+    const relative = path.relative(path.resolve(__dirname, '..'), file).replace(/\\/g, '/');
+    for (const pattern of patterns) {
+      let match = pattern.exec(source);
+      while (match) {
+        const endpoint = normalizeRoutePath(match[2]);
+        if (endpoint.startsWith('/api/auth/')) {
+          match = pattern.exec(source);
+          continue;
+        }
+        if (endpoint.startsWith('/api/:param')) {
+          match = pattern.exec(source);
+          continue;
+        }
+        if (!references.has(endpoint)) {
+          references.set(endpoint, new Set<string>());
+        }
+        references.get(endpoint)!.add(relative);
+        match = pattern.exec(source);
+      }
+    }
+  }
+
+  return references;
 }
 
 function parseRouteMethods(source: string): HttpMethod[] {
@@ -169,7 +243,20 @@ const routeCases: ApiCase[] = collectRouteFiles(API_ROOT)
     }));
   });
 
+const routePathSet = new Set(
+  collectRouteFiles(API_ROOT).map((routeFile) => normalizeRoutePath(toApiPath(routeFile)))
+);
+
 test.describe('API routes coverage', () => {
+  test('UI endpoint references resolve to backend routes', async () => {
+    const references = collectUiEndpointReferences();
+    const unresolved = [...references.keys()]
+      .filter((endpoint) => !routePathSet.has(endpoint))
+      .sort();
+
+    expect(unresolved).toEqual([...KNOWN_LEGACY_UI_ENDPOINTS].sort());
+  });
+
   test('discovers route cases', async () => {
     expect(routeCases.length).toBeGreaterThan(0);
   });
