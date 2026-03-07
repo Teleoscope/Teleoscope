@@ -143,68 +143,76 @@ export default async function initialize_user(
             { session }
         );
 
-        // Check if the customer already exists in Stripe
-        const customer = await stripe.customers.search({
-            query: `metadata["userId"]:"${userId}"`
-        });
-
-        if (customer.data.length === 0) {
-            // Create a new Stripe customer
-            const new_customer = await stripe.customers.create({
-                email: email.toString(),
-                metadata: { userId }
+        if (stripe) {
+            // Check if the customer already exists in Stripe
+            const customer = await stripe.customers.search({
+                query: `metadata["userId"]:"${userId}"`
             });
 
-            // Search for the default subscription product in Stripe
-            const default_subscriptions = await stripe.products.search({
-                query: `name:\'Default\'`
-            });
-
-            if (default_subscriptions.data.length > 0) {
-                const default_subscription = default_subscriptions.data[0];
-
-                if (!default_subscription.default_price) {
-                    throw new Error('Default subscription price not defined.');
-                }
-
-                // Create a new subscription for the customer
-                const new_subscription = await stripe.subscriptions.create({
-                    customer: new_customer.id,
-                    items: [
-                        {
-                            price: default_subscription.default_price
-                        }
-                    ]
+            if (customer.data.length === 0) {
+                // Create a new Stripe customer
+                const new_customer = await stripe.customers.create({
+                    email: email.toString(),
+                    metadata: { userId }
                 });
 
-                // Update the account with the Stripe customer ID
-                await db
-                    .collection('accounts')
-                    .updateOne(
-                        { _id: account_result.insertedId },
-                        { $set: { stripe_id: new_customer.id } },
-                        { session }
-                    );
+                // Search for the default subscription product in Stripe
+                const default_subscriptions = await stripe.products.search({
+                    query: `name:\'Default\'`
+                });
 
-                await session.commitTransaction();
-                console.log(
-                    'Transaction committed. New user and customer created.'
-                );
+                if (default_subscriptions.data.length > 0) {
+                    const default_subscription = default_subscriptions.data[0];
+
+                    if (!default_subscription.default_price) {
+                        throw new Error('Default subscription price not defined.');
+                    }
+
+                    // Create a new subscription for the customer
+                    const new_subscription = await stripe.subscriptions.create({
+                        customer: new_customer.id,
+                        items: [
+                            {
+                                price: default_subscription.default_price
+                            }
+                        ]
+                    });
+
+                    // Update the account with the Stripe customer ID
+                    await db
+                        .collection('accounts')
+                        .updateOne(
+                            { _id: account_result.insertedId },
+                            { $set: { stripe_id: new_customer.id } },
+                            { session }
+                        );
+                } else {
+                    throw new Error(`Stripe default subscriptions error: 
+                        ${util.inspect(default_subscriptions, {
+                            showHidden: false,
+                            depth: 3,
+                            colors: true
+                        })}
+                    `);
+                }
             } else {
-                throw new Error(`Stripe default subscriptions error: 
-                    ${util.inspect(default_subscriptions, {
-                        showHidden: false,
-                        depth: 3,
-                        colors: true
-                    })}
-                `);
+                throw new Error('Customer already exists in Stripe.');
             }
         } else {
-            throw new Error('Customer already exists in Stripe.');
+            console.warn('Stripe not configured. Skipping Stripe customer creation for local development.');
         }
+
+        await session.commitTransaction();
+        console.log(
+            'Transaction committed. New user created.' + (stripe ? ' Stripe customer created.' : ' (Stripe skipped)')
+        );
     
     // Make a new user in loops
-    await newUser({email: email.toString()})
+    try {
+        await newUser({email: email.toString()});
+    } catch (loopsError) {
+        console.warn('Loops notification failed (non-critical):', loopsError);
+    }
 
     } catch (error) {
         await session.abortTransaction();
