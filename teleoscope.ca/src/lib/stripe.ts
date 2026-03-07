@@ -26,9 +26,13 @@ if (!process.env.STRIPE_CLIENT_SECRET) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Singleton Stripe connection
 let _stripe: Stripe | undefined;
-export async function get_stripe(): Promise<Stripe> {
+export async function get_stripe(): Promise<Stripe | null> {
+    if (!key) {
+        console.warn('STRIPE_TEST_SECRET_KEY is not set. Stripe integration is disabled.');
+        return null;
+    }
     if (!_stripe) {
-        _stripe = new Stripe(key!, {
+        _stripe = new Stripe(key, {
             apiVersion: '2024-04-10'
         });
     }
@@ -72,6 +76,11 @@ export async function recreate_products() {
  * @param customer_id the Stripe ID string
  */
 export async function resolve_subscriptions_by_customer_id(customer_id: string) {
+    const stripe = await get_stripe();
+    if (!stripe) {
+        console.warn('Stripe not configured. Skipping subscription resolution.');
+        return;
+    }
     const account = await getAccountByStripeId(customer_id);
     if (!account) {
         throw new Error(`Error retrieving Teleoscope account for Stripe customer: ${customer_id}.`);
@@ -81,6 +90,11 @@ export async function resolve_subscriptions_by_customer_id(customer_id: string) 
 }
 
 export async function resolve_subscriptions_by_user_id(user_id: string) {
+    const stripe = await get_stripe();
+    if (!stripe) {
+        console.warn('Stripe not configured. Skipping subscription resolution.');
+        return;
+    }
     const account = await getAccountByUserId(user_id);
     if (!account) {
         throw new Error(`Error retrieving Teleoscope account for: ${user_id}.`);

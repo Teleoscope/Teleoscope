@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import PurchaseDisplay from "@/components/PurchaseDisplay";
 
 export default async function Purchases() {

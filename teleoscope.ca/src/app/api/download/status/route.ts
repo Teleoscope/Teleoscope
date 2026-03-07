@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { validateRequest } from '@/lib/auth';
 import { Files } from '@/types/files';
 import { NextResponse } from 'next/server';

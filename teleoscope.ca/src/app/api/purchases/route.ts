@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { client } from '@/lib/db';
 import { get_stripe, resolve_subscriptions_by_customer_id } from '@/lib/stripe';
 
