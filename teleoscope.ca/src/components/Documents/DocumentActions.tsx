@@ -38,7 +38,7 @@ export const copyJsonToClipboard = (document) =>
 export const CopyText = (props) => {
   return (
     <Tooltip title="Copy text to clipboard" key="Copy text to clipboard">
-      <IconButton onClick={() => copyTextToClipboard(document)}>
+      <IconButton onClick={() => copyTextToClipboard(props.document)}>
         <ContentCopyIcon fontSize="small" />
       </IconButton>
     </Tooltip>

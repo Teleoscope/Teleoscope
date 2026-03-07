@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { validateRequest } from '@/lib/auth';
 import { Teams } from '@/types/teams';
 import { ObjectId } from 'mongodb';

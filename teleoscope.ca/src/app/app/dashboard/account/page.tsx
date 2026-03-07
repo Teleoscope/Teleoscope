@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import AccountDisplay from "@/components/AccountDisplay";
 import Link from "next/link";
 

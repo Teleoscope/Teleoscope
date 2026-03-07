@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { validateRequest } from '@/lib/auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { dbOp } from '@/lib/db';
@@ -27,15 +28,24 @@ export async function POST(request: NextRequest) {
     } = req;
 
     const result = await dbOp(async (client: MongoClient, db: Db) => {
+        const groupGraph = await db.collection<Graph>('graph').findOne({
+            uid: group_id
+        });
+        const documentGraph = await db.collection<Graph>('graph').findOne({
+            uid: document_id
+        });
+        const groupOid = groupGraph?.reference ?? new ObjectId(group_id);
+        const documentOid = documentGraph?.reference ?? new ObjectId(document_id);
+
         const group_uids = await db.collection<Graph>('graph').find({
-            reference: new ObjectId(group_id)
-        }).toArray()
+            reference: new ObjectId(groupOid)
+        }).toArray();
         
         const pull_result =  await db.collection<Groups>('groups').updateOne(
-            { _id: new ObjectId(group_id) },
+            { _id: new ObjectId(groupOid) },
             {
                 $pull: {
-                    docs: new ObjectId(document_id)
+                    docs: new ObjectId(documentOid)
                 }
             }
         );

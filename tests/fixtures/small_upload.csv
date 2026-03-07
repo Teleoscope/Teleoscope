@@ -1,0 +1,4 @@
+title,text
+"Test document one","This is the first test document for automated testing of the upload pipeline."
+"Test document two","This is the second test document to verify batch processing works correctly."
+"Test document three","A third document to ensure the system handles multiple documents in a single upload."

@@ -94,7 +94,7 @@ def load_model():
 
 # Callback function to handle incoming messages from RabbitMQ
 def vectorize_documents(ch, method, properties, body):
-    global model, last_processed_time  # Ensure we refer to the global model variable
+    global last_processed_time
     
     # Lazy load the model if it's not already loaded
     load_model()

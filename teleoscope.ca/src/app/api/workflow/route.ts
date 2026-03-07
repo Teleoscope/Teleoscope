@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { validateRequest } from '@/lib/auth';
 import { Workflows } from '@/types/workflows';
 import { ObjectId } from 'mongodb';

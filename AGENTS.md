@@ -31,12 +31,19 @@ For RabbitMQ and Milvus, use `docker compose up -d rabbitmq etcd minio milvus` f
 
 ### Key Gotchas
 
+- **MongoDB must run as a replica set**: The app uses MongoDB transactions for account creation which require a replica set. The docker-compose.yml handles this automatically via a `mongodb-init` sidecar container.
 - **MongoDB URI must include database name**: The URI path must be `/teleoscope` (e.g. `mongodb://teleoscope:pass@localhost:27017/teleoscope?...&authSource=admin`). Without it, `mongo_client.db()` defaults to the wrong database.
 - **Stripe is optional for local dev**: `STRIPE_TEST_SECRET_KEY` is not needed. The code gracefully skips Stripe integration when the key is absent.
-- **`pymongo>=6.0.0` in `backend/requirements.txt` does not exist on PyPI**: Install `pymongo>=4.0.0` instead. The test suite and backend work fine with pymongo 4.x.
+- **API routes use `force-dynamic`**: All API route handlers and server-rendered pages export `dynamic = 'force-dynamic'` to prevent Next.js from prerendering them at build time (which would fail without a MongoDB connection).
 - **`hdbscan` requires `python3-dev` and `build-essential`** to compile from source.
 - **Schema generation**: Run `python loadschemas.py` in `teleoscope.ca/` to generate `src/schemas/*.json` and `src/types/*.ts` from `schemas/*.yaml`. This requires `pyyaml`. The `pnpm schema` script calls this.
 - **pnpm install with `--ignore-scripts`** is safe; `sharp` and other native deps have prebuilt binaries. Do not add `pnpm.onlyBuiltDependencies` to `package.json` as it regenerates the lockfile.
+- **`MIVLUS_PORT` typo**: The env var for Milvus port is intentionally `MIVLUS_PORT` (not `MILVUS_PORT`) in docker-compose and `backend/embeddings.py`. Do not "fix" the typo in one place without the other.
+- **Celery workers in Docker need `C_FORCE_ROOT=1`**: Since containers run as root, Celery requires this env var.
+
+### Pre-installed Tools
+
+The VM update script installs: `python3.12-venv`, `python3-dev`, `build-essential`, `pip-audit`, Playwright Chromium + system deps, and all Python backend/test deps. Node 22 and pnpm 10 are pre-installed via nvm.
 
 ### Common Commands
 
@@ -44,6 +51,11 @@ For RabbitMQ and Milvus, use `docker compose up -d rabbitmq etcd minio milvus` f
 |------|---------|
 | **Lint** | `cd teleoscope.ca && pnpm lint` |
 | **Backend unit tests** | `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v` |
+| **Frontend modular tests** | `cd teleoscope.ca && pnpm test:unit` |
+| **API/frontend contract checks** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test tests/api-frontend-contract.spec.ts tests/api.spec.ts -g "Frontend/API contract consistency|UI endpoint references resolve to backend routes" --project=chromium --retries=0` |
 | **Playwright e2e** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test --project=chromium` |
+| **Playwright UI system bundle (components + export + uploader + vector)** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_COMPONENT_E2E=1 PLAYWRIGHT_UI_EXPORT_E2E=1 PLAYWRIGHT_UI_UPLOADER_E2E=1 PLAYWRIGHT_UI_VECTOR_E2E=1 pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/ui-vectorization-large.spec.ts --project=chromium --retries=0` |
 | **Dev server** | `cd teleoscope.ca && pnpm dev` |
-| **Full test suite** | See `TESTING.md` |
+| **Full test suite** | `./scripts/run-all-tests.sh` (see also `TESTING.md`) |
+| **Seed test data** | `PYTHONPATH=. python scripts/seed-test-data.py` (creates user `test@test.test`, team, workspace, 10 sample docs) |
+| **Docker full stack** | `cp .env.example .env && docker compose up -d` |

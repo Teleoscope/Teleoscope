@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { validateRequest } from "@/lib/auth";
 import { dbOp } from "@/lib/db";
 import { Db, MongoClient } from "mongodb";

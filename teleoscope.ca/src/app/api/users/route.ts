@@ -1,8 +1,10 @@
+export const dynamic = 'force-dynamic';
 import { client } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';
 import { Db, MongoClient } from "mongodb";
 import { dbOp } from "@/lib/db";
+import { validateRequest } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
 
@@ -95,7 +97,9 @@ export async function POST(request: NextRequest) {
             _id: account._id
         },
         {
-            "resources.amount_seats_used": account.resources.amount_seats_used + 1
+            $set: {
+                "resources.amount_seats_used": account.resources.amount_seats_used + 1
+            }
         }, {
             session: mongo_session
         }
@@ -113,4 +117,95 @@ export async function POST(request: NextRequest) {
     await mongo_session.commitTransaction();
 
     return NextResponse.json({ success: true });
+}
+
+export async function DELETE(request: NextRequest) {
+    const { user } = await validateRequest();
+    if (!user) {
+        return NextResponse.json(
+            { error: 'No user signed in.' },
+            { status: 401 }
+        );
+    }
+
+    const { userId, teamId } = await request.json();
+    if (!userId || !teamId) {
+        return NextResponse.json(
+            { error: 'userId and teamId are required' },
+            { status: 400 }
+        );
+    }
+
+    const mongo_client = await client();
+    const mongo_session = mongo_client.startSession();
+    const db = mongo_client.db();
+
+    const teamObjectId = new ObjectId(teamId);
+    const team = await db.collection('teams').findOne({ _id: teamObjectId });
+    if (!team) {
+        return NextResponse.json({ error: 'Team not found.' }, { status: 404 });
+    }
+    if (`${team.owner}` === `${userId}`) {
+        return NextResponse.json(
+            { error: 'Team owner cannot be removed.' },
+            { status: 400 }
+        );
+    }
+
+    const account = await db.collection('accounts').findOne({ _id: team.account });
+    if (!account) {
+        return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
+    }
+
+    const idCandidates: Array<string | ObjectId> = [userId];
+    if (ObjectId.isValid(userId)) {
+        idCandidates.push(new ObjectId(userId));
+    }
+
+    mongo_session.startTransaction();
+    try {
+        const team_result = await db.collection('teams').updateOne(
+            { _id: teamObjectId },
+            {
+                $pull: {
+                    users: {
+                        _id: { $in: idCandidates }
+                    } as any
+                }
+            },
+            { session: mongo_session }
+        );
+
+        if (team_result.modifiedCount === 0) {
+            await mongo_session.abortTransaction();
+            return NextResponse.json(
+                { error: 'User is not a collaborator on this team.' },
+                { status: 404 }
+            );
+        }
+
+        await db.collection('accounts').updateOne(
+            { _id: account._id },
+            {
+                $set: {
+                    'resources.amount_seats_used': Math.max(
+                        (account.resources?.amount_seats_used ?? 0) - 1,
+                        0
+                    )
+                }
+            },
+            { session: mongo_session }
+        );
+
+        await mongo_session.commitTransaction();
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        await mongo_session.abortTransaction();
+        return NextResponse.json(
+            { error: 'Failed to remove collaborator.' },
+            { status: 500 }
+        );
+    } finally {
+        mongo_session.endSession();
+    }
 }

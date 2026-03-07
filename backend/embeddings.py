@@ -33,7 +33,7 @@ def string_to_int(s):
     # Convert the hexadecimal string to an integer
     return int(hex_dig, 16)
 
-from pymilvus import MilvusClient, DataType, MilvusException, connections, db
+from pymilvus import MilvusClient, DataType, MilvusException
 
 
 def milvus_setup(client: MilvusClient, workspace_id, collection_name="teleoscope"):
@@ -93,15 +93,57 @@ def connect():
         logging.info("Connected to Milvus Lite.")
         return client
     try:
-        client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
+        client = MilvusClient(
+            uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME
+        )
+        # Probe one lightweight API call so invalid/unsupported db selection
+        # fails here and we can gracefully fall back to default DB.
+        try:
+            client.list_collections()
+        except Exception as probe_exc:
+            msg = str(probe_exc)
+            if (
+                "database" in msg.lower()
+                or "DescribeDatabase" in msg
+                or "UNIMPLEMENTED" in msg
+            ):
+                logging.warning(
+                    "Milvus database '%s' is unavailable or unsupported; "
+                    "falling back to default database.",
+                    MILVUS_DBNAME,
+                )
+                client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
+            else:
+                raise
     except MilvusException as e:
-        logging.info(f"Exception {e} when creating Milvus client.")
-        connections.connect(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
-        database = db.create_database(MILVUS_DBNAME)
-        connections.disconnect(f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
-        client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME)
+        logging.info(
+            "Exception %s when creating Milvus client with db '%s'; "
+            "using default database.",
+            e,
+            MILVUS_DBNAME,
+        )
+        client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
     logging.info("Connected to Milvus.")
     return client
+
+
+def use_database_if_supported(client: MilvusClient):
+    """
+    Switch Milvus database when supported by the server.
+    Older Milvus deployments may not implement DescribeDatabase/using_database.
+    """
+    if _use_lite():
+        return
+    try:
+        client.using_database(db_name=MILVUS_DBNAME)
+    except Exception as exc:
+        msg = str(exc)
+        if "DescribeDatabase" in msg or "UNIMPLEMENTED" in msg:
+            logging.warning(
+                "Milvus server does not support database switching; continuing on default database."
+            )
+            return
+        raise
 
 
 def get_embeddings(client: MilvusClient, collection_name, workspace_id, oids, limit=16384): # hard limit for milvus
@@ -110,8 +152,7 @@ def get_embeddings(client: MilvusClient, collection_name, workspace_id, oids, li
     # ensure the collection exists
     milvus_setup(client, workspace_id, collection_name=collection_name)
 
-    if not _use_lite():
-        client.using_database(db_name=MILVUS_DBNAME)
+    use_database_if_supported(client)
     # load the collection into memory
     client.load_partitions(collection_name=collection_name, partition_names=[str(workspace_id)])
     logging.info(f"Connected to Milvus Collection {collection_name} and partition {workspace_id}.")
