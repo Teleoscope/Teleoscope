@@ -67,7 +67,7 @@
     "tailwind-merge": "^2.2.2",
     "tailwindcss-animate": "^1.0.7",
     "websocket-ts": "^2.1.5",
-    "xlsx": "^0.18.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -88,5 +88,13 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "immutable": "3.8.3",
+      "cross-spawn@<6.0.6": "6.0.6",
+      "cross-spawn@>=7.0.0 <7.0.5": "7.0.6",
+      "mermaid": "^10.9.3"
+    }
   }
 }
