@@ -1,10 +1,15 @@
 import { expect, Page, test } from '@playwright/test';
 import crypto from 'crypto';
 
-const DOC_COUNT = 1000;
-const CHUNK_SIZE = 200;
+const DOC_COUNT = parsePositiveInt(process.env.PLAYWRIGHT_UI_VECTOR_DOC_COUNT, 1000);
+const CHUNK_SIZE = Math.min(200, DOC_COUNT);
 const TEST_PASSWORD = 'VectorE2EPassword123!';
-const RESULT_TIMEOUT_MS = 12 * 60 * 1000;
+const DEFAULT_RESULT_TIMEOUT_MS = 12 * 60 * 1000;
+const RESULT_TIMEOUT_MS = parseTimeoutMs(
+  process.env.PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS,
+  DEFAULT_RESULT_TIMEOUT_MS
+);
+const TEST_TIMEOUT_MS = RESULT_TIMEOUT_MS + 8 * 60 * 1000;
 
 type RankedDoc = [string, number];
 
@@ -53,6 +58,28 @@ function rankedCount(node: GraphNode | null): number {
   );
 }
 
+function parseTimeoutMs(raw: string | undefined, fallback: number): number {
+  if (!raw) {
+    return fallback;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return parsed;
+}
+
+function parsePositiveInt(raw: string | undefined, fallback: number): number {
+  if (!raw) {
+    return fallback;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return parsed;
+}
+
 function makeFlowNode(
   uid: string,
   type: string,
@@ -96,8 +123,8 @@ test.describe('UI E2E: large upload, vectorization, ranking, set ops', () => {
     'Set PLAYWRIGHT_UI_VECTOR_E2E=1 to run large UI vectorization E2E'
   );
 
-  test('uploads 1000 docs and validates rank + set operations', async ({ page }) => {
-    test.setTimeout(16 * 60 * 1000);
+  test(`uploads ${DOC_COUNT} docs and validates rank + set operations`, async ({ page }) => {
+    test.setTimeout(TEST_TIMEOUT_MS);
 
     const email = `ui-vector-${Date.now()}@test.teleoscope`;
     const uploadLabel = `ui-vector-batch-${Date.now()}`;

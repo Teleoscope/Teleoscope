@@ -7,8 +7,12 @@ const menuItems = [
     href: "/about",
   },
   {
-    label: "Resources",
-    href: "/resources",
+    label: "Docs",
+    href: "/resources/reference",
+  },
+  {
+    label: "Public Demo",
+    href: "/demo",
   },
   {
     label: "Get Started",

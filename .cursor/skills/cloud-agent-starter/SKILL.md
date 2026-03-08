@@ -95,9 +95,11 @@ API/frontend contract consistency checks:
 1. `cd teleoscope.ca`
 2. `PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test tests/api-frontend-contract.spec.ts tests/api.spec.ts -g "Frontend/API contract consistency|UI endpoint references resolve to backend routes" --project=chromium --retries=0`
 
-Full system UI e2e bundle (components + export + uploader + 1000-doc vectorization):
+Full system UI e2e bundle (chunked):
 1. Ensure Docker stack is healthy (`./scripts/test-stack.sh http://localhost:3000`).
-2. `PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_COMPONENT_E2E=1 PLAYWRIGHT_UI_EXPORT_E2E=1 PLAYWRIGHT_UI_UPLOADER_E2E=1 PLAYWRIGHT_UI_VECTOR_E2E=1 pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/ui-vectorization-large.spec.ts --project=chromium --retries=0`
+2. Chunk 1 (core/demo): `PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_COMPONENT_E2E=1 PLAYWRIGHT_UI_EXPORT_E2E=1 PLAYWRIGHT_UI_UPLOADER_E2E=1 pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/demo-public.spec.ts --project=chromium --retries=0`
+3. Full vector (manual/scheduled): `PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_VECTOR_E2E=1 PLAYWRIGHT_UI_VECTOR_DOC_COUNT=1000 PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=1200000 pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0`
+4. Optional conference demo stress check: `node scripts/load-test-demo.mjs http://localhost:3000 5000 30`
 
 ### Area C: Backend core (`backend/` + `tests/`)
 Primary use: fast Python correctness checks and service-backed integration tests.
