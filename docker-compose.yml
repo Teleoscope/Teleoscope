@@ -251,6 +251,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+      args:
+        PREWARM_BGE_M3: "1"
     restart: unless-stopped
     command: ["python", "-m", "backend.vectorizer"]
     environment:
