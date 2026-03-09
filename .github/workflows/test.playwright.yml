@@ -47,6 +47,12 @@ jobs:
         run: pnpm exec playwright install chromium --with-deps
         working-directory: teleoscope.ca
 
+      - name: Ensure root .env exists
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
+
       - name: Start full stack
         run: docker compose up -d --build
 
@@ -112,6 +118,12 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm exec playwright install chromium --with-deps
         working-directory: teleoscope.ca
+
+      - name: Ensure root .env exists
+        run: |
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
 
       - name: Start full stack
         run: docker compose up -d --build
