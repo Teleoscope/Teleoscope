@@ -2,15 +2,39 @@
 
 ## Cursor Cloud specific instructions
 
-### Architecture Overview
+### Architecture overview
 
-Teleoscope is a qualitative research platform with a Next.js 14 frontend (`teleoscope.ca/`), Python Celery backend (`backend/`), and infrastructure services (MongoDB, RabbitMQ, Milvus). See `README.md` for full details.
+Teleoscope is a qualitative research platform with:
+- Next.js 14 frontend in `teleoscope.ca/`
+- Python backend + Celery workers in `backend/`
+- Infrastructure services: MongoDB, RabbitMQ, Milvus (plus etcd + MinIO)
 
-### Running Services
+See `README.md` for complete architecture details.
 
-**Infrastructure** (Docker): MongoDB (replica set, port 27017), RabbitMQ (5672/15672), Milvus + etcd + MinIO (19530).
+### Fast bootstrap (new Cloud agents)
 
-MongoDB **must** run as a single-node replica set because the app uses MongoDB transactions for account creation. Start it with:
+1. Install deps if missing:
+   - `python -m pip install -r backend/requirements.txt -r requirements-test.txt`
+   - `cd teleoscope.ca && pnpm install && pnpm exec playwright install chromium && cd ..`
+2. Ensure `.env` exists at repo root (usually already present).
+3. Start stack:
+   - `docker compose up -d`
+4. Validate:
+   - `./scripts/test-stack.sh http://localhost:3000`
+
+If Docker is unavailable, use:
+- `./scripts/one-click-test-no-docker.sh`
+
+### Running services (critical details)
+
+**Infrastructure** (Docker):
+- MongoDB replica set (`27017`)
+- RabbitMQ (`5672`, `15672`)
+- Milvus + etcd + MinIO (`19530`)
+
+MongoDB **must** run as a single-node replica set because account creation uses transactions.
+
+Manual MongoDB startup (if needed):
 
 ```bash
 docker rm -f teleoscope-mongodb 2>/dev/null
@@ -25,40 +49,102 @@ sleep 5
 docker exec teleoscope-mongodb mongosh -u admin -p admin_password --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]})"
 ```
 
-For RabbitMQ and Milvus, use `docker compose up -d rabbitmq etcd minio milvus` from the repo root.
+For RabbitMQ + Milvus:
+- `docker compose up -d rabbitmq etcd minio milvus`
 
-**Frontend dev server**: `cd teleoscope.ca && pnpm dev` (port 3000). Requires `.env.local` with correct MongoDB URI including `/teleoscope` database path and `authSource=admin`.
+Frontend dev server:
+- `cd teleoscope.ca && pnpm dev` (port `3000`)
+- `.env.local` must use Mongo URI with `/teleoscope` and `authSource=admin`.
 
-### Key Gotchas
+### Login/auth quick notes
 
-- **MongoDB must run as a replica set**: The app uses MongoDB transactions for account creation which require a replica set. The docker-compose.yml handles this automatically via a `mongodb-init` sidecar container.
-- **MongoDB URI must include database name**: The URI path must be `/teleoscope` (e.g. `mongodb://teleoscope:pass@localhost:27017/teleoscope?...&authSource=admin`). Without it, `mongo_client.db()` defaults to the wrong database.
-- **Stripe is optional for local dev**: `STRIPE_TEST_SECRET_KEY` is not needed. The code gracefully skips Stripe integration when the key is absent.
-- **API routes use `force-dynamic`**: All API route handlers and server-rendered pages export `dynamic = 'force-dynamic'` to prevent Next.js from prerendering them at build time (which would fail without a MongoDB connection).
-- **`hdbscan` requires `python3-dev` and `build-essential`** to compile from source.
-- **Schema generation**: Run `python loadschemas.py` in `teleoscope.ca/` to generate `src/schemas/*.json` and `src/types/*.ts` from `schemas/*.yaml`. This requires `pyyaml`. The `pnpm schema` script calls this.
-- **pnpm install with `--ignore-scripts`** is safe; `sharp` and other native deps have prebuilt binaries. Do not add `pnpm.onlyBuiltDependencies` to `package.json` as it regenerates the lockfile.
-- **`MIVLUS_PORT` typo**: The env var for Milvus port is intentionally `MIVLUS_PORT` (not `MILVUS_PORT`) in docker-compose and `backend/embeddings.py`. Do not "fix" the typo in one place without the other.
-- **Celery workers in Docker need `C_FORCE_ROOT=1`**: Since containers run as root, Celery requires this env var.
+- Local dev auth is email/password; no external SSO required.
+- Signup page: `http://localhost:3000/auth/signup`
+- Optional health auth check:
+  - set `HEALTH_AUTH_USER` and `HEALTH_AUTH_PASS`
+  - run `curl -u "$HEALTH_AUTH_USER:$HEALTH_AUTH_PASS" http://localhost:3000/api/health`
+- For Playwright account tests (`teleoscope.ca/tests/account.spec.ts`), set:
+  - `TEST_EMAIL`
+  - `TEST_PASSWORD`
 
-### Pre-installed Tools
+### Environment toggles (testing shortcuts)
 
-The VM update script installs: `python3.12-venv`, `python3-dev`, `build-essential`, `pip-audit`, Playwright Chromium + system deps, and all Python backend/test deps. Node 22 and pnpm 10 are pre-installed via nvm.
+- `PLAYWRIGHT_BASE_URL=http://localhost:3000` (reuse running app)
+- `PLAYWRIGHT_SKIP_ACCOUNT=1` (skip signup/account tests)
+- `PLAYWRIGHT_PROJECT=chromium` (match CI browser target)
+- `PLAYWRIGHT_UI_COMPONENT_E2E=1` (sidebar component e2e)
+- `PLAYWRIGHT_UI_EXPORT_E2E=1` (export button e2e)
+- `PLAYWRIGHT_UI_UPLOADER_E2E=1` (CSV uploader e2e)
+- `PLAYWRIGHT_UI_VECTOR_E2E=1` (large vectorization e2e)
+- `RUN_E2E=1` (include backend vector e2e in full script)
+- `MILVUS_LITE_PATH=./.milvus_lite_test` (non-Docker vector runs)
 
-### Common Commands
+### Key gotchas
+
+- **MongoDB replica set is required** for account transactions.
+- **Mongo URI must include `/teleoscope`**, or DB selection is wrong.
+- **Stripe is optional locally**: `STRIPE_TEST_SECRET_KEY` may be absent.
+- **API/server routes use `dynamic = 'force-dynamic'`** to avoid prerender DB failures.
+- **`hdbscan` build prereqs**: `python3-dev` and `build-essential`.
+- **Schema generation**: run `python loadschemas.py` in `teleoscope.ca/`.
+- **`pnpm install --ignore-scripts` is safe**; do not add `pnpm.onlyBuiltDependencies`.
+- **`MIVLUS_PORT` typo is intentional**; do not rename in only one location.
+- **Celery in Docker needs `C_FORCE_ROOT=1`**.
+
+### Common commands
 
 | Task | Command |
 |------|---------|
-| **Lint** | `cd teleoscope.ca && pnpm lint` |
-| **Backend unit tests** | `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v` |
-| **Frontend modular tests** | `cd teleoscope.ca && pnpm test:unit` |
-| **API/frontend contract checks** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test tests/api-frontend-contract.spec.ts tests/api.spec.ts -g "Frontend/API contract consistency|UI endpoint references resolve to backend routes" --project=chromium --retries=0` |
-| **Playwright e2e** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test --project=chromium` |
-| **Playwright UI core/demo bundle (chunk 1)** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_COMPONENT_E2E=1 PLAYWRIGHT_UI_EXPORT_E2E=1 PLAYWRIGHT_UI_UPLOADER_E2E=1 pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/demo-public.spec.ts --project=chromium --retries=0` |
-| **Playwright vectorization full (manual/scheduled)** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_VECTOR_E2E=1 PLAYWRIGHT_UI_VECTOR_DOC_COUNT=1000 PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=1200000 pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0` |
-| **Dev server** | `cd teleoscope.ca && pnpm dev` |
-| **Full test suite** | `./scripts/run-all-tests.sh` (see also `TESTING.md`) |
-| **Seed test data** | `PYTHONPATH=. python scripts/seed-test-data.py` (creates user `test@test.test`, team, workspace, 10 sample docs) |
-| **Docker full stack** | `cp .env.example .env && docker compose up -d` |
-| **One-click public demo bootstrap** | `./scripts/one-click-demo.sh` |
-| **Public demo load test** | `node scripts/load-test-demo.mjs http://localhost:3000 250 15` (CI smoke), `node scripts/load-test-demo.mjs http://localhost:3000 5000 30` (conference stress target) |
+| Lint | `cd teleoscope.ca && pnpm lint` |
+| Backend unit tests | `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v` |
+| Frontend modular tests | `cd teleoscope.ca && pnpm test:unit` |
+| API/frontend contract checks | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test tests/api-frontend-contract.spec.ts tests/api.spec.ts -g "Frontend/API contract consistency|UI endpoint references resolve to backend routes" --project=chromium --retries=0` |
+| Playwright e2e | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test --project=chromium` |
+| Playwright UI core/demo bundle (chunk 1) | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_COMPONENT_E2E=1 PLAYWRIGHT_UI_EXPORT_E2E=1 PLAYWRIGHT_UI_UPLOADER_E2E=1 pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/demo-public.spec.ts --project=chromium --retries=0` |
+| Playwright vectorization full (manual/scheduled) | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_VECTOR_E2E=1 PLAYWRIGHT_UI_VECTOR_DOC_COUNT=1000 PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=1200000 pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0` |
+| Dev server | `cd teleoscope.ca && pnpm dev` |
+| Full test suite | `./scripts/run-all-tests.sh` |
+| Seed test data | `PYTHONPATH=. python scripts/seed-test-data.py` |
+| Docker full stack | `cp .env.example .env && docker compose up -d` |
+| One-click public demo bootstrap | `./scripts/one-click-demo.sh` |
+| Public demo load test | `node scripts/load-test-demo.mjs http://localhost:3000 250 15` (CI smoke), `node scripts/load-test-demo.mjs http://localhost:3000 5000 30` (conference target) |
+
+### Area-specific workflows
+
+#### A) Full stack orchestration (`scripts/`, `docker-compose.yml`)
+1. `docker compose up -d`
+2. `./scripts/test-stack.sh http://localhost:3000`
+3. `curl -sf http://localhost:3000/api/hello`
+
+#### B) Frontend app (`teleoscope.ca/`)
+- Smoke: `PLAYWRIGHT_PROJECT=chromium PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test tests/corporate.spec.ts --project=chromium`
+- Account/auth flow: set `TEST_EMAIL` + `TEST_PASSWORD`, then run `pnpm exec playwright test tests/account.spec.ts --project=chromium`
+- If app already running: `PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm exec playwright test --project=chromium`
+
+#### C) Backend core (`backend/`, `tests/`)
+- Unit-focused: `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v --tb=short`
+- Integration only: `PYTHONPATH=. python -m pytest tests/ -m integration -v`
+
+#### D) Vector pipeline/workers (`backend.dispatch`, `backend.vectorizer`, `backend.uploader`, `backend.graph`, `tests/e2e/`)
+1. Ensure MongoDB + RabbitMQ + Milvus + workers are up.
+2. Run `PYTHONPATH=. python -m pytest tests/e2e/ -m e2e -v`
+3. Shortcut: `RUN_E2E=1 ./scripts/run-all-tests.sh`
+
+### Fast failure triage
+
+- App unreachable:
+  - `docker compose ps`
+  - `docker compose logs app --tail 100`
+- RabbitMQ/Mongo errors:
+  - rerun `./scripts/test-stack.sh` and follow WARN output.
+- Playwright fails due to missing Mongo:
+  - set `PLAYWRIGHT_SKIP_ACCOUNT=1` and rerun Chromium smoke first.
+- Vector e2e stalls:
+  - verify dispatch/vectorizer/uploader/graph workers are running.
+
+### Maintenance rule for this file
+
+When runbook knowledge changes:
+1. Update the relevant section (A/B/C/D), not a generic dump area.
+2. Include exact command, preconditions, success signal, and a one-line failure hint.
+3. Replace outdated steps instead of adding duplicates.
