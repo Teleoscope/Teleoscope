@@ -20,6 +20,24 @@ As shown in the above figure, that will give a set of results that are more sema
 
 The workflow for developing themes is as shown in the above figure. The user iteratively searches for keywords, reads the relevant documents, groups them together and selects the documents to train the Teleoscope system with, then repeats. There is also an experimental clustering feature that allows you to use the system to create groups automatically based on the groups you have given it so far.
 
+## Repository map (where to look first)
+
+Use this as the quick orientation guide before editing:
+
+| Path | Purpose | Status |
+|---|---|---|
+| `teleoscope.ca/` | Active Next.js app (UI + API routes + Playwright/Vitest tests) | Active |
+| `backend/` | Python workers/tasks/vector pipeline | Active |
+| `scripts/` | One-click stack/test/demo helper scripts | Active |
+| `tests/` | Python backend tests and e2e pipeline tests | Active |
+| `docs/` | Long-form docs and runbooks | Active |
+| `schemas/` | Data schemas consumed by app/backend | Active |
+| `.github/workflows/` | CI workflows | Active |
+| `frontend/` | Older/legacy frontend app | Legacy |
+| `backend/archive/` | Historical backend utilities | Legacy |
+
+For contributor workflow and "where to put changes", see `CONTRIBUTING.md`.
+
 ## Installation
 
 ### Option 1: Docker (quickest)
@@ -68,7 +86,7 @@ For a separate vectorizer machine, use `ansible/newvectorizer.yaml`.
 
 ### Option 3: Frontend-only development
 
-Run the web app against a remote backend:
+Run the active web app (`teleoscope.ca`) against a remote backend:
 
 ```bash
 cd teleoscope.ca
@@ -92,7 +110,7 @@ Vector search and embedding require Milvus (no native macOS server); those are t
 If you use [mamba](https://mamba.readthedocs.io/) (or conda) to manage Node/Python per project:
 
 ```bash
-mamba env create -f environment.yml
+mamba env create -f environments/environment.yml
 mamba activate teleoscope
 ```
 
