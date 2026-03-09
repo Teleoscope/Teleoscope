@@ -26,8 +26,12 @@ const links = [
         href: "/pricing",
       },
       {
-        label: "Resources",
-        href: "https://teleoscope.ca/",
+        label: "Docs",
+        href: "/resources/reference",
+      },
+      {
+        label: "Public Demo",
+        href: "/demo",
       },
       {
         label: "Get Started",

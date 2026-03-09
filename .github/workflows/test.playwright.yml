@@ -5,11 +5,15 @@ on:
     branches: ["main", "frontend"]
   pull_request:
     branches: ["main", "frontend"]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * *"
 
 jobs:
-  ui-vectorization-e2e:
+  ui-core-e2e:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 55
 
     steps:
       - name: Checkout
@@ -49,8 +53,8 @@ jobs:
       - name: Wait for stack readiness
         run: ./scripts/test-stack.sh http://localhost:3000
 
-      - name: Run UI component/export/uploader/vectorization e2e
-        run: pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/ui-vectorization-large.spec.ts --project=chromium --retries=1 --reporter=line
+      - name: Run UI component/export/uploader/demo e2e
+        run: pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/demo-public.spec.ts --project=chromium --retries=1 --reporter=line
         working-directory: teleoscope.ca
         env:
           CI: "true"
@@ -59,12 +63,76 @@ jobs:
           PLAYWRIGHT_UI_COMPONENT_E2E: "1"
           PLAYWRIGHT_UI_EXPORT_E2E: "1"
           PLAYWRIGHT_UI_UPLOADER_E2E: "1"
+
+      - name: Demo API load test (CI smoke)
+        run: node scripts/load-test-demo.mjs http://localhost:3000 250 15
+
+      - name: Upload Playwright report (core)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-ui-core
+          path: teleoscope.ca/playwright-report/
+          retention-days: 14
+
+  ui-vectorization-full-e2e:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Cache pnpm store
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_ENV
+        working-directory: teleoscope.ca
+
+      - name: Restore pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('teleoscope.ca/pnpm-lock.yaml') }}
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: teleoscope.ca
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium --with-deps
+        working-directory: teleoscope.ca
+
+      - name: Start full stack
+        run: docker compose up -d --build
+
+      - name: Wait for stack readiness
+        run: ./scripts/test-stack.sh http://localhost:3000
+
+      - name: Run UI vectorization full e2e
+        run: pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=1 --reporter=line
+        working-directory: teleoscope.ca
+        env:
+          CI: "true"
+          PLAYWRIGHT_BASE_URL: "http://localhost:3000"
+          PLAYWRIGHT_SKIP_ACCOUNT: "1"
           PLAYWRIGHT_UI_VECTOR_E2E: "1"
+          PLAYWRIGHT_UI_VECTOR_DOC_COUNT: "1000"
+          PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS: "1200000"
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-ui-vectorization
+          name: playwright-report-ui-vectorization-full
           path: teleoscope.ca/playwright-report/
           retention-days: 14
