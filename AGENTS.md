@@ -54,8 +54,11 @@ The VM update script installs: `python3.12-venv`, `python3-dev`, `build-essentia
 | **Frontend modular tests** | `cd teleoscope.ca && pnpm test:unit` |
 | **API/frontend contract checks** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test tests/api-frontend-contract.spec.ts tests/api.spec.ts -g "Frontend/API contract consistency|UI endpoint references resolve to backend routes" --project=chromium --retries=0` |
 | **Playwright e2e** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test --project=chromium` |
-| **Playwright UI system bundle (components + export + uploader + vector)** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_COMPONENT_E2E=1 PLAYWRIGHT_UI_EXPORT_E2E=1 PLAYWRIGHT_UI_UPLOADER_E2E=1 PLAYWRIGHT_UI_VECTOR_E2E=1 pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/ui-vectorization-large.spec.ts --project=chromium --retries=0` |
+| **Playwright UI core/demo bundle (chunk 1)** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_COMPONENT_E2E=1 PLAYWRIGHT_UI_EXPORT_E2E=1 PLAYWRIGHT_UI_UPLOADER_E2E=1 pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/demo-public.spec.ts --project=chromium --retries=0` |
+| **Playwright vectorization full (manual/scheduled)** | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_VECTOR_E2E=1 PLAYWRIGHT_UI_VECTOR_DOC_COUNT=1000 PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=1200000 pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0` |
 | **Dev server** | `cd teleoscope.ca && pnpm dev` |
 | **Full test suite** | `./scripts/run-all-tests.sh` (see also `TESTING.md`) |
 | **Seed test data** | `PYTHONPATH=. python scripts/seed-test-data.py` (creates user `test@test.test`, team, workspace, 10 sample docs) |
 | **Docker full stack** | `cp .env.example .env && docker compose up -d` |
+| **One-click public demo bootstrap** | `./scripts/one-click-demo.sh` |
+| **Public demo load test** | `node scripts/load-test-demo.mjs http://localhost:3000 250 15` (CI smoke), `node scripts/load-test-demo.mjs http://localhost:3000 5000 30` (conference stress target) |

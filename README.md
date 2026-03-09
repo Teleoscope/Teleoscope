@@ -33,7 +33,13 @@ docker compose up -d
 
 The app will be at **http://localhost:3000**. MongoDB, RabbitMQ, Milvus, and all workers (dispatch, graph, vectorizer, uploader, tasks, files API) start automatically. After the stack is up, run `./scripts/test-stack.sh` to verify connectivity.
 
-**Tests:** CI includes fast frontend/backend checks plus a full-stack Playwright workflow (`.github/workflows/test.playwright.yml`) that runs sidebar-component e2e, export-button e2e, CSV-uploader system e2e, and 1000-doc vectorization e2e. Modular frontend tests run with `cd teleoscope.ca && pnpm test:unit`, and API/frontend contract alignment checks run with `tests/api-frontend-contract.spec.ts` + `tests/api.spec.ts` (see [TESTING.md](TESTING.md)).
+**Conference demo mode (public/no-login):**
+
+- Run `./scripts/one-click-demo.sh`
+- Open `http://localhost:3000/demo`
+- Demo route serves 1000 baked-in reddit-style posts (`teleoscope.ca/src/lib/demoData.ts`) and interactive set operations without login/dashboard.
+
+**Tests:** CI includes fast frontend/backend checks plus a chunked full-stack Playwright workflow (`.github/workflows/test.playwright.yml`) with separate core/demo and vectorization jobs: PRs run the stable core/demo bundle, while full 1000-doc vectorization runs on schedule/manual dispatch. This avoids repeated timeout loops while keeping full coverage. Also includes a demo API load smoke test. Modular frontend tests run with `cd teleoscope.ca && pnpm test:unit`, and API/frontend contract alignment checks run with `tests/api-frontend-contract.spec.ts` + `tests/api.spec.ts` (see [TESTING.md](TESTING.md)).
 
 > **Note:** First run will take several minutes to build images and pull the embedding model. For GPU acceleration (NVIDIA), use:
 > ```bash
