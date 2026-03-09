@@ -1,0 +1,3 @@
+{
+  "dockerfile": ".cursor/base-image.Dockerfile"
+}
