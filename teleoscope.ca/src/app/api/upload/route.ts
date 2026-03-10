@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import send from "@/lib/amqp";
 import { validateRequest } from "@/lib/auth";
-import { isDemoReadOnlyMode } from '@/lib/demoMode';
+import { isDemoUserById } from '@/lib/demoMode';
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR!
 const MONGODB_DATABASE = process.env.MONGODB_DATABASE!
@@ -26,9 +26,9 @@ export const POST = async (req: NextRequest) => {
     if (!user) {
         return NextResponse.json({ message: 'No user signed in.' });
     }
-  if (isDemoReadOnlyMode()) {
+  if (await isDemoUserById(user.id)) {
     return NextResponse.json(
-      { message: 'Uploads are disabled in public demo mode.' },
+      { message: 'Uploads are disabled for demo users.' },
       { status: 403 }
     );
   }

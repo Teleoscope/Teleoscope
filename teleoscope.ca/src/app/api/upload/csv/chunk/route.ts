@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateRequest } from '@/lib/auth';
 import send from '@/lib/amqp';
-import { isDemoReadOnlyMode } from '@/lib/demoMode';
+import { isDemoUserById } from '@/lib/demoMode';
 
 const MONGODB_DATABASE = process.env.MONGODB_DATABASE!;
 
@@ -12,9 +12,9 @@ export const POST = async (request: NextRequest) => {
     if (!user) {
         return NextResponse.json({ message: 'No user signed in.' });
     }
-    if (isDemoReadOnlyMode()) {
+    if (await isDemoUserById(user.id)) {
         return NextResponse.json(
-            { message: 'Uploads are disabled in public demo mode.' },
+            { message: 'Uploads are disabled for demo users.' },
             { status: 403 }
         );
     }
