@@ -111,9 +111,10 @@ jobs:
       - name: E2E env
         run: |
           touch .env.local
-          echo "MONGODB_URI=${{ secrets.MONGODB_ATLAS_TESTING_URI || 'mongodb://admin:admin_password@localhost:27017/teleoscope?authSource=admin&replicaSet=rs0&directConnection=true' }}" >> .env.local
+          echo "MONGODB_URI=mongodb://admin:admin_password@localhost:27017/teleoscope?authSource=admin&replicaSet=rs0&directConnection=true" >> .env.local
           echo "PLAYWRIGHT_E2E=1" >> .env.local
           echo "MONGODB_HOST=localhost" >> .env.local
+          echo "TELEOSCOPE_BASE_URL=http://127.0.0.1:3099" >> .env.local
 
       - name: Run Playwright (Chromium)
         run: pnpm exec playwright test --project=chromium
@@ -121,8 +122,9 @@ jobs:
           CI: true
           PLAYWRIGHT_E2E: "1"
           PLAYWRIGHT_SKIP_ACCOUNT: "1"
-          MONGODB_URI: ${{ secrets.MONGODB_ATLAS_TESTING_URI || 'mongodb://admin:admin_password@localhost:27017/teleoscope?authSource=admin&replicaSet=rs0&directConnection=true' }}
+          MONGODB_URI: mongodb://admin:admin_password@localhost:27017/teleoscope?authSource=admin&replicaSet=rs0&directConnection=true
           MONGODB_HOST: localhost
+          TELEOSCOPE_BASE_URL: http://127.0.0.1:3099
 
       - uses: actions/upload-artifact@v4
         if: failure()
