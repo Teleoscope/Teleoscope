@@ -69,6 +69,7 @@ Happy-path workflow:
 1. `docker compose up -d`
 2. `./scripts/test-stack.sh http://localhost:3000`
 3. `curl -sf http://localhost:3000/api/hello`
+4. If you need host-level Milvus access, resolve mapped port with `docker compose port milvus 19530` (or set `MILVUS_HOST_PORT` in `.env` for a fixed mapping).
 
 Use `./scripts/one-click-test.sh` when you want stack startup + full test sweep in one command.
 
@@ -130,6 +131,7 @@ Shortcut:
   - set `PLAYWRIGHT_SKIP_ACCOUNT=1` and rerun Chromium smoke suite first.
 - Vector e2e stalls:
   - verify dispatch/vectorizer/uploader/graph workers are running in compose output.
+  - if needed, check mapped Milvus host port with `docker compose port milvus 19530`.
 
 ## 6) How to update this skill when new runbook knowledge is discovered
 Keep this file minimal and operational. When you discover a new testing trick or runbook fix:

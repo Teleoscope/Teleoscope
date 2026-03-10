@@ -53,7 +53,19 @@ if ! command -v docker &>/dev/null; then
   exit 1
 fi
 echo "Starting stack (docker compose up -d)..."
+export MILVUS_HOST_PORT="${MILVUS_HOST_PORT:-0}"
 docker compose up -d
+
+MILVUS_PORT_LINE="$(docker compose port milvus 19530 2>/dev/null || true)"
+if [[ -z "$MILVUS_PORT_LINE" ]]; then
+  echo "Could not resolve Milvus host port mapping."
+  docker compose logs milvus 2>/dev/null | tail -20
+  exit 1
+fi
+MILVUS_HOST_PORT_RESOLVED="${MILVUS_PORT_LINE##*:}"
+export MILVUS_HOST=localhost
+export MIVLUS_PORT="$MILVUS_HOST_PORT_RESOLVED"
+echo "Resolved Milvus host port: $MILVUS_HOST_PORT_RESOLVED"
 
 # 4. Wait for services (with timeout)
 wait_for() {
@@ -75,7 +87,7 @@ wait_for() {
 echo "Waiting for services..."
 wait_for "MongoDB" "nc -z localhost 27017" 45 || { docker compose logs mongodb 2>/dev/null | tail -20; exit 1; }
 wait_for "RabbitMQ" "nc -z localhost 5672" 30 || { docker compose logs rabbitmq 2>/dev/null | tail -20; exit 1; }
-wait_for "Milvus" "nc -z localhost 19530" 90 || { docker compose logs milvus 2>/dev/null | tail -20; exit 1; }
+wait_for "Milvus" "nc -z localhost $MILVUS_HOST_PORT_RESOLVED" 90 || { docker compose logs milvus 2>/dev/null | tail -20; exit 1; }
 wait_for "App" "curl -sf --connect-timeout 2 http://localhost:3000/api/hello | grep -q hello" 60 || { docker compose logs app 2>/dev/null | tail -30; exit 1; }
 echo "Stack is up."
 echo ""
