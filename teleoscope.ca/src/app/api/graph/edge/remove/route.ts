@@ -6,6 +6,7 @@ import { Db, MongoClient } from 'mongodb';
 import { Graph } from '@/types/graph';
 import send from '@/lib/amqp';
 import { Edge } from 'reactflow';
+import { resolveDemoCorpusWorkspaceId } from '@/lib/demoMode';
 
 export async function POST(request: NextRequest) {
     const { user } = await validateRequest();
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
         edges = body.edges;
         workspace_id = body.workspace_id;
         workflow_id = body.workflow_id;
+        workspace_id = resolveDemoCorpusWorkspaceId(workspace_id);
 
         if (!edges) {
             throw new Error('No edges provided.');
