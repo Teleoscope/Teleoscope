@@ -56,6 +56,7 @@ The app will be at **http://localhost:3000**. MongoDB, RabbitMQ, Milvus, and all
 - Run `./scripts/one-click-demo.sh`
 - Open `http://localhost:3000/demo`
 - Demo route serves 1000 baked-in reddit-style posts (`teleoscope.ca/src/lib/demoData.ts`) and interactive set operations without login/dashboard.
+- Optional live corpus demo: set `DEMO_PUBLIC_MODE=1` and `DEMO_CORPUS_WORKSPACE_ID=<workspace_oid>`, then open `http://localhost:3000/demo/workspace` to auto-create anonymous users with saved workspace state while uploads remain disabled.
 
 **Tests:** CI includes fast frontend/backend checks plus a chunked full-stack Playwright workflow (`.github/workflows/test.playwright.yml`) with separate core/demo and vectorization jobs: PRs run the stable core/demo bundle, while scheduled/manual vectorization runs execute both 10-doc and 100-doc passes to keep runtime bounded while preserving coverage. Also includes a demo API load smoke test. Modular frontend tests run with `cd teleoscope.ca && pnpm test:unit`, and API/frontend contract alignment checks run with `tests/api-frontend-contract.spec.ts` + `tests/api.spec.ts` (see [TESTING.md](TESTING.md)).
 

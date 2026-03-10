@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DemoPost, DemoSetTag, DEMO_SET_TAGS } from '@/lib/demoData';
 import { SetOperation, applySetOperation } from '@/lib/setOperations';
+import Link from 'next/link';
 
 type DemoResponse = {
   total: number;
@@ -110,6 +111,12 @@ export default function DemoWorkspace() {
         <p className="mt-2 text-neutral-600">
           No login required. This dataset includes 1000 baked-in reddit-style posts.
         </p>
+        <Link
+          href="/demo/workspace"
+          className="mt-4 inline-flex rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white"
+        >
+          Open live corpus demo workspace
+        </Link>
       </div>
 
       <section className="grid grid-cols-1 gap-3 md:grid-cols-4">

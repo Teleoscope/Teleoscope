@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import send from "@/lib/amqp";
 import { validateRequest } from "@/lib/auth";
+import { isDemoReadOnlyMode } from '@/lib/demoMode';
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR!
 const MONGODB_DATABASE = process.env.MONGODB_DATABASE!
@@ -25,6 +26,12 @@ export const POST = async (req: NextRequest) => {
     if (!user) {
         return NextResponse.json({ message: 'No user signed in.' });
     }
+  if (isDemoReadOnlyMode()) {
+    return NextResponse.json(
+      { message: 'Uploads are disabled in public demo mode.' },
+      { status: 403 }
+    );
+  }
   const formData = await req.formData();
   const body: FileFormData = Object.fromEntries(formData);
 

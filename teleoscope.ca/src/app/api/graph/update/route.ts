@@ -5,6 +5,7 @@ import { dbOp } from '@/lib/db';
 import { Db, MongoClient } from 'mongodb';
 import { Graph } from '@/types/graph';
 import send from '@/lib/amqp';
+import { resolveDemoCorpusWorkspaceId } from '@/lib/demoMode';
 
 export async function POST(request: NextRequest) {
     const { user } = await validateRequest();
@@ -15,6 +16,7 @@ export async function POST(request: NextRequest) {
     const req = await request.json();
 
     const { uid, parameters, workflow_id, workspace_id } = req;
+    const effectiveWorkspaceId = resolveDemoCorpusWorkspaceId(workspace_id);
     
     const result = await dbOp(async (client: MongoClient, db: Db) => {
         const setObject: any = {};
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
 
         send('update_nodes', {
             workflow_id: workflow_id,
-            workspace_id: workspace_id,
+            workspace_id: effectiveWorkspaceId,
             node_uids: [uid]
         });
 
