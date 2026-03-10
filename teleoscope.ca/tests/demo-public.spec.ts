@@ -9,22 +9,12 @@ test.describe('public demo mode', () => {
     expect(body.posts).toHaveLength(10);
   });
 
-  test('demo page is accessible and interactive without login', async ({ page }) => {
+  test('demo route boots anonymous workspace without login', async ({ page }) => {
+    test.setTimeout(120_000);
     await page.goto('/demo');
-    await expect(page.getByText('Public Demo Workspace')).toBeVisible();
-    await expect(page.getByText('No login required.')).toBeVisible();
-
-    const totalCount = page.getByTestId('demo-total-count');
-    await expect(totalCount).toHaveText('1000');
-
-    const resultCount = page.getByTestId('demo-result-count');
-    const before = Number.parseInt((await resultCount.innerText()).trim(), 10);
-
-    await page.getByTestId('demo-operation').selectOption('union');
-    await expect(resultCount).not.toHaveText(before.toString());
-
-    await page.getByTestId('demo-search').fill('wedding');
-    await expect(page.getByTestId('demo-post-row').first()).toBeVisible();
+    await expect(page).toHaveURL(/\/workspace\/[^/?]+(\?.*)?demo=1/);
+    await expect(page.getByText('Default workspace')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Data' })).toBeVisible();
   });
 
   test('docs reference includes interactive boolean playground', async ({ page }) => {

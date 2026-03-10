@@ -10,7 +10,7 @@ import { validateRequest } from '@/lib/auth';
 import { connect } from '@/lib/lucia';
 import { Teams } from '@/types/teams';
 import { Workspaces } from '@/types/workspaces';
-import { isDemoPublicMode } from '@/lib/demoMode';
+import { isDemoUserById } from '@/lib/demoMode';
 
 async function getDefaultWorkspaceId(userId: string): Promise<string | null> {
     const mongoClient = await client();
@@ -29,15 +29,13 @@ async function getDefaultWorkspaceId(userId: string): Promise<string | null> {
 }
 
 export async function POST() {
-    if (!isDemoPublicMode()) {
-        return NextResponse.json({ message: 'Demo mode is not enabled.' }, { status: 404 });
-    }
-
     const { user } = await validateRequest();
-    let userId = user?.id ?? null;
+    let userId: string | null = null;
     let shouldSetSessionCookie = false;
 
-    if (!userId) {
+    if (user && (await isDemoUserById(user.id))) {
+        userId = user.id;
+    } else {
         userId = generateIdFromEntropySize(10);
         const passwordSeed = `${crypto.randomUUID()}-${Date.now()}`;
         const hashedPassword = await new Argon2id().hash(passwordSeed);
