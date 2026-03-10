@@ -11,6 +11,7 @@ import { newNote } from '@/lib/newnote';
 import { Notes } from '@/types/notes';
 import { Groups } from '@/types/groups';
 import { Search } from '@/types/search';
+import { resolveDemoCorpusWorkspaceId } from '@/lib/demoMode';
 
 async function insert(
     coll: string,
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest) {
     const req = await request.json();
 
     const { uid, type, workflow_id, workspace_id, parameters } = req;
+    const effectiveWorkspaceId = resolveDemoCorpusWorkspaceId(workspace_id);
 
     const result = await dbOp(async (client: MongoClient, db: Db) => {
         let ref = null;
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest) {
 
         send('update_nodes', {
             workflow_id: workflow_id,
-            workspace_id: workspace_id,
+            workspace_id: effectiveWorkspaceId,
             node_uids: [uid]
         });
 
