@@ -14,6 +14,8 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 55
+    env:
+      COMPOSE_PROJECT_NAME: teleoscope
 
     steps:
       - name: Checkout
@@ -53,8 +55,37 @@ jobs:
             cp .env.example .env
           fi
 
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build stack images (cached)
+        run: |
+          docker buildx bake --file docker-compose.yml \
+            --set app.tags=teleoscope-app \
+            --set dispatch.tags=teleoscope-dispatch \
+            --set files.tags=teleoscope-files \
+            --set uploader.tags=teleoscope-uploader \
+            --set vectorizer.tags=teleoscope-vectorizer \
+            --set worker-graph.tags=teleoscope-worker-graph \
+            --set worker-tasks.tags=teleoscope-worker-tasks \
+            --set app.cache-from=type=gha,scope=playwright-app \
+            --set app.cache-to=type=gha,scope=playwright-app,mode=max \
+            --set dispatch.cache-from=type=gha,scope=playwright-backend \
+            --set dispatch.cache-to=type=gha,scope=playwright-backend,mode=max \
+            --set files.cache-from=type=gha,scope=playwright-backend \
+            --set files.cache-to=type=gha,scope=playwright-backend,mode=max \
+            --set uploader.cache-from=type=gha,scope=playwright-backend \
+            --set uploader.cache-to=type=gha,scope=playwright-backend,mode=max \
+            --set worker-graph.cache-from=type=gha,scope=playwright-backend \
+            --set worker-graph.cache-to=type=gha,scope=playwright-backend,mode=max \
+            --set worker-tasks.cache-from=type=gha,scope=playwright-backend \
+            --set worker-tasks.cache-to=type=gha,scope=playwright-backend,mode=max \
+            --set vectorizer.cache-from=type=gha,scope=playwright-vectorizer \
+            --set vectorizer.cache-to=type=gha,scope=playwright-vectorizer,mode=max \
+            --set '*.output=type=docker'
+
       - name: Start full stack
-        run: docker compose up -d --build
+        run: docker compose up -d --no-build
 
       - name: Wait for stack readiness
         run: ./scripts/test-stack.sh http://localhost:3000
@@ -92,6 +123,8 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    env:
+      COMPOSE_PROJECT_NAME: teleoscope
 
     steps:
       - name: Checkout
@@ -131,8 +164,37 @@ jobs:
             cp .env.example .env
           fi
 
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build stack images (cached)
+        run: |
+          docker buildx bake --file docker-compose.yml \
+            --set app.tags=teleoscope-app \
+            --set dispatch.tags=teleoscope-dispatch \
+            --set files.tags=teleoscope-files \
+            --set uploader.tags=teleoscope-uploader \
+            --set vectorizer.tags=teleoscope-vectorizer \
+            --set worker-graph.tags=teleoscope-worker-graph \
+            --set worker-tasks.tags=teleoscope-worker-tasks \
+            --set app.cache-from=type=gha,scope=playwright-app \
+            --set app.cache-to=type=gha,scope=playwright-app,mode=max \
+            --set dispatch.cache-from=type=gha,scope=playwright-backend \
+            --set dispatch.cache-to=type=gha,scope=playwright-backend,mode=max \
+            --set files.cache-from=type=gha,scope=playwright-backend \
+            --set files.cache-to=type=gha,scope=playwright-backend,mode=max \
+            --set uploader.cache-from=type=gha,scope=playwright-backend \
+            --set uploader.cache-to=type=gha,scope=playwright-backend,mode=max \
+            --set worker-graph.cache-from=type=gha,scope=playwright-backend \
+            --set worker-graph.cache-to=type=gha,scope=playwright-backend,mode=max \
+            --set worker-tasks.cache-from=type=gha,scope=playwright-backend \
+            --set worker-tasks.cache-to=type=gha,scope=playwright-backend,mode=max \
+            --set vectorizer.cache-from=type=gha,scope=playwright-vectorizer \
+            --set vectorizer.cache-to=type=gha,scope=playwright-vectorizer,mode=max \
+            --set '*.output=type=docker'
+
       - name: Start full stack
-        run: docker compose up -d --build
+        run: docker compose up -d --no-build
 
       - name: Wait for stack readiness
         run: ./scripts/test-stack.sh http://localhost:3000
