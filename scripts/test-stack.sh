@@ -6,6 +6,7 @@ set -e
 BASE_URL="${1:-http://localhost:3000}"
 APP_WAIT_SECONDS="${TEST_STACK_APP_WAIT_SECONDS:-180}"
 APP_WAIT_INTERVAL_SECONDS="${TEST_STACK_APP_WAIT_INTERVAL_SECONDS:-3}"
+MILVUS_PROBE_PORT="${TEST_STACK_MILVUS_PORT:-}"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -17,6 +18,16 @@ warn() { echo -e "${YELLOW}  WARN${NC} $1"; }
 
 echo "Testing stack (base: $BASE_URL)..."
 echo ""
+
+if [ -z "$MILVUS_PROBE_PORT" ] && command -v docker >/dev/null 2>&1; then
+  MILVUS_PORT_LINE=$(docker compose port milvus 19530 2>/dev/null | tail -n 1 || true)
+  if [ -n "$MILVUS_PORT_LINE" ]; then
+    MILVUS_PROBE_PORT="${MILVUS_PORT_LINE##*:}"
+  fi
+fi
+if [ -z "$MILVUS_PROBE_PORT" ]; then
+  MILVUS_PROBE_PORT=19530
+fi
 
 # 1. App (Next.js)
 echo -n "App (Next.js) ... "
@@ -66,13 +77,13 @@ else
 fi
 
 # 5. Milvus (TCP)
-echo -n "Milvus (port) ... "
-if command -v nc >/dev/null 2>&1 && nc -z localhost 19530 2>/dev/null; then
-  ok "localhost:19530"
-elif command -v timeout >/dev/null 2>&1 && timeout 1 bash -c 'cat < /dev/null > /dev/tcp/localhost/19530' 2>/dev/null; then
-  ok "localhost:19530"
+echo -n "Milvus (port $MILVUS_PROBE_PORT) ... "
+if command -v nc >/dev/null 2>&1 && nc -z localhost "$MILVUS_PROBE_PORT" 2>/dev/null; then
+  ok "localhost:$MILVUS_PROBE_PORT"
+elif command -v timeout >/dev/null 2>&1 && timeout 1 bash -c "cat < /dev/null > /dev/tcp/localhost/$MILVUS_PROBE_PORT" 2>/dev/null; then
+  ok "localhost:$MILVUS_PROBE_PORT"
 else
-  warn "localhost:19530 (Milvus may still be starting)"
+  warn "localhost:$MILVUS_PROBE_PORT (Milvus may still be starting)"
 fi
 
 echo ""
