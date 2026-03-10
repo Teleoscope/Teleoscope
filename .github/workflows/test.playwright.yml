@@ -60,7 +60,7 @@ jobs:
         run: ./scripts/test-stack.sh http://localhost:3000
 
       - name: Run UI component/export/uploader/demo/information-flow/workflow e2e
-        run: pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/demo-public.spec.ts tests/ui-information-flow.spec.ts tests/workflow-cicd-sample-data.spec.ts --project=chromium --retries=1 --reporter=line
+        run: pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/demo-public.spec.ts tests/ui-information-flow.spec.ts tests/workflow-cicd-sample-data.spec.ts --project=chromium --workers=2 --retries=1 --max-failures=1 --reporter=line
         working-directory: teleoscope.ca
         env:
           CI: "true"
