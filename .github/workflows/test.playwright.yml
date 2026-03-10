@@ -59,8 +59,8 @@ jobs:
       - name: Wait for stack readiness
         run: ./scripts/test-stack.sh http://localhost:3000
 
-      - name: Run UI component/export/uploader/demo/information-flow e2e
-        run: pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/demo-public.spec.ts tests/ui-information-flow.spec.ts --project=chromium --retries=1 --reporter=line
+      - name: Run UI component/export/uploader/demo/information-flow/workflow e2e
+        run: pnpm exec playwright test tests/sidebar-components-e2e.spec.ts tests/export-buttons-ui.spec.ts tests/csv-uploader-ui.spec.ts tests/demo-public.spec.ts tests/ui-information-flow.spec.ts tests/workflow-cicd-sample-data.spec.ts --project=chromium --retries=1 --reporter=line
         working-directory: teleoscope.ca
         env:
           CI: "true"
@@ -70,6 +70,11 @@ jobs:
           PLAYWRIGHT_UI_EXPORT_E2E: "1"
           PLAYWRIGHT_UI_UPLOADER_E2E: "1"
           PLAYWRIGHT_UI_INFORMATION_E2E: "1"
+          PLAYWRIGHT_UI_SAMPLE_DOC_COUNT: "10"
+          PLAYWRIGHT_UI_INFORMATION_DOC_COUNT: "10"
+          PLAYWRIGHT_WORKFLOW_CICD_E2E: "1"
+          PLAYWRIGHT_WORKFLOW_DOC_COUNT: "10"
+          PLAYWRIGHT_WORKFLOW_RESULT_TIMEOUT_MS: "480000"
 
       - name: Demo API load test (CI smoke)
         run: node scripts/load-test-demo.mjs http://localhost:3000 250 15
@@ -152,6 +157,28 @@ jobs:
           PLAYWRIGHT_UI_VECTOR_E2E: "1"
           PLAYWRIGHT_UI_VECTOR_DOC_COUNT: "100"
           PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS: "600000"
+
+      - name: Run UI vectorization e2e (1000 docs)
+        run: pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=1 --reporter=line
+        working-directory: teleoscope.ca
+        env:
+          CI: "true"
+          PLAYWRIGHT_BASE_URL: "http://localhost:3000"
+          PLAYWRIGHT_SKIP_ACCOUNT: "1"
+          PLAYWRIGHT_UI_VECTOR_E2E: "1"
+          PLAYWRIGHT_UI_VECTOR_DOC_COUNT: "1000"
+          PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS: "900000"
+
+      - name: Run full workflow e2e (100 docs)
+        run: pnpm exec playwright test tests/workflow-cicd-sample-data.spec.ts --project=chromium --retries=1 --reporter=line
+        working-directory: teleoscope.ca
+        env:
+          CI: "true"
+          PLAYWRIGHT_BASE_URL: "http://localhost:3000"
+          PLAYWRIGHT_SKIP_ACCOUNT: "1"
+          PLAYWRIGHT_WORKFLOW_CICD_E2E: "1"
+          PLAYWRIGHT_WORKFLOW_DOC_COUNT: "100"
+          PLAYWRIGHT_WORKFLOW_RESULT_TIMEOUT_MS: "720000"
 
       - name: Upload Playwright report
         if: always()

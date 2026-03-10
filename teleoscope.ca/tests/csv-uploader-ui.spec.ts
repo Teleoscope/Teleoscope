@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import fs from 'fs/promises';
+import { copySampleCsvTo } from './helpers/sampleData';
+
+const SAMPLE_SIZE = Number.parseInt(process.env.PLAYWRIGHT_UI_SAMPLE_DOC_COUNT ?? '10', 10) || 10;
 
 test.describe('CSV uploader UI system e2e', () => {
   test.skip(
@@ -47,15 +49,9 @@ test.describe('CSV uploader UI system e2e', () => {
     await page.getByRole('button', { name: 'Data' }).click();
     await page.getByRole('button', { name: 'Open CSV Importer' }).click();
 
-    const csvPath = testInfo.outputPath('csv-uploader-system.csv');
-    await fs.writeFile(
-      csvPath,
-      [
-        'text,title,group',
-        '"uploader system doc 1 text","Uploader System Doc 1","alpha"',
-        '"uploader system doc 2 text","Uploader System Doc 2","beta"'
-      ].join('\n'),
-      'utf8'
+    const csvPath = await copySampleCsvTo(
+      testInfo.outputPath(`csv-uploader-system-sample-${SAMPLE_SIZE}.csv`),
+      SAMPLE_SIZE
     );
 
     const dialogLike = page
