@@ -4,6 +4,8 @@
 set -e
 
 BASE_URL="${1:-http://localhost:3000}"
+APP_WAIT_SECONDS="${TEST_STACK_APP_WAIT_SECONDS:-180}"
+APP_WAIT_INTERVAL_SECONDS="${TEST_STACK_APP_WAIT_INTERVAL_SECONDS:-3}"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -18,10 +20,21 @@ echo ""
 
 # 1. App (Next.js)
 echo -n "App (Next.js) ... "
-if curl -sf --connect-timeout 5 "$BASE_URL/api/hello" | grep -q '"hello"'; then
-  ok "GET $BASE_URL/api/hello"
+APP_READY=0
+SECONDS_WAITED=0
+while [ "$SECONDS_WAITED" -lt "$APP_WAIT_SECONDS" ]; do
+  if curl -sf --connect-timeout 5 "$BASE_URL/api/hello" | grep -q '"hello"'; then
+    APP_READY=1
+    break
+  fi
+  sleep "$APP_WAIT_INTERVAL_SECONDS"
+  SECONDS_WAITED=$((SECONDS_WAITED + APP_WAIT_INTERVAL_SECONDS))
+done
+
+if [ "$APP_READY" -eq 1 ]; then
+  ok "GET $BASE_URL/api/hello (waited ${SECONDS_WAITED}s)"
 else
-  fail "App not responding at $BASE_URL"
+  fail "App not responding at $BASE_URL after ${APP_WAIT_SECONDS}s"
 fi
 
 # 2. RabbitMQ management UI

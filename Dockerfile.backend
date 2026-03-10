@@ -3,15 +3,24 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+ARG PREWARM_BGE_M3=0
+
 # Install system deps for some Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+ENV HF_HOME=/opt/hf-cache
+ENV TRANSFORMERS_CACHE=/opt/hf-cache/transformers
+RUN mkdir -p "$HF_HOME" "$TRANSFORMERS_CACHE"
+
 # Copy backend requirements first for layer caching
 COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
+RUN if [ "$PREWARM_BGE_M3" = "1" ]; then \
+      python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-m3'); print('Prewarmed BAAI/bge-m3')" ; \
+    fi
 
 # Copy backend and schemas (graph/projection may reference schemas)
 COPY backend /app/backend

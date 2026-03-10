@@ -35,10 +35,49 @@ def string_to_int(s):
 
 from pymilvus import MilvusClient, DataType, MilvusException
 
+def _is_missing_database_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return "database" in msg and "not found" in msg
+
+def _is_unimplemented_db_feature(exc: Exception) -> bool:
+    msg = str(exc)
+    return "DescribeDatabase" in msg or "UNIMPLEMENTED" in msg
+
+def _ensure_database_available(client: MilvusClient):
+    if _use_lite():
+        return
+    try:
+        client.using_database(db_name=MILVUS_DBNAME)
+    except Exception as exc:
+        if _is_unimplemented_db_feature(exc):
+            logging.warning(
+                "Milvus server does not support database switching; continuing on default database."
+            )
+            return
+        if _is_missing_database_error(exc):
+            logging.warning(
+                "Milvus database '%s' was missing; creating it now.",
+                MILVUS_DBNAME,
+            )
+            client.create_database(db_name=MILVUS_DBNAME)
+            client.using_database(db_name=MILVUS_DBNAME)
+            return
+        raise
 
 def milvus_setup(client: MilvusClient, workspace_id, collection_name="teleoscope"):
+    _ensure_database_available(client)
     logging.info(f"Checking if collection {collection_name} exists...")
-    if not client.has_collection(collection_name):
+    has_collection = False
+    try:
+        has_collection = client.has_collection(collection_name)
+    except Exception as exc:
+        if _is_missing_database_error(exc):
+            _ensure_database_available(client)
+            has_collection = client.has_collection(collection_name)
+        else:
+            raise
+
+    if not has_collection:
         logging.info(f"Collection {collection_name} does not exist. Initializing...")
         # 2. Create schema
         # 2.1. Create schema
@@ -137,11 +176,18 @@ def use_database_if_supported(client: MilvusClient):
     try:
         client.using_database(db_name=MILVUS_DBNAME)
     except Exception as exc:
-        msg = str(exc)
-        if "DescribeDatabase" in msg or "UNIMPLEMENTED" in msg:
+        if _is_unimplemented_db_feature(exc):
             logging.warning(
                 "Milvus server does not support database switching; continuing on default database."
             )
+            return
+        if _is_missing_database_error(exc):
+            logging.warning(
+                "Milvus database '%s' missing when switching; creating it.",
+                MILVUS_DBNAME,
+            )
+            client.create_database(db_name=MILVUS_DBNAME)
+            client.using_database(db_name=MILVUS_DBNAME)
             return
         raise
 

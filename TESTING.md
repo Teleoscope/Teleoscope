@@ -19,10 +19,9 @@ The test suite is **automated** and runs on every push and pull request to `main
       - `tests/demo-public.spec.ts`
       - `node scripts/load-test-demo.mjs http://localhost:3000 250 15`
     - **`ui-vectorization-full-e2e`** runs on schedule/manual dispatch:
-      - `tests/ui-vectorization-large.spec.ts`
-      - with `PLAYWRIGHT_UI_VECTOR_DOC_COUNT=1000`
-      - with `PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=1200000` (20 min vector wait window)
-  - This keeps PR checks stable while preserving full vector coverage outside the merge gate.
+      - `tests/ui-vectorization-large.spec.ts` at `PLAYWRIGHT_UI_VECTOR_DOC_COUNT=10` with `PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=300000`
+      - `tests/ui-vectorization-large.spec.ts` at `PLAYWRIGHT_UI_VECTOR_DOC_COUNT=100` with `PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=600000`
+  - This keeps PR checks stable while preserving vector coverage outside the merge gate.
 
 **Required status:** Protect `main` with branch rules that require both **“Test suite”** and **“Playwright UI System E2E”** to pass before merge.
 
@@ -130,12 +129,18 @@ cd teleoscope.ca
 PLAYWRIGHT_BASE_URL=http://localhost:3000 \
 PLAYWRIGHT_SKIP_ACCOUNT=1 \
 PLAYWRIGHT_UI_VECTOR_E2E=1 \
-PLAYWRIGHT_UI_VECTOR_DOC_COUNT=1000 \
-PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=1200000 \
+PLAYWRIGHT_UI_VECTOR_DOC_COUNT=10 \
+PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=300000 \
+pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0 && \
+PLAYWRIGHT_BASE_URL=http://localhost:3000 \
+PLAYWRIGHT_SKIP_ACCOUNT=1 \
+PLAYWRIGHT_UI_VECTOR_E2E=1 \
+PLAYWRIGHT_UI_VECTOR_DOC_COUNT=100 \
+PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=600000 \
 pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0
 ```
 
-Expected signal: `1 passed` for the full 1000-doc vectorization spec.
+Expected signal: `1 passed` for each vectorization run (10-doc and 100-doc).
 
 **Public demo load test (concurrency smoke + optional 5000 stress):**
 

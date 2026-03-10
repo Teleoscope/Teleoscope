@@ -6,6 +6,9 @@ cd "$(dirname "$0")/.."
 export PORT="${PORT:-3099}"
 if [[ -n "$PLAYWRIGHT_MONGODB_URI" ]]; then
   export MONGODB_URI="$PLAYWRIGHT_MONGODB_URI"
+elif [[ -n "$MONGODB_URI" ]]; then
+  # Respect explicit MONGODB_URI from Playwright/webServer env (CI/local overrides).
+  export MONGODB_URI="$MONGODB_URI"
 else
   export MONGODB_URI="mongodb://localhost:27017"
 fi

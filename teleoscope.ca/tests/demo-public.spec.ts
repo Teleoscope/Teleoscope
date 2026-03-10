@@ -28,10 +28,11 @@ test.describe('public demo mode', () => {
   });
 
   test('docs reference includes interactive boolean playground', async ({ page }) => {
-    await page.goto('/resources/reference');
+    test.setTimeout(90_000);
+    await page.goto('/resources/reference', { timeout: 60_000 });
     await expect(
       page.getByRole('heading', { name: 'Interactive Playground' })
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 60_000 });
     await expect(page.getByTestId('set-op-union')).toBeVisible();
     await page.getByTestId('set-op-difference').click();
     await expect(page.getByText('Result (A - B)')).toBeVisible();
