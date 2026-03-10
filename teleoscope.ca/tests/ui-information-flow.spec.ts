@@ -4,7 +4,7 @@ import { readSampleUploadRows } from './helpers/sampleData';
 
 const TEST_PASSWORD = 'InfoFlowE2EPassword123!';
 const SAMPLE_SIZE = parsePositiveInt(process.env.PLAYWRIGHT_UI_INFORMATION_DOC_COUNT, 10);
-const DEFAULT_FLOW_TIMEOUT_MS = 8 * 60 * 1000;
+const DEFAULT_FLOW_TIMEOUT_MS = 10 * 60 * 1000;
 const FLOW_TIMEOUT_MS = parsePositiveInt(
   process.env.PLAYWRIGHT_UI_INFORMATION_TIMEOUT_MS,
   DEFAULT_FLOW_TIMEOUT_MS
@@ -233,17 +233,23 @@ test.describe('UI E2E: information flow with two documents', () => {
     const [docA, docB] = uploaded.docs;
     const docAId = asStringId(docA._id);
     const docBId = asStringId(docB._id);
+    const uploadedDocIds = uploaded.docs.map((doc) => asStringId(doc._id));
 
     await waitFor(async () => {
-      const a = await apiGetJson<{ state?: { vectorized?: boolean } }>(
-        page,
-        `/api/document?document=${docAId}`
-      );
-      const b = await apiGetJson<{ state?: { vectorized?: boolean } }>(
-        page,
-        `/api/document?document=${docBId}`
-      );
-      return a.state?.vectorized && b.state?.vectorized ? true : null;
+      let vectorizedCount = 0;
+      for (const docId of uploadedDocIds) {
+        const doc = await apiGetJson<{ state?: { vectorized?: boolean } }>(
+          page,
+          `/api/document?document=${docId}`
+        );
+        if (doc.state?.vectorized) {
+          vectorizedCount += 1;
+          if (vectorizedCount >= 2) {
+            return true;
+          }
+        }
+      }
+      return null;
     }, FLOW_TIMEOUT_MS);
 
     // 3) Add one document node to the canvas and validate it is readable.

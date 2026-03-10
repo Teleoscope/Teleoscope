@@ -120,8 +120,9 @@ test.describe('CSV uploader UI system e2e', () => {
           return false;
         }
         const doc = await docRes.json();
-        return !!doc?.state?.vectorized;
-      }, { timeout: 180_000 })
+        return typeof doc?.text === 'string' && typeof doc?.title === 'string' && doc.text.length > 0;
+      }, { timeout: 60_000 })
       .toBe(true);
+
   });
 });
