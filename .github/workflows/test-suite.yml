@@ -88,10 +88,30 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm exec playwright install chromium --with-deps
 
+      - name: Start MongoDB replica set (CI local fallback)
+        run: |
+          docker rm -f teleoscope-mongodb-ci 2>/dev/null || true
+          docker run -d --name teleoscope-mongodb-ci \
+            -p 27017:27017 \
+            -e MONGO_INITDB_ROOT_USERNAME=admin \
+            -e MONGO_INITDB_ROOT_PASSWORD=admin_password \
+            -e MONGO_INITDB_DATABASE=teleoscope \
+            -v "${{ github.workspace }}/docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro" \
+            mongo:7 bash -c "openssl rand -base64 756 > /tmp/keyfile && chmod 400 /tmp/keyfile && chown 999:999 /tmp/keyfile && exec docker-entrypoint.sh mongod --replSet rs0 --keyFile /tmp/keyfile"
+
+          for i in $(seq 1 30); do
+            if docker exec teleoscope-mongodb-ci mongosh -u admin -p admin_password --quiet --eval "db.adminCommand({ ping: 1 }).ok" >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+
+          docker exec teleoscope-mongodb-ci mongosh -u admin -p admin_password --eval "try { rs.status(); } catch (e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]}); }"
+
       - name: E2E env
         run: |
           touch .env.local
-          echo "MONGODB_URI=${{ secrets.MONGODB_ATLAS_TESTING_URI || 'mongodb://localhost:27017' }}" >> .env.local
+          echo "MONGODB_URI=${{ secrets.MONGODB_ATLAS_TESTING_URI || 'mongodb://admin:admin_password@localhost:27017/teleoscope?authSource=admin&replicaSet=rs0&directConnection=true' }}" >> .env.local
           echo "PLAYWRIGHT_E2E=1" >> .env.local
           echo "MONGODB_HOST=localhost" >> .env.local
 
@@ -101,7 +121,7 @@ jobs:
           CI: true
           PLAYWRIGHT_E2E: "1"
           PLAYWRIGHT_SKIP_ACCOUNT: "1"
-          MONGODB_URI: ${{ secrets.MONGODB_ATLAS_TESTING_URI || 'mongodb://localhost:27017' }}
+          MONGODB_URI: ${{ secrets.MONGODB_ATLAS_TESTING_URI || 'mongodb://admin:admin_password@localhost:27017/teleoscope?authSource=admin&replicaSet=rs0&directConnection=true' }}
           MONGODB_HOST: localhost
 
       - uses: actions/upload-artifact@v4
