@@ -50,6 +50,7 @@ docker compose up -d
 ```
 
 The app will be at **http://localhost:3000**. MongoDB, RabbitMQ, Milvus, and all workers (dispatch, graph, vectorizer, uploader, tasks, files API) start automatically. After the stack is up, run `./scripts/test-stack.sh` to verify connectivity.
+If Milvus host port `19530` is already in use, Docker now auto-assigns a free host port; run `docker compose port milvus 19530` to inspect it, or set `MILVUS_HOST_PORT` in `.env` for a fixed port.
 
 **Conference demo mode (public/no-login):**
 

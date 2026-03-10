@@ -30,7 +30,7 @@ If Docker is unavailable, use:
 **Infrastructure** (Docker):
 - MongoDB replica set (`27017`)
 - RabbitMQ (`5672`, `15672`)
-- Milvus + etcd + MinIO (`19530`)
+- Milvus + etcd + MinIO (host port is auto-assigned unless `MILVUS_HOST_PORT` is set)
 
 MongoDB **must** run as a single-node replica set because account creation uses transactions.
 
@@ -50,7 +50,7 @@ docker exec teleoscope-mongodb mongosh -u admin -p admin_password --eval "rs.ini
 ```
 
 For RabbitMQ + Milvus:
-- `docker compose up -d rabbitmq etcd minio milvus`
+- `docker compose up -d rabbitmq etcd minio milvus` (run `docker compose port milvus 19530` to see the mapped host port)
 
 Frontend dev server:
 - `cd teleoscope.ca && pnpm dev` (port `3000`)
@@ -141,6 +141,7 @@ Frontend dev server:
   - set `PLAYWRIGHT_SKIP_ACCOUNT=1` and rerun Chromium smoke first.
 - Vector e2e stalls:
   - verify dispatch/vectorizer/uploader/graph workers are running.
+ - if needed, verify mapped Milvus host port with `docker compose port milvus 19530`.
 
 ### Maintenance rule for this file
 
