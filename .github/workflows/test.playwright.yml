@@ -60,29 +60,35 @@ jobs:
 
       - name: Build stack images (cached)
         run: |
-          docker buildx bake --file docker-compose.yml \
-            --set app.tags=teleoscope-app \
-            --set dispatch.tags=teleoscope-dispatch \
-            --set files.tags=teleoscope-files \
-            --set uploader.tags=teleoscope-uploader \
-            --set vectorizer.tags=teleoscope-vectorizer \
-            --set worker-graph.tags=teleoscope-worker-graph \
-            --set worker-tasks.tags=teleoscope-worker-tasks \
-            --set app.cache-from=type=gha,scope=playwright-app \
-            --set app.cache-to=type=gha,scope=playwright-app,mode=max \
-            --set dispatch.cache-from=type=gha,scope=playwright-backend \
-            --set dispatch.cache-to=type=gha,scope=playwright-backend,mode=max \
-            --set files.cache-from=type=gha,scope=playwright-backend \
-            --set files.cache-to=type=gha,scope=playwright-backend,mode=max \
-            --set uploader.cache-from=type=gha,scope=playwright-backend \
-            --set uploader.cache-to=type=gha,scope=playwright-backend,mode=max \
-            --set worker-graph.cache-from=type=gha,scope=playwright-backend \
-            --set worker-graph.cache-to=type=gha,scope=playwright-backend,mode=max \
-            --set worker-tasks.cache-from=type=gha,scope=playwright-backend \
-            --set worker-tasks.cache-to=type=gha,scope=playwright-backend,mode=max \
-            --set vectorizer.cache-from=type=gha,scope=playwright-vectorizer \
-            --set vectorizer.cache-to=type=gha,scope=playwright-vectorizer,mode=max \
-            --set '*.output=type=docker'
+          docker buildx build \
+            --file Dockerfile.app \
+            --tag teleoscope-app \
+            --cache-from type=gha,scope=playwright-app \
+            --cache-to type=gha,scope=playwright-app,mode=max \
+            --load \
+            .
+
+          docker buildx build \
+            --file Dockerfile.backend \
+            --build-arg PREWARM_BGE_M3=0 \
+            --tag teleoscope-backend \
+            --cache-from type=gha,scope=playwright-backend \
+            --cache-to type=gha,scope=playwright-backend,mode=max \
+            --load \
+            .
+
+          docker buildx build \
+            --file Dockerfile.backend \
+            --build-arg PREWARM_BGE_M3=1 \
+            --tag teleoscope-vectorizer \
+            --cache-from type=gha,scope=playwright-vectorizer \
+            --cache-to type=gha,scope=playwright-vectorizer,mode=max \
+            --load \
+            .
+
+          for svc in dispatch files uploader worker-graph worker-tasks; do
+            docker tag teleoscope-backend "teleoscope-${svc}"
+          done
 
       - name: Start full stack
         run: docker compose up -d --no-build
@@ -169,29 +175,35 @@ jobs:
 
       - name: Build stack images (cached)
         run: |
-          docker buildx bake --file docker-compose.yml \
-            --set app.tags=teleoscope-app \
-            --set dispatch.tags=teleoscope-dispatch \
-            --set files.tags=teleoscope-files \
-            --set uploader.tags=teleoscope-uploader \
-            --set vectorizer.tags=teleoscope-vectorizer \
-            --set worker-graph.tags=teleoscope-worker-graph \
-            --set worker-tasks.tags=teleoscope-worker-tasks \
-            --set app.cache-from=type=gha,scope=playwright-app \
-            --set app.cache-to=type=gha,scope=playwright-app,mode=max \
-            --set dispatch.cache-from=type=gha,scope=playwright-backend \
-            --set dispatch.cache-to=type=gha,scope=playwright-backend,mode=max \
-            --set files.cache-from=type=gha,scope=playwright-backend \
-            --set files.cache-to=type=gha,scope=playwright-backend,mode=max \
-            --set uploader.cache-from=type=gha,scope=playwright-backend \
-            --set uploader.cache-to=type=gha,scope=playwright-backend,mode=max \
-            --set worker-graph.cache-from=type=gha,scope=playwright-backend \
-            --set worker-graph.cache-to=type=gha,scope=playwright-backend,mode=max \
-            --set worker-tasks.cache-from=type=gha,scope=playwright-backend \
-            --set worker-tasks.cache-to=type=gha,scope=playwright-backend,mode=max \
-            --set vectorizer.cache-from=type=gha,scope=playwright-vectorizer \
-            --set vectorizer.cache-to=type=gha,scope=playwright-vectorizer,mode=max \
-            --set '*.output=type=docker'
+          docker buildx build \
+            --file Dockerfile.app \
+            --tag teleoscope-app \
+            --cache-from type=gha,scope=playwright-app \
+            --cache-to type=gha,scope=playwright-app,mode=max \
+            --load \
+            .
+
+          docker buildx build \
+            --file Dockerfile.backend \
+            --build-arg PREWARM_BGE_M3=0 \
+            --tag teleoscope-backend \
+            --cache-from type=gha,scope=playwright-backend \
+            --cache-to type=gha,scope=playwright-backend,mode=max \
+            --load \
+            .
+
+          docker buildx build \
+            --file Dockerfile.backend \
+            --build-arg PREWARM_BGE_M3=1 \
+            --tag teleoscope-vectorizer \
+            --cache-from type=gha,scope=playwright-vectorizer \
+            --cache-to type=gha,scope=playwright-vectorizer,mode=max \
+            --load \
+            .
+
+          for svc in dispatch files uploader worker-graph worker-tasks; do
+            docker tag teleoscope-backend "teleoscope-${svc}"
+          done
 
       - name: Start full stack
         run: docker compose up -d --no-build
