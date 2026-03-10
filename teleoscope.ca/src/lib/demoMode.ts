@@ -1,12 +1,22 @@
-export function isDemoPublicMode(): boolean {
-    return process.env.DEMO_PUBLIC_MODE === '1';
+import { client } from '@/lib/db';
+import { Users } from '@/types/users';
+
+const DEMO_EMAIL_SUFFIX = '@demo.teleoscope.local';
+
+export function isDemoUserEmail(email: string): boolean {
+    return email.endsWith(DEMO_EMAIL_SUFFIX);
 }
 
-export function isDemoReadOnlyMode(): boolean {
-    if (!isDemoPublicMode()) {
+export async function isDemoUserById(userId: string): Promise<boolean> {
+    const mongoClient = await client();
+    const db = mongoClient.db();
+    const user = await db
+        .collection<Users>('users')
+        .findOne({ _id: userId }, { projection: { emails: 1 } });
+    if (!user?.emails?.length) {
         return false;
     }
-    return process.env.DEMO_ALLOW_UPLOADS !== '1';
+    return user.emails.some(isDemoUserEmail);
 }
 
 export function getDemoCorpusWorkspaceId(): string | null {
@@ -15,8 +25,5 @@ export function getDemoCorpusWorkspaceId(): string | null {
 }
 
 export function resolveDemoCorpusWorkspaceId(workspaceId: string): string {
-    if (!isDemoPublicMode()) {
-        return workspaceId;
-    }
     return getDemoCorpusWorkspaceId() ?? workspaceId;
 }

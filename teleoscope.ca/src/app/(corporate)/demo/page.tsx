@@ -1,7 +1,7 @@
-import DemoWorkspace from '@/components/demo/DemoWorkspace';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default function DemoPage() {
-  return <DemoWorkspace />;
+  redirect('/demo/workspace');
 }
