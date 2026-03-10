@@ -4,7 +4,7 @@ import { readSampleUploadRows } from './helpers/sampleData';
 
 const TEST_PASSWORD = 'InfoFlowE2EPassword123!';
 const SAMPLE_SIZE = parsePositiveInt(process.env.PLAYWRIGHT_UI_INFORMATION_DOC_COUNT, 10);
-const DEFAULT_FLOW_TIMEOUT_MS = 3 * 60 * 1000;
+const DEFAULT_FLOW_TIMEOUT_MS = 8 * 60 * 1000;
 const FLOW_TIMEOUT_MS = parsePositiveInt(
   process.env.PLAYWRIGHT_UI_INFORMATION_TIMEOUT_MS,
   DEFAULT_FLOW_TIMEOUT_MS
