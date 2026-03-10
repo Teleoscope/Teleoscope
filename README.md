@@ -57,7 +57,7 @@ The app will be at **http://localhost:3000**. MongoDB, RabbitMQ, Milvus, and all
 - Open `http://localhost:3000/demo`
 - Demo route serves 1000 baked-in reddit-style posts (`teleoscope.ca/src/lib/demoData.ts`) and interactive set operations without login/dashboard.
 
-**Tests:** CI includes fast frontend/backend checks plus a chunked full-stack Playwright workflow (`.github/workflows/test.playwright.yml`) with separate core/demo and vectorization jobs: PRs run the stable core/demo bundle, while full 1000-doc vectorization runs on schedule/manual dispatch. This avoids repeated timeout loops while keeping full coverage. Also includes a demo API load smoke test. Modular frontend tests run with `cd teleoscope.ca && pnpm test:unit`, and API/frontend contract alignment checks run with `tests/api-frontend-contract.spec.ts` + `tests/api.spec.ts` (see [TESTING.md](TESTING.md)).
+**Tests:** CI includes fast frontend/backend checks plus a chunked full-stack Playwright workflow (`.github/workflows/test.playwright.yml`) with separate core/demo and vectorization jobs: PRs run the stable core/demo bundle, while scheduled/manual vectorization runs execute both 10-doc and 100-doc passes to keep runtime bounded while preserving coverage. Also includes a demo API load smoke test. Modular frontend tests run with `cd teleoscope.ca && pnpm test:unit`, and API/frontend contract alignment checks run with `tests/api-frontend-contract.spec.ts` + `tests/api.spec.ts` (see [TESTING.md](TESTING.md)).
 
 > **Note:** First run will take several minutes to build images and pull the embedding model. For GPU acceleration (NVIDIA), use:
 > ```bash

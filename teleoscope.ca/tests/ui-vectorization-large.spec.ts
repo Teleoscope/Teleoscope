@@ -3,6 +3,8 @@ import crypto from 'crypto';
 
 const DOC_COUNT = parsePositiveInt(process.env.PLAYWRIGHT_UI_VECTOR_DOC_COUNT, 1000);
 const CHUNK_SIZE = Math.min(200, DOC_COUNT);
+// Rank search excludes the control document itself, so expected results cap at DOC_COUNT - 1.
+const MIN_EXPECTED_RANKED_RESULTS = Math.max(0, Math.min(100, DOC_COUNT - 1));
 const TEST_PASSWORD = 'VectorE2EPassword123!';
 const DEFAULT_RESULT_TIMEOUT_MS = 12 * 60 * 1000;
 const RESULT_TIMEOUT_MS = parseTimeoutMs(
@@ -312,12 +314,12 @@ test.describe('UI E2E: large upload, vectorization, ranking, set ops', () => {
     // 5) Validate backend-computed counts for rank + set operations.
     const rankNode = await waitFor(async () => {
       const node = (await apiGetJson(page, `/api/graph?uid=${rankNodeUid}`)) as GraphNode;
-      if (rankedCount(node) >= 100) {
+      if (rankedCount(node) >= MIN_EXPECTED_RANKED_RESULTS) {
         return node;
       }
       return null;
     }, RESULT_TIMEOUT_MS);
-    expect(rankedCount(rankNode)).toBeGreaterThanOrEqual(100);
+    expect(rankedCount(rankNode)).toBeGreaterThanOrEqual(MIN_EXPECTED_RANKED_RESULTS);
 
     await waitFor(async () => {
       const node = (await apiGetJson(page, `/api/graph?uid=${unionNodeUid}`)) as GraphNode;
