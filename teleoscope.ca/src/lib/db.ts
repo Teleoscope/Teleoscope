@@ -10,31 +10,47 @@ import notes from '@/schemas/notes.json';
 import graph from '@/schemas/graph.json';
 import documents from '@/schemas/documents.json';
 import clientPromise from './mongodb';
+import { MongoServerError } from 'mongodb';
 
+let schemaReadyPromise: Promise<void> | null = null;
+
+async function ensureDbReady(db: Db): Promise<void> {
+    if (!schemaReadyPromise) {
+        schemaReadyPromise = ensure_db_collections_exist(db).catch((error) => {
+            schemaReadyPromise = null;
+            throw error;
+        });
+    }
+    await schemaReadyPromise;
+}
 
 export const dbOp = async (operation: Function) => {
-    const mongo_client = await clientPromise
-    let result;
+    const mongo_client = await clientPromise;
+    const db = mongo_client.db();
+    await ensureDbReady(db);
+
     try {
-      const db = mongo_client.db();
-      result = await operation(mongo_client, db);
+        return await operation(mongo_client, db);
     } catch (error) {
-      if (error.code === 121) {
-        // Document validation error
-        const details = error.errInfo.details;
-        console.log('Document validation error:');
-        console.log(JSON.stringify(details, null, 2));
-      } else {
-        console.error('An error occurred:', error);
-      }
+        if (error instanceof MongoServerError && error.code === 121) {
+            // Document validation error
+            const details = error.errInfo?.details;
+            console.log('Document validation error:');
+            if (details) {
+                console.log(JSON.stringify(details, null, 2));
+            }
+        } else {
+            console.error('An error occurred:', error);
+        }
+        throw error;
     }
-    return result;
-  };
+};
 
 
 async function client() {
-    const _client = await clientPromise
+    const _client = await clientPromise;
     await _client.connect();
+    await ensureDbReady(_client.db());
     return _client;
 }
 
@@ -50,14 +66,14 @@ async function ensure_db_collections_exist(db: Db) {
             validationLevel: 'strict'
             // TODO: validationLevel
         });
-        await db.collection('users').createIndex(
-            { emails: 1 },
-            {
-                name: 'emails',
-                unique: true
-            }
-        );
     }
+    await db.collection('users').createIndex(
+        { emails: 1 },
+        {
+            name: 'emails',
+            unique: true
+        }
+    );
     if (!coll_names.includes('sessions')) {
         await db.createCollection('sessions', {
             validator: sessions,
@@ -112,27 +128,27 @@ async function ensure_db_collections_exist(db: Db) {
             validator: documents,
             validationLevel: 'strict'
         });
-        await db.collection('documents').createIndex(
-            { title: 'text', text: 'text' },
-            {
-                name: 'text'
-            }
-        );
     }
+    await db.collection('documents').createIndex(
+        { title: 'text', text: 'text' },
+        {
+            name: 'text'
+        }
+    );
 
     if (!coll_names.includes('graph')) {
         await db.createCollection('graph', {
             validator: graph,
             validationLevel: 'strict'
         });
-        await db.collection('graph').createIndex(
-            { uid: 1 },
-            {
-                name: 'uid',
-                unique: true
-            }
-        );
     }
+    await db.collection('graph').createIndex(
+        { uid: 1 },
+        {
+            name: 'uid',
+            unique: true
+        }
+    );
 }
 
-export { client, ensure_db_collections_exist };
+export { client, ensure_db_collections_exist, ensureDbReady };

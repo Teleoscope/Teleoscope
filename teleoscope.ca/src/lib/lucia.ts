@@ -3,6 +3,7 @@ import { MongodbAdapter } from "@lucia-auth/adapter-mongodb";
 import { Lucia, RegisteredDatabaseUserAttributes } from "lucia";
 import { Collection, Db } from "mongodb";
 import clientPromise from "./mongodb";
+import { ensureDbReady } from "./db";
 
 interface UserDoc extends RegisteredDatabaseUserAttributes {
     _id: string;
@@ -29,6 +30,7 @@ export async function connect(): Promise<
 > {
   const mongo_client = await clientPromise
   const db = mongo_client.db();
+  await ensureDbReady(db);
 
   const { Session, User } = await getUsersAndSessionsCollections(db);
   
