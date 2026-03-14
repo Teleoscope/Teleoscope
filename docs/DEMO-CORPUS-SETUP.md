@@ -11,7 +11,7 @@ The corpus comes from [Teleoscope/teleoscope-demo-data](https://github.com/Teleo
 
 ## Docker / one-click demo (automatic)
 
-Run `./scripts/one-click-demo.sh`. It starts the stack, downloads the demo data (if missing), seeds the corpus into Mongo and Milvus, sets `DEMO_CORPUS_WORKSPACE_ID` in `.env`, and restarts the app. The demo at http://localhost:3000/demo then has the corpus. You need a mamba/conda env named `teleoscope` with `pyarrow` and `py7zr` on the host (see [environments/environment.yml](../environments/environment.yml)).
+Run `./scripts/one-click-demo.sh`. It starts the stack, downloads the demo data (if missing), seeds the corpus into Mongo and Milvus, and restarts the app. The app **auto-discovers** the demo corpus by finding the workspace with label "Demo corpus" in Mongo (same label the seed script uses), so you do not need to set `DEMO_CORPUS_WORKSPACE_ID`; one-click may still write it to `.env` when the seed prints an ID (avoids a one-time DB lookup). The demo at http://localhost:3000/demo then has the corpus. You need a mamba/conda env named `teleoscope` with `pyarrow` and `py7zr` on the host (see [environments/environment.yml](../environments/environment.yml)).
 
 **Update only (no package or data download):** run `./scripts/refresh-demo-corpus.sh` when the stack and `data/` are already in place. It does not rebuild Docker images, run npm/pip, or download demo data; it only re-seeds Mongo/Milvus from existing data and restarts the app. Run `git pull` first if you want the latest code. For a **clean install** (rebuild all images with no cache and re-download demo data), run `CLEAN_INSTALL=1 ./scripts/one-click-demo.sh`.
 
@@ -47,21 +47,21 @@ The script will:
 - If Milvus is configured, load vectors from parquet into Milvus for that workspace (so ranking/similarity work).
 - Print the workspace ID.
 
-### 3. Point the app at the demo corpus
+### 3. (Optional) Set the demo corpus workspace ID
 
-Set the printed workspace ID in your environment:
+The app **auto-discovers** the demo corpus by querying Mongo for the workspace with label "Demo corpus" (the same label the seed script uses). You do not need to set `DEMO_CORPUS_WORKSPACE_ID`. If you want to avoid that one-time DB lookup, set the printed workspace ID:
 
 ```bash
 export DEMO_CORPUS_WORKSPACE_ID=<workspace_id_printed_by_script>
 ```
 
-For the Next.js app you can use `.env.local`:
+For the Next.js app you can use `.env` or `.env.local`:
 
 ```bash
 DEMO_CORPUS_WORKSPACE_ID=<workspace_id>
 ```
 
-Then start the app. When anonymous users open `/demo`, they are redirected to a workspace whose **reads** (search, count, document fetch) and **vector operations** (when the backend is used) use this pre-seeded corpus. Uploads remain disabled for demo users.
+Then start the app. When anonymous users open `/demo`, they are redirected to that workspace; **reads** (search, count, document fetch) and **vector operations** use the pre-seeded corpus. Uploads remain disabled for demo users.
 
 ## No-Docker (Mongo only)
 
@@ -79,7 +79,7 @@ If this machine **cannot run Docker** (no Milvus, no RabbitMQ/Celery):
 
    You’ll see: “MILVUS_URI and MILVUS_LITE_PATH unset; skipping Milvus”.
 
-4. Set `DEMO_CORPUS_WORKSPACE_ID` and start the frontend (`cd teleoscope.ca && pnpm dev`).
+4. (Optional) Set `DEMO_CORPUS_WORKSPACE_ID`; the app will otherwise auto-discover the corpus by label. Start the frontend (`cd teleoscope.ca && pnpm dev`).
 
 Result:
 
@@ -98,7 +98,7 @@ With Docker (Mongo + Milvus + workers):
 2. `docker compose up -d` (or ensure Mongo + Milvus are up).
 3. `MILVUS_URI=http://localhost:19530 PYTHONPATH=. python scripts/seed-demo-corpus.py`  
    (Adjust host/port if Milvus is elsewhere; e.g. `docker compose port milvus 19530`.)
-4. Set `DEMO_CORPUS_WORKSPACE_ID` in `.env` / environment and start the app.
+4. (Optional) Set `DEMO_CORPUS_WORKSPACE_ID` in `.env`; the app auto-discovers the corpus by label if unset. Start the app.
 
 Then anonymous demo users get both document list/search and vector ranking/similarity from the pre-seeded corpus.
 
@@ -127,7 +127,7 @@ Run `./scripts/demo-status.sh [base_url]` to check: demo workspace ID (in .env),
 
 | Variable | Purpose |
 |--------|----------|
-| `DEMO_CORPUS_WORKSPACE_ID` | Workspace ID for demo reads/vector ops (set by one-click-demo.sh or after running seed-demo-corpus.py). |
+| `DEMO_CORPUS_WORKSPACE_ID` | Optional. When set, app uses this workspace for demo reads/vector ops; when unset, app auto-discovers the workspace by label "Demo corpus" in Mongo. One-click and seed script may set it. |
 | `TELEOSCOPE_DATA_DIR` | Directory containing `documents.jsonl.7z` and `parquet_export/` (default: repo `data/`). |
 | `MONGODB_URI` / `MONGODB_DATABASE` | Mongo connection for the seed script and app. |
 | `MILVUS_URI` or `MILVUS_LITE_PATH` | When set, seed script loads vectors from parquet into Milvus. |

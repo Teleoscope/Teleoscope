@@ -4,7 +4,7 @@ import { Documents } from '@/types/documents';
 import { NextRequest, NextResponse } from 'next/server';
 import { dbOp } from '@/lib/db';
 import { Db, MongoClient, ObjectId } from 'mongodb';
-import { resolveDemoCorpusWorkspaceId } from '@/lib/demoMode';
+import { resolveDemoCorpusWorkspaceIdAsync } from '@/lib/demoMode';
 
 export async function GET(request: NextRequest) {
     const { user } = await validateRequest();
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     if (!workspace) {
         return NextResponse.json({ message: 'workspace is required.' }, { status: 400 });
     }
-    const effectiveWorkspace = resolveDemoCorpusWorkspaceId(workspace);
+    const effectiveWorkspace = await resolveDemoCorpusWorkspaceIdAsync(workspace);
 
     const result = await dbOp(async (client: MongoClient, db: Db) => {
         const q = query

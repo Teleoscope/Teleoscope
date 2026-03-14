@@ -10,7 +10,7 @@ import { validateRequest } from '@/lib/auth';
 import { connect } from '@/lib/lucia';
 import { Teams } from '@/types/teams';
 import { Workspaces } from '@/types/workspaces';
-import { isDemoUserById } from '@/lib/demoMode';
+import { isDemoUserById, getDemoCorpusWorkspaceIdAsync } from '@/lib/demoMode';
 
 async function getDefaultWorkspaceId(userId: string): Promise<string | null> {
     const mongoClient = await client();
@@ -44,7 +44,11 @@ export async function POST() {
         shouldSetSessionCookie = true;
     }
 
-    const workspaceId = await getDefaultWorkspaceId(userId);
+    // Prefer the shared demo corpus workspace (auto-discovered by label if not in env)
+    let workspaceId = await getDemoCorpusWorkspaceIdAsync();
+    if (!workspaceId) {
+        workspaceId = await getDefaultWorkspaceId(userId);
+    }
     if (!workspaceId) {
         return NextResponse.json(
             { message: 'Unable to resolve workspace for demo user.' },

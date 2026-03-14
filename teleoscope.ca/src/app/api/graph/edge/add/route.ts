@@ -5,7 +5,7 @@ import send from '@/lib/amqp';
 import { dbOp } from '@/lib/db';
 import { Db, MongoClient } from 'mongodb';
 import { Graph } from '@/types/graph';
-import { resolveDemoCorpusWorkspaceId } from '@/lib/demoMode';
+import { resolveDemoCorpusWorkspaceIdAsync } from '@/lib/demoMode';
 
 interface Change {
     source: string;
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { changes, workspace_id, workflow_id } = await request.json();
-    const effectiveWorkspaceId = resolveDemoCorpusWorkspaceId(workspace_id);
+    const effectiveWorkspaceId = await resolveDemoCorpusWorkspaceIdAsync(workspace_id);
     if (!Array.isArray(changes)) {
         throw new TypeError('Expected changes to be an array');
     }

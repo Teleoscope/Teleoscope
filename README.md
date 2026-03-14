@@ -54,7 +54,7 @@ If Milvus host port `19530` is already in use, Docker now auto-assigns a free ho
 
 **Conference demo mode (public/no-login):**
 
-- Run `./scripts/one-click-demo.sh`. It starts the stack, **downloads the demo data**, **seeds the demo corpus** into Mongo and Milvus, and sets `DEMO_CORPUS_WORKSPACE_ID` in `.env` so the app serves the corpus. No extra steps.
+- Run `./scripts/one-click-demo.sh`. It starts the stack, **downloads the demo data**, and **seeds the demo corpus** into Mongo and Milvus. The app finds the corpus by the workspace label "Demo corpus" (no need to set `DEMO_CORPUS_WORKSPACE_ID`; one-click may still write it to `.env` to skip a DB lookup). No extra steps.
 - Open **http://localhost:3000/demo**. You land in an anonymous workspace (no login) with the **pre-seeded document corpus** (search, documents, vector ranking). The demo always uses this data; it is part of the install.
 
 **Tests:** CI includes fast frontend/backend checks plus a chunked full-stack Playwright workflow (`.github/workflows/test.playwright.yml`) with separate core/demo and vectorization jobs: PRs run the stable core/demo bundle, while scheduled/manual vectorization runs execute both 10-doc and 100-doc passes to keep runtime bounded while preserving coverage. Also includes a demo API load smoke test. Modular frontend tests run with `cd teleoscope.ca && pnpm test:unit`, and API/frontend contract alignment checks run with `tests/api-frontend-contract.spec.ts` + `tests/api.spec.ts` (see [TESTING.md](TESTING.md)).
@@ -69,12 +69,12 @@ If Milvus host port `19530` is already in use, Docker now auto-assigns a free ho
 
 The **/demo** route sends visitors to an anonymous workspace that **always** uses a pre-seeded document corpus (search, open docs, vector ranking). Demo materials are **pre-vectorized** (parquet); the seed script loads them into Mongo and Milvus and does not run the vectorization pipeline. No upload or vectorization in the UI.
 
-- **Docker / one-click demo:** `./scripts/one-click-demo.sh` does everything: starts the stack, runs `./scripts/download-demo-data.sh`, runs the seed script (requires mamba/conda env `teleoscope` with `pyarrow` and `py7zr` on the host), writes `DEMO_CORPUS_WORKSPACE_ID` to `.env`, and restarts the app. The demo at **http://localhost:3000/demo** then has the corpus. No options; it’s part of the install.
+- **Docker / one-click demo:** `./scripts/one-click-demo.sh` does everything: starts the stack, runs `./scripts/download-demo-data.sh`, runs the seed script (requires mamba/conda env `teleoscope` with `pyarrow` and `py7zr` on the host), and restarts the app. The app **auto-discovers** the demo corpus by the workspace label "Demo corpus" in Mongo; one-click may write `DEMO_CORPUS_WORKSPACE_ID` to `.env` when the seed prints an ID (optional). The demo at **http://localhost:3000/demo** then has the corpus. No options; it’s part of the install.
 
 - **Manual setup (e.g. no Docker or re-seeding):** If you run the stack yourself or need to re-seed:
   1. Download: `./scripts/download-demo-data.sh` (puts `documents.jsonl.7z` and `parquet_export/` in `data/`).
   2. Seed: `mamba activate teleoscope` then `PYTHONPATH=. python scripts/seed-demo-corpus.py` (use Mongo/Milvus URIs for your stack). The script prints a workspace ID.
-  3. Set `DEMO_CORPUS_WORKSPACE_ID=<that_id>` in `.env` (or `teleoscope.ca/.env.local`) and restart the app.
+  3. Optional: set `DEMO_CORPUS_WORKSPACE_ID=<that_id>` in `.env` to avoid a DB lookup; if unset, the app finds the corpus by the workspace label "Demo corpus". Restart the app.
 
 - **Update only** (no package or data download): run `./scripts/refresh-demo-corpus.sh` when the stack and data are already in place. Does not rebuild images or re-download demo data; run `git pull` first for latest code.
 - **Clean install** (full rebuild and re-download): run `CLEAN_INSTALL=1 ./scripts/one-click-demo.sh`.
@@ -121,7 +121,7 @@ If you can't run Docker (e.g. hypervisor limits in a VM), run and test everythin
 
 Vector search and embedding require Milvus (no native macOS server); those are tested in CI or on a host with Docker. See [docs/TESTING-WITHOUT-DOCKER.md](docs/TESTING-WITHOUT-DOCKER.md).
 
-To run the **demo with a pre-seeded corpus** on this machine (Mongo only; list/search work, vector ranking needs Milvus elsewhere): follow [Demo corpus (pre-seeded data)](#demo-corpus-pre-seeded-data)—download demo data, run `scripts/seed-demo-corpus.py` without Milvus env vars, set `DEMO_CORPUS_WORKSPACE_ID`, then start the app.
+To run the **demo with a pre-seeded corpus** on this machine (Mongo only; list/search work, vector ranking needs Milvus elsewhere): follow [Demo corpus (pre-seeded data)](#demo-corpus-pre-seeded-data)—download demo data, run `scripts/seed-demo-corpus.py` without Milvus env vars, then start the app (the app auto-discovers the corpus by workspace label "Demo corpus"; setting `DEMO_CORPUS_WORKSPACE_ID` is optional).
 
 ### Mamba/Conda environment
 

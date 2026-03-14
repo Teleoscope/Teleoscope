@@ -28,7 +28,7 @@ if [[ -f .env ]]; then
     DEMO_WORKSPACE_ID=$(grep '^DEMO_CORPUS_WORKSPACE_ID=' .env | head -1 | sed 's/^DEMO_CORPUS_WORKSPACE_ID=//' | tr -d '\r')
     ok "DEMO_CORPUS_WORKSPACE_ID is set in .env ($DEMO_WORKSPACE_ID)"
   else
-    warn "DEMO_CORPUS_WORKSPACE_ID not set in .env (demo will show empty corpus)"
+    ok "DEMO_CORPUS_WORKSPACE_ID not set; app will auto-discover demo corpus by label \"Demo corpus\" in Mongo"
   fi
 else
   warn ".env not found"
@@ -36,7 +36,7 @@ else
 fi
 if [[ -z "$DEMO_WORKSPACE_ID" ]] && [[ -f .demo_corpus_workspace_id ]]; then
   DEMO_WORKSPACE_ID=$(cat .demo_corpus_workspace_id | tr -d '\r\n')
-  warn "Using .demo_corpus_workspace_id file ($DEMO_WORKSPACE_ID); add to .env and restart app"
+  info "Read from .demo_corpus_workspace_id ($DEMO_WORKSPACE_ID); app can also discover by label"
 fi
 
 # --- Demo data files ---
