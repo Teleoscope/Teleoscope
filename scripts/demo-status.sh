@@ -147,6 +147,133 @@ else
   warn "No demo workspace ID (env/file) and could not discover by label \"Demo corpus\"; is Mongo up and corpus seeded?"
 fi
 
+# --- Milvus ---
+section "Milvus (vector ranking)"
+set -a
+# shellcheck source=/dev/null
+source .env 2>/dev/null || true
+set +a
+MILVUS_PORT="${MILVUS_PORT:-}"
+if [[ -n "${MILVUS_URI:-}" ]]; then
+  if [[ "$MILVUS_URI" =~ ^https?://[^:/]+:([0-9]+) ]]; then
+    MILVUS_PORT="${BASH_REMATCH[1]}"
+  elif [[ "$MILVUS_URI" =~ ^https?://[^:/]+ ]]; then
+    MILVUS_PORT="19530"
+  fi
+fi
+if [[ -z "$MILVUS_PORT" ]] && command -v docker >/dev/null 2>&1 && [[ -f docker-compose.yml ]]; then
+  MILVUS_PORT=$(docker compose port milvus 19530 2>/dev/null | cut -d: -f2)
+fi
+if [[ -z "$MILVUS_PORT" ]]; then
+  MILVUS_PORT="19530"
+fi
+# Export for Python backend.embeddings (URI takes precedence over HOST:PORT)
+export MILVUS_URI="${MILVUS_URI:-http://localhost:$MILVUS_PORT}"
+export MILVUS_DBNAME="${MILVUS_DBNAME:-teleoscope}"
+
+if [[ -n "${MILVUS_LITE_PATH:-}" ]]; then
+  LITE_PATH="${MILVUS_LITE_PATH}"
+  [[ "$LITE_PATH" != /* ]] && LITE_PATH="$REPO_ROOT/$LITE_PATH"
+  if [[ -e "$LITE_PATH" ]]; then
+    ok "Milvus Lite path present: $LITE_PATH"
+  else
+    warn "MILVUS_LITE_PATH set but path not found: $LITE_PATH"
+  fi
+  # Optional: demo partition check + vector count via Python (same as server path below)
+  if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
+    MILVUS_STATUS=$(MILVUS_LITE_PATH="$MILVUS_LITE_PATH" DEMO_WORKSPACE_ID="$DEMO_WORKSPACE_ID" PYTHONPATH=. python3 -c "
+import os, sys
+from pathlib import Path
+sys.path.insert(0, str(Path('.').resolve()))
+try:
+    from backend import embeddings
+    client = embeddings.connect()
+    cn = os.environ.get('MILVUS_DBNAME', 'teleoscope')
+    wid = os.environ.get('DEMO_WORKSPACE_ID', '')
+    if not client.has_partition(collection_name=cn, partition_name=wid):
+        print('PARTITION:no')
+    else:
+        try:
+            st = client.get_partition_stats(collection_name=cn, partition_name=wid)
+            n = int(st.get('row_count', 0))
+            print('PARTITION:yes:' + str(n))
+        except Exception:
+            print('PARTITION:yes')
+except Exception as e:
+    print('ERR:' + str(e))
+" 2>/dev/null) || true
+    if [[ "$MILVUS_STATUS" == PARTITION:yes:* ]]; then
+      MILVUS_VECTORS="${MILVUS_STATUS#PARTITION:yes:}"
+      ok "Demo partition: $MILVUS_VECTORS vectors (ranking available)"
+    elif [[ "$MILVUS_STATUS" == "PARTITION:yes" ]]; then
+      ok "Demo partition exists (ranking available)"
+    elif [[ "$MILVUS_STATUS" == "PARTITION:no" ]]; then
+      warn "Demo partition missing (run seed with MILVUS_LITE_PATH for ranking)"
+    fi
+  fi
+else
+  if command -v nc >/dev/null 2>&1 && nc -z localhost "$MILVUS_PORT" 2>/dev/null; then
+    ok "Milvus reachable at localhost:$MILVUS_PORT"
+  elif command -v timeout >/dev/null 2>&1 && timeout 1 bash -c "cat < /dev/null > /dev/tcp/localhost/$MILVUS_PORT" 2>/dev/null; then
+    ok "Milvus reachable at localhost:$MILVUS_PORT"
+  else
+    warn "Milvus not reachable at localhost:$MILVUS_PORT (ranking will be unavailable)"
+  fi
+  if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
+    export MILVUS_URI="${MILVUS_URI:-http://localhost:$MILVUS_PORT}"
+    export DEMO_WORKSPACE_ID
+    MILVUS_STATUS=$(PYTHONPATH=. python3 -c "
+import os, sys
+from pathlib import Path
+sys.path.insert(0, str(Path('.').resolve()))
+try:
+    from backend import embeddings
+    client = embeddings.connect()
+    cn = os.environ.get('MILVUS_DBNAME', 'teleoscope')
+    wid = os.environ.get('DEMO_WORKSPACE_ID', '')
+    if not client.has_partition(collection_name=cn, partition_name=wid):
+        print('PARTITION:no')
+    else:
+        try:
+            st = client.get_partition_stats(collection_name=cn, partition_name=wid)
+            n = int(st.get('row_count', 0))
+            print('PARTITION:yes:' + str(n))
+        except Exception:
+            print('PARTITION:yes')
+except Exception as e:
+    print('ERR:' + str(e))
+" 2>/dev/null) || true
+    if [[ "$MILVUS_STATUS" == PARTITION:yes:* ]]; then
+      MILVUS_VECTORS="${MILVUS_STATUS#PARTITION:yes:}"
+      ok "Demo partition: $MILVUS_VECTORS vectors (ranking available)"
+    elif [[ "$MILVUS_STATUS" == "PARTITION:yes" ]]; then
+      ok "Demo partition exists (ranking available)"
+    elif [[ "$MILVUS_STATUS" == "PARTITION:no" ]]; then
+      warn "Demo partition missing (run seed with MILVUS_URI for ranking)"
+    elif [[ "$MILVUS_STATUS" == ERR:* ]]; then
+      info "Could not check demo partition: ${MILVUS_STATUS#ERR:}"
+    fi
+  fi
+fi
+
+# --- Counts summary ---
+section "Counts (Mongo docs vs Milvus vectors)"
+if [[ -n "${DOC_COUNT:-}" ]] && [[ "$DOC_COUNT" =~ ^[0-9]+$ ]]; then
+  info "Mongo demo documents: $DOC_COUNT"
+fi
+if [[ -n "${MILVUS_VECTORS:-}" ]] && [[ "$MILVUS_VECTORS" =~ ^[0-9]+$ ]]; then
+  info "Milvus demo vectors: $MILVUS_VECTORS"
+fi
+if [[ -n "${DOC_COUNT:-}" ]] && [[ "$DOC_COUNT" =~ ^[0-9]+$ ]] && [[ -n "${MILVUS_VECTORS:-}" ]] && [[ "$MILVUS_VECTORS" =~ ^[0-9]+$ ]]; then
+  if [[ "$DOC_COUNT" -eq "$MILVUS_VECTORS" ]]; then
+    ok "Counts match ($DOC_COUNT docs = $MILVUS_VECTORS vectors)"
+  else
+    warn "Mismatch: Mongo $DOC_COUNT docs vs Milvus $MILVUS_VECTORS vectors (run ./scripts/refresh-demo-corpus.sh to re-seed)"
+  fi
+elif [[ -z "${DOC_COUNT:-}" ]] && [[ -z "${MILVUS_VECTORS:-}" ]]; then
+  info "No counts available (ensure demo workspace and Mongo/Milvus are reachable)"
+fi
+
 # --- App ---
 section "App"
 if curl -sf --connect-timeout 3 "$BASE_URL/api/hello" 2>/dev/null | grep -q '"hello"'; then
