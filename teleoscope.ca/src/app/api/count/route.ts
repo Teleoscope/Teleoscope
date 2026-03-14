@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbOp } from '@/lib/db';
 import { Db, MongoClient, ObjectId } from 'mongodb';
 import { resolveDemoCorpusWorkspaceId } from '@/lib/demoMode';
+
 export async function GET(request: NextRequest) {
     const { user } = await validateRequest();
     if (!user) {
