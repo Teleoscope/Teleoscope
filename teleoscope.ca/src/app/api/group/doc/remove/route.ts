@@ -6,7 +6,7 @@ import { Db, MongoClient, ObjectId } from 'mongodb';
 import { Groups } from '@/types/groups';
 import { Graph } from '@/types/graph';
 import send from '@/lib/amqp';
-import { resolveDemoCorpusWorkspaceId } from '@/lib/demoMode';
+import { resolveDemoCorpusWorkspaceIdAsync } from '@/lib/demoMode';
 
 export async function POST(request: NextRequest) {
     const { user } = await validateRequest();
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         workflow_id: string;
         workspace_id: string;
     } = req;
-    const effectiveWorkspaceId = resolveDemoCorpusWorkspaceId(workspace_id);
+    const effectiveWorkspaceId = await resolveDemoCorpusWorkspaceIdAsync(workspace_id);
 
     const result = await dbOp(async (client: MongoClient, db: Db) => {
         const groupGraph = await db.collection<Graph>('graph').findOne({

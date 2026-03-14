@@ -120,22 +120,22 @@ if [[ -z "$DEMO_WORKSPACE_ID" ]] && [[ -f "$REPO_ROOT/.demo_corpus_workspace_id"
   DEMO_WORKSPACE_ID=$(cat "$REPO_ROOT/.demo_corpus_workspace_id" | tr -d '\r\n')
   info "Read DEMO_CORPUS_WORKSPACE_ID from .demo_corpus_workspace_id"
 fi
-if [[ -z "$DEMO_WORKSPACE_ID" ]]; then
-  fail "Could not parse DEMO_CORPUS_WORKSPACE_ID from seed script output or .demo_corpus_workspace_id file."
-fi
-ok "Workspace ID: $DEMO_WORKSPACE_ID"
-
-info "Updating .env with DEMO_CORPUS_WORKSPACE_ID..."
-if grep -q '^DEMO_CORPUS_WORKSPACE_ID=' .env 2>/dev/null; then
-  if [[ "$(uname)" = Darwin ]]; then
-    sed -i '' "s|^DEMO_CORPUS_WORKSPACE_ID=.*|DEMO_CORPUS_WORKSPACE_ID=$DEMO_WORKSPACE_ID|" .env
+if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
+  ok "Workspace ID: $DEMO_WORKSPACE_ID (app can also auto-discover by label \"Demo corpus\")"
+  info "Updating .env with DEMO_CORPUS_WORKSPACE_ID (optional; app discovers corpus by label if unset)..."
+  if grep -q '^DEMO_CORPUS_WORKSPACE_ID=' .env 2>/dev/null; then
+    if [[ "$(uname)" = Darwin ]]; then
+      sed -i '' "s|^DEMO_CORPUS_WORKSPACE_ID=.*|DEMO_CORPUS_WORKSPACE_ID=$DEMO_WORKSPACE_ID|" .env
+    else
+      sed -i "s|^DEMO_CORPUS_WORKSPACE_ID=.*|DEMO_CORPUS_WORKSPACE_ID=$DEMO_WORKSPACE_ID|" .env
+    fi
+    ok "Updated DEMO_CORPUS_WORKSPACE_ID in .env"
   else
-    sed -i "s|^DEMO_CORPUS_WORKSPACE_ID=.*|DEMO_CORPUS_WORKSPACE_ID=$DEMO_WORKSPACE_ID|" .env
+    echo "DEMO_CORPUS_WORKSPACE_ID=$DEMO_WORKSPACE_ID" >> .env
+    ok "Appended DEMO_CORPUS_WORKSPACE_ID to .env"
   fi
-  ok "Updated existing DEMO_CORPUS_WORKSPACE_ID in .env"
 else
-  echo "DEMO_CORPUS_WORKSPACE_ID=$DEMO_WORKSPACE_ID" >> .env
-  ok "Appended DEMO_CORPUS_WORKSPACE_ID to .env"
+  warn "Could not parse workspace ID from seed output. App will auto-discover demo corpus by label \"Demo corpus\" in Mongo."
 fi
 
 section "Restart app to load corpus"

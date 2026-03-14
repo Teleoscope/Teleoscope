@@ -12,8 +12,8 @@ Creates a dedicated demo-corpus workspace and:
   2. If Milvus is configured (MILVUS_URI or MILVUS_LITE_PATH), loads vectors from
      parquet into Milvus for the same workspace so ranking/similarity work.
 
-Then set DEMO_CORPUS_WORKSPACE_ID=<printed_workspace_id> so anonymous demo users
-see this corpus without uploading or vectorizing.
+The app auto-discovers this corpus by the workspace label "Demo corpus" in Mongo,
+so DEMO_CORPUS_WORKSPACE_ID is optional; set it to avoid a one-time DB lookup.
 
 Usage:
   # Mongo only (no Docker; document list/search work; ranking needs Milvus)
