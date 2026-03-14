@@ -14,10 +14,11 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-ok()   { echo -e "${GREEN}  ✓${NC} $1"; }
-warn() { echo -e "${YELLOW}  ⚠${NC} $1"; }
-fail() { echo -e "${RED}  ✗${NC} $1"; }
-section() { echo -e "\n${CYAN}▶ $1${NC}"; }
+ok()   { echo -e "${GREEN}  [OK]${NC} $*"; }
+warn() { echo -e "${YELLOW}  [WARN]${NC} $*"; }
+info() { echo -e "${CYAN}  [INFO]${NC} $*"; }
+fail() { echo -e "${RED}  [FAIL]${NC} $*"; }
+section() { echo -e "\n${CYAN}=== $* ===${NC}"; }
 
 echo -e "${CYAN}=== Demo status ($BASE_URL) ===${NC}"
 
@@ -63,10 +64,37 @@ source .env 2>/dev/null || true
 set +a
 MONGODB_URI="${MONGODB_URI:-mongodb://teleoscope:teleoscope_dev_password@localhost:27017/teleoscope?directConnection=true&serverSelectionTimeoutMS=5000&authSource=admin}"
 MONGODB_DATABASE="${MONGODB_DATABASE:-teleoscope}"
+export MONGODB_URI MONGODB_DATABASE
+
+# Resolve demo workspace: use env/file if set, else discover by label "Demo corpus" (same as app)
+if [[ -z "$DEMO_WORKSPACE_ID" ]]; then
+  DEMO_WORKSPACE_ID=$(PYTHONPATH=. python3 -c "
+import os
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path('.').resolve()))
+try:
+    from pymongo import MongoClient
+except ImportError:
+    sys.exit(1)
+uri = os.environ.get('MONGODB_URI', '')
+dbname = os.environ.get('MONGODB_DATABASE', 'teleoscope')
+try:
+    client = MongoClient(uri, serverSelectionTimeoutMS=3000)
+    db = client[dbname]
+    w = db.workspaces.find_one({'label': 'Demo corpus'}, {'_id': 1})
+    if w and w.get('_id'):
+        print(str(w['_id']))
+except Exception:
+    pass
+" 2>/dev/null) || true
+  if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
+    info "Demo workspace discovered by label \"Demo corpus\": $DEMO_WORKSPACE_ID"
+  fi
+fi
 
 if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
   export DEMO_WORKSPACE_ID
-  # Use Python to count documents and check text index (pymongo is in backend deps)
   MONGO_STATUS=$(PYTHONPATH=. python3 -c "
 import os
 import sys
@@ -116,7 +144,7 @@ except Exception as e:
     fi
   fi
 else
-  warn "No DEMO_CORPUS_WORKSPACE_ID; skip Mongo doc count"
+  warn "No demo workspace ID (env/file) and could not discover by label \"Demo corpus\"; is Mongo up and corpus seeded?"
 fi
 
 # --- App ---
