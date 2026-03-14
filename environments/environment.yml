@@ -44,3 +44,6 @@ dependencies:
       - pytest-cov>=4.0.0
       - pyyaml>=6.0.0
       - httpx>=0.28.1
+      # Demo corpus seed script (scripts/seed-demo-corpus.py)
+      - pyarrow>=14.0.0
+      - py7zr>=0.22.0
