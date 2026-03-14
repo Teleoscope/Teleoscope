@@ -10,6 +10,7 @@ Operational and helper scripts for local setup, validation, and demos.
 - `one-click-test-no-docker.sh`: local non-Docker test flow.
 - `start-local-stack.sh`: local service startup helper.
 - `one-click-demo.sh`: **Full demo bootstrap**: starts stack (`docker compose up -d --build`), downloads demo data if missing, seeds corpus, sets `DEMO_CORPUS_WORKSPACE_ID`, restarts app. Uses Docker cache so re-runs do not re-download all packages. Optional **clean install** (rebuild images with no cache + re-download demo data): `CLEAN_INSTALL=1 ./scripts/one-click-demo.sh`. Requires mamba env `teleoscope` on host.
+- `demo-status.sh`: **CLI monitor** — run `./scripts/demo-status.sh [base_url]` to verify demo workspace ID, demo data files, Mongo document count and text index, app health, and Docker services. Default base_url is http://localhost:3000.
 - `refresh-demo-corpus.sh`: **Update only** (no packages, no data download): re-seeds from existing `data/`, updates `.env`, restarts app. Does not rebuild images, run npm/pip, or download demo data. Run after `git pull` if you want latest code. Use when stack and data are already in place.
 - `load-test-demo.mjs`: demo API concurrency/load test helper.
 - `seed-test-data.py`: test account/workspace seed script.
