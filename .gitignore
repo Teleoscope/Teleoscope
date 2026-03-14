@@ -176,6 +176,7 @@ ansible/vars/inventory.yaml
 # .env
 .env
 .env.local
+.demo_corpus_workspace_id
 .env.*.local
 **/.env
 **/.env.local

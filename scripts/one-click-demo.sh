@@ -90,9 +90,12 @@ if [[ -z "$seed_out" ]]; then
   exit 1
 fi
 
-DEMO_WORKSPACE_ID=$(echo "$seed_out" | grep -E '^DEMO_CORPUS_WORKSPACE_ID=' | tail -1 | cut -d= -f2-)
+DEMO_WORKSPACE_ID=$(echo "$seed_out" | grep 'DEMO_CORPUS_WORKSPACE_ID=' | tail -1 | sed 's/.*DEMO_CORPUS_WORKSPACE_ID=//' | tr -d '\r')
+if [[ -z "$DEMO_WORKSPACE_ID" ]] && [[ -f "$REPO_ROOT/.demo_corpus_workspace_id" ]]; then
+  DEMO_WORKSPACE_ID=$(cat "$REPO_ROOT/.demo_corpus_workspace_id" | tr -d '\r\n')
+fi
 if [[ -z "$DEMO_WORKSPACE_ID" ]]; then
-  echo "ERROR: Could not parse DEMO_CORPUS_WORKSPACE_ID from seed script output."
+  echo "ERROR: Could not parse DEMO_CORPUS_WORKSPACE_ID from seed script output or .demo_corpus_workspace_id file."
   exit 1
 fi
 
