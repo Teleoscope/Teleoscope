@@ -82,12 +82,14 @@ def ensure_collections(db):
         if name not in db.list_collection_names():
             db.create_collection(name)
             log(f"Created collection: {name}")
-    # Text index for search/count
+    # Text index for search/count (required for $text in API search/count)
     coll = db.documents
-    indexes = [idx["name"] for idx in coll.index_information()]
-    if "text" not in indexes:
+    index_names = list(coll.index_information().keys())
+    if "text" not in index_names:
         coll.create_index([("title", "text"), ("text", "text")], name="text")
         log("Created documents text index.")
+    else:
+        log("Documents text index already exists.")
 
 
 def extract_jsonl_from_7z(archive_path: Path) -> list[dict]:
@@ -317,6 +319,21 @@ def seed() -> None:
     inserted_ids = insert_documents_batched(db, docs)
     log(f"Inserted {len(inserted_ids)} documents into workspace {workspace_id}.")
 
+    # Ensure text index exists (e.g. if collection was created by app without it, or index_information was wrong)
+    try:
+        db.documents.create_index(
+            [("title", "text"), ("text", "text")],
+            name="text",
+            default_language="english",
+        )
+        log("Ensured documents text index (for search/count).")
+    except Exception as e:
+        if "already exists" not in str(e).lower() and "duplicate" not in str(e).lower():
+            log(f"Warning: could not ensure text index: {e}")
+
+    count = db.documents.count_documents({"workspace": workspace_id})
+    log(f"Verified: {count} documents in demo workspace (Mongo).")
+
     parquet_dir = find_parquet_dir()
     if parquet_dir:
         seed_milvus(workspace_id, inserted_ids, parquet_dir)
@@ -324,12 +341,16 @@ def seed() -> None:
         log("No parquet_export/part-*.parquet found; skipping Milvus (ranking will be unavailable).")
 
     client.close()
-    print("")
-    print("Demo corpus seeded. Set in your environment:")
-    print(f"  export DEMO_CORPUS_WORKSPACE_ID={workspace_id}")
-    print("")
-    # Parseable line for one-click-demo.sh and other scripts
-    print(f"DEMO_CORPUS_WORKSPACE_ID={workspace_id}")
+    # Write ID to file so one-click-demo.sh / refresh-demo-corpus.sh can read it (avoids parsing stdout)
+    id_file = REPO_ROOT / ".demo_corpus_workspace_id"
+    id_file.write_text(str(workspace_id), encoding="utf-8")
+    log(f"Wrote {id_file}")
+    print("", flush=True)
+    print("Demo corpus seeded. Set in your environment:", flush=True)
+    print(f"  export DEMO_CORPUS_WORKSPACE_ID={workspace_id}", flush=True)
+    print("", flush=True)
+    # Parseable line for scripts (match with grep 'DEMO_CORPUS_WORKSPACE_ID=')
+    print(f"DEMO_CORPUS_WORKSPACE_ID={workspace_id}", flush=True)
 
 
 if __name__ == "__main__":
