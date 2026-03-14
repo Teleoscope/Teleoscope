@@ -73,23 +73,24 @@ DEMO_WORKFLOW_LABEL = "Default"
 BATCH_INSERT = 500
 
 
-def log(msg: str) -> None:
-    print(f"[seed-demo-corpus] {msg}", flush=True)
+def log(msg: str, level: str = "INFO") -> None:
+    prefix = {"OK": "[OK]", "INFO": "[INFO]", "WARN": "[WARN]", "FAIL": "[FAIL]"}.get(level, "[INFO]")
+    print(f"{prefix} {msg}", flush=True)
 
 
 def ensure_collections(db):
     for name in ["documents", "workspaces", "teams", "workflows"]:
         if name not in db.list_collection_names():
             db.create_collection(name)
-            log(f"Created collection: {name}")
+            log(f"Created collection: {name}", "OK")
     # Text index for search/count (required for $text in API search/count)
     coll = db.documents
     index_names = list(coll.index_information().keys())
     if "text" not in index_names:
         coll.create_index([("title", "text"), ("text", "text")], name="text")
-        log("Created documents text index.")
+        log("Created documents text index.", "OK")
     else:
-        log("Documents text index already exists.")
+        log("Documents text index already exists.", "INFO")
 
 
 def extract_jsonl_from_7z(archive_path: Path) -> list[dict]:
@@ -109,7 +110,7 @@ def extract_jsonl_from_7z(archive_path: Path) -> list[dict]:
                 try:
                     rows.append(json.loads(line))
                 except json.JSONDecodeError as e:
-                    log(f"Skip bad JSON line: {e}")
+                    log(f"Skip bad JSON line: {e}", "WARN")
     return rows
 
 
@@ -124,7 +125,7 @@ def load_jsonl_uncompressed(path: Path) -> list[dict]:
             try:
                 rows.append(json.loads(line))
             except json.JSONDecodeError as e:
-                log(f"Skip bad JSON line: {e}")
+                log(f"Skip bad JSON line: {e}", "WARN")
     return rows
 
 
@@ -177,7 +178,7 @@ def insert_documents_batched(db, docs: list[dict], batch_size: int = BATCH_INSER
         chunk = docs[i : i + batch_size]
         result = db.documents.insert_many(chunk)
         inserted.extend(result.inserted_ids)
-        log(f"Inserted documents {len(inserted) - len(chunk) + 1}–{len(inserted)}")
+        log(f"Inserted documents {len(inserted) - len(chunk) + 1}–{len(inserted)}", "OK")
     return inserted
 
 
@@ -214,19 +215,20 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
     try:
         from backend import embeddings
     except ImportError:
-        log("Backend not on path; skip Milvus. Set PYTHONPATH=. when running.")
+        log("Backend not on path; skip Milvus. Set PYTHONPATH=. when running.", "WARN")
         return
     if not os.environ.get("MILVUS_URI") and not os.environ.get("MILVUS_LITE_PATH"):
-        log("MILVUS_URI and MILVUS_LITE_PATH unset; skipping Milvus (ranking will be unavailable).")
+        log("MILVUS_URI and MILVUS_LITE_PATH unset; skipping Milvus (ranking will be unavailable).", "INFO")
         return
     if not pq:
-        log("pyarrow not installed; skipping Milvus load.")
+        log("pyarrow not installed; skipping Milvus load.", "WARN")
         return
     rows = load_parquet_rows([parquet_dir])
     if len(rows) != len(doc_ids):
         log(
             f"Parquet row count ({len(rows)}) != Mongo doc count ({len(doc_ids)}). "
-            "Vectors may be misaligned; skipping Milvus load."
+            "Vectors may be misaligned; skipping Milvus load.",
+            "WARN",
         )
         return
     client = embeddings.connect()
@@ -253,16 +255,16 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
             data=vector_data,
             partition_name=str(workspace_id),
         )
-        log(f"Upserted vectors {i + 1}–{i + len(chunk_ids)}")
+        log(f"Upserted vectors {i + 1}–{i + len(chunk_ids)}", "OK")
     client.flush(collection_name=collection_name)
     client.close()
-    log("Milvus seed done.")
+    log("Milvus seed done.", "OK")
 
 
 def seed() -> None:
-    log("Loading documents from 7z/JSONL...")
+    log("Loading documents from 7z/JSONL...", "INFO")
     raw_rows = load_documents_jsonl()
-    log(f"Loaded {len(raw_rows)} raw rows.")
+    log(f"Loaded {len(raw_rows)} raw rows.", "OK")
 
     client = MongoClient(MONGODB_URI)
     db = client[MONGODB_DATABASE]
@@ -272,11 +274,11 @@ def seed() -> None:
     existing = db.workspaces.find_one({"label": DEMO_WORKSPACE_LABEL})
     if existing:
         workspace_id = existing["_id"]
-        log(f"Reusing existing demo workspace: {workspace_id}")
+        log(f"Reusing existing demo workspace: {workspace_id}", "INFO")
         # Optionally re-seed documents: delete old docs in this workspace and re-insert
         deleted = db.documents.delete_many({"workspace": workspace_id})
         if deleted.deleted_count:
-            log(f"Removed {deleted.deleted_count} old documents from demo workspace.")
+            log(f"Removed {deleted.deleted_count} old documents from demo workspace.", "INFO")
     else:
         team_id = ObjectId()
         workspace_id = ObjectId()
@@ -309,15 +311,15 @@ def seed() -> None:
             "last_update": "2024-01-01T00:00:00.000Z",
             "logical_clock": 100,
         })
-        log(f"Created team={team_id}, workspace={workspace_id}, workflow={workflow_id}")
+        log(f"Created team={team_id}, workspace={workspace_id}, workflow={workflow_id}", "OK")
 
     docs = mongo_docs_from_rows(raw_rows, workspace_id)
     if not docs:
-        log("No documents to insert.")
+        log("No documents to insert.", "WARN")
         client.close()
         return
     inserted_ids = insert_documents_batched(db, docs)
-    log(f"Inserted {len(inserted_ids)} documents into workspace {workspace_id}.")
+    log(f"Inserted {len(inserted_ids)} documents into workspace {workspace_id}.", "OK")
 
     # Ensure text index exists (e.g. if collection was created by app without it, or index_information was wrong)
     try:
@@ -326,27 +328,27 @@ def seed() -> None:
             name="text",
             default_language="english",
         )
-        log("Ensured documents text index (for search/count).")
+        log("Ensured documents text index (for search/count).", "OK")
     except Exception as e:
         if "already exists" not in str(e).lower() and "duplicate" not in str(e).lower():
-            log(f"Warning: could not ensure text index: {e}")
+            log(f"Could not ensure text index: {e}", "WARN")
 
     count = db.documents.count_documents({"workspace": workspace_id})
-    log(f"Verified: {count} documents in demo workspace (Mongo).")
+    log(f"Verified: {count} documents in demo workspace (Mongo).", "OK")
 
     parquet_dir = find_parquet_dir()
     if parquet_dir:
         seed_milvus(workspace_id, inserted_ids, parquet_dir)
     else:
-        log("No parquet_export/part-*.parquet found; skipping Milvus (ranking will be unavailable).")
+        log("No parquet_export/part-*.parquet found; skipping Milvus (ranking will be unavailable).", "INFO")
 
     client.close()
     # Write ID to file so one-click-demo.sh / refresh-demo-corpus.sh can read it (avoids parsing stdout)
     id_file = REPO_ROOT / ".demo_corpus_workspace_id"
     id_file.write_text(str(workspace_id), encoding="utf-8")
-    log(f"Wrote {id_file}")
+    log(f"Wrote {id_file}", "OK")
     print("", flush=True)
-    print("Demo corpus seeded. Set in your environment:", flush=True)
+    print("[OK] Demo corpus seeded. Set in your environment:", flush=True)
     print(f"  export DEMO_CORPUS_WORKSPACE_ID={workspace_id}", flush=True)
     print("", flush=True)
     # Parseable line for scripts (match with grep 'DEMO_CORPUS_WORKSPACE_ID=')
@@ -357,8 +359,8 @@ if __name__ == "__main__":
     try:
         seed()
     except FileNotFoundError as e:
-        log(str(e))
+        log(str(e), "FAIL")
         sys.exit(1)
     except Exception as e:
-        log(f"Error: {e}")
+        log(f"Error: {e}", "FAIL")
         sys.exit(1)

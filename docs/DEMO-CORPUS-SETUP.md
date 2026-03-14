@@ -119,6 +119,10 @@ envs_dirs:
 
 (Use your actual home path if different.) Then `mamba activate teleoscope` will find the env. Alternatively, activate by path: `mamba activate /Users/codebot/.micromamba/envs/teleoscope`.
 
+## Verifying status
+
+Run `./scripts/demo-status.sh [base_url]` to check: demo workspace ID (in .env), demo data files, Mongo document count and text index for the demo workspace, app health, and Docker services. Default base_url is http://localhost:3000.
+
 ## Env reference
 
 | Variable | Purpose |
