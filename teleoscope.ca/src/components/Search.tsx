@@ -20,7 +20,9 @@ import { useAppSelector } from "@/lib/hooks";
 import { RootState } from "@/lib/store";
 
 export default function Search({ data: search, reactflow_node, graph_node }: WindowProps) {
-  const [query, setQuery] = useState(search?.query ? search.query : "");
+  const [query, setQuery] = useState(
+    () => reactflow_node?.data?.query ?? search?.query ?? ""
+  );
   const { _id: workspace } = useAppSelector((state: RootState) => state.appState.workspace);
   const { data: documents, isLoading: documents_loading } = useSWRF(
     `/api/search?query=${query}&workspace=${workspace}`
@@ -55,7 +57,8 @@ export default function Search({ data: search, reactflow_node, graph_node }: Win
         />
         <TextField
           fullWidth
-          placeholder={query ? query : "Search..."}
+          value={query}
+          placeholder="Search..."
           sx={{
             "& .MuiInput-underline:after": { borderBottomColor: color },
           }}

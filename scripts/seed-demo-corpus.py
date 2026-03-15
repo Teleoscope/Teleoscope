@@ -161,6 +161,9 @@ def mongo_docs_from_rows(rows: list[dict], workspace_id: ObjectId) -> list[dict]
                     meta[k] = v
                 except (TypeError, ValueError):
                     pass
+        source_id = row.get("id")
+        if source_id is not None:
+            meta["source_id"] = str(source_id)
         docs.append({
             "text": text[:1_000_000],
             "title": title[:2048],
@@ -235,8 +238,8 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
     collection_name = os.environ.get("MILVUS_DBNAME", "teleoscope")
     embeddings.milvus_setup(client, str(workspace_id), collection_name=collection_name)
     embeddings.use_database_if_supported(client)
-    # Backend schema: id (varchar), vector (float_vector 1024). Parquet has "id" (from JSONL) and "dense".
-    # We map by position: doc_ids[i] -> rows[i]["dense"]
+    # Backend schema: id (varchar), vector (float_vector 1024). Parquet may have "id" (e.g. reddit/source id).
+    # Use parquet row "id" when present so Rank can find embeddings keyed by that id; else use Mongo _id.
     batch = 1000
     for i in range(0, len(doc_ids), batch):
         chunk_ids = doc_ids[i : i + batch]
@@ -246,8 +249,14 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
                 return v.tolist()
             return list(v) if not isinstance(v, list) else v
 
+        def vector_id(j, oid):
+            row_id = chunk_rows[j].get("id") if chunk_rows[j] else None
+            if row_id is not None:
+                return str(row_id)
+            return str(oid)
+
         vector_data = [
-            {"id": str(oid), "vector": to_list(chunk_rows[j]["dense"])}
+            {"id": vector_id(j, oid), "vector": to_list(chunk_rows[j]["dense"])}
             for j, oid in enumerate(chunk_ids)
         ]
         client.upsert(
