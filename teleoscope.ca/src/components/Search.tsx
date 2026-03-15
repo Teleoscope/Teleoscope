@@ -41,7 +41,8 @@ export default function Search({ data: search, reactflow_node, graph_node }: Win
 
   const handleSetQuery = (e) => {
     setQuery(e.target.value);
-    dispatch(updateSearch({ search_id: reactflow_node.oid, query: e.target.value }));
+    const searchDocId = graph_node?.reference?.toString?.() ?? graph_node?.reference ?? reactflow_node.oid;
+    dispatch(updateSearch({ search_id: searchDocId, query: e.target.value }));
   };
 
   const { color } = useAppSelector((state: RootState) => state.appState.workflow.settings.color);
