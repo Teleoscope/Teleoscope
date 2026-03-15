@@ -355,6 +355,12 @@ def get_collection(db: database.Database, type):
             return db.graph
 
 
+def _doc_to_milvus_id(doc):
+    """Return the id used for this document in Milvus (source_id when present, else _id)."""
+    vid = (doc.get("metadata") or {}).get("source_id") or doc.get("_id")
+    return str(vid) if vid is not None else None
+
+
 def get_oids(db: database.Database, source, exclude=["Note"]):
     if source["type"] in exclude:
         return []
@@ -362,16 +368,38 @@ def get_oids(db: database.Database, source, exclude=["Note"]):
     node = get_collection(db, source["type"]).find_one({"_id": source["reference"]})
     match source["type"]:
         case "Document":
-            return [str(node["_id"])]
+            vid = _doc_to_milvus_id(node)
+            return [vid] if vid else []
         case "Note":
             return [str(node["_id"])]
         case "Group":
-            return [str(oid) for oid in node["docs"]]
+            if not node.get("docs"):
+                return []
+            docs = list(
+                db.documents.find(
+                    {"_id": {"$in": node["docs"]}},
+                    projection={"_id": 1, "metadata.source_id": 1},
+                )
+            )
+            id_map = {d["_id"]: _doc_to_milvus_id(d) for d in docs}
+            return [id_map[oid] for oid in node["docs"] if id_map.get(oid)]
         case "Storage":
-            return [str(oid) for oid in node["docs"]]
+            if not node.get("docs"):
+                return []
+            docs = list(
+                db.documents.find(
+                    {"_id": {"$in": node["docs"]}},
+                    projection={"_id": 1, "metadata.source_id": 1},
+                )
+            )
+            id_map = {d["_id"]: _doc_to_milvus_id(d) for d in docs}
+            return [id_map[oid] for oid in node["docs"] if id_map.get(oid)]
         case "Search":
-            cursor = db.documents.find(make_query(node["query"]), projection={"_id": 1})
-            return [str(d["_id"]) for d in list(cursor)]
+            cursor = db.documents.find(
+                make_query(node["query"]),
+                projection={"_id": 1, "metadata.source_id": 1},
+            )
+            return [_doc_to_milvus_id(d) for d in cursor if _doc_to_milvus_id(d)]
         case "Rank" | "Union" | "Difference" | "Intersection" | "Exclusion":
             return [
                 str(d[0])
