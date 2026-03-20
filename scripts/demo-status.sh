@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Demo status monitor: verify demo corpus, Mongo, app, and optional Milvus.
+# For raw Milvus collections/partitions/row counts (any workspace): PYTHONPATH=. python scripts/milvus-status.py
 # Usage: ./scripts/demo-status.sh [base_url]
 # Set MONGODB_URI in .env or env for Mongo checks; base_url defaults to http://localhost:3000.
 set -e
