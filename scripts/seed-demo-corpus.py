@@ -25,10 +25,15 @@ Usage:
   # Custom data dir
   TELEOSCOPE_DATA_DIR=/path/to/data PYTHONPATH=. python scripts/seed-demo-corpus.py
 
+  # Refresh Milvus vectors only (Mongo unchanged). Requires existing demo workspace + same
+  # document count as parquet rows; documents are matched in Mongo _id insertion order.
+  MILVUS_URI=http://localhost:19530 PYTHONPATH=. python scripts/seed-demo-corpus.py --milvus-only
+
 Requires: pymongo, pyarrow, py7zr. Use the project mamba env: `mamba activate teleoscope` (see environments/environment.yml).
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -214,6 +219,66 @@ def find_parquet_dir() -> Path | None:
     return None
 
 
+def resolve_demo_workspace_id(db) -> ObjectId:
+    raw = os.environ.get("DEMO_CORPUS_WORKSPACE_ID", "").strip()
+    if raw:
+        try:
+            return ObjectId(raw)
+        except Exception as e:
+            raise SystemExit(f"Invalid DEMO_CORPUS_WORKSPACE_ID: {raw!r}") from e
+    ws = db.workspaces.find_one({"label": DEMO_WORKSPACE_LABEL})
+    if not ws:
+        raise SystemExit(
+            'No demo workspace found (label "Demo corpus"). '
+            "Run full seed-demo-corpus.py once, or set DEMO_CORPUS_WORKSPACE_ID."
+        )
+    return ws["_id"]
+
+
+def seed_milvus_only() -> None:
+    """Load parquet vectors into Milvus for an existing demo workspace; do not modify Mongo."""
+    parquet_dir = find_parquet_dir()
+    if not parquet_dir:
+        raise SystemExit(
+            f"No parquet_export/part-*.parquet under {DATA_DIR}. "
+            "Run ./scripts/download-demo-data.sh first."
+        )
+    if not pq:
+        raise SystemExit("pyarrow is required for Milvus seed. pip install pyarrow")
+
+    parquet_rows = load_parquet_rows([parquet_dir])
+    n = len(parquet_rows)
+    if n == 0:
+        raise SystemExit("Parquet export is empty.")
+
+    client = MongoClient(MONGODB_URI)
+    db = client[MONGODB_DATABASE]
+    workspace_id = resolve_demo_workspace_id(db)
+    docs = list(db.documents.find({"workspace": workspace_id}).sort("_id", 1))
+    if len(docs) != n:
+        raise SystemExit(
+            f"Milvus-only seed needs Mongo document count ({len(docs)}) to equal parquet "
+            f"rows ({n}). Documents must align in the same order as a full seed (Mongo sort "
+            "by _id). If you changed the demo workspace in Mongo, run full "
+            "seed-demo-corpus.py without --milvus-only."
+        )
+
+    doc_ids = [d["_id"] for d in docs]
+    log(
+        f"Milvus-only: workspace {workspace_id}, {n} Mongo docs × parquet rows (by _id order).",
+        "INFO",
+    )
+    seed_milvus(workspace_id, doc_ids, parquet_dir)
+    client.close()
+
+    id_file = REPO_ROOT / ".demo_corpus_workspace_id"
+    id_file.write_text(str(workspace_id), encoding="utf-8")
+    log(f"Wrote {id_file}", "OK")
+    log("Milvus-only seed done (Mongo unchanged).", "OK")
+    print("", flush=True)
+    print(f"DEMO_CORPUS_WORKSPACE_ID={workspace_id}", flush=True)
+
+
 def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Path) -> None:
     try:
         from backend import embeddings
@@ -370,8 +435,22 @@ def seed() -> None:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--milvus-only",
+        action="store_true",
+        help=(
+            "Only upsert vectors from parquet into Milvus for the demo workspace. "
+            "Does not read the 7z or change Mongo. Requires MILVUS_URI or MILVUS_LITE_PATH, "
+            "and Mongo document count must match parquet row count (sorted by _id)."
+        ),
+    )
+    args = parser.parse_args()
     try:
-        seed()
+        if args.milvus_only:
+            seed_milvus_only()
+        else:
+            seed()
     except FileNotFoundError as e:
         log(str(e), "FAIL")
         sys.exit(1)
