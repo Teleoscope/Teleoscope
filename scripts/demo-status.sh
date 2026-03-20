@@ -1,18 +1,58 @@
 #!/usr/bin/env bash
 # Demo status monitor: verify demo corpus, Mongo, app, and optional Milvus.
 # For raw Milvus collections/partitions/row counts (any workspace): PYTHONPATH=. python scripts/milvus-status.py
-# Usage: ./scripts/demo-status.sh [base_url]
+# Usage: ./scripts/demo-status.sh [-v|--verbose] [base_url]
 # Set MONGODB_URI in .env or env for Mongo checks; base_url defaults to http://localhost:3000.
+# Honors TELEOSCOPE_DATA_DIR (same as seed-demo-corpus.py); defaults to <repo>/data.
+# Verbose: -v / --verbose or DEMO_STATUS_VERBOSE=1 (extra paths, sizes, config, timings).
 set -e
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
-BASE_URL="${1:-http://localhost:3000}"
+
+CLI_VERBOSE=0
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -v|--verbose)
+      CLI_VERBOSE=1
+      shift
+      ;;
+    -h|--help)
+      echo "Usage: $0 [-v|--verbose] [base_url]"
+      echo "  base_url defaults to http://localhost:3000"
+      echo "  DEMO_STATUS_VERBOSE=1 enables verbose (same as -v)"
+      exit 0
+      ;;
+    *)
+      POSITIONAL+=("$1")
+      shift
+      ;;
+  esac
+done
+
+set -a
+# shellcheck source=/dev/null
+source .env 2>/dev/null || true
+set +a
+
+VERBOSE=0
+[[ "$CLI_VERBOSE" -eq 1 ]] && VERBOSE=1
+[[ "$CLI_VERBOSE" -eq 0 ]] && case "${DEMO_STATUS_VERBOSE,,}" in 1|true|yes) VERBOSE=1 ;; esac
+
+BASE_URL="${POSITIONAL[0]:-http://localhost:3000}"
+DATA_DIR="${TELEOSCOPE_DATA_DIR:-$REPO_ROOT/data}"
+if [[ "$DATA_DIR" != /* ]]; then
+  DATA_DIR="$REPO_ROOT/$DATA_DIR"
+fi
+
+SECONDS=0
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
+DIM='\033[2m'
 NC='\033[0m'
 
 ok()   { echo -e "${GREEN}  [OK]${NC} $*"; }
@@ -20,11 +60,23 @@ warn() { echo -e "${YELLOW}  [WARN]${NC} $*"; }
 info() { echo -e "${CYAN}  [INFO]${NC} $*"; }
 fail() { echo -e "${RED}  [FAIL]${NC} $*"; }
 section() { echo -e "\n${CYAN}=== $* ===${NC}"; }
+vinfo() {
+  [[ "$VERBOSE" -eq 1 ]] || return 0
+  echo -e "${DIM}  [verbose]${NC} $*"
+}
+
+# Redact user:pass@ in mongodb URIs for logs
+_redact_mongo_uri() {
+  echo "${1:-}" | sed -E 's#(mongodb(\+srv)?://)[^/@]+@#\1***@#'
+}
 
 echo -e "${CYAN}=== Demo status ($BASE_URL) ===${NC}"
+vinfo "REPO_ROOT=$REPO_ROOT"
+vinfo "Verbose mode on (DEMO_STATUS_VERBOSE / -v)"
 
 # --- .env and DEMO_CORPUS_WORKSPACE_ID ---
 section "Demo workspace ID"
+vinfo ".env path: $REPO_ROOT/.env ($( [[ -f .env ]] && echo present || echo missing ))"
 if [[ -f .env ]]; then
   if grep -q '^DEMO_CORPUS_WORKSPACE_ID=' .env 2>/dev/null; then
     DEMO_WORKSPACE_ID=$(grep '^DEMO_CORPUS_WORKSPACE_ID=' .env | head -1 | sed 's/^DEMO_CORPUS_WORKSPACE_ID=//' | tr -d '\r')
@@ -43,29 +95,58 @@ fi
 
 # --- Demo data files ---
 section "Demo data (pre-vectorized)"
-if [[ -f data/documents.jsonl.7z ]]; then
-  ok "data/documents.jsonl.7z present"
-elif [[ -f data/documents.jsonl ]]; then
-  ok "data/documents.jsonl present"
+info "Data directory: $DATA_DIR"
+if [[ -f "$DATA_DIR/documents.jsonl.7z" ]]; then
+  ok "documents.jsonl.7z present"
+  [[ "$VERBOSE" -eq 1 ]] && vinfo "$(ls -lh "$DATA_DIR/documents.jsonl.7z" 2>/dev/null | awk '{print $5" "$6" "$7" "$9}')"
+elif [[ -f "$DATA_DIR/documents.jsonl" ]]; then
+  ok "documents.jsonl present"
+  [[ "$VERBOSE" -eq 1 ]] && vinfo "$(ls -lh "$DATA_DIR/documents.jsonl" 2>/dev/null | awk '{print $5" "$6" "$7" "$9}')"
 else
-  fail "No data/documents.jsonl.7z or data/documents.jsonl (run ./scripts/download-demo-data.sh)"
+  fail "No documents.jsonl.7z or documents.jsonl under $DATA_DIR (run ./scripts/download-demo-data.sh or PYTHONPATH=. python scripts/seed-demo-corpus.py to fetch)"
 fi
-PARQUET_COUNT=$(find data/parquet_export -name 'part-*.parquet' 2>/dev/null | wc -l | tr -d ' ')
+# Same search order as seed-demo-corpus.py: parquet_export/full, then parquet_export
+PARQUET_DIR=""
+PARQUET_COUNT=0
+for _pqdir in "$DATA_DIR/parquet_export/full" "$DATA_DIR/parquet_export"; do
+  if [[ -d "$_pqdir" ]]; then
+    _n=$(find "$_pqdir" -maxdepth 1 -name 'part-*.parquet' 2>/dev/null | wc -l | tr -d ' ')
+    vinfo "Checked $_pqdir: part-*.parquet count=$_n"
+    if [[ "${_n:-0}" -gt 0 ]]; then
+      PARQUET_DIR="$_pqdir"
+      PARQUET_COUNT="$_n"
+      break
+    fi
+  else
+    vinfo "Parquet candidate not a directory: $_pqdir"
+  fi
+done
+WANTS_MILVUS=0
+if [[ -n "${MILVUS_URI:-}" ]] || [[ -n "${MILVUS_LITE_PATH:-}" ]]; then
+  WANTS_MILVUS=1
+fi
+vinfo "Milvus env: WANTS_MILVUS=$WANTS_MILVUS (MILVUS_URI ${MILVUS_URI:+set}${MILVUS_URI:-unset}, MILVUS_LITE_PATH ${MILVUS_LITE_PATH:+set}${MILVUS_LITE_PATH:-unset})"
 if [[ "${PARQUET_COUNT:-0}" -gt 0 ]]; then
-  ok "data/parquet_export: $PARQUET_COUNT part file(s)"
+  ok "parquet vectors: $PARQUET_COUNT part file(s) in $PARQUET_DIR"
+  if [[ "$VERBOSE" -eq 1 ]]; then
+    vinfo "$( (du -sh "$PARQUET_DIR" 2>/dev/null || true) )"
+    vinfo "Sample files: $(find "$PARQUET_DIR" -maxdepth 1 -name 'part-*.parquet' 2>/dev/null | head -5 | tr '\n' ' ')"
+  fi
 else
-  warn "No data/parquet_export/part-*.parquet (ranking will be unavailable)"
+  if [[ "$WANTS_MILVUS" -eq 1 ]]; then
+    fail "No parquet_export/.../part-*.parquet under $DATA_DIR (required with MILVUS_URI or MILVUS_LITE_PATH; run download-demo-data.sh or seed)"
+  else
+    warn "No parquet part-*.parquet under $DATA_DIR/parquet_export (optional unless Milvus is configured)"
+  fi
 fi
 
 # --- MongoDB ---
 section "MongoDB (demo corpus documents)"
-set -a
-# shellcheck source=/dev/null
-source .env 2>/dev/null || true
-set +a
 MONGODB_URI="${MONGODB_URI:-mongodb://teleoscope:teleoscope_dev_password@localhost:27017/teleoscope?directConnection=true&serverSelectionTimeoutMS=5000&authSource=admin}"
 MONGODB_DATABASE="${MONGODB_DATABASE:-teleoscope}"
 export MONGODB_URI MONGODB_DATABASE
+vinfo "MONGODB_DATABASE=$MONGODB_DATABASE"
+vinfo "MONGODB_URI=$(_redact_mongo_uri "$MONGODB_URI")"
 
 # Resolve demo workspace: use env/file if set, else discover by label "Demo corpus" (same as app)
 if [[ -z "$DEMO_WORKSPACE_ID" ]]; then
@@ -96,6 +177,7 @@ fi
 
 if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
   export DEMO_WORKSPACE_ID
+  export _DEMO_STATUS_VERBOSE_PY="$VERBOSE"
   MONGO_STATUS=$(PYTHONPATH=. python3 -c "
 import os
 import sys
@@ -120,10 +202,14 @@ try:
     count = db.documents.count_documents({'workspace': oid})
     indexes = list(db.documents.index_information().keys())
     has_text = 'text' in indexes
-    print(f'{count}:{\"yes\" if has_text else \"no\"}')
+    line = f'{count}:{\"yes\" if has_text else \"no\"}'
+    if os.environ.get('_DEMO_STATUS_VERBOSE_PY') == '1':
+        line += '|' + ','.join(sorted(indexes))
+    print(line)
 except Exception as e:
     print(f'ERR:{e}')
 " 2>/dev/null) || MONGO_STATUS=""
+  unset _DEMO_STATUS_VERBOSE_PY 2>/dev/null || true
   if [[ -z "$MONGO_STATUS" ]]; then
     warn "Could not connect to Mongo or pymongo not installed"
   elif [[ "$MONGO_STATUS" == SKIP:* ]]; then
@@ -132,7 +218,11 @@ except Exception as e:
     fail "Mongo: ${MONGO_STATUS#ERR:}"
   else
     DOC_COUNT="${MONGO_STATUS%%:*}"
-    HAS_TEXT="${MONGO_STATUS#*:}"
+    _mongo_rest="${MONGO_STATUS#*:}"
+    HAS_TEXT="${_mongo_rest%%|*}"
+    if [[ "$_mongo_rest" == *"|"* ]]; then
+      vinfo "documents index names: ${_mongo_rest#*|}"
+    fi
     if [[ "$DOC_COUNT" =~ ^[0-9]+$ ]]; then
       ok "Documents in demo workspace: $DOC_COUNT"
       if [[ "$HAS_TEXT" == "yes" ]]; then
@@ -150,10 +240,7 @@ fi
 
 # --- Milvus ---
 section "Milvus (vector ranking)"
-set -a
-# shellcheck source=/dev/null
-source .env 2>/dev/null || true
-set +a
+vinfo "MILVUS_COLLECTION=${MILVUS_COLLECTION:-<unset>} MILVUS_DBNAME=${MILVUS_DBNAME:-<unset>}"
 MILVUS_PORT="${MILVUS_PORT:-}"
 if [[ -n "${MILVUS_URI:-}" ]]; then
   if [[ "$MILVUS_URI" =~ ^https?://[^:/]+:([0-9]+) ]]; then
@@ -277,6 +364,10 @@ fi
 
 # --- App ---
 section "App"
+if [[ "$VERBOSE" -eq 1 ]]; then
+  _hello_ms="$(curl -sf --connect-timeout 3 -o /dev/null -w '%{time_total}' "$BASE_URL/api/hello" 2>/dev/null || echo "")"
+  vinfo "GET $BASE_URL/api/hello time_total=${_hello_ms}s"
+fi
 if curl -sf --connect-timeout 3 "$BASE_URL/api/hello" 2>/dev/null | grep -q '"hello"'; then
   ok "App responding at $BASE_URL"
 else
@@ -287,7 +378,11 @@ fi
 section "Docker services"
 if command -v docker >/dev/null 2>&1 && [[ -f docker-compose.yml ]]; then
   if docker compose ps --format json 2>/dev/null | grep -q '"Name"'; then
-    docker compose ps --format "table {{.Name}}\t{{.Status}}" 2>/dev/null | head -20 || true
+    if [[ "$VERBOSE" -eq 1 ]]; then
+      docker compose ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || true
+    else
+      docker compose ps --format "table {{.Name}}\t{{.Status}}" 2>/dev/null | head -20 || true
+    fi
   else
     warn "docker compose ps failed or no services"
   fi
@@ -297,4 +392,5 @@ fi
 
 echo ""
 echo -e "${CYAN}Demo URL: $BASE_URL/demo${NC}"
+vinfo "Finished in ${SECONDS}s wall time"
 echo ""
