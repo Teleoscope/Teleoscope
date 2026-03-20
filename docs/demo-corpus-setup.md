@@ -38,12 +38,17 @@ mamba activate teleoscope   # or: conda activate teleoscope
 PYTHONPATH=. python scripts/seed-demo-corpus.py
 ```
 
+If `documents.jsonl.7z` and `documents.jsonl` are both missing under `data/` (or `TELEOSCOPE_DATA_DIR`), the seed script **runs `scripts/download-demo-data.sh` for you**—that shallow-clones [Teleoscope/teleoscope-demo-data](https://github.com/Teleoscope/teleoscope-demo-data) and copies files into your data directory (same as one-click demo). You need **git** and **bash** on `PATH`. Use **`--download`** / **`SEED_DOWNLOAD_DEMO_DATA=1`** to re-fetch from GitHub even when files already exist; use **`--no-download`** / **`SEED_NO_DOWNLOAD=1`** if the machine is air-gapped and you stage `data/` yourself.
+
+You can still run `./scripts/download-demo-data.sh` alone first; it is optional if you rely on the automatic fetch.
+
 If you get “prefix does not exist at …/mamba/envs/teleoscope” but the env exists under `~/.micromamba/envs/teleoscope`, add that path to `envs_dirs` in `~/.mambarc` so activation by name works (see [Troubleshooting](#troubleshooting) below).
 
 Run from the **repo root**. **`mamba activate teleoscope`** picks the interpreter and installed deps; **`PYTHONPATH=.`** adds the repo root so `import backend` works.
 
 The script will:
 
+- Ensure demo files exist (clone **teleoscope-demo-data** when needed; see above).
 - Create a dedicated **demo corpus** workspace in MongoDB (or reuse an existing one).
 - Extract the 7z, insert all documents into the `documents` collection under that workspace.
 - If Milvus is configured, load vectors from parquet into Milvus for that workspace (so ranking/similarity work).
