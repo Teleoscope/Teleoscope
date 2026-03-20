@@ -311,38 +311,41 @@ def ensure_documents_text_index(db) -> None:
             log(f"Could not ensure text index: {e}", "WARN")
 
 
-def _open_7z_archive(archive_path: Path):
-    """Open a 7z for reading (py7zr >= 0.20 uses SevenZipFile; older wheels exposed module-level open)."""
-    if hasattr(py7zr, "open"):
-        return py7zr.open(archive_path, "r")
-    return py7zr.SevenZipFile(archive_path, mode="r")
-
-
 def extract_jsonl_from_7z(archive_path: Path) -> list[dict]:
     if not py7zr:
-        raise RuntimeError("py7zr is required to read documents.jsonl.7z. pip install py7zr")
+        raise RuntimeError("py7zr is required to read documents.jsonl.7z. pip install 'py7zr>=0.22'")
+    SevenZipFile = getattr(py7zr, "SevenZipFile", None)
+    if SevenZipFile is None:
+        raise RuntimeError("py7zr.SevenZipFile missing; pip install -U 'py7zr>=0.22'")
     if not archive_path.exists():
         raise FileNotFoundError(
             f"Archive not found: {archive_path}. Re-run with network access or run ./scripts/download-demo-data.sh."
         )
     rows = []
     log(f"Opening 7z archive: {archive_path}", "INFO")
-    with _open_7z_archive(archive_path) as arc:
-        all_files = arc.readall()
-        jsonl_names = [n for n in all_files if n.endswith(".jsonl")]
-        log(f"JSONL entries in archive ({len(jsonl_names)}): {jsonl_names}", "INFO")
+    with SevenZipFile(archive_path, mode="r") as arc:
+        names = arc.getnames() if hasattr(arc, "getnames") else arc.namelist()
+        targets = [n for n in names if str(n).endswith(".jsonl")]
+        log(f"JSONL members ({len(targets)}): {targets}", "INFO")
+        if not targets:
+            log("No .jsonl files in archive.", "WARN")
+            return rows
         t0 = time.perf_counter()
-        for name, bio in all_files.items():
-            if not name.endswith(".jsonl"):
+        # Public API: read(targets) -> { filename: BytesIO }; not readall() (removed / inconsistent across versions).
+        by_name = arc.read(targets)
+        for name in targets:
+            bio = by_name.get(name)
+            if bio is None:
+                log(f"Archive read() omitted member {name!r}", "WARN")
                 continue
-            for line in bio:
-                line = line.decode("utf-8").strip()
+            for raw_line in bio.read().splitlines():
+                line = raw_line.decode("utf-8").strip()
                 if not line:
                     continue
                 try:
                     rows.append(json.loads(line))
                 except json.JSONDecodeError as e:
-                    log(f"Skip bad JSON line: {e}", "WARN")
+                    log(f"Skip bad JSON line in {name}: {e}", "WARN")
         log(
             f"Parsed {len(rows):,} lines from 7z JSONL in {_fmt_elapsed(time.perf_counter() - t0)}.",
             "OK",
