@@ -2,6 +2,7 @@
 # Update-only (no packages, no data download): re-seed the demo corpus from existing data and restart the app.
 # Does not: rebuild Docker images, run npm/pip install, or download demo data. Use when data/ already
 # has documents.jsonl.7z and parquet_export/. For code updates, run 'git pull' first.
+# MILVUS_ONLY=1: only reload vectors into Milvus (Mongo unchanged); needs parquet + matching Mongo doc count.
 # Full bootstrap: ./scripts/one-click-demo.sh. Clean install (rebuild + re-download): CLEAN_INSTALL=1 ./scripts/one-click-demo.sh
 set -e
 
@@ -27,10 +28,17 @@ if [[ ! -f .env ]]; then
 fi
 ok ".env exists"
 
-if [[ ! -f data/documents.jsonl.7z ]] && [[ ! -f data/documents.jsonl ]]; then
-  fail "No demo data in data/. Run ./scripts/download-demo-data.sh first (or ./scripts/one-click-demo.sh for full setup)."
+if [[ "${MILVUS_ONLY:-}" == "1" ]]; then
+  if ! find "$REPO_ROOT/data/parquet_export" -name "part-*.parquet" -print -quit 2>/dev/null | grep -q .; then
+    fail "MILVUS_ONLY=1 requires parquet under data/parquet_export/. Run download-demo-data.sh if missing."
+  fi
+  ok "Parquet present for Milvus-only seed"
+else
+  if [[ ! -f data/documents.jsonl.7z ]] && [[ ! -f data/documents.jsonl ]]; then
+    fail "No demo data in data/. Run ./scripts/download-demo-data.sh first (or ./scripts/one-click-demo.sh for full setup)."
+  fi
+  ok "Demo data present in data/"
 fi
-ok "Demo data present in data/"
 
 set -a
 # shellcheck source=/dev/null
@@ -38,7 +46,13 @@ source .env 2>/dev/null || true
 set +a
 
 section "Seeding (pre-vectorized only, no vectorization pipeline)"
-info "Re-seeding from existing 7z + parquet; no download."
+if [[ "${MILVUS_ONLY:-}" == "1" ]]; then
+  info "Milvus-only: upserting vectors from parquet (Mongo unchanged)."
+  SEED_EXTRA=(--milvus-only)
+else
+  info "Re-seeding from existing 7z + parquet; no download."
+  SEED_EXTRA=()
+fi
 
 export MONGODB_URI="mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@localhost:27017/teleoscope?directConnection=true&serverSelectionTimeoutMS=5000&authSource=admin"
 MILVUS_PORT=$(docker compose port milvus 19530 2>/dev/null | cut -d: -f2)
@@ -47,15 +61,15 @@ export MILVUS_URI="http://localhost:${MILVUS_PORT:-19530}"
 seed_out=""
 if command -v mamba &>/dev/null && mamba run -n teleoscope true 2>/dev/null; then
   info "Running seed via mamba run -n teleoscope..."
-  seed_out=$(MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" mamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/seed-demo-corpus.py" 2>/dev/null) || true
+  seed_out=$(MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" mamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/seed-demo-corpus.py ${SEED_EXTRA[*]}" 2>/dev/null) || true
 fi
 if [[ -z "$seed_out" ]] && command -v micromamba &>/dev/null && micromamba run -n teleoscope true 2>/dev/null; then
   info "Running seed via micromamba run -n teleoscope..."
-  seed_out=$(MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" micromamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/seed-demo-corpus.py" 2>/dev/null) || true
+  seed_out=$(MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" micromamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/seed-demo-corpus.py ${SEED_EXTRA[*]}" 2>/dev/null) || true
 fi
 if [[ -z "$seed_out" ]]; then
   info "Running seed with current Python..."
-  seed_out=$(cd "$REPO_ROOT" && PYTHONPATH=. python scripts/seed-demo-corpus.py 2>/dev/null) || true
+  seed_out=$(cd "$REPO_ROOT" && PYTHONPATH=. python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}" 2>/dev/null) || true
 fi
 
 if [[ -z "$seed_out" ]]; then

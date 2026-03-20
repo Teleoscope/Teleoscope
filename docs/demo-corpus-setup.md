@@ -113,6 +113,20 @@ Then anonymous demo users get both document list/search and vector ranking/simil
 
 Running `seed-demo-corpus.py` again **reuses** the same demo workspace: it deletes existing documents in that workspace and re-inserts from the 7z. If parquet is present and Milvus is configured, vectors are re-loaded. So you can refresh the corpus by re-running the script after re-downloading or replacing the data.
 
+### Milvus only (leave Mongo as-is)
+
+To reload **vectors from parquet** without touching Mongo (no 7z read, no document delete/insert):
+
+```bash
+mamba activate teleoscope
+export MILVUS_URI=http://127.0.0.1:$(docker compose port milvus 19530 | cut -d: -f2)
+PYTHONPATH=. python scripts/seed-demo-corpus.py --milvus-only
+```
+
+Requirements: demo workspace already exists (label **Demo corpus**, or set **`DEMO_CORPUS_WORKSPACE_ID`**); **`data/parquet_export/`** with `part-*.parquet`; Mongo document count for that workspace must **equal** the number of parquet rows, in the same order as after a full seed (script matches by sorting Mongo documents by **`_id`**). If you changed the workspace document set, run a **full** seed instead.
+
+Shell shortcut: **`MILVUS_ONLY=1 ./scripts/refresh-demo-corpus.sh`** (skips the 7z precondition; still restarts the app at the end).
+
 ## Troubleshooting
 
 **“Cannot activate, prefix does not exist at …/mamba/envs/teleoscope”** — Your `teleoscope` env lives under `~/.micromamba/envs/` while mamba is only looking in `~/.local/share/mamba/envs`. Add the micromamba envs directory to your config:

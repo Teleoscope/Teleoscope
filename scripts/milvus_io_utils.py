@@ -7,6 +7,8 @@ from typing import Any, Tuple
 
 from dotenv import load_dotenv
 
+from backend.milvus_quiet import quiet_pymilvus_rpc_logs
+
 load_dotenv()
 
 _LOG = logging.getLogger("milvus_io")
@@ -50,6 +52,19 @@ def connect_milvus_client() -> Tuple[Any, str | None]:
 
     if uri:
         _LOG.info("Connecting via MILVUS_URI")
+        prefer_default = (
+            uri.lower().startswith("http://")
+            and not token
+            and os.getenv("MILVUS_FORCE_DB_NAME_ON_CONNECT", "").lower()
+            not in ("1", "true", "yes")
+        )
+        if prefer_default:
+            try:
+                c = MilvusClient(uri=uri, token=token)
+                c.list_collections()
+                return c, None
+            except MilvusException as e:
+                _LOG.info("Connect without db_name failed (%s); retrying with db_name.", e)
         try:
             c = MilvusClient(uri=uri, token=token, db_name=db_name)
             c.list_collections()
@@ -77,7 +92,8 @@ def use_milvus_db(client: Any, db_name: str | None) -> None:
         embeddings.use_database_if_supported(client)
         return
     try:
-        client.using_database(db_name=db_name)
+        with quiet_pymilvus_rpc_logs():
+            client.using_database(db_name=db_name)
     except Exception as exc:
         _LOG.warning("using_database(%s) skipped: %s", db_name, exc)
         _named_db_unsupported = True
