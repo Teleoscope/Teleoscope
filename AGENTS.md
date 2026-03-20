@@ -85,6 +85,7 @@ Frontend dev server:
 - **MongoDB replica set is required** for account transactions.
 - **Mongo URI must include `/teleoscope`**, or DB selection is wrong.
 - **Stripe is optional locally**: `STRIPE_TEST_SECRET_KEY` may be absent.
+- **`seed-demo-corpus.py` is demo/local/staging only**: do not run against production MongoDB after go-live; the default path drops the entire `documents` collection (`docs/demo-corpus-setup.md`).
 - **API/server routes use `dynamic = 'force-dynamic'`** to avoid prerender DB failures.
 - **`hdbscan` build prereqs**: `python3-dev` and `build-essential`.
 - **Schema generation**: run `python loadschemas.py` in `teleoscope.ca/`.

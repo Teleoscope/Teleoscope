@@ -101,7 +101,7 @@ The **/demo** route sends visitors to an anonymous workspace that **always** use
 
 - **Manual setup (e.g. no Docker or re-seeding):** If you run the stack yourself or need to re-seed:
   1. Download: `./scripts/download-demo-data.sh` (puts `documents.jsonl.7z` and `parquet_export/` in `data/`).
-  2. Seed: `mamba activate teleoscope` then `PYTHONPATH=. python scripts/seed-demo-corpus.py` (use Mongo/Milvus URIs for your stack). The script prints a workspace ID.
+  2. Seed: `mamba activate teleoscope` then `PYTHONPATH=. python scripts/seed-demo-corpus.py` (use Mongo/Milvus URIs for your stack). The script prints a workspace ID. **Use only for demo/local/staging**—never against production after real data exists (see `docs/demo-corpus-setup.md`).
   3. Optional: set `DEMO_CORPUS_WORKSPACE_ID=<that_id>` in `.env` to avoid a DB lookup; if unset, the app finds the corpus by the workspace label "Demo corpus". Restart the app.
 
 - **Update only** (no package or data download): run `./scripts/refresh-demo-corpus.sh` when the stack and data are already in place. Does not rebuild images or re-download demo data; run `git pull` first for latest code.
