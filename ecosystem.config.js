@@ -6,6 +6,25 @@
 module.exports = {
   apps: [
     {
+      name: "worker-tasks",
+      script: "python",
+      args: [
+        "-m",
+        "celery",
+        "-A",
+        "backend.tasks",
+        "worker",
+        "--loglevel=info",
+        "-Q",
+        "teleoscope-tasks",
+      ],
+      watch: false,
+      interpreter: "",
+      max_memory_restart: "16G",
+      instances: 1,
+      time: true,
+    },
+    {
       name: "dispatch",
       script: 'python',
       args: ["-m", "backend.dispatch"],
