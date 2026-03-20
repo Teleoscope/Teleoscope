@@ -90,6 +90,7 @@ Frontend dev server:
 - **Schema generation**: run `python loadschemas.py` in `teleoscope.ca/`.
 - **`pnpm install --ignore-scripts` is safe**; do not add `pnpm.onlyBuiltDependencies`.
 - **`MIVLUS_PORT` typo is intentional**; do not rename in only one location.
+- **Local Python:** `mamba activate teleoscope` then `PYTHONPATH=.` from repo root for scripts and pytest (env = deps, `PYTHONPATH` = `import backend`). CI uses pip + `PYTHONPATH` without mamba.
 - **Celery in Docker needs `C_FORCE_ROOT=1`**.
 - **Vectorizer** defaults to activity-gated mode: open `/workspace/...` or `/demo` pings wake it via `VECTORIZER_CONTROL_URL`; after idle it unloads. Set `VECTORIZER_ALWAYS_ON=1` to disable that (no control HTTP server on `8765`).
 
@@ -98,7 +99,7 @@ Frontend dev server:
 | Task | Command |
 |------|---------|
 | Lint | `cd teleoscope.ca && pnpm lint` |
-| Backend unit tests | `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v` |
+| Backend unit tests | `mamba activate teleoscope && PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v` |
 | Frontend modular tests | `cd teleoscope.ca && pnpm test:unit` |
 | API/frontend contract checks | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test tests/api-frontend-contract.spec.ts tests/api.spec.ts -g "Frontend/API contract consistency|UI endpoint references resolve to backend routes" --project=chromium --retries=0` |
 | Playwright e2e | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 pnpm exec playwright test --project=chromium` |
@@ -106,7 +107,7 @@ Frontend dev server:
 | Playwright vectorization sweep (manual/scheduled) | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_VECTOR_E2E=1 PLAYWRIGHT_UI_VECTOR_DOC_COUNT=10 PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=300000 pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0 && PLAYWRIGHT_BASE_URL=http://localhost:3000 PLAYWRIGHT_SKIP_ACCOUNT=1 PLAYWRIGHT_UI_VECTOR_E2E=1 PLAYWRIGHT_UI_VECTOR_DOC_COUNT=100 PLAYWRIGHT_VECTOR_RESULT_TIMEOUT_MS=600000 pnpm exec playwright test tests/ui-vectorization-large.spec.ts --project=chromium --retries=0` |
 | Dev server | `cd teleoscope.ca && pnpm dev` |
 | Full test suite | `./scripts/run-all-tests.sh` |
-| Seed test data | `PYTHONPATH=. python scripts/seed-test-data.py` |
+| Seed test data | `mamba activate teleoscope && PYTHONPATH=. python scripts/seed-test-data.py` |
 | Docker full stack | `cp .env.example .env && docker compose up -d` |
 | One-click public demo bootstrap | `./scripts/one-click-demo.sh` |
 | Public demo load test | `node scripts/load-test-demo.mjs http://localhost:3000 250 15` (CI smoke), `node scripts/load-test-demo.mjs http://localhost:3000 5000 30` (conference target) |
@@ -124,12 +125,12 @@ Frontend dev server:
 - If app already running: `PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm exec playwright test --project=chromium`
 
 #### C) Backend core (`backend/`, `tests/`)
-- Unit-focused: `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v --tb=short`
-- Integration only: `PYTHONPATH=. python -m pytest tests/ -m integration -v`
+- Unit-focused: `mamba activate teleoscope && PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v --tb=short`
+- Integration only: `mamba activate teleoscope && PYTHONPATH=. python -m pytest tests/ -m integration -v`
 
 #### D) Vector pipeline/workers (`backend.dispatch`, `backend.vectorizer`, `backend.uploader`, `backend.graph`, `tests/e2e/`)
 1. Ensure MongoDB + RabbitMQ + Milvus + workers are up. With Docker, the app service sets `VECTORIZER_CONTROL_URL` to the vectorizer control port; without it, set `VECTORIZER_ALWAYS_ON=1` on the vectorizer or the consumer stays idle until something POSTs `/activity`.
-2. Run `PYTHONPATH=. python -m pytest tests/e2e/ -m e2e -v`
+2. Run `mamba activate teleoscope && PYTHONPATH=. python -m pytest tests/e2e/ -m e2e -v`
 3. Shortcut: `RUN_E2E=1 ./scripts/run-all-tests.sh`
 
 ### Fast failure triage

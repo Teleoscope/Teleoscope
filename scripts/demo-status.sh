@@ -188,7 +188,7 @@ sys.path.insert(0, str(Path('.').resolve()))
 try:
     from backend import embeddings
     client = embeddings.connect()
-    cn = os.environ.get('MILVUS_DBNAME', 'teleoscope')
+    cn = os.environ.get('MILVUS_COLLECTION') or os.environ.get('MILVUS_DBNAME', 'teleoscope')
     wid = os.environ.get('DEMO_WORKSPACE_ID', '')
     if not client.has_partition(collection_name=cn, partition_name=wid):
         print('PARTITION:no')
@@ -229,7 +229,7 @@ sys.path.insert(0, str(Path('.').resolve()))
 try:
     from backend import embeddings
     client = embeddings.connect()
-    cn = os.environ.get('MILVUS_DBNAME', 'teleoscope')
+    cn = os.environ.get('MILVUS_COLLECTION') or os.environ.get('MILVUS_DBNAME', 'teleoscope')
     wid = os.environ.get('DEMO_WORKSPACE_ID', '')
     if not client.has_partition(collection_name=cn, partition_name=wid):
         print('PARTITION:no')

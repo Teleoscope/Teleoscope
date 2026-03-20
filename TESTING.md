@@ -56,15 +56,19 @@ This runs:
 2. Stack connectivity check (optional; warns if app/MongoDB/RabbitMQ are not up)  
 3. Playwright e2e (Chromium by default; starts the app on 3099 if needed)
 
+**Backend / pytest:** use **`mamba activate teleoscope`** (see `environments/environment.yml`) so dependencies are installed; run from the **repo root** with **`PYTHONPATH=.`** so `backend` imports resolve (CI does the same via pip + `PYTHONPATH`).
+
 **Backend only:**
 
 ```bash
+mamba activate teleoscope
 PYTHONPATH=. python -m pytest tests/ -m "not integration" -v
 ```
 
 **With integration tests (needs MongoDB):**
 
 ```bash
+mamba activate teleoscope
 PYTHONPATH=. python -m pytest tests/ -m integration -v
 ```
 
@@ -73,6 +77,7 @@ PYTHONPATH=. python -m pytest tests/ -m integration -v
 Requires MongoDB, RabbitMQ, Milvus, and workers (dispatch, tasks, graph, vectorizer, uploader). Start the stack (e.g. `docker compose up -d` or `./scripts/start-local-stack.sh` with Milvus elsewhere), set `MONGODB_URI`, `MONGODB_DATABASE`, `RABBITMQ_*`, then:
 
 ```bash
+mamba activate teleoscope
 PYTHONPATH=. python -m pytest tests/e2e/ -m e2e -v
 ```
 
