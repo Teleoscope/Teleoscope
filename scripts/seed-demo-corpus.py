@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
 """Seed the demo corpus from teleoscope-demo-data (7z + parquet) into Mongo and optionally Milvus.
 
+**Scope:** This script is only for **building the anonymous `/demo` stack** (local, CI, staging,
+or a dedicated demo host). It is **not** a production maintenance tool: **do not run it against
+production MongoDB** after real customer data exists—it drops the `documents` collection by default
+and bulk-writes the demo workspace.
+
 Uses **pre-vectorized** materials only: documents from the 7z and vectors from parquet.
 Does not run the vectorization pipeline (no embedding model, no vectorizer worker).
 
 Run after ./scripts/download-demo-data.sh so that data/documents.jsonl.7z and
 data/parquet_export/ (or data/parquet_export/full/) exist.
 
-Creates a dedicated demo-corpus workspace and:
-  1. Extracts documents.jsonl.7z, inserts documents into MongoDB (state.vectorized=True).
+Creates or reuses a demo-corpus workspace and:
+  1. Extracts documents.jsonl.7z, loads documents into MongoDB (state.vectorized=True).
+     By default the entire `documents` collection is dropped and recreated (see
+     `--workspace-documents-only` to keep other workspaces' documents).
   2. If Milvus is configured (MILVUS_URI or MILVUS_LITE_PATH), loads vectors from
      parquet into Milvus for the same workspace so ranking/similarity work.
 
@@ -28,6 +35,11 @@ Usage:
   # Refresh Milvus vectors only (Mongo unchanged). Requires existing demo workspace + same
   # document count as parquet rows; documents are matched in Mongo _id insertion order.
   MILVUS_URI=http://localhost:19530 PYTHONPATH=. python scripts/seed-demo-corpus.py --milvus-only
+
+  # Multi-workspace DB: only delete/replace documents in the demo workspace (slower on large
+  # re-seeds; drops the text index during bulk load unless --keep-text-index). Env:
+  # SEED_WORKSPACE_DOCUMENTS_ONLY=1
+  PYTHONPATH=. python scripts/seed-demo-corpus.py --workspace-documents-only
 
 Requires: pymongo, pyarrow, py7zr. Use the project mamba env: `mamba activate teleoscope` (see environments/environment.yml).
 """
@@ -76,6 +88,8 @@ DEMO_TEAM_LABEL = "Demo corpus (shared)"
 DEMO_WORKSPACE_LABEL = "Demo corpus"
 DEMO_WORKFLOW_LABEL = "Default"
 BATCH_INSERT = 500
+DOCUMENTS_TEXT_INDEX = "text"
+DOCUMENTS_TEXT_INDEX_KEYS = [("title", "text"), ("text", "text")]
 
 
 def log(msg: str, level: str = "INFO") -> None:
@@ -83,19 +97,67 @@ def log(msg: str, level: str = "INFO") -> None:
     print(f"{prefix} {msg}", flush=True)
 
 
+def log_demo_seed_scope_warning() -> None:
+    log(
+        "Demo corpus seed — for local/staging/demo DBs only. Do not use on production.",
+        "WARN",
+    )
+
+
 def ensure_collections(db):
     for name in ["documents", "workspaces", "teams", "workflows"]:
         if name not in db.list_collection_names():
             db.create_collection(name)
             log(f"Created collection: {name}", "OK")
-    # Text index for search/count (required for $text in API search/count)
-    coll = db.documents
-    index_names = list(coll.index_information().keys())
-    if "text" not in index_names:
-        coll.create_index([("title", "text"), ("text", "text")], name="text")
-        log("Created documents text index.", "OK")
-    else:
-        log("Documents text index already exists.", "INFO")
+    # Text index is created once after bulk load (see ensure_documents_text_index) so we do
+    # not maintain it on every insert during seed — avoids Mongo looking like it is
+    # "constantly re-indexing" during large delete_many + insert_many batches.
+
+
+def wipe_documents_collection(db) -> None:
+    """Drop and recreate empty `documents` (all indexes and rows removed in one step)."""
+    if "documents" in db.list_collection_names():
+        db.drop_collection("documents")
+        log(
+            "Dropped entire MongoDB `documents` collection (all workspaces). "
+            "graph/storage/groups may still hold stale document ObjectIds.",
+            "WARN",
+        )
+    db.create_collection("documents")
+    log("Recreated empty documents collection.", "OK")
+
+
+def drop_documents_text_index_if_exists(db) -> None:
+    """Drop the shared documents text index before bulk re-seed (optional, faster bulk load)."""
+    try:
+        db.documents.drop_index(DOCUMENTS_TEXT_INDEX)
+        log(
+            f"Dropped index {DOCUMENTS_TEXT_INDEX!r} on documents — $text search is offline "
+            "until the seed finishes.",
+            "WARN",
+        )
+    except Exception as e:
+        if "index not found" in str(e).lower() or "can't find index" in str(e).lower():
+            log(f"No existing {DOCUMENTS_TEXT_INDEX!r} index to drop.", "INFO")
+        else:
+            log(f"Could not drop text index: {e}", "WARN")
+
+
+def ensure_documents_text_index(db) -> None:
+    """Single text index definition (same options everywhere) after bulk insert."""
+    try:
+        db.documents.create_index(
+            DOCUMENTS_TEXT_INDEX_KEYS,
+            name=DOCUMENTS_TEXT_INDEX,
+            default_language="english",
+        )
+        log("Ensured documents text index (for search/count).", "OK")
+    except Exception as e:
+        msg = str(e).lower()
+        if "already exists" in msg or "duplicate" in msg or "same name" in msg:
+            log("Documents text index already present with compatible definition.", "INFO")
+        else:
+            log(f"Could not ensure text index: {e}", "WARN")
 
 
 def extract_jsonl_from_7z(archive_path: Path) -> list[dict]:
@@ -184,7 +246,8 @@ def insert_documents_batched(db, docs: list[dict], batch_size: int = BATCH_INSER
     inserted = []
     for i in range(0, len(docs), batch_size):
         chunk = docs[i : i + batch_size]
-        result = db.documents.insert_many(chunk)
+        # unordered: server may parallelize; order of inserted_ids still matches chunk order
+        result = db.documents.insert_many(chunk, ordered=False)
         inserted.extend(result.inserted_ids)
         log(f"Inserted documents {len(inserted) - len(chunk) + 1}–{len(inserted)}", "OK")
     return inserted
@@ -237,6 +300,7 @@ def resolve_demo_workspace_id(db) -> ObjectId:
 
 def seed_milvus_only() -> None:
     """Load parquet vectors into Milvus for an existing demo workspace; do not modify Mongo."""
+    log_demo_seed_scope_warning()
     parquet_dir = find_parquet_dir()
     if not parquet_dir:
         raise SystemExit(
@@ -340,7 +404,16 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
     log("Milvus seed done.", "OK")
 
 
-def seed() -> None:
+def seed(*, workspace_documents_only: bool = False, keep_text_index: bool = False) -> None:
+    if os.environ.get("SEED_WORKSPACE_DOCUMENTS_ONLY", "").lower() in ("1", "true", "yes"):
+        workspace_documents_only = True
+    if os.environ.get("SEED_KEEP_TEXT_INDEX", "").lower() in ("1", "true", "yes"):
+        keep_text_index = True
+    # Legacy opt-out for dropping the text index during workspace-scoped re-seed
+    if os.environ.get("SEED_DROP_TEXT_INDEX", "").lower() in ("0", "false", "no"):
+        keep_text_index = True
+
+    log_demo_seed_scope_warning()
     log("Loading documents from 7z/JSONL...", "INFO")
     raw_rows = load_documents_jsonl()
     log(f"Loaded {len(raw_rows)} raw rows.", "OK")
@@ -354,10 +427,6 @@ def seed() -> None:
     if existing:
         workspace_id = existing["_id"]
         log(f"Reusing existing demo workspace: {workspace_id}", "INFO")
-        # Optionally re-seed documents: delete old docs in this workspace and re-insert
-        deleted = db.documents.delete_many({"workspace": workspace_id})
-        if deleted.deleted_count:
-            log(f"Removed {deleted.deleted_count} old documents from demo workspace.", "INFO")
     else:
         team_id = ObjectId()
         workspace_id = ObjectId()
@@ -397,20 +466,30 @@ def seed() -> None:
         log("No documents to insert.", "WARN")
         client.close()
         return
+
+    if workspace_documents_only:
+        if not keep_text_index:
+            log(
+                "Dropping shared documents text index before bulk delete/insert "
+                "($text offline for all workspaces until rebuild).",
+                "WARN",
+            )
+            drop_documents_text_index_if_exists(db)
+        deleted = db.documents.delete_many({"workspace": workspace_id})
+        if deleted.deleted_count:
+            log(f"Removed {deleted.deleted_count} old documents from demo workspace.", "INFO")
+    else:
+        log(
+            "Replacing Mongo `documents` by dropping the collection (default for demo re-seed). "
+            "Use --workspace-documents-only if other workspaces must keep their documents.",
+            "INFO",
+        )
+        wipe_documents_collection(db)
+
     inserted_ids = insert_documents_batched(db, docs)
     log(f"Inserted {len(inserted_ids)} documents into workspace {workspace_id}.", "OK")
 
-    # Ensure text index exists (e.g. if collection was created by app without it, or index_information was wrong)
-    try:
-        db.documents.create_index(
-            [("title", "text"), ("text", "text")],
-            name="text",
-            default_language="english",
-        )
-        log("Ensured documents text index (for search/count).", "OK")
-    except Exception as e:
-        if "already exists" not in str(e).lower() and "duplicate" not in str(e).lower():
-            log(f"Could not ensure text index: {e}", "WARN")
+    ensure_documents_text_index(db)
 
     count = db.documents.count_documents({"workspace": workspace_id})
     log(f"Verified: {count} documents in demo workspace (Mongo).", "OK")
@@ -445,12 +524,34 @@ if __name__ == "__main__":
             "and Mongo document count must match parquet row count (sorted by _id)."
         ),
     )
+    parser.add_argument(
+        "--workspace-documents-only",
+        action="store_true",
+        help=(
+            "Only delete documents in the demo workspace instead of dropping the entire "
+            "`documents` collection. Slower for large corpora; by default the text index is "
+            "dropped during bulk load (use --keep-text-index to skip). "
+            "Same as env SEED_WORKSPACE_DOCUMENTS_ONLY=1."
+        ),
+    )
+    parser.add_argument(
+        "--keep-text-index",
+        action="store_true",
+        help=(
+            "With --workspace-documents-only: do not drop the shared text index before bulk "
+            "writes (slower). Ignored when the full collection is dropped (default seed path). "
+            "Same as env SEED_KEEP_TEXT_INDEX=1."
+        ),
+    )
     args = parser.parse_args()
     try:
         if args.milvus_only:
             seed_milvus_only()
         else:
-            seed()
+            seed(
+                workspace_documents_only=args.workspace_documents_only,
+                keep_text_index=args.keep_text_index,
+            )
     except FileNotFoundError as e:
         log(str(e), "FAIL")
         sys.exit(1)

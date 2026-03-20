@@ -2,6 +2,8 @@
 
 The **/demo** route always uses a **pre-seeded** document corpus: anonymous users land in a workspace that shows real documents, search, and vector ranking without anyone uploading or vectorizing. Demo materials are **pre-vectorized** (documents + vectors come from teleoscope-demo-data); the seed script loads them into Mongo and Milvus and does **not** run the vectorization pipeline. For Docker, `./scripts/one-click-demo.sh` does the download and seed automatically; this doc covers how it works and how to run or re-run the steps manually (e.g. no Docker or re-seeding).
 
+**Production:** `scripts/seed-demo-corpus.py` is **only** for demo-capable environments (local, CI, staging, or a host dedicated to `/demo`). It must **not** be run against a **production** database once real workspaces and documents matter—the default path **drops the entire `documents` collection** and is destructive by design.
+
 ## Data source
 
 The corpus comes from [Teleoscope/teleoscope-demo-data](https://github.com/Teleoscope/teleoscope-demo-data):
@@ -111,7 +113,13 @@ Then anonymous demo users get both document list/search and vector ranking/simil
 
 ## Re-seeding
 
-Running `seed-demo-corpus.py` again **reuses** the same demo workspace: it deletes existing documents in that workspace and re-inserts from the 7z. If parquet is present and Milvus is configured, vectors are re-loaded. So you can refresh the corpus by re-running the script after re-downloading or replacing the data.
+Running `seed-demo-corpus.py` again **reuses** the same demo workspace (same team/workspace/workflow ObjectIds). By default it **drops the entire MongoDB `documents` collection** and recreates it, then inserts only the demo corpus. That removes all rows and indexes in one step (no per-document delete churn), then adds a single full-text index **after** bulk insert. If parquet is present and Milvus is configured, vectors are re-loaded for the demo workspace.
+
+**Other workspaces’ documents are deleted** by this default path. If you share one MongoDB with non-demo workspaces and must keep their documents, use **`--workspace-documents-only`** (or **`SEED_WORKSPACE_DOCUMENTS_ONLY=1`**): only documents with the demo workspace id are removed and re-inserted. That path is slower on large corpora; by default the script drops the shared text index during that bulk load and rebuilds it at the end—use **`--keep-text-index`** / **`SEED_KEEP_TEXT_INDEX=1`** only if you accept slower writes.
+
+### Why batched inserts still log
+
+`insert_many` runs in chunks for progress logging and to avoid huge single payloads. Index work for the text index happens **after** all inserts when using the default **drop collection** path, not once per batch.
 
 ### Milvus only (leave Mongo as-is)
 
