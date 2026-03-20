@@ -11,9 +11,11 @@ Does not run the vectorization pipeline (no embedding model, no vectorizer worke
 
 **Demo files** come from [Teleoscope/teleoscope-demo-data](https://github.com/Teleoscope/teleoscope-demo-data).
 If `documents.jsonl.7z` or `documents.jsonl` is missing under `TELEOSCOPE_DATA_DIR`, this script runs
-`scripts/download-demo-data.sh` (shallow git clone + copy) automatically. Use **`--download`** to
-refresh from GitHub even when files already exist, or **`--no-download`** / **`SEED_NO_DOWNLOAD=1`**
-to fail fast when data is absent (air-gapped / pre-staged trees).
+`scripts/download-demo-data.sh` (shallow git clone + copy) automatically. When **`MILVUS_URI`** or
+**`MILVUS_LITE_PATH`** is set, it also requires **`parquet_export/part-*.parquet`** and will fetch
+demo data if that is missing too. Use **`--download`** to refresh from GitHub even when files
+already exist, or **`--no-download`** / **`SEED_NO_DOWNLOAD=1`** to fail fast when data is absent
+(air-gapped / pre-staged trees).
 
 Creates or reuses a demo-corpus workspace and:
   1. Extracts documents.jsonl.7z, loads documents into MongoDB (state.vectorized=True).
@@ -125,6 +127,24 @@ def demo_document_sources_present() -> bool:
     return DOCUMENTS_7Z.exists() or jsonl_path.is_file()
 
 
+def find_parquet_dir() -> Path | None:
+    for d in PARQUET_DIRS:
+        if d.is_dir() and list(d.glob("part-*.parquet")):
+            return d
+    return None
+
+
+def demo_parquet_present() -> bool:
+    return find_parquet_dir() is not None
+
+
+def milvus_env_configured() -> bool:
+    return bool(
+        (os.environ.get("MILVUS_URI") or "").strip()
+        or (os.environ.get("MILVUS_LITE_PATH") or "").strip()
+    )
+
+
 def run_download_demo_data_script() -> None:
     """Clone Teleoscope/teleoscope-demo-data via scripts/download-demo-data.sh (same as one-click)."""
     bash = shutil.which("bash")
@@ -161,12 +181,26 @@ def apply_download_env_overrides(download: bool, no_download: bool) -> tuple[boo
     return download, no_download
 
 
-def ensure_demo_corpus_materials(*, force_download: bool, no_download: bool) -> None:
-    """Ensure documents.jsonl.7z or documents.jsonl exists; optionally clone from GitHub."""
+def ensure_demo_data_files(
+    *,
+    force_download: bool,
+    no_download: bool,
+    need_documents: bool,
+    need_parquet: bool,
+) -> None:
+    """Ensure JSONL/7z and/or parquet exist under TELEOSCOPE_DATA_DIR; clone demo-data if allowed."""
+    if not need_documents and not need_parquet:
+        return
+
     if no_download:
-        if not demo_document_sources_present():
+        if need_documents and not demo_document_sources_present():
             raise FileNotFoundError(
                 f"No demo documents under {DATA_DIR}: need documents.jsonl.7z or documents.jsonl. "
+                "Run ./scripts/download-demo-data.sh, or omit --no-download / SEED_NO_DOWNLOAD."
+            )
+        if need_parquet and not demo_parquet_present():
+            raise FileNotFoundError(
+                f"No parquet_export/part-*.parquet under {DATA_DIR}. "
                 "Run ./scripts/download-demo-data.sh, or omit --no-download / SEED_NO_DOWNLOAD."
             )
         log("Skipping demo data fetch (--no-download / SEED_NO_DOWNLOAD).", "INFO")
@@ -175,38 +209,28 @@ def ensure_demo_corpus_materials(*, force_download: bool, no_download: bool) -> 
     if force_download:
         log("Refreshing demo corpus files from GitHub (download-demo-data.sh)…", "INFO")
         run_download_demo_data_script()
-    elif not demo_document_sources_present():
-        log(
-            f"No documents.jsonl.7z or documents.jsonl under {DATA_DIR}; "
-            "fetching Teleoscope/teleoscope-demo-data…",
-            "INFO",
-        )
-        run_download_demo_data_script()
+    else:
+        missing: list[str] = []
+        if need_documents and not demo_document_sources_present():
+            missing.append("documents (documents.jsonl.7z or documents.jsonl)")
+        if need_parquet and not demo_parquet_present():
+            missing.append("vectors (parquet_export/part-*.parquet)")
+        if missing:
+            log(
+                f"Missing {', '.join(missing)} under {DATA_DIR}; "
+                "fetching Teleoscope/teleoscope-demo-data…",
+                "INFO",
+            )
+            run_download_demo_data_script()
 
-    if not demo_document_sources_present():
+    if need_documents and not demo_document_sources_present():
         raise FileNotFoundError(
             f"Demo document sources still missing under {DATA_DIR} after download-demo-data.sh."
         )
-
-
-def ensure_milvus_seed_materials(*, force_download: bool, no_download: bool) -> None:
-    """Ensure parquet_export/part-*.parquet exists (clone demo-data repo if needed)."""
-    if no_download:
-        if find_parquet_dir() is None:
-            raise SystemExit(
-                f"No parquet_export/part-*.parquet under {DATA_DIR}. "
-                "Run ./scripts/download-demo-data.sh, or omit --no-download / SEED_NO_DOWNLOAD."
-            )
-        log("Skipping demo data fetch (--no-download / SEED_NO_DOWNLOAD).", "INFO")
-        return
-
-    if force_download or find_parquet_dir() is None:
-        log("Fetching Teleoscope/teleoscope-demo-data (parquet required for --milvus-only)…", "INFO")
-        run_download_demo_data_script()
-
-    if find_parquet_dir() is None:
-        raise SystemExit(
-            f"No parquet_export/part-*.parquet under {DATA_DIR} after download-demo-data.sh."
+    if need_parquet and not demo_parquet_present():
+        raise FileNotFoundError(
+            f"Demo parquet still missing under {DATA_DIR} after download-demo-data.sh "
+            "(expected parquet_export/part-*.parquet)."
         )
 
 
@@ -441,13 +465,6 @@ def load_parquet_rows(parquet_dirs: list[Path]) -> list[dict]:
     return all_rows
 
 
-def find_parquet_dir() -> Path | None:
-    for d in PARQUET_DIRS:
-        if d.is_dir() and list(d.glob("part-*.parquet")):
-            return d
-    return None
-
-
 def resolve_demo_workspace_id(db) -> ObjectId:
     raw = os.environ.get("DEMO_CORPUS_WORKSPACE_ID", "").strip()
     if raw:
@@ -470,7 +487,12 @@ def seed_milvus_only(*, download: bool = False, no_download: bool = False) -> No
     log_demo_seed_scope_warning()
     t_run = time.perf_counter()
     log(f"Milvus-only mode: TELEOSCOPE_DATA_DIR={DATA_DIR}", "INFO")
-    ensure_milvus_seed_materials(force_download=download, no_download=no_download)
+    ensure_demo_data_files(
+        force_download=download,
+        no_download=no_download,
+        need_documents=False,
+        need_parquet=True,
+    )
     parquet_dir = find_parquet_dir()
     if not parquet_dir:
         raise SystemExit(f"No parquet_export/part-*.parquet under {DATA_DIR}.")
@@ -632,7 +654,18 @@ def seed(
     log_demo_seed_scope_warning()
     t_seed = time.perf_counter()
     log(f"TELEOSCOPE_DATA_DIR={DATA_DIR}", "INFO")
-    ensure_demo_corpus_materials(force_download=download, no_download=no_download)
+    need_parquet = milvus_env_configured()
+    if need_parquet:
+        log(
+            "MILVUS_URI or MILVUS_LITE_PATH is set — will require parquet_export/part-*.parquet for vector seed.",
+            "INFO",
+        )
+    ensure_demo_data_files(
+        force_download=download,
+        no_download=no_download,
+        need_documents=True,
+        need_parquet=need_parquet,
+    )
     log("Loading documents from 7z/JSONL...", "INFO")
     raw_rows = load_documents_jsonl()
     log(f"Loaded {len(raw_rows):,} raw rows from source.", "OK")
@@ -738,9 +771,15 @@ def seed(
     if parquet_dir:
         log(f"Parquet vectors: using {parquet_dir}", "INFO")
         seed_milvus(workspace_id, inserted_ids, parquet_dir)
+    elif need_parquet:
+        raise RuntimeError(
+            "MILVUS_URI/MILVUS_LITE_PATH set and parquet was required at startup, "
+            "but find_parquet_dir() is now None — unexpected; check TELEOSCOPE_DATA_DIR."
+        )
     else:
         log(
-            "No parquet_export/part-*.parquet found under data paths; skipping Milvus (ranking unavailable).",
+            "No parquet_export/part-*.parquet found under data paths; skipping Milvus (ranking unavailable). "
+            "Unset MILVUS_URI/MILVUS_LITE_PATH if you want Mongo-only demo without vectors.",
             "INFO",
         )
 

@@ -38,7 +38,7 @@ mamba activate teleoscope   # or: conda activate teleoscope
 PYTHONPATH=. python scripts/seed-demo-corpus.py
 ```
 
-If `documents.jsonl.7z` and `documents.jsonl` are both missing under `data/` (or `TELEOSCOPE_DATA_DIR`), the seed script **runs `scripts/download-demo-data.sh` for you**—that shallow-clones [Teleoscope/teleoscope-demo-data](https://github.com/Teleoscope/teleoscope-demo-data) and copies files into your data directory (same as one-click demo). You need **git** and **bash** on `PATH`. Use **`--download`** / **`SEED_DOWNLOAD_DEMO_DATA=1`** to re-fetch from GitHub even when files already exist; use **`--no-download`** / **`SEED_NO_DOWNLOAD=1`** if the machine is air-gapped and you stage `data/` yourself.
+If `documents.jsonl.7z` and `documents.jsonl` are both missing under `data/` (or `TELEOSCOPE_DATA_DIR`), the seed script **runs `scripts/download-demo-data.sh` for you**—that shallow-clones [Teleoscope/teleoscope-demo-data](https://github.com/Teleoscope/teleoscope-demo-data) and copies files into your data directory (same as one-click demo). If **`MILVUS_URI`** or **`MILVUS_LITE_PATH`** is set, the same logic applies when **`parquet_export/part-*.parquet`** is missing (vectors are required for Milvus seed). You need **git** and **bash** on `PATH`. Use **`--download`** / **`SEED_DOWNLOAD_DEMO_DATA=1`** to re-fetch from GitHub even when files already exist; use **`--no-download`** / **`SEED_NO_DOWNLOAD=1`** if the machine is air-gapped and you stage `data/` yourself.
 
 You can still run `./scripts/download-demo-data.sh` alone first; it is optional if you rely on the automatic fetch.
 
@@ -155,7 +155,7 @@ envs_dirs:
 
 ## Verifying status
 
-Run `./scripts/demo-status.sh [base_url]` to check: demo workspace ID (in .env), demo data files, Mongo document count and text index for the demo workspace, app health, and Docker services. Default base_url is http://localhost:3000.
+Run `./scripts/demo-status.sh [-v|--verbose] [base_url]` to check: demo workspace ID (in .env), demo data files under **`TELEOSCOPE_DATA_DIR`** (default `data/`), including parquet under `parquet_export/full` or `parquet_export` (same as the seed script), Mongo document count and text index for the demo workspace, Milvus alignment when **`MILVUS_URI`** or **`MILVUS_LITE_PATH`** is set, app health, and Docker services. Use **`-v`** or **`DEMO_STATUS_VERBOSE=1`** for extra detail (sizes, URIs with credentials redacted, index list, Docker ports, `/api/hello` timing). Default base_url is http://localhost:3000.
 
 ## Milvus: why there is no database literally named `teleoscope` (Docker / standalone)
 
