@@ -120,23 +120,31 @@ def milvus_setup(client: MilvusClient, workspace_id, collection_name="teleoscope
 def _use_lite():
     return bool(MILVUS_LITE_PATH)
 
-def connect():
-    logging.info("Connecting to Milvus...")
-    client = None
-    if _use_lite():
-        # Milvus Lite: local file, no server (runs without Docker). Use MILVUS_LITE_PATH so pymilvus orm is not given a file URI at import.
-        path = MILVUS_LITE_PATH
-        if path.startswith("file://"):
-            path = path[7:]
-        client = MilvusClient(uri=path)
-        logging.info("Connected to Milvus Lite.")
-        return client
+
+def _milvus_token() -> str | None:
+    t = os.getenv("MILVUS_TOKEN", "").strip()
+    if t:
+        return t
+    u, p = os.getenv("MILVUS_USERNAME", ""), os.getenv("MILVUS_PASSWORD", "")
+    if u and p:
+        return f"{u}:{p}"
+    return None
+
+
+def _milvus_client_kwargs(uri: str, *, with_db_name: bool) -> dict:
+    kw: dict = {"uri": uri}
+    tok = _milvus_token()
+    if tok:
+        kw["token"] = tok
+    if with_db_name:
+        kw["db_name"] = MILVUS_DBNAME
+    return kw
+
+
+def _connect_after_probe(uri: str) -> MilvusClient:
+    """Create client with db_name, probe list_collections, fall back if DB API unsupported."""
     try:
-        client = MilvusClient(
-            uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}", db_name=MILVUS_DBNAME
-        )
-        # Probe one lightweight API call so invalid/unsupported db selection
-        # fails here and we can gracefully fall back to default DB.
+        client = MilvusClient(**_milvus_client_kwargs(uri, with_db_name=True))
         try:
             client.list_collections()
         except Exception as probe_exc:
@@ -151,9 +159,10 @@ def connect():
                     "falling back to default database.",
                     MILVUS_DBNAME,
                 )
-                client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
+                client = MilvusClient(**_milvus_client_kwargs(uri, with_db_name=False))
             else:
                 raise
+        return client
     except MilvusException as e:
         logging.info(
             "Exception %s when creating Milvus client with db '%s'; "
@@ -161,7 +170,27 @@ def connect():
             e,
             MILVUS_DBNAME,
         )
-        client = MilvusClient(uri=f"http://{MILVUS_HOST}:{MIVLUS_PORT}")
+        return MilvusClient(**_milvus_client_kwargs(uri, with_db_name=False))
+
+
+def connect():
+    logging.info("Connecting to Milvus...")
+    if _use_lite():
+        # Milvus Lite: local file, no server (runs without Docker). Use MILVUS_LITE_PATH so pymilvus orm is not given a file URI at import.
+        path = MILVUS_LITE_PATH
+        if path.startswith("file://"):
+            path = path[7:]
+        client = MilvusClient(uri=path)
+        logging.info("Connected to Milvus Lite.")
+        return client
+
+    if MILVUS_URI:
+        client = _connect_after_probe(MILVUS_URI)
+        logging.info("Connected to Milvus (MILVUS_URI).")
+        return client
+
+    uri = f"http://{MILVUS_HOST}:{MIVLUS_PORT}"
+    client = _connect_after_probe(uri)
     logging.info("Connected to Milvus.")
     return client
 

@@ -60,7 +60,7 @@ This simple example can help build intuition for how documents can be represente
 By looking at the columns for `dog` and `park` we can see that a bag-of-words model would show that
 `sentence_1` and `sentence_3` are the most similar.
 
-That overlaps with our intution that "The dog napped in the park" and "The dog napped in the park" 
+That overlaps with our intuition that "The dog napped in the park" and "The dog napped in the park" 
 are similar in conceptual content becase both talk about parks. In this case, the bag-of-words 
 model will give us answer that align with our intuition.
 
@@ -182,11 +182,9 @@ imagine building a model where "took the dog out for a banana" is more likely th
 the relationship between "banana" and "ice cream". Again, only data that is present in the corpus will be 
 represented in the model.
 
-## Why Teleoscope uses existing LLMs
+## Why Teleoscope uses Hugging Face embedding models
 
-In Teleoscope, we use open-source pre-built models (such as from [FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding)) 
-which allows for more complex semantic similarity to be captured. These models are good for capturing 
-categorical similarities because they were trained on huge amounts of data.
+In Teleoscope, we load open models from the **[Hugging Face](https://huggingface.co/) Hub**—by default **[BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3)** through **[FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding)**—which capture rich semantic similarity. These models are strong on categorical and paraphrase-style relationships because they were trained on large text corpora.
 
 There is a core design trade-off between using a pre-built model vs. building a model off of
 the dataset that you're interested in studying. If you build your own model,
@@ -198,6 +196,5 @@ do not appear very often near each other, or along with other conceptually simil
 By starting with a model that has been trained on large amounts of data,
 we can capture semantics that a smaller model may not be able to.
 However, then we have the problem of determining similarities that might be present in our dataset,
-or in our minds, which may not be captured by the USE model.
-However, Teleoscope is model-agnostic. We can swap out models easily, since we can operate Teleoscope 
-on any embeddings.
+or in our minds, which may not be captured by the chosen embedding model.
+Teleoscope is model-agnostic at the architecture level: swap the vectorizer for another Hugging Face–compatible embedding model and re-vectorize if you need different behavior.

@@ -1,12 +1,25 @@
 # Teleoscope Overview
 
-Teleoscope is a system for supporting qualitative research with machine learning algorithms. It addresses the problem of having to look through a large corpora of documents (i.e., in the hundreds of thousands) for themes. It works by representing each document as a high-dimensional vector using Google’s Universal Sentence Encoder (USE). Users can interact with documents using a web-based interface by grouping the documents together. When the users group documents, the machine learning system moves a search vector closer to the documents they are adding to the group. The results are displayed to users as a list of documents that are closest to the example documents they have selected to group together.
+Teleoscope is a system for supporting qualitative research with machine learning algorithms. It addresses the problem of having to look through a large corpora of documents (i.e., in the hundreds of thousands) for themes. It works by representing each document as a high-dimensional **dense embedding** from a **[Hugging Face](https://huggingface.co/)** model (the default pipeline uses **[BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3)** via **[FlagEmbedding](https://github.com/FlagOpen/FlagEmbedding)**). Users can interact with documents using a web-based interface by grouping the documents together. When the users group documents, the machine learning system moves a search vector closer to the documents they are adding to the group. The results are displayed to users as a list of documents that are closest to the example documents they have selected to group together.
 
 Teleoscope is the PhD project of [Paul Bucci](https://paulbucci.ca/) who is working with [Prof. Ivan Beschastnikh](https://www.cs.ubc.ca/~bestchai/) from the [Systopia Lab](https://systopia.cs.ubc.ca/) at the [University of British Columbia](https://www.ubc.ca/). Join the [Teleoscope Discord Server](https://discord.gg/GNpjvccnAX) for questions, discussions, and feature requests for Paul. Check out our [Youtube Playlist](https://www.youtube.com/playlist?list=PLfTo3bBE97a0_GllWl9RzzPb9GpwRuayP) for a tutorial on how to use Teleoscope.
 
+## Live demo and documentation ([teleoscope.ca](https://teleoscope.ca))
+
+The hosted app and user-facing docs are on **[teleoscope.ca](https://teleoscope.ca)**:
+
+| | |
+| --- | --- |
+| **[Demo](https://teleoscope.ca/demo)** | Public, no-login workspace with the pre-seeded corpus (search, documents, vector ranking)—requires demo data on the server. |
+| **[Get started](https://teleoscope.ca/get-started)** | Sign up, workspaces, uploads, and basic usage. |
+| **[Documentation](https://teleoscope.ca/resources)** | Tutorials, lessons, examples, methodology, and reference. |
+| **[Citations](https://teleoscope.ca/academics/citations)** | CHI ’26 and arXiv citation formats. |
+
+Local installs use the same routes on **http://localhost:3000** (see [Installation](#installation)).
+
 ![keywords aren't enough](images/keywords.png)
 
-The problem that Teleoscope addresses is that keyword searches are based on textual similarities between words. However, we want semantic similarities to be the basis of our searches. The above figure (which is an annotated screenshot of the interface) depicts a conceptual similarity between WiFi and Netflix in that they are both types of accounts that people often share among family and friends. A keyword search could not capture the similarity between those concepts. But our Teleoscope system can by using the USE document embeddings.
+The problem that Teleoscope addresses is that keyword searches are based on textual similarities between words. However, we want semantic similarities to be the basis of our searches. The above figure (which is an annotated screenshot of the interface) depicts a conceptual similarity between WiFi and Netflix in that they are both types of accounts that people often share among family and friends. A keyword search could not capture the similarity between those concepts. But our Teleoscope system can by using those semantic document embeddings.
 
 ![search by example](images/search-by-example.png)
 
@@ -31,7 +44,7 @@ The work reports a multi-year **research-through-design** process, including ext
 **Please cite the conference paper (primary):**  
 Patrick Yung Kang Lee, Paul Hendrik Bucci, Leo Itsuki Foord-Kelcey, Alamjeet Singh, and Ivan Beschastnikh. 2026. *Crystallizing Schemas with Teleoscope: Thematic Curation of Large Text Corpora on Reddit.* In *Proceedings of the 2026 CHI Conference on Human Factors in Computing Systems (CHI ’26)*, April 13–17, 2026, Barcelona, Spain. ACM, New York, NY, USA, 20 pages. [https://doi.org/10.1145/3772318.3791310](https://doi.org/10.1145/3772318.3791310)
 
-**Earlier extended preprint** (related manuscript; title differs slightly): [arXiv:2402.06124](https://arxiv.org/abs/2402.06124). Ready-to-paste BibTeX and Vancouver entries for both appear in [`teleoscope.ca/src/pages/academics/citations.mdx`](teleoscope.ca/src/pages/academics/citations.mdx).
+**Earlier extended preprint** (related manuscript; title differs slightly): [arXiv:2402.06124](https://arxiv.org/abs/2402.06124). Ready-to-paste BibTeX and Vancouver entries: **[teleoscope.ca/academics/citations](https://teleoscope.ca/academics/citations)** (source in repo: `teleoscope.ca/src/pages/academics/citations.mdx`).
 
 ## Repository map (where to look first)
 
@@ -43,7 +56,7 @@ Use this as the quick orientation guide before editing:
 | `backend/` | Python workers/tasks/vector pipeline | Active |
 | `scripts/` | One-click stack/test/demo helper scripts | Active |
 | `tests/` | Python backend tests and e2e pipeline tests | Active |
-| `docs/` | Long-form docs and runbooks | Active |
+| `docs/` | Developer runbooks (Docker, testing); **user docs** live on [teleoscope.ca/resources](https://teleoscope.ca/resources) | Active |
 | `schemas/` | Data schemas consumed by app/backend | Active |
 | `.github/workflows/` | CI workflows | Active |
 | `frontend/` | Older/legacy frontend app | Legacy |
@@ -55,6 +68,8 @@ For contributor workflow and "where to put changes", see `CONTRIBUTING.md`.
 
 ### Option 1: Docker (quickest)
 
+**AWS EC2:** step-by-step (instance sizing, security groups, `.env`, HTTPS) is in **[docs/EC2-INSTALL.md](docs/EC2-INSTALL.md)**.
+
 Get the full stack running with one command:
 
 ```bash
@@ -62,13 +77,13 @@ cp .env.example .env
 docker compose up -d
 ```
 
-The app will be at **http://localhost:3000**. MongoDB, RabbitMQ, Milvus, and all workers (dispatch, graph, vectorizer, uploader, tasks, files API) start automatically. After the stack is up, run `./scripts/test-stack.sh` to verify connectivity.
+The app will be at **http://localhost:3000**. MongoDB, RabbitMQ, Milvus, and all workers (dispatch, graph, vectorizer, uploader, tasks, files API) start automatically. The **vectorizer** loads its embedding model when someone is in a workspace (including **/demo**); after **5 minutes** without workspace activity it stops consuming and unloads to free RAM (`VECTORIZER_IDLE_SECONDS`, default 300). Set **`VECTORIZER_ALWAYS_ON=1`** to keep the legacy always-on consumer (e.g. some CI or unattended setups). After the stack is up, run `./scripts/test-stack.sh` to verify connectivity.
 If Milvus host port `19530` is already in use, Docker now auto-assigns a free host port; run `docker compose port milvus 19530` to inspect it, or set `MILVUS_HOST_PORT` in `.env` for a fixed port.
 
 **Conference demo mode (public/no-login):**
 
 - Run `./scripts/one-click-demo.sh`. It starts the stack, **downloads the demo data**, and **seeds the demo corpus** into Mongo and Milvus. The app finds the corpus by the workspace label "Demo corpus" (no need to set `DEMO_CORPUS_WORKSPACE_ID`; one-click may still write it to `.env` to skip a DB lookup). No extra steps.
-- Open **http://localhost:3000/demo**. You land in an anonymous workspace (no login) with the **pre-seeded document corpus** (search, documents, vector ranking). The demo always uses this data; it is part of the install.
+- Open **http://localhost:3000/demo** (or the hosted **[teleoscope.ca/demo](https://teleoscope.ca/demo)** when available). You land in an anonymous workspace (no login) with the **pre-seeded document corpus** (search, documents, vector ranking). The demo always uses this data; it is part of the install.
 
 **Tests:** CI includes fast frontend/backend checks plus a chunked full-stack Playwright workflow (`.github/workflows/test.playwright.yml`) with separate core/demo and vectorization jobs: PRs run the stable core/demo bundle, while scheduled/manual vectorization runs execute both 10-doc and 100-doc passes to keep runtime bounded while preserving coverage. Also includes a demo API load smoke test. Modular frontend tests run with `cd teleoscope.ca && pnpm test:unit`, and API/frontend contract alignment checks run with `tests/api-frontend-contract.spec.ts` + `tests/api.spec.ts` (see [TESTING.md](TESTING.md)).
 
@@ -80,9 +95,9 @@ If Milvus host port `19530` is already in use, Docker now auto-assigns a free ho
 
 #### Demo corpus (pre-seeded data) — included in Docker demo
 
-The **/demo** route sends visitors to an anonymous workspace that **always** uses a pre-seeded document corpus (search, open docs, vector ranking). Demo materials are **pre-vectorized** (parquet); the seed script loads them into Mongo and Milvus and does not run the vectorization pipeline. No upload or vectorization in the UI.
+The **/demo** route sends visitors to an anonymous workspace that **always** uses a pre-seeded document corpus (search, open docs, vector ranking). Try it live at **[teleoscope.ca/demo](https://teleoscope.ca/demo)** when that deployment is seeded; locally it is **http://localhost:3000/demo** after you run the steps below. Demo materials are **pre-vectorized** (parquet); the seed script loads them into Mongo and Milvus and does not run the vectorization pipeline. No upload or vectorization in the UI.
 
-- **Docker / one-click demo:** `./scripts/one-click-demo.sh` does everything: starts the stack, runs `./scripts/download-demo-data.sh`, runs the seed script (requires mamba/conda env `teleoscope` with `pyarrow` and `py7zr` on the host), and restarts the app. The app **auto-discovers** the demo corpus by the workspace label "Demo corpus" in Mongo; one-click may write `DEMO_CORPUS_WORKSPACE_ID` to `.env` when the seed prints an ID (optional). The demo at **http://localhost:3000/demo** then has the corpus. No options; it’s part of the install.
+- **Docker / one-click demo:** `./scripts/one-click-demo.sh` does everything: starts the stack, runs `./scripts/download-demo-data.sh`, runs the seed script (requires mamba/conda env `teleoscope` with `pyarrow` and `py7zr` on the host), and restarts the app. The app **auto-discovers** the demo corpus by the workspace label "Demo corpus" in Mongo; one-click may write `DEMO_CORPUS_WORKSPACE_ID` to `.env` when the seed prints an ID (optional). The demo at **http://localhost:3000/demo** or **[teleoscope.ca/demo](https://teleoscope.ca/demo)** then has the corpus. No options; it’s part of the install.
 
 - **Manual setup (e.g. no Docker or re-seeding):** If you run the stack yourself or need to re-seed:
   1. Download: `./scripts/download-demo-data.sh` (puts `documents.jsonl.7z` and `parquet_export/` in `data/`).
@@ -104,7 +119,7 @@ For production or VM deployment:
    cp ansible/vars/inventory.yaml.example ansible/vars/inventory.yaml
    ```
 
-2. Edit `ansible/vars/vars.yaml` with your MongoDB, RabbitMQ, and auth credentials.
+2. Edit `ansible/vars/vars.yaml` with your MongoDB, RabbitMQ, and auth credentials (see [ansible/README.md](ansible/README.md) for a variable cheat sheet and `ansible/vars/vars.yaml.example` for the full template).
 
 3. Run the full playbook:
    ```bash
@@ -148,7 +163,7 @@ mamba activate teleoscope
 This gives you Node 22, pnpm, and Python 3.11 in an isolated env. Then run `pnpm install` in `teleoscope.ca` and `pip install -r backend/requirements.txt` for full backend deps.
 
 # Technical notes
-Teleoscope is designed from the ground-up to make use of distributed and cloud-based computing. This means that there is a steep learning curve for people who would like to become involved in the prokect. If you are just getting started, here are some of the technologies that you will need to learn:
+Teleoscope is designed from the ground-up to make use of distributed and cloud-based computing. This means that there is a steep learning curve for people who would like to become involved in the project. If you are just getting started, here are some of the technologies that you will need to learn:
 
 ## Frontend: React, NextJS, and MUI
 The frontend is built using [React](https://reactjs.org/) via the [NextJS](https://nextjs.org/) framework. Most components are customizations of [MUI](https://mui.com/) components. Our interaction and windowing system is based on [React Flow](https://reactflow.dev/).
@@ -158,30 +173,12 @@ If you'd like to get started developing for the Teleoscope frontend, create a st
 ## Backend: MongoDB, RabbitMQ, and Celery
 The technologies that allow us to create a distributed processing system are [RabbitMQ](https://www.rabbitmq.com/) and [Celery](https://docs.celeryq.dev/en/stable/index.html). After installing, work through the examples in the [Celery starter guide](https://docs.celeryq.dev/en/stable/getting-started/introduction.html).
 
-Our database is [MongoDB](https://www.mongodb.com/). After installing MongoDB, you can install [MonogoDB Compass](https://www.mongodb.com/products/compass) as a graphical user interface for searching through the database.
+Our database is [MongoDB](https://www.mongodb.com/). After installing MongoDB, you can install [MongoDB Compass](https://www.mongodb.com/products/compass) as a graphical user interface for searching through the database.
 
-## Machine Learning: USE, UMAP, and HDBSCAN
-Our machine learning pipeline starts by encoding document text with [Universal Sentence Encoder](https://www.tensorflow.org/hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder). This allows us to create similarity scores for words/sentences that may have low or no representation in user datasets. When users have created groups, we then perform dimensionality reduction with [UMAP](https://umap-learn.readthedocs.io/en/latest/supervised.html). 
+## Machine Learning: Hugging Face embeddings, UMAP, and HDBSCAN
+The vectorization worker encodes document text with a Hugging Face embedding model loaded through FlagEmbedding (default **`BAAI/bge-m3`**, 1024-dimensional dense vectors). That yields similarity structure for text that may be sparse in your own corpus. When users have created groups, we then perform dimensionality reduction with [UMAP](https://umap-learn.readthedocs.io/en/latest/supervised.html).
 
-You can think of it like this: when the user creates a group, they are saying that they believe that the documents are similar, whether or not the USE model would consider them to be very close. Rather than recalculating a whole new model, we simply decide to reduce dimensions with a custom distance metric that says "documents in the same group should end up close when dimensions are cut." The space is then transformed without having to retrain a neural network, which could take a very long time. Then, we perform clustering using [HDBSCAN](https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html) and present the machine-created clusters to users. If they like the clusters, they can add them as groups and re-run the clustering.
+You can think of it like this: when the user creates a group, they are saying that they believe that the documents are similar, whether or not the base embedding model would place them very close together. Rather than fine-tuning a new model from scratch, we reduce dimensions with a custom distance metric that says “documents in the same group should end up close when dimensions are cut.” The space is then transformed without a full retraining run. Then, we perform clustering using [HDBSCAN](https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html) and present the machine-created clusters to users. If they like the clusters, they can add them as groups and re-run the clustering.
 
 ## Cloud-first design
-Teleoscope is easily deployable to new VMs using the [Ansible](https://www.ansible.com/) framework. You'll need your own AWS or Azure account and VMs to run public instances of Teleoscope, but you can create a test environment by creating an [vars/inventory.yaml](https://docs.ansible.com/ansible/latest/inventory_guide/index.html) that includes, say, `localhost` for your own machine, or any other host you may have access to. You'll need to create a [vars/vars.yaml](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html) file to house the following variables. You can just copy-paste the following and replace defaults with your own values:
-
-```
-remote_prefix: /home                              # example for linux 
-conda_environment: teleoscope                     # any label will do
-conda_prefix: /usr/share/miniconda3               # you can change this to ~/miniconda3 if you don't have access to /usr/share
-mongodb_admin_name: example_admin                 # replace "example_admin" with your administrator name
-mongodb_admin_password: admin_password            # replace "admin_password" with your administrator's password
-mongodb_dev_name: example_dev                     # replace "example_dev" with your name
-mongodb_dev_password: dev_password                # replace "dev_password" with your password
-mongodb_database: teleoscope                      # any label will do
-rabbitmq_vhost: teleoscope                        # any label will do
-rabbitmq_admin_username: example_admin            # replace "example_admin" with your administrator name (can be different than above)
-rabbitmq_admin_password: admin_password           # replace "admin_password" with your administrator's password (can be different than above)
-rabbitmq_dev_username:  example_dev               # replace "example_dev" with your name (can be different than above)
-rabbitmq_dev_password: dev_password               # replace "dev_password" with your password (can be different than above)
-nodejs_version: 19                                # tested for 19
-ubuntu_version: jammy                             # tested for focal and jammy, may need to change some configs for focal
-```
+Teleoscope is deployable to new VMs with [Ansible](https://www.ansible.com/). Example `vars.yaml` fields, inventory notes, and playbook entrypoints are in **[ansible/README.md](ansible/README.md)**. For step-by-step install commands, see [Option 2: Ansible (VM deployment)](#option-2-ansible-vm-deployment) above.

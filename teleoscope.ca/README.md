@@ -27,5 +27,5 @@ pnpm exec playwright test --project=chromium
 ## Notes for contributors
 
 - This is the canonical frontend path for active product work.
-- Do not start new feature work in `/workspace/frontend` unless a task explicitly requests legacy/migration changes.
+- Do not start new feature work in `frontend/` (repo root) unless a task explicitly requests legacy/migration changes.
 - For full-stack setup and CI/testing expectations, read root `README.md` and `TESTING.md`.
