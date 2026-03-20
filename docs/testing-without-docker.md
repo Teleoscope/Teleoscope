@@ -159,7 +159,7 @@ If `MILVUS_LITE_PATH` is configured, vectorization/search/ranking flows can be v
 
 | Test type        | Command / action                          | Needs stack? |
 |------------------|--------------------------------------------|--------------|
-| Backend unit     | `PYTHONPATH=. pytest tests/ -m "not integration"` | No           |
+| Backend unit     | `mamba activate teleoscope` then `PYTHONPATH=. pytest tests/ -m "not integration"` | No           |
 | Frontend unit    | `cd teleoscope.ca && pnpm test:run`        | No           |
 | Connectivity     | `./scripts/test-stack.sh`                  | Yes          |
 | E2E (smoke)      | `cd teleoscope.ca && PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm exec playwright test --project=chromium` | Yes |

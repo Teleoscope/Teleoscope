@@ -11,7 +11,7 @@ Connection (same idea as ``backend.embeddings``):
   - Optional auth: ``MILVUS_TOKEN`` (Zilliz API key / ``user:password``) or
     ``MILVUS_USERNAME`` + ``MILVUS_PASSWORD``
 
-Usage:
+Usage (repo root; ``mamba activate teleoscope`` for pymilvus et al.; ``PYTHONPATH=.`` for ``backend`` imports):
   PYTHONPATH=. python scripts/export_milvus_teleoscope.py --out ./milvus-export
   PYTHONPATH=. python scripts/export_milvus_teleoscope.py \\
     --collection teleoscope --partition 674a... --out ./one-partition.jsonl
@@ -83,10 +83,11 @@ def _iter_milvus_client(
     if not hasattr(client, "query_iterator"):
         raise AttributeError("query_iterator missing on MilvusClient")
 
+    # Empty filter can yield no rows on some MilvusClient / server combos; match ORM fallback.
     kwargs: dict[str, Any] = {
         "collection_name": collection,
         "batch_size": batch_size,
-        "filter": "",
+        "filter": 'id != ""',
         "output_fields": ["*"],
         "limit": UNLIMITED,
         "partition_names": [partition],
@@ -171,6 +172,20 @@ def export_partition(
     token: str | None,
 ) -> int:
     use_milvus_db(client, db_name)
+    try:
+        st = client.get_partition_stats(
+            collection_name=collection, partition_name=partition
+        )
+        log.info("Partition %s stats: %s", partition, st)
+        if isinstance(st, dict) and int(st.get("row_count", -1)) == 0:
+            log.warning(
+                "Partition %s has row_count 0. If you only rebuilt Mongo, vectors may never "
+                "have been loaded into Milvus — re-run seed-demo-corpus / vectorization, or "
+                "export another partition.",
+                partition,
+            )
+    except Exception:
+        pass
     count = 0
 
     def write_batch(batch: list[dict[str, Any]]) -> None:
@@ -219,8 +234,13 @@ def main() -> int:
     )
     parser.add_argument(
         "--collection",
-        default=os.getenv("MILVUS_DBNAME", "teleoscope"),
-        help="Milvus collection name (default: MILVUS_DBNAME or teleoscope).",
+        default=os.getenv("MILVUS_COLLECTION")
+        or os.getenv("MILVUS_DBNAME", "teleoscope"),
+        help=(
+            "Milvus collection name (default: MILVUS_COLLECTION, else MILVUS_DBNAME for "
+            "backward compat, else teleoscope). MILVUS_DBNAME is the *database* name for "
+            "MilvusClient, not the collection — use MILVUS_COLLECTION if they differ."
+        ),
     )
     parser.add_argument(
         "--partition",
@@ -249,7 +269,12 @@ def main() -> int:
     client, db_override = connect_milvus_client()
     uri = os.getenv("MILVUS_URI", "").strip() or None
     token = token_from_env()
-    db_name = db_override or os.getenv("MILVUS_DBNAME", "teleoscope").strip()
+    # Logical Milvus database for using_database (not the collection name).
+    if db_override is not None:
+        db_name = db_override
+    else:
+        db_name = os.getenv("MILVUS_DATABASE") or os.getenv("MILVUS_DBNAME", "teleoscope")
+        db_name = str(db_name).strip() or "teleoscope"
 
     try:
         if args.partitions:

@@ -235,7 +235,12 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
         )
         return
     client = embeddings.connect()
-    collection_name = os.environ.get("MILVUS_DBNAME", "teleoscope")
+    # Collection name (vectors live here). MILVUS_DBNAME is a legacy alias — it is also used as
+    # the *Milvus database* name in embeddings.connect(); on standalone Milvus everything still
+    # ends up under the default DB. Prefer MILVUS_COLLECTION when DB name != collection name.
+    collection_name = os.environ.get("MILVUS_COLLECTION") or os.environ.get(
+        "MILVUS_DBNAME", "teleoscope"
+    )
     embeddings.milvus_setup(client, str(workspace_id), collection_name=collection_name)
     embeddings.use_database_if_supported(client)
     # Backend schema: id (varchar), vector (float_vector 1024). Parquet may have "id" (e.g. reddit/source id).

@@ -38,7 +38,7 @@ PYTHONPATH=. python scripts/seed-demo-corpus.py
 
 If you get “prefix does not exist at …/mamba/envs/teleoscope” but the env exists under `~/.micromamba/envs/teleoscope`, add that path to `envs_dirs` in `~/.mambarc` so activation by name works (see [Troubleshooting](#troubleshooting) below).
 
-(Run from the repo root so the backend is on `PYTHONPATH`.)
+Run from the **repo root**. **`mamba activate teleoscope`** picks the interpreter and installed deps; **`PYTHONPATH=.`** adds the repo root so `import backend` works.
 
 The script will:
 
@@ -90,14 +90,21 @@ So you can **prep and test** the corpus and UI without Docker; for full vector b
 
 ## Full stack (Docker) — manual
 
-For automatic Docker demo use `./scripts/one-click-demo.sh` (it does the steps below for you). If you prefer to run the stack and seed manually (e.g. without mamba on the host):
+For automatic Docker demo use `./scripts/one-click-demo.sh` (it does the steps below for you). If you prefer to run the stack and seed manually:
 
 With Docker (Mongo + Milvus + workers):
 
 1. `./scripts/download-demo-data.sh`
 2. `docker compose up -d` (or ensure Mongo + Milvus are up).
-3. `MILVUS_URI=http://localhost:19530 PYTHONPATH=. python scripts/seed-demo-corpus.py`  
-   (Adjust host/port if Milvus is elsewhere; e.g. `docker compose port milvus 19530`.)
+3. From the repo root, with the **`teleoscope`** mamba env and `PYTHONPATH` set:
+
+   ```bash
+   mamba activate teleoscope
+   export MILVUS_URI=http://127.0.0.1:$(docker compose port milvus 19530 | cut -d: -f2)
+   PYTHONPATH=. python scripts/seed-demo-corpus.py
+   ```
+
+   (Adjust `MILVUS_URI` if Milvus is not on localhost.) If you cannot use mamba, use another env with `pip install -r backend/requirements.txt` plus `pyarrow` / `py7zr` for the seed script, still from the repo root with `PYTHONPATH=.`.
 4. (Optional) Set `DEMO_CORPUS_WORKSPACE_ID` in `.env`; the app auto-discovers the corpus by label if unset. Start the app.
 
 Then anonymous demo users get both document list/search and vector ranking/similarity from the pre-seeded corpus.
@@ -123,6 +130,14 @@ envs_dirs:
 
 Run `./scripts/demo-status.sh [base_url]` to check: demo workspace ID (in .env), demo data files, Mongo document count and text index for the demo workspace, app health, and Docker services. Default base_url is http://localhost:3000.
 
+## Milvus: why there is no database literally named `teleoscope` (Docker / standalone)
+
+Milvus has **databases** (like Postgres schemas) and **collections** (where vectors live). In `.env`, **`MILVUS_DBNAME`** is used by **`backend.embeddings.connect()`** as the *Milvus database* name when the server supports multi-DB.
+
+**Docker Compose uses Milvus 2.3 standalone**, which often does **not** implement `DescribeDatabase` / `using_database`. The app then keeps everything in Milvus’s built-in **`default`** database. The **collection** that holds vectors is still named **`teleoscope`** (or **`MILVUS_COLLECTION`** if you set it). So one-click / `refresh-demo-corpus` / `seed-demo-corpus.py` **did** write vectors into the **`teleoscope` collection**; they are not missing — they sit under the **default** Milvus DB, not a DB named `teleoscope`.
+
+On **Zilliz** or newer Milvus, a database named `teleoscope` may exist if the server supports it and `create_database` ran successfully.
+
 ## Env reference
 
 | Variable | Purpose |
@@ -131,3 +146,6 @@ Run `./scripts/demo-status.sh [base_url]` to check: demo workspace ID (in .env),
 | `TELEOSCOPE_DATA_DIR` | Directory containing `documents.jsonl.7z` and `parquet_export/` (default: repo `data/`). |
 | `MONGODB_URI` / `MONGODB_DATABASE` | Mongo connection for the seed script and app. |
 | `MILVUS_URI` or `MILVUS_LITE_PATH` | When set, seed script loads vectors from parquet into Milvus. |
+| `MILVUS_COLLECTION` | Milvus **collection** name for seed/export/import (default: `teleoscope`). Prefer this over overloading `MILVUS_DBNAME`. |
+| `MILVUS_DBNAME` | Used as Milvus **database** for `connect()` when supported; seed historically also used it as collection name — use `MILVUS_COLLECTION` for clarity. |
+| `MILVUS_DATABASE` | Optional override for export/import **database** selection (see `docs/zilliz-migration.md`). |

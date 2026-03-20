@@ -122,7 +122,7 @@ docker compose up -d app
 
 ## 7. Demo corpus (optional)
 
-To ship the **public /demo** experience with the pre-seeded corpus, see **[DEMO-CORPUS-SETUP.md](DEMO-CORPUS-SETUP.md)** and **`scripts/one-click-demo.sh`** (host steps may require Conda/mamba for the seed script even when the stack runs in Docker).
+To ship the **public /demo** experience with the pre-seeded corpus, see **[demo-corpus-setup.md](demo-corpus-setup.md)** and **`scripts/one-click-demo.sh`** (host steps may require Conda/mamba for the seed script even when the stack runs in Docker).
 
 ## 8. Operations
 

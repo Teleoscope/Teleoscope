@@ -106,17 +106,17 @@ Full system UI e2e bundle (chunked):
 Primary use: fast Python correctness checks and service-backed integration tests.
 
 Unit-focused run (default high-signal check):
-- `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v --tb=short`
+- `mamba activate teleoscope` then `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v --tb=short` (env = deps; `PYTHONPATH` = `import backend`)
 
 Integration-only run (needs live services):
-- `PYTHONPATH=. python -m pytest tests/ -m integration -v`
+- `mamba activate teleoscope` then `PYTHONPATH=. python -m pytest tests/ -m integration -v`
 
 ### Area D: Vector pipeline and workers (`backend.dispatch`, `backend.vectorizer`, `backend.uploader`, `backend.graph`, `tests/e2e/`)
 Primary use: upload -> vectorize -> rank/search pipeline validation.
 
 Full pipeline check:
 1. Ensure MongoDB + RabbitMQ + Milvus + workers are up (Docker stack recommended).
-2. `PYTHONPATH=. python -m pytest tests/e2e/ -m e2e -v`
+2. `mamba activate teleoscope` then `PYTHONPATH=. python -m pytest tests/e2e/ -m e2e -v`
 
 Shortcut:
 - `RUN_E2E=1 ./scripts/run-all-tests.sh`

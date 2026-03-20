@@ -11,6 +11,10 @@ load_dotenv()
 
 _LOG = logging.getLogger("milvus_io")
 
+# After one failed using_database (standalone Milvus / no multi-DB), skip further switches
+# for this process so export/import do not spam DescribeDatabase / using_database RPCs.
+_named_db_unsupported = False
+
 
 def token_from_env() -> str | None:
     t = os.getenv("MILVUS_TOKEN", "").strip()
@@ -29,6 +33,9 @@ def connect_milvus_client() -> Tuple[Any, str | None]:
     When the second value is set (URI connect fallback), callers should pass it to
     ``use_milvus_db`` so ``using_database`` runs on the client.
     """
+    global _named_db_unsupported
+    _named_db_unsupported = False
+
     from pymilvus import MilvusClient, MilvusException
 
     lite = os.getenv("MILVUS_LITE_PATH", "").strip()
@@ -59,7 +66,12 @@ def connect_milvus_client() -> Tuple[Any, str | None]:
 
 
 def use_milvus_db(client: Any, db_name: str | None) -> None:
-    if not db_name:
+    global _named_db_unsupported
+    if _named_db_unsupported:
+        return
+    if db_name is None:
+        return
+    if not str(db_name).strip():
         from backend import embeddings
 
         embeddings.use_database_if_supported(client)
@@ -68,3 +80,4 @@ def use_milvus_db(client: Any, db_name: str | None) -> None:
         client.using_database(db_name=db_name)
     except Exception as exc:
         _LOG.warning("using_database(%s) skipped: %s", db_name, exc)
+        _named_db_unsupported = True

@@ -8,7 +8,7 @@ if you pass ``--default-collection`` and ``--default-partition``.
 Connection: same as export — ``MILVUS_LITE_PATH``, ``MILVUS_URI`` + ``MILVUS_TOKEN``, or
 ``MILVUS_HOST`` / ``MIVLUS_PORT`` (see ``scripts/milvus_io_utils.py``).
 
-Usage:
+Usage (repo root; ``mamba activate teleoscope`` for pymilvus et al.; ``PYTHONPATH=.`` for ``backend`` imports):
   PYTHONPATH=. python scripts/import_milvus_teleoscope.py --in ./milvus-backup/
   PYTHONPATH=. python scripts/import_milvus_teleoscope.py --in ./export.jsonl
 
@@ -173,11 +173,17 @@ def main() -> int:
     inp = Path(args.input_path)
     files = resolve_input_files(inp)
 
-    default_coll = args.default_collection or os.getenv("MILVUS_DBNAME", "teleoscope").strip()
+    default_coll = args.default_collection or (
+        os.getenv("MILVUS_COLLECTION") or os.getenv("MILVUS_DBNAME", "teleoscope")
+    ).strip()
     default_part = args.default_partition
 
     client, db_override = connect_milvus_client()
-    db_name = db_override or os.getenv("MILVUS_DBNAME", "teleoscope").strip()
+    if db_override is not None:
+        db_name = db_override
+    else:
+        db_name = os.getenv("MILVUS_DATABASE") or os.getenv("MILVUS_DBNAME", "teleoscope")
+        db_name = str(db_name).strip() or "teleoscope"
     collections_flushed: set[str] = set()
 
     try:

@@ -6,6 +6,7 @@ Zilliz Cloud is managed Milvus. Teleoscope talks to it with **`pymilvus`** using
 
 - A **Zilliz Cloud** cluster (pick a Milvus version compatible with your workload; self-hosted in this repo often uses **2.3.x**).
 - From the Zilliz console: **Public endpoint** (URI) and **token** (API key / `user:password` string — copy exactly what the “Connect” panel shows).
+- **Python:** use the project **mamba** env (`mamba activate teleoscope` after `mamba env create -f environments/environment.yml`) so `pymilvus` and other deps match the repo. From the **repo root**, set **`PYTHONPATH=.`** so `import backend` works (same pattern as `scripts/seed-demo-corpus.py`).
 
 Runtime code uses **`backend.embeddings.connect()`**, which honors (in order):
 
@@ -23,6 +24,7 @@ From a machine that can reach your **current** cluster (often the Docker host):
 
 ```bash
 cd /path/to/Teleoscope
+mamba activate teleoscope   # or: conda activate teleoscope
 # If Milvus is mapped to localhost (set port if yours differs):
 export MIVLUS_PORT=$(docker compose port milvus 19530 | cut -d: -f2)
 export MILVUS_HOST=127.0.0.1
@@ -39,6 +41,8 @@ That writes JSONL (optionally gzipped) under `./milvus-export-docker`, including
 Create an empty cluster (or empty database) in Zilliz. Then:
 
 ```bash
+cd /path/to/Teleoscope
+mamba activate teleoscope
 export MILVUS_URI='https://YOUR_ENDPOINT.zillizcloud.com:19530'
 export MILVUS_TOKEN='paste-token-from-zilliz-console'
 export MILVUS_DBNAME=teleoscope   # optional; match export
@@ -92,6 +96,7 @@ Workspace metadata and document records stay in **MongoDB**. Only **vector stora
 
 | Issue | What to check |
 |--------|----------------|
+| Export logs `database not found` / `DescribeDatabase` UNIMPLEMENTED then **0 rows** | Common on **Milvus 2.3 standalone**: there is no separate database named `teleoscope` — vectors live in the **default** DB. Scripts now stop retrying `using_database` after the first failure and use a non-empty `query_iterator` filter. If row_count is still 0, the partition is empty: rebuilding **Mongo** alone does not refill Milvus; re-run `seed-demo-corpus.py` with `MILVUS_URI` or run vectorization. Use **`MILVUS_COLLECTION=teleoscope`** if your collection name differs from `MILVUS_DBNAME`. |
 | `UNAUTHENTICATED` / 401 | `MILVUS_TOKEN` matches Zilliz “Connect”; no extra quotes in systemd/Compose if they strip secrets. |
 | Database / “not found” | Try unsetting `MILVUS_DBNAME` or use the default DB name Zilliz shows; `embeddings.connect()` falls back when the server does not support named DBs. |
 | TLS / connection errors | URI must be **`https://`** for Zilliz public endpoints; port usually **19530**. |

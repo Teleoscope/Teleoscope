@@ -10,8 +10,10 @@ This directory contains Python test suites for backend and pipeline behavior.
 
 ## Run references
 
-- Fast backend suite: `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v`
-- Integration: `PYTHONPATH=. python -m pytest tests/ -m integration -v`
-- Pipeline e2e: `PYTHONPATH=. python -m pytest tests/e2e/ -m e2e -v`
+Activate the **`teleoscope`** mamba env first, then from the **repo root** use `PYTHONPATH=.` (see root `README.md` — mamba supplies deps, `PYTHONPATH` resolves `backend`).
+
+- Fast backend suite: `mamba activate teleoscope` then `PYTHONPATH=. python -m pytest tests/ -m "not integration and not e2e" -v`
+- Integration: `mamba activate teleoscope` then `PYTHONPATH=. python -m pytest tests/ -m integration -v`
+- Pipeline e2e: `mamba activate teleoscope` then `PYTHONPATH=. python -m pytest tests/e2e/ -m e2e -v`
 
 See root `TESTING.md` for complete test matrix and CI behavior.

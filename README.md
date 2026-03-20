@@ -68,7 +68,7 @@ For contributor workflow and "where to put changes", see `CONTRIBUTING.md`.
 
 ### Option 1: Docker (quickest)
 
-**AWS EC2:** step-by-step (instance sizing, security groups, `.env`, HTTPS) is in **[docs/EC2-INSTALL.md](docs/EC2-INSTALL.md)**.
+**AWS EC2:** step-by-step (instance sizing, security groups, `.env`, HTTPS) is in **[docs/ec2-install.md](docs/ec2-install.md)**.
 
 Get the full stack running with one command:
 
@@ -107,7 +107,7 @@ The **/demo** route sends visitors to an anonymous workspace that **always** use
 - **Update only** (no package or data download): run `./scripts/refresh-demo-corpus.sh` when the stack and data are already in place. Does not rebuild images or re-download demo data; run `git pull` first for latest code.
 - **Clean install** (full rebuild and re-download): run `CLEAN_INSTALL=1 ./scripts/one-click-demo.sh`.
 
-Full steps, env vars, and troubleshooting (e.g. mamba/micromamba env paths): [docs/DEMO-CORPUS-SETUP.md](docs/DEMO-CORPUS-SETUP.md).
+Full steps, env vars, and troubleshooting (e.g. mamba/micromamba env paths): [docs/demo-corpus-setup.md](docs/demo-corpus-setup.md).
 
 ### Option 2: Ansible (VM deployment)
 
@@ -147,9 +147,9 @@ If you can't run Docker (e.g. hypervisor limits in a VM), run and test everythin
 2. **Start stack:** `mamba activate teleoscope && ./scripts/start-local-stack.sh`
 3. **Test:** Unit tests (pytest, vitest), `./scripts/test-stack.sh`, and Playwright for non-vector flows.
 
-Vector search and embedding require Milvus (no native macOS server); those are tested in CI or on a host with Docker. See [docs/TESTING-WITHOUT-DOCKER.md](docs/TESTING-WITHOUT-DOCKER.md).
+Vector search and embedding require Milvus (no native macOS server); those are tested in CI or on a host with Docker. See [docs/testing-without-docker.md](docs/testing-without-docker.md).
 
-To run the **demo with a pre-seeded corpus** on this machine (Mongo only; list/search work, vector ranking needs Milvus elsewhere): follow [Demo corpus (pre-seeded data)](#demo-corpus-pre-seeded-data)—download demo data, run `scripts/seed-demo-corpus.py` without Milvus env vars, then start the app (the app auto-discovers the corpus by workspace label "Demo corpus"; setting `DEMO_CORPUS_WORKSPACE_ID` is optional).
+To run the **demo with a pre-seeded corpus** on this machine (Mongo only; list/search work, vector ranking needs Milvus elsewhere): follow [Demo corpus (pre-seeded data)](#demo-corpus-pre-seeded-data)—download demo data, `mamba activate teleoscope` then `PYTHONPATH=. python scripts/seed-demo-corpus.py` without Milvus env vars, then start the app (the app auto-discovers the corpus by workspace label "Demo corpus"; setting `DEMO_CORPUS_WORKSPACE_ID` is optional).
 
 ### Mamba/Conda environment
 
@@ -161,6 +161,8 @@ mamba activate teleoscope
 ```
 
 This gives you Node 22, pnpm, and Python 3.11 in an isolated env. Then run `pnpm install` in `teleoscope.ca` and `pip install -r backend/requirements.txt` for full backend deps.
+
+**Repo-root Python (`scripts/*.py`, pytest):** activate the env first (`mamba activate teleoscope`), then prefix commands with `PYTHONPATH=.` from the repo root. The env supplies packages (`pymongo`, `pymilvus`, `pytest`, …); `PYTHONPATH=.` is what lets `import backend` resolve without installing the tree as a package. CI uses a pip-installed venv the same way and sets `PYTHONPATH` in workflows.
 
 # Technical notes
 Teleoscope is designed from the ground-up to make use of distributed and cloud-based computing. This means that there is a steep learning curve for people who would like to become involved in the project. If you are just getting started, here are some of the technologies that you will need to learn:
