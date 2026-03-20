@@ -35,6 +35,9 @@ def string_to_int(s):
 
 from pymilvus import MilvusClient, DataType, MilvusException
 
+from backend.milvus_quiet import quiet_pymilvus_rpc_logs
+
+
 def _is_missing_database_error(exc: Exception) -> bool:
     msg = str(exc).lower()
     return "database" in msg and "not found" in msg
@@ -47,7 +50,8 @@ def _ensure_database_available(client: MilvusClient):
     if _use_lite():
         return
     try:
-        client.using_database(db_name=MILVUS_DBNAME)
+        with quiet_pymilvus_rpc_logs():
+            client.using_database(db_name=MILVUS_DBNAME)
     except Exception as exc:
         if _is_unimplemented_db_feature(exc):
             logging.warning(
@@ -59,8 +63,9 @@ def _ensure_database_available(client: MilvusClient):
                 "Milvus database '%s' was missing; creating it now.",
                 MILVUS_DBNAME,
             )
-            client.create_database(db_name=MILVUS_DBNAME)
-            client.using_database(db_name=MILVUS_DBNAME)
+            with quiet_pymilvus_rpc_logs():
+                client.create_database(db_name=MILVUS_DBNAME)
+                client.using_database(db_name=MILVUS_DBNAME)
             return
         raise
 
@@ -141,8 +146,35 @@ def _milvus_client_kwargs(uri: str, *, with_db_name: bool) -> dict:
     return kw
 
 
+def _prefer_default_db_first(uri: str) -> bool:
+    """
+    Standalone / Docker Milvus over plain HTTP usually has no database named MILVUS_DBNAME;
+    passing db_name in the constructor makes pymilvus log RPC errors before we can fall back.
+    Zilliz and other HTTPS + token endpoints typically expect the named DB in connect.
+    """
+    if os.getenv("MILVUS_FORCE_DB_NAME_ON_CONNECT", "").lower() in ("1", "true", "yes"):
+        return False
+    if uri.lower().startswith("https://"):
+        return False
+    if _milvus_token():
+        return False
+    return True
+
+
 def _connect_after_probe(uri: str) -> MilvusClient:
-    """Create client with db_name, probe list_collections, fall back if DB API unsupported."""
+    """Probe list_collections; avoid constructor db_name on self-hosted HTTP when possible."""
+    if _prefer_default_db_first(uri):
+        try:
+            client = MilvusClient(**_milvus_client_kwargs(uri, with_db_name=False))
+            client.list_collections()
+            return client
+        except Exception as exc:
+            logging.info(
+                "Milvus connect without db_name failed (%s); retrying with db_name=%s.",
+                exc,
+                MILVUS_DBNAME,
+            )
+
     try:
         client = MilvusClient(**_milvus_client_kwargs(uri, with_db_name=True))
         try:
@@ -203,7 +235,8 @@ def use_database_if_supported(client: MilvusClient):
     if _use_lite():
         return
     try:
-        client.using_database(db_name=MILVUS_DBNAME)
+        with quiet_pymilvus_rpc_logs():
+            client.using_database(db_name=MILVUS_DBNAME)
     except Exception as exc:
         if _is_unimplemented_db_feature(exc):
             logging.warning(
@@ -215,8 +248,9 @@ def use_database_if_supported(client: MilvusClient):
                 "Milvus database '%s' missing when switching; creating it.",
                 MILVUS_DBNAME,
             )
-            client.create_database(db_name=MILVUS_DBNAME)
-            client.using_database(db_name=MILVUS_DBNAME)
+            with quiet_pymilvus_rpc_logs():
+                client.create_database(db_name=MILVUS_DBNAME)
+                client.using_database(db_name=MILVUS_DBNAME)
             return
         raise
 
