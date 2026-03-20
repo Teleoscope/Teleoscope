@@ -4,6 +4,13 @@
 # has documents.jsonl.7z and parquet_export/. For code updates, run 'git pull' first.
 # MILVUS_ONLY=1: only reload vectors into Milvus (Mongo unchanged); needs parquet + matching Mongo doc count.
 # Full bootstrap: ./scripts/one-click-demo.sh. Clean install (rebuild + re-download): CLEAN_INSTALL=1 ./scripts/one-click-demo.sh
+#
+# The seed runs in the foreground (stdout/stderr visible). If it finishes suspiciously fast, check the log
+# for "Milvus seed done" / upsert batches, or run after refresh:
+#   DEMO_STATUS_SKIP_APP=1 ./scripts/demo-status.sh -v
+#   PYTHONPATH=. python scripts/milvus-status.py --workspace "$(cat .demo_corpus_workspace_id)"
+# VERIFY_REFRESH=0 skips the post-seed demo-status run. REFRESH_VERBOSE=1 passes -v to demo-status.
+# REFRESH_DEMO_STATUS_URL overrides the base_url passed to demo-status (default http://localhost:3000).
 set -e
 
 RED='\033[0;31m'
@@ -57,30 +64,44 @@ fi
 export MONGODB_URI="mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@localhost:27017/teleoscope?directConnection=true&serverSelectionTimeoutMS=5000&authSource=admin"
 MILVUS_PORT=$(docker compose port milvus 19530 2>/dev/null | cut -d: -f2)
 export MILVUS_URI="http://localhost:${MILVUS_PORT:-19530}"
+info "Milvus upserts use MILVUS_URI=$MILVUS_URI (from \`docker compose port milvus 19530\`). Watch seed output for upsert batches or 'skipping Milvus'."
 
-seed_out=""
+export MONGODB_URI MILVUS_URI
+cd "$REPO_ROOT"
+
+SEED_RAN=0
 if command -v mamba &>/dev/null && mamba run -n teleoscope true 2>/dev/null; then
-  info "Running seed via mamba run -n teleoscope..."
-  seed_out=$(MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" mamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/seed-demo-corpus.py ${SEED_EXTRA[*]}" 2>/dev/null) || true
+  section "Seed (streaming — look for Milvus upsert batches + \"Milvus seed done\")"
+  if [[ ${#SEED_EXTRA[@]} -eq 0 ]]; then info "Mode: full seed (Mongo + Milvus if reachable)"; else info "Mode: ${SEED_EXTRA[*]}"; fi
+  if mamba run -n teleoscope env PYTHONPATH=. python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
+    SEED_RAN=1
+  fi
 fi
-if [[ -z "$seed_out" ]] && command -v micromamba &>/dev/null && micromamba run -n teleoscope true 2>/dev/null; then
-  info "Running seed via micromamba run -n teleoscope..."
-  seed_out=$(MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" micromamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/seed-demo-corpus.py ${SEED_EXTRA[*]}" 2>/dev/null) || true
+if [[ "$SEED_RAN" -eq 0 ]] && command -v micromamba &>/dev/null && micromamba run -n teleoscope true 2>/dev/null; then
+  section "Seed (streaming — micromamba)"
+  if [[ ${#SEED_EXTRA[@]} -eq 0 ]]; then info "Mode: full seed (Mongo + Milvus if reachable)"; else info "Mode: ${SEED_EXTRA[*]}"; fi
+  if micromamba run -n teleoscope env PYTHONPATH=. python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
+    SEED_RAN=1
+  fi
 fi
-if [[ -z "$seed_out" ]]; then
-  info "Running seed with current Python..."
-  seed_out=$(cd "$REPO_ROOT" && PYTHONPATH=. python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}" 2>/dev/null) || true
+if [[ "$SEED_RAN" -eq 0 ]]; then
+  section "Seed (streaming — current interpreter)"
+  if [[ ${#SEED_EXTRA[@]} -eq 0 ]]; then info "Mode: full seed (Mongo + Milvus if reachable)"; else info "Mode: ${SEED_EXTRA[*]}"; fi
+  if env PYTHONPATH=. python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
+    SEED_RAN=1
+  fi
 fi
 
-if [[ -z "$seed_out" ]]; then
-  fail "Could not seed. Ensure mamba env teleoscope is available (mamba activate teleoscope) and Mongo (and Milvus if desired) are reachable."
-fi
-ok "Seed script finished"
+[[ "$SEED_RAN" -eq 1 ]] || fail "Seed failed or no working Python (mamba env teleoscope / micromamba / PATH). Fix errors above; Mongo and Milvus must be reachable."
 
-DEMO_WORKSPACE_ID=$(echo "$seed_out" | grep 'DEMO_CORPUS_WORKSPACE_ID=' | tail -1 | sed 's/.*DEMO_CORPUS_WORKSPACE_ID=//' | tr -d '\r')
-if [[ -z "$DEMO_WORKSPACE_ID" ]] && [[ -f "$REPO_ROOT/.demo_corpus_workspace_id" ]]; then
+ok "Seed script exited successfully"
+
+DEMO_WORKSPACE_ID=""
+if [[ -f "$REPO_ROOT/.demo_corpus_workspace_id" ]]; then
   DEMO_WORKSPACE_ID=$(cat "$REPO_ROOT/.demo_corpus_workspace_id" | tr -d '\r\n')
-  info "Read DEMO_CORPUS_WORKSPACE_ID from .demo_corpus_workspace_id"
+fi
+if [[ -z "$DEMO_WORKSPACE_ID" ]]; then
+  warn "No .demo_corpus_workspace_id after seed (unexpected)"
 fi
 if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
   ok "Workspace ID: $DEMO_WORKSPACE_ID (app can also auto-discover by label \"Demo corpus\")"
@@ -98,7 +119,15 @@ if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
     ok "Appended DEMO_CORPUS_WORKSPACE_ID to .env"
   fi
 else
-  warn "Could not parse workspace ID from seed output. App will auto-discover demo corpus by label \"Demo corpus\" in Mongo."
+  warn "Could not read workspace ID from .demo_corpus_workspace_id. App will auto-discover demo corpus by label \"Demo corpus\" in Mongo."
+fi
+
+if [[ "${VERIFY_REFRESH:-1}" != "0" ]]; then
+  section "Verify Mongo doc count vs Milvus partition (app check skipped)"
+  info "Set VERIFY_REFRESH=0 to skip. For more detail: REFRESH_VERBOSE=1 or DEMO_STATUS_SKIP_APP=1 ./scripts/demo-status.sh -v"
+  _ds_args=()
+  [[ "${REFRESH_VERBOSE:-0}" == "1" ]] && _ds_args+=(-v)
+  DEMO_STATUS_SKIP_APP=1 ./scripts/demo-status.sh "${_ds_args[@]}" "${REFRESH_DEMO_STATUS_URL:-http://localhost:3000}" || true
 fi
 
 section "Restart app"
@@ -109,4 +138,5 @@ ok "App container recreated"
 echo ""
 echo -e "${GREEN}=== Demo corpus refreshed ===${NC}"
 echo "  App is restarting; open http://localhost:3000/demo when ready."
+echo '  Confirm vectors: mamba activate teleoscope; PYTHONPATH=. python scripts/milvus-status.py --workspace "$(cat .demo_corpus_workspace_id)"'
 echo ""

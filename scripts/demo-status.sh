@@ -5,6 +5,7 @@
 # Set MONGODB_URI in .env or env for Mongo checks; base_url defaults to http://localhost:3000.
 # Honors TELEOSCOPE_DATA_DIR (same as seed-demo-corpus.py); defaults to <repo>/data.
 # Verbose: -v / --verbose or DEMO_STATUS_VERBOSE=1 (extra paths, sizes, config, timings).
+# DEMO_STATUS_SKIP_APP=1: skip HTTP /api/hello (e.g. refresh-demo-corpus.sh before app recreate).
 set -e
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -364,14 +365,18 @@ fi
 
 # --- App ---
 section "App"
-if [[ "$VERBOSE" -eq 1 ]]; then
-  _hello_ms="$(curl -sf --connect-timeout 3 -o /dev/null -w '%{time_total}' "$BASE_URL/api/hello" 2>/dev/null || echo "")"
-  vinfo "GET $BASE_URL/api/hello time_total=${_hello_ms}s"
-fi
-if curl -sf --connect-timeout 3 "$BASE_URL/api/hello" 2>/dev/null | grep -q '"hello"'; then
-  ok "App responding at $BASE_URL"
+if [[ "${DEMO_STATUS_SKIP_APP:-0}" == "1" ]]; then
+  info "Skipping HTTP app check (DEMO_STATUS_SKIP_APP=1 — e.g. right before \`docker compose recreate app\`)"
 else
-  fail "App not responding at $BASE_URL"
+  if [[ "$VERBOSE" -eq 1 ]]; then
+    _hello_ms="$(curl -sf --connect-timeout 3 -o /dev/null -w '%{time_total}' "$BASE_URL/api/hello" 2>/dev/null || echo "")"
+    vinfo "GET $BASE_URL/api/hello time_total=${_hello_ms}s"
+  fi
+  if curl -sf --connect-timeout 3 "$BASE_URL/api/hello" 2>/dev/null | grep -q '"hello"'; then
+    ok "App responding at $BASE_URL"
+  else
+    fail "App not responding at $BASE_URL"
+  fi
 fi
 
 # --- Docker (optional) ---
