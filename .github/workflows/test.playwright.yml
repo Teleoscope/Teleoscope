@@ -54,6 +54,7 @@ jobs:
           if [ ! -f .env ]; then
             cp .env.example .env
           fi
+          grep -q '^VECTORIZER_ALWAYS_ON=' .env || echo 'VECTORIZER_ALWAYS_ON=1' >> .env
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -169,6 +170,7 @@ jobs:
           if [ ! -f .env ]; then
             cp .env.example .env
           fi
+          grep -q '^VECTORIZER_ALWAYS_ON=' .env || echo 'VECTORIZER_ALWAYS_ON=1' >> .env
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3

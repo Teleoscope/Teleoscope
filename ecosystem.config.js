@@ -2,6 +2,10 @@
 // npm install -g pm2
 // pm2 start ecosystem.config.js
 // pm2 monit
+//
+// Vectorizer: by default it waits for workspace activity on VECTORIZER_CONTROL_PORT (8765).
+// Point the Next.js app at it with VECTORIZER_CONTROL_URL (e.g. http://127.0.0.1:8765).
+// Use VECTORIZER_ALWAYS_ON=1 on the vectorizer process for CI or to skip the control server.
 
 module.exports = {
   apps: [
@@ -50,6 +54,10 @@ module.exports = {
       args:["-m", "backend.vectorizer"],
       watch: false,
       interpreter: "",
+      env: {
+        VECTORIZER_CONTROL_HOST: "0.0.0.0",
+        VECTORIZER_CONTROL_PORT: "8765",
+      },
     },
     {
       name:"uploader",

@@ -86,6 +86,17 @@ else
   warn "localhost:$MILVUS_PROBE_PORT (Milvus may still be starting)"
 fi
 
+# 6. Vectorizer control (HTTP) — only when activity mode publishes port 8765
+echo -n "Vectorizer control (POST :8765/activity) ... "
+VZ_CODE=$(curl -sf -o /dev/null -w "%{http_code}" -X POST --connect-timeout 3 http://127.0.0.1:8765/activity 2>/dev/null || echo "000")
+if [ "$VZ_CODE" = "204" ]; then
+  ok "127.0.0.1:8765/activity"
+elif [ "$VZ_CODE" = "401" ]; then
+  warn "127.0.0.1:8765 (401 — set VECTORIZER_CONTROL_TOKEN for curl or use app proxy)"
+else
+  warn "127.0.0.1:8765 (code $VZ_CODE — expected if VECTORIZER_ALWAYS_ON=1 or port not published)"
+fi
+
 echo ""
 echo -e "${GREEN}Connectivity check done.${NC}"
 echo "For full health (with auth), set HEALTH_AUTH_USER and HEALTH_AUTH_PASS, then:"

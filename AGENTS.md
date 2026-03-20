@@ -78,6 +78,7 @@ Frontend dev server:
 - `PLAYWRIGHT_UI_VECTOR_E2E=1` (large vectorization e2e)
 - `RUN_E2E=1` (include backend vector e2e in full script)
 - `MILVUS_LITE_PATH=./.milvus_lite_test` (non-Docker vector runs)
+- `VECTORIZER_ALWAYS_ON=1` (vectorizer consumes immediately; Playwright CI appends this to `.env` for stable uploads)
 
 ### Key gotchas
 
@@ -90,6 +91,7 @@ Frontend dev server:
 - **`pnpm install --ignore-scripts` is safe**; do not add `pnpm.onlyBuiltDependencies`.
 - **`MIVLUS_PORT` typo is intentional**; do not rename in only one location.
 - **Celery in Docker needs `C_FORCE_ROOT=1`**.
+- **Vectorizer** defaults to activity-gated mode: open `/workspace/...` or `/demo` pings wake it via `VECTORIZER_CONTROL_URL`; after idle it unloads. Set `VECTORIZER_ALWAYS_ON=1` to disable that (no control HTTP server on `8765`).
 
 ### Common commands
 
@@ -126,7 +128,7 @@ Frontend dev server:
 - Integration only: `PYTHONPATH=. python -m pytest tests/ -m integration -v`
 
 #### D) Vector pipeline/workers (`backend.dispatch`, `backend.vectorizer`, `backend.uploader`, `backend.graph`, `tests/e2e/`)
-1. Ensure MongoDB + RabbitMQ + Milvus + workers are up.
+1. Ensure MongoDB + RabbitMQ + Milvus + workers are up. With Docker, the app service sets `VECTORIZER_CONTROL_URL` to the vectorizer control port; without it, set `VECTORIZER_ALWAYS_ON=1` on the vectorizer or the consumer stays idle until something POSTs `/activity`.
 2. Run `PYTHONPATH=. python -m pytest tests/e2e/ -m e2e -v`
 3. Shortcut: `RUN_E2E=1 ./scripts/run-all-tests.sh`
 
@@ -140,8 +142,8 @@ Frontend dev server:
 - Playwright fails due to missing Mongo:
   - set `PLAYWRIGHT_SKIP_ACCOUNT=1` and rerun Chromium smoke first.
 - Vector e2e stalls:
-  - verify dispatch/vectorizer/uploader/graph workers are running.
- - if needed, verify mapped Milvus host port with `docker compose port milvus 19530`.
+  - verify dispatch/vectorizer/uploader/graph workers are running; if the vectorizer waits for UI activity, set `VECTORIZER_ALWAYS_ON=1` or open a workspace so `/api/workers/vectorizer-activity` runs.
+  - if needed, verify mapped Milvus host port with `docker compose port milvus 19530`.
 
 ### Maintenance rule for this file
 

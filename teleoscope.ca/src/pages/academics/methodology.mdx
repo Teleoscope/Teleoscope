@@ -13,8 +13,8 @@ research project.
 
 ## Topic Models
 Teleoscope fits under the umbrella of [topic modelling](https://en.wikipedia.org/wiki/Topic_model).
-We use large language models [LLMs](https://en.wikipedia.org/wiki/Large_language_model) to provide
-embeddings for your documents, and then use a variety of techniques to help you find and group documents
+We use **pre-trained transformer embedding models** from the **[Hugging Face](https://huggingface.co/)** ecosystem (see [BAAI/bge-m3](https://huggingface.co/BAAI/bge-m3) in production) to provide
+dense vectors for your documents, then apply a variety of techniques to help you find and group documents
 that are closest to your idea of what a good topic is.
 
 You can think of a "topic" as a group of documents that a computer is guessing is thematically similar
@@ -29,17 +29,17 @@ will rank and group documents according to your examples.
 
 ### Your own interpretation
 Teleoscope attempts to support computer-assisted qualitative research by putting the values of 
-qualitative reseachers front-and-center. We wanted to reflect the process of arranging data by hand 
+qualitative researchers front-and-center. We wanted to reflect the process of arranging data by hand 
 in the Teleoscope workspace. We also wanted to give qualitative researchers the feeling of really
 digging into their data, even though they're searching through thousands or millions of documents.
 
-Although Teleoscope uses LLMs, you are imposing your own interpretive perspective on the models by 
-asking it to rank and group documents according to what you think is similar. Ideally, it is picking
+Although Teleoscope relies on a fixed embedding model for efficiency, you impose your own interpretive perspective by 
+asking the system to rank and group documents according to what you think is similar. Ideally, it is picking
 up on your personal sense of thematic similarity.
 
 That is why we call Teleoscope topics "themes" like in [thematic analysis](https://en.wikipedia.org/wiki/Thematic_analysis).
 We mean the groups that you develop in Teleoscope to be more than *just* categories. They are attempting
-to reflect an underlying intution that you have about your data, and help reflect the way that you 
+to reflect an underlying intuition that you have about your data, and help reflect the way that you 
 make sense of your data.
 
 
@@ -62,7 +62,7 @@ When you have common qualitative datasets, you might be able to look through ten
 if you had a very large research group with a lot of paid coders, a couple thousand documents. However, when you get to thousands to millions of documents, it stops being feasible or even desirable
 to look through your data. 
 
-Most people start relying on keywords and statitics at this point. 
+Most people start relying on keywords and statistics at this point. 
 
 
 ## Overview of the Teleoscope Method
@@ -85,7 +85,7 @@ Nowhere in the text does it mention vegetarianism, yet it is highly ranked in th
 
 ### The Teleoscope Rank
 
-Teleoscope ranks documents by similarity using different LLMs.
+Teleoscope ranks documents by similarity in the embedding space produced by its Hugging Face embedding model.
 When multiple documents are input as `controls`, the Teleoscope will average the
 document vectors to give you a "mix" of the different vectors. In this way, a
 Teleoscope search is a **search by example**. You can connect many documents to
@@ -114,5 +114,5 @@ projections and [HDBSCAN](https://hdbscan.readthedocs.io/en/latest/how_hdbscan_w
 to perform our clustering.
 
 The practical upshot is that our system will attempt to cluster the document source based on
-the groups you provide. You can think of it like pruning a large, general language model
-like USE for your specific way of thinking about your document set.
+the groups you provide. You can think of it like steering a general-purpose embedding model
+(such as the one Teleoscope uses for document vectors) toward your specific way of thinking about your document set.

@@ -149,6 +149,9 @@ services:
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-in-production}
       UPLOAD_DIR: /tmp/teleoscope/uploads
+      # Proxied by the app so open workspaces wake the vectorizer (see VECTORIZER_CONTROL_* on vectorizer).
+      VECTORIZER_CONTROL_URL: ${VECTORIZER_CONTROL_URL:-http://vectorizer:8765}
+      VECTORIZER_CONTROL_TOKEN: ${VECTORIZER_CONTROL_TOKEN:-}
     env_file:
       - .env
     volumes:
@@ -160,6 +163,8 @@ services:
         condition: service_completed_successfully
       rabbitmq:
         condition: service_healthy
+      vectorizer:
+        condition: service_started
 
   # Celery worker - main task queue
   worker-tasks:
@@ -257,6 +262,8 @@ services:
         PREWARM_BGE_M3: "1"
     restart: unless-stopped
     command: ["python", "-m", "backend.vectorizer"]
+    ports:
+      - "8765:8765"
     environment:
       RABBITMQ_USERNAME: guest
       RABBITMQ_PASSWORD: guest
@@ -265,6 +272,11 @@ services:
       RABBITMQ_VHOST: /
       RABBITMQ_VECTORIZE_QUEUE: teleoscope-vectorize
       RABBITMQ_UPLOAD_VECTOR_QUEUE: teleoscope-upload-vector
+      VECTORIZER_CONTROL_HOST: ${VECTORIZER_CONTROL_HOST:-0.0.0.0}
+      VECTORIZER_CONTROL_PORT: ${VECTORIZER_CONTROL_PORT:-8765}
+      VECTORIZER_IDLE_SECONDS: ${VECTORIZER_IDLE_SECONDS:-300}
+      VECTORIZER_CONTROL_TOKEN: ${VECTORIZER_CONTROL_TOKEN:-}
+      VECTORIZER_ALWAYS_ON: ${VECTORIZER_ALWAYS_ON:-}
     env_file:
       - .env
     depends_on:
