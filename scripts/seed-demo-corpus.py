@@ -311,6 +311,13 @@ def ensure_documents_text_index(db) -> None:
             log(f"Could not ensure text index: {e}", "WARN")
 
 
+def _open_7z_archive(archive_path: Path):
+    """Open a 7z for reading (py7zr >= 0.20 uses SevenZipFile; older wheels exposed module-level open)."""
+    if hasattr(py7zr, "open"):
+        return py7zr.open(archive_path, "r")
+    return py7zr.SevenZipFile(archive_path, mode="r")
+
+
 def extract_jsonl_from_7z(archive_path: Path) -> list[dict]:
     if not py7zr:
         raise RuntimeError("py7zr is required to read documents.jsonl.7z. pip install py7zr")
@@ -320,7 +327,7 @@ def extract_jsonl_from_7z(archive_path: Path) -> list[dict]:
         )
     rows = []
     log(f"Opening 7z archive: {archive_path}", "INFO")
-    with py7zr.open(archive_path, "r") as arc:
+    with _open_7z_archive(archive_path) as arc:
         all_files = arc.readall()
         jsonl_names = [n for n in all_files if n.endswith(".jsonl")]
         log(f"JSONL entries in archive ({len(jsonl_names)}): {jsonl_names}", "INFO")
