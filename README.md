@@ -20,6 +20,19 @@ As shown in the above figure, that will give a set of results that are more sema
 
 The workflow for developing themes is as shown in the above figure. The user iteratively searches for keywords, reads the relevant documents, groups them together and selects the documents to train the Teleoscope system with, then repeats. There is also an experimental clustering feature that allows you to use the system to create groups automatically based on the groups you have given it so far.
 
+## Research summary and citation
+
+Teleoscope targets a growing practice in HCI, healthcare, and the social sciences: **qualitative inquiry over very large text corpora** (for example, social media at Reddit scale, on the order of 100K–1M posts). At that scale, teams often resort to **statistical subsampling** before any close reading. That shortcut can be **epistemically misaligned** with interpretivist qualitative work, which depends on context, reflexivity, positionality, and staying “close to the data.”
+
+The CHI 2026 paper frames Teleoscope as scaffolding for **thematic curation**: an **inductive, interpretive** way to shrink a huge corpus *before* full analysis. Researchers start from **keyword search**, then iteratively organize the workspace—documents, groups, and chained similarity operations driven by **semantic embeddings**—so that exploration stays document-centered rather than reduced to corpus-level dashboards alone. The intended output is a **thematic schema**: a curated subset of documents together with a **traceable** record of how items were connected and refined, making **provenance** and **team discussion** of alternative curation paths easier before formal coding and analysis.
+
+The work reports a multi-year **research-through-design** process, including extended formative study with a simulated research team, a field deployment with a qualitative team in nursing, and a public cloud deployment that informed product-facing needs. Contributions are methodological (**thematic curation** and **thematic schemas**), systems-oriented (open, collaborative curation tooling), and empirical (findings from those deployments—for example around serendipitous keyword discovery, confidence in saturation, and collaborative comparison of interpretive lenses).
+
+**Please cite the conference paper (primary):**  
+Patrick Yung Kang Lee, Paul Hendrik Bucci, Leo Itsuki Foord-Kelcey, Alamjeet Singh, and Ivan Beschastnikh. 2026. *Crystallizing Schemas with Teleoscope: Thematic Curation of Large Text Corpora on Reddit.* In *Proceedings of the 2026 CHI Conference on Human Factors in Computing Systems (CHI ’26)*, April 13–17, 2026, Barcelona, Spain. ACM, New York, NY, USA, 20 pages. [https://doi.org/10.1145/3772318.3791310](https://doi.org/10.1145/3772318.3791310)
+
+**Earlier extended preprint** (related manuscript; title differs slightly): [arXiv:2402.06124](https://arxiv.org/abs/2402.06124). Ready-to-paste BibTeX and Vancouver entries for both appear in [`teleoscope.ca/src/pages/academics/citations.mdx`](teleoscope.ca/src/pages/academics/citations.mdx).
+
 ## Repository map (where to look first)
 
 Use this as the quick orientation guide before editing:
