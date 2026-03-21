@@ -22,12 +22,29 @@ services:
     volumes:
       - mongodb_data:/data/db
       - ./docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    # Root user lives in `admin`; omitting --authenticationDatabase breaks auth on many Mongo 7 images.
+    # Replica set must be PRIMARY (myState 1); rs.status().ok is not a reliable field on the status doc.
     healthcheck:
-      test: ["CMD", "mongosh", "-u", "admin", "-p", "admin_password", "--eval", "try { rs.status().ok } catch(e) { 0 }"]
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--host",
+          "127.0.0.1",
+          "-u",
+          "admin",
+          "-p",
+          "admin_password",
+          "--authenticationDatabase",
+          "admin",
+          "--quiet",
+          "--eval",
+          "var p = db.adminCommand({ ping: 1 }); if (!p.ok) quit(1); try { var s = rs.status(); quit(s.myState === 1 ? 0 : 1); } catch (e) { quit(1); }",
+        ]
       interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
 
   # One-shot: initializes the replica set on first start
   mongodb-init:
@@ -40,13 +57,13 @@ services:
       bash -c '
         echo "Waiting for MongoDB to accept connections..."
         for i in $$(seq 1 30); do
-          if mongosh --host mongodb -u admin -p admin_password --quiet --eval "db.adminCommand({ping:1})" 2>/dev/null; then
+          if mongosh --host mongodb -u admin -p admin_password --authenticationDatabase admin --quiet --eval "db.adminCommand({ping:1})" 2>/dev/null; then
             break
           fi
           sleep 2
         done
         echo "Initiating replica set..."
-        mongosh --host mongodb -u admin -p admin_password --eval "
+        mongosh --host mongodb -u admin -p admin_password --authenticationDatabase admin --eval "
           try {
             var status = rs.status();
             print(\"Replica set already initialized: \" + status.set);
