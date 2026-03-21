@@ -84,9 +84,9 @@ services:
       ETCD_ENDPOINTS: etcd:2379
       MINIO_ADDRESS: minio:9000
     ports:
-      # Use an ephemeral host port by default to avoid startup failures when 19530 is already in use.
-      # Set MILVUS_HOST_PORT explicitly in .env when you need a fixed host port.
-      - "${MILVUS_HOST_PORT:-0}:19530"
+      # Default host port 19530 so host-run scripts (seed, demo-status) use http://localhost:19530 without discovery.
+      # Set MILVUS_HOST_PORT=0 for a random free port (then milvus_docker_uri.sh queries docker compose port).
+      - "${MILVUS_HOST_PORT:-19530}:19530"
     depends_on:
       etcd:
         condition: service_healthy

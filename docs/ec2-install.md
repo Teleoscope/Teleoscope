@@ -83,7 +83,7 @@ Compose wires **internal** hostnames (`mongodb`, `rabbitmq`, `milvus`, `vectoriz
 
 **Vectorizer behavior:** By default the stack uses **activity-based** wake (workspace UI pings). For a server with no browser traffic tests, or to avoid idle shutdown during batch jobs, set `VECTORIZER_ALWAYS_ON=1` in `.env` (see root `README.md` and `.env.example`).
 
-**Milvus port:** If you need a **fixed** host port (e.g. for host-side tools), set `MILVUS_HOST_PORT=19530` in `.env`. Otherwise Docker may map Milvus to a random host port; containers still reach it as `milvus:19530`.
+**Milvus port:** Compose defaults to host **19530** (`MILVUS_HOST_PORT` defaults to 19530). Set **`MILVUS_HOST_PORT=0`** only if you need a random free port; containers still reach the service as `milvus:19530` on the Docker network.
 
 ## 5. Start the stack
 

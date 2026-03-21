@@ -13,6 +13,7 @@
 #   PYTHONPATH=. python scripts/milvus-status.py --workspace "$(cat .demo_corpus_workspace_id)"
 # VERIFY_REFRESH=0 skips the post-seed demo-status run. REFRESH_VERBOSE=1 passes -v to demo-status.
 # REFRESH_DEMO_STATUS_URL overrides the base_url passed to demo-status (default http://localhost:3000).
+# REFRESH_SKIP_MILVUS_TCP_CHECK=1: skip the localhost Milvus port probe before seed (only if you know the endpoint is special).
 set -e
 
 RED='\033[0;31m'
@@ -64,10 +65,62 @@ else
 fi
 
 export MONGODB_URI="mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@localhost:27017/teleoscope?directConnection=true&serverSelectionTimeoutMS=5000&authSource=admin"
+
 # shellcheck source=scripts/milvus_docker_uri.sh
 source "$REPO_ROOT/scripts/milvus_docker_uri.sh"
-milvus_export_host_uri_from_compose
+
+refresh_resolve_milvus_uri() {
+  milvus_export_host_uri_from_compose
+  export MILVUS_URI
+}
+
+# True if something accepts TCP on host:port (2s deadline).
+_milvus_tcp_open() {
+  python3 -c "
+import socket, sys
+host, port = sys.argv[1], int(sys.argv[2])
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.settimeout(2.0)
+try:
+    s.connect((host, port))
+    sys.exit(0)
+except OSError:
+    sys.exit(1)
+finally:
+    try:
+        s.close()
+    except Exception:
+        pass
+" "$1" "$2" 2>/dev/null
+}
+
+refresh_check_local_milvus_port() {
+  [[ "${REFRESH_SKIP_MILVUS_TCP_CHECK:-0}" == "1" ]] && {
+    warn "REFRESH_SKIP_MILVUS_TCP_CHECK=1 — skipping localhost Milvus TCP check"
+    return 0
+  }
+  local uri="$MILVUS_URI"
+  if [[ "$uri" =~ ^https?://(localhost|127\.0\.0\.1):([0-9]+) ]]; then
+    local port="${BASH_REMATCH[2]}"
+    if ! _milvus_tcp_open localhost "$port"; then
+      echo -e "${RED}  [FAIL]${NC} Nothing accepting connections on localhost:${port} (Milvus not reachable)."
+      echo -e "${YELLOW}  [HINT]${NC} Start Milvus: cd \"$REPO_ROOT\" && docker compose up -d milvus"
+      echo -e "${YELLOW}  [HINT]${NC} Mapped port: docker compose port milvus 19530"
+      if command -v docker >/dev/null 2>&1; then
+        echo -e "${CYAN}  [INFO]${NC} docker compose ps milvus:"
+        (cd "$REPO_ROOT" && docker compose ps milvus 2>/dev/null) || true
+      fi
+      exit 1
+    fi
+    ok "Milvus listening on localhost:${port}"
+  else
+    info "MILVUS_URI is not localhost (remote/Zilliz); skipping local TCP preflight"
+  fi
+}
+
+refresh_resolve_milvus_uri
 info "Milvus upserts use MILVUS_URI=$MILVUS_URI (scripts/milvus_docker_uri.sh). Watch seed output for upsert batches or 'skipping Milvus'."
+info "Local Milvus TCP is checked immediately before seed (avoids a long Mongo+parquet run when Milvus is down)."
 
 export MONGODB_URI MILVUS_URI
 
@@ -80,7 +133,10 @@ if command -v mamba &>/dev/null && mamba run -n teleoscope true 2>/dev/null; the
   section "Seed (streaming — look for Milvus upsert batches + \"Milvus seed done\")"
   if [[ ${#SEED_EXTRA[@]} -eq 0 ]]; then info "Mode: full seed (Mongo + Milvus if reachable)"; else info "Mode: ${SEED_EXTRA[*]}"; fi
   SEED_INVOKED=1
-  if mamba run -n teleoscope env PYTHONPATH=. python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
+  refresh_resolve_milvus_uri
+  info "MILVUS_URI before seed (re-resolved): $MILVUS_URI"
+  refresh_check_local_milvus_port
+  if mamba run -n teleoscope env PYTHONPATH=. MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
     SEED_RAN=1
   else
     fail "Seed failed under mamba (exit non-zero). Not retrying with micromamba — that would repeat the full Mongo re-seed. Fix the error above (e.g. Milvus flush) or run: PYTHONPATH=. python scripts/seed-demo-corpus.py"
@@ -90,7 +146,10 @@ if [[ "$SEED_RAN" -eq 0 ]] && [[ "$SEED_INVOKED" -eq 0 ]] && command -v micromam
   section "Seed (streaming — micromamba)"
   if [[ ${#SEED_EXTRA[@]} -eq 0 ]]; then info "Mode: full seed (Mongo + Milvus if reachable)"; else info "Mode: ${SEED_EXTRA[*]}"; fi
   SEED_INVOKED=1
-  if micromamba run -n teleoscope env PYTHONPATH=. python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
+  refresh_resolve_milvus_uri
+  info "MILVUS_URI before seed (re-resolved): $MILVUS_URI"
+  refresh_check_local_milvus_port
+  if micromamba run -n teleoscope env PYTHONPATH=. MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
     SEED_RAN=1
   else
     fail "Seed failed under micromamba (exit non-zero). Not retrying with system Python — that would repeat the full Mongo re-seed. Fix the error above or run seed manually."
@@ -100,7 +159,10 @@ if [[ "$SEED_RAN" -eq 0 ]] && [[ "$SEED_INVOKED" -eq 0 ]]; then
   section "Seed (streaming — current interpreter)"
   if [[ ${#SEED_EXTRA[@]} -eq 0 ]]; then info "Mode: full seed (Mongo + Milvus if reachable)"; else info "Mode: ${SEED_EXTRA[*]}"; fi
   SEED_INVOKED=1
-  if env PYTHONPATH=. python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
+  refresh_resolve_milvus_uri
+  info "MILVUS_URI before seed (re-resolved): $MILVUS_URI"
+  refresh_check_local_milvus_port
+  if env PYTHONPATH=. MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
     SEED_RAN=1
   else
     fail "Seed failed (exit non-zero). Fix errors above; Mongo and Milvus must be reachable."
