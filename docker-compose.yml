@@ -22,8 +22,9 @@ services:
     volumes:
       - mongodb_data:/data/db
       - ./docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-    # Root user lives in `admin`; omitting --authenticationDatabase breaks auth on many Mongo 7 images.
-    # Replica set must be PRIMARY (myState 1); rs.status().ok is not a reliable field on the status doc.
+    # Ping only: replica set is initialized by mongodb-init. Requiring PRIMARY here caused a deadlock
+    # (unhealthy until rs.initiate, while operators waited on health).
+    # Root user is in `admin` — always pass --authenticationDatabase admin.
     healthcheck:
       test:
         [
@@ -39,40 +40,40 @@ services:
           "admin",
           "--quiet",
           "--eval",
-          "var p = db.adminCommand({ ping: 1 }); if (!p.ok) quit(1); try { var s = rs.status(); quit(s.myState === 1 ? 0 : 1); } catch (e) { quit(1); }",
+          "var r = db.adminCommand({ ping: 1 }); quit(r.ok ? 0 : 1);",
         ]
       interval: 10s
       timeout: 10s
-      retries: 15
-      start_period: 60s
+      retries: 12
+      start_period: 90s
 
-  # One-shot: initializes the replica set on first start
+  # One-shot: rs.initiate (app and transactions need a replica set)
   mongodb-init:
     image: mongo:7
     depends_on:
       mongodb:
         condition: service_started
     restart: "no"
-    entrypoint: >
-      bash -c '
-        echo "Waiting for MongoDB to accept connections..."
-        for i in $$(seq 1 30); do
-          if mongosh --host mongodb -u admin -p admin_password --authenticationDatabase admin --quiet --eval "db.adminCommand({ping:1})" 2>/dev/null; then
+    entrypoint: ["/bin/bash", "-lc"]
+    command:
+      - |
+        set -euo pipefail
+        echo "Waiting for MongoDB (admin ping)..."
+        ok=
+        for i in $(seq 1 90); do
+          if mongosh --host mongodb --username admin --password admin_password --authenticationDatabase admin --quiet --eval 'var r = db.adminCommand({ ping: 1 }); quit(r.ok ? 0 : 1);'; then
+            ok=1
             break
           fi
           sleep 2
         done
-        echo "Initiating replica set..."
-        mongosh --host mongodb -u admin -p admin_password --authenticationDatabase admin --eval "
-          try {
-            var status = rs.status();
-            print(\"Replica set already initialized: \" + status.set);
-          } catch(e) {
-            rs.initiate({ _id: \"rs0\", members: [{ _id: 0, host: \"mongodb:27017\" }] });
-            print(\"Replica set initiated.\");
-          }
-        "
-      '
+        if [[ -z "${ok:-}" ]]; then
+          echo "mongodb-init: MongoDB did not respond to ping in time" >&2
+          exit 1
+        fi
+        echo "Ensuring replica set rs0..."
+        mongosh --host mongodb --username admin --password admin_password --authenticationDatabase admin --quiet --eval "try { rs.status(); quit(0); } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] }); quit(0); }"
+        echo "mongodb-init: done"
 
   rabbitmq:
     image: rabbitmq:3-management
