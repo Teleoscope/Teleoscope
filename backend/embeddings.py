@@ -2,6 +2,8 @@
 import logging
 import os
 import hashlib
+import sys
+import time
 
 from warnings import simplefilter
 
@@ -137,7 +139,9 @@ def _milvus_token() -> str | None:
 
 
 def _milvus_client_timeout() -> float | None:
-    """Optional RPC timeout (seconds) for MilvusClient; set MILVUS_CLIENT_TIMEOUT for status tools."""
+    """RPC timeout (seconds) for MilvusClient; unset = no limit (workers). Scripts set MILVUS_CLIENT_TIMEOUT."""
+    if os.getenv("MILVUS_UNBOUNDED_RPC", "").lower() in ("1", "true", "yes"):
+        return None
     raw = os.getenv("MILVUS_CLIENT_TIMEOUT", "").strip()
     if not raw:
         return None
@@ -145,6 +149,20 @@ def _milvus_client_timeout() -> float | None:
         return float(raw)
     except ValueError:
         return None
+
+
+_milvus_trace_t0: float | None = None
+
+
+def _milvus_connect_trace(msg: str) -> None:
+    """stderr timeline when MILVUS_DIAG=1 or MILVUS_DEBUG=1."""
+    if not (os.getenv("MILVUS_DIAG", "").strip() or os.getenv("MILVUS_DEBUG", "").strip()):
+        return
+    global _milvus_trace_t0
+    if _milvus_trace_t0 is None:
+        _milvus_trace_t0 = time.perf_counter()
+    dt = time.perf_counter() - _milvus_trace_t0
+    print(f"[milvus +{dt:7.2f}s] {msg}", file=sys.stderr, flush=True)
 
 
 def _milvus_client_kwargs(uri: str, *, with_db_name: bool) -> dict:
@@ -179,8 +197,11 @@ def _connect_after_probe(uri: str) -> MilvusClient:
     """Probe list_collections; avoid constructor db_name on self-hosted HTTP when possible."""
     if _prefer_default_db_first(uri):
         try:
+            _milvus_connect_trace(f"MilvusClient(uri=…, db_name off) timeout={_milvus_client_timeout()!r}")
             client = MilvusClient(**_milvus_client_kwargs(uri, with_db_name=False))
+            _milvus_connect_trace("list_collections() (no db_name)")
             client.list_collections()
+            _milvus_connect_trace("list_collections OK")
             return client
         except Exception as exc:
             logging.info(
@@ -190,9 +211,14 @@ def _connect_after_probe(uri: str) -> MilvusClient:
             )
 
     try:
+        _milvus_connect_trace(
+            f"MilvusClient(uri=…, db_name={MILVUS_DBNAME!r}) timeout={_milvus_client_timeout()!r}"
+        )
         client = MilvusClient(**_milvus_client_kwargs(uri, with_db_name=True))
         try:
+            _milvus_connect_trace("list_collections() (with db_name)")
             client.list_collections()
+            _milvus_connect_trace("list_collections OK")
         except Exception as probe_exc:
             msg = str(probe_exc)
             if (
@@ -205,6 +231,7 @@ def _connect_after_probe(uri: str) -> MilvusClient:
                     "falling back to default database.",
                     MILVUS_DBNAME,
                 )
+                _milvus_connect_trace("fallback MilvusClient without db_name")
                 client = MilvusClient(**_milvus_client_kwargs(uri, with_db_name=False))
             else:
                 raise
@@ -216,10 +243,14 @@ def _connect_after_probe(uri: str) -> MilvusClient:
             e,
             MILVUS_DBNAME,
         )
+        _milvus_connect_trace("MilvusException → final client without db_name")
         return MilvusClient(**_milvus_client_kwargs(uri, with_db_name=False))
 
 
 def connect():
+    global _milvus_trace_t0
+    _milvus_trace_t0 = None
+    _milvus_connect_trace("connect() start")
     logging.info("Connecting to Milvus...")
     if _use_lite():
         # Milvus Lite: local file, no server (runs without Docker). Use MILVUS_LITE_PATH so pymilvus orm is not given a file URI at import.
@@ -230,18 +261,35 @@ def connect():
         t = _milvus_client_timeout()
         if t is not None:
             lite_kw["timeout"] = t
+        _milvus_connect_trace(f"Milvus Lite open {path!r} timeout={t!r}")
         client = MilvusClient(**lite_kw)
         logging.info("Connected to Milvus Lite.")
+        _milvus_connect_trace("Milvus Lite client ready")
         return client
 
+    if os.getenv("MILVUS_SKIP_TCP_PREFLIGHT", "").lower() not in ("1", "true", "yes"):
+        try:
+            from backend.milvus_preflight import tcp_probe_from_env
+
+            tcp_probe_from_env()
+            _milvus_connect_trace("TCP preflight OK (port accepts connections)")
+        except RuntimeError:
+            raise
+        except Exception as exc:
+            logging.warning("Milvus TCP preflight skipped: %s", exc)
+
     if MILVUS_URI:
+        _milvus_connect_trace(f"RPC target MILVUS_URI (timeout sec={_milvus_client_timeout()!r})")
         client = _connect_after_probe(MILVUS_URI)
         logging.info("Connected to Milvus (MILVUS_URI).")
+        _milvus_connect_trace("connect() done (MILVUS_URI)")
         return client
 
     uri = f"http://{MILVUS_HOST}:{MIVLUS_PORT}"
+    _milvus_connect_trace(f"RPC target {uri} (timeout sec={_milvus_client_timeout()!r})")
     client = _connect_after_probe(uri)
     logging.info("Connected to Milvus.")
+    _milvus_connect_trace("connect() done (host:port)")
     return client
 
 
