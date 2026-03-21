@@ -325,7 +325,8 @@ def ensure_demo_data_files(
 
 
 def ensure_collections(db):
-    needed = ["documents", "workspaces", "teams", "workflows"]
+    # `accounts` is required when creating a demo team (teams collection validator needs `account`).
+    needed = ["documents", "workspaces", "teams", "workflows", "accounts"]
     existing = set(db.list_collection_names())
     created = [n for n in needed if n not in existing]
     for name in created:
@@ -956,10 +957,12 @@ def seed(
         team_id = ObjectId()
         workspace_id = ObjectId()
         workflow_id = ObjectId()
+        account_id = insert_demo_corpus_account(db)
         db.teams.insert_one({
             "_id": team_id,
             "owner": "demo-corpus-seed",
             "label": DEMO_TEAM_LABEL,
+            "account": account_id,
             "workspaces": [workspace_id],
             "users": [],
         })
