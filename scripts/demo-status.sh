@@ -176,11 +176,25 @@ for _pqdir in "$DATA_DIR/parquet_export/full" "$DATA_DIR/parquet_export"; do
     vinfo "Parquet candidate not a directory: $_pqdir"
   fi
 done
+# Parquet required only when user explicitly configured Milvus in .env (seed / vectors intent).
 WANTS_MILVUS=0
 if [[ -n "${MILVUS_URI:-}" ]] || [[ -n "${MILVUS_LITE_PATH:-}" ]]; then
   WANTS_MILVUS=1
 fi
-vinfo "Milvus env: WANTS_MILVUS=$WANTS_MILVUS (MILVUS_URI ${MILVUS_URI:+set}${MILVUS_URI:-unset}, MILVUS_LITE_PATH ${MILVUS_LITE_PATH:+set}${MILVUS_LITE_PATH:-unset})"
+# RPC/partition checks also when Docker Compose exposes Milvus on localhost (typical .env has MILVUS_HOST=milvus for containers but no MILVUS_URI for the host).
+RUN_MILVUS_CHECKS=$WANTS_MILVUS
+if [[ "$RUN_MILVUS_CHECKS" -eq 0 ]] && command -v docker >/dev/null 2>&1 && [[ -f "$REPO_ROOT/docker-compose.yml" ]]; then
+  set +e
+  _DEMO_MILVUS_MP="$(_docker_milvus_mapped_port)"
+  _DEMO_MILVUS_MP_RC=$?
+  set -e
+  if [[ "$_DEMO_MILVUS_MP_RC" -eq 0 && -n "${_DEMO_MILVUS_MP:-}" ]]; then
+    RUN_MILVUS_CHECKS=1
+    export MILVUS_URI="${MILVUS_URI:-http://localhost:${_DEMO_MILVUS_MP}}"
+    info "Milvus: inferred host URI from docker compose (port ${_DEMO_MILVUS_MP}) — .env often omits MILVUS_URI; containers use MILVUS_DOCKER_URI internally"
+  fi
+fi
+vinfo "Milvus env: WANTS_MILVUS=$WANTS_MILVUS (parquet strict), RUN_MILVUS_CHECKS=$RUN_MILVUS_CHECKS (MILVUS_URI ${MILVUS_URI:+set}${MILVUS_URI:-unset}, MILVUS_LITE_PATH ${MILVUS_LITE_PATH:+set}${MILVUS_LITE_PATH:-unset})"
 if [[ "${PARQUET_COUNT:-0}" -gt 0 ]]; then
   ok "parquet vectors: $PARQUET_COUNT part file(s) in $PARQUET_DIR"
   if [[ "$VERBOSE" -eq 1 ]]; then
@@ -295,8 +309,8 @@ fi
 
 # --- Milvus ---
 section "Milvus (vector ranking)"
-if [[ "$WANTS_MILVUS" -ne 1 ]]; then
-  info "Milvus not configured (no MILVUS_URI or MILVUS_LITE_PATH); skipping policy/RPC/partition checks"
+if [[ "$RUN_MILVUS_CHECKS" -ne 1 ]]; then
+  info "Milvus RPC checks skipped: set MILVUS_URI or MILVUS_LITE_PATH in .env, or run from repo with Docker Compose Milvus (mapped 19530) so the port can be detected"
 else
   vinfo "MILVUS_COLLECTION=${MILVUS_COLLECTION:-<unset>} MILVUS_DBNAME=${MILVUS_DBNAME:-<unset>}"
   MILVUS_PORT="${MILVUS_PORT:-}"

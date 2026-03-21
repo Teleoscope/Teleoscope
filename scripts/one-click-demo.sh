@@ -2,7 +2,8 @@
 # One-click demo bootstrap:
 # 1) Start full Docker stack (rebuild images; use CLEAN_INSTALL=1 to force no-cache and re-download demo data)
 # 2) Validate core services
-# 3) Validate public demo endpoints
+# 3) Milvus smoke (host Python: one test upsert) + seed Mongo/Milvus — runs after containers are up, not during image build
+# 4) Validate public demo endpoints
 #
 # CLEAN_INSTALL=1: rebuild images with --no-cache (re-download base images, npm/pip in build) and
 #                  always re-download demo data. Use for a full clean install.
@@ -62,7 +63,11 @@ wait_for_cmd() {
   while ! eval "$cmd" 2>/dev/null; do
     n=$((n + 1))
     if [[ $n -ge $max ]]; then
-      echo -e "${RED}  [FAIL]${NC} Timeout waiting for $name"
+      echo -e "${RED}  [FAIL]${NC} Timeout waiting for $name (${max} tries × 2s)"
+      if [[ "$name" == *"App"* ]]; then
+        echo -e "${YELLOW}  [HINT]${NC} First Next.js start can be slow; retry or raise ONE_CLICK_APP_WAIT_ITERATIONS (default 120)."
+        echo -e "${YELLOW}  [HINT]${NC} docker compose ps app && docker compose logs app --tail 80"
+      fi
       return 1
     fi
     sleep 2
@@ -71,8 +76,10 @@ wait_for_cmd() {
 }
 
 section "Waiting for services"
-info "Waiting for App API (up to 120s)..."
-wait_for_cmd "App API" "curl -sf --connect-timeout 2 http://localhost:3000/api/hello | rg -q hello" 120
+ONE_CLICK_APP_WAIT_ITERATIONS="${ONE_CLICK_APP_WAIT_ITERATIONS:-120}"
+info "Waiting for App API (up to $((ONE_CLICK_APP_WAIT_ITERATIONS * 2))s, ${ONE_CLICK_APP_WAIT_ITERATIONS}×2s; override ONE_CLICK_APP_WAIT_ITERATIONS if needed)..."
+# Use grep (POSIX); do not use rg — ripgrep is often not installed and the loop would never succeed.
+wait_for_cmd "App API" "curl -sf --connect-timeout 2 http://localhost:3000/api/hello | grep -q hello" "$ONE_CLICK_APP_WAIT_ITERATIONS"
 info "Running stack connectivity check..."
 wait_for_cmd "Stack connectivity" "./scripts/test-stack.sh http://localhost:3000 >/tmp/teleoscope_demo_stack_check.log" 60
 
@@ -90,15 +97,15 @@ else
   ok "Demo data already present in data/ (skipping download)"
 fi
 
-section "Seeding demo corpus (Mongo + Milvus)"
+section "Host tools: MongoDB + Milvus URI (for seed scripts on your machine)"
 export MONGODB_URI="mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@localhost:27017/teleoscope?directConnection=true&serverSelectionTimeoutMS=5000&authSource=admin"
 # shellcheck source=scripts/milvus_docker_uri.sh
 source "$REPO_ROOT/scripts/milvus_docker_uri.sh"
 milvus_export_host_uri_from_compose
-info "MONGODB_URI and MILVUS_URI set for host"
+ok "MONGODB_URI and MILVUS_URI=$MILVUS_URI (host → mapped Milvus port; not the same as MILVUS_HOST=milvus inside containers)"
 
-section "Milvus smoke (upsert, flush, read, delete)"
-# Same runner cascade as seed: proves Milvus RPC + write path before heavy demo seed.
+section "Milvus smoke test (runs after stack is up — not during docker build)"
+info "One ephemeral collection: upsert → flush → get → delete. Same Python runner as seed (mamba → micromamba → PATH)."
 SMOKE_RAN=0
 SMOKE_INVOKED=0
 if command -v mamba &>/dev/null && mamba run -n teleoscope true 2>/dev/null; then
@@ -131,6 +138,7 @@ fi
 [[ "$SMOKE_RAN" -eq 1 ]] || fail "Milvus smoke: no working Python runner (mamba env teleoscope, micromamba, or PATH)."
 ok "Milvus smoke passed"
 
+section "Seeding demo corpus (Mongo + Milvus)"
 # Fall back mamba → micromamba → PATH only when a runner is unavailable — not when seed exits
 # non-zero (avoids repeating full Mongo re-seed). Stream seed logs to the terminal (no capture).
 SEED_RAN=0
@@ -196,7 +204,7 @@ docker compose up -d --force-recreate app
 ok "App container recreated"
 sleep 5
 info "Waiting for App API after restart..."
-wait_for_cmd "App API (after restart)" "curl -sf --connect-timeout 2 http://localhost:3000/api/hello | rg -q hello" 60
+wait_for_cmd "App API (after restart)" "curl -sf --connect-timeout 2 http://localhost:3000/api/hello | grep -q hello" 60
 
 section "Demo checks"
 info "Checking public demo API..."
