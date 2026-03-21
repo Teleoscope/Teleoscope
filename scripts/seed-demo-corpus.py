@@ -63,6 +63,8 @@ Usage:
   # Hang avoidance: SEED_MILVUS_RPC_TIMEOUT (default 300) sets MILVUS_CLIENT_TIMEOUT for pymilvus;
   # MILVUS_UNBOUNDED_RPC=1 removes cap; MILVUS_DIAG=1 stderr timeline in embeddings.connect;
   # MILVUS_SKIP_TCP_PREFLIGHT=1 skips port check before RPC.
+  # Transient upsert errors (e.g. "Milvus Proxy is not ready yet"): the seed reconnects and retries
+  # each batch up to SEED_MILVUS_UPSERT_RETRIES times (default 6) with exponential backoff (5s, 10s, …, 60s cap).
   # After bulk upsert, client.flush() can fail with RootCoord "channel not found" (stale gRPC).
   # The seed closes the client, reconnects, and retries flush once; SEED_MILVUS_SKIP_FLUSH=1 skips
   # flush entirely (Milvus auto-seals); SEED_MILVUS_FLUSH_STRICT=1 exits non-zero if flush still fails.
@@ -231,6 +233,17 @@ def _milvus_upsert_batch_size() -> int:
 
 def _milvus_batch_log_enabled() -> bool:
     return os.environ.get("SEED_MILVUS_BATCH_LOG", "").lower() in ("1", "true", "yes")
+
+
+def _milvus_upsert_max_retries() -> int:
+    """Max reconnect+retry attempts per Milvus upsert batch; override with SEED_MILVUS_UPSERT_RETRIES (default 6)."""
+    raw = os.environ.get("SEED_MILVUS_UPSERT_RETRIES", "").strip()
+    if raw:
+        try:
+            return max(1, int(raw))
+        except ValueError:
+            pass
+    return 6
 
 
 def _milvus_periodic_flush_interval_batches() -> int:
@@ -911,11 +924,39 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
         if _seed_use_progress and tqdm is not None:
             milvus_pbar.set_postfix_str(f"{i + 1:,}–{hi:,} vecs · upsert…", refresh=True)
         t0 = time.perf_counter()
-        client.upsert(
-            collection_name=collection_name,
-            data=vector_data,
-            partition_name=str(workspace_id),
-        )
+        max_upsert_attempts = _milvus_upsert_max_retries()
+        for upsert_attempt in range(max_upsert_attempts):
+            try:
+                client.upsert(
+                    collection_name=collection_name,
+                    data=vector_data,
+                    partition_name=str(workspace_id),
+                )
+                break
+            except Exception as e_up:
+                if upsert_attempt + 1 >= max_upsert_attempts:
+                    if _seed_use_progress and tqdm is not None:
+                        milvus_pbar.close()
+                    raise
+                wait = min(60.0, 5.0 * 2**upsert_attempt)
+                log(
+                    f"Milvus upsert batch {b_idx + 1}/{n_batches} transient error "
+                    f"(attempt {upsert_attempt + 1}/{max_upsert_attempts}): {e_up!s}; "
+                    f"reconnecting in {wait:.0f}s…",
+                    "WARN",
+                )
+                time.sleep(wait)
+                try:
+                    client.close()
+                except Exception:
+                    pass
+                client = embeddings.connect()
+                embeddings.use_database_if_supported(client)
+                log(
+                    f"Milvus reconnected — retrying batch {b_idx + 1}/{n_batches} "
+                    f"(attempt {upsert_attempt + 2}/{max_upsert_attempts}).",
+                    "INFO",
+                )
         dt = time.perf_counter() - t0
         if _seed_use_progress and tqdm is not None:
             milvus_pbar.set_postfix_str(f"{i + 1:,}–{hi:,} vecs · {dt:.1f}s", refresh=True)
