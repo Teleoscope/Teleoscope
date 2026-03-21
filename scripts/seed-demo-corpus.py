@@ -102,6 +102,12 @@ except ImportError:
 
 from bson.objectid import ObjectId
 from pymongo import MongoClient
+from pymongo.errors import (
+    AutoReconnect,
+    ConnectionFailure,
+    NetworkTimeout,
+    ServerSelectionTimeoutError,
+)
 
 # Repo root and data dir
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -118,6 +124,14 @@ MONGODB_URI = os.environ.get(
     "?directConnection=true&serverSelectionTimeoutMS=5000&authSource=admin",
 )
 MONGODB_DATABASE = os.environ.get("MONGODB_DATABASE", "teleoscope")
+
+# Transient driver/network issues during long demo bulk inserts (reconnect + resume).
+_TRANSIENT_MONGO_ERRORS = (
+    AutoReconnect,
+    ConnectionFailure,
+    NetworkTimeout,
+    ServerSelectionTimeoutError,
+)
 
 DEMO_TEAM_LABEL = "Demo corpus (shared)"
 DEMO_WORKSPACE_LABEL = "Demo corpus"
@@ -324,6 +338,34 @@ def ensure_demo_data_files(
         )
 
 
+def mongo_client_for_seed() -> MongoClient:
+    """Mongo client tuned for long-running bulk seed (avoids client-side socket timeouts)."""
+    kwargs = {
+        "serverSelectionTimeoutMS": int(
+            os.environ.get("SEED_MONGO_SERVER_SELECTION_TIMEOUT_MS", "60000")
+        ),
+        "connectTimeoutMS": int(os.environ.get("SEED_MONGO_CONNECT_TIMEOUT_MS", "30000")),
+        # 0 = no socket timeout (PyMongo/MongoDB driver convention for “wait for response”).
+        "socketTimeoutMS": int(os.environ.get("SEED_MONGO_SOCKET_TIMEOUT_MS", "0")),
+        "maxPoolSize": int(os.environ.get("SEED_MONGO_MAX_POOL_SIZE", "10")),
+    }
+    return MongoClient(MONGODB_URI, **kwargs)
+
+
+def _mongo_seed_transient(exc: BaseException) -> bool:
+    if isinstance(exc, _TRANSIENT_MONGO_ERRORS):
+        return True
+    msg = str(exc).lower()
+    return "connection closed" in msg or "connection reset" in msg or "broken pipe" in msg
+
+
+def _mongo_workspace_doc_ids(db, workspace_id: ObjectId) -> list[ObjectId]:
+    return [
+        d["_id"]
+        for d in db.documents.find({"workspace": workspace_id}, {"_id": 1}).sort("_id", 1)
+    ]
+
+
 def insert_demo_corpus_account(db):
     """Minimal `accounts` row for the demo team; aligns with seed-test-data and accounts schema."""
     owner = "demo-corpus-seed"
@@ -515,42 +557,122 @@ def mongo_docs_from_rows(rows: list[dict], workspace_id: ObjectId) -> list[dict]
     return docs
 
 
-def insert_documents_batched(db, docs: list[dict], batch_size: int = BATCH_INSERT) -> list[ObjectId]:
+def insert_documents_batched(
+    client: MongoClient,
+    workspace_id: ObjectId,
+    docs: list[dict],
+    batch_size: int = BATCH_INSERT,
+) -> tuple[MongoClient, list[ObjectId]]:
+    """Bulk-insert demo documents; reconnect and resume if Mongo drops the connection mid-run."""
     total = len(docs)
     n_batches = (total + batch_size - 1) // batch_size
-    inserted: list[ObjectId] = []
+    max_attempts = max(1, int(os.environ.get("SEED_MONGO_BATCH_RETRIES", "12")))
     t_all = time.perf_counter()
     per_batch_logs = not _seed_use_progress
+
+    db = client[MONGODB_DATABASE]
+    inserted = _mongo_workspace_doc_ids(db, workspace_id)
+    i = len(inserted)
+    if i > total:
+        raise RuntimeError(
+            f"Mongo already has {i:,} documents for this workspace but seed payload is {total:,} "
+            "(misaligned vs parquet). Drop workspace documents or re-seed from a clean `documents` "
+            "collection."
+        )
+    if i:
+        log(
+            f"Mongo bulk insert resume: {i:,}/{total:,} document(s) already present for workspace; "
+            f"inserting the rest in ≤{n_batches - (i + batch_size - 1) // batch_size} batch(es).",
+            "WARN",
+        )
     log(
-        f"Mongo insert_many: {total:,} documents → {n_batches} batch(es) × ≤{batch_size} (ordered=False).",
+        f"Mongo insert_many: up to {total - i:,} document(s) in ~{n_batches} batch(es) × ≤{batch_size} "
+        f"(ordered=False); transient disconnects reconnect and resume (SEED_MONGO_BATCH_RETRIES).",
         "INFO",
     )
-    batch_iter = _pbar(
-        range(0, total, batch_size),
-        total=n_batches,
-        desc="Mongo insert_many",
-        unit="batch",
-    )
-    for bi, i in enumerate(batch_iter):
+
+    mongo_pbar = None
+    if _seed_use_progress and tqdm is not None:
+        mongo_pbar = tqdm(
+            total=n_batches,
+            initial=min(n_batches, (i + batch_size - 1) // batch_size),
+            desc="Mongo insert_many",
+            unit="batch",
+            file=sys.stderr,
+            dynamic_ncols=True,
+            smoothing=0.05,
+        )
+
+    bi = (i + batch_size - 1) // batch_size
+    while i < total:
         chunk = docs[i : i + batch_size]
         t0 = time.perf_counter()
-        # unordered: server may parallelize; order of inserted_ids still matches chunk order
-        result = db.documents.insert_many(chunk, ordered=False)
-        inserted.extend(result.inserted_ids)
-        if per_batch_logs:
-            dt = time.perf_counter() - t0
-            rate = len(chunk) / dt if dt > 0 else 0.0
-            lo, hi = len(inserted) - len(chunk) + 1, len(inserted)
-            log(
-                f"Mongo batch {bi + 1}/{n_batches}: documents {lo:,}–{hi:,} "
-                f"({len(chunk):,} inserted, {dt:.2f}s, {rate:,.0f} docs/s)",
-                "OK",
-            )
+        for attempt in range(max_attempts):
+            try:
+                db = client[MONGODB_DATABASE]
+                result = db.documents.insert_many(chunk, ordered=False)
+                inserted.extend(result.inserted_ids)
+                i += len(chunk)
+                bi += 1
+                if mongo_pbar is not None:
+                    mongo_pbar.update(1)
+                if per_batch_logs:
+                    dt = time.perf_counter() - t0
+                    rate = len(chunk) / dt if dt > 0 else 0.0
+                    lo, hi = len(inserted) - len(chunk) + 1, len(inserted)
+                    log(
+                        f"Mongo batch {bi}/{n_batches}: documents {lo:,}–{hi:,} "
+                        f"({len(chunk):,} inserted, {dt:.2f}s, {rate:,.0f} docs/s)",
+                        "OK",
+                    )
+                break
+            except Exception as e:
+                if not _mongo_seed_transient(e) or attempt + 1 >= max_attempts:
+                    if mongo_pbar is not None:
+                        mongo_pbar.close()
+                    raise
+                log(
+                    f"Mongo batch at offset {i:,}: transient error ({e!s}); "
+                    f"reconnecting (attempt {attempt + 2}/{max_attempts})…",
+                    "WARN",
+                )
+                time.sleep(min(30.0, 1.5**attempt))
+                try:
+                    client.close()
+                except Exception:
+                    pass
+                client = mongo_client_for_seed()
+                db = client[MONGODB_DATABASE]
+                synced = _mongo_workspace_doc_ids(db, workspace_id)
+                inserted = synced
+                new_i = len(inserted)
+                if new_i < i:
+                    log(
+                        f"After reconnect, workspace document count fell ({new_i:,} < {i:,}); "
+                        "aborting to avoid corrupt seed state.",
+                        "FAIL",
+                    )
+                    if mongo_pbar is not None:
+                        mongo_pbar.close()
+                    raise RuntimeError("Mongo document count decreased after reconnect") from e
+                i = new_i
+                bi = (i + batch_size - 1) // batch_size
+                if i > total:
+                    if mongo_pbar is not None:
+                        mongo_pbar.close()
+                    raise RuntimeError(
+                        f"Mongo workspace has {i:,} documents after reconnect but payload is {total:,}"
+                    ) from e
+                chunk = docs[i : i + batch_size]
+
+    if mongo_pbar is not None:
+        mongo_pbar.close()
+
     log(
         f"Mongo insert_many complete: {len(inserted):,} documents in {_fmt_elapsed(time.perf_counter() - t_all)}.",
         "OK",
     )
-    return inserted
+    return client, inserted
 
 
 def load_parquet_rows(parquet_dirs: list[Path]) -> list[dict]:
@@ -635,7 +757,7 @@ def seed_milvus_only(
     if n == 0:
         raise SystemExit("Parquet export is empty.")
 
-    client = MongoClient(MONGODB_URI)
+    client = mongo_client_for_seed()
     db = client[MONGODB_DATABASE]
     log(f"Connected to MongoDB database={MONGODB_DATABASE!r} (Milvus-only; Mongo not modified).", "INFO")
     workspace_id = resolve_demo_workspace_id(db)
@@ -959,7 +1081,7 @@ def seed(
     log(f"Loaded {len(raw_rows):,} raw rows from source.", "OK")
 
     log_section("MongoDB")
-    client = MongoClient(MONGODB_URI)
+    client = mongo_client_for_seed()
     db = client[MONGODB_DATABASE]
     if workspace_documents_only:
         _mode = (
@@ -1050,7 +1172,8 @@ def seed(
         )
         wipe_documents_collection(db)
 
-    inserted_ids = insert_documents_batched(db, docs)
+    client, inserted_ids = insert_documents_batched(client, workspace_id, docs)
+    db = client[MONGODB_DATABASE]
     log(f"Inserted {len(inserted_ids):,} documents into workspace {workspace_id}.", "OK")
 
     # Not a second bulk insert: create_index scans existing rows once for $text search.
