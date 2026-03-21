@@ -50,7 +50,10 @@ Usage:
   # Re-clone teleoscope-demo-data into data/ before seed (same as download-demo-data.sh)
   PYTHONPATH=. python scripts/seed-demo-corpus.py --download
 
-Requires: pymongo, pyarrow, py7zr, git, bash (for automatic demo data fetch). Use the project mamba env: `mamba activate teleoscope` (see environments/environment.yml).
+  # Disable tqdm progress bars (plain logs only): --no-progress or SEED_NO_PROGRESS=1
+  PYTHONPATH=. python scripts/seed-demo-corpus.py --no-progress
+
+Requires: pymongo, pyarrow, py7zr, tqdm (optional progress bars), git, bash. Use the project mamba env: `mamba activate teleoscope` (see environments/environment.yml).
 """
 from __future__ import annotations
 
@@ -76,6 +79,10 @@ try:
     import pyarrow.parquet as pq
 except ImportError:
     pq = None
+try:
+    from tqdm import tqdm
+except ImportError:
+    tqdm = None  # type: ignore[misc, assignment]
 
 from bson.objectid import ObjectId
 from pymongo import MongoClient
@@ -103,10 +110,45 @@ BATCH_INSERT = 500
 DOCUMENTS_TEXT_INDEX = "text"
 DOCUMENTS_TEXT_INDEX_KEYS = [("title", "text"), ("text", "text")]
 
+# Set True in _configure_seed_ui when tqdm bars are active (log() uses tqdm.write).
+_seed_use_progress: bool = False
+
+
+def _configure_seed_ui(*, no_progress: bool) -> None:
+    """Enable tqdm on stderr for long loops when tty + tqdm installed; optional --no-progress / SEED_NO_PROGRESS."""
+    global _seed_use_progress
+    env_off = os.environ.get("SEED_NO_PROGRESS", "").lower() in ("1", "true", "yes")
+    _seed_use_progress = (
+        (not no_progress)
+        and (not env_off)
+        and (tqdm is not None)
+        and sys.stderr.isatty()
+    )
+
+
+def _pbar(iterable, **kwargs):
+    if not _seed_use_progress:
+        return iterable
+    kwargs.setdefault("file", sys.stderr)
+    kwargs.setdefault("dynamic_ncols", True)
+    kwargs.setdefault("smoothing", 0.05)
+    return tqdm(iterable, **kwargs)
+
+
+def log_section(title: str) -> None:
+    """Visual phase break (always plain ASCII for dumb terminals)."""
+    width = max(48, min(76, len(title) + 12))
+    line = "=" * width
+    print(f"\n{line}\n  {title}\n{line}", flush=True)
+
 
 def log(msg: str, level: str = "INFO") -> None:
     prefix = {"OK": "[OK]", "INFO": "[INFO]", "WARN": "[WARN]", "FAIL": "[FAIL]"}.get(level, "[INFO]")
-    print(f"{prefix} {msg}", flush=True)
+    line = f"{prefix} {msg}"
+    if tqdm is not None and _seed_use_progress:
+        tqdm.write(line)
+    else:
+        print(line, flush=True)
 
 
 def log_demo_seed_scope_warning() -> None:
@@ -364,7 +406,10 @@ def load_documents_jsonl() -> list[dict]:
 
 def mongo_docs_from_rows(rows: list[dict], workspace_id: ObjectId) -> list[dict]:
     docs = []
-    for row in rows:
+    row_iter = rows
+    if _seed_use_progress and len(rows) >= 8000:
+        row_iter = _pbar(rows, total=len(rows), desc="Build Mongo payloads", unit="row")
+    for row in row_iter:
         title = (row.get("title") or "").strip() or "Untitled"
         text = (row.get("text") or "").strip()
         if not text and not title:
@@ -402,24 +447,32 @@ def insert_documents_batched(db, docs: list[dict], batch_size: int = BATCH_INSER
     n_batches = (total + batch_size - 1) // batch_size
     inserted: list[ObjectId] = []
     t_all = time.perf_counter()
+    per_batch_logs = not _seed_use_progress
     log(
-        f"Mongo insert_many: {total:,} documents in {n_batches} batch(es) of up to {batch_size} (ordered=False).",
+        f"Mongo insert_many: {total:,} documents → {n_batches} batch(es) × ≤{batch_size} (ordered=False).",
         "INFO",
     )
-    for bi, i in enumerate(range(0, total, batch_size)):
+    batch_iter = _pbar(
+        range(0, total, batch_size),
+        total=n_batches,
+        desc="Mongo insert_many",
+        unit="batch",
+    )
+    for bi, i in enumerate(batch_iter):
         chunk = docs[i : i + batch_size]
         t0 = time.perf_counter()
         # unordered: server may parallelize; order of inserted_ids still matches chunk order
         result = db.documents.insert_many(chunk, ordered=False)
         inserted.extend(result.inserted_ids)
-        dt = time.perf_counter() - t0
-        rate = len(chunk) / dt if dt > 0 else 0.0
-        lo, hi = len(inserted) - len(chunk) + 1, len(inserted)
-        log(
-            f"Mongo batch {bi + 1}/{n_batches}: documents {lo:,}–{hi:,} "
-            f"({len(chunk):,} inserted, {dt:.2f}s, {rate:,.0f} docs/s)",
-            "OK",
-        )
+        if per_batch_logs:
+            dt = time.perf_counter() - t0
+            rate = len(chunk) / dt if dt > 0 else 0.0
+            lo, hi = len(inserted) - len(chunk) + 1, len(inserted)
+            log(
+                f"Mongo batch {bi + 1}/{n_batches}: documents {lo:,}–{hi:,} "
+                f"({len(chunk):,} inserted, {dt:.2f}s, {rate:,.0f} docs/s)",
+                "OK",
+            )
     log(
         f"Mongo insert_many complete: {len(inserted):,} documents in {_fmt_elapsed(time.perf_counter() - t_all)}.",
         "OK",
@@ -430,22 +483,34 @@ def insert_documents_batched(db, docs: list[dict], batch_size: int = BATCH_INSER
 def load_parquet_rows(parquet_dirs: list[Path]) -> list[dict]:
     if not pq:
         raise RuntimeError("pyarrow is required to read parquet. pip install pyarrow")
-    all_rows = []
+    file_jobs: list[Path] = []
     for d in parquet_dirs:
         if not d.is_dir():
             continue
-        files = sorted(d.glob("part-*.parquet"))
-        for f in files:
-            tbl = pq.read_table(f)
-            for i in range(tbl.num_rows):
-                row = {}
-                for name in tbl.column_names:
-                    col = tbl.column(name)
-                    val = col[i]
-                    if hasattr(val, "as_py"):
-                        val = val.as_py()
-                    row[name] = val
-                all_rows.append(row)
+        file_jobs.extend(sorted(d.glob("part-*.parquet")))
+    all_rows: list[dict] = []
+    file_iter = _pbar(file_jobs, desc="Read parquet parts", unit="file") if file_jobs else file_jobs
+    for f in file_iter:
+        tbl = pq.read_table(f)
+        n = tbl.num_rows
+        row_indices = range(n)
+        if _seed_use_progress and n > 4000:
+            row_indices = _pbar(
+                row_indices,
+                total=n,
+                desc=f"  ↳ {f.name[:36]}",
+                unit="row",
+                leave=False,
+            )
+        for i in row_indices:
+            row = {}
+            for name in tbl.column_names:
+                col = tbl.column(name)
+                val = col[i]
+                if hasattr(val, "as_py"):
+                    val = val.as_py()
+                row[name] = val
+            all_rows.append(row)
     return all_rows
 
 
@@ -465,9 +530,15 @@ def resolve_demo_workspace_id(db) -> ObjectId:
     return ws["_id"]
 
 
-def seed_milvus_only(*, download: bool = False, no_download: bool = False) -> None:
+def seed_milvus_only(
+    *,
+    download: bool = False,
+    no_download: bool = False,
+    no_progress: bool = False,
+) -> None:
     """Load parquet vectors into Milvus for an existing demo workspace; do not modify Mongo."""
     download, no_download = apply_download_env_overrides(download, no_download)
+    _configure_seed_ui(no_progress=no_progress)
     log_demo_seed_scope_warning()
     t_run = time.perf_counter()
     log(f"Milvus-only mode: TELEOSCOPE_DATA_DIR={DATA_DIR}", "INFO")
@@ -580,7 +651,14 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
     batch = 1000
     n_batches = (len(doc_ids) + batch - 1) // batch
     t_upsert = time.perf_counter()
-    for b_idx, i in enumerate(range(0, len(doc_ids), batch)):
+    per_batch_logs = not _seed_use_progress
+    upsert_iter = _pbar(
+        range(0, len(doc_ids), batch),
+        total=n_batches,
+        desc="Milvus upsert",
+        unit="batch",
+    )
+    for b_idx, i in enumerate(upsert_iter):
         chunk_ids = doc_ids[i : i + batch]
         chunk_rows = rows[i : i + batch]
         def to_list(v):
@@ -604,12 +682,13 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
             data=vector_data,
             partition_name=str(workspace_id),
         )
-        dt = time.perf_counter() - t0
-        log(
-            f"Milvus upsert batch {b_idx + 1}/{n_batches}: vectors {i + 1:,}–{i + len(chunk_ids):,} "
-            f"({len(chunk_ids):,} rows, {dt:.2f}s)",
-            "OK",
-        )
+        if per_batch_logs:
+            dt = time.perf_counter() - t0
+            log(
+                f"Milvus upsert batch {b_idx + 1}/{n_batches}: vectors {i + 1:,}–{i + len(chunk_ids):,} "
+                f"({len(chunk_ids):,} rows, {dt:.2f}s)",
+                "OK",
+            )
     log(f"All Milvus upserts done in {_fmt_elapsed(time.perf_counter() - t_upsert)}.", "OK")
     t_flush = time.perf_counter()
     client.flush(collection_name=collection_name)
@@ -624,6 +703,7 @@ def seed(
     keep_text_index: bool = False,
     download: bool = False,
     no_download: bool = False,
+    no_progress: bool = False,
 ) -> None:
     if os.environ.get("SEED_WORKSPACE_DOCUMENTS_ONLY", "").lower() in ("1", "true", "yes"):
         workspace_documents_only = True
@@ -634,6 +714,7 @@ def seed(
         keep_text_index = True
 
     download, no_download = apply_download_env_overrides(download, no_download)
+    _configure_seed_ui(no_progress=no_progress)
 
     log_demo_seed_scope_warning()
     t_seed = time.perf_counter()
@@ -650,10 +731,12 @@ def seed(
         need_documents=True,
         need_parquet=need_parquet,
     )
+    log_section("Source documents (7z or JSONL)")
     log("Loading documents from 7z/JSONL...", "INFO")
     raw_rows = load_documents_jsonl()
     log(f"Loaded {len(raw_rows):,} raw rows from source.", "OK")
 
+    log_section("MongoDB")
     client = MongoClient(MONGODB_URI)
     db = client[MONGODB_DATABASE]
     if workspace_documents_only:
@@ -746,6 +829,7 @@ def seed(
     inserted_ids = insert_documents_batched(db, docs)
     log(f"Inserted {len(inserted_ids):,} documents into workspace {workspace_id}.", "OK")
 
+    log_section("MongoDB text index ($text search)")
     ensure_documents_text_index(db)
 
     count = db.documents.count_documents({"workspace": workspace_id})
@@ -753,6 +837,7 @@ def seed(
 
     parquet_dir = find_parquet_dir()
     if parquet_dir:
+        log_section("Milvus vectors (from parquet)")
         log(f"Parquet vectors: using {parquet_dir}", "INFO")
         seed_milvus(workspace_id, inserted_ids, parquet_dir)
     elif need_parquet:
@@ -772,6 +857,7 @@ def seed(
     id_file = REPO_ROOT / ".demo_corpus_workspace_id"
     id_file.write_text(str(workspace_id), encoding="utf-8")
     log(f"Wrote {id_file}", "OK")
+    log_section("Done")
     log(f"Total seed time: {_fmt_elapsed(time.perf_counter() - t_seed)}.", "OK")
     print("", flush=True)
     print("[OK] Demo corpus seeded. Set in your environment:", flush=True)
@@ -828,16 +914,29 @@ if __name__ == "__main__":
             "Same as SEED_NO_DOWNLOAD=1."
         ),
     )
+    parser.add_argument(
+        "--no-progress",
+        action="store_true",
+        help=(
+            "Disable tqdm progress bars; use plain per-batch logs only. "
+            "Same as SEED_NO_PROGRESS=1 (also implied when stderr is not a TTY)."
+        ),
+    )
     args = parser.parse_args()
     try:
         if args.milvus_only:
-            seed_milvus_only(download=args.download, no_download=args.no_download)
+            seed_milvus_only(
+                download=args.download,
+                no_download=args.no_download,
+                no_progress=args.no_progress,
+            )
         else:
             seed(
                 workspace_documents_only=args.workspace_documents_only,
                 keep_text_index=args.keep_text_index,
                 download=args.download,
                 no_download=args.no_download,
+                no_progress=args.no_progress,
             )
     except FileNotFoundError as e:
         log(str(e), "FAIL")
