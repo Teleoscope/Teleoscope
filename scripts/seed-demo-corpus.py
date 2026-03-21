@@ -324,6 +324,30 @@ def ensure_demo_data_files(
         )
 
 
+def insert_demo_corpus_account(db):
+    """Minimal `accounts` row for the demo team; aligns with seed-test-data and accounts schema."""
+    owner = "demo-corpus-seed"
+    result = db.accounts.insert_one({
+        "users": {"owner": owner},
+        "resources": {
+            "amount_teams_available": 1,
+            "amount_seats_available": 1,
+            "amount_storage_available": 100,
+            "amount_teams_used": 1,
+            "amount_seats_used": 1,
+            "amount_storage_used": 0,
+        },
+        "plan": {
+            "name": "Default",
+            "plan_team_amount": 1,
+            "plan_collaborator_amount": 1,
+            "plan_storage_amount": 100,
+            "note": "Seeded demo corpus account.",
+        },
+    })
+    return result.inserted_id
+
+
 def ensure_collections(db):
     # `accounts` is required when creating a demo team (teams collection validator needs `account`).
     needed = ["documents", "workspaces", "teams", "workflows", "accounts"]
