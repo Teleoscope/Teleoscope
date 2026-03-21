@@ -134,8 +134,13 @@ def milvus_setup(client: MilvusClient, workspace_id, collection_name="teleoscope
         client.create_partition(collection_name=collection_name, partition_name=workspace_id)
 
 
-def _use_lite():
-    return bool(MILVUS_LITE_PATH)
+def _use_lite() -> bool:
+    return bool(os.getenv("MILVUS_LITE_PATH", "").strip())
+
+
+def _milvus_uri_from_env() -> str:
+    """Fresh read — module-level MILVUS_* can be stale if env was set after import."""
+    return os.getenv("MILVUS_URI", "").strip()
 
 
 def _milvus_client_timeout() -> float | None:
@@ -258,8 +263,7 @@ def connect():
     _milvus_connect_trace("connect() start")
     logging.info("Connecting to Milvus...")
     if _use_lite():
-        # Milvus Lite: local file, no server (runs without Docker). Use MILVUS_LITE_PATH so pymilvus orm is not given a file URI at import.
-        path = MILVUS_LITE_PATH
+        path = os.getenv("MILVUS_LITE_PATH", "").strip()
         if path.startswith("file://"):
             path = path[7:]
         lite_kw: dict = {"uri": path}
@@ -283,17 +287,20 @@ def connect():
         except Exception as exc:
             logging.warning("Milvus TCP preflight skipped: %s", exc)
 
-    if MILVUS_URI:
-        assert_milvus_auth_before_network_connect(MILVUS_URI)
-        log_milvus_auth_summary(MILVUS_URI)
+    uri_env = _milvus_uri_from_env()
+    if uri_env:
+        assert_milvus_auth_before_network_connect(uri_env)
+        log_milvus_auth_summary(uri_env)
         _milvus_connect_trace(f"auth={milvus_auth_label()} (no secrets logged)")
         _milvus_connect_trace(f"RPC target MILVUS_URI (timeout sec={_milvus_client_timeout()!r})")
-        client = _connect_after_probe(MILVUS_URI)
+        client = _connect_after_probe(uri_env)
         logging.info("Connected to Milvus (MILVUS_URI).")
         _milvus_connect_trace("connect() done (MILVUS_URI)")
         return client
 
-    uri = f"http://{MILVUS_HOST}:{MIVLUS_PORT}"
+    host = os.getenv("MILVUS_HOST", MILVUS_HOST)
+    port = os.getenv("MIVLUS_PORT", MIVLUS_PORT)
+    uri = f"http://{host}:{port}"
     assert_milvus_auth_before_network_connect(uri)
     log_milvus_auth_summary(uri)
     _milvus_connect_trace(f"auth={milvus_auth_label()} (no secrets logged)")

@@ -5,7 +5,9 @@
 # MILVUS_ONLY=1: only reload vectors into Milvus (Mongo unchanged); needs parquet + matching Mongo doc count.
 # Full bootstrap: ./scripts/one-click-demo.sh. Clean install (rebuild + re-download): CLEAN_INSTALL=1 ./scripts/one-click-demo.sh
 #
-# The seed runs in the foreground (stdout/stderr visible). If it finishes suspiciously fast, check the log
+# The seed runs in the foreground (stdout/stderr visible). mamba/micromamba/PATH are tried only when
+# the prior runner is unavailable — a failed seed (non-zero exit) does NOT fall through to another runner
+# (that used to re-run the full Mongo re-seed twice). If it finishes suspiciously fast, check the log
 # for "Milvus seed done" / upsert batches, or run after refresh:
 #   DEMO_STATUS_SKIP_APP=1 ./scripts/demo-status.sh -v
 #   PYTHONPATH=. python scripts/milvus-status.py --workspace "$(cat .demo_corpus_workspace_id)"
@@ -69,30 +71,43 @@ info "Milvus upserts use MILVUS_URI=$MILVUS_URI (from \`docker compose port milv
 export MONGODB_URI MILVUS_URI
 cd "$REPO_ROOT"
 
+# Only fall back mamba → micromamba → PATH when a *runner is missing*, not when seed exits
+# non-zero. Otherwise a Milvus (or any) failure would re-run the full Mongo drop+insert twice.
 SEED_RAN=0
+SEED_INVOKED=0
+
 if command -v mamba &>/dev/null && mamba run -n teleoscope true 2>/dev/null; then
   section "Seed (streaming — look for Milvus upsert batches + \"Milvus seed done\")"
   if [[ ${#SEED_EXTRA[@]} -eq 0 ]]; then info "Mode: full seed (Mongo + Milvus if reachable)"; else info "Mode: ${SEED_EXTRA[*]}"; fi
+  SEED_INVOKED=1
   if mamba run -n teleoscope env PYTHONPATH=. python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
     SEED_RAN=1
+  else
+    fail "Seed failed under mamba (exit non-zero). Not retrying with micromamba — that would repeat the full Mongo re-seed. Fix the error above (e.g. Milvus flush) or run: PYTHONPATH=. python scripts/seed-demo-corpus.py"
   fi
 fi
-if [[ "$SEED_RAN" -eq 0 ]] && command -v micromamba &>/dev/null && micromamba run -n teleoscope true 2>/dev/null; then
+if [[ "$SEED_RAN" -eq 0 ]] && [[ "$SEED_INVOKED" -eq 0 ]] && command -v micromamba &>/dev/null && micromamba run -n teleoscope true 2>/dev/null; then
   section "Seed (streaming — micromamba)"
   if [[ ${#SEED_EXTRA[@]} -eq 0 ]]; then info "Mode: full seed (Mongo + Milvus if reachable)"; else info "Mode: ${SEED_EXTRA[*]}"; fi
+  SEED_INVOKED=1
   if micromamba run -n teleoscope env PYTHONPATH=. python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
     SEED_RAN=1
+  else
+    fail "Seed failed under micromamba (exit non-zero). Not retrying with system Python — that would repeat the full Mongo re-seed. Fix the error above or run seed manually."
   fi
 fi
-if [[ "$SEED_RAN" -eq 0 ]]; then
+if [[ "$SEED_RAN" -eq 0 ]] && [[ "$SEED_INVOKED" -eq 0 ]]; then
   section "Seed (streaming — current interpreter)"
   if [[ ${#SEED_EXTRA[@]} -eq 0 ]]; then info "Mode: full seed (Mongo + Milvus if reachable)"; else info "Mode: ${SEED_EXTRA[*]}"; fi
+  SEED_INVOKED=1
   if env PYTHONPATH=. python scripts/seed-demo-corpus.py "${SEED_EXTRA[@]}"; then
     SEED_RAN=1
+  else
+    fail "Seed failed (exit non-zero). Fix errors above; Mongo and Milvus must be reachable."
   fi
 fi
 
-[[ "$SEED_RAN" -eq 1 ]] || fail "Seed failed or no working Python (mamba env teleoscope / micromamba / PATH). Fix errors above; Mongo and Milvus must be reachable."
+[[ "$SEED_RAN" -eq 1 ]] || fail "No working Python runner (mamba env teleoscope, micromamba, or PATH). Install deps and try: mamba activate teleoscope; PYTHONPATH=. python scripts/seed-demo-corpus.py"
 
 ok "Seed script exited successfully"
 
