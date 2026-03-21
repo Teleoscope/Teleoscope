@@ -35,6 +35,19 @@ def test_tcp_target_from_env_lite_skips_network():
         os.environ.pop("MILVUS_URI", None)
 
 
+def test_tcp_target_from_env_milvus_port_fallback():
+    os.environ.pop("MILVUS_URI", None)
+    os.environ.pop("MILVUS_LITE_PATH", None)
+    os.environ["MILVUS_HOST"] = "localhost"
+    os.environ.pop("MIVLUS_PORT", None)
+    os.environ["MILVUS_PORT"] = "55015"
+    try:
+        assert tcp_target_from_env() == ("localhost", 55015)
+    finally:
+        os.environ.pop("MILVUS_HOST", None)
+        os.environ.pop("MILVUS_PORT", None)
+
+
 def test_ensure_script_rpc_deadline(monkeypatch):
     monkeypatch.delenv("MILVUS_CLIENT_TIMEOUT", raising=False)
     monkeypatch.delenv("MILVUS_UNBOUNDED_RPC", raising=False)

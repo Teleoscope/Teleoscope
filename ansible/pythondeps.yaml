@@ -46,7 +46,7 @@
           - pandas
           - spacy
           - umap-learn
-          - pymilvus
+          - "pymilvus>=2.6.0,<2.7.0"
           - fastapi
           - uvicorn
           - gunicorn

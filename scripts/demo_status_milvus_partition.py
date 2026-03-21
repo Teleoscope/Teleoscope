@@ -23,12 +23,9 @@ if str(REPO_ROOT) not in sys.path:
 
 
 def _resolve_network_uri() -> str:
-    u = os.environ.get("MILVUS_URI", "").strip()
-    if u:
-        return u
-    h = os.environ.get("MILVUS_HOST", "localhost")
-    p = os.environ.get("MIVLUS_PORT", "19530")
-    return f"http://{h}:{p}"
+    from backend.milvus_uri_resolve import milvus_http_uri_from_env
+
+    return milvus_http_uri_from_env()
 
 
 def _e(msg: str) -> None:

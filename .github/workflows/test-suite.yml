@@ -34,7 +34,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-test.txt
-          pip install pyyaml celery python-dotenv 'pymongo>=4.0.0' pika kombu pymilvus pandas python-docx openpyxl xlsxwriter umap-learn hdbscan numpy scipy zstandard fastapi 'uvicorn[standard]' gunicorn tqdm ujson bcrypt random_object_id joblib
+          pip install pyyaml celery python-dotenv 'pymongo>=4.0.0' pika kombu 'pymilvus>=2.6.0,<2.7.0' pandas python-docx openpyxl xlsxwriter umap-learn hdbscan numpy scipy zstandard fastapi 'uvicorn[standard]' gunicorn tqdm ujson bcrypt random_object_id joblib
 
       - name: Run unit tests
         run: |

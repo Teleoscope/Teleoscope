@@ -1,4 +1,8 @@
-"""Milvus credential policy and server-side auth error mapping."""
+"""Milvus credential policy and server-side auth error mapping.
+
+Docker Compose workers default MILVUS_URI to http://milvus:19530 (in-network service); anonymous HTTP is
+allowlisted for that host (see test_http_milvus_service_ok_without_token).
+"""
 from __future__ import annotations
 
 import pytest

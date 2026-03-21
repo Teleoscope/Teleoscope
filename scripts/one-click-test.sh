@@ -12,6 +12,18 @@ for env_bin in "$HOME/.local/share/mamba/envs/teleoscope/bin" "/opt/homebrew/Cas
   [[ -d "$env_bin" ]] && PATH="$env_bin:$PATH" && break
 done
 
+PY="${PY:-}"
+if [[ -z "$PY" || ! -x "$PY" ]]; then
+  command -v python &>/dev/null && PY="$(command -v python)" || true
+  [[ -z "$PY" ]] && command -v python3 &>/dev/null && PY="$(command -v python3)" || true
+  [[ -z "$PY" && -x "$HOME/.local/share/mamba/envs/teleoscope/bin/python" ]] && PY="$HOME/.local/share/mamba/envs/teleoscope/bin/python"
+  [[ -z "$PY" && -x "/opt/homebrew/Caskroom/miniconda/base/envs/teleoscope/bin/python" ]] && PY="/opt/homebrew/Caskroom/miniconda/base/envs/teleoscope/bin/python"
+fi
+if [[ -z "$PY" || ! -x "$PY" ]]; then
+  echo "No Python found for Milvus smoke / tests. Activate: mamba activate teleoscope (or set PY=...)"
+  exit 1
+fi
+
 echo "=== One-click test: start stack, then run all tests ==="
 echo ""
 
@@ -66,6 +78,10 @@ MILVUS_HOST_PORT_RESOLVED="${MILVUS_PORT_LINE##*:}"
 export MILVUS_HOST=localhost
 export MIVLUS_PORT="$MILVUS_HOST_PORT_RESOLVED"
 echo "Resolved Milvus host port: $MILVUS_HOST_PORT_RESOLVED"
+# shellcheck source=scripts/milvus_docker_uri.sh
+source "$REPO_ROOT/scripts/milvus_docker_uri.sh"
+milvus_export_host_uri_from_compose
+echo "MILVUS_URI=$MILVUS_URI (for host-side Python/tests; same mapping as above)"
 
 # 4. Wait for services (with timeout)
 wait_for() {
@@ -92,5 +108,14 @@ wait_for "App" "curl -sf --connect-timeout 2 http://localhost:3000/api/hello | g
 echo "Stack is up."
 echo ""
 
-# 5. Run all tests (unit, connectivity, Playwright, pipeline e2e)
+# 5. Milvus write-path smoke (ephemeral collection; same schema as app vectors)
+echo "Milvus smoke (upsert / flush / get)..."
+cd "$REPO_ROOT" && MILVUS_URI="$MILVUS_URI" PYTHONPATH=. "$PY" scripts/milvus_one_click_smoke.py || {
+  echo "Milvus smoke failed. Check MILVUS_URI=$MILVUS_URI and: docker compose logs milvus --tail 50"
+  exit 1
+}
+echo "Milvus smoke OK."
+echo ""
+
+# 6. Run all tests (unit, connectivity, Playwright, pipeline e2e)
 ./scripts/run-all-tests.sh

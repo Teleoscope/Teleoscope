@@ -66,8 +66,8 @@ Usage:
   # After bulk upsert, client.flush() can fail with RootCoord "channel not found" (stale gRPC).
   # The seed closes the client, reconnects, and retries flush once; SEED_MILVUS_SKIP_FLUSH=1 skips
   # flush entirely (Milvus auto-seals); SEED_MILVUS_FLUSH_STRICT=1 exits non-zero if flush still fails.
-  # Large loads (~250k+ vectors): periodic flush every N upsert batches (default N=35 when unset)
-  # so RootCoord seals smaller chunks — SEED_MILVUS_FLUSH_EVERY_N_BATCHES=0 disables, or set N explicitly.
+  # Optional SEED_MILVUS_FLUSH_EVERY_N_BATCHES=N: flush every N upsert batches (default off). If a
+  # periodic flush fails, the seed reconnects before continuing upserts (avoids broken gRPC).
 
 Requires: pymongo, pyarrow, py7zr, tqdm (optional progress bars), git, bash. Use the project mamba env: `mamba activate teleoscope` (see environments/environment.yml).
 """
@@ -219,21 +219,20 @@ def _milvus_batch_log_enabled() -> bool:
     return os.environ.get("SEED_MILVUS_BATCH_LOG", "").lower() in ("1", "true", "yes")
 
 
-def _milvus_periodic_flush_interval_batches(vector_count: int) -> int:
+def _milvus_periodic_flush_interval_batches() -> int:
     """
-    Flush after every N upsert batches mid-load so Milvus seals smaller segments instead of one
-    huge final flush (~350k vectors). SEED_MILVUS_FLUSH_EVERY_N_BATCHES: 0 = off; positive = N;
-    unset and vector_count >= 250_000 → default 35.
+    Opt-in only: flush after every N upsert batches. Default off — automatic periodic flush was
+    hitting the same RootCoord flush failures as end-of-load and could break the client (weird
+    follow-on errors on upsert). Set SEED_MILVUS_FLUSH_EVERY_N_BATCHES explicitly if you want it.
     """
     raw = os.environ.get("SEED_MILVUS_FLUSH_EVERY_N_BATCHES", "").strip()
-    if raw:
-        try:
-            return max(0, int(raw))
-        except ValueError:
-            log(f"Invalid SEED_MILVUS_FLUSH_EVERY_N_BATCHES={raw!r}; using default rule.", "WARN")
-    if vector_count >= 250_000:
-        return 35
-    return 0
+    if not raw:
+        return 0
+    try:
+        return max(0, int(raw))
+    except ValueError:
+        log(f"Invalid SEED_MILVUS_FLUSH_EVERY_N_BATCHES={raw!r}; periodic flush disabled.", "WARN")
+        return 0
 
 
 def run_download_demo_data_script() -> None:
@@ -718,13 +717,13 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
     # Backend schema: id (varchar), vector (float_vector 1024). Parquet may have "id" (e.g. reddit/source id).
     # Use parquet row "id" when present so Rank can find embeddings keyed by that id; else use Mongo _id.
     n_batches = (len(doc_ids) + batch - 1) // batch
-    flush_every_n = _milvus_periodic_flush_interval_batches(len(doc_ids))
+    flush_every_n = _milvus_periodic_flush_interval_batches()
     if flush_every_n:
         approx_vecs = flush_every_n * batch
         log(
             f"Milvus: periodic flush every {flush_every_n} upsert batch(es) (~{approx_vecs:,} vectors "
-            f"per seal) plus a final flush — reduces one huge seal at the end on large loads. "
-            f"Override: SEED_MILVUS_FLUSH_EVERY_N_BATCHES (0=off).",
+            f"per seal) plus final flush — opt-in; if flush RPCs fail on your cluster, use "
+            f"SEED_MILVUS_SKIP_FLUSH=1.",
             "INFO",
         )
     t_upsert = time.perf_counter()
@@ -781,8 +780,10 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
             )
         if flush_every_n and (b_idx + 1) % flush_every_n == 0:
             t_pf = time.perf_counter()
+            pf_ok = False
             try:
                 client.flush(collection_name=collection_name)
+                pf_ok = True
                 log(
                     f"Milvus periodic flush after upsert batch {b_idx + 1}/{n_batches} "
                     f"({_fmt_elapsed(time.perf_counter() - t_pf)}).",
@@ -790,9 +791,36 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
                 )
             except Exception as e_pf:
                 log(
-                    f"Milvus periodic flush after batch {b_idx + 1} failed (continuing upserts): {e_pf!s}",
+                    f"Milvus periodic flush after batch {b_idx + 1} failed: {e_pf!s}",
                     "WARN",
                 )
+            if not pf_ok:
+                try:
+                    client.close()
+                except Exception:
+                    pass
+                log(
+                    "Milvus: reconnecting after failed flush (stale RootCoord channel can break "
+                    "the next upsert with e.g. code 65537).",
+                    "INFO",
+                )
+                t_re = time.perf_counter()
+                client = embeddings.connect()
+                embeddings.use_database_if_supported(client)
+                log(f"Milvus reconnect in {_fmt_elapsed(time.perf_counter() - t_re)}.", "OK")
+                try:
+                    t_pf2 = time.perf_counter()
+                    client.flush(collection_name=collection_name)
+                    log(
+                        f"Milvus periodic flush OK on fresh connection after batch {b_idx + 1} "
+                        f"({_fmt_elapsed(time.perf_counter() - t_pf2)}).",
+                        "OK",
+                    )
+                except Exception as e_pf2:
+                    log(
+                        f"Milvus periodic flush still failing on fresh connection (continuing upserts): {e_pf2!s}",
+                        "WARN",
+                    )
     log(f"All Milvus upserts done in {_fmt_elapsed(time.perf_counter() - t_upsert)}.", "OK")
     t_flush = time.perf_counter()
     flush_strict = os.environ.get("SEED_MILVUS_FLUSH_STRICT", "").lower() in (

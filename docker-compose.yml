@@ -73,8 +73,11 @@ services:
       timeout: 5s
       retries: 5
 
+  # Keep in sync with pymilvus major.minor in backend/requirements.txt (2.6.x).
+  # Upgrading from older Milvus: existing milvus/etcd/minio volumes may be incompatible —
+  # for local dev, `docker compose down -v` then re-seed is usually simplest.
   milvus:
-    image: milvusdb/milvus:v2.3.3
+    image: milvusdb/milvus:v2.6.11
     restart: unless-stopped
     command: ["milvus", "run", "standalone"]
     environment:
@@ -189,6 +192,7 @@ services:
       MILVUS_HOST: milvus
       MIVLUS_PORT: 19530
       MILVUS_DBNAME: teleoscope
+      MILVUS_URI: ${MILVUS_DOCKER_URI:-http://milvus:19530}
       RABBITMQ_DISPATCH_QUEUE: teleoscope-dispatch
       RABBITMQ_VECTORIZE_QUEUE: teleoscope-vectorize
       RABBITMQ_UPLOAD_VECTOR_QUEUE: teleoscope-upload-vector
@@ -246,6 +250,7 @@ services:
       MILVUS_HOST: milvus
       MIVLUS_PORT: 19530
       MILVUS_DBNAME: teleoscope
+      MILVUS_URI: ${MILVUS_DOCKER_URI:-http://milvus:19530}
     env_file:
       - .env
     depends_on:
@@ -302,6 +307,7 @@ services:
       MILVUS_HOST: milvus
       MIVLUS_PORT: 19530
       MILVUS_DBNAME: teleoscope
+      MILVUS_URI: ${MILVUS_DOCKER_URI:-http://milvus:19530}
     env_file:
       - .env
     depends_on:

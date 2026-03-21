@@ -15,8 +15,8 @@ transformers>=4.33.0,<4.46.0
 peft>=0.7.0
 torch>=2.0.0
 
-# Vector DB
-pymilvus>=2.3.0
+# Vector DB (match Docker Milvus in docker-compose.yml, e.g. v2.6.x)
+pymilvus>=2.6.0,<2.7.0
 
 # Document processing
 pandas>=2.0.0

@@ -56,6 +56,7 @@ CHROMA_PORT = os.getenv("CHROMA_PORT")
 MILVUS_HOST = os.getenv("MILVUS_HOST")
 MILVUS_PORT = os.getenv("MILVUS_PORT")
 MILVUS_DATABASE = os.getenv("MILVUS_DATABASE")
+# Note: active code paths use backend.milvus_uri_resolve (MILVUS_URI, MIVLUS_PORT, MILVUS_PORT).
 
 
 db = "test"
@@ -226,8 +227,16 @@ def rank_document_ids_by_similarity(documents_ids, scores):
 
 
 def connect_milvus():
-    connections.connect("default", host=MILVUS_HOST, port=MILVUS_PORT)
-    db.using_database(MILVUS_DATABASE)
+    """ORM connection; prefers MILVUS_URI / same rules as ``embeddings.connect()``."""
+    from backend.milvus_uri_resolve import milvus_http_uri_from_env, milvus_named_database_from_env
+
+    uri = milvus_http_uri_from_env()
+    connections.connect("default", uri=uri)
+    db_name = milvus_named_database_from_env()
+    try:
+        db.using_database(db_name)
+    except Exception:
+        logging.debug("Milvus using_database(%r) skipped (unsupported or default DB).", db_name)
 
 
 def get_documents_milvus(dbstring, limit):

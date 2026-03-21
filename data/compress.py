@@ -1,14 +1,26 @@
 import json
-import time
 import random
+import sys
+import time
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(_REPO_ROOT / ".env", override=False)
+except ImportError:
+    pass
 
 import pyarrow as pa
 import pyarrow.parquet as pq
 from pymilvus import MilvusClient, DataType
 from sentence_transformers import SentenceTransformer
 
-MILVUS_URI = "http://localhost:19530"
+from backend.milvus_script_connect import connect_milvus_script_client
+
 COLLECTION_NAME = "reddit_posts"
 JSONL_PATH = "documents.jsonl"
 OUT_DIR = Path("parquet_out")
@@ -186,57 +198,63 @@ def main():
     out_samples = OUT_DIR / "samples"
     out_samples.mkdir(parents=True, exist_ok=True)
 
-    client = MilvusClient(uri=MILVUS_URI)
-    build_collection(client)
+    client = connect_milvus_script_client()
+    try:
+        build_collection(client)
 
-    model = SentenceTransformer("BAAI/bge-m3", device="cpu")
-    model.max_seq_length = MAX_SEQ_LENGTH
-    log(f"Model loaded. max_seq_length={model.max_seq_length}")
+        model = SentenceTransformer("BAAI/bge-m3", device="cpu")
+        model.max_seq_length = MAX_SEQ_LENGTH
+        log(f"Model loaded. max_seq_length={model.max_seq_length}")
 
-    parquet_writer = ShardedParquetWriter(out_full, rows_per_file=PARQUET_ROWS_PER_FILE)
-    samplers = [
-        ReservoirSampler(10, seed=42),
-        ReservoirSampler(100, seed=43),
-        ReservoirSampler(1000, seed=44),
-    ]
+        parquet_writer = ShardedParquetWriter(out_full, rows_per_file=PARQUET_ROWS_PER_FILE)
+        samplers = [
+            ReservoirSampler(10, seed=42),
+            ReservoirSampler(100, seed=43),
+            ReservoirSampler(1000, seed=44),
+        ]
 
-    batch_rows = []
-    total_seen = 0
+        batch_rows = []
+        total_seen = 0
 
-    for doc in iter_jsonl(JSONL_PATH):
-        total_seen += 1
+        for doc in iter_jsonl(JSONL_PATH):
+            total_seen += 1
 
-        title = (doc.get("title") or "").strip()
-        text = (doc.get("text") or "").strip()
-        combined_text = make_combined_text(title, text)
+            title = (doc.get("title") or "").strip()
+            text = (doc.get("text") or "").strip()
+            combined_text = make_combined_text(title, text)
 
-        batch_rows.append({
-            "id": str(doc["id"]),
-            "title": title[:2048],
-            "text": text[:65535],
-            "combined_text": combined_text[:65535],
-        })
+            batch_rows.append({
+                "id": str(doc["id"]),
+                "title": title[:2048],
+                "text": text[:65535],
+                "combined_text": combined_text[:65535],
+            })
 
-        if total_seen % 100 == 0:
-            log(f"Read {total_seen} docs so far; buffered={len(batch_rows)}")
+            if total_seen % 100 == 0:
+                log(f"Read {total_seen} docs so far; buffered={len(batch_rows)}")
 
-        if len(batch_rows) >= INSERT_BATCH_SIZE:
+            if len(batch_rows) >= INSERT_BATCH_SIZE:
+                flush_batch(client, model, batch_rows, total_seen, parquet_writer, samplers)
+                batch_rows.clear()
+
+        if batch_rows:
             flush_batch(client, model, batch_rows, total_seen, parquet_writer, samplers)
-            batch_rows.clear()
 
-    if batch_rows:
-        flush_batch(client, model, batch_rows, total_seen, parquet_writer, samplers)
+        parquet_writer.flush()
 
-    parquet_writer.flush()
+        client.flush(collection_name=COLLECTION_NAME)
+        log("Milvus flush finished.")
 
-    client.flush(collection_name=COLLECTION_NAME)
-    log("Milvus flush finished.")
+        write_sample(samplers[0].items, out_samples / "sample_10.parquet")
+        write_sample(samplers[1].items, out_samples / "sample_100.parquet")
+        write_sample(samplers[2].items, out_samples / "sample_1000.parquet")
 
-    write_sample(samplers[0].items, out_samples / "sample_10.parquet")
-    write_sample(samplers[1].items, out_samples / "sample_100.parquet")
-    write_sample(samplers[2].items, out_samples / "sample_1000.parquet")
-
-    log("Done.")
+        log("Done.")
+    finally:
+        try:
+            client.close()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

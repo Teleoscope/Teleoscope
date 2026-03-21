@@ -64,12 +64,12 @@ else
 fi
 
 export MONGODB_URI="mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@localhost:27017/teleoscope?directConnection=true&serverSelectionTimeoutMS=5000&authSource=admin"
-MILVUS_PORT=$(docker compose port milvus 19530 2>/dev/null | cut -d: -f2)
-export MILVUS_URI="http://localhost:${MILVUS_PORT:-19530}"
-info "Milvus upserts use MILVUS_URI=$MILVUS_URI (from \`docker compose port milvus 19530\`). Watch seed output for upsert batches or 'skipping Milvus'."
+# shellcheck source=scripts/milvus_docker_uri.sh
+source "$REPO_ROOT/scripts/milvus_docker_uri.sh"
+milvus_export_host_uri_from_compose
+info "Milvus upserts use MILVUS_URI=$MILVUS_URI (scripts/milvus_docker_uri.sh). Watch seed output for upsert batches or 'skipping Milvus'."
 
 export MONGODB_URI MILVUS_URI
-cd "$REPO_ROOT"
 
 # Only fall back mamba → micromamba → PATH when a *runner is missing*, not when seed exits
 # non-zero. Otherwise a Milvus (or any) failure would re-run the full Mongo drop+insert twice.

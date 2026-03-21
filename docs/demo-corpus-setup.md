@@ -161,7 +161,7 @@ Run `./scripts/demo-status.sh [-v|--verbose] [base_url]` to check: demo workspac
 
 Milvus has **databases** (like Postgres schemas) and **collections** (where vectors live). In `.env`, **`MILVUS_DBNAME`** is used by **`backend.embeddings.connect()`** as the *Milvus database* name when the server supports multi-DB.
 
-**Docker Compose uses Milvus 2.3 standalone**, which often does **not** implement `DescribeDatabase` / `using_database`. The app then keeps everything in Milvus’s built-in **`default`** database. The **collection** that holds vectors is still named **`teleoscope`** (or **`MILVUS_COLLECTION`** if you set it). So one-click / `refresh-demo-corpus` / `seed-demo-corpus.py` **did** write vectors into the **`teleoscope` collection**; they are not missing — they sit under the **default** Milvus DB, not a DB named `teleoscope`.
+**Docker Compose uses Milvus 2.6.x standalone** (see `docker-compose.yml`), which in some setups may **not** implement `DescribeDatabase` / `using_database` the way multi-DB clusters do. The app then keeps everything in Milvus’s built-in **`default`** database. The **collection** that holds vectors is still named **`teleoscope`** (or **`MILVUS_COLLECTION`** if you set it). So one-click / `refresh-demo-corpus` / `seed-demo-corpus.py` **did** write vectors into the **`teleoscope` collection**; they are not missing — they sit under the **default** Milvus DB, not a DB named `teleoscope`.
 
 On **Zilliz** or newer Milvus, a database named `teleoscope` may exist if the server supports it and `create_database` ran successfully.
 
