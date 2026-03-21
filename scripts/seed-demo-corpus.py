@@ -20,7 +20,10 @@ already exist, or **`--no-download`** / **`SEED_NO_DOWNLOAD=1`** to fail fast wh
 Creates or reuses a demo-corpus workspace and:
   1. Extracts documents.jsonl.7z, loads documents into MongoDB (state.vectorized=True).
      By default the entire `documents` collection is dropped and recreated (see
-     `--workspace-documents-only` to keep other workspaces' documents).
+     `--workspace-documents-only` to keep other workspaces' documents). You will see
+     two long tqdm phases over ~all rows (build Python payloads, then insert_many batches)
+     plus a separate **text-index build** (create_index scans documents once for $text)—
+     that is **not** a second document import.
   2. If Milvus is configured (MILVUS_URI or MILVUS_LITE_PATH), loads vectors from
      parquet into Milvus for the same workspace so ranking/similarity work.
 
@@ -60,6 +63,11 @@ Usage:
   # Hang avoidance: SEED_MILVUS_RPC_TIMEOUT (default 300) sets MILVUS_CLIENT_TIMEOUT for pymilvus;
   # MILVUS_UNBOUNDED_RPC=1 removes cap; MILVUS_DIAG=1 stderr timeline in embeddings.connect;
   # MILVUS_SKIP_TCP_PREFLIGHT=1 skips port check before RPC.
+  # After bulk upsert, client.flush() can fail with RootCoord "channel not found" (stale gRPC).
+  # The seed closes the client, reconnects, and retries flush once; SEED_MILVUS_SKIP_FLUSH=1 skips
+  # flush entirely (Milvus auto-seals); SEED_MILVUS_FLUSH_STRICT=1 exits non-zero if flush still fails.
+  # Large loads (~250k+ vectors): periodic flush every N upsert batches (default N=35 when unset)
+  # so RootCoord seals smaller chunks — SEED_MILVUS_FLUSH_EVERY_N_BATCHES=0 disables, or set N explicitly.
 
 Requires: pymongo, pyarrow, py7zr, tqdm (optional progress bars), git, bash. Use the project mamba env: `mamba activate teleoscope` (see environments/environment.yml).
 """
@@ -209,6 +217,23 @@ def _milvus_upsert_batch_size() -> int:
 
 def _milvus_batch_log_enabled() -> bool:
     return os.environ.get("SEED_MILVUS_BATCH_LOG", "").lower() in ("1", "true", "yes")
+
+
+def _milvus_periodic_flush_interval_batches(vector_count: int) -> int:
+    """
+    Flush after every N upsert batches mid-load so Milvus seals smaller segments instead of one
+    huge final flush (~350k vectors). SEED_MILVUS_FLUSH_EVERY_N_BATCHES: 0 = off; positive = N;
+    unset and vector_count >= 250_000 → default 35.
+    """
+    raw = os.environ.get("SEED_MILVUS_FLUSH_EVERY_N_BATCHES", "").strip()
+    if raw:
+        try:
+            return max(0, int(raw))
+        except ValueError:
+            log(f"Invalid SEED_MILVUS_FLUSH_EVERY_N_BATCHES={raw!r}; using default rule.", "WARN")
+    if vector_count >= 250_000:
+        return 35
+    return 0
 
 
 def run_download_demo_data_script() -> None:
@@ -693,6 +718,15 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
     # Backend schema: id (varchar), vector (float_vector 1024). Parquet may have "id" (e.g. reddit/source id).
     # Use parquet row "id" when present so Rank can find embeddings keyed by that id; else use Mongo _id.
     n_batches = (len(doc_ids) + batch - 1) // batch
+    flush_every_n = _milvus_periodic_flush_interval_batches(len(doc_ids))
+    if flush_every_n:
+        approx_vecs = flush_every_n * batch
+        log(
+            f"Milvus: periodic flush every {flush_every_n} upsert batch(es) (~{approx_vecs:,} vectors "
+            f"per seal) plus a final flush — reduces one huge seal at the end on large loads. "
+            f"Override: SEED_MILVUS_FLUSH_EVERY_N_BATCHES (0=off).",
+            "INFO",
+        )
     t_upsert = time.perf_counter()
     batch_log = _milvus_batch_log_enabled()
     per_batch_logs = (not _seed_use_progress) or batch_log
@@ -745,11 +779,90 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
                 f"({len(chunk_ids):,} rows, {dt:.2f}s)",
                 "OK",
             )
+        if flush_every_n and (b_idx + 1) % flush_every_n == 0:
+            t_pf = time.perf_counter()
+            try:
+                client.flush(collection_name=collection_name)
+                log(
+                    f"Milvus periodic flush after upsert batch {b_idx + 1}/{n_batches} "
+                    f"({_fmt_elapsed(time.perf_counter() - t_pf)}).",
+                    "OK",
+                )
+            except Exception as e_pf:
+                log(
+                    f"Milvus periodic flush after batch {b_idx + 1} failed (continuing upserts): {e_pf!s}",
+                    "WARN",
+                )
     log(f"All Milvus upserts done in {_fmt_elapsed(time.perf_counter() - t_upsert)}.", "OK")
     t_flush = time.perf_counter()
-    client.flush(collection_name=collection_name)
-    client.close()
-    log(f"Milvus flush + client close in {_fmt_elapsed(time.perf_counter() - t_flush)}.", "OK")
+    flush_strict = os.environ.get("SEED_MILVUS_FLUSH_STRICT", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    skip_flush = os.environ.get("SEED_MILVUS_SKIP_FLUSH", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+
+    def _close_mv(c) -> None:
+        try:
+            c.close()
+        except Exception:
+            pass
+
+    if skip_flush:
+        log(
+            "SEED_MILVUS_SKIP_FLUSH=1 — skipping flush (Milvus seals segments in the background).",
+            "INFO",
+        )
+        _close_mv(client)
+    else:
+        log(
+            "Milvus: flush() to seal segments (retries once with a fresh connection if RootCoord "
+            "reports channel errors after a long upsert)…",
+            "INFO",
+        )
+        flushed = False
+        try:
+            client.flush(collection_name=collection_name)
+            flushed = True
+            log(f"Milvus flush in {_fmt_elapsed(time.perf_counter() - t_flush)}.", "OK")
+        except Exception as e1:
+            log(
+                f"Milvus flush failed on current connection (often stale gRPC after bulk upsert): {e1!s}",
+                "WARN",
+            )
+        _close_mv(client)
+
+        if not flushed:
+            log("Milvus: reconnecting and retrying flush once…", "INFO")
+            t_retry = time.perf_counter()
+            try:
+                client = embeddings.connect()
+                embeddings.use_database_if_supported(client)
+                client.flush(collection_name=collection_name)
+                log(
+                    f"Milvus flush OK after reconnect ({_fmt_elapsed(time.perf_counter() - t_retry)}).",
+                    "OK",
+                )
+                flushed = True
+            except Exception as e2:
+                detail = (
+                    "Milvus flush still failing after reconnect. Upserts are usually persisted; "
+                    "segments may seal automatically, or restart Milvus (`docker compose restart milvus`). "
+                    "Verify: PYTHONPATH=. python scripts/milvus-status.py — "
+                    "or set SEED_MILVUS_SKIP_FLUSH=1 to complete the seed without flush."
+                )
+                if flush_strict:
+                    log(f"{detail} ({e2!s})", "FAIL")
+                    _close_mv(client)
+                    raise SystemExit(1) from e2
+                log(f"{detail} Detail: {e2!s}", "WARN")
+            finally:
+                _close_mv(client)
+
     log("Milvus seed done.", "OK")
 
 
@@ -885,6 +998,11 @@ def seed(
     inserted_ids = insert_documents_batched(db, docs)
     log(f"Inserted {len(inserted_ids):,} documents into workspace {workspace_id}.", "OK")
 
+    # Not a second bulk insert: create_index scans existing rows once for $text search.
+    log(
+        "Next: build the shared MongoDB $text index on `documents` (one index build, not re-loading JSONL).",
+        "INFO",
+    )
     log_section("MongoDB text index ($text search)")
     ensure_documents_text_index(db)
 

@@ -96,27 +96,44 @@ MILVUS_PORT=$(docker compose port milvus 19530 2>/dev/null | cut -d: -f2)
 export MILVUS_URI="http://localhost:${MILVUS_PORT:-19530}"
 info "MONGODB_URI and MILVUS_URI set for host"
 
-seed_out=""
+# Fall back mamba → micromamba → PATH only when a runner is unavailable — not when seed exits
+# non-zero (avoids repeating full Mongo re-seed). Stream seed logs to the terminal (no capture).
+SEED_RAN=0
+SEED_INVOKED=0
 if command -v mamba &>/dev/null && mamba run -n teleoscope true 2>/dev/null; then
   info "Running seed via mamba run -n teleoscope..."
-  seed_out=$(MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" mamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/seed-demo-corpus.py" 2>/dev/null) || true
+  SEED_INVOKED=1
+  if MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" mamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/seed-demo-corpus.py"; then
+    SEED_RAN=1
+  else
+    fail "Seed failed under mamba. Not retrying with micromamba — that would repeat the full Mongo re-seed. Fix the error above, then re-run this script or run seed manually."
+  fi
 fi
-if [[ -z "$seed_out" ]] && command -v micromamba &>/dev/null && micromamba run -n teleoscope true 2>/dev/null; then
+if [[ "$SEED_RAN" -eq 0 ]] && [[ "$SEED_INVOKED" -eq 0 ]] && command -v micromamba &>/dev/null && micromamba run -n teleoscope true 2>/dev/null; then
   info "Running seed via micromamba run -n teleoscope..."
-  seed_out=$(MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" micromamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/seed-demo-corpus.py" 2>/dev/null) || true
+  SEED_INVOKED=1
+  if MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" micromamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/seed-demo-corpus.py"; then
+    SEED_RAN=1
+  else
+    fail "Seed failed under micromamba. Not retrying with system Python — that would repeat the full Mongo re-seed."
+  fi
 fi
-if [[ -z "$seed_out" ]]; then
+if [[ "$SEED_RAN" -eq 0 ]] && [[ "$SEED_INVOKED" -eq 0 ]]; then
   info "Running seed with current Python..."
-  seed_out=$(cd "$REPO_ROOT" && PYTHONPATH=. python scripts/seed-demo-corpus.py 2>/dev/null) || true
+  SEED_INVOKED=1
+  if cd "$REPO_ROOT" && MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" PYTHONPATH=. python scripts/seed-demo-corpus.py; then
+    SEED_RAN=1
+  else
+    fail "Seed failed. Install the env and deps, then: mamba activate teleoscope; PYTHONPATH=. python scripts/seed-demo-corpus.py"
+  fi
 fi
 
-if [[ -z "$seed_out" ]]; then
-  fail "Could not seed demo corpus. Install the env and deps, then run: mamba activate teleoscope; PYTHONPATH=. python scripts/seed-demo-corpus.py; add DEMO_CORPUS_WORKSPACE_ID=<printed_id> to .env and restart app."
-fi
+[[ "$SEED_RAN" -eq 1 ]] || fail "No working Python runner (mamba env teleoscope, micromamba, or PATH). Install deps and re-run."
+
 ok "Seed script finished"
 
-DEMO_WORKSPACE_ID=$(echo "$seed_out" | grep 'DEMO_CORPUS_WORKSPACE_ID=' | tail -1 | sed 's/.*DEMO_CORPUS_WORKSPACE_ID=//' | tr -d '\r')
-if [[ -z "$DEMO_WORKSPACE_ID" ]] && [[ -f "$REPO_ROOT/.demo_corpus_workspace_id" ]]; then
+DEMO_WORKSPACE_ID=""
+if [[ -f "$REPO_ROOT/.demo_corpus_workspace_id" ]]; then
   DEMO_WORKSPACE_ID=$(cat "$REPO_ROOT/.demo_corpus_workspace_id" | tr -d '\r\n')
   info "Read DEMO_CORPUS_WORKSPACE_ID from .demo_corpus_workspace_id"
 fi

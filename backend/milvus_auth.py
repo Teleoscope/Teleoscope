@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 from urllib.parse import urlparse
 
 _LOG = logging.getLogger(__name__)
@@ -169,6 +170,32 @@ def log_milvus_auth_summary(uri: str) -> None:
         milvus_auth_label(),
         _uri_host_hint(uri),
     )
+
+
+def print_milvus_auth_status_for_shell(uri: str) -> int:
+    """
+    Print Milvus auth summary to stdout (not logging) for shell scripts.
+    Returns 0 if checks pass, 1 on policy failure.
+    """
+    creds = milvus_has_credentials()
+    print(f"milvus_auth_label: {milvus_auth_label()}", file=sys.stdout, flush=True)
+    print(f"milvus_creds_in_env: {'yes' if creds else 'no'}", file=sys.stdout, flush=True)
+    print(f"milvus_target_host: {_uri_host_hint(uri)}", file=sys.stdout, flush=True)
+    req = os.getenv("DEMO_STATUS_REQUIRE_MILVUS_CREDENTIALS", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    if req and not creds:
+        print("milvus_auth_check: FAIL (DEMO_STATUS_REQUIRE_MILVUS_CREDENTIALS)", file=sys.stdout, flush=True)
+        return 1
+    try:
+        assert_milvus_auth_before_network_connect(uri)
+    except Exception as e:
+        print(f"milvus_auth_check: FAIL ({e})", file=sys.stdout, flush=True)
+        return 1
+    print("milvus_auth_check: OK", file=sys.stdout, flush=True)
+    return 0
 
 
 def _looks_like_milvus_auth_failure(exc: BaseException) -> bool:
