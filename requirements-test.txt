@@ -4,3 +4,4 @@ pytest-cov>=4.0.0
 pyyaml>=6.0.0
 python-dotenv>=1.0.0
 httpx>=0.28.1
+py7zr>=0.22

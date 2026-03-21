@@ -314,43 +314,17 @@ def ensure_documents_text_index(db) -> None:
 def extract_jsonl_from_7z(archive_path: Path) -> list[dict]:
     if not py7zr:
         raise RuntimeError("py7zr is required to read documents.jsonl.7z. pip install 'py7zr>=0.22'")
-    SevenZipFile = getattr(py7zr, "SevenZipFile", None)
-    if SevenZipFile is None:
-        raise RuntimeError("py7zr.SevenZipFile missing; pip install -U 'py7zr>=0.22'")
     if not archive_path.exists():
         raise FileNotFoundError(
             f"Archive not found: {archive_path}. Re-run with network access or run ./scripts/download-demo-data.sh."
         )
-    rows = []
-    log(f"Opening 7z archive: {archive_path}", "INFO")
-    with SevenZipFile(archive_path, mode="r") as arc:
-        names = arc.getnames() if hasattr(arc, "getnames") else arc.namelist()
-        targets = [n for n in names if str(n).endswith(".jsonl")]
-        log(f"JSONL members ({len(targets)}): {targets}", "INFO")
-        if not targets:
-            log("No .jsonl files in archive.", "WARN")
-            return rows
-        t0 = time.perf_counter()
-        # Public API: read(targets) -> { filename: BytesIO }; not readall() (removed / inconsistent across versions).
-        by_name = arc.read(targets)
-        for name in targets:
-            bio = by_name.get(name)
-            if bio is None:
-                log(f"Archive read() omitted member {name!r}", "WARN")
-                continue
-            for raw_line in bio.read().splitlines():
-                line = raw_line.decode("utf-8").strip()
-                if not line:
-                    continue
-                try:
-                    rows.append(json.loads(line))
-                except json.JSONDecodeError as e:
-                    log(f"Skip bad JSON line in {name}: {e}", "WARN")
-        log(
-            f"Parsed {len(rows):,} lines from 7z JSONL in {_fmt_elapsed(time.perf_counter() - t0)}.",
-            "OK",
-        )
-    return rows
+    # py7zr 1.x has no SevenZipFile.read/readall; implementation lives in demo_7z_jsonl.py (pytest-verified).
+    _scripts = str(Path(__file__).resolve().parent)
+    if _scripts not in sys.path:
+        sys.path.insert(0, _scripts)
+    from demo_7z_jsonl import extract_jsonl_rows_from_7z
+
+    return extract_jsonl_rows_from_7z(archive_path, log=log)
 
 
 def load_jsonl_uncompressed(path: Path) -> list[dict]:
