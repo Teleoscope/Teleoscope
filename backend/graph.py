@@ -106,8 +106,15 @@ def update_vectors(database: str, documents):
 def delete_vectors(database: str, ids):
     logging.info(f"Deleting {len(ids)} vectors in database {database}...")
     client = embeddings.connect()
-    client.delete(collection_name=database, ids=ids)
-    logging.info(f"Deleted {len(ids)} vectors in database {database}.")
+    try:
+        embeddings.use_database_if_supported(client)
+        client.delete(collection_name=database, ids=ids)
+        logging.info(f"Deleted {len(ids)} vectors in database {database}.")
+    finally:
+        try:
+            client.close()
+        except Exception:
+            pass
 
 
 ################################################################################

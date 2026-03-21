@@ -1,11 +1,35 @@
-from pymilvus import MilvusClient
+import sys
+from pathlib import Path
 from pprint import pprint
 
-client = MilvusClient(uri="http://localhost:19530")
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+try:
+    from dotenv import load_dotenv
 
-collections = client.list_collections()
-print(collections)
+    load_dotenv(_REPO_ROOT / ".env", override=False)
+except ImportError:
+    pass
 
-for name in client.list_collections():
-    print(f"\n=== {name} ===")
-    pprint(client.describe_collection(collection_name=name))
+from backend.milvus_script_connect import connect_milvus_script_client
+
+
+def main() -> None:
+    client = connect_milvus_script_client()
+    try:
+        collections = client.list_collections()
+        print(collections)
+
+        for name in collections:
+            print(f"\n=== {name} ===")
+            pprint(client.describe_collection(collection_name=name))
+    finally:
+        try:
+            client.close()
+        except Exception:
+            pass
+
+
+if __name__ == "__main__":
+    main()

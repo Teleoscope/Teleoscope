@@ -92,9 +92,44 @@ fi
 
 section "Seeding demo corpus (Mongo + Milvus)"
 export MONGODB_URI="mongodb://teleoscope:${MONGODB_PASSWORD:-teleoscope_dev_password}@localhost:27017/teleoscope?directConnection=true&serverSelectionTimeoutMS=5000&authSource=admin"
-MILVUS_PORT=$(docker compose port milvus 19530 2>/dev/null | cut -d: -f2)
-export MILVUS_URI="http://localhost:${MILVUS_PORT:-19530}"
+# shellcheck source=scripts/milvus_docker_uri.sh
+source "$REPO_ROOT/scripts/milvus_docker_uri.sh"
+milvus_export_host_uri_from_compose
 info "MONGODB_URI and MILVUS_URI set for host"
+
+section "Milvus smoke (upsert, flush, read, delete)"
+# Same runner cascade as seed: proves Milvus RPC + write path before heavy demo seed.
+SMOKE_RAN=0
+SMOKE_INVOKED=0
+if command -v mamba &>/dev/null && mamba run -n teleoscope true 2>/dev/null; then
+  info "Milvus smoke via mamba run -n teleoscope..."
+  SMOKE_INVOKED=1
+  if MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" mamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/milvus_one_click_smoke.py"; then
+    SMOKE_RAN=1
+  else
+    fail "Milvus smoke failed under mamba. Fix Milvus (MILVUS_URI, auth, docker compose logs milvus) before seeding."
+  fi
+fi
+if [[ "$SMOKE_RAN" -eq 0 ]] && [[ "$SMOKE_INVOKED" -eq 0 ]] && command -v micromamba &>/dev/null && micromamba run -n teleoscope true 2>/dev/null; then
+  info "Milvus smoke via micromamba run -n teleoscope..."
+  SMOKE_INVOKED=1
+  if MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" micromamba run -n teleoscope bash -c "cd '$REPO_ROOT' && PYTHONPATH=. python scripts/milvus_one_click_smoke.py"; then
+    SMOKE_RAN=1
+  else
+    fail "Milvus smoke failed under micromamba."
+  fi
+fi
+if [[ "$SMOKE_RAN" -eq 0 ]] && [[ "$SMOKE_INVOKED" -eq 0 ]]; then
+  info "Milvus smoke with current Python..."
+  SMOKE_INVOKED=1
+  if cd "$REPO_ROOT" && MONGODB_URI="$MONGODB_URI" MILVUS_URI="$MILVUS_URI" PYTHONPATH=. python scripts/milvus_one_click_smoke.py; then
+    SMOKE_RAN=1
+  else
+    fail "Milvus smoke failed. Install pymilvus (e.g. mamba env teleoscope) and check MILVUS_URI."
+  fi
+fi
+[[ "$SMOKE_RAN" -eq 1 ]] || fail "Milvus smoke: no working Python runner (mamba env teleoscope, micromamba, or PATH)."
+ok "Milvus smoke passed"
 
 # Fall back mamba → micromamba → PATH only when a runner is unavailable — not when seed exits
 # non-zero (avoids repeating full Mongo re-seed). Stream seed logs to the terminal (no capture).

@@ -1,10 +1,23 @@
 import json
+import sys
 import time
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(_REPO_ROOT / ".env", override=False)
+except ImportError:
+    pass
 
 from pymilvus import MilvusClient, DataType
 from sentence_transformers import SentenceTransformer
 
-MILVUS_URI = "http://localhost:19530"
+from backend.milvus_script_connect import connect_milvus_script_client
+
 COLLECTION_NAME = "reddit_posts"
 JSONL_PATH = "documents.jsonl"
 
@@ -137,55 +150,61 @@ def flush_batch(client, model, rows, total_seen):
 
 def main():
     log("Connecting to Milvus...")
-    client = MilvusClient(uri=MILVUS_URI)
+    client = connect_milvus_script_client()
     log("Connected to Milvus.")
 
-    build_collection(client)
+    try:
+        build_collection(client)
 
-    log("Loading embedding model...")
-    model = SentenceTransformer("BAAI/bge-m3", device="cpu")
-    model.max_seq_length = MAX_SEQ_LENGTH
-    log(f"Model loaded. max_seq_length={model.max_seq_length}")
+        log("Loading embedding model...")
+        model = SentenceTransformer("BAAI/bge-m3", device="cpu")
+        model.max_seq_length = MAX_SEQ_LENGTH
+        log(f"Model loaded. max_seq_length={model.max_seq_length}")
 
-    batch_rows = []
-    total_seen = 0
+        batch_rows = []
+        total_seen = 0
 
-    for doc in iter_jsonl(JSONL_PATH):
-        total_seen += 1
+        for doc in iter_jsonl(JSONL_PATH):
+            total_seen += 1
 
-        if total_seen <= 5:
-            log(f"Sample doc {total_seen}: id={doc.get('id')} title={repr((doc.get('title') or '')[:80])}")
+            if total_seen <= 5:
+                log(
+                    f"Sample doc {total_seen}: id={doc.get('id')} "
+                    f"title={repr((doc.get('title') or '')[:80])}"
+                )
 
-        title = (doc.get("title") or "").strip()
-        text = (doc.get("text") or "").strip()
-        combined_text = make_combined_text(title, text)
+            title = (doc.get("title") or "").strip()
+            text = (doc.get("text") or "").strip()
+            combined_text = make_combined_text(title, text)
 
-        batch_rows.append({
-            "id": str(doc["id"]),
-            "title": title[:2048],
-            "text": text[:65535],
-            "combined_text": combined_text[:65535],
-        })
+            batch_rows.append({
+                "id": str(doc["id"]),
+                "title": title[:2048],
+                "text": text[:65535],
+                "combined_text": combined_text[:65535],
+            })
 
-        if total_seen % 10 == 0:
-            log(f"Read {total_seen} docs so far; current buffered rows={len(batch_rows)}")
+            if total_seen % 10 == 0:
+                log(f"Read {total_seen} docs so far; current buffered rows={len(batch_rows)}")
 
-        if len(batch_rows) >= INSERT_BATCH_SIZE:
+            if len(batch_rows) >= INSERT_BATCH_SIZE:
+                flush_batch(client, model, batch_rows, total_seen)
+                batch_rows.clear()
+
+        if batch_rows:
+            log(f"Final batch with {len(batch_rows)} rows...")
             flush_batch(client, model, batch_rows, total_seen)
-            batch_rows.clear()
 
-        # smoke test limit; remove after debugging
-        # if total_seen >= 100:
-        #     log("Stopping early at 100 docs for smoke test.")
-        #     break
-
-    if batch_rows:
-        log(f"Final flush with {len(batch_rows)} rows...")
-        flush_batch(client, model, batch_rows, total_seen)
-
-    log("Loading collection into memory...")
-    client.load_collection(COLLECTION_NAME)
-    log("Done.")
+        log("Flushing Milvus segments...")
+        client.flush(collection_name=COLLECTION_NAME)
+        log("Loading collection into memory...")
+        client.load_collection(collection_name=COLLECTION_NAME)
+        log("Done.")
+    finally:
+        try:
+            client.close()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

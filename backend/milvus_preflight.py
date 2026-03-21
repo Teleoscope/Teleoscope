@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 import socket
 import time
-from urllib.parse import urlparse
 
 
 def tcp_probe(host: str, port: int, *, timeout_sec: float = 3.0) -> None:
@@ -30,24 +29,13 @@ def tcp_probe(host: str, port: int, *, timeout_sec: float = 3.0) -> None:
 def tcp_target_from_env() -> tuple[str, int] | None:
     """
     Return (host, port) for a network Milvus endpoint, or None if using Milvus Lite only.
+
+    Delegates to ``backend.milvus_uri_resolve`` so host/port matches ``MILVUS_URI`` and
+    ``MIVLUS_PORT`` / ``MILVUS_PORT`` / ``MILVUS_HOST`` consistently.
     """
-    if (os.getenv("MILVUS_LITE_PATH") or "").strip():
-        return None
-    uri = (os.getenv("MILVUS_URI") or "").strip()
-    if uri:
-        parsed = urlparse(uri if "://" in uri else f"http://{uri}")
-        host = parsed.hostname
-        if not host:
-            raise RuntimeError(f"MILVUS_URI is set but has no host: {uri!r}")
-        port = parsed.port or 19530
-        return host, int(port)
-    host = (os.getenv("MILVUS_HOST") or "localhost").strip() or "localhost"
-    port_raw = (os.getenv("MIVLUS_PORT") or "19530").strip() or "19530"
-    try:
-        port = int(port_raw)
-    except ValueError as e:
-        raise RuntimeError(f"Invalid MIVLUS_PORT={port_raw!r}") from e
-    return host, port
+    from backend.milvus_uri_resolve import milvus_tcp_host_port_from_env
+
+    return milvus_tcp_host_port_from_env()
 
 
 def tcp_probe_from_env(*, timeout_sec: float | None = None) -> None:

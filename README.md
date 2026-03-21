@@ -78,7 +78,7 @@ docker compose up -d
 ```
 
 The app will be at **http://localhost:3000**. MongoDB, RabbitMQ, Milvus, and all workers (dispatch, graph, vectorizer, uploader, tasks, files API) start automatically. The **vectorizer** loads its embedding model when someone is in a workspace (including **/demo**); after **5 minutes** without workspace activity it stops consuming and unloads to free RAM (`VECTORIZER_IDLE_SECONDS`, default 300). Set **`VECTORIZER_ALWAYS_ON=1`** to keep the legacy always-on consumer (e.g. some CI or unattended setups). After the stack is up, run `./scripts/test-stack.sh` to verify connectivity.
-If Milvus host port `19530` is already in use, Docker now auto-assigns a free host port; run `docker compose port milvus 19530` to inspect it, or set `MILVUS_HOST_PORT` in `.env` for a fixed port.
+If Milvus host port `19530` is already in use, Docker now auto-assigns a free host port; run `docker compose port milvus 19530` to inspect it, or set `MILVUS_HOST_PORT` in `.env` for a fixed port. The **Milvus server image** in `docker-compose.yml` and **`pymilvus`** in `backend/requirements.txt` are kept on the same release line (e.g. 2.6.x). After a major Milvus bump, local volumes may need a reset (`docker compose down -v`) and a demo re-seed.
 
 **Conference demo mode (public/no-login):**
 

@@ -139,7 +139,7 @@ def _iter_collection_orm(
     token: str | None,
     db_name: str | None,
 ) -> Iterator[list[dict[str, Any]]]:
-    """ORM Collection.query_iterator fallback (pymilvus 2.3-style)."""
+    """ORM Collection.query_iterator fallback (pymilvus Collection ORM, legacy API)."""
     from pymilvus import Collection
 
     _ensure_orm_connection(uri, token, db_name)

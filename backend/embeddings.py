@@ -18,7 +18,9 @@ MIVLUS_PORT = os.getenv("MIVLUS_PORT", "19530")
 MILVUS_USERNAME = os.getenv("MILVUS_USERNAME")
 MILVUS_PASSWORD = os.getenv("MILVUS_PASSWORD")
 MILVUS_DBNAME = os.getenv("MILVUS_DBNAME", "teleoscope")
-# Server: MILVUS_URI or MILVUS_HOST:MIVLUS_PORT. Lite: MILVUS_LITE_PATH (file path).
+# connect() prefers Milvus Lite (MILVUS_LITE_PATH), else MILVUS_URI, else MILVUS_HOST + MIVLUS_PORT.
+# When MILVUS_URI is set it wins over host:port. Docker Compose should set MILVUS_URI for workers via
+# MILVUS_DOCKER_URI substitution (default http://milvus:19530) so containers do not use host localhost.
 # Do not set MILVUS_URI to a file path — pymilvus orm validates URI at import time.
 MILVUS_URI = os.getenv("MILVUS_URI", "").strip()
 MILVUS_LITE_PATH = os.getenv("MILVUS_LITE_PATH", "").strip()
@@ -136,11 +138,6 @@ def milvus_setup(client: MilvusClient, workspace_id, collection_name="teleoscope
 
 def _use_lite() -> bool:
     return bool(os.getenv("MILVUS_LITE_PATH", "").strip())
-
-
-def _milvus_uri_from_env() -> str:
-    """Fresh read — module-level MILVUS_* can be stale if env was set after import."""
-    return os.getenv("MILVUS_URI", "").strip()
 
 
 def _milvus_client_timeout() -> float | None:
@@ -287,27 +284,16 @@ def connect():
         except Exception as exc:
             logging.warning("Milvus TCP preflight skipped: %s", exc)
 
-    uri_env = _milvus_uri_from_env()
-    if uri_env:
-        assert_milvus_auth_before_network_connect(uri_env)
-        log_milvus_auth_summary(uri_env)
-        _milvus_connect_trace(f"auth={milvus_auth_label()} (no secrets logged)")
-        _milvus_connect_trace(f"RPC target MILVUS_URI (timeout sec={_milvus_client_timeout()!r})")
-        client = _connect_after_probe(uri_env)
-        logging.info("Connected to Milvus (MILVUS_URI).")
-        _milvus_connect_trace("connect() done (MILVUS_URI)")
-        return client
+    from backend.milvus_uri_resolve import milvus_http_uri_from_env
 
-    host = os.getenv("MILVUS_HOST", MILVUS_HOST)
-    port = os.getenv("MIVLUS_PORT", MIVLUS_PORT)
-    uri = f"http://{host}:{port}"
+    uri = milvus_http_uri_from_env()
     assert_milvus_auth_before_network_connect(uri)
     log_milvus_auth_summary(uri)
     _milvus_connect_trace(f"auth={milvus_auth_label()} (no secrets logged)")
     _milvus_connect_trace(f"RPC target {uri} (timeout sec={_milvus_client_timeout()!r})")
     client = _connect_after_probe(uri)
     logging.info("Connected to Milvus.")
-    _milvus_connect_trace("connect() done (host:port)")
+    _milvus_connect_trace("connect() done")
     return client
 
 
@@ -361,8 +347,15 @@ def get_embeddings(client: MilvusClient, collection_name, workspace_id, oids, li
 
 def delete(collection_name, ids):
     client = connect()
-    client.load_collection(collection_name=collection_name)
-    res = client.delete(
-        collection_name=collection_name,
-        ids=ids
-    )
+    try:
+        use_database_if_supported(client)
+        client.load_collection(collection_name=collection_name)
+        return client.delete(
+            collection_name=collection_name,
+            ids=ids
+        )
+    finally:
+        try:
+            client.close()
+        except Exception:
+            pass
