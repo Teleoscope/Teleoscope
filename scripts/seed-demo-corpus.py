@@ -57,6 +57,9 @@ Usage:
   # vector range + "upsert…", then timing when the RPC returns (Milvus does not stream in-RPC progress).
   # Smaller batches → more frequent updates: SEED_MILVUS_UPSERT_BATCH=250
   # Per-batch [OK] lines even with tqdm: SEED_MILVUS_BATCH_LOG=1
+  # Hang avoidance: SEED_MILVUS_RPC_TIMEOUT (default 300) sets MILVUS_CLIENT_TIMEOUT for pymilvus;
+  # MILVUS_UNBOUNDED_RPC=1 removes cap; MILVUS_DIAG=1 stderr timeline in embeddings.connect;
+  # MILVUS_SKIP_TCP_PREFLIGHT=1 skips port check before RPC.
 
 Requires: pymongo, pyarrow, py7zr, tqdm (optional progress bars), git, bash. Use the project mamba env: `mamba activate teleoscope` (see environments/environment.yml).
 """
@@ -621,6 +624,7 @@ def seed_milvus_only(
 def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Path) -> None:
     try:
         from backend import embeddings
+        from backend.milvus_preflight import ensure_script_rpc_deadline
     except ImportError:
         log("Backend not on path; skip Milvus. Set PYTHONPATH=. when running.", "WARN")
         return
@@ -649,8 +653,26 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
             "WARN",
         )
         return
+    _seed_mv_rpc = float(os.environ.get("SEED_MILVUS_RPC_TIMEOUT", "300").strip() or "300")
+    ensure_script_rpc_deadline(_seed_mv_rpc)
+    log(
+        f"Milvus RPC deadline: {os.environ.get('MILVUS_CLIENT_TIMEOUT')}s per call "
+        f"(SEED_MILVUS_RPC_TIMEOUT / MILVUS_CLIENT_TIMEOUT; MILVUS_UNBOUNDED_RPC=1 disables). "
+        f"TCP preflight + MILVUS_DIAG=1 for stderr timeline.",
+        "INFO",
+    )
     t_conn = time.perf_counter()
-    client = embeddings.connect()
+    log("Milvus: calling embeddings.connect() (TCP preflight + list_collections probe)…", "INFO")
+    try:
+        client = embeddings.connect()
+    except Exception as e:
+        log(
+            f"Milvus connect failed: {e!s}. "
+            "Try: MILVUS_DIAG=1, correct MILVUS_URI, `docker compose port milvus 19530`, "
+            "MILVUS_SKIP_TCP_PREFLIGHT=1 only if you know the port is special.",
+            "FAIL",
+        )
+        raise SystemExit(1) from e
     log(f"Milvus client connected in {_fmt_elapsed(time.perf_counter() - t_conn)}.", "INFO")
     # Collection name (vectors live here). MILVUS_DBNAME is a legacy alias — it is also used as
     # the *Milvus database* name in embeddings.connect(); on standalone Milvus everything still

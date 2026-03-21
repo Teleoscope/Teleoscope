@@ -3,6 +3,9 @@
 # Usage: ./scripts/test-stack.sh [base_url]
 set -e
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_ROOT"
+
 BASE_URL="${1:-http://localhost:3000}"
 APP_WAIT_SECONDS="${TEST_STACK_APP_WAIT_SECONDS:-180}"
 APP_WAIT_INTERVAL_SECONDS="${TEST_STACK_APP_WAIT_INTERVAL_SECONDS:-3}"
@@ -19,11 +22,24 @@ warn() { echo -e "${YELLOW}  WARN${NC} $1"; }
 echo "Testing stack (base: $BASE_URL)..."
 echo ""
 
-if [ -z "$MILVUS_PROBE_PORT" ] && command -v docker >/dev/null 2>&1; then
-  MILVUS_PORT_LINE=$(docker compose port milvus 19530 2>/dev/null | tail -n 1 || true)
-  if [ -n "$MILVUS_PORT_LINE" ]; then
-    MILVUS_PROBE_PORT="${MILVUS_PORT_LINE##*:}"
-  fi
+if [ -z "$MILVUS_PROBE_PORT" ] && command -v docker >/dev/null 2>&1 && [ -f docker-compose.yml ]; then
+  MILVUS_PROBE_PORT=$(python3 -c "
+import subprocess, sys
+from pathlib import Path
+try:
+    p = subprocess.run(
+        ['docker', 'compose', 'port', 'milvus', '19530'],
+        cwd=str(Path('.').resolve()),
+        capture_output=True, text=True, timeout=12,
+    )
+except subprocess.TimeoutExpired:
+    sys.exit(0)
+if p.returncode != 0:
+    sys.exit(0)
+lines = [x.strip() for x in (p.stdout or '').splitlines() if x.strip()]
+if lines:
+    print(lines[-1].split(':')[-1])
+" 2>/dev/null) || true
 fi
 if [ -z "$MILVUS_PROBE_PORT" ]; then
   MILVUS_PROBE_PORT=19530

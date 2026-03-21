@@ -11,10 +11,15 @@ Uses the same environment as workers and export/import:
 
 For demo corpus vs Mongo alignment, prefer ``./scripts/demo-status.sh`` (includes Mongo + app).
 
+Env (hang avoidance): ``MILVUS_CLIENT_TIMEOUT`` (default 90s for this script if unset),
+``MILVUS_UNBOUNDED_RPC=1`` to remove deadline, ``MILVUS_DIAG=1`` stderr timeline from
+``embeddings.connect``, ``MILVUS_SKIP_TCP_PREFLIGHT=1`` to skip port check.
+
 Usage::
 
   mamba activate teleoscope
   PYTHONPATH=. python scripts/milvus-status.py
+  PYTHONPATH=. python scripts/milvus-status.py -v
   PYTHONPATH=. python scripts/milvus-status.py --collection teleoscope
   PYTHONPATH=. python scripts/milvus-status.py --json
   PYTHONPATH=. python scripts/milvus-status.py --workspace 674a2f...  # highlight one partition
@@ -26,6 +31,7 @@ import json
 import logging
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -41,7 +47,12 @@ for _p in (REPO_ROOT, SCRIPTS_DIR):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
+from backend.milvus_preflight import ensure_script_rpc_deadline  # noqa: E402
 from milvus_io_utils import connect_milvus_client, use_milvus_db  # noqa: E402
+
+
+def _phase(msg: str) -> None:
+    print(f"[milvus-status {time.strftime('%H:%M:%S')}] {msg}", file=sys.stderr, flush=True)
 
 
 def _resolve_db_name(db_override: str | None) -> str:
@@ -232,10 +243,36 @@ def main() -> int:
         action="store_true",
         help="Machine-readable JSON on stdout",
     )
+    parser.add_argument(
+        "--workspace",
+        default=None,
+        metavar="PARTITION",
+        help="Highlight this partition name (e.g. demo workspace ObjectId hex)",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="INFO logs + stderr phases (connect can still use MILVUS_DIAG=1 for embeddings trace)",
+    )
     args = parser.parse_args()
 
+    if args.verbose:
+        logging.getLogger().setLevel(logging.INFO)
+        logging.getLogger("milvus_io").setLevel(logging.INFO)
+
+    status_deadline = float(os.getenv("MILVUS_STATUS_TIMEOUT", "90").strip() or "90")
+    ensure_script_rpc_deadline(status_deadline)
+    _phase(
+        f"RPC deadline {os.environ.get('MILVUS_CLIENT_TIMEOUT')}s "
+        f"(override MILVUS_CLIENT_TIMEOUT / MILVUS_STATUS_TIMEOUT)"
+    )
+
     focus = args.collection if args.collection is not None else _collection_default()
+    _phase("connect_milvus_client() …")
+    t0 = time.perf_counter()
     client, db_override = connect_milvus_client()
+    _phase(f"connected in {time.perf_counter() - t0:.2f}s")
     db_name = _resolve_db_name(db_override)
 
     try:

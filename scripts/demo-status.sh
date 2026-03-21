@@ -6,8 +6,9 @@
 # Honors TELEOSCOPE_DATA_DIR (same as seed-demo-corpus.py); defaults to <repo>/data.
 # Verbose: -v / --verbose or DEMO_STATUS_VERBOSE=1 (extra paths, sizes, config, timings).
 # DEMO_STATUS_SKIP_APP=1: skip HTTP /api/hello (e.g. refresh-demo-corpus.sh before app recreate).
-# Milvus: TCP check uses a 2s socket deadline (avoids nc hanging). Python checks set
-# MILVUS_CLIENT_TIMEOUT (default 25s) so pymilvus RPCs do not block indefinitely on a bad server.
+# Milvus: TCP check uses a 2s socket deadline. docker compose port is bounded (~12s).
+# Python partition checks default MILVUS_CLIENT_TIMEOUT=60s unless you set it.
+# MILVUS_DIAG=1 enables stderr timeline during embeddings.connect. See scripts/README.md.
 set -e
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -88,6 +89,33 @@ finally:
     except Exception:
         pass
 " "$host" "$port" 2>/dev/null
+}
+
+# docker compose port can hang if the daemon is wedged; subprocess timeout always returns.
+_docker_milvus_mapped_port() {
+  python3 -c "
+import subprocess
+import sys
+from pathlib import Path
+root = Path(sys.argv[1])
+try:
+    p = subprocess.run(
+        ['docker', 'compose', 'port', 'milvus', '19530'],
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        timeout=12,
+    )
+except subprocess.TimeoutExpired:
+    sys.exit(2)
+if p.returncode != 0:
+    sys.exit(1)
+lines = [x.strip() for x in (p.stdout or '').splitlines() if x.strip()]
+if not lines:
+    sys.exit(1)
+hostport = lines[-1]
+print(hostport.split(':')[-1])
+" "$REPO_ROOT"
 }
 
 # Redact user:pass@ in mongodb URIs for logs
@@ -275,7 +303,20 @@ if [[ -n "${MILVUS_URI:-}" ]]; then
   fi
 fi
 if [[ -z "$MILVUS_PORT" ]] && command -v docker >/dev/null 2>&1 && [[ -f docker-compose.yml ]]; then
-  MILVUS_PORT=$(docker compose port milvus 19530 2>/dev/null | cut -d: -f2)
+  info "Resolving Milvus mapped port (docker compose, max 12s)…"
+  mp=""
+  set +e
+  mp="$(_docker_milvus_mapped_port)"
+  _dc_port_rc=$?
+  set -e
+  if [[ "$_dc_port_rc" -eq 0 && -n "$mp" ]]; then
+    MILVUS_PORT="$mp"
+    vinfo "docker compose port milvus 19530 -> host port $MILVUS_PORT"
+  elif [[ "$_dc_port_rc" -eq 2 ]]; then
+    warn "docker compose port timed out (12s); using default 19530 — check Docker daemon"
+  else
+    vinfo "docker compose port failed (Milvus container may be stopped); using default 19530"
+  fi
 fi
 if [[ -z "$MILVUS_PORT" ]]; then
   MILVUS_PORT="19530"
@@ -294,13 +335,19 @@ if [[ -n "${MILVUS_LITE_PATH:-}" ]]; then
   fi
   # Optional: demo partition check + vector count via Python (same as server path below)
   if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
-    MILVUS_STATUS=$(MILVUS_CLIENT_TIMEOUT="${MILVUS_CLIENT_TIMEOUT:-25}" MILVUS_LITE_PATH="$MILVUS_LITE_PATH" DEMO_WORKSPACE_ID="$DEMO_WORKSPACE_ID" PYTHONPATH=. python3 -c "
+    info "Milvus Lite: partition check (stderr shows stages; set MILVUS_DIAG=1 for RPC trace)…"
+    MILVUS_STATUS=$(MILVUS_CLIENT_TIMEOUT="${MILVUS_CLIENT_TIMEOUT:-60}" MILVUS_LITE_PATH="$MILVUS_LITE_PATH" DEMO_WORKSPACE_ID="$DEMO_WORKSPACE_ID" PYTHONPATH=. python3 -c "
 import os, sys
 from pathlib import Path
 sys.path.insert(0, str(Path('.').resolve()))
+def _e(msg):
+    print(msg, file=sys.stderr, flush=True)
 try:
+    _e('[demo-status] milvus: import embeddings')
     from backend import embeddings
+    _e('[demo-status] milvus: connect()')
     client = embeddings.connect()
+    _e('[demo-status] milvus: has_partition / get_partition_stats')
     cn = os.environ.get('MILVUS_COLLECTION') or os.environ.get('MILVUS_DBNAME', 'teleoscope')
     wid = os.environ.get('DEMO_WORKSPACE_ID', '')
     if not client.has_partition(collection_name=cn, partition_name=wid):
@@ -314,7 +361,7 @@ try:
             print('PARTITION:yes')
 except Exception as e:
     print('ERR:' + str(e))
-" 2>/dev/null) || true
+") || true
     if [[ "$MILVUS_STATUS" == PARTITION:yes:* ]]; then
       MILVUS_VECTORS="${MILVUS_STATUS#PARTITION:yes:}"
       ok "Demo partition: $MILVUS_VECTORS vectors (ranking available)"
@@ -333,13 +380,19 @@ else
   if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
     export MILVUS_URI="${MILVUS_URI:-http://localhost:$MILVUS_PORT}"
     export DEMO_WORKSPACE_ID
-    MILVUS_STATUS=$(MILVUS_CLIENT_TIMEOUT="${MILVUS_CLIENT_TIMEOUT:-25}" PYTHONPATH=. python3 -c "
+    info "Milvus: partition check against MILVUS_URI=$MILVUS_URI (stderr shows stages; MILVUS_DIAG=1 for detail)…"
+    MILVUS_STATUS=$(MILVUS_CLIENT_TIMEOUT="${MILVUS_CLIENT_TIMEOUT:-60}" PYTHONPATH=. python3 -c "
 import os, sys
 from pathlib import Path
 sys.path.insert(0, str(Path('.').resolve()))
+def _e(msg):
+    print(msg, file=sys.stderr, flush=True)
 try:
+    _e('[demo-status] milvus: import embeddings')
     from backend import embeddings
+    _e('[demo-status] milvus: connect()')
     client = embeddings.connect()
+    _e('[demo-status] milvus: has_partition / get_partition_stats')
     cn = os.environ.get('MILVUS_COLLECTION') or os.environ.get('MILVUS_DBNAME', 'teleoscope')
     wid = os.environ.get('DEMO_WORKSPACE_ID', '')
     if not client.has_partition(collection_name=cn, partition_name=wid):
@@ -353,7 +406,7 @@ try:
             print('PARTITION:yes')
 except Exception as e:
     print('ERR:' + str(e))
-" 2>/dev/null) || true
+") || true
     if [[ "$MILVUS_STATUS" == PARTITION:yes:* ]]; then
       MILVUS_VECTORS="${MILVUS_STATUS#PARTITION:yes:}"
       ok "Demo partition: $MILVUS_VECTORS vectors (ranking available)"
