@@ -53,6 +53,11 @@ Usage:
   # Disable tqdm progress bars (plain logs only): --no-progress or SEED_NO_PROGRESS=1
   PYTHONPATH=. python scripts/seed-demo-corpus.py --no-progress
 
+  # Milvus upserts: tqdm shows batch count; during each blocking upsert() the bar postfix shows
+  # vector range + "upsert…", then timing when the RPC returns (Milvus does not stream in-RPC progress).
+  # Smaller batches → more frequent updates: SEED_MILVUS_UPSERT_BATCH=250
+  # Per-batch [OK] lines even with tqdm: SEED_MILVUS_BATCH_LOG=1
+
 Requires: pymongo, pyarrow, py7zr, tqdm (optional progress bars), git, bash. Use the project mamba env: `mamba activate teleoscope` (see environments/environment.yml).
 """
 from __future__ import annotations
@@ -185,6 +190,22 @@ def milvus_env_configured() -> bool:
         (os.environ.get("MILVUS_URI") or "").strip()
         or (os.environ.get("MILVUS_LITE_PATH") or "").strip()
     )
+
+
+def _milvus_upsert_batch_size() -> int:
+    """Vectors per Milvus upsert(); override with SEED_MILVUS_UPSERT_BATCH (smaller = more tqdm updates)."""
+    raw = os.environ.get("SEED_MILVUS_UPSERT_BATCH", "").strip()
+    if raw:
+        try:
+            n = int(raw)
+            return max(1, min(n, 10_000))
+        except ValueError:
+            pass
+    return 1000
+
+
+def _milvus_batch_log_enabled() -> bool:
+    return os.environ.get("SEED_MILVUS_BATCH_LOG", "").lower() in ("1", "true", "yes")
 
 
 def run_download_demo_data_script() -> None:
@@ -637,9 +658,10 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
     collection_name = os.environ.get("MILVUS_COLLECTION") or os.environ.get(
         "MILVUS_DBNAME", "teleoscope"
     )
+    batch = _milvus_upsert_batch_size()
     log(
         f"Milvus collection={collection_name!r}, partition (workspace)={workspace_id!s}, "
-        f"upsert batch size=1000.",
+        f"upsert batch size={batch} (override: SEED_MILVUS_UPSERT_BATCH).",
         "INFO",
     )
     t_setup = time.perf_counter()
@@ -648,17 +670,24 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
     log(f"milvus_setup + use_database_if_supported in {_fmt_elapsed(time.perf_counter() - t_setup)}.", "OK")
     # Backend schema: id (varchar), vector (float_vector 1024). Parquet may have "id" (e.g. reddit/source id).
     # Use parquet row "id" when present so Rank can find embeddings keyed by that id; else use Mongo _id.
-    batch = 1000
     n_batches = (len(doc_ids) + batch - 1) // batch
     t_upsert = time.perf_counter()
-    per_batch_logs = not _seed_use_progress
-    upsert_iter = _pbar(
-        range(0, len(doc_ids), batch),
-        total=n_batches,
-        desc="Milvus upsert",
-        unit="batch",
-    )
-    for b_idx, i in enumerate(upsert_iter):
+    batch_log = _milvus_batch_log_enabled()
+    per_batch_logs = (not _seed_use_progress) or batch_log
+    upsert_indices = range(0, len(doc_ids), batch)
+    if _seed_use_progress and tqdm is not None:
+        milvus_pbar = tqdm(
+            upsert_indices,
+            total=n_batches,
+            desc="Milvus upsert",
+            unit="batch",
+            file=sys.stderr,
+            dynamic_ncols=True,
+            smoothing=0.05,
+        )
+    else:
+        milvus_pbar = upsert_indices
+    for b_idx, i in enumerate(milvus_pbar):
         chunk_ids = doc_ids[i : i + batch]
         chunk_rows = rows[i : i + batch]
         def to_list(v):
@@ -676,16 +705,21 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
             {"id": vector_id(j, oid), "vector": to_list(chunk_rows[j]["dense"])}
             for j, oid in enumerate(chunk_ids)
         ]
+        hi = i + len(chunk_ids)
+        if _seed_use_progress and tqdm is not None:
+            milvus_pbar.set_postfix_str(f"{i + 1:,}–{hi:,} vecs · upsert…", refresh=True)
         t0 = time.perf_counter()
         client.upsert(
             collection_name=collection_name,
             data=vector_data,
             partition_name=str(workspace_id),
         )
+        dt = time.perf_counter() - t0
+        if _seed_use_progress and tqdm is not None:
+            milvus_pbar.set_postfix_str(f"{i + 1:,}–{hi:,} vecs · {dt:.1f}s", refresh=True)
         if per_batch_logs:
-            dt = time.perf_counter() - t0
             log(
-                f"Milvus upsert batch {b_idx + 1}/{n_batches}: vectors {i + 1:,}–{i + len(chunk_ids):,} "
+                f"Milvus upsert batch {b_idx + 1}/{n_batches}: vectors {i + 1:,}–{hi:,} "
                 f"({len(chunk_ids):,} rows, {dt:.2f}s)",
                 "OK",
             )

@@ -136,6 +136,17 @@ def _milvus_token() -> str | None:
     return None
 
 
+def _milvus_client_timeout() -> float | None:
+    """Optional RPC timeout (seconds) for MilvusClient; set MILVUS_CLIENT_TIMEOUT for status tools."""
+    raw = os.getenv("MILVUS_CLIENT_TIMEOUT", "").strip()
+    if not raw:
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        return None
+
+
 def _milvus_client_kwargs(uri: str, *, with_db_name: bool) -> dict:
     kw: dict = {"uri": uri}
     tok = _milvus_token()
@@ -143,6 +154,9 @@ def _milvus_client_kwargs(uri: str, *, with_db_name: bool) -> dict:
         kw["token"] = tok
     if with_db_name:
         kw["db_name"] = MILVUS_DBNAME
+    t = _milvus_client_timeout()
+    if t is not None:
+        kw["timeout"] = t
     return kw
 
 
@@ -212,7 +226,11 @@ def connect():
         path = MILVUS_LITE_PATH
         if path.startswith("file://"):
             path = path[7:]
-        client = MilvusClient(uri=path)
+        lite_kw: dict = {"uri": path}
+        t = _milvus_client_timeout()
+        if t is not None:
+            lite_kw["timeout"] = t
+        client = MilvusClient(**lite_kw)
         logging.info("Connected to Milvus Lite.")
         return client
 
