@@ -27,7 +27,7 @@ Shared behavior (see **`backend/milvus_preflight.py`**, **`backend/embeddings.py
 - **`MILVUS_SKIP_TCP_PREFLIGHT=1`**: skip the fast TCP connect check before RPC (only if the check is a false negative).
 - **`MILVUS_DIAG=1`** or **`MILVUS_DEBUG=1`**: stderr timeline during **`embeddings.connect()`** (`list_collections` retries, etc.).
 - **`MILVUS_TCP_PREFLIGHT_TIMEOUT`**: seconds for TCP check (default **4**).
-- **Auth** (`backend/milvus_auth.py`): **`MILVUS_TOKEN`** or **`MILVUS_USERNAME` + `MILVUS_PASSWORD`** are passed to pymilvus as `token`. **HTTPS** or **zillizcloud.com** URIs **fail immediately** if no credentials (avoids hanging). **`MILVUS_ALLOW_ANONYMOUS_HTTPS=1`** overrides. **`MILVUS_REQUIRE_AUTH=1`** requires credentials even for **`http://`** (self-hosted with auth). Partial user/pass logs a warning and connects anonymously.
+- **Auth** (`backend/milvus_auth.py`): pymilvus gets **`token=`** from **`MILVUS_TOKEN`**, or **`user=` + `password=`** from username/password env vars (not a hand-built string). **Before connect**: anonymous **http** is **refused** unless the host is **localhost / milvus / …** or **`MILVUS_ALLOW_ANONYMOUS=1`** / **`MILVUS_ANONYMOUS_HTTP_HOSTS`**. **HTTPS / Zilliz** still require creds unless **`MILVUS_ALLOW_ANONYMOUS_HTTPS=1`**. **After `list_collections`**: auth-like errors are rewritten to **`Milvus authentication failed …`**. **`MILVUS_REQUIRE_AUTH=1`** forces keys on every host.
 
 Script-specific defaults: **`seed-demo-corpus.py`** → **`SEED_MILVUS_RPC_TIMEOUT`** (default **300**); **`milvus-status.py`** / **`milvus_io_utils`** → **`MILVUS_STATUS_TIMEOUT`** / **`MILVUS_IO_RPC_TIMEOUT`** (defaults **90** / **120**).
 

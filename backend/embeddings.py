@@ -39,9 +39,13 @@ from pymilvus import MilvusClient, DataType, MilvusException
 
 from backend.milvus_auth import (
     assert_milvus_auth_before_network_connect,
+    is_milvus_auth_failure,
     log_milvus_auth_summary,
+    log_milvus_rpc_auth_ok,
     milvus_auth_label,
-    milvus_token_for_client,
+    milvus_connection_auth_kwargs,
+    milvus_has_credentials,
+    reraise_milvus_connect_error,
 )
 from backend.milvus_quiet import quiet_pymilvus_rpc_logs
 
@@ -134,10 +138,6 @@ def _use_lite():
     return bool(MILVUS_LITE_PATH)
 
 
-def _milvus_token() -> str | None:
-    return milvus_token_for_client()
-
-
 def _milvus_client_timeout() -> float | None:
     """RPC timeout (seconds) for MilvusClient; unset = no limit (workers). Scripts set MILVUS_CLIENT_TIMEOUT."""
     if os.getenv("MILVUS_UNBOUNDED_RPC", "").lower() in ("1", "true", "yes"):
@@ -166,10 +166,7 @@ def _milvus_connect_trace(msg: str) -> None:
 
 
 def _milvus_client_kwargs(uri: str, *, with_db_name: bool) -> dict:
-    kw: dict = {"uri": uri}
-    tok = _milvus_token()
-    if tok:
-        kw["token"] = tok
+    kw: dict = {"uri": uri, **milvus_connection_auth_kwargs()}
     if with_db_name:
         kw["db_name"] = MILVUS_DBNAME
     t = _milvus_client_timeout()
@@ -188,7 +185,7 @@ def _prefer_default_db_first(uri: str) -> bool:
         return False
     if uri.lower().startswith("https://"):
         return False
-    if _milvus_token():
+    if milvus_has_credentials():
         return False
     return True
 
@@ -201,9 +198,12 @@ def _connect_after_probe(uri: str) -> MilvusClient:
             client = MilvusClient(**_milvus_client_kwargs(uri, with_db_name=False))
             _milvus_connect_trace("list_collections() (no db_name)")
             client.list_collections()
+            log_milvus_rpc_auth_ok(uri)
             _milvus_connect_trace("list_collections OK")
             return client
         except Exception as exc:
+            if is_milvus_auth_failure(exc):
+                reraise_milvus_connect_error(uri, exc)
             logging.info(
                 "Milvus connect without db_name failed (%s); retrying with db_name=%s.",
                 exc,
@@ -218,8 +218,11 @@ def _connect_after_probe(uri: str) -> MilvusClient:
         try:
             _milvus_connect_trace("list_collections() (with db_name)")
             client.list_collections()
+            log_milvus_rpc_auth_ok(uri)
             _milvus_connect_trace("list_collections OK")
         except Exception as probe_exc:
+            if is_milvus_auth_failure(probe_exc):
+                reraise_milvus_connect_error(uri, probe_exc)
             msg = str(probe_exc)
             if (
                 "database" in msg.lower()
@@ -237,6 +240,8 @@ def _connect_after_probe(uri: str) -> MilvusClient:
                 raise
         return client
     except MilvusException as e:
+        if is_milvus_auth_failure(e):
+            reraise_milvus_connect_error(uri, e)
         logging.info(
             "Exception %s when creating Milvus client with db '%s'; "
             "using default database.",

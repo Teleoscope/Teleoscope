@@ -10,8 +10,13 @@ from dotenv import load_dotenv
 from backend.embeddings import _milvus_client_timeout
 from backend.milvus_auth import (
     assert_milvus_auth_before_network_connect,
+    is_milvus_auth_failure,
     log_milvus_auth_summary,
+    log_milvus_rpc_auth_ok,
+    milvus_connection_auth_kwargs,
+    milvus_has_credentials,
     milvus_token_for_client,
+    reraise_milvus_connect_error,
 )
 from backend.milvus_preflight import ensure_script_rpc_deadline, tcp_probe_from_env
 from backend.milvus_quiet import quiet_pymilvus_rpc_logs
@@ -30,19 +35,15 @@ def _timeout_kw() -> dict[str, float]:
     return {"timeout": t} if t is not None else {}
 
 
-def _uri_client_kwargs(
-    uri: str, *, token: str | None, db_name: str | None = None
-) -> dict[str, Any]:
-    kw: dict[str, Any] = {"uri": uri, **_timeout_kw()}
-    if token:
-        kw["token"] = token
+def _uri_client_kwargs(uri: str, *, db_name: str | None = None) -> dict[str, Any]:
+    kw: dict[str, Any] = {"uri": uri, **milvus_connection_auth_kwargs(), **_timeout_kw()}
     if db_name is not None:
         kw["db_name"] = db_name
     return kw
 
 
 def token_from_env() -> str | None:
-    """Same as ``milvus_token_for_client`` (export scripts import this name)."""
+    """Legacy export scripts; prefer ``milvus_connection_auth_kwargs()`` internally."""
     return milvus_token_for_client()
 
 
@@ -76,7 +77,6 @@ def connect_milvus_client() -> Tuple[Any, str | None]:
     _LOG.info("TCP preflight passed (or skipped for Lite)")
 
     uri = os.getenv("MILVUS_URI", "").strip()
-    token = token_from_env()
     db_name = os.getenv("MILVUS_DBNAME", "teleoscope").strip() or "teleoscope"
 
     if uri:
@@ -85,27 +85,38 @@ def connect_milvus_client() -> Tuple[Any, str | None]:
         _LOG.info("Connecting via MILVUS_URI")
         prefer_default = (
             uri.lower().startswith("http://")
-            and not token
+            and not milvus_has_credentials()
             and os.getenv("MILVUS_FORCE_DB_NAME_ON_CONNECT", "").lower()
             not in ("1", "true", "yes")
         )
         if prefer_default:
             try:
-                c = MilvusClient(**_uri_client_kwargs(uri, token=token))
+                c = MilvusClient(**_uri_client_kwargs(uri, db_name=None))
                 _LOG.info("list_collections (no db_name on connect)")
                 c.list_collections()
+                log_milvus_rpc_auth_ok(uri)
                 return c, None
-            except MilvusException as e:
-                _LOG.info("Connect without db_name failed (%s); retrying with db_name.", e)
+            except Exception as e:
+                if is_milvus_auth_failure(e):
+                    reraise_milvus_connect_error(uri, e)
+                if isinstance(e, MilvusException):
+                    _LOG.info("Connect without db_name failed (%s); retrying with db_name.", e)
+                else:
+                    raise
         try:
-            c = MilvusClient(**_uri_client_kwargs(uri, token=token, db_name=db_name))
+            c = MilvusClient(**_uri_client_kwargs(uri, db_name=db_name))
             _LOG.info("list_collections (db_name on connect)")
             c.list_collections()
+            log_milvus_rpc_auth_ok(uri)
             return c, None
-        except MilvusException as e:
-            _LOG.warning("Connect with db_name failed (%s); retrying without db_name.", e)
-            c = MilvusClient(**_uri_client_kwargs(uri, token=token))
-            return c, db_name
+        except Exception as e:
+            if is_milvus_auth_failure(e):
+                reraise_milvus_connect_error(uri, e)
+            if isinstance(e, MilvusException):
+                _LOG.warning("Connect with db_name failed (%s); retrying without db_name.", e)
+                c = MilvusClient(**_uri_client_kwargs(uri, db_name=None))
+                return c, db_name
+            raise
 
     from backend import embeddings
 
