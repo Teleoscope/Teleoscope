@@ -30,7 +30,7 @@ If Docker is unavailable, use:
 **Infrastructure** (Docker):
 - MongoDB replica set (`27017`)
 - RabbitMQ (`5672`, `15672`)
-- Milvus + etcd + MinIO (host port is auto-assigned unless `MILVUS_HOST_PORT` is set)
+- Milvus + etcd + MinIO (default host port **19530**; set `MILVUS_HOST_PORT=0` for a random free port)
 
 MongoDB **must** run as a single-node replica set because account creation uses transactions.
 
@@ -50,8 +50,8 @@ docker exec teleoscope-mongodb mongosh -u admin -p admin_password --eval "rs.ini
 ```
 
 For RabbitMQ + Milvus:
-- `docker compose up -d rabbitmq etcd minio milvus` (run `docker compose port milvus 19530` to see the mapped host port)
-- **Milvus image** in `docker-compose.yml` (e.g. v2.6.11) and **`pymilvus`** 2.6.x in `backend/requirements.txt` stay aligned. **`MILVUS_DOCKER_URI`** in `.env` is substituted into worker/uploader **`MILVUS_URI`** (default `http://milvus:19530`) for in-network Milvus; use it for Zilliz HTTPS. Endpoint rules: `backend/milvus_uri_resolve.py` (`MILVUS_URI` or `MILVUS_HOST` + `MIVLUS_PORT` / `MILVUS_PORT`). Host-side seed scripts source `scripts/milvus_docker_uri.sh` to set `MILVUS_URI` from the mapped port.
+- `docker compose up -d rabbitmq etcd minio milvus` (host URL is **`http://localhost:19530`** by default; use `docker compose port milvus 19530` only if `MILVUS_HOST_PORT=0`)
+- **Milvus image** in `docker-compose.yml` (e.g. v2.6.11) and **`pymilvus`** 2.6.x in `backend/requirements.txt` stay aligned. **`MILVUS_DOCKER_URI`** in `.env` is substituted into worker/uploader **`MILVUS_URI`** (default `http://milvus:19530`) for in-network Milvus; use it for Zilliz HTTPS. Endpoint rules: `backend/milvus_uri_resolve.py` (`MILVUS_URI` or `MILVUS_HOST` + `MIVLUS_PORT` / `MILVUS_PORT`). Host-side scripts source `scripts/milvus_docker_uri.sh`: **`http://localhost:${MILVUS_HOST_PORT:-19530}`**, or compose port lookup when `MILVUS_HOST_PORT=0`.
 
 Frontend dev server:
 - `cd teleoscope.ca && pnpm dev` (port `3000`)
@@ -146,7 +146,7 @@ Frontend dev server:
   - set `PLAYWRIGHT_SKIP_ACCOUNT=1` and rerun Chromium smoke first.
 - Vector e2e stalls:
   - verify dispatch/vectorizer/uploader/graph workers are running; if the vectorizer waits for UI activity, set `VECTORIZER_ALWAYS_ON=1` or open a workspace so `/api/workers/vectorizer-activity` runs.
-  - if needed, verify mapped Milvus host port with `docker compose port milvus 19530`.
+  - if using `MILVUS_HOST_PORT=0`, verify the mapped host port with `docker compose port milvus 19530`.
 
 ### Maintenance rule for this file
 

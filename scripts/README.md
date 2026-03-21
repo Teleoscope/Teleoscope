@@ -24,7 +24,7 @@ Operational and helper scripts for local setup, validation, and demos.
 - **`MILVUS_DOCKER_URI`**: optional in **`.env`** for Compose substitution into worker/uploader **`MILVUS_URI`** (Zilliz HTTPS). Do not put **`MILVUS_URI=http://localhost:...`** in **`.env`** for Docker workers — use host-only exports / **`milvus_docker_uri.sh`** for seed and status.
 - **Docker** `milvusdb/milvus` tag in **`docker-compose.yml`** and **`pymilvus`** in **`backend/requirements.txt`** / **`environments/environment.yml`** stay on the same release line (e.g. 2.6.x).
 - **URI resolution** is centralized in **`backend/milvus_uri_resolve.py`**: `MILVUS_URI` wins; otherwise `http://MILVUS_HOST` + **`MIVLUS_PORT`** (legacy spelling) or **`MILVUS_PORT`** or **19530**. Used by **`embeddings.connect()`**, TCP preflight, **`demo_status_milvus_partition.py`**, and legacy **`backend.utils.connect_milvus`**.
-- **Host-side seed** after compose: **`scripts/milvus_docker_uri.sh`** (`milvus_export_host_uri_from_compose`) — sourced by **`refresh-demo-corpus.sh`** and **`one-click-demo.sh`** so `MILVUS_URI` matches `docker compose port milvus 19530`.
+- **Host-side seed** after compose: **`scripts/milvus_docker_uri.sh`** (`milvus_export_host_uri_from_compose`) — sets `MILVUS_URI=http://localhost:${MILVUS_HOST_PORT:-19530}` (Compose default host port is 19530); if **`MILVUS_HOST_PORT=0`**, falls back to `docker compose port milvus 19530`. Used by **`refresh-demo-corpus.sh`** and **`one-click-demo.sh`**.
 - **`data/*.py`** utilities load repo **`.env`** and use **`milvus_http_uri_from_env()`** (run from repo root: `PYTHONPATH=. python data/import.py`).
 
 ## Milvus scripts: hangs and debugging

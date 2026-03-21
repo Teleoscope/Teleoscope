@@ -65,7 +65,7 @@ if ! command -v docker &>/dev/null; then
   exit 1
 fi
 echo "Starting stack (docker compose up -d)..."
-export MILVUS_HOST_PORT="${MILVUS_HOST_PORT:-0}"
+export MILVUS_HOST_PORT="${MILVUS_HOST_PORT:-19530}"
 docker compose up -d
 
 MILVUS_PORT_LINE="$(docker compose port milvus 19530 2>/dev/null || true)"

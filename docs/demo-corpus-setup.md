@@ -107,11 +107,11 @@ With Docker (Mongo + Milvus + workers):
 
    ```bash
    mamba activate teleoscope
-   export MILVUS_URI=http://127.0.0.1:$(docker compose port milvus 19530 | cut -d: -f2)
+   source scripts/milvus_docker_uri.sh && milvus_export_host_uri_from_compose   # → http://localhost:19530 by default
    PYTHONPATH=. python scripts/seed-demo-corpus.py
    ```
 
-   (Adjust `MILVUS_URI` if Milvus is not on localhost.) If you cannot use mamba, use another env with `pip install -r backend/requirements.txt` plus `pyarrow` / `py7zr` for the seed script, still from the repo root with `PYTHONPATH=.`.
+   Compose publishes Milvus on host **19530** by default (`MILVUS_HOST_PORT` in `.env`). Use `MILVUS_HOST_PORT=0` only if that port is busy (then `milvus_docker_uri.sh` queries `docker compose port`). If you cannot use mamba, use another env with `pip install -r backend/requirements.txt` plus `pyarrow` / `py7zr` for the seed script, still from the repo root with `PYTHONPATH=.`.
 4. (Optional) Set `DEMO_CORPUS_WORKSPACE_ID` in `.env`; the app auto-discovers the corpus by label if unset. Start the app.
 
 Then anonymous demo users get both document list/search and vector ranking/similarity from the pre-seeded corpus.
@@ -132,7 +132,7 @@ To reload **vectors from parquet** without touching Mongo (no 7z read, no docume
 
 ```bash
 mamba activate teleoscope
-export MILVUS_URI=http://127.0.0.1:$(docker compose port milvus 19530 | cut -d: -f2)
+source scripts/milvus_docker_uri.sh && milvus_export_host_uri_from_compose
 PYTHONPATH=. python scripts/seed-demo-corpus.py --milvus-only
 ```
 
