@@ -37,6 +37,12 @@ def string_to_int(s):
 
 from pymilvus import MilvusClient, DataType, MilvusException
 
+from backend.milvus_auth import (
+    assert_milvus_auth_before_network_connect,
+    log_milvus_auth_summary,
+    milvus_auth_label,
+    milvus_token_for_client,
+)
 from backend.milvus_quiet import quiet_pymilvus_rpc_logs
 
 
@@ -129,13 +135,7 @@ def _use_lite():
 
 
 def _milvus_token() -> str | None:
-    t = os.getenv("MILVUS_TOKEN", "").strip()
-    if t:
-        return t
-    u, p = os.getenv("MILVUS_USERNAME", ""), os.getenv("MILVUS_PASSWORD", "")
-    if u and p:
-        return f"{u}:{p}"
-    return None
+    return milvus_token_for_client()
 
 
 def _milvus_client_timeout() -> float | None:
@@ -279,6 +279,9 @@ def connect():
             logging.warning("Milvus TCP preflight skipped: %s", exc)
 
     if MILVUS_URI:
+        assert_milvus_auth_before_network_connect(MILVUS_URI)
+        log_milvus_auth_summary(MILVUS_URI)
+        _milvus_connect_trace(f"auth={milvus_auth_label()} (no secrets logged)")
         _milvus_connect_trace(f"RPC target MILVUS_URI (timeout sec={_milvus_client_timeout()!r})")
         client = _connect_after_probe(MILVUS_URI)
         logging.info("Connected to Milvus (MILVUS_URI).")
@@ -286,6 +289,9 @@ def connect():
         return client
 
     uri = f"http://{MILVUS_HOST}:{MIVLUS_PORT}"
+    assert_milvus_auth_before_network_connect(uri)
+    log_milvus_auth_summary(uri)
+    _milvus_connect_trace(f"auth={milvus_auth_label()} (no secrets logged)")
     _milvus_connect_trace(f"RPC target {uri} (timeout sec={_milvus_client_timeout()!r})")
     client = _connect_after_probe(uri)
     logging.info("Connected to Milvus.")

@@ -8,6 +8,11 @@ from typing import Any, Tuple
 from dotenv import load_dotenv
 
 from backend.embeddings import _milvus_client_timeout
+from backend.milvus_auth import (
+    assert_milvus_auth_before_network_connect,
+    log_milvus_auth_summary,
+    milvus_token_for_client,
+)
 from backend.milvus_preflight import ensure_script_rpc_deadline, tcp_probe_from_env
 from backend.milvus_quiet import quiet_pymilvus_rpc_logs
 
@@ -37,13 +42,8 @@ def _uri_client_kwargs(
 
 
 def token_from_env() -> str | None:
-    t = os.getenv("MILVUS_TOKEN", "").strip()
-    if t:
-        return t
-    u, p = os.getenv("MILVUS_USERNAME", ""), os.getenv("MILVUS_PASSWORD", "")
-    if u and p:
-        return f"{u}:{p}"
-    return None
+    """Same as ``milvus_token_for_client`` (export scripts import this name)."""
+    return milvus_token_for_client()
 
 
 def connect_milvus_client() -> Tuple[Any, str | None]:
@@ -80,6 +80,8 @@ def connect_milvus_client() -> Tuple[Any, str | None]:
     db_name = os.getenv("MILVUS_DBNAME", "teleoscope").strip() or "teleoscope"
 
     if uri:
+        assert_milvus_auth_before_network_connect(uri)
+        log_milvus_auth_summary(uri)
         _LOG.info("Connecting via MILVUS_URI")
         prefer_default = (
             uri.lower().startswith("http://")
