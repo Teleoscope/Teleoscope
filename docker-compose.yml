@@ -40,38 +40,26 @@ services:
           "admin",
           "--quiet",
           "--eval",
-          "var r = db.adminCommand({ ping: 1 }); quit(r.ok ? 0 : 1);",
+          "var r = db.adminCommand({ ping: 1 }); quit((r && (r.ok === 1 || r.ok === true)) ? 0 : 1);",
         ]
-      interval: 10s
-      timeout: 10s
-      retries: 12
-      start_period: 90s
+      interval: 5s
+      timeout: 15s
+      retries: 30
+      start_period: 180s
 
-  # One-shot: rs.initiate (app and transactions need a replica set)
+  # One-shot: rs.initiate (app and transactions need a replica set).
+  # MUST run after mongodb is healthy: admin user only exists after entrypoint initdb finishes; with
+  # service_started alone, this container raced mongod and burned the whole wait loop on auth failure.
   mongodb-init:
     image: mongo:7
     depends_on:
       mongodb:
-        condition: service_started
+        condition: service_healthy
     restart: "no"
-    entrypoint: ["/bin/bash", "-lc"]
+    entrypoint: ["/bin/bash", "-eu", "-c"]
     command:
       - |
-        set -euo pipefail
-        echo "Waiting for MongoDB (admin ping)..."
-        ok=
-        for i in $(seq 1 90); do
-          if mongosh --host mongodb --username admin --password admin_password --authenticationDatabase admin --quiet --eval 'var r = db.adminCommand({ ping: 1 }); quit(r.ok ? 0 : 1);'; then
-            ok=1
-            break
-          fi
-          sleep 2
-        done
-        if [[ -z "${ok:-}" ]]; then
-          echo "mongodb-init: MongoDB did not respond to ping in time" >&2
-          exit 1
-        fi
-        echo "Ensuring replica set rs0..."
+        echo "mongodb-init: ensuring replica set rs0 (Mongo already passed health: admin ping)..."
         mongosh --host mongodb --username admin --password admin_password --authenticationDatabase admin --quiet --eval "try { rs.status(); quit(0); } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] }); quit(0); }"
         echo "mongodb-init: done"
 
