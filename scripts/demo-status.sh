@@ -6,6 +6,8 @@
 # Honors TELEOSCOPE_DATA_DIR (same as seed-demo-corpus.py); defaults to <repo>/data.
 # Verbose: -v / --verbose or DEMO_STATUS_VERBOSE=1 (extra paths, sizes, config, timings).
 # DEMO_STATUS_SKIP_APP=1: skip HTTP /api/hello (e.g. refresh-demo-corpus.sh before app recreate).
+# Milvus: TCP check uses a 2s socket deadline (avoids nc hanging). Python checks set
+# MILVUS_CLIENT_TIMEOUT (default 25s) so pymilvus RPCs do not block indefinitely on a bad server.
 set -e
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -64,6 +66,28 @@ section() { echo -e "\n${CYAN}=== $* ===${NC}"; }
 vinfo() {
   [[ "$VERBOSE" -eq 1 ]] || return 0
   echo -e "${DIM}  [verbose]${NC} $*"
+}
+
+# Bounded TCP connect (localhost + port). macOS/BSD nc -z can hang without -G; this always returns.
+_milvus_tcp_open() {
+  local host="${1:-localhost}"
+  local port="$2"
+  python3 -c "
+import socket, sys
+host, port = sys.argv[1], int(sys.argv[2])
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.settimeout(2.0)
+try:
+    s.connect((host, port))
+    sys.exit(0)
+except OSError:
+    sys.exit(1)
+finally:
+    try:
+        s.close()
+    except Exception:
+        pass
+" "$host" "$port" 2>/dev/null
 }
 
 # Redact user:pass@ in mongodb URIs for logs
@@ -270,7 +294,7 @@ if [[ -n "${MILVUS_LITE_PATH:-}" ]]; then
   fi
   # Optional: demo partition check + vector count via Python (same as server path below)
   if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
-    MILVUS_STATUS=$(MILVUS_LITE_PATH="$MILVUS_LITE_PATH" DEMO_WORKSPACE_ID="$DEMO_WORKSPACE_ID" PYTHONPATH=. python3 -c "
+    MILVUS_STATUS=$(MILVUS_CLIENT_TIMEOUT="${MILVUS_CLIENT_TIMEOUT:-25}" MILVUS_LITE_PATH="$MILVUS_LITE_PATH" DEMO_WORKSPACE_ID="$DEMO_WORKSPACE_ID" PYTHONPATH=. python3 -c "
 import os, sys
 from pathlib import Path
 sys.path.insert(0, str(Path('.').resolve()))
@@ -301,9 +325,7 @@ except Exception as e:
     fi
   fi
 else
-  if command -v nc >/dev/null 2>&1 && nc -z localhost "$MILVUS_PORT" 2>/dev/null; then
-    ok "Milvus reachable at localhost:$MILVUS_PORT"
-  elif command -v timeout >/dev/null 2>&1 && timeout 1 bash -c "cat < /dev/null > /dev/tcp/localhost/$MILVUS_PORT" 2>/dev/null; then
+  if _milvus_tcp_open localhost "$MILVUS_PORT"; then
     ok "Milvus reachable at localhost:$MILVUS_PORT"
   else
     warn "Milvus not reachable at localhost:$MILVUS_PORT (ranking will be unavailable)"
@@ -311,7 +333,7 @@ else
   if [[ -n "$DEMO_WORKSPACE_ID" ]]; then
     export MILVUS_URI="${MILVUS_URI:-http://localhost:$MILVUS_PORT}"
     export DEMO_WORKSPACE_ID
-    MILVUS_STATUS=$(PYTHONPATH=. python3 -c "
+    MILVUS_STATUS=$(MILVUS_CLIENT_TIMEOUT="${MILVUS_CLIENT_TIMEOUT:-25}" PYTHONPATH=. python3 -c "
 import os, sys
 from pathlib import Path
 sys.path.insert(0, str(Path('.').resolve()))
