@@ -1,0 +1,47 @@
+name: Deploy to teleoscope.ca
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:  # allow manual deploys from the Actions tab
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Only run after the build check passes
+    needs: []
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+            cd ~/Teleoscope
+
+            echo "==> Pulling latest main..."
+            git fetch origin main
+            git checkout main
+            git pull origin main
+
+            echo "==> Rebuilding and restarting containers..."
+            docker compose \
+              -f docker-compose.yml \
+              -f docker-compose.prod.yml \
+              up -d --build
+
+            echo "==> Waiting for app to be healthy..."
+            for i in $(seq 1 30); do
+              if curl -sf http://localhost:3000/api/hello > /dev/null 2>&1; then
+                echo "App is up."
+                break
+              fi
+              echo "  attempt $i/30 — waiting 5s..."
+              sleep 5
+            done
+
+            echo "==> Deploy complete."
+            docker compose ps

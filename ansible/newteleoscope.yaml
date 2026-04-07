@@ -21,3 +21,7 @@
   ansible.builtin.import_playbook: ufw.yaml
 - name: Rebuild and Start Teleoscope
   ansible.builtin.import_playbook: build-and-start-teleoscope.yaml
+- name: Install and configure nginx reverse proxy
+  ansible.builtin.import_playbook: nginx.yaml
+- name: Provision Let's Encrypt SSL certificate
+  ansible.builtin.import_playbook: certbot.yaml

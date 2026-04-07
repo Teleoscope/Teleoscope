@@ -46,6 +46,12 @@ google_client_id: ""
 google_client_secret: ""
 
 # -----------------------------------------------------------------------------
+# TLS / Let's Encrypt (used by ansible/certbot.yaml)
+# -----------------------------------------------------------------------------
+# Email for Let's Encrypt expiry notices (required by certbot)
+certbot_email: admin@teleoscope.ca
+
+# -----------------------------------------------------------------------------
 # Conda (Python environment)
 # -----------------------------------------------------------------------------
 conda_environment: teleoscope

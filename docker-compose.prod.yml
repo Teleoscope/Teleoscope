@@ -1,0 +1,37 @@
+# Production overlay for docker-compose.yml — use with Zilliz Cloud (no local Milvus)
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# What this does:
+#   - Moves milvus / etcd / minio behind the "local-milvus" profile so they are
+#     NOT started by default.  Workers connect to Zilliz (or any remote Milvus)
+#     via MILVUS_DOCKER_URI + MILVUS_TOKEN in .env instead.
+#   - Sets VECTORIZER_ALWAYS_ON so the embedding worker stays up without waiting
+#     for browser activity (appropriate for a production server).
+#
+# Required .env additions for Zilliz Cloud (see docs/zilliz-migration.md):
+#   MILVUS_DOCKER_URI=https://<endpoint>.zillizcloud.com:19530
+#   MILVUS_TOKEN=<your-zilliz-api-key>
+#   NEXTAUTH_URL=https://teleoscope.ca
+#   NEXTAUTH_SECRET=<long-random-string>
+#   TELEOSCOPE_BASE_URL=https://teleoscope.ca
+#   MONGODB_PASSWORD=<strong-password>
+#
+# To start local Milvus anyway (e.g. for a migration one-shot):
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#     --profile local-milvus up -d milvus etcd minio
+
+services:
+  milvus:
+    profiles: ["local-milvus"]
+
+  etcd:
+    profiles: ["local-milvus"]
+
+  minio:
+    profiles: ["local-milvus"]
+
+  vectorizer:
+    environment:
+      VECTORIZER_ALWAYS_ON: "1"

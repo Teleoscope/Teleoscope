@@ -1,0 +1,38 @@
+- hosts: "{{ groups['newmachines'] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files:
+    - ./vars/vars.yaml
+  become: yes
+
+  tasks:
+    - name: Install nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: latest
+        update_cache: yes
+
+    - name: Write HTTP-only nginx site config
+      ansible.builtin.template:
+        src: ./teleoscope.ca.http.j2
+        dest: /etc/nginx/sites-available/teleoscope.ca
+
+    - name: Enable teleoscope.ca site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/teleoscope.ca
+        dest: /etc/nginx/sites-enabled/teleoscope.ca
+        state: link
+
+    - name: Remove default nginx site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Validate nginx config
+      ansible.builtin.shell: nginx -t
+      changed_when: false
+
+    - name: Enable and start nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
