@@ -7,8 +7,9 @@
 #   - Moves milvus / etcd / minio behind the "local-milvus" profile so they are
 #     NOT started by default.  Workers connect to Zilliz (or any remote Milvus)
 #     via MILVUS_DOCKER_URI + MILVUS_TOKEN in .env instead.
-#   - Sets VECTORIZER_ALWAYS_ON so the embedding worker stays up without waiting
-#     for browser activity (appropriate for a production server).
+#   - Keeps the vectorizer in activity-gated mode (model loads on first workspace
+#     open, unloads after VECTORIZER_IDLE_SECONDS of no activity — default 5 min).
+#     Set VECTORIZER_IDLE_SECONDS in .env to tune the idle timeout.
 #
 # Required .env additions for Zilliz Cloud (see docs/zilliz-migration.md):
 #   MILVUS_DOCKER_URI=https://<endpoint>.zillizcloud.com:19530
@@ -32,6 +33,6 @@ services:
   minio:
     profiles: ["local-milvus"]
 
-  vectorizer:
-    environment:
-      VECTORIZER_ALWAYS_ON: "1"
+  # vectorizer: activity-gated by default — no override needed.
+  # Set VECTORIZER_IDLE_SECONDS in .env to control how long the model stays
+  # loaded after the last workspace activity (default: 300s / 5 min).
