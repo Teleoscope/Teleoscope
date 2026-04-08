@@ -1,8 +1,8 @@
 # Installing Teleoscope on AWS EC2
 
-This guide walks through running the **full stack** (Next.js app, MongoDB, RabbitMQ, Milvus, workers, vectorizer) on a single **Ubuntu** EC2 instance using **Docker Compose**—the same layout as local development and CI.
+> **Automated path:** `bash scripts/setup.sh` provisions EC2 instances, installs Docker, deploys the stack, configures nginx + TLS, and sets up the on-demand GPU vectorizer in one run. See [ansible/README.md](../ansible/README.md). Use the manual steps below if you want a single-instance setup without the GPU auto-scaler or Zilliz.
 
-For automated install **onto** an existing Ubuntu host (with or without Docker), see **[ansible/README.md](../ansible/README.md)** instead.
+This guide walks through running the **full stack** (Next.js app, MongoDB, RabbitMQ, Milvus, workers, vectorizer) on a single **Ubuntu** EC2 instance using **Docker Compose**—the same layout as local development and CI.
 
 ## What you need
 
@@ -143,15 +143,9 @@ docker compose ps
 docker compose logs --tail=200 worker-tasks
 ```
 
-## Alternative: Ansible on EC2
+## Alternative: fully automated deploy
 
-If you prefer **PM2 + system packages** on Ubuntu instead of Docker:
-
-1. Launch the same class of EC2 instance.
-2. Copy and edit `ansible/vars/vars.yaml` and `ansible/vars/inventory.yaml` (point `newmachines` at the instance).
-3. Run `ansible-playbook -i ansible/vars/inventory.yaml ansible/newteleoscope.yaml`.
-
-You still need TLS, DNS, and security groups as above; Ansible does not create AWS infrastructure.
+`bash scripts/setup.sh` handles everything above — EC2 provisioning, Docker install, stack startup, nginx, and TLS — plus spins up a separate on-demand GPU EC2 for the vectorizer and uses Zilliz Cloud instead of a local Milvus. See [ansible/README.md](../ansible/README.md) for the full reference.
 
 ## Troubleshooting
 

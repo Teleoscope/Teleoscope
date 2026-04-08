@@ -109,24 +109,35 @@ The **/demo** route sends visitors to an anonymous workspace that **always** use
 
 Full steps, env vars, and troubleshooting (e.g. mamba/micromamba env paths): [docs/demo-corpus-setup.md](docs/demo-corpus-setup.md).
 
-### Option 2: Ansible (VM deployment)
+### Option 2: Automated production deploy (AWS + Ansible)
 
-For production or VM deployment:
+For a production deployment to teleoscope.ca (or any domain) on AWS EC2, with a separate on-demand GPU vectorizer and Zilliz Cloud for the vector database:
 
-1. Copy the example vars and inventory:
-   ```bash
-   cp ansible/vars/vars.yaml.example ansible/vars/vars.yaml
-   cp ansible/vars/inventory.yaml.example ansible/vars/inventory.yaml
-   ```
+**Before you start, you'll need:**
+- AWS account with permission to create EC2 instances, security groups, and IAM roles
+- An EC2 key pair created in the AWS console with its `.pem` file on your machine
+- A [Zilliz Cloud](https://zilliz.com/) cluster (free tier works) — grab the endpoint URI and API token from the Connect panel
+- A domain with DNS you can edit (to point an A record at the Elastic IP after deploy)
 
-2. Edit `ansible/vars/vars.yaml` with your MongoDB, RabbitMQ, and auth credentials (see [ansible/README.md](ansible/README.md) for a variable cheat sheet and `ansible/vars/vars.yaml.example` for the full template).
+**One command to configure and deploy:**
+```bash
+bash scripts/setup.sh
+```
 
-3. Run the full playbook:
-   ```bash
-   ansible-playbook -i ansible/vars/inventory.yaml ansible/newteleoscope.yaml
-   ```
+The script checks prerequisites, asks for the handful of values only you can know (key pair, domain, Zilliz credentials), auto-generates all passwords and secrets, writes `ansible/vars/vars.yaml`, then runs `ansible-playbook ansible/site.yaml` which:
 
-For a separate vectorizer machine, use `ansible/newvectorizer.yaml`.
+1. Provisions AWS — security groups, IAM role (for GPU auto-scaler), main EC2, GPU EC2, Elastic IP
+2. Installs Docker on both instances
+3. Starts the main stack (app, workers, MongoDB, RabbitMQ) + nginx + Let's Encrypt TLS
+4. Builds the GPU vectorizer image (pre-downloads BGE-M3, ~1 GB), then **stops** the GPU EC2 — `monitor.py` starts it automatically when there is vectorization work and stops it after it has been idle for 10 minutes
+5. Prints the Elastic IP — point your DNS A record there and the site is live
+
+**Day-to-day updates:**
+```bash
+ansible-playbook -i ansible/vars/inventory.yaml ansible/deploy-update.yaml
+```
+
+See [ansible/README.md](ansible/README.md) for the full architecture diagram, individual playbooks, and operations reference.
 
 ### Option 3: Frontend-only development
 
