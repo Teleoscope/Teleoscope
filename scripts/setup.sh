@@ -76,6 +76,14 @@ if [[ ${#PIP_NEEDED[@]} -gt 0 ]]; then
     # ~/.local/bin on Linux. Ask Python itself where it put them.
     PY_USER_BIN="$(python3 -m site --user-base)/bin"
     export PATH="$PY_USER_BIN:$HOME/.local/bin:$PATH"
+    # Persist to shell profile so ansible is found in future sessions.
+    if [[ "$SHELL" == *zsh* ]]; then  SHELL_RC="$HOME/.zshrc"
+    elif [[ "$SHELL" == *bash* ]]; then SHELL_RC="$HOME/.bash_profile"
+    else SHELL_RC=""; fi
+    if [[ -n "$SHELL_RC" ]] && ! grep -qF "$PY_USER_BIN" "$SHELL_RC" 2>/dev/null; then
+      printf '\n# Added by Teleoscope setup.sh\nexport PATH="%s:$PATH"\n' "$PY_USER_BIN" >> "$SHELL_RC"
+      warn "Added $PY_USER_BIN to $SHELL_RC — run: source $SHELL_RC to persist in this shell"
+    fi
     echo ""
     for item in "${PIP_NEEDED[@]}"; do
       case "$item" in
