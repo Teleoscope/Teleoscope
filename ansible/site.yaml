@@ -197,6 +197,7 @@
         ansible_host: "{{ item.ip }}"
         ansible_user: "{{ ansible_user }}"
         ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+        ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         groups: "{{ item.group }}"
         main_private_ip: "{{ main_instance.instances[0].private_ip_address }}"
         ec2_worker_instance: "{{ worker_instance.instances[0].instance_id }}"
