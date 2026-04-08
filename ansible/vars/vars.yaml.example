@@ -37,6 +37,7 @@ aws_key_pair: my-teleoscope-key
 main_instance_type: t3.large
 worker_instance_type: m6i.large
 gpu_instance_type: g5.xlarge
+# gpu_availability_zone: ca-central-1b   # uncomment if AWS reports InsufficientInstanceCapacity in default AZ
 
 # EBS root volume sizes in GB.
 main_volume_size: 80
