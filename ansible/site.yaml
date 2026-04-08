@@ -332,7 +332,7 @@
       become: true
 
     - name: Configure UFW
-      ansible.builtin.include_tasks: ufw-tasks.yaml
+      ansible.builtin.import_tasks: ufw-tasks.yaml
       become: true
 
 # ── PLAY 5: Deploy worker stack, then stop the worker EC2 ────────────────────
