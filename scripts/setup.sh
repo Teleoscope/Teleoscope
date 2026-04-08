@@ -72,7 +72,10 @@ if [[ ${#PIP_NEEDED[@]} -gt 0 ]]; then
   echo -en "  Install via pip? [Y/n]: "; read -r yn
   if [[ "${yn:-Y}" =~ ^[Yy] ]]; then
     python3 -m pip install --user "${PIP_NEEDED[@]}"
-    export PATH="$HOME/.local/bin:$PATH"   # pip --user installs bins here
+    # pip --user bin dir is platform-specific: ~/Library/Python/3.x/bin on macOS,
+    # ~/.local/bin on Linux. Ask Python itself where it put them.
+    PY_USER_BIN="$(python3 -m site --user-base)/bin"
+    export PATH="$PY_USER_BIN:$HOME/.local/bin:$PATH"
     echo ""
     for item in "${PIP_NEEDED[@]}"; do
       case "$item" in
