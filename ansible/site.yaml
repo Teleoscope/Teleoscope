@@ -17,10 +17,13 @@
 #       ansible-playbook -i ansible/vars/inventory.yaml ansible/deploy-update.yaml
 
 # ── PLAY 1: Provision all AWS infrastructure ─────────────────────────────────
+# Skip on re-runs once infrastructure exists:
+#   ansible-playbook ansible/site.yaml --skip-tags provision
 - name: Provision AWS infrastructure
   hosts: localhost
   connection: local
   gather_facts: false
+  tags: [provision]
   vars_files:
     - ./vars/vars.yaml
 
