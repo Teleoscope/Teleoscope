@@ -103,15 +103,19 @@ ask CERTBOT_EMAIL "Email for Let's Encrypt"        ""
 
 # ── instances ────────────────────────────────────────────────────────────────
 header "EC2 instances"
-echo -e "  ${DIM}main: app + workers + MongoDB + RabbitMQ (min 16 GB)${RESET}"
-echo -e "  ${DIM}GPU:  BGE-M3 vectorizer — started on demand by monitor.py${RESET}"
+echo -e "  ${DIM}main:   app + MongoDB + RabbitMQ + nginx + monitor.py (always on, ~\$60/mo)${RESET}"
+echo -e "  ${DIM}worker: Python workers — started by monitor.py when queues are non-empty${RESET}"
+echo -e "  ${DIM}GPU:    BGE-M3 vectorizer — started by monitor.py when vectorize queue is non-empty${RESET}"
 echo ""
 
-ask MAIN_TYPE  "Main instance type"       "m6i.xlarge"
-ask GPU_TYPE   "GPU instance type"        "g5.xlarge"
-ask MAIN_VOL   "Main EBS volume (GB)"     "100"
-ask GPU_VOL    "GPU EBS volume (GB)"      "60"
-ask IDLE_STOP  "GPU idle stop (minutes)"  "10"
+ask MAIN_TYPE    "Main instance type"          "t3.large"
+ask WORKER_TYPE  "Worker instance type"        "m6i.large"
+ask GPU_TYPE     "GPU instance type"           "g5.xlarge"
+ask MAIN_VOL     "Main EBS volume (GB)"        "80"
+ask WORKER_VOL   "Worker EBS volume (GB)"      "60"
+ask GPU_VOL      "GPU EBS volume (GB)"         "60"
+ask WORKER_STOP  "Worker idle stop (minutes)"  "10"
+ask IDLE_STOP    "GPU idle stop (minutes)"     "10"
 
 # ── zilliz ───────────────────────────────────────────────────────────────────
 header "Zilliz Cloud  (vector database — zilliz.com)"
@@ -149,7 +153,8 @@ echo "  ────────────────────────
 printf "  %-26s %s\n" "Domain:"          "$DOMAIN"
 printf "  %-26s %s\n" "AWS region:"      "$AWS_REGION"
 printf "  %-26s %s\n" "Key pair:"        "$AWS_KEY_PAIR"
-printf "  %-26s %s\n" "Main instance:"   "$MAIN_TYPE  (${MAIN_VOL} GB)"
+printf "  %-26s %s\n" "Main instance:"   "$MAIN_TYPE  (${MAIN_VOL} GB, always on)"
+printf "  %-26s %s\n" "Worker instance:" "$WORKER_TYPE  (${WORKER_VOL} GB, idle stop: ${WORKER_STOP} min)"
 printf "  %-26s %s\n" "GPU instance:"    "$GPU_TYPE  (${GPU_VOL} GB, idle stop: ${IDLE_STOP} min)"
 printf "  %-26s %s\n" "Zilliz URI:"      "$ZILLIZ_URI"
 printf "  %-26s %s\n" "All secrets:"     "auto-generated ✓"
@@ -176,9 +181,12 @@ teleoscope:
 aws_region: ${AWS_REGION}
 aws_key_pair: ${AWS_KEY_PAIR}
 main_instance_type: ${MAIN_TYPE}
+worker_instance_type: ${WORKER_TYPE}
 gpu_instance_type: ${GPU_TYPE}
 main_volume_size: ${MAIN_VOL}
+worker_volume_size: ${WORKER_VOL}
 vectorizer_volume_size: ${GPU_VOL}
+worker_idle_stop_minutes: ${WORKER_STOP}
 vectorizer_idle_stop_minutes: ${IDLE_STOP}
 
 mongodb_admin_name: teleoscope_admin
@@ -224,11 +232,11 @@ echo ""
 echo -e "${CYAN}${BOLD}  Ready to deploy${RESET}"
 echo ""
 echo "  ansible-playbook ansible/site.yaml will:"
-echo "    1. Create EC2 instances, security groups, IAM role, Elastic IP"
-echo "    2. Install Docker on both instances"
-echo "    3. Start the main stack + nginx + TLS certificate"
-echo "    4. Build the GPU vectorizer image (downloads BGE-M3, ~1 GB)"
-echo "    5. Stop the GPU EC2 — monitor.py starts it on demand"
+echo "    1. Provision 3 EC2s (main/worker/GPU), security groups, IAM role, Elastic IP"
+echo "    2. Install Docker on all 3 instances"
+echo "    3. Start main stack (app + MongoDB + RabbitMQ) + nginx + TLS"
+echo "    4. Build worker image; stop worker EC2 (monitor.py starts on demand)"
+echo "    5. Build GPU image + BGE-M3 (~1 GB); stop GPU EC2 (monitor.py starts on demand)"
 echo ""
 echo "  Estimated time: 10–15 minutes."
 echo ""

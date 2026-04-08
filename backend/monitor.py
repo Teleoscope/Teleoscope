@@ -1,24 +1,27 @@
 # monitor.py
 """
-EC2 auto-scaler for the vectorizer (and optionally the vector DB) instance.
+EC2 auto-scaler for the worker EC2 and the vectorizer GPU EC2.
 
-Watches the RABBITMQ_VECTORIZE_QUEUE queue:
-  - Queue non-empty + instance stopped/stopping  → start the EC2 instance.
-  - Queue empty for VECTORIZER_IDLE_STOP_MINUTES → stop the EC2 instance.
+Runs on the always-on app server (t3.large) and watches RabbitMQ queue depths:
 
-The vectorizer instance should run docker-compose.vectorizer.yml with
-VECTORIZER_ALWAYS_ON=1 so it consumes immediately on boot.
+  Worker EC2  — dispatch / tasks / graph / uploader queues
+    non-empty + instance stopped  → start
+    all empty for WORKER_IDLE_STOP_MINUTES → stop
+
+  Vectorizer GPU EC2  — teleoscope-vectorize queue
+    non-empty + instance stopped  → start
+    empty for VECTORIZER_IDLE_STOP_MINUTES → stop
 
 Required env vars:
-  EC2_VECTORIZE_INSTANCE       EC2 instance ID for the vectorizer, e.g. i-0abc123
-  RABBITMQ_VECTORIZE_QUEUE     Queue name to watch
-  RABBITMQ_VHOST               RabbitMQ vhost
+  EC2_WORKER_INSTANCE          Instance ID for the Python worker EC2
+  EC2_VECTORIZE_INSTANCE       Instance ID for the GPU vectorizer EC2
+  RABBITMQ_VHOST               RabbitMQ vhost (usually /)
 
 Optional env vars:
-  EC2_VECTORDB_INSTANCE        EC2 instance ID for a self-hosted vector DB (omit when using Zilliz)
-  AWS_REGION                   AWS region (default: ca-central-1)
-  MONITOR_CHECK_INTERVAL       Seconds between queue polls (default: 10)
-  VECTORIZER_IDLE_STOP_MINUTES Minutes of empty queue before stopping the instance (default: 10)
+  AWS_REGION                   default: ca-central-1
+  MONITOR_CHECK_INTERVAL       seconds between polls (default: 10)
+  WORKER_IDLE_STOP_MINUTES     idle minutes before stopping worker EC2 (default: 10)
+  VECTORIZER_IDLE_STOP_MINUTES idle minutes before stopping GPU EC2 (default: 10)
 """
 from __future__ import annotations
 
@@ -47,155 +50,178 @@ logging.getLogger("pika").setLevel(logging.WARNING)
 def _require(var: str) -> str:
     value = os.getenv(var)
     if not value:
-        raise EnvironmentError(
-            f"{var} environment variable is not set. Please configure it before running."
-        )
+        raise EnvironmentError(f"{var} is required but not set.")
     return value
 
 
-RABBITMQ_VECTORIZE_QUEUE = _require("RABBITMQ_VECTORIZE_QUEUE")
-RABBITMQ_VHOST = _require("RABBITMQ_VHOST")
-EC2_VECTORIZE_INSTANCE = _require("EC2_VECTORIZE_INSTANCE")
-# Optional — omit when using Zilliz Cloud instead of a self-hosted vector DB.
-EC2_VECTORDB_INSTANCE = os.getenv("EC2_VECTORDB_INSTANCE", "").strip() or None
+EC2_WORKER_INSTANCE     = _require("EC2_WORKER_INSTANCE")
+EC2_VECTORIZE_INSTANCE  = _require("EC2_VECTORIZE_INSTANCE")
+RABBITMQ_VHOST          = _require("RABBITMQ_VHOST")
 
-AWS_REGION = os.getenv("AWS_REGION", "ca-central-1")
-CHECK_INTERVAL = int(os.getenv("MONITOR_CHECK_INTERVAL", "10"))
-IDLE_STOP_MINUTES = int(os.getenv("VECTORIZER_IDLE_STOP_MINUTES", "10"))
+AWS_REGION              = os.getenv("AWS_REGION", "ca-central-1")
+CHECK_INTERVAL          = int(os.getenv("MONITOR_CHECK_INTERVAL", "10"))
+WORKER_IDLE_STOP        = int(os.getenv("WORKER_IDLE_STOP_MINUTES", "10"))
+VECTORIZER_IDLE_STOP    = int(os.getenv("VECTORIZER_IDLE_STOP_MINUTES", "10"))
+
+# Queues that drive the worker EC2 (everything except the vectorize queue).
+WORKER_QUEUES = [
+    os.getenv("RABBITMQ_DISPATCH_QUEUE",      "teleoscope-dispatch"),
+    os.getenv("RABBITMQ_TASK_QUEUE",          "teleoscope-tasks"),
+    os.getenv("RABBITMQ_UPLOAD_VECTOR_QUEUE", "teleoscope-upload-vector"),
+    "graph",
+]
+VECTORIZE_QUEUE = os.getenv("RABBITMQ_VECTORIZE_QUEUE", "teleoscope-vectorize")
+
+_TRANSIENT = {"pending", "stopping", "shutting-down", "rebooting"}
 
 ec2 = boto3.client("ec2", region_name=AWS_REGION)
-
-# Transient states — do not issue start/stop while the instance is in one of these.
-_TRANSIENT_STATES = {"pending", "stopping", "shutting-down", "rebooting"}
 
 
 # ---------------------------------------------------------------------------
 # EC2 helpers
 # ---------------------------------------------------------------------------
 
-
-def get_instance_state(instance_id: str) -> str | None:
-    """Return the EC2 instance state name, or None on error."""
+def instance_state(instance_id: str) -> str | None:
     try:
         resp = ec2.describe_instances(InstanceIds=[instance_id])
         reservations = resp.get("Reservations", [])
         if not reservations:
             return None
-        state = reservations[0]["Instances"][0]["State"]["Name"]
-        return state
+        return reservations[0]["Instances"][0]["State"]["Name"]
     except ClientError as e:
         logging.error("describe_instances(%s): %s", instance_id, e)
         return None
 
 
-def start_instance(instance_id: str) -> None:
+def start_instance(instance_id: str, label: str) -> None:
     try:
         ec2.start_instances(InstanceIds=[instance_id])
-        logging.info("start_instances(%s) issued.", instance_id)
+        logging.info("%s: issued start_instances(%s)", label, instance_id)
     except ClientError as e:
-        logging.error("start_instances(%s): %s", instance_id, e)
+        logging.error("%s: start_instances(%s): %s", label, instance_id, e)
 
 
-def stop_instance(instance_id: str) -> None:
+def stop_instance(instance_id: str, label: str) -> None:
     try:
         ec2.stop_instances(InstanceIds=[instance_id])
-        logging.info("stop_instances(%s) issued.", instance_id)
+        logging.info("%s: issued stop_instances(%s)", label, instance_id)
     except ClientError as e:
-        logging.error("stop_instances(%s): %s", instance_id, e)
+        logging.error("%s: stop_instances(%s): %s", label, instance_id, e)
 
 
 # ---------------------------------------------------------------------------
 # RabbitMQ helpers
 # ---------------------------------------------------------------------------
 
-
-def get_queue_depth(queue_name: str) -> int | None:
-    """Return the number of ready messages in the queue, or None on error."""
+def queue_depth(queue_name: str) -> int | None:
     try:
-        connection = utils.get_connection()
-        channel = connection.channel()
-        result = channel.queue_declare(queue=queue_name, passive=True)
+        conn = utils.get_connection()
+        ch = conn.channel()
+        result = ch.queue_declare(queue=queue_name, passive=True)
         depth = result.method.message_count
-        connection.close()
+        conn.close()
         return depth
     except Exception as e:
-        logging.error("get_queue_depth(%s): %s", queue_name, e)
+        logging.warning("queue_depth(%s): %s", queue_name, e)
         return None
 
 
+def total_depth(queues: list[str]) -> int | None:
+    """Sum depths across a list of queues. Returns None if all checks fail."""
+    total = 0
+    any_ok = False
+    for q in queues:
+        d = queue_depth(q)
+        if d is not None:
+            total += d
+            any_ok = True
+    return total if any_ok else None
+
+
 # ---------------------------------------------------------------------------
-# Monitor loop
+# Per-instance scaler logic
 # ---------------------------------------------------------------------------
 
+class InstanceScaler:
+    """Starts an EC2 instance when queues are non-empty; stops it when idle."""
 
-def monitor_loop() -> None:
-    queue_empty_since: float | None = None  # wall time when queue first became empty
+    def __init__(self, instance_id: str, queues: list[str], idle_minutes: int, label: str):
+        self.instance_id = instance_id
+        self.queues = queues
+        self.idle_minutes = idle_minutes
+        self.label = label
+        self._empty_since: float | None = None
 
-    logging.info(
-        "monitor: watching queue=%s instance=%s region=%s idle_stop=%dm check_interval=%ds",
-        RABBITMQ_VECTORIZE_QUEUE,
-        EC2_VECTORIZE_INSTANCE,
-        AWS_REGION,
-        IDLE_STOP_MINUTES,
-        CHECK_INTERVAL,
-    )
-    if EC2_VECTORDB_INSTANCE:
-        logging.info("monitor: also keeping vectordb instance=%s alive.", EC2_VECTORDB_INSTANCE)
-
-    while True:
-        depth = get_queue_depth(RABBITMQ_VECTORIZE_QUEUE)
-        state = get_instance_state(EC2_VECTORIZE_INSTANCE)
+    def tick(self) -> None:
+        depth = total_depth(self.queues)
+        state = instance_state(self.instance_id)
 
         logging.info(
-            "vectorize queue depth=%s  vectorizer state=%s",
+            "%s: queue_depth=%s  state=%s",
+            self.label,
             depth if depth is not None else "ERR",
             state or "ERR",
         )
 
-        if depth is not None and state is not None:
-            if depth > 0:
-                # Work to do — reset idle timer; start instance if it's stopped.
-                queue_empty_since = None
-                if state == "stopped":
+        if depth is None or state is None:
+            return
+
+        if depth > 0:
+            self._empty_since = None
+            if state == "stopped":
+                logging.info("%s: %d messages — starting instance.", self.label, depth)
+                start_instance(self.instance_id, self.label)
+            elif state in _TRANSIENT:
+                logging.info("%s: instance in transient state '%s' — waiting.", self.label, state)
+        else:
+            if self._empty_since is None:
+                self._empty_since = time.time()
+            idle = (time.time() - self._empty_since) / 60.0
+
+            if state == "running":
+                if idle >= self.idle_minutes:
                     logging.info(
-                        "Queue has %d messages and instance is stopped — starting %s.",
-                        depth,
-                        EC2_VECTORIZE_INSTANCE,
+                        "%s: queues empty %.1f / %d min — stopping instance.",
+                        self.label, idle, self.idle_minutes,
                     )
-                    start_instance(EC2_VECTORIZE_INSTANCE)
-                elif state in _TRANSIENT_STATES:
-                    logging.info("Instance %s is in transient state '%s' — waiting.", EC2_VECTORIZE_INSTANCE, state)
-            else:
-                # Queue is empty — track how long it has been idle.
-                if queue_empty_since is None:
-                    queue_empty_since = time.time()
-                idle_minutes = (time.time() - queue_empty_since) / 60.0
+                    stop_instance(self.instance_id, self.label)
+                    self._empty_since = None
+                else:
+                    logging.info(
+                        "%s: queues empty %.1f / %d min — keeping instance running.",
+                        self.label, idle, self.idle_minutes,
+                    )
 
-                if state == "running":
-                    if idle_minutes >= IDLE_STOP_MINUTES:
-                        logging.info(
-                            "Queue empty for %.1f min (threshold %d min) — stopping %s.",
-                            idle_minutes,
-                            IDLE_STOP_MINUTES,
-                            EC2_VECTORIZE_INSTANCE,
-                        )
-                        stop_instance(EC2_VECTORIZE_INSTANCE)
-                        queue_empty_since = None  # reset so we don't re-issue stop
-                    else:
-                        logging.info(
-                            "Queue empty for %.1f / %d min — keeping instance running.",
-                            idle_minutes,
-                            IDLE_STOP_MINUTES,
-                        )
 
-        # Optional: keep the self-hosted vector DB instance alive (skip for Zilliz).
-        if EC2_VECTORDB_INSTANCE:
-            db_state = get_instance_state(EC2_VECTORDB_INSTANCE)
-            logging.info("vectordb instance=%s state=%s", EC2_VECTORDB_INSTANCE, db_state or "ERR")
-            if db_state == "stopped":
-                logging.info("Vector DB instance is stopped — starting %s.", EC2_VECTORDB_INSTANCE)
-                start_instance(EC2_VECTORDB_INSTANCE)
+# ---------------------------------------------------------------------------
+# Main loop
+# ---------------------------------------------------------------------------
 
+def monitor_loop() -> None:
+    worker_scaler = InstanceScaler(
+        instance_id=EC2_WORKER_INSTANCE,
+        queues=WORKER_QUEUES,
+        idle_minutes=WORKER_IDLE_STOP,
+        label="workers",
+    )
+    gpu_scaler = InstanceScaler(
+        instance_id=EC2_VECTORIZE_INSTANCE,
+        queues=[VECTORIZE_QUEUE],
+        idle_minutes=VECTORIZER_IDLE_STOP,
+        label="vectorizer",
+    )
+
+    logging.info(
+        "monitor: region=%s  check_interval=%ds  "
+        "worker=%s (idle_stop=%dm)  gpu=%s (idle_stop=%dm)",
+        AWS_REGION, CHECK_INTERVAL,
+        EC2_WORKER_INSTANCE, WORKER_IDLE_STOP,
+        EC2_VECTORIZE_INSTANCE, VECTORIZER_IDLE_STOP,
+    )
+
+    while True:
+        worker_scaler.tick()
+        gpu_scaler.tick()
         time.sleep(CHECK_INTERVAL)
 
 

@@ -1,22 +1,19 @@
 ---
-# Provision AWS infrastructure for Teleoscope.
+# provision-aws.yaml — provision all AWS infrastructure for Teleoscope.
 #
 # Creates (idempotently):
-#   - Security groups for main EC2 and GPU vectorizer EC2
-#   - IAM policy + role so monitor.py can start/stop the GPU instance
-#   - Main EC2 instance (app + workers + MongoDB + RabbitMQ)
-#   - GPU EC2 instance (vectorizer — stopped after provisioning; monitor.py controls it)
-#   - Elastic IP associated with the main EC2
-#   - vars/infra-outputs.yaml with instance IDs and IPs for subsequent playbooks
+#   - Security groups: main, worker, GPU vectorizer
+#   - IAM policy + role (main EC2) so monitor.py can start/stop worker + GPU instances
+#   - main EC2   (t3.large)   — app, MongoDB, RabbitMQ, nginx, monitor.py
+#   - worker EC2 (m6i.large)  — Python workers (stopped after provisioning)
+#   - GPU EC2    (g5.xlarge)  — BGE-M3 vectorizer (stopped after provisioning)
+#   - Elastic IP on main EC2
+#   - vars/infra-outputs.yaml with all instance IDs and IPs
 #
-# Run standalone:
-#   ansible-playbook -i vars/inventory.yaml ansible/provision-aws.yaml
+# Usage:
+#   ansible-playbook ansible/provision-aws.yaml
 #
-# Or let site.yaml call it automatically as the first step.
-#
-# Requirements: amazon.aws collection (ansible-galaxy collection install -r ansible/requirements.yaml)
-# AWS credentials: set AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY in env, or use an IAM instance
-# role / AWS SSO profile (export AWS_PROFILE=my-profile).
+# Requirements: amazon.aws collection + AWS credentials in environment.
 
 - name: Provision AWS infrastructure
   hosts: localhost
@@ -26,13 +23,11 @@
     - ./vars/vars.yaml
 
   tasks:
-    # ------------------------------------------------------------------
-    # Find the latest Ubuntu 22.04 LTS AMI (Canonical owner)
-    # ------------------------------------------------------------------
-    - name: Find latest Ubuntu 22.04 LTS AMI
+    # ── AMI ──────────────────────────────────────────────────────────────────
+    - name: Find latest Ubuntu 22.04 LTS AMI (Canonical)
       amazon.aws.ec2_ami_info:
-        region: "{{ aws_region | default('ca-central-1') }}"
-        owners: ["099720109477"]   # Canonical
+        region: "{{ aws_region }}"
+        owners: ["099720109477"]
         filters:
           name: "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
           state: available
@@ -40,26 +35,24 @@
           root-device-type: ebs
       register: ami_info
 
-    - name: Set Ubuntu AMI ID fact
+    - name: Set Ubuntu AMI fact
       ansible.builtin.set_fact:
         ubuntu_ami: "{{ (ami_info.images | sort(attribute='creation_date') | last).image_id }}"
 
-    - name: Show AMI being used
+    - name: Show AMI
       ansible.builtin.debug:
-        msg: "Using Ubuntu 22.04 AMI: {{ ubuntu_ami }}"
+        msg: "Ubuntu 22.04 AMI: {{ ubuntu_ami }}"
 
-    # ------------------------------------------------------------------
-    # Security groups
-    # ------------------------------------------------------------------
+    # ── Security groups ───────────────────────────────────────────────────────
     - name: Create main EC2 security group
       amazon.aws.ec2_security_group:
         name: teleoscope-main-sg
-        description: "Teleoscope main EC2 — app, workers, MongoDB, RabbitMQ"
-        region: "{{ aws_region | default('ca-central-1') }}"
+        description: "Teleoscope main (app, MongoDB, RabbitMQ, nginx)"
+        region: "{{ aws_region }}"
         rules:
           - proto: tcp
             ports: [22]
-            cidr_ip: "{{ ssh_allowed_cidr | default('0.0.0.0/0') }}"
+            cidr_ip: "{{ ssh_allowed_cidr }}"
             rule_desc: SSH
           - proto: tcp
             ports: [80]
@@ -69,60 +62,71 @@
             ports: [443]
             cidr_ip: 0.0.0.0/0
             rule_desc: HTTPS
-        tags:
-          Project: teleoscope
+        tags: { Project: teleoscope }
         state: present
       register: main_sg
+
+    - name: Create worker EC2 security group
+      amazon.aws.ec2_security_group:
+        name: teleoscope-worker-sg
+        description: "Teleoscope worker (tasks, graph, dispatch, uploader)"
+        region: "{{ aws_region }}"
+        rules:
+          - proto: tcp
+            ports: [22]
+            cidr_ip: "{{ ssh_allowed_cidr }}"
+            rule_desc: SSH
+        tags: { Project: teleoscope }
+        state: present
+      register: worker_sg
 
     - name: Create GPU vectorizer security group
       amazon.aws.ec2_security_group:
         name: teleoscope-vectorizer-sg
-        description: "Teleoscope GPU vectorizer EC2"
-        region: "{{ aws_region | default('ca-central-1') }}"
+        description: "Teleoscope GPU vectorizer"
+        region: "{{ aws_region }}"
         rules:
           - proto: tcp
             ports: [22]
-            cidr_ip: "{{ ssh_allowed_cidr | default('0.0.0.0/0') }}"
+            cidr_ip: "{{ ssh_allowed_cidr }}"
             rule_desc: SSH
-        tags:
-          Project: teleoscope
+        tags: { Project: teleoscope }
         state: present
       register: vectorizer_sg
 
-    - name: Allow RabbitMQ from GPU EC2 to main EC2
+    - name: Allow RabbitMQ + MongoDB from worker and GPU EC2 to main EC2
       amazon.aws.ec2_security_group:
         name: teleoscope-main-sg
-        description: "Teleoscope main EC2 — app, workers, MongoDB, RabbitMQ"
-        region: "{{ aws_region | default('ca-central-1') }}"
+        description: "Teleoscope main (app, MongoDB, RabbitMQ, nginx)"
+        region: "{{ aws_region }}"
         purge_rules: false
         rules:
           - proto: tcp
             ports: [5672]
+            group_id: "{{ worker_sg.group_id }}"
+            rule_desc: "RabbitMQ from worker EC2"
+          - proto: tcp
+            ports: [27017]
+            group_id: "{{ worker_sg.group_id }}"
+            rule_desc: "MongoDB from worker EC2"
+          - proto: tcp
+            ports: [5672]
             group_id: "{{ vectorizer_sg.group_id }}"
-            rule_desc: "RabbitMQ from GPU vectorizer"
+            rule_desc: "RabbitMQ from GPU EC2"
         state: present
 
-    # ------------------------------------------------------------------
-    # IAM: policy + role so monitor.py can start/stop the GPU instance
-    # ------------------------------------------------------------------
+    # ── IAM ───────────────────────────────────────────────────────────────────
     - name: Create IAM policy for monitor.py
       amazon.aws.iam_managed_policy:
         policy_name: teleoscope-monitor-policy
         policy: |
           {
             "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Sid": "ManageVectorizerInstance",
-                "Effect": "Allow",
-                "Action": [
-                  "ec2:StartInstances",
-                  "ec2:StopInstances",
-                  "ec2:DescribeInstances"
-                ],
-                "Resource": "*"
-              }
-            ]
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": ["ec2:StartInstances", "ec2:StopInstances", "ec2:DescribeInstances"],
+              "Resource": "*"
+            }]
           }
         state: present
       register: monitor_policy
@@ -139,107 +143,110 @@
               "Action": "sts:AssumeRole"
             }]
           }
-        managed_policies:
-          - "{{ monitor_policy.policy.arn }}"
+        managed_policies: ["{{ monitor_policy.policy.arn }}"]
         create_instance_profile: true
         state: present
-      register: main_iam_role
 
-    # ------------------------------------------------------------------
-    # EC2 instances
-    # ------------------------------------------------------------------
-    - name: Launch main EC2 instance
+    # ── EC2 instances ─────────────────────────────────────────────────────────
+    - name: Launch main EC2
       amazon.aws.ec2_instance:
         name: teleoscope-main
         key_name: "{{ aws_key_pair }}"
-        instance_type: "{{ main_instance_type | default('m6i.xlarge') }}"
+        instance_type: "{{ main_instance_type }}"
         image_id: "{{ ubuntu_ami }}"
-        region: "{{ aws_region | default('ca-central-1') }}"
+        region: "{{ aws_region }}"
         security_groups: [teleoscope-main-sg]
         iam_instance_profile: teleoscope-main-role
-        network:
-          assign_public_ip: true
+        network: { assign_public_ip: true }
         volumes:
           - device_name: /dev/sda1
-            ebs:
-              volume_size: "{{ main_volume_size | default(100) }}"
-              volume_type: gp3
-              delete_on_termination: true
-        tags:
-          Name: teleoscope-main
-          Project: teleoscope
+            ebs: { volume_size: "{{ main_volume_size }}", volume_type: gp3, delete_on_termination: true }
+        tags: { Name: teleoscope-main, Project: teleoscope }
         wait: true
         state: running
       register: main_instance
 
-    - name: Launch GPU vectorizer EC2 instance
+    - name: Launch worker EC2
+      amazon.aws.ec2_instance:
+        name: teleoscope-worker
+        key_name: "{{ aws_key_pair }}"
+        instance_type: "{{ worker_instance_type }}"
+        image_id: "{{ ubuntu_ami }}"
+        region: "{{ aws_region }}"
+        security_groups: [teleoscope-worker-sg]
+        network: { assign_public_ip: true }
+        volumes:
+          - device_name: /dev/sda1
+            ebs: { volume_size: "{{ worker_volume_size }}", volume_type: gp3, delete_on_termination: true }
+        tags: { Name: teleoscope-worker, Project: teleoscope }
+        wait: true
+        state: running
+      register: worker_instance
+
+    - name: Launch GPU vectorizer EC2
       amazon.aws.ec2_instance:
         name: teleoscope-vectorizer
         key_name: "{{ aws_key_pair }}"
-        instance_type: "{{ gpu_instance_type | default('g5.xlarge') }}"
+        instance_type: "{{ gpu_instance_type }}"
         image_id: "{{ ubuntu_ami }}"
-        region: "{{ aws_region | default('ca-central-1') }}"
+        region: "{{ aws_region }}"
         security_groups: [teleoscope-vectorizer-sg]
-        network:
-          assign_public_ip: true
+        network: { assign_public_ip: true }
         volumes:
           - device_name: /dev/sda1
-            ebs:
-              volume_size: "{{ vectorizer_volume_size | default(60) }}"
-              volume_type: gp3
-              delete_on_termination: true
-        tags:
-          Name: teleoscope-vectorizer
-          Project: teleoscope
+            ebs: { volume_size: "{{ vectorizer_volume_size }}", volume_type: gp3, delete_on_termination: true }
+        tags: { Name: teleoscope-vectorizer, Project: teleoscope }
         wait: true
         state: running
       register: gpu_instance
 
-    # ------------------------------------------------------------------
-    # Elastic IP for the main instance (stable public IP for DNS)
-    # ------------------------------------------------------------------
+    # ── Elastic IP ────────────────────────────────────────────────────────────
     - name: Allocate and associate Elastic IP with main EC2
       amazon.aws.ec2_eip:
         device_id: "{{ main_instance.instances[0].instance_id }}"
-        region: "{{ aws_region | default('ca-central-1') }}"
+        region: "{{ aws_region }}"
         release_on_disassociation: false
         in_vpc: true
-        tags:
-          Name: teleoscope-main-eip
-          Project: teleoscope
+        tags: { Name: teleoscope-main-eip, Project: teleoscope }
       register: eip
 
-    # ------------------------------------------------------------------
-    # Persist outputs for subsequent playbooks
-    # ------------------------------------------------------------------
-    - name: Write infra outputs to vars/infra-outputs.yaml
+    # ── Write outputs ─────────────────────────────────────────────────────────
+    - name: Write vars/infra-outputs.yaml
       ansible.builtin.copy:
         dest: "{{ playbook_dir }}/vars/infra-outputs.yaml"
         content: |
           # Auto-generated by provision-aws.yaml — do not edit manually.
-          # Re-run provision-aws.yaml to refresh.
           ec2_main_id: "{{ main_instance.instances[0].instance_id }}"
           ec2_main_public_ip: "{{ eip.public_ip }}"
           ec2_main_private_ip: "{{ main_instance.instances[0].private_ip_address }}"
+          ec2_worker_instance: "{{ worker_instance.instances[0].instance_id }}"
+          ec2_worker_public_ip: "{{ worker_instance.instances[0].public_ip_address }}"
+          ec2_worker_private_ip: "{{ worker_instance.instances[0].private_ip_address }}"
           ec2_vectorize_instance: "{{ gpu_instance.instances[0].instance_id }}"
           ec2_vectorizer_public_ip: "{{ gpu_instance.instances[0].public_ip_address }}"
           ec2_vectorizer_private_ip: "{{ gpu_instance.instances[0].private_ip_address }}"
 
-    # ------------------------------------------------------------------
-    # Add instances to the in-memory inventory for subsequent plays
-    # ------------------------------------------------------------------
-    - name: Add main EC2 to in-memory inventory
+    # ── In-memory inventory for subsequent plays ──────────────────────────────
+    - name: Add main EC2 to inventory
       ansible.builtin.add_host:
         name: teleoscope-main
         ansible_host: "{{ eip.public_ip }}"
         ansible_user: "{{ ansible_user }}"
         ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
         groups: main
-        # Pass provisioning facts to host vars
-        ec2_main_private_ip: "{{ main_instance.instances[0].private_ip_address }}"
+        ec2_worker_instance: "{{ worker_instance.instances[0].instance_id }}"
         ec2_vectorize_instance: "{{ gpu_instance.instances[0].instance_id }}"
 
-    - name: Add GPU EC2 to in-memory inventory
+    - name: Add worker EC2 to inventory
+      ansible.builtin.add_host:
+        name: teleoscope-worker
+        ansible_host: "{{ worker_instance.instances[0].public_ip_address }}"
+        ansible_user: "{{ ansible_user }}"
+        ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+        groups: workers
+        main_ec2_private_ip: "{{ main_instance.instances[0].private_ip_address }}"
+
+    - name: Add GPU EC2 to inventory
       ansible.builtin.add_host:
         name: teleoscope-vectorizer
         ansible_host: "{{ gpu_instance.instances[0].public_ip_address }}"
@@ -248,11 +255,11 @@
         groups: vectorizer
         main_ec2_private_ip: "{{ main_instance.instances[0].private_ip_address }}"
 
-    - name: Summary
+    - name: Provisioning summary
       ansible.builtin.debug:
         msg:
-          - "Main EC2:        {{ eip.public_ip }} ({{ main_instance.instances[0].instance_id }})"
-          - "GPU EC2:         {{ gpu_instance.instances[0].public_ip_address }} ({{ gpu_instance.instances[0].instance_id }})"
-          - "Elastic IP:      {{ eip.public_ip }}"
-          - "Point DNS:       teleoscope.ca A {{ eip.public_ip }}"
-          - "Outputs written: ansible/vars/infra-outputs.yaml"
+          - "Main EC2:       {{ eip.public_ip }} ({{ main_instance.instances[0].instance_id }})"
+          - "Worker EC2:     {{ worker_instance.instances[0].public_ip_address }} ({{ worker_instance.instances[0].instance_id }})"
+          - "GPU EC2:        {{ gpu_instance.instances[0].public_ip_address }} ({{ gpu_instance.instances[0].instance_id }})"
+          - "Elastic IP:     {{ eip.public_ip }}"
+          - "Outputs:        ansible/vars/infra-outputs.yaml"
