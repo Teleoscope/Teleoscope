@@ -1,0 +1,52 @@
+---
+# setup-tls.yaml — obtain a Let's Encrypt TLS certificate for the main EC2.
+#
+# Run AFTER site.yaml has finished AND your DNS A record is pointing at the
+# Elastic IP printed by site.yaml.  Certbot validates the domain via HTTP, so
+# DNS must be live before this playbook runs.
+#
+# Usage:
+#   ansible-playbook -i ansible/vars/inventory.yaml ansible/setup-tls.yaml
+#
+# After this runs, https://{{ domain }} will be fully live.
+# Re-run any time you need to renew or if the cert expires (certbot auto-renews
+# via a systemd timer installed by the certbot package).
+
+- name: Obtain TLS certificate and enable HTTPS
+  hosts: main
+  become: true
+  gather_facts: false
+  vars_files:
+    - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+
+  tasks:
+    - name: Ensure certbot is installed
+      ansible.builtin.apt:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: present
+        update_cache: true
+
+    - name: Obtain / renew certificate (certbot --nginx)
+      ansible.builtin.command:
+        cmd: >
+          certbot --nginx
+          --non-interactive
+          --agree-tos
+          --email {{ certbot_email }}
+          -d {{ teleoscope.ca }}
+          -d www.{{ teleoscope.ca }}
+      register: certbot_result
+      changed_when: "'Certificate not yet due for renewal' not in certbot_result.stdout"
+
+    - name: Enable certbot systemd timer (auto-renewal)
+      ansible.builtin.systemd:
+        name: certbot.timer
+        enabled: true
+        state: started
+
+    - name: TLS setup complete
+      ansible.builtin.debug:
+        msg: "https://{{ teleoscope.ca }} is now live with TLS."

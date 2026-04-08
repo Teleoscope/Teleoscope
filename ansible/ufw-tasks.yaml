@@ -20,6 +20,37 @@
     port: "443"
     proto: tcp
 
+# Allow worker / vectorizer EC2s (same VPC, RFC-1918) to reach MongoDB + RabbitMQ.
+# AWS security groups already restrict this at the network level; UFW is a
+# belt-and-suspenders second layer.
+- name: UFW - allow MongoDB from private network
+  community.general.ufw:
+    rule: allow
+    port: "27017"
+    proto: tcp
+    src: "10.0.0.0/8"
+
+- name: UFW - allow RabbitMQ AMQP from private network
+  community.general.ufw:
+    rule: allow
+    port: "5672"
+    proto: tcp
+    src: "10.0.0.0/8"
+
+- name: UFW - allow MongoDB from 172.16/12 private range
+  community.general.ufw:
+    rule: allow
+    port: "27017"
+    proto: tcp
+    src: "172.16.0.0/12"
+
+- name: UFW - allow RabbitMQ from 172.16/12 private range
+  community.general.ufw:
+    rule: allow
+    port: "5672"
+    proto: tcp
+    src: "172.16.0.0/12"
+
 - name: UFW - enable
   community.general.ufw:
     state: enabled
