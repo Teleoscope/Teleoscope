@@ -48,16 +48,48 @@ echo ""
 # ── prerequisites ────────────────────────────────────────────────────────────
 header "Checking prerequisites"
 
-check() {
-  command -v "$1" &>/dev/null \
-    && success "$1" \
-    || die "$1 not found — $2"
-}
-check ansible  "pip install ansible"
-check python3  "install Python 3"
-check aws      "https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html"
-python3 -c "import boto3" 2>/dev/null && success "boto3" || die "pip install boto3"
+# Hard blockers — cannot auto-install
+command -v python3 &>/dev/null \
+  && success "python3" \
+  || die "python3 is required. Install from https://python.org"
 
+command -v aws &>/dev/null \
+  && success "aws CLI" \
+  || die "aws CLI not found. Install: https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html"
+
+# Pip-installable tools — collect missing ones, then offer a single install
+PIP_NEEDED=()
+command -v ansible &>/dev/null \
+  && success "ansible" \
+  || { warn "ansible not found"; PIP_NEEDED+=(ansible); }
+python3 -c "import boto3" 2>/dev/null \
+  && success "boto3" \
+  || { warn "boto3 not found"; PIP_NEEDED+=(boto3); }
+
+if [[ ${#PIP_NEEDED[@]} -gt 0 ]]; then
+  echo ""
+  echo -e "  ${YELLOW}Missing:${RESET} ${PIP_NEEDED[*]}"
+  echo -en "  Install via pip? [Y/n]: "; read -r yn
+  if [[ "${yn:-Y}" =~ ^[Yy] ]]; then
+    python3 -m pip install --user "${PIP_NEEDED[@]}"
+    export PATH="$HOME/.local/bin:$PATH"   # pip --user installs bins here
+    echo ""
+    for item in "${PIP_NEEDED[@]}"; do
+      case "$item" in
+        ansible) command -v ansible &>/dev/null \
+                   && success "ansible installed" \
+                   || die "ansible install failed — run: pip3 install ansible" ;;
+        boto3)   python3 -c "import boto3" 2>/dev/null \
+                   && success "boto3 installed" \
+                   || die "boto3 install failed — run: pip3 install boto3" ;;
+      esac
+    done
+  else
+    die "Cannot continue without: ${PIP_NEEDED[*]}"
+  fi
+fi
+
+# ansible-galaxy collection (requires ansible, so checked after pip installs)
 if ansible-galaxy collection list 2>/dev/null | grep -q "amazon\.aws"; then
   success "amazon.aws collection"
 else
@@ -65,7 +97,8 @@ else
   echo -en "  Install now? [Y/n]: "; read -r yn
   [[ "${yn:-Y}" =~ ^[Yy] ]] \
     && ansible-galaxy collection install -r "$REPO_ROOT/ansible/requirements.yaml" \
-    || warn "Run: ansible-galaxy collection install -r ansible/requirements.yaml"
+    && success "amazon.aws collection installed" \
+    || die "Run: ansible-galaxy collection install -r ansible/requirements.yaml"
 fi
 
 if aws sts get-caller-identity &>/dev/null; then
