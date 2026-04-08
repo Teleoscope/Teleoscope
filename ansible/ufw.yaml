@@ -5,9 +5,18 @@
   become: yes
 
   tasks:
-    - name: UFW Allow
-      ansible.builtin.shell: ufw allow 22,6379,61613,27017,15672,15674,80,2222,5672/tcp
+    - name: UFW - allow SSH
+      ansible.builtin.shell: ufw allow 22/tcp
+    - name: UFW - allow HTTP
+      ansible.builtin.shell: ufw allow 80/tcp
+    - name: UFW - allow HTTPS
+      ansible.builtin.shell: ufw allow 443/tcp
+    - name: UFW - allow RabbitMQ WebStomp from localhost only
+      ansible.builtin.shell: ufw allow from 127.0.0.1 to any port 15674 proto tcp
+    # Internal ports (MongoDB 27017, RabbitMQ 5672/15672, Milvus 19530, vectorizer 8765,
+    # files API 8000) are NOT opened here — they should be blocked at the EC2 security
+    # group level and are only needed within the Docker network or localhost.
     - name: UFW Enable
       ansible.builtin.shell: ufw --force enable
     - name: UFW Reload
-      ansible.builtin.shell: ufw reload 
+      ansible.builtin.shell: ufw reload

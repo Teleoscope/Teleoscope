@@ -1,0 +1,11 @@
+---
+# Ansible collection dependencies for the Docker + AWS deployment path.
+# Install before running site.yaml or provision-aws.yaml:
+#
+#   ansible-galaxy collection install -r ansible/requirements.yaml
+
+collections:
+  - name: amazon.aws
+    version: ">=8.0.0"
+  - name: community.general
+    version: ">=9.0.0"

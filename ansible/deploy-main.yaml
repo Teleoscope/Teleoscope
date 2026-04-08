@@ -1,0 +1,122 @@
+---
+# Deploy (or re-deploy) the main Teleoscope stack on the main EC2.
+#
+# Standalone usage (after infrastructure is provisioned):
+#   ansible-playbook -i vars/inventory.yaml ansible/deploy-main.yaml
+#
+# Reads vars/infra-outputs.yaml for ec2_vectorize_instance and private IPs
+# written by provision-aws.yaml.
+
+- name: Deploy main Teleoscope stack
+  hosts: main
+  remote_user: "{{ ansible_user }}"
+  vars_files:
+    - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+  become: false
+
+  tasks:
+    # ------------------------------------------------------------------
+    # Repo
+    # ------------------------------------------------------------------
+    - name: Clone or update Teleoscope repo
+      ansible.builtin.git:
+        repo: "https://github.com/Teleoscope/Teleoscope.git"
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        version: main
+        force: false
+      register: git_result
+
+    # ------------------------------------------------------------------
+    # Environment
+    # ------------------------------------------------------------------
+    - name: Write production .env
+      ansible.builtin.template:
+        src: ./.env.j2
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
+        mode: "0600"
+
+    # ------------------------------------------------------------------
+    # Docker Compose
+    # ------------------------------------------------------------------
+    - name: Build and start main stack
+      community.docker.docker_compose_v2:
+        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        files:
+          - docker-compose.yml
+          - docker-compose.prod.yml
+        build: always
+        state: present
+        pull: missing
+      become: true
+
+    - name: Wait for app to be healthy
+      ansible.builtin.uri:
+        url: "http://localhost:3000/api/hello"
+        status_code: 200
+      register: health
+      until: health.status == 200
+      retries: 30
+      delay: 10
+
+    # ------------------------------------------------------------------
+    # nginx + TLS
+    # ------------------------------------------------------------------
+    - name: Install nginx and certbot
+      ansible.builtin.apt:
+        name:
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+        state: present
+        update_cache: true
+      become: true
+
+    - name: Write HTTP-only nginx config
+      ansible.builtin.template:
+        src: ./teleoscope.ca.http.j2
+        dest: /etc/nginx/sites-available/teleoscope.ca
+      become: true
+
+    - name: Enable site, remove default
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/teleoscope.ca
+        dest: /etc/nginx/sites-enabled/teleoscope.ca
+        state: link
+      become: true
+
+    - name: Remove default nginx site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      become: true
+
+    - name: Validate and reload nginx
+      ansible.builtin.shell: nginx -t && systemctl reload nginx
+      become: true
+
+    - name: Obtain Let's Encrypt certificate
+      ansible.builtin.shell: >
+        certbot --nginx
+        -d {{ teleoscope.ca }}
+        -d www.{{ teleoscope.ca }}
+        --non-interactive
+        --agree-tos
+        --email {{ certbot_email }}
+      args:
+        creates: "/etc/letsencrypt/live/{{ teleoscope.ca }}/fullchain.pem"
+      become: true
+
+    - name: Enable certbot renewal timer
+      ansible.builtin.systemd:
+        name: certbot.timer
+        state: started
+        enabled: true
+      become: true
+
+    # ------------------------------------------------------------------
+    # Firewall
+    # ------------------------------------------------------------------
+    - name: Configure UFW
+      ansible.builtin.include_tasks: ufw-tasks.yaml
+      become: true

@@ -1,64 +1,125 @@
-# Ansible variables - copy to vars.yaml and replace with your values
-# Required by all playbooks. Do not commit vars.yaml (add to .gitignore).
+# Ansible variables — copy to vars.yaml and fill in your values.
+# Do NOT commit vars.yaml (it is gitignored).
+#
+# Used by: ansible/site.yaml (full deploy) and individual playbooks.
 
 # -----------------------------------------------------------------------------
 # General
 # -----------------------------------------------------------------------------
 ansible_user: ubuntu
-production: production
 remote_prefix: /home
 
-# Hostnames (use your domain or VM IP)
+# SSH private key on your local machine (the key pair registered in AWS).
+ssh_private_key_file: ~/.ssh/my-teleoscope-key.pem
+
+# Restrict SSH access to your IP for better security: x.x.x.x/32
+# Leave as 0.0.0.0/0 only if you accept open SSH (not recommended for prod).
+ssh_allowed_cidr: 0.0.0.0/0
+
+# -----------------------------------------------------------------------------
+# Domain
+# -----------------------------------------------------------------------------
 teleoscope:
-  ca: teleoscope.ca
+  ca: teleoscope.ca   # change if deploying to a different domain
+
+# -----------------------------------------------------------------------------
+# AWS — infrastructure provisioning (provision-aws.yaml / site.yaml)
+# -----------------------------------------------------------------------------
+aws_region: ca-central-1
+
+# EC2 key pair name as it appears in the AWS console (not the filename).
+aws_key_pair: my-teleoscope-key
+
+# Instance types. Minimum for the model + workers:
+#   main:        m6i.xlarge (16 GB) — app, workers, MongoDB, RabbitMQ
+#   vectorizer:  g5.xlarge (24 GB GPU) — BGE-M3 embeddings
+main_instance_type: m6i.xlarge
+gpu_instance_type: g5.xlarge
+
+# EBS root volume sizes in GB.
+main_volume_size: 100
+vectorizer_volume_size: 60
+
+# ec2_vectorize_instance is written automatically by provision-aws.yaml /
+# site.yaml into vars/infra-outputs.yaml. You can set it manually here if
+# you already have a GPU instance.
+# ec2_vectorize_instance: i-0abc1234567890def
+
+# Minutes of empty vectorize queue before stopping the GPU instance (default 10).
+vectorizer_idle_stop_minutes: 10
 
 # -----------------------------------------------------------------------------
 # MongoDB
 # -----------------------------------------------------------------------------
-mongodb_admin_name: example_admin
-mongodb_admin_password: admin_password
-mongodb_dev_name: example_dev
-mongodb_dev_password: dev_password
+mongodb_admin_name: teleoscope_admin
+mongodb_admin_password: change-me-admin-password
+mongodb_dev_name: teleoscope
+mongodb_dev_password: change-me-app-password
 mongodb_database: teleoscope
-mongodb_public_user: example_dev
-mongodb_public_password: dev_password
-mongodb_registrar_user: example_dev
-mongodb_registrar_password: dev_password
+mongodb_public_user: teleoscope
+mongodb_public_password: change-me-app-password
+mongodb_registrar_user: teleoscope
+mongodb_registrar_password: change-me-app-password
 
 # -----------------------------------------------------------------------------
 # RabbitMQ
 # -----------------------------------------------------------------------------
-rabbitmq_vhost: teleoscope
-rabbitmq_admin_username: example_admin
-rabbitmq_admin_password: admin_password
-rabbitmq_dev_username: example_dev
-rabbitmq_dev_password: dev_password
-rabbitmq_public_user: example_dev
-rabbitmq_public_password: dev_password
+rabbitmq_vhost: /
+rabbitmq_admin_username: guest
+rabbitmq_admin_password: guest
+rabbitmq_dev_username: guest
+rabbitmq_dev_password: guest
+rabbitmq_public_user: guest
+rabbitmq_public_password: guest
 rabbitmq_task_queue: teleoscope-tasks
 rabbitmq_dispatch_queue: teleoscope-dispatch
 
 # -----------------------------------------------------------------------------
-# Auth (NextAuth / Lucia)
+# Auth (NextAuth)
 # -----------------------------------------------------------------------------
-nextauth_secret: generate-a-random-secret-for-production
+# Generate with: python3 -c "import secrets; print(secrets.token_hex(32))"
+nextauth_secret: change-me-generate-a-random-secret
+
 google_client_id: ""
 google_client_secret: ""
 
 # -----------------------------------------------------------------------------
-# Conda (Python environment)
+# TLS / Let's Encrypt
+# -----------------------------------------------------------------------------
+certbot_email: admin@teleoscope.ca
+
+# -----------------------------------------------------------------------------
+# Milvus / Zilliz Cloud
+# -----------------------------------------------------------------------------
+# From your Zilliz console → Connect panel.
+milvus_uri: "https://your-endpoint.zillizcloud.com:19530"
+milvus_token: "your-zilliz-api-key"
+milvus_dbname: teleoscope
+
+# -----------------------------------------------------------------------------
+# Vectorizer
+# -----------------------------------------------------------------------------
+# Generate with: python3 -c "import secrets; print(secrets.token_hex(32))"
+vectorizer_control_token: change-me-vectorizer-token
+
+# -----------------------------------------------------------------------------
+# Optional integrations
+# -----------------------------------------------------------------------------
+# loops_api_key: ""
+# stripe_secret_key: ""
+
+# -----------------------------------------------------------------------------
+# Conda (legacy PM2 path only — not used by Docker/site.yaml)
 # -----------------------------------------------------------------------------
 conda_environment: teleoscope
 conda_prefix: /usr/share/miniconda3
-
-# -----------------------------------------------------------------------------
-# Node.js
-# -----------------------------------------------------------------------------
-nodejs_version: "19"
+nodejs_version: "22"
 ubuntu_version: jammy
 
 # -----------------------------------------------------------------------------
-# AWS (optional - for coordinator/monitor EC2 auto-scaling)
+# AWS credentials (legacy PM2 coordinator — not needed for Docker path)
+# For site.yaml, set AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY in your shell
+# or use an AWS SSO profile (export AWS_PROFILE=my-profile).
 # -----------------------------------------------------------------------------
 aws_access_key: ""
 aws_secret_key: ""

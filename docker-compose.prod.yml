@@ -1,0 +1,67 @@
+# Production overlay for docker-compose.yml — Zilliz Cloud + GPU EC2 vectorizer
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# What this does:
+#   - Moves milvus / etcd / minio behind the "local-milvus" profile so they are
+#     NOT started here — workers connect to Zilliz Cloud via MILVUS_DOCKER_URI.
+#   - Moves the vectorizer behind the "local-vectorizer" profile — vectorization
+#     runs on a dedicated GPU EC2 managed by monitor.py (see docker-compose.vectorizer.yml).
+#   - Enables the monitor service, which watches the vectorize queue and
+#     starts/stops the GPU EC2 instance automatically via boto3.
+#
+# Required .env additions (see .env.example for full reference):
+#   MILVUS_DOCKER_URI=https://<endpoint>.zillizcloud.com:19530
+#   MILVUS_TOKEN=<your-zilliz-api-key>
+#   NEXTAUTH_URL=https://teleoscope.ca
+#   NEXTAUTH_SECRET=<long-random-string>
+#   TELEOSCOPE_BASE_URL=https://teleoscope.ca
+#   MONGODB_PASSWORD=<strong-password>
+#   EC2_VECTORIZE_INSTANCE=i-0abc1234567890def
+#   AWS_REGION=ca-central-1
+#
+# AWS credentials for monitor.py (boto3) — use an IAM role on the EC2 instance
+# (recommended) or set AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY in .env.
+#
+# To run the vectorizer locally (e.g. for debugging) instead of on GPU EC2:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#     --profile local-vectorizer up -d vectorizer
+#
+# To start local Milvus instead of Zilliz (e.g. for a migration):
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#     --profile local-milvus up -d milvus etcd minio
+
+services:
+  milvus:
+    profiles: ["local-milvus"]
+
+  etcd:
+    profiles: ["local-milvus"]
+
+  minio:
+    profiles: ["local-milvus"]
+
+  # Vectorizer runs on the GPU EC2; exclude it from the main stack.
+  # Use --profile local-vectorizer to run it here instead (e.g. for debugging).
+  vectorizer:
+    profiles: ["local-vectorizer"]
+
+  monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["python", "-m", "backend.monitor"]
+    environment:
+      RABBITMQ_VECTORIZE_QUEUE: teleoscope-vectorize
+      RABBITMQ_VHOST: /
+      EC2_VECTORIZE_INSTANCE: ${EC2_VECTORIZE_INSTANCE}
+      # EC2_VECTORDB_INSTANCE: omit — using Zilliz Cloud, no self-hosted vector DB.
+      AWS_REGION: ${AWS_REGION:-ca-central-1}
+      MONITOR_CHECK_INTERVAL: ${MONITOR_CHECK_INTERVAL:-10}
+      VECTORIZER_IDLE_STOP_MINUTES: ${VECTORIZER_IDLE_STOP_MINUTES:-10}
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq

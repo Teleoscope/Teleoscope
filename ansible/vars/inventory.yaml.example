@@ -1,22 +1,26 @@
-# Ansible inventory - copy to inventory.yaml and adjust
-# Run: ansible-playbook -i vars/inventory.yaml ansible/newteleoscope.yaml
+# Ansible inventory
+#
+# site.yaml builds a dynamic in-memory inventory automatically from AWS during
+# provisioning — you do NOT need to edit this file when running site.yaml.
+#
+# Edit this file for standalone playbooks (deploy-update.yaml, deploy-main.yaml,
+# etc.) after infrastructure is already provisioned. Replace IPs with the values
+# from ansible/vars/infra-outputs.yaml (written by provision-aws.yaml / site.yaml).
+#
+# Run: ansible-playbook -i ansible/vars/inventory.yaml ansible/deploy-update.yaml
 
 all:
   children:
-    newmachines:
+    main:
       hosts:
-        # For local deploy, use localhost (ensure SSH to self works)
-        localhost:
-          ansible_connection: local
-        # For remote VMs, add hosts:
-        # teleoscope-vm:
-        #   ansible_host: 192.168.1.100
-        #   ansible_user: ubuntu
+        teleoscope-main:
+          ansible_host: 1.2.3.4          # Elastic IP from infra-outputs.yaml
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: ~/.ssh/my-teleoscope-key.pem
 
-    # Optional: separate vectorizer machines
-    vectorizers:
-      hosts: []
-
-    # Optional: coordinator for EC2 auto-scaling
-    coordinators:
-      hosts: []
+    vectorizer:
+      hosts:
+        teleoscope-vectorizer:
+          ansible_host: 5.6.7.8          # GPU EC2 public IP from infra-outputs.yaml
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: ~/.ssh/my-teleoscope-key.pem

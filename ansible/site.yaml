@@ -1,0 +1,471 @@
+---
+# site.yaml — full Teleoscope deployment from scratch.
+#
+# Provisions AWS infrastructure, installs Docker, deploys the main stack
+# (with nginx + TLS), deploys the GPU vectorizer, then stops the GPU EC2
+# so monitor.py can manage it on-demand.
+#
+# One-time setup:
+#   1. cp ansible/vars/vars.yaml.example ansible/vars/vars.yaml
+#   2. Edit ansible/vars/vars.yaml with your credentials and config.
+#   3. ansible-galaxy collection install -r ansible/requirements.yaml
+#   4. export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=...   (or use AWS_PROFILE)
+#   5. ansible-playbook ansible/site.yaml
+#
+# After that:
+#   - Point teleoscope.ca A record to the Elastic IP printed at the end.
+#   - For updates: ansible-playbook -i ansible/vars/inventory.yaml ansible/deploy-update.yaml
+
+# ============================================================
+# PLAY 1 — Provision AWS infrastructure
+# ============================================================
+- name: Provision AWS infrastructure
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ./vars/vars.yaml
+
+  tasks:
+    - name: Find latest Ubuntu 22.04 LTS AMI
+      amazon.aws.ec2_ami_info:
+        region: "{{ aws_region | default('ca-central-1') }}"
+        owners: ["099720109477"]
+        filters:
+          name: "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
+          state: available
+          architecture: x86_64
+          root-device-type: ebs
+      register: ami_info
+
+    - name: Set Ubuntu AMI fact
+      ansible.builtin.set_fact:
+        ubuntu_ami: "{{ (ami_info.images | sort(attribute='creation_date') | last).image_id }}"
+
+    - name: Create main EC2 security group
+      amazon.aws.ec2_security_group:
+        name: teleoscope-main-sg
+        description: "Teleoscope main EC2"
+        region: "{{ aws_region | default('ca-central-1') }}"
+        rules:
+          - proto: tcp
+            ports: [22]
+            cidr_ip: "{{ ssh_allowed_cidr | default('0.0.0.0/0') }}"
+            rule_desc: SSH
+          - proto: tcp
+            ports: [80]
+            cidr_ip: 0.0.0.0/0
+            rule_desc: HTTP
+          - proto: tcp
+            ports: [443]
+            cidr_ip: 0.0.0.0/0
+            rule_desc: HTTPS
+        tags:
+          Project: teleoscope
+        state: present
+      register: main_sg
+
+    - name: Create GPU vectorizer security group
+      amazon.aws.ec2_security_group:
+        name: teleoscope-vectorizer-sg
+        description: "Teleoscope GPU vectorizer EC2"
+        region: "{{ aws_region | default('ca-central-1') }}"
+        rules:
+          - proto: tcp
+            ports: [22]
+            cidr_ip: "{{ ssh_allowed_cidr | default('0.0.0.0/0') }}"
+            rule_desc: SSH
+        tags:
+          Project: teleoscope
+        state: present
+      register: vectorizer_sg
+
+    - name: Allow RabbitMQ from GPU EC2 to main EC2
+      amazon.aws.ec2_security_group:
+        name: teleoscope-main-sg
+        description: "Teleoscope main EC2"
+        region: "{{ aws_region | default('ca-central-1') }}"
+        purge_rules: false
+        rules:
+          - proto: tcp
+            ports: [5672]
+            group_id: "{{ vectorizer_sg.group_id }}"
+            rule_desc: "RabbitMQ from GPU vectorizer"
+        state: present
+
+    - name: Create IAM policy for monitor.py
+      amazon.aws.iam_managed_policy:
+        policy_name: teleoscope-monitor-policy
+        policy: |
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": ["ec2:StartInstances", "ec2:StopInstances", "ec2:DescribeInstances"],
+              "Resource": "*"
+            }]
+          }
+        state: present
+      register: monitor_policy
+
+    - name: Create IAM role for main EC2
+      amazon.aws.iam_role:
+        name: teleoscope-main-role
+        assume_role_policy_document: |
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Principal": { "Service": "ec2.amazonaws.com" },
+              "Action": "sts:AssumeRole"
+            }]
+          }
+        managed_policies:
+          - "{{ monitor_policy.policy.arn }}"
+        create_instance_profile: true
+        state: present
+
+    - name: Launch main EC2
+      amazon.aws.ec2_instance:
+        name: teleoscope-main
+        key_name: "{{ aws_key_pair }}"
+        instance_type: "{{ main_instance_type | default('m6i.xlarge') }}"
+        image_id: "{{ ubuntu_ami }}"
+        region: "{{ aws_region | default('ca-central-1') }}"
+        security_groups: [teleoscope-main-sg]
+        iam_instance_profile: teleoscope-main-role
+        network:
+          assign_public_ip: true
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_size: "{{ main_volume_size | default(100) }}"
+              volume_type: gp3
+              delete_on_termination: true
+        tags:
+          Name: teleoscope-main
+          Project: teleoscope
+        wait: true
+        state: running
+      register: main_instance
+
+    - name: Launch GPU EC2
+      amazon.aws.ec2_instance:
+        name: teleoscope-vectorizer
+        key_name: "{{ aws_key_pair }}"
+        instance_type: "{{ gpu_instance_type | default('g5.xlarge') }}"
+        image_id: "{{ ubuntu_ami }}"
+        region: "{{ aws_region | default('ca-central-1') }}"
+        security_groups: [teleoscope-vectorizer-sg]
+        network:
+          assign_public_ip: true
+        volumes:
+          - device_name: /dev/sda1
+            ebs:
+              volume_size: "{{ vectorizer_volume_size | default(60) }}"
+              volume_type: gp3
+              delete_on_termination: true
+        tags:
+          Name: teleoscope-vectorizer
+          Project: teleoscope
+        wait: true
+        state: running
+      register: gpu_instance
+
+    - name: Allocate and associate Elastic IP
+      amazon.aws.ec2_eip:
+        device_id: "{{ main_instance.instances[0].instance_id }}"
+        region: "{{ aws_region | default('ca-central-1') }}"
+        release_on_disassociation: false
+        in_vpc: true
+        tags:
+          Name: teleoscope-main-eip
+          Project: teleoscope
+      register: eip
+
+    - name: Write vars/infra-outputs.yaml
+      ansible.builtin.copy:
+        dest: "{{ playbook_dir }}/vars/infra-outputs.yaml"
+        content: |
+          # Auto-generated by site.yaml — do not edit.
+          ec2_main_id: "{{ main_instance.instances[0].instance_id }}"
+          ec2_main_public_ip: "{{ eip.public_ip }}"
+          ec2_main_private_ip: "{{ main_instance.instances[0].private_ip_address }}"
+          ec2_vectorize_instance: "{{ gpu_instance.instances[0].instance_id }}"
+          ec2_vectorizer_public_ip: "{{ gpu_instance.instances[0].public_ip_address }}"
+          ec2_vectorizer_private_ip: "{{ gpu_instance.instances[0].private_ip_address }}"
+
+    - name: Add main EC2 to inventory
+      ansible.builtin.add_host:
+        name: teleoscope-main
+        ansible_host: "{{ eip.public_ip }}"
+        ansible_user: "{{ ansible_user }}"
+        ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+        groups: main
+        ec2_vectorize_instance: "{{ gpu_instance.instances[0].instance_id }}"
+
+    - name: Add GPU EC2 to inventory
+      ansible.builtin.add_host:
+        name: teleoscope-vectorizer
+        ansible_host: "{{ gpu_instance.instances[0].public_ip_address }}"
+        ansible_user: "{{ ansible_user }}"
+        ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+        groups: vectorizer
+        main_ec2_private_ip: "{{ main_instance.instances[0].private_ip_address }}"
+
+# ============================================================
+# PLAY 2 — Wait for SSH on both instances
+# ============================================================
+- name: Wait for SSH
+  hosts: main:vectorizer
+  gather_facts: false
+  tasks:
+    - name: Wait for connection
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+        sleep: 10
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+# ============================================================
+# PLAY 3 — Install Docker on both instances
+# ============================================================
+- name: Install Docker on both instances
+  hosts: main:vectorizer
+  remote_user: "{{ ansible_user }}"
+  vars_files:
+    - ./vars/vars.yaml
+  become: true
+
+  tasks:
+    - name: Install apt prerequisites
+      ansible.builtin.apt:
+        name: [ca-certificates, curl, gnupg]
+        state: present
+        update_cache: true
+
+    - name: Create Docker apt keyring directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Add Docker GPG key
+      ansible.builtin.shell:
+        cmd: |
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+            | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        creates: /etc/apt/keyrings/docker.gpg
+
+    - name: Add Docker apt repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg]
+          https://download.docker.com/linux/ubuntu
+          {{ ansible_distribution_release }} stable
+        filename: docker
+        state: present
+
+    - name: Install Docker CE and Compose plugin
+      ansible.builtin.apt:
+        name: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+        state: present
+        update_cache: true
+
+    - name: Enable Docker daemon
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add user to docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+
+# ============================================================
+# PLAY 4 — Deploy main stack + nginx + TLS
+# ============================================================
+- name: Deploy main stack
+  hosts: main
+  remote_user: "{{ ansible_user }}"
+  vars_files:
+    - ./vars/vars.yaml
+  become: false
+
+  tasks:
+    - name: Clone Teleoscope repo
+      ansible.builtin.git:
+        repo: "https://github.com/Teleoscope/Teleoscope.git"
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        version: main
+        force: false
+
+    - name: Write production .env
+      ansible.builtin.template:
+        src: ./.env.j2
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
+        mode: "0600"
+
+    - name: Build and start main Docker Compose stack
+      community.docker.docker_compose_v2:
+        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        files:
+          - docker-compose.yml
+          - docker-compose.prod.yml
+        build: always
+        state: present
+        pull: missing
+      become: true
+
+    - name: Wait for app health
+      ansible.builtin.uri:
+        url: "http://localhost:3000/api/hello"
+        status_code: 200
+      register: health
+      until: health.status == 200
+      retries: 30
+      delay: 10
+
+    - name: Install nginx and certbot
+      ansible.builtin.apt:
+        name: [nginx, certbot, python3-certbot-nginx]
+        state: present
+        update_cache: true
+      become: true
+
+    - name: Write HTTP-only nginx config
+      ansible.builtin.template:
+        src: ./teleoscope.ca.http.j2
+        dest: /etc/nginx/sites-available/teleoscope.ca
+      become: true
+
+    - name: Enable nginx site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/teleoscope.ca
+        dest: /etc/nginx/sites-enabled/teleoscope.ca
+        state: link
+      become: true
+
+    - name: Remove default nginx site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      become: true
+
+    - name: Validate and reload nginx
+      ansible.builtin.shell: nginx -t && systemctl reload nginx
+      become: true
+
+    - name: Obtain Let's Encrypt certificate
+      ansible.builtin.shell: >
+        certbot --nginx
+        -d {{ teleoscope.ca }}
+        -d www.{{ teleoscope.ca }}
+        --non-interactive --agree-tos
+        --email {{ certbot_email }}
+      args:
+        creates: "/etc/letsencrypt/live/{{ teleoscope.ca }}/fullchain.pem"
+      become: true
+
+    - name: Enable certbot renewal timer
+      ansible.builtin.systemd:
+        name: certbot.timer
+        state: started
+        enabled: true
+      become: true
+
+    - name: Configure UFW
+      ansible.builtin.include_tasks: ufw-tasks.yaml
+      become: true
+
+# ============================================================
+# PLAY 5 — Deploy GPU vectorizer, then stop it
+# ============================================================
+- name: Deploy GPU vectorizer stack
+  hosts: vectorizer
+  remote_user: "{{ ansible_user }}"
+  vars_files:
+    - ./vars/vars.yaml
+  become: false
+
+  tasks:
+    - name: Clone Teleoscope repo
+      ansible.builtin.git:
+        repo: "https://github.com/Teleoscope/Teleoscope.git"
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        version: main
+        force: false
+
+    - name: Write vectorizer .env
+      ansible.builtin.template:
+        src: ./.env.vectorizer.j2
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
+        mode: "0600"
+
+    - name: Build vectorizer image (downloads BGE-M3 model)
+      community.docker.docker_compose_v2:
+        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        files:
+          - docker-compose.vectorizer.yml
+        build: always
+        state: present
+      become: true
+
+    - name: Configure UFW — SSH only
+      community.general.ufw:
+        rule: allow
+        port: "22"
+        proto: tcp
+      become: true
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+        policy: deny
+      become: true
+
+    - name: Stop GPU EC2 (monitor.py will start it when needed)
+      amazon.aws.ec2_instance:
+        instance_ids:
+          - "{{ hostvars['teleoscope-vectorizer']['ec2_vectorize_instance'] | default(ec2_vectorize_instance) }}"
+        region: "{{ aws_region | default('ca-central-1') }}"
+        state: stopped
+        wait: false
+      delegate_to: localhost
+      become: false
+
+# ============================================================
+# PLAY 6 — Final summary
+# ============================================================
+- name: Deployment summary
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+
+  tasks:
+    - name: Print next steps
+      ansible.builtin.debug:
+        msg:
+          - "============================================================"
+          - "  Teleoscope deployment complete!"
+          - "============================================================"
+          - ""
+          - "  Elastic IP:  {{ ec2_main_public_ip }}"
+          - ""
+          - "  ACTION REQUIRED:"
+          - "  Point your DNS:  {{ teleoscope.ca }}  A  {{ ec2_main_public_ip }}"
+          - ""
+          - "  Once DNS propagates:"
+          - "  https://{{ teleoscope.ca }} will be live."
+          - ""
+          - "  GPU vectorizer:  {{ ec2_vectorize_instance }} (stopped — monitor.py controls it)"
+          - ""
+          - "  Future updates:"
+          - "  ansible-playbook -i ansible/vars/inventory.yaml ansible/deploy-update.yaml"
+          - "============================================================"

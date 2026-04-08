@@ -1,0 +1,54 @@
+# Vectorizer-only stack — run this on the dedicated GPU EC2 instance.
+#
+# The main EC2 (docker-compose.prod.yml) runs the app, workers, MongoDB, and
+# RabbitMQ. This file runs only the vectorizer, pointing at the main EC2 for
+# RabbitMQ connectivity.  monitor.py on the main EC2 starts/stops this instance
+# automatically based on queue depth.
+#
+# Usage:
+#   cp .env.example .env
+#   # Set RABBITMQ_HOST to the main EC2's private IP or hostname in .env
+#   docker compose -f docker-compose.vectorizer.yml up -d --build
+#
+# Required .env vars on this instance:
+#   RABBITMQ_HOST=<main-ec2-private-ip>
+#   RABBITMQ_USERNAME=guest
+#   RABBITMQ_PASSWORD=guest
+#   RABBITMQ_VHOST=/
+#   RABBITMQ_VECTORIZE_QUEUE=teleoscope-vectorize
+#   RABBITMQ_UPLOAD_VECTOR_QUEUE=teleoscope-upload-vector
+#
+# GPU: if an NVIDIA GPU is available, install the NVIDIA container toolkit and
+# uncomment the `deploy` block below. CPU fallback works without it.
+
+services:
+  vectorizer:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        # Pre-download the BAAI/bge-m3 model at image build time so the first
+        # job starts immediately without a ~1 GB download on boot.
+        PREWARM_BGE_M3: "1"
+    restart: unless-stopped
+    command: ["python", "-m", "backend.vectorizer"]
+    environment:
+      # Dedicated instance: consume immediately on boot, no activity gate.
+      VECTORIZER_ALWAYS_ON: "1"
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}   # must be set in .env — points to main EC2
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+      RABBITMQ_VECTORIZE_QUEUE: ${RABBITMQ_VECTORIZE_QUEUE:-teleoscope-vectorize}
+      RABBITMQ_UPLOAD_VECTOR_QUEUE: ${RABBITMQ_UPLOAD_VECTOR_QUEUE:-teleoscope-upload-vector}
+    env_file:
+      - .env
+    # Uncomment to enable GPU access (requires NVIDIA container toolkit):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]

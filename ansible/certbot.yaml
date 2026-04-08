@@ -1,0 +1,31 @@
+- hosts: "{{ groups['newmachines'] }}"
+  remote_user: "{{ ansible_user }}"
+  vars_files:
+    - ./vars/vars.yaml
+  become: yes
+
+  tasks:
+    - name: Install certbot and nginx plugin
+      ansible.builtin.apt:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: latest
+        update_cache: yes
+
+    - name: Obtain Let's Encrypt certificate
+      ansible.builtin.shell: >
+        certbot --nginx
+        -d {{ teleoscope.ca }}
+        -d www.{{ teleoscope.ca }}
+        --non-interactive
+        --agree-tos
+        --email {{ certbot_email }}
+      args:
+        creates: /etc/letsencrypt/live/{{ teleoscope.ca }}/fullchain.pem
+
+    - name: Enable certbot renewal timer
+      ansible.builtin.systemd:
+        name: certbot.timer
+        state: started
+        enabled: yes

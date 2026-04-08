@@ -1,0 +1,57 @@
+---
+# Update an existing Teleoscope deployment — pull latest code and restart.
+#
+# Run this whenever you push new code and want to roll it out without a full
+# re-provision. Only touches the main EC2; the GPU vectorizer image is only
+# rebuilt when you explicitly run deploy-vectorizer.yaml.
+#
+# Usage:
+#   ansible-playbook -i vars/inventory.yaml ansible/deploy-update.yaml
+
+- name: Update main Teleoscope stack
+  hosts: main
+  remote_user: "{{ ansible_user }}"
+  vars_files:
+    - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+  become: false
+
+  tasks:
+    - name: Pull latest code
+      ansible.builtin.git:
+        repo: "https://github.com/Teleoscope/Teleoscope.git"
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        version: main
+        force: false
+      register: git_result
+
+    - name: Rebuild and restart changed containers
+      community.docker.docker_compose_v2:
+        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        files:
+          - docker-compose.yml
+          - docker-compose.prod.yml
+        build: always
+        state: present
+        pull: missing
+      become: true
+
+    - name: Wait for app to be healthy
+      ansible.builtin.uri:
+        url: "http://localhost:3000/api/hello"
+        status_code: 200
+      register: health
+      until: health.status == 200
+      retries: 30
+      delay: 10
+
+    - name: Show running containers
+      ansible.builtin.shell: docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+      args:
+        chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+      register: ps_out
+      become: true
+
+    - name: Container status
+      ansible.builtin.debug:
+        var: ps_out.stdout_lines
