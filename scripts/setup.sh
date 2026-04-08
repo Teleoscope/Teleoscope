@@ -45,6 +45,27 @@ echo "  Writes ansible/vars/vars.yaml, then optionally"
 echo "  runs: ansible-playbook ansible/site.yaml"
 echo ""
 
+# ── existing vars.yaml fast-path ─────────────────────────────────────────────
+if [[ -f "$VARS_FILE" ]]; then
+  echo -e "  ${GREEN}Found existing ansible/vars/vars.yaml${RESET}"
+  echo -en "  Re-use it and skip to deploy? [Y/n]: "; read -r reuse
+  if [[ "${reuse:-Y}" =~ ^[Yy] ]]; then
+    echo ""
+    echo -e "${CYAN}${BOLD}  Ready to deploy${RESET}"
+    echo ""
+    echo -en "  Run ansible-playbook ansible/site.yaml now? [Y/n]: "; read -r yn
+    if [[ "${yn:-Y}" =~ ^[Yy] ]]; then
+      cd "$REPO_ROOT"
+      ansible-playbook ansible/site.yaml
+    else
+      echo "  Run manually: ansible-playbook ansible/site.yaml"
+    fi
+    echo ""
+    exit 0
+  fi
+  echo ""
+fi
+
 # ── prerequisites ────────────────────────────────────────────────────────────
 header "Checking prerequisites"
 
