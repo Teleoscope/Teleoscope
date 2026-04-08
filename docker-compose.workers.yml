@@ -1,0 +1,134 @@
+# Worker-only stack — run this on the on-demand worker EC2.
+#
+# The always-on app server (t3.large) runs the app, MongoDB, RabbitMQ, and
+# monitor.py. monitor.py starts this EC2 when any work queue is non-empty and
+# stops it after WORKER_IDLE_STOP_MINUTES of empty queues.
+#
+# Usage:
+#   cp .env.example .env
+#   # In .env, set RABBITMQ_HOST and MONGODB_HOST to the main EC2's private IP.
+#   docker compose -f docker-compose.workers.yml up -d --build
+#
+# Required .env vars pointing at the main EC2:
+#   RABBITMQ_HOST=<main-ec2-private-ip>
+#   RABBITMQ_USERNAME=teleoscope
+#   RABBITMQ_PASSWORD=<generated-by-setup.sh>
+#   MONGODB_HOST=<main-ec2-private-ip>
+#   MONGODB_USERNAME=teleoscope
+#   MONGODB_PASSWORD=<generated-by-setup.sh>
+#   MILVUS_DOCKER_URI=https://<endpoint>.zillizcloud.com:19530
+#   MILVUS_TOKEN=<zilliz-token>
+#
+# Containers restart on boot (restart: unless-stopped), so when monitor.py
+# starts this EC2 instance the workers automatically reconnect.
+
+services:
+  dispatch:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["python", "-m", "backend.dispatch"]
+    environment:
+      C_FORCE_ROOT: 1
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+      RABBITMQ_TASK_QUEUE: ${RABBITMQ_TASK_QUEUE:-teleoscope-tasks}
+      RABBITMQ_DISPATCH_QUEUE: ${RABBITMQ_DISPATCH_QUEUE:-teleoscope-dispatch}
+    env_file: [.env]
+
+  worker-tasks:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["python", "-m", "celery", "-A", "backend.tasks", "worker", "--loglevel=info", "-Q", "teleoscope-tasks"]
+    environment:
+      C_FORCE_ROOT: 1
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+      RABBITMQ_TASK_QUEUE: ${RABBITMQ_TASK_QUEUE:-teleoscope-tasks}
+      RABBITMQ_DISPATCH_QUEUE: ${RABBITMQ_DISPATCH_QUEUE:-teleoscope-dispatch}
+      RABBITMQ_VECTORIZE_QUEUE: ${RABBITMQ_VECTORIZE_QUEUE:-teleoscope-vectorize}
+      RABBITMQ_UPLOAD_VECTOR_QUEUE: ${RABBITMQ_UPLOAD_VECTOR_QUEUE:-teleoscope-upload-vector}
+      MONGODB_USERNAME: ${MONGODB_USERNAME:-teleoscope}
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD}
+      MONGODB_HOST: ${MONGODB_HOST}
+      MONGODB_OPTIONS: ${MONGODB_OPTIONS:-directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin}
+      MILVUS_URI: ${MILVUS_DOCKER_URI:-}
+      MILVUS_TOKEN: ${MILVUS_TOKEN:-}
+      MILVUS_DBNAME: ${MILVUS_DBNAME:-teleoscope}
+      DOWNLOAD_DIR: /tmp/teleoscope/downloads
+    volumes:
+      - teleoscope_downloads:/tmp/teleoscope/downloads
+    env_file: [.env]
+
+  worker-graph:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["python", "-m", "celery", "-A", "backend.graph", "worker", "--loglevel=info", "-Q", "graph"]
+    environment:
+      C_FORCE_ROOT: 1
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+      RABBITMQ_TASK_QUEUE: ${RABBITMQ_TASK_QUEUE:-teleoscope-tasks}
+      RABBITMQ_VECTORIZE_QUEUE: ${RABBITMQ_VECTORIZE_QUEUE:-teleoscope-vectorize}
+      RABBITMQ_UPLOAD_VECTOR_QUEUE: ${RABBITMQ_UPLOAD_VECTOR_QUEUE:-teleoscope-upload-vector}
+      MONGODB_USERNAME: ${MONGODB_USERNAME:-teleoscope}
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD}
+      MONGODB_HOST: ${MONGODB_HOST}
+      MONGODB_OPTIONS: ${MONGODB_OPTIONS:-directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin}
+      MILVUS_URI: ${MILVUS_DOCKER_URI:-}
+      MILVUS_TOKEN: ${MILVUS_TOKEN:-}
+      MILVUS_DBNAME: ${MILVUS_DBNAME:-teleoscope}
+    env_file: [.env]
+
+  uploader:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["python", "-m", "backend.uploader"]
+    environment:
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+      RABBITMQ_TASK_QUEUE: ${RABBITMQ_TASK_QUEUE:-teleoscope-tasks}
+      RABBITMQ_DISPATCH_QUEUE: ${RABBITMQ_DISPATCH_QUEUE:-teleoscope-dispatch}
+      RABBITMQ_VECTORIZE_QUEUE: ${RABBITMQ_VECTORIZE_QUEUE:-teleoscope-vectorize}
+      RABBITMQ_UPLOAD_VECTOR_QUEUE: ${RABBITMQ_UPLOAD_VECTOR_QUEUE:-teleoscope-upload-vector}
+      MILVUS_URI: ${MILVUS_DOCKER_URI:-}
+      MILVUS_TOKEN: ${MILVUS_TOKEN:-}
+      MILVUS_DBNAME: ${MILVUS_DBNAME:-teleoscope}
+    env_file: [.env]
+
+  files:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    command: ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "files:app", "--bind", "0.0.0.0:8000"]
+    working_dir: /app/backend
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DOWNLOAD_DIR: /tmp/teleoscope/downloads
+    volumes:
+      - teleoscope_downloads:/tmp/teleoscope/downloads
+    env_file: [.env]
+
+volumes:
+  teleoscope_downloads:

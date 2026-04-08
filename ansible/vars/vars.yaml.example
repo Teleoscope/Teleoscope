@@ -30,22 +30,21 @@ aws_region: ca-central-1
 # EC2 key pair name as it appears in the AWS console (not the filename).
 aws_key_pair: my-teleoscope-key
 
-# Instance types. Minimum for the model + workers:
-#   main:        m6i.xlarge (16 GB) — app, workers, MongoDB, RabbitMQ
-#   vectorizer:  g5.xlarge (24 GB GPU) — BGE-M3 embeddings
-main_instance_type: m6i.xlarge
+# Instance types:
+#   main:    t3.large (8 GB)   — app, MongoDB, RabbitMQ, nginx, monitor.py (always on)
+#   worker:  m6i.large (8 GB)  — Python workers: tasks, graph, dispatch, uploader, files (on-demand)
+#   gpu:     g5.xlarge (GPU)   — BGE-M3 vectorizer (on-demand)
+main_instance_type: t3.large
+worker_instance_type: m6i.large
 gpu_instance_type: g5.xlarge
 
 # EBS root volume sizes in GB.
-main_volume_size: 100
+main_volume_size: 80
+worker_volume_size: 60
 vectorizer_volume_size: 60
 
-# ec2_vectorize_instance is written automatically by provision-aws.yaml /
-# site.yaml into vars/infra-outputs.yaml. You can set it manually here if
-# you already have a GPU instance.
-# ec2_vectorize_instance: i-0abc1234567890def
-
-# Minutes of empty vectorize queue before stopping the GPU instance (default 10).
+# Minutes of empty queues before stopping each on-demand instance.
+worker_idle_stop_minutes: 10
 vectorizer_idle_stop_minutes: 10
 
 # -----------------------------------------------------------------------------
