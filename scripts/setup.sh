@@ -34,6 +34,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 VARS_FILE="$REPO_ROOT/ansible/vars/vars.yaml"
 
+# ── ensure pip --user bin is on PATH (macOS: ~/Library/Python/3.x/bin) ──────
+PY_USER_BIN="$(python3 -m site --user-base 2>/dev/null)/bin"
+export PATH="$PY_USER_BIN:$HOME/.local/bin:$PATH"
+
 # ── banner ──────────────────────────────────────────────────────────────────
 clear
 echo -e "${CYAN}${BOLD}"
