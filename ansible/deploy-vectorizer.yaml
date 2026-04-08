@@ -1,0 +1,89 @@
+---
+# Set up the GPU vectorizer EC2 — clone repo, write .env, build image, enable on boot.
+#
+# After this runs, the EC2 is stopped. monitor.py on the main EC2 will start it
+# automatically when the vectorize queue has work, and stop it after idle.
+#
+# Standalone usage (after infrastructure is provisioned):
+#   ansible-playbook -i vars/inventory.yaml ansible/deploy-vectorizer.yaml
+
+- name: Deploy GPU vectorizer stack
+  hosts: vectorizer
+  remote_user: "{{ ansible_user }}"
+  vars_files:
+    - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+  become: false
+
+  tasks:
+    # ------------------------------------------------------------------
+    # Repo
+    # ------------------------------------------------------------------
+    - name: Clone or update Teleoscope repo
+      ansible.builtin.git:
+        repo: "https://github.com/Teleoscope/Teleoscope.git"
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        version: main
+        force: false
+
+    # ------------------------------------------------------------------
+    # Environment
+    # ------------------------------------------------------------------
+    - name: Write vectorizer .env (points RabbitMQ at main EC2 private IP)
+      ansible.builtin.template:
+        src: ./.env.vectorizer.j2
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
+        mode: "0600"
+
+    # ------------------------------------------------------------------
+    # Build image (pre-download BGE-M3 model at build time)
+    # ------------------------------------------------------------------
+    - name: Build vectorizer Docker image
+      community.docker.docker_compose_v2:
+        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        files:
+          - docker-compose.vectorizer.yml
+        build: always
+        state: present
+      become: true
+
+    - name: Verify vectorizer container started
+      ansible.builtin.shell: >
+        docker compose -f docker-compose.vectorizer.yml ps --format json
+      args:
+        chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+      register: compose_ps
+      become: true
+
+    - name: Show vectorizer container status
+      ansible.builtin.debug:
+        var: compose_ps.stdout
+
+    # ------------------------------------------------------------------
+    # Firewall — minimal: only SSH
+    # ------------------------------------------------------------------
+    - name: Allow SSH
+      community.general.ufw:
+        rule: allow
+        port: "22"
+        proto: tcp
+      become: true
+
+    - name: Enable UFW
+      community.general.ufw:
+        state: enabled
+        policy: deny
+      become: true
+
+    # ------------------------------------------------------------------
+    # Stop the instance — monitor.py will start it when there's work
+    # ------------------------------------------------------------------
+    - name: Stop GPU EC2 instance (monitor.py controls it from here)
+      amazon.aws.ec2_instance:
+        instance_ids:
+          - "{{ ec2_vectorize_instance }}"
+        region: "{{ aws_region | default('ca-central-1') }}"
+        state: stopped
+        wait: false
+      delegate_to: localhost
+      become: false
