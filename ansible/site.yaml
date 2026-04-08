@@ -197,7 +197,7 @@
         ansible_host: "{{ item.ip }}"
         ansible_user: "{{ ansible_user }}"
         ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
-        ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes"
         groups: "{{ item.group }}"
         main_private_ip: "{{ main_instance.instances[0].private_ip_address }}"
         ec2_worker_instance: "{{ worker_instance.instances[0].instance_id }}"
@@ -212,10 +212,14 @@
   hosts: main:workers:vectorizer
   gather_facts: false
   tasks:
-    - name: Wait for connection
-      ansible.builtin.wait_for_connection:
+    - name: Wait for port 22 (TCP only — no SSH auth)
+      ansible.builtin.wait_for:
+        port: 22
+        host: "{{ ansible_host }}"
         timeout: 300
-        sleep: 10
+        sleep: 5
+      delegate_to: localhost
+
     - name: Gather facts
       ansible.builtin.setup:
 
