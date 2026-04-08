@@ -15,7 +15,7 @@ services:
       '
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin_password
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ADMIN_PASSWORD:-admin_password}
       MONGO_INITDB_DATABASE: teleoscope
     ports:
       - "27017:27017"
@@ -27,21 +27,12 @@ services:
     # Root user is in `admin` — always pass --authenticationDatabase admin.
     healthcheck:
       test:
-        [
-          "CMD",
-          "mongosh",
-          "--host",
-          "127.0.0.1",
-          "-u",
-          "admin",
-          "-p",
-          "admin_password",
-          "--authenticationDatabase",
-          "admin",
-          "--quiet",
-          "--eval",
-          "var r = db.adminCommand({ ping: 1 }); quit((r && (r.ok === 1 || r.ok === true)) ? 0 : 1);",
-        ]
+        - "CMD-SHELL"
+        - >-
+          mongosh --host 127.0.0.1 -u admin
+          -p "$$MONGODB_ADMIN_PASSWORD"
+          --authenticationDatabase admin --quiet
+          --eval 'var r = db.adminCommand({ ping: 1 }); quit((r && (r.ok === 1 || r.ok === true)) ? 0 : 1);'
       interval: 5s
       timeout: 15s
       retries: 30
@@ -56,19 +47,21 @@ services:
       mongodb:
         condition: service_healthy
     restart: "no"
+    environment:
+      MONGODB_ADMIN_PASSWORD: ${MONGODB_ADMIN_PASSWORD:-admin_password}
     entrypoint: ["/bin/bash", "-eu", "-c"]
     command:
       - |
         echo "mongodb-init: ensuring replica set rs0 (Mongo already passed health: admin ping)..."
-        mongosh --host mongodb --username admin --password admin_password --authenticationDatabase admin --quiet --eval "try { rs.status(); quit(0); } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] }); quit(0); }"
+        mongosh --host mongodb --username admin --password "$MONGODB_ADMIN_PASSWORD" --authenticationDatabase admin --quiet --eval "try { rs.status(); quit(0); } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] }); quit(0); }"
         echo "mongodb-init: done"
 
   rabbitmq:
     image: rabbitmq:3-management
     restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
       RABBITMQ_DEFAULT_VHOST: /
     ports:
       - "5672:5672"
