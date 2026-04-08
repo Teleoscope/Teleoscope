@@ -1,0 +1,68 @@
+---
+# seed-demo.yaml — Load the Teleoscope demo corpus into MongoDB + Zilliz Cloud.
+#
+# Run AFTER site.yaml has finished and the stack is healthy.
+# The demo data is downloaded automatically from Teleoscope/teleoscope-demo-data
+# (shallow clone) if not already present on the server.
+#
+# Usage:
+#   ansible-playbook -i ansible/vars/inventory.yaml ansible/seed-demo.yaml
+#
+# Idempotent:
+#   - Milvus vectors are upserted (safe to re-run).
+#   - MongoDB: --workspace-documents-only replaces only the demo workspace
+#     documents instead of dropping the entire documents collection, so
+#     existing user data in other workspaces is preserved.
+#
+# After this playbook the /demo route should show the corpus with working
+# vector search (ranking / similarity).
+
+- name: Seed demo corpus into MongoDB + Zilliz
+  hosts: main
+  remote_user: "{{ ansible_user }}"
+  vars_files:
+    - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+
+  tasks:
+    - name: Create seed virtualenv and install Python dependencies
+      ansible.builtin.pip:
+        name:
+          - py7zr
+          - pyarrow
+          - tqdm
+          - python-dotenv
+          - pymongo
+        virtualenv: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed"
+        virtualenv_command: python3 -m venv
+
+    - name: Run seed-demo-corpus.py (MongoDB + Zilliz)
+      ansible.builtin.command:
+        cmd: >
+          {{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python
+          scripts/seed-demo-corpus.py
+          --no-progress
+          --workspace-documents-only
+        chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+      environment:
+        PYTHONPATH: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        # MongoDB: connect directly (replicaSet node) using the app user.
+        MONGODB_URI: "mongodb://{{ mongodb_dev_name }}:{{ mongodb_dev_password }}@localhost:27017/{{ mongodb_database }}?directConnection=true&serverSelectionTimeoutMS=10000&authSource=admin"
+        MONGODB_DATABASE: "{{ mongodb_database }}"
+        # Milvus / Zilliz Cloud.
+        # NOTE: containers use MILVUS_DOCKER_URI mapped to MILVUS_URI internally;
+        # the seed script runs on the host so we pass MILVUS_URI directly.
+        MILVUS_URI: "{{ milvus_uri }}"
+        MILVUS_TOKEN: "{{ milvus_token }}"
+        MILVUS_DATABASE: "{{ milvus_dbname | default('teleoscope') }}"
+        # Zilliz is HTTPS — skip the raw TCP port preflight check.
+        MILVUS_SKIP_TCP_PREFLIGHT: "1"
+        TELEOSCOPE_DATA_DIR: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
+      register: seed_result
+      # Seed can take several minutes on first run (parquet upsert to Zilliz).
+      async: 1800
+      poll: 30
+
+    - name: Show seed output
+      ansible.builtin.debug:
+        var: seed_result.stdout_lines
