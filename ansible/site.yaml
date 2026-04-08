@@ -293,11 +293,18 @@
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
         mode: "0600"
 
+    - name: Check if main app image is already built
+      ansible.builtin.command: docker image inspect teleoscope-app --format "exists"
+      register: _main_image
+      failed_when: false
+      changed_when: false
+      become: true
+
     - name: Start main Docker Compose stack
       community.docker.docker_compose_v2:
         project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
         files: [docker-compose.yml, docker-compose.prod.yml]
-        build: "{{ 'always' if rebuild | default(true) | bool else 'never' }}"
+        build: "{{ 'always' if (rebuild | default(false) | bool or _main_image.rc != 0) else 'never' }}"
         state: present
       become: true
 
@@ -363,11 +370,18 @@
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
         mode: "0600"
 
+    - name: Check if worker image is already built
+      ansible.builtin.command: docker image inspect teleoscope-dispatch --format "exists"
+      register: _worker_image
+      failed_when: false
+      changed_when: false
+      become: true
+
     - name: Build worker images
       community.docker.docker_compose_v2:
         project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
         files: [docker-compose.workers.yml]
-        build: "{{ 'always' if rebuild | default(true) | bool else 'never' }}"
+        build: "{{ 'always' if (rebuild | default(false) | bool or _worker_image.rc != 0) else 'never' }}"
         state: present
       become: true
 
@@ -411,11 +425,18 @@
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
         mode: "0600"
 
+    - name: Check if vectorizer image is already built
+      ansible.builtin.command: docker image inspect teleoscope-vectorizer --format "exists"
+      register: _vectorizer_image
+      failed_when: false
+      changed_when: false
+      become: true
+
     - name: Build vectorizer image (downloads BGE-M3 model ~1 GB)
       community.docker.docker_compose_v2:
         project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
         files: [docker-compose.vectorizer.yml]
-        build: "{{ 'always' if rebuild | default(true) | bool else 'never' }}"
+        build: "{{ 'always' if (rebuild | default(false) | bool or _vectorizer_image.rc != 0) else 'never' }}"
         state: present
       become: true
 

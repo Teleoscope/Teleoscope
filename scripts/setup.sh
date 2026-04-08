@@ -64,17 +64,15 @@ if [[ -f "$VARS_FILE" ]]; then
       echo -e "  ${DIM}Infrastructure already provisioned (infra-outputs.yaml exists).${RESET}"
       echo -en "  Skip AWS provisioning and deploy only? [Y/n]: "; read -r skip
       [[ "${skip:-Y}" =~ ^[Yy] ]] && SKIP_PROVISION="--skip-tags provision"
-      echo -en "  Rebuild Docker images? [y/N]: "; read -r rb
-      [[ "${rb:-N}" =~ ^[Yy] ]] && REBUILD_FLAG="-e rebuild=true" || REBUILD_FLAG="-e rebuild=false"
     fi
 
     echo ""
     echo -en "  Run ansible-playbook ansible/site.yaml now? [Y/n]: "; read -r yn
     if [[ "${yn:-Y}" =~ ^[Yy] ]]; then
       cd "$REPO_ROOT"
-      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml $SKIP_PROVISION $REBUILD_FLAG
+      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml $SKIP_PROVISION
     else
-      echo "  Run manually: ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml $SKIP_PROVISION $REBUILD_FLAG"
+      echo "  Run manually: ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml $SKIP_PROVISION"
     fi
     echo ""
     exit 0
