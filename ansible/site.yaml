@@ -297,7 +297,7 @@
       community.docker.docker_compose_v2:
         project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
         files: [docker-compose.yml, docker-compose.prod.yml]
-        build: always
+        build: "{{ 'always' if rebuild | default(true) | bool else 'never' }}"
         state: present
       become: true
 
@@ -367,7 +367,7 @@
       community.docker.docker_compose_v2:
         project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
         files: [docker-compose.workers.yml]
-        build: always
+        build: "{{ 'always' if rebuild | default(true) | bool else 'never' }}"
         state: present
       become: true
 
@@ -415,7 +415,7 @@
       community.docker.docker_compose_v2:
         project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
         files: [docker-compose.vectorizer.yml]
-        build: always
+        build: "{{ 'always' if rebuild | default(true) | bool else 'never' }}"
         state: present
       become: true
 
