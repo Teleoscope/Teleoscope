@@ -60,7 +60,7 @@ if [[ -f "$VARS_FILE" ]]; then
     echo -en "  Run ansible-playbook ansible/site.yaml now? [Y/n]: "; read -r yn
     if [[ "${yn:-Y}" =~ ^[Yy] ]]; then
       cd "$REPO_ROOT"
-      ansible-playbook ansible/site.yaml
+      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml
     else
       echo "  Run manually: ansible-playbook ansible/site.yaml"
     fi
@@ -313,7 +313,7 @@ echo -en "  Deploy now? [Y/n]: "; read -r yn
 
 if [[ "${yn:-Y}" =~ ^[Yy] ]]; then
   cd "$REPO_ROOT"
-  ansible-playbook ansible/site.yaml
+  ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml
   echo ""
   echo -e "${GREEN}${BOLD}  Deployment complete!${RESET}"
   echo "  Point your DNS A record to the Elastic IP shown above, then"
