@@ -60,31 +60,214 @@ echo "  Writes ansible/vars/vars.yaml, then optionally"
 echo "  runs: ansible-playbook ansible/site.yaml"
 echo ""
 
-# ── existing vars.yaml fast-path ─────────────────────────────────────────────
+# ── existing deployment fast-path ────────────────────────────────────────────
+INFRA_FILE="$REPO_ROOT/ansible/vars/infra-outputs.yaml"
+
+if [[ -f "$VARS_FILE" && -f "$INFRA_FILE" ]]; then
+  # ── Parse key values from infra-outputs.yaml ──────────────────────────────
+  _get_yaml() { python3 -c "
+import sys, re
+key = sys.argv[1]
+for line in open(sys.argv[2]):
+    m = re.match(r'^' + re.escape(key) + r':\s*[\"']?([^\"'\n]+)[\"']?\s*$', line)
+    if m: print(m.group(1).strip()); sys.exit(0)
+print('')
+" "$1" "$2" 2>/dev/null; }
+
+  EIP="$(_get_yaml ec2_main_public_ip "$INFRA_FILE")"
+  WORKER_ID="$(_get_yaml ec2_worker_instance "$INFRA_FILE")"
+  GPU_ID="$(_get_yaml ec2_vectorize_instance "$INFRA_FILE")"
+  AWS_REGION_LOCAL="$(_get_yaml aws_region "$VARS_FILE")"
+  DOMAIN_LOCAL="$(python3 -c "
+import re, sys
+for line in open(sys.argv[1]):
+    m = re.search(r'ca:\s*(\S+)', line)
+    if m: print(m.group(1)); sys.exit(0)
+print('')
+" "$VARS_FILE" 2>/dev/null)"
+
+  header "Current deployment status"
+
+  # ── Quick connectivity probes (non-blocking, short timeouts) ──────────────
+  _port_check() {
+    # _port_check host port label
+    local host="$1" port="$2" label="$3"
+    if python3 -c "
+import socket, sys
+try:
+    socket.create_connection(('$host', $port), timeout=3); sys.exit(0)
+except: sys.exit(1)
+" 2>/dev/null; then
+      success "$label  ${DIM}(${host}:${port})${RESET}"
+      echo "ok"
+    else
+      warn "$label  ${DIM}(${host}:${port} — no response)${RESET}"
+      echo "down"
+    fi
+  }
+
+  _http_status() {
+    # Returns HTTP status code or "down"
+    local url="$1"
+    curl -sko /dev/null --max-time 4 -w "%{http_code}" "$url" 2>/dev/null || echo "down"
+  }
+
+  echo -e "  ${DIM}Elastic IP: ${EIP:-unknown}${RESET}"
+  echo ""
+
+  if [[ -n "$EIP" ]]; then
+    APP_TCP="$(_port_check "$EIP" 3000 "App  (port 3000)"     2>/dev/null | tail -1)"
+    HTTP_CODE="$(_http_status "http://${EIP}" 2>/dev/null)"
+    HTTPS_CODE="$(_http_status "https://${DOMAIN_LOCAL:-$EIP}" 2>/dev/null)"
+
+    if [[ "$HTTP_CODE" =~ ^[0-9]+$ && "$HTTP_CODE" != "000" ]]; then
+      success "HTTP   (port 80)    → HTTP $HTTP_CODE"
+    else
+      warn    "HTTP   (port 80)    → no response"
+    fi
+
+    if [[ "$HTTPS_CODE" =~ ^[0-9]+$ && "$HTTPS_CODE" != "000" ]]; then
+      success "HTTPS  (port 443)   → HTTP $HTTPS_CODE"
+    else
+      warn    "HTTPS  (port 443)   → not configured (run setup-tls.yaml after DNS)"
+    fi
+  else
+    warn "No Elastic IP found in infra-outputs.yaml"
+  fi
+
+  # ── EC2 instance states (via AWS API) ─────────────────────────────────────
+  echo ""
+  if command -v aws &>/dev/null && [[ -n "$WORKER_ID" ]]; then
+    _ec2_state() {
+      aws ec2 describe-instances \
+        --instance-ids "$1" \
+        --region "${AWS_REGION_LOCAL:-ca-central-1}" \
+        --query 'Reservations[0].Instances[0].State.Name' \
+        --output text 2>/dev/null || echo "unknown"
+    }
+    WORKER_STATE="$(_ec2_state "$WORKER_ID")"
+    GPU_STATE="$(_ec2_state "$GPU_ID")"
+
+    # Colour by state
+    _state_color() {
+      case "$1" in
+        running)  echo -e "${GREEN}$1${RESET}" ;;
+        stopped)  echo -e "${DIM}$1${RESET}" ;;
+        *)        echo -e "${YELLOW}$1${RESET}" ;;
+      esac
+    }
+
+    printf "  %-28s %s\n" "Worker EC2 ($WORKER_ID):" "$(_state_color "$WORKER_STATE")"
+    printf "  %-28s %s\n" "GPU EC2    ($GPU_ID):"    "$(_state_color "$GPU_STATE")"
+  fi
+
+  # ── SSH check to main EC2 for container health ─────────────────────────────
+  SSH_KEY_LOCAL="$(python3 -c "
+import re, sys
+for line in open(sys.argv[1]):
+    m = re.match(r'ssh_private_key_file:\s*[\"']?([^\"'\n]+)', line)
+    if m: print(m.group(1).strip().replace('~', '$HOME')); sys.exit(0)
+" "$VARS_FILE" 2>/dev/null)"
+  SSH_KEY_LOCAL="${SSH_KEY_LOCAL/#\~/$HOME}"
+
+  if [[ -n "$EIP" && -f "$SSH_KEY_LOCAL" ]]; then
+    echo ""
+    CONTAINER_STATUS="$(ssh -i "$SSH_KEY_LOCAL" \
+      -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+      -o IdentitiesOnly=yes -o ConnectTimeout=5 -o BatchMode=yes \
+      "ubuntu@${EIP}" \
+      "docker ps --format '{{.Names}} {{.Status}}' 2>/dev/null | grep -v '^$'" 2>/dev/null || true)"
+
+    if [[ -n "$CONTAINER_STATUS" ]]; then
+      echo -e "  ${DIM}Containers:${RESET}"
+      while IFS= read -r line; do
+        NAME="${line%% *}"
+        STATUS="${line#* }"
+        if echo "$STATUS" | grep -q "(healthy)"; then
+          success "  $NAME  ${DIM}($STATUS)${RESET}"
+        elif echo "$STATUS" | grep -q "(unhealthy)"; then
+          warn    "  $NAME  ${RED}($STATUS)${RESET}"
+        else
+          echo -e "    ${DIM}$NAME  ($STATUS)${RESET}"
+        fi
+      done <<< "$CONTAINER_STATUS"
+    else
+      warn "Could not reach main EC2 for container status (SSH timeout or no key)"
+    fi
+  fi
+
+  # ── TLS status ─────────────────────────────────────────────────────────────
+  INVENTORY="$REPO_ROOT/ansible/vars/inventory.yaml"
+  TLS_NOTE=""
+  if [[ "$HTTPS_CODE" == "000" || -z "$HTTPS_CODE" || "$HTTPS_CODE" == "down" ]]; then
+    TLS_NOTE="${YELLOW}  TLS not configured — after DNS propagates run:${RESET}\n    ansible-playbook -i ansible/vars/inventory.yaml ansible/setup-tls.yaml"
+  fi
+
+  # ── Action menu ────────────────────────────────────────────────────────────
+  echo ""
+  echo "  ─────────────────────────────────────────────"
+  echo -e "  ${BOLD}What would you like to do?${RESET}"
+  echo ""
+  echo "   [h]  Health check — full status report (check-health.yaml)"
+  echo "   [u]  Update — pull latest code + restart changed containers"
+  echo "   [f]  Full redeploy — re-run site.yaml (skips AWS provisioning)"
+  echo "   [p]  Full redeploy WITH re-provisioning (recreates EC2s)"
+  echo "   [t]  TLS setup — run setup-tls.yaml (after DNS is pointed)"
+  echo "   [q]  Quit"
+  echo ""
+  echo -en "  Choice [h/u/f/p/t/q]: "; read -r choice
+
+  cd "$REPO_ROOT"
+  case "${choice:-h}" in
+    h|H)
+      echo ""
+      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
+        -i ansible/vars/inventory.yaml ansible/check-health.yaml
+      ;;
+    u|U)
+      echo ""
+      echo -e "  ${DIM}Pulling latest code and restarting changed containers…${RESET}"
+      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
+        -i ansible/vars/inventory.yaml ansible/deploy-update.yaml
+      ;;
+    f|F)
+      echo ""
+      echo -e "  ${DIM}Running site.yaml (skipping AWS provisioning)…${RESET}"
+      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
+        ansible/site.yaml --skip-tags provision
+      ;;
+    p|P)
+      echo ""
+      warn "This will re-provision EC2s — existing instances will be replaced."
+      echo -en "  Are you sure? [y/N]: "; read -r confirm
+      [[ "${confirm:-N}" =~ ^[Yy] ]] || { echo "  Aborted."; exit 0; }
+      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml
+      ;;
+    t|T)
+      echo ""
+      echo -e "  ${DIM}Running setup-tls.yaml — DNS must already point to ${EIP}…${RESET}"
+      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
+        -i ansible/vars/inventory.yaml ansible/setup-tls.yaml
+      ;;
+    q|Q|"")
+      echo "  Bye."
+      ;;
+    *)
+      echo "  Unknown choice '$choice'. Run setup.sh again and pick h/u/f/p/t/q."
+      ;;
+  esac
+  echo ""
+  exit 0
+fi
+
+# vars.yaml exists but no infra-outputs yet — original single-question fast-path
 if [[ -f "$VARS_FILE" ]]; then
   echo -e "  ${GREEN}Found existing ansible/vars/vars.yaml${RESET}"
-  echo -en "  Re-use it and skip to deploy? [Y/n]: "; read -r reuse
+  echo -en "  Re-use it and run deployment? [Y/n]: "; read -r reuse
   if [[ "${reuse:-Y}" =~ ^[Yy] ]]; then
+    cd "$REPO_ROOT"
     echo ""
-    echo -e "${CYAN}${BOLD}  Ready to deploy${RESET}"
-
-    INFRA_FILE="$REPO_ROOT/ansible/vars/infra-outputs.yaml"
-    SKIP_PROVISION=""
-    REBUILD_FLAG=""
-    if [[ -f "$INFRA_FILE" ]]; then
-      echo -e "  ${DIM}Infrastructure already provisioned (infra-outputs.yaml exists).${RESET}"
-      echo -en "  Skip AWS provisioning and deploy only? [Y/n]: "; read -r skip
-      [[ "${skip:-Y}" =~ ^[Yy] ]] && SKIP_PROVISION="--skip-tags provision"
-    fi
-
-    echo ""
-    echo -en "  Run ansible-playbook ansible/site.yaml now? [Y/n]: "; read -r yn
-    if [[ "${yn:-Y}" =~ ^[Yy] ]]; then
-      cd "$REPO_ROOT"
-      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml $SKIP_PROVISION
-    else
-      echo "  Run manually: ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml $SKIP_PROVISION"
-    fi
+    ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml
     echo ""
     exit 0
   fi
