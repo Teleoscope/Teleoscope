@@ -225,6 +225,11 @@ def queue_depth(queue_name: str) -> int | None:
         conn.close()
         return depth
     except Exception as e:
+        err = str(e)
+        if "404" in err or "NOT_FOUND" in err:
+            # Queue not declared yet (no worker has connected). No messages
+            # waiting — treat as empty rather than an error.
+            return 0
         log.warning("queue_depth(%s): %s", queue_name, e)
         return None
 

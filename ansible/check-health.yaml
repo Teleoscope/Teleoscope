@@ -215,6 +215,6 @@
           - "  MongoDB:       {{ mongo_health.stdout | default('unknown') }}"
           - "  RabbitMQ:      {{ 'OK' if rabbitmq_health.rc == 0 else 'FAILED' }}"
           - "  nginx:         {{ nginx_health.stdout_lines[-1] | default('unknown') }}"
-          - "  Zilliz Cloud:  {{ 'OK' if zilliz_check.rc == 0 else 'UNREACHABLE' }}"
+          - "  Zilliz Cloud:  {{ 'OK' if hostvars['localhost']['zilliz_check'].rc == 0 else 'UNREACHABLE' }}"
           - "  Containers:    {{ container_issues.stdout_lines[0] | default('unknown') }}"
           - "══════════════════════════════════════════"
