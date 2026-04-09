@@ -101,23 +101,6 @@ PYEOF
   header "Current deployment status"
 
   # ── Quick connectivity probes (non-blocking, short timeouts) ──────────────
-  _port_check() {
-    # _port_check host port label
-    local host="$1" port="$2" label="$3"
-    if python3 -c "
-import socket, sys
-try:
-    socket.create_connection(('$host', $port), timeout=3); sys.exit(0)
-except: sys.exit(1)
-" 2>/dev/null; then
-      success "$label  ${DIM}(${host}:${port})${RESET}"
-      echo "ok"
-    else
-      warn "$label  ${DIM}(${host}:${port} — no response)${RESET}"
-      echo "down"
-    fi
-  }
-
   _http_status() {
     # Returns HTTP status code or "down"
     local url="$1"
@@ -129,7 +112,6 @@ except: sys.exit(1)
 
   HTTPS_CODE=""  # initialise so TLS note check below is always safe
   if [[ -n "$EIP" ]]; then
-    _port_check "$EIP" 3000 "App   (port 3000)"   # side-effect: prints status
     HTTP_CODE="$(_http_status "http://${EIP}")"
     HTTPS_CODE="$(_http_status "https://${DOMAIN_LOCAL:-$EIP}")"
 
