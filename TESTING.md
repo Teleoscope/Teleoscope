@@ -25,6 +25,30 @@ The test suite is **automated** and runs on every push and pull request to `main
 
 **Required status:** Protect `main` with branch rules that require both **“Test suite”** and **“Playwright UI System E2E”** to pass before merge.
 
+## Listing all API endpoints
+
+**Quick reference — print every active API route with its HTTP methods:**
+
+```bash
+node scripts/list-api-endpoints.mjs
+```
+
+Output is a formatted table covering:
+- All 67 Next.js App Router route files in `teleoscope.ca/src/app/api/` (73 endpoint+method combinations)
+- The FastAPI file-download backend endpoint in `backend/files.py` (`GET /download/{filename}`, port 8000)
+- The 13 legacy Pages Router routes in `frontend/pages/api/` (deprecated app, excluded from the active test suite)
+
+The active routes are auto-discovered and exercised by `teleoscope.ca/tests/api.spec.ts` on every CI run. The listing script runs as its own step in the `test-suite.yml` workflow so the full inventory is visible in every job log.
+
+To exercise the `/api/health` endpoint with authentication (verifies the endpoint returns `{"status":"OK"}`):
+
+```bash
+HEALTH_AUTH_USER=<user> HEALTH_AUTH_PASS=<pass> \
+  pnpm exec playwright test tests/api.spec.ts -g "GET /api/health" --project=chromium
+```
+
+Without those env vars the test simply asserts the endpoint returns 401 (unauthenticated), which is the expected behaviour in unit-only CI.
+
 ## Running locally
 
 **One-click: stack + all tests (no Docker, when Docker isn't available):**

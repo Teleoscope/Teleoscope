@@ -79,6 +79,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: List API endpoints
+        run: node ../scripts/list-api-endpoints.mjs
+
       - name: Run frontend modular tests (Vitest)
         run: pnpm exec vitest run --config vitest.config.ts
 
