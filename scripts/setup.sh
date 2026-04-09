@@ -170,12 +170,15 @@ except: sys.exit(1)
   fi
 
   # ── SSH check to main EC2 for container health ─────────────────────────────
-  SSH_KEY_LOCAL="$(python3 -c "
+  SSH_KEY_LOCAL="$(python3 - "$VARS_FILE" 2>/dev/null <<'PYEOF' || true
 import re, sys
 for line in open(sys.argv[1]):
-    m = re.match(r'ssh_private_key_file:\s*[\"']?([^\"'\n]+)', line)
-    if m: print(m.group(1).strip().replace('~', '$HOME')); sys.exit(0)
-" "$VARS_FILE" 2>/dev/null)"
+    m = re.match(r"""ssh_private_key_file:\s*["']?([^"'\n]+)""", line)
+    if m:
+        print(m.group(1).strip())
+        sys.exit(0)
+PYEOF
+)"
   SSH_KEY_LOCAL="${SSH_KEY_LOCAL/#\~/$HOME}"
 
   if [[ -n "$EIP" && -f "$SSH_KEY_LOCAL" ]]; then
