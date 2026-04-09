@@ -254,12 +254,41 @@ test.describe('API routes coverage', () => {
     expect(routeCases.length).toBeGreaterThan(0);
   });
 
+  // Regression guard: catches accidental route file deletions.
+  // The active app has 67 route.ts files yielding 73+ method combinations;
+  // use 65 as a conservative lower bound so the test stays green even if a
+  // handful of stub-only routes are cleaned up.
+  test('route count is at least 65', async () => {
+    expect(routeCases.length).toBeGreaterThanOrEqual(65);
+  });
+
   for (const caseInfo of routeCases) {
     test(`${caseInfo.method} ${caseInfo.routePath}`, async ({ request }) => {
       const url = buildUrl(caseInfo.routePath);
       let response;
 
-      if (caseInfo.method === 'GET') {
+      if (caseInfo.routePath === '/api/health' && caseInfo.method === 'GET') {
+        // /api/health requires HTTP Basic auth.  When credentials are available
+        // (e.g. full-stack E2E runs) we verify the endpoint actually works;
+        // otherwise we accept 401 so the test still passes in unit-only CI.
+        const authUser = process.env.HEALTH_AUTH_USER;
+        const authPass = process.env.HEALTH_AUTH_PASS;
+        if (authUser && authPass) {
+          const encoded = Buffer.from(`${authUser}:${authPass}`).toString('base64');
+          response = await request.fetch(url, {
+            method: 'GET',
+            headers: { ...DEFAULT_HEADERS, Authorization: `Basic ${encoded}` },
+          });
+          expect(response.status()).toBe(200);
+          const body = await response.json();
+          expect(body).toHaveProperty('status', 'OK');
+          return;
+        }
+        // No credentials — just verify the endpoint rejects unauthenticated requests.
+        response = await request.fetch(url, { method: 'GET', headers: DEFAULT_HEADERS });
+        expect(response.status()).toBe(401);
+        return;
+      } else if (caseInfo.method === 'GET') {
         response = await request.fetch(url, {
           method: 'GET',
           headers: DEFAULT_HEADERS,
