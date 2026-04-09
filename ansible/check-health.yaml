@@ -36,7 +36,39 @@
           ({{ item.instance_id }})
           — state: {{ item.state.name }}
           — type: {{ item.instance_type }}
-          — ip: {{ item.public_ip_address | default('stopped/no-ip') }}
+          — ip: {{ item.public_ip_address | default('no public IP (stopped)') }}
+      loop: "{{ ec2_info.instances | default([]) }}"
+      loop_control:
+        label: "{{ item.instance_id }}"
+
+    # Add running worker to a dynamic group so Play 3 can SSH into it.
+    # Stopped instances have no public IP — skip them gracefully.
+    - name: Register running worker for live health check
+      ansible.builtin.add_host:
+        name: teleoscope-worker-live
+        groups: workers_live
+        ansible_host: "{{ item.public_ip_address }}"
+        ansible_user: "{{ ansible_user }}"
+        ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+      when:
+        - item.instance_id == ec2_worker_instance
+        - item.state.name == 'running'
+        - item.public_ip_address is defined and item.public_ip_address != ''
+      loop: "{{ ec2_info.instances | default([]) }}"
+      loop_control:
+        label: "{{ item.instance_id }}"
+
+    - name: Register running vectorizer for live health check
+      ansible.builtin.add_host:
+        name: teleoscope-vectorizer-live
+        groups: vectorizer_live
+        ansible_host: "{{ item.public_ip_address }}"
+        ansible_user: "{{ ansible_user }}"
+        ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+      when:
+        - item.instance_id == ec2_vectorize_instance
+        - item.state.name == 'running'
+        - item.public_ip_address is defined and item.public_ip_address != ''
       loop: "{{ ec2_info.instances | default([]) }}"
       loop_control:
         label: "{{ item.instance_id }}"
@@ -228,3 +260,94 @@
           - "  Zilliz Cloud:  {{ 'OK' if hostvars['localhost']['zilliz_check'].rc == 0 else 'UNREACHABLE' }}"
           - "  Containers:    {{ container_issues.stdout_lines[0] | default('unknown') }}"
           - "══════════════════════════════════════════"
+
+# ── PLAY 3: Worker health (only when instance is running) ─────────────────────
+# If the worker is stopped, no hosts were added to workers_live and this play
+# prints "skipping: no hosts matched" — which is correct and expected.
+- name: Check worker EC2 health (when running)
+  hosts: workers_live
+  remote_user: "{{ ansible_user }}"
+  gather_facts: false
+  ignore_unreachable: true
+  vars_files:
+    - ./vars/vars.yaml
+
+  tasks:
+    - name: Wait for SSH
+      ansible.builtin.wait_for_connection:
+        timeout: 30
+
+    - name: Worker container status
+      ansible.builtin.shell: |
+        docker ps --format 'table {{ '{{' }}.Names{{ '}}' }}\t{{ '{{' }}.Status{{ '}}' }}\t{{ '{{' }}.Image{{ '}}' }}' 2>/dev/null
+      register: worker_containers
+      become: true
+      changed_when: false
+
+    - name: Worker containers
+      ansible.builtin.debug:
+        var: worker_containers.stdout_lines
+
+    - name: Check for unhealthy worker containers
+      ansible.builtin.shell: |
+        UNHEALTHY=$(docker ps --filter health=unhealthy --format '{{ '{{' }}.Names{{ '}}' }}' 2>/dev/null)
+        EXITED=$(docker ps -a --filter status=exited --format '{{ '{{' }}.Names{{ '}}' }}: {{ '{{' }}.Status{{ '}}' }}' 2>/dev/null || true)
+        if [ -n "$UNHEALTHY" ]; then echo "UNHEALTHY: $UNHEALTHY"; fi
+        if [ -n "$EXITED" ]; then echo "EXITED: $EXITED"; fi
+        if [ -z "$UNHEALTHY" ] && [ -z "$EXITED" ]; then echo "All worker containers healthy"; fi
+      args:
+        executable: /bin/bash
+      register: worker_issues
+      become: true
+      changed_when: false
+
+    - name: Worker health summary
+      ansible.builtin.debug:
+        var: worker_issues.stdout_lines
+
+    - name: Worker git commit
+      ansible.builtin.command:
+        cmd: git rev-parse --short HEAD
+        chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+      register: worker_sha
+      changed_when: false
+
+    - name: Worker code version
+      ansible.builtin.debug:
+        msg: "Worker code: {{ worker_sha.stdout }}"
+
+# ── PLAY 4: Vectorizer health (only when instance is running) ─────────────────
+- name: Check vectorizer EC2 health (when running)
+  hosts: vectorizer_live
+  remote_user: "{{ ansible_user }}"
+  gather_facts: false
+  ignore_unreachable: true
+  vars_files:
+    - ./vars/vars.yaml
+
+  tasks:
+    - name: Wait for SSH
+      ansible.builtin.wait_for_connection:
+        timeout: 30
+
+    - name: Vectorizer container status
+      ansible.builtin.shell: |
+        docker ps --format 'table {{ '{{' }}.Names{{ '}}' }}\t{{ '{{' }}.Status{{ '}}' }}\t{{ '{{' }}.Image{{ '}}' }}' 2>/dev/null
+      register: vec_containers
+      become: true
+      changed_when: false
+
+    - name: Vectorizer containers
+      ansible.builtin.debug:
+        var: vec_containers.stdout_lines
+
+    - name: Vectorizer git commit
+      ansible.builtin.command:
+        cmd: git rev-parse --short HEAD
+        chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+      register: vec_sha
+      changed_when: false
+
+    - name: Vectorizer code version
+      ansible.builtin.debug:
+        msg: "Vectorizer code: {{ vec_sha.stdout }}"
