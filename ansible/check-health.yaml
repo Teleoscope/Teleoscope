@@ -102,38 +102,6 @@
       loop_control:
         label: "{{ item.instance_id }}"
 
-    - name: Check Zilliz Cloud endpoint is reachable
-      ansible.builtin.command:
-        argv:
-          - python3
-          - -c
-          - |
-            import socket, sys, os
-            from urllib.parse import urlparse
-            u = urlparse(os.environ.get('MILVUS_URI', ''))
-            host = u.hostname or u.path
-            is_https = u.scheme.lower() == 'https'
-            port = u.port or (443 if is_https else 19530)
-            try:
-                socket.create_connection((host, port), timeout=10)
-                print('Zilliz OK -- {}:{}'.format(host, port))
-            except Exception as e:
-                print('Zilliz UNREACHABLE -- {}:{}: {}'.format(host, port, e))
-                sys.exit(1)
-      environment:
-        MILVUS_URI: "{{ milvus_uri }}"
-      register: zilliz_check
-      failed_when: false
-      changed_when: false
-
-    - name: Zilliz status
-      ansible.builtin.debug:
-        msg: "{{ zilliz_check.stdout | default('check failed') }}"
-
-    - name: Track Zilliz failure
-      ansible.builtin.set_fact:
-        local_failures: "{{ local_failures + ['Zilliz Cloud: ' + (zilliz_check.stdout | default('unreachable'))] }}"
-      when: zilliz_check.rc | default(1) != 0
 
 # ── PLAY 2: Main EC2 — containers, MongoDB, RabbitMQ, disk, nginx ─────────────
 - name: Check main EC2 health
@@ -183,6 +151,52 @@
       when: >-
         'UNHEALTHY' in (container_issues.stdout | default('')) or
         'EXITED' in (container_issues.stdout | default(''))
+
+    - name: Check Zilliz Cloud connectivity via pymilvus
+      ansible.builtin.shell: |
+        docker exec \
+          -e MILVUS_URI \
+          -e MILVUS_TOKEN \
+          teleoscope-app-1 \
+          python3 -c "
+        import os, sys
+        from pymilvus import MilvusClient
+        uri = os.environ.get('MILVUS_URI', '')
+        token = os.environ.get('MILVUS_TOKEN', '')
+        if not uri:
+            print('MILVUS_URI not set')
+            sys.exit(1)
+        try:
+            kw = {'uri': uri}
+            if token:
+                kw['token'] = token
+            client = MilvusClient(**kw)
+            cols = client.list_collections()
+            print('Zilliz OK -- {} collections'.format(len(cols)))
+            client.close()
+        except Exception as e:
+            print('Zilliz UNREACHABLE: {}'.format(e))
+            sys.exit(1)
+        "
+      args:
+        executable: /bin/bash
+      environment:
+        MILVUS_URI: "{{ milvus_uri }}"
+        MILVUS_TOKEN: "{{ milvus_token | default('') }}"
+      become: true
+      register: zilliz_check
+      failed_when: false
+      changed_when: false
+      no_log: true  # prevent token appearing in -v output
+
+    - name: Zilliz status
+      ansible.builtin.debug:
+        msg: "{{ zilliz_check.stdout | default(zilliz_check.stderr) | default('check failed') }}"
+
+    - name: Track Zilliz failure
+      ansible.builtin.set_fact:
+        main_play_failures: "{{ main_play_failures + ['Zilliz Cloud: ' + (zilliz_check.stdout | default(zilliz_check.stderr) | default('unreachable'))] }}"
+      when: zilliz_check.rc | default(1) != 0
 
     - name: Check MongoDB — admin ping and replica set status
       ansible.builtin.shell: |
@@ -327,7 +341,7 @@
           - "  MongoDB:       {{ mongo_health.stdout | default('unknown') }}"
           - "  RabbitMQ:      {{ 'OK' if rabbitmq_health.rc == 0 else 'FAILED' }}"
           - "  nginx:         {{ nginx_health.stdout_lines[-1] | default('unknown') }}"
-          - "  Zilliz Cloud:  {{ 'OK' if hostvars['localhost']['zilliz_check'].rc == 0 else 'UNREACHABLE' }}"
+          - "  Zilliz Cloud:  {{ 'OK' if zilliz_check.rc == 0 else 'UNREACHABLE' }}"
           - "  Containers:    {{ container_issues.stdout_lines[0] | default('unknown') }}"
           - "══════════════════════════════════════════"
 
