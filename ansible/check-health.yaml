@@ -70,6 +70,54 @@
       loop_control:
         label: "{{ item.instance_id }}"
 
+    - name: Ensure pymilvus is available for Zilliz health check
+      ansible.builtin.pip:
+        name: "pymilvus>=2.6.0,<2.7.0"
+        virtualenv: "{{ playbook_dir }}/../.venv-health"
+        virtualenv_command: python3 -m venv
+        state: present
+
+    - name: Check Zilliz Cloud connectivity via pymilvus
+      ansible.builtin.command:
+        argv:
+          - "{{ playbook_dir }}/../.venv-health/bin/python3"
+          - "-c"
+          - |
+            import os, sys
+            from pymilvus import MilvusClient
+            uri = os.environ.get('MILVUS_URI', '')
+            token = os.environ.get('MILVUS_TOKEN', '')
+            if not uri:
+                print('MILVUS_URI not set')
+                sys.exit(1)
+            try:
+                kw = {'uri': uri}
+                if token:
+                    kw['token'] = token
+                client = MilvusClient(**kw)
+                cols = client.list_collections()
+                print('Zilliz OK -- {} collections'.format(len(cols)))
+                client.close()
+            except Exception as e:
+                print('Zilliz UNREACHABLE: {}'.format(e))
+                sys.exit(1)
+      environment:
+        MILVUS_URI: "{{ milvus_uri }}"
+        MILVUS_TOKEN: "{{ milvus_token | default('') }}"
+      register: zilliz_check
+      failed_when: false
+      changed_when: false
+      no_log: true  # prevent token appearing in -v output
+
+    - name: Zilliz status
+      ansible.builtin.debug:
+        msg: "{{ zilliz_check.stdout | default(zilliz_check.stderr) | default('check failed') }}"
+
+    - name: Track Zilliz failure
+      ansible.builtin.set_fact:
+        local_failures: "{{ local_failures + ['Zilliz Cloud: ' + (zilliz_check.stdout | default(zilliz_check.stderr) | default('unreachable'))] }}"
+      when: zilliz_check.rc | default(1) != 0
+
     # Add running worker to a dynamic group so Play 3 can SSH into it.
     # Stopped instances have no public IP — skip them gracefully.
     - name: Register running worker for live health check
@@ -102,37 +150,6 @@
       loop_control:
         label: "{{ item.instance_id }}"
 
-    - name: Check Zilliz Cloud endpoint is reachable
-      ansible.builtin.command:
-        argv:
-          - python3
-          - -c
-          - |
-            import socket, sys, os
-            from urllib.parse import urlparse
-            u = urlparse(os.environ.get('MILVUS_URI', ''))
-            host = u.hostname or u.path
-            port = u.port or 19530
-            try:
-                socket.create_connection((host, port), timeout=10)
-                print('Zilliz OK -- {}:{}'.format(host, port))
-            except Exception as e:
-                print('Zilliz UNREACHABLE -- {}:{}: {}'.format(host, port, e))
-                sys.exit(1)
-      environment:
-        MILVUS_URI: "{{ milvus_uri }}"
-      register: zilliz_check
-      failed_when: false
-      changed_when: false
-
-    - name: Zilliz status
-      ansible.builtin.debug:
-        msg: "{{ zilliz_check.stdout | default('check failed') }}"
-
-    - name: Track Zilliz failure
-      ansible.builtin.set_fact:
-        local_failures: "{{ local_failures + ['Zilliz Cloud: ' + (zilliz_check.stdout | default('unreachable'))] }}"
-      when: zilliz_check.rc | default(1) != 0
 
 # ── PLAY 2: Main EC2 — containers, MongoDB, RabbitMQ, disk, nginx ─────────────
 - name: Check main EC2 health
