@@ -2,9 +2,10 @@
 # Shared UFW task list — included by deploy-main.yaml and site.yaml.
 # Caller must set become: true.
 
-- name: UFW - allow SSH
+# Rate-limit SSH: max 6 new connections per 30s per source IP (brute-force mitigation).
+- name: UFW - rate-limit SSH
   community.general.ufw:
-    rule: allow
+    rule: limit
     port: "22"
     proto: tcp
 
@@ -20,36 +21,22 @@
     port: "443"
     proto: tcp
 
-# Allow worker / vectorizer EC2s (same VPC, RFC-1918) to reach MongoDB + RabbitMQ.
-# AWS security groups already restrict this at the network level; UFW is a
-# belt-and-suspenders second layer.
-- name: UFW - allow MongoDB from private network
+# Allow worker / vectorizer EC2s (same VPC) to reach MongoDB + RabbitMQ.
+# Use vpc_cidr from vars.yaml (default: 172.31.0.0/16 for AWS default VPC).
+# AWS security groups already enforce cross-SG rules; UFW is belt-and-suspenders.
+- name: UFW - allow MongoDB from VPC CIDR
   community.general.ufw:
     rule: allow
     port: "27017"
     proto: tcp
-    src: "10.0.0.0/8"
+    src: "{{ vpc_cidr | default('172.31.0.0/16') }}"
 
-- name: UFW - allow RabbitMQ AMQP from private network
+- name: UFW - allow RabbitMQ AMQP from VPC CIDR
   community.general.ufw:
     rule: allow
     port: "5672"
     proto: tcp
-    src: "10.0.0.0/8"
-
-- name: UFW - allow MongoDB from 172.16/12 private range
-  community.general.ufw:
-    rule: allow
-    port: "27017"
-    proto: tcp
-    src: "172.16.0.0/12"
-
-- name: UFW - allow RabbitMQ from 172.16/12 private range
-  community.general.ufw:
-    rule: allow
-    port: "5672"
-    proto: tcp
-    src: "172.16.0.0/12"
+    src: "{{ vpc_cidr | default('172.31.0.0/16') }}"
 
 - name: UFW - enable
   community.general.ufw:

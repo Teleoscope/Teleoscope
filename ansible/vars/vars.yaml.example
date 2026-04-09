@@ -2,6 +2,13 @@
 # Do NOT commit vars.yaml (it is gitignored).
 #
 # Used by: ansible/site.yaml (full deploy) and individual playbooks.
+#
+# Security tip: encrypt vars.yaml at rest with Ansible Vault:
+#   ansible-vault encrypt ansible/vars/vars.yaml
+#   ansible-vault edit ansible/vars/vars.yaml
+#   # Then add --ask-vault-pass to all ansible-playbook commands, or:
+#   echo "your-vault-password" > ~/.teleoscope-vault-pass && chmod 600 ~/.teleoscope-vault-pass
+#   # And set in ansible.cfg: vault_password_file = ~/.teleoscope-vault-pass
 
 # -----------------------------------------------------------------------------
 # General
@@ -26,6 +33,10 @@ teleoscope:
 # AWS — infrastructure provisioning (provision-aws.yaml / site.yaml)
 # -----------------------------------------------------------------------------
 aws_region: ca-central-1
+
+# VPC CIDR for UFW rules allowing MongoDB/RabbitMQ from worker/GPU EC2s.
+# Default AWS VPC is 172.31.0.0/16. Check: aws ec2 describe-vpcs --query 'Vpcs[0].CidrBlock'
+vpc_cidr: 172.31.0.0/16
 
 # EC2 key pair name as it appears in the AWS console (not the filename).
 aws_key_pair: my-teleoscope-key

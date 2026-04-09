@@ -82,4 +82,5 @@ services:
     env_file:
       - .env
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy  # Don't start until RabbitMQ is ready; restart: unless-stopped handles recovery

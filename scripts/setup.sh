@@ -25,10 +25,22 @@ ask() {
   local hint=""; [[ -n "$default" ]] && hint=" ${DIM}[$default]${RESET}"
   echo -en "  ${prompt}${hint}: "
   read -r value; value="${value:-$default}"
-  eval "$var=\"\$value\""
+  # printf -v is safe against command injection (no eval)
+  printf -v "$var" '%s' "$value"
 }
 
 gen() { python3 -c "import secrets; print(secrets.token_hex(32))"; }
+
+# Produce a YAML double-quoted scalar that safely wraps the argument.
+# Handles backslashes, double-quotes, and newlines correctly.
+yaml_val() {
+  python3 -c "
+import sys
+v = sys.argv[1]
+safe = v.replace('\\\\', '\\\\\\\\').replace('\"', '\\\\\"').replace('\\n', '\\\\n').replace('\\r', '\\\\r')
+print('\"' + safe + '\"')
+" "$1"
+}
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -39,7 +51,6 @@ PY_USER_BIN="$(python3 -m site --user-base 2>/dev/null)/bin"
 export PATH="$PY_USER_BIN:$HOME/.local/bin:$PATH"
 
 # ── banner ──────────────────────────────────────────────────────────────────
-clear
 echo -e "${CYAN}${BOLD}"
 echo "  ╔══════════════════════════════════════════╗"
 echo "  ║       Teleoscope — deployment setup      ║"
@@ -164,27 +175,69 @@ header "AWS"
 ask AWS_REGION   "Region"              "ca-central-1"
 ask AWS_KEY_PAIR "EC2 key pair name"   ""
 [[ -z "$AWS_KEY_PAIR" ]] && die "EC2 key pair name is required."
+
+# Verify the key pair exists in AWS before proceeding
+if aws ec2 describe-key-pairs --key-names "$AWS_KEY_PAIR" --region "$AWS_REGION" &>/dev/null; then
+  success "Key pair '$AWS_KEY_PAIR' found in $AWS_REGION"
+else
+  warn "Key pair '$AWS_KEY_PAIR' not found in $AWS_REGION — verify the name and region."
+  echo -en "  Continue anyway? [y/N]: "; read -r yn
+  [[ "${yn:-N}" =~ ^[Yy] ]] || die "Fix the key pair name and try again."
+fi
+
 ask SSH_KEY_FILE "Path to .pem file"   "~/.ssh/${AWS_KEY_PAIR}.pem"
 SSH_KEY_FILE="${SSH_KEY_FILE/#\~/$HOME}"
-[[ -f "$SSH_KEY_FILE" ]] || warn "Key file not found — ensure it exists before deploying."
+if [[ -f "$SSH_KEY_FILE" ]]; then
+  # Check permissions: must be 0400 or 0600 or SSH will refuse to use it
+  if [[ "$(uname)" == "Darwin" ]]; then
+    PERM="$(stat -f "%OLp" "$SSH_KEY_FILE")"
+  else
+    PERM="$(stat -c "%a" "$SSH_KEY_FILE")"
+  fi
+  if [[ "$PERM" == "400" || "$PERM" == "600" ]]; then
+    success "SSH key found (permissions: $PERM)"
+  else
+    warn "SSH key permissions are $PERM — fixing to 400 (required by SSH)"
+    chmod 400 "$SSH_KEY_FILE"
+    success "SSH key permissions fixed to 400"
+  fi
+else
+  warn "Key file not found at $SSH_KEY_FILE — ensure it exists before deploying."
+fi
 
 MY_IP="$(curl -sf --max-time 3 https://checkip.amazonaws.com 2>/dev/null || true)"
 [[ -n "$MY_IP" ]] \
   && ask SSH_CIDR "SSH allowed CIDR (your IP: ${MY_IP})" "${MY_IP}/32" \
   || ask SSH_CIDR "SSH allowed CIDR" "0.0.0.0/0"
 
+# Validate CIDR format: x.x.x.x/n
+if ! [[ "$SSH_CIDR" =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}$ ]]; then
+  die "Invalid CIDR format '$SSH_CIDR'. Example: 203.0.113.1/32 or 0.0.0.0/0"
+fi
+
 # ── domain ───────────────────────────────────────────────────────────────────
 header "Domain & TLS"
 
 ask DOMAIN        "Domain name"                   "teleoscope.ca"
 ask CERTBOT_EMAIL "Email for Let's Encrypt"        ""
+
+# Validate domain: no spaces, has at least one dot, no leading/trailing dots
+if [[ "$DOMAIN" =~ [[:space:]] ]] || [[ "$DOMAIN" != *.* ]] || [[ "$DOMAIN" == .* ]] || [[ "$DOMAIN" == *. ]]; then
+  die "Invalid domain '$DOMAIN'. Example: teleoscope.ca"
+fi
+
 [[ -z "$CERTBOT_EMAIL" ]] && die "Certbot email is required."
+# Validate email: must have @ with content before and after
+if ! [[ "$CERTBOT_EMAIL" =~ ^[^@]+@[^@]+\.[^@]+$ ]]; then
+  die "Invalid email '$CERTBOT_EMAIL'. Example: admin@teleoscope.ca"
+fi
 
 # ── instances ────────────────────────────────────────────────────────────────
 header "EC2 instances"
-echo -e "  ${DIM}main:   app + MongoDB + RabbitMQ + nginx + monitor.py (always on, ~\$60/mo)${RESET}"
-echo -e "  ${DIM}worker: Python workers — started by monitor.py when queues are non-empty${RESET}"
-echo -e "  ${DIM}GPU:    BGE-M3 vectorizer — started by monitor.py when vectorize queue is non-empty${RESET}"
+echo -e "  ${DIM}Approximate monthly costs (on-demand, ca-central-1):${RESET}"
+echo -e "  ${DIM}  t3.large   (\$60/mo)  — main: app + MongoDB + RabbitMQ + nginx (always on)${RESET}"
+echo -e "  ${DIM}  m6i.large  (\$87/mo)  — worker: Python workers (on-demand, billed by the hour)${RESET}"
+echo -e "  ${DIM}  g5.xlarge  (\$1.006/hr) — GPU: BGE-M3 vectorizer (on-demand, started by monitor.py)${RESET}"
 echo ""
 
 ask MAIN_TYPE    "Main instance type"          "t3.large"
@@ -195,6 +248,15 @@ ask WORKER_VOL   "Worker EBS volume (GB)"      "60"
 ask GPU_VOL      "GPU EBS volume (GB)"         "60"
 ask WORKER_STOP  "Worker idle stop (minutes)"  "10"
 ask IDLE_STOP    "GPU idle stop (minutes)"     "10"
+
+# Validate volume sizes are integers
+for _v in "$MAIN_VOL" "$WORKER_VOL" "$GPU_VOL"; do
+  [[ "$_v" =~ ^[0-9]+$ ]] || die "Volume size must be an integer (got: $_v)"
+done
+# Validate instance types have no spaces
+for _t in "$MAIN_TYPE" "$WORKER_TYPE" "$GPU_TYPE"; do
+  [[ "$_t" =~ [[:space:]] ]] && die "Instance type cannot contain spaces (got: $_t)"
+done
 
 # ── zilliz ───────────────────────────────────────────────────────────────────
 header "Zilliz Cloud  (vector database — zilliz.com)"
@@ -232,11 +294,17 @@ echo "  ────────────────────────
 printf "  %-26s %s\n" "Domain:"          "$DOMAIN"
 printf "  %-26s %s\n" "AWS region:"      "$AWS_REGION"
 printf "  %-26s %s\n" "Key pair:"        "$AWS_KEY_PAIR"
-printf "  %-26s %s\n" "Main instance:"   "$MAIN_TYPE  (${MAIN_VOL} GB, always on)"
+printf "  %-26s %s\n" "Main instance:"   "$MAIN_TYPE  (${MAIN_VOL} GB, always on ~\$60/mo)"
 printf "  %-26s %s\n" "Worker instance:" "$WORKER_TYPE  (${WORKER_VOL} GB, idle stop: ${WORKER_STOP} min)"
 printf "  %-26s %s\n" "GPU instance:"    "$GPU_TYPE  (${GPU_VOL} GB, idle stop: ${IDLE_STOP} min)"
 printf "  %-26s %s\n" "Zilliz URI:"      "$ZILLIZ_URI"
-printf "  %-26s %s\n" "All secrets:"     "auto-generated ✓"
+echo ""
+echo -e "  ${YELLOW}${BOLD}Generated secrets (save these — you'll need them if vars.yaml is lost):${RESET}"
+printf "  %-26s %s\n" "MongoDB admin password:"  "$MONGO_ADMIN_PASS"
+printf "  %-26s %s\n" "MongoDB app password:"    "$MONGO_PASS"
+printf "  %-26s %s\n" "RabbitMQ password:"       "$RABBITMQ_PASS"
+printf "  %-26s %s\n" "NextAuth secret:"         "$NEXTAUTH_SECRET"
+printf "  %-26s %s\n" "Vectorizer token:"        "$VEC_TOKEN"
 echo "  ─────────────────────────────────────────────"
 echo ""
 echo -en "  Write ansible/vars/vars.yaml? [Y/n]: "
@@ -248,6 +316,8 @@ mkdir -p "$REPO_ROOT/ansible/vars"
 cat > "$VARS_FILE" <<YAML
 # ansible/vars/vars.yaml — generated by scripts/setup.sh
 # Do NOT commit this file (it is gitignored).
+# To encrypt: ansible-vault encrypt ansible/vars/vars.yaml
+# To edit encrypted: ansible-vault edit ansible/vars/vars.yaml
 
 ansible_user: ubuntu
 remote_prefix: /home
@@ -294,15 +364,16 @@ google_client_secret: "${GOOGLE_CLIENT_SECRET}"
 
 certbot_email: ${CERTBOT_EMAIL}
 
-milvus_uri: "${ZILLIZ_URI}"
-milvus_token: "${ZILLIZ_TOKEN}"
+milvus_uri: $(yaml_val "$ZILLIZ_URI")
+milvus_token: $(yaml_val "$ZILLIZ_TOKEN")
 milvus_dbname: ${MILVUS_DB}
 
 vectorizer_control_token: "${VEC_TOKEN}"
 YAML
 
-[[ -n "$LOOPS_API_KEY"  ]] && echo "loops_api_key: \"${LOOPS_API_KEY}\""     >> "$VARS_FILE"
-[[ -n "$STRIPE_SECRET"  ]] && echo "stripe_secret_key: \"${STRIPE_SECRET}\"" >> "$VARS_FILE"
+# Append optional integrations using YAML-safe quoting (handles special chars)
+[[ -n "$LOOPS_API_KEY"  ]] && printf 'loops_api_key: %s\n'     "$(yaml_val "$LOOPS_API_KEY")"  >> "$VARS_FILE"
+[[ -n "$STRIPE_SECRET"  ]] && printf 'stripe_secret_key: %s\n' "$(yaml_val "$STRIPE_SECRET")"  >> "$VARS_FILE"
 
 success "Wrote ansible/vars/vars.yaml"
 
@@ -313,11 +384,12 @@ echo ""
 echo "  ansible-playbook ansible/site.yaml will:"
 echo "    1. Provision 3 EC2s (main/worker/GPU), security groups, IAM role, Elastic IP"
 echo "    2. Install Docker on all 3 instances"
-echo "    3. Start main stack (app + MongoDB + RabbitMQ) + nginx + TLS"
+echo "    3. Start main stack (app + MongoDB + RabbitMQ) + nginx"
 echo "    4. Build worker image; stop worker EC2 (monitor.py starts on demand)"
 echo "    5. Build GPU image + BGE-M3 (~1 GB); stop GPU EC2 (monitor.py starts on demand)"
 echo ""
-echo "  Estimated time: 10–15 minutes."
+echo "  Estimated time: 15–20 minutes."
+echo "  Full log written to: ./ansible-deploy.log"
 echo ""
 echo -en "  Deploy now? [Y/n]: "; read -r yn
 
@@ -326,8 +398,8 @@ if [[ "${yn:-Y}" =~ ^[Yy] ]]; then
   ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml
   echo ""
   echo -e "${GREEN}${BOLD}  Deployment complete!${RESET}"
-  echo "  Point your DNS A record to the Elastic IP shown above, then"
-  echo "  https://${DOMAIN} will be live."
+  echo "  Point your DNS A record to the Elastic IP shown above, then run:"
+  echo "    ansible-playbook -i ansible/vars/inventory.yaml ansible/setup-tls.yaml"
 else
   echo ""
   echo -e "  ${BOLD}To deploy later:${RESET}"

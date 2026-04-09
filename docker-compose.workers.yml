@@ -123,7 +123,9 @@ services:
     command: ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "files:app", "--bind", "0.0.0.0:8000"]
     working_dir: /app/backend
     ports:
-      - "127.0.0.1:8000:8000"
+      # Bind to all interfaces so nginx on the main EC2 can proxy downloads
+      # to this worker EC2 via its private IP.
+      - "0.0.0.0:8000:8000"
     environment:
       DOWNLOAD_DIR: /tmp/teleoscope/downloads
     volumes:

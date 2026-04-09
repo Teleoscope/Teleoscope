@@ -30,7 +30,7 @@ services:
         - "CMD-SHELL"
         - >-
           mongosh --host 127.0.0.1 -u admin
-          -p "$$MONGODB_ADMIN_PASSWORD"
+          -p "$$MONGO_INITDB_ROOT_PASSWORD"
           --authenticationDatabase admin --quiet
           --eval 'var r = db.adminCommand({ ping: 1 }); quit((r && (r.ok === 1 || r.ok === true)) ? 0 : 1);'
       interval: 5s

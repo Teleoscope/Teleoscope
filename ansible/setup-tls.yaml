@@ -21,6 +21,16 @@
     - ./vars/infra-outputs.yaml
 
   tasks:
+    # Certbot uses HTTP-01 challenge — DNS must resolve before this runs.
+    # Validate resolution from localhost (the control machine) before SSHing in.
+    - name: Check DNS resolves to our Elastic IP
+      ansible.builtin.command:
+        cmd: "python3 -c \"import socket; ip=socket.gethostbyname('{{ teleoscope.ca }}'); assert ip == '{{ ec2_main_public_ip }}', f'DNS resolves to {ip}, expected {{ ec2_main_public_ip }}'\""
+      delegate_to: localhost
+      become: false
+      register: dns_check
+      failed_when: dns_check.rc != 0
+
     - name: Ensure certbot is installed
       ansible.builtin.apt:
         name:
@@ -47,6 +57,13 @@
         enabled: true
         state: started
 
+    - name: Test certbot renewal configuration (dry run)
+      ansible.builtin.command: certbot renew --dry-run
+      register: renew_check
+      changed_when: false
+
     - name: TLS setup complete
       ansible.builtin.debug:
-        msg: "https://{{ teleoscope.ca }} is now live with TLS."
+        msg:
+          - "https://{{ teleoscope.ca }} is now live with TLS."
+          - "Renewal dry-run: {{ 'OK' if renew_check.rc == 0 else 'FAILED — check certbot configuration' }}"

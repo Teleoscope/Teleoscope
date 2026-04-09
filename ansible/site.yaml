@@ -16,6 +16,49 @@
 #   - For future code updates:
 #       ansible-playbook -i ansible/vars/inventory.yaml ansible/deploy-update.yaml
 
+# ── PLAY 0: Validate infra-outputs.yaml is not stale ─────────────────────────
+# Runs even when --skip-tags provision is used.  If the listed instance IDs no
+# longer exist in AWS, warn so the operator knows to delete infra-outputs.yaml
+# and re-run without --skip-tags provision.
+- name: Validate existing infrastructure (if infra-outputs.yaml exists)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ./vars/vars.yaml
+  tasks:
+    - name: Check if infra-outputs.yaml exists
+      ansible.builtin.stat:
+        path: "{{ playbook_dir }}/vars/infra-outputs.yaml"
+      register: _infra_file
+
+    - name: Load infra-outputs.yaml
+      ansible.builtin.include_vars:
+        file: "{{ playbook_dir }}/vars/infra-outputs.yaml"
+      when: _infra_file.stat.exists
+
+    - name: Verify main EC2 still exists in AWS
+      amazon.aws.ec2_instance_info:
+        instance_ids: ["{{ ec2_main_id }}"]
+        region: "{{ aws_region }}"
+      register: _main_check
+      when: _infra_file.stat.exists and ec2_main_id is defined
+      failed_when: false
+
+    - name: Warn if main EC2 is missing or terminated
+      ansible.builtin.fail:
+        msg: >
+          infra-outputs.yaml references {{ ec2_main_id }} but it is
+          {{ (_main_check.instances | default([{}]))[0].state.name | default('missing') }} in AWS.
+          Delete ansible/vars/infra-outputs.yaml and re-run without --skip-tags provision
+          to reprovision fresh instances.
+      when:
+        - _infra_file.stat.exists
+        - ec2_main_id is defined
+        - _main_check is defined
+        - (_main_check.instances | default([])) | length == 0
+            or (_main_check.instances[0].state.name | default('')) in ['terminated', 'shutting-down']
+
 # ── PLAY 1: Provision all AWS infrastructure ─────────────────────────────────
 # Skip on re-runs once infrastructure exists:
 #   ansible-playbook ansible/site.yaml --skip-tags provision
@@ -78,29 +121,43 @@
         state: present
       register: vectorizer_sg
 
-    - name: Allow RabbitMQ + MongoDB inbound from worker and GPU EC2
+    # Idempotent: specify the FULL ruleset in one task so purge_rules: true
+    # removes stale duplicates on re-runs instead of accumulating new copies.
+    - name: Update main SG with complete ruleset (public + cross-SG)
       amazon.aws.ec2_security_group:
         name: teleoscope-main-sg
         description: "Teleoscope main (app, MongoDB, RabbitMQ, nginx)"
         region: "{{ aws_region }}"
-        purge_rules: false
         rules:
+          - { proto: tcp, ports: [22],  cidr_ip: "{{ ssh_allowed_cidr }}", rule_desc: SSH }
+          - { proto: tcp, ports: [80],  cidr_ip: 0.0.0.0/0, rule_desc: HTTP }
+          - { proto: tcp, ports: [443], cidr_ip: 0.0.0.0/0, rule_desc: HTTPS }
           - { proto: tcp, ports: [5672],  group_id: "{{ worker_sg.group_id }}", rule_desc: "RabbitMQ from worker" }
           - { proto: tcp, ports: [27017], group_id: "{{ worker_sg.group_id }}", rule_desc: "MongoDB from worker" }
           - { proto: tcp, ports: [5672],  group_id: "{{ vectorizer_sg.group_id }}", rule_desc: "RabbitMQ from GPU" }
         state: present
 
-    - name: Create IAM policy for monitor.py (start/stop EC2)
+    - name: Create IAM policy for monitor.py (start/stop EC2 tagged Project:teleoscope)
       amazon.aws.iam_managed_policy:
         policy_name: teleoscope-monitor-policy
         policy: |
           {
             "Version": "2012-10-17",
-            "Statement": [{
-              "Effect": "Allow",
-              "Action": ["ec2:StartInstances","ec2:StopInstances","ec2:DescribeInstances"],
-              "Resource": "*"
-            }]
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": ["ec2:StartInstances","ec2:StopInstances"],
+                "Resource": "*",
+                "Condition": {
+                  "StringEquals": {"aws:ResourceTag/Project": "teleoscope"}
+                }
+              },
+              {
+                "Effect": "Allow",
+                "Action": ["ec2:DescribeInstances","ec2:DescribeInstanceStatus"],
+                "Resource": "*"
+              }
+            ]
           }
         state: present
       register: monitor_policy
@@ -194,6 +251,36 @@
           ec2_vectorizer_public_ip: "{{ gpu_instance.instances[0].public_ip_address }}"
           ec2_vectorizer_private_ip: "{{ gpu_instance.instances[0].private_ip_address }}"
 
+    # Auto-generate inventory.yaml so standalone playbooks (setup-tls, seed-demo,
+    # deploy-update) work without manual IP copying from infra-outputs.yaml.
+    - name: Write vars/inventory.yaml from provisioned IPs
+      ansible.builtin.copy:
+        dest: "{{ playbook_dir }}/vars/inventory.yaml"
+        content: |
+          # Auto-generated by site.yaml — do not edit.
+          all:
+            vars:
+              ansible_user: "{{ ansible_user }}"
+              ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+              ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes"
+            children:
+              main:
+                hosts:
+                  teleoscope-main:
+                    ansible_host: "{{ eip.public_ip }}"
+                    main_private_ip: "{{ main_instance.instances[0].private_ip_address }}"
+                    ec2_worker_instance: "{{ worker_instance.instances[0].instance_id }}"
+                    ec2_vectorize_instance: "{{ gpu_instance.instances[0].instance_id }}"
+              workers:
+                hosts:
+                  teleoscope-worker:
+                    ansible_host: "{{ worker_instance.instances[0].public_ip_address }}"
+                    main_private_ip: "{{ main_instance.instances[0].private_ip_address }}"
+              vectorizer:
+                hosts:
+                  teleoscope-vectorizer:
+                    ansible_host: "{{ gpu_instance.instances[0].public_ip_address }}"
+
     - name: Add hosts to in-memory inventory
       ansible.builtin.add_host:
         name: "{{ item.name }}"
@@ -285,7 +372,7 @@
         repo: "https://github.com/Teleoscope/Teleoscope.git"
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
         version: main
-        force: false
+        force: true  # Overwrite any server-side edits so re-runs are reliable
 
     - name: Write production .env
       ansible.builtin.template:
@@ -293,12 +380,40 @@
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
         mode: "0600"
 
+    # Snapshot MongoDB before deploying so a failed migration can be rolled back.
+    - name: Backup MongoDB before deploy
+      ansible.builtin.shell: |
+        set -e
+        STAMP=$(date +%Y%m%d-%H%M%S)
+        DEST=/tmp/mongodump-pre-deploy-${STAMP}
+        docker exec teleoscope-mongodb-1 \
+          mongodump \
+          --username admin \
+          --password "{{ mongodb_admin_password }}" \
+          --authenticationDatabase admin \
+          --out /tmp/mongodump-${STAMP} \
+          2>/dev/null || true
+        # Copy out of container in case container is recreated
+        docker cp teleoscope-mongodb-1:/tmp/mongodump-${STAMP} ${DEST} 2>/dev/null || true
+        echo "backup: ${DEST}"
+      register: _backup
+      changed_when: false
+      failed_when: false  # Don't abort deploy if MongoDB isn't running yet (first deploy)
+      become: true
+
     - name: Check if main app image is already built
       ansible.builtin.command: docker image inspect teleoscope-app --format "exists"
       register: _main_image
       failed_when: false
       changed_when: false
       become: true
+
+    - name: Get git SHA for image tagging
+      ansible.builtin.command:
+        cmd: git rev-parse --short HEAD
+        chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+      register: _git_sha
+      changed_when: false
 
     - name: Start main Docker Compose stack
       community.docker.docker_compose_v2:
@@ -308,14 +423,21 @@
         state: present
       become: true
 
-    - name: Wait for app health
-      ansible.builtin.uri:
-        url: "http://localhost:3000/api/hello"
-        status_code: 200
-      register: health
-      until: health.status == 200
-      retries: 30
-      delay: 10
+    - name: Tag app image with git SHA for rollback reference
+      ansible.builtin.shell: |
+        docker tag teleoscope-app:latest teleoscope-app:{{ _git_sha.stdout }} 2>/dev/null || true
+        docker tag teleoscope-monitor:latest teleoscope-monitor:{{ _git_sha.stdout }} 2>/dev/null || true
+      become: true
+      changed_when: false
+
+    # Use TCP port check — avoids depending on Zilliz Cloud being reachable.
+    # The app process being up on port 3000 is the correct success signal here.
+    - name: Wait for app to accept TCP connections on port 3000
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 3000
+        timeout: 300
+        sleep: 5
 
     - name: Install nginx (HTTP only — TLS added by setup-tls.yaml after DNS)
       ansible.builtin.apt:
@@ -362,7 +484,7 @@
         repo: "https://github.com/Teleoscope/Teleoscope.git"
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
         version: main
-        force: false
+        force: true  # Overwrite any server-side edits so re-runs are reliable
 
     - name: Write worker .env
       ansible.builtin.template:
@@ -403,7 +525,7 @@
         instance_ids: ["{{ hostvars['teleoscope-worker']['ec2_worker_instance'] | default(ec2_worker_instance) }}"]
         region: "{{ aws_region }}"
         state: stopped
-        wait: false
+        wait: true  # Confirm stop completed; avoids monitor.py racing a transitional state
       delegate_to: localhost
 
 # ── PLAY 6: Deploy GPU vectorizer, then stop the GPU EC2 ─────────────────────
@@ -417,7 +539,7 @@
         repo: "https://github.com/Teleoscope/Teleoscope.git"
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
         version: main
-        force: false
+        force: true  # Overwrite any server-side edits so re-runs are reliable
 
     - name: Write vectorizer .env
       ansible.builtin.template:
@@ -458,10 +580,48 @@
         instance_ids: ["{{ hostvars['teleoscope-vectorizer']['ec2_vectorize_instance'] | default(ec2_vectorize_instance) }}"]
         region: "{{ aws_region }}"
         state: stopped
-        wait: false
+        wait: true  # Confirm stop completed; avoids monitor.py racing a transitional state
       delegate_to: localhost
 
-# ── PLAY 7: Final summary ─────────────────────────────────────────────────────
+# ── PLAY 7: Post-deploy verification ─────────────────────────────────────────
+- name: Verify deployment
+  hosts: main
+  remote_user: "{{ ansible_user }}"
+  gather_facts: false
+  vars_files: [./vars/vars.yaml, ./vars/infra-outputs.yaml]
+  tasks:
+    - name: Check MongoDB is responding
+      ansible.builtin.shell: |
+        docker exec teleoscope-mongodb-1 \
+          mongosh --host 127.0.0.1 \
+          -u admin -p "{{ mongodb_admin_password }}" \
+          --authenticationDatabase admin --quiet \
+          --eval 'db.adminCommand({ping:1}).ok'
+      register: mongo_check
+      changed_when: false
+      become: true
+
+    - name: Check RabbitMQ is running
+      ansible.builtin.command: >
+        docker exec teleoscope-rabbitmq-1 rabbitmq-diagnostics check_running
+      register: rabbit_check
+      changed_when: false
+      become: true
+
+    - name: Check app port 3000 is accepting connections
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 3000
+        timeout: 30
+
+    - name: Verification summary
+      ansible.builtin.debug:
+        msg:
+          - "MongoDB: {{ 'OK' if mongo_check.rc == 0 else 'FAILED' }}"
+          - "RabbitMQ: {{ 'OK' if rabbit_check.rc == 0 else 'FAILED' }}"
+          - "App port 3000: OK"
+
+# ── PLAY 8: Final summary ─────────────────────────────────────────────────────
 - name: Deployment summary
   hosts: localhost
   connection: local
@@ -476,6 +636,7 @@
           - "============================================================"
           - ""
           - "  Elastic IP:  {{ ec2_main_public_ip }}"
+          - "  inventory.yaml written to: ansible/vars/inventory.yaml"
           - ""
           - "  1. Add DNS record:"
           - "       {{ teleoscope.ca }}  A  {{ ec2_main_public_ip }}"
