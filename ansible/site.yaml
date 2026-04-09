@@ -416,7 +416,7 @@
       ansible.builtin.shell: |
         STAMP=$(date +%Y%m%d-%H%M%S)
         DEST=/tmp/mongodump-pre-deploy-${STAMP}
-        if ! docker ps --format '{{.Names}}' | grep -q teleoscope-mongodb-1; then
+        if ! docker ps --format '{{ '{{' }}.Names{{ '}}' }}' | grep -q teleoscope-mongodb-1; then
           echo "SKIPPED: mongodb container not running (first deploy)"
           exit 0
         fi

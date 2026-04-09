@@ -77,7 +77,7 @@
   tasks:
     - name: List all running containers with health status
       ansible.builtin.shell: |
-        docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}' 2>/dev/null
+        docker ps --format 'table {{ '{{' }}.Names{{ '}}' }}\t{{ '{{' }}.Status{{ '}}' }}\t{{ '{{' }}.Image{{ '}}' }}' 2>/dev/null
       register: containers
       become: true
       changed_when: false
@@ -88,8 +88,8 @@
 
     - name: Check for any unhealthy or exited containers
       ansible.builtin.shell: |
-        UNHEALTHY=$(docker ps --filter health=unhealthy --format '{{.Names}}' 2>/dev/null)
-        EXITED=$(docker ps -a --filter status=exited --format '{{.Names}}: exited {{.Status}}' 2>/dev/null | grep -v "mongodb-init" || true)
+        UNHEALTHY=$(docker ps --filter health=unhealthy --format '{{ '{{' }}.Names{{ '}}' }}' 2>/dev/null)
+        EXITED=$(docker ps -a --filter status=exited --format '{{ '{{' }}.Names{{ '}}' }}: exited {{ '{{' }}.Status{{ '}}' }}' 2>/dev/null | grep -v "mongodb-init" || true)
         if [[ -n "$UNHEALTHY" ]]; then echo "UNHEALTHY: $UNHEALTHY"; fi
         if [[ -n "$EXITED" ]]; then echo "EXITED: $EXITED"; fi
         if [[ -z "$UNHEALTHY" && -z "$EXITED" ]]; then echo "All containers healthy"; fi
