@@ -24,7 +24,7 @@ ask() {
   local var="$1" prompt="$2" default="${3:-}"
   local hint=""; [[ -n "$default" ]] && hint=" ${DIM}[$default]${RESET}"
   echo -en "  ${prompt}${hint}: "
-  read -r value; value="${value:-$default}"
+  read -r value || true; value="${value:-$default}"
   # printf -v is safe against command injection (no eval)
   printf -v "$var" '%s' "$value"
 }
@@ -47,7 +47,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 VARS_FILE="$REPO_ROOT/ansible/vars/vars.yaml"
 
 # ── ensure pip --user bin is on PATH (macOS: ~/Library/Python/3.x/bin) ──────
-PY_USER_BIN="$(python3 -m site --user-base 2>/dev/null)/bin"
+PY_USER_BIN="$(python3 -m site --user-base 2>/dev/null || echo "$HOME/.local")/bin"
 export PATH="$PY_USER_BIN:$HOME/.local/bin:$PATH"
 
 # ── banner ──────────────────────────────────────────────────────────────────
@@ -64,6 +64,10 @@ echo ""
 INFRA_FILE="$REPO_ROOT/ansible/vars/infra-outputs.yaml"
 
 if [[ -f "$VARS_FILE" && -f "$INFRA_FILE" ]]; then
+  # The fast-path is informational only and always ends with exit 0.
+  # Disable strict mode so no probe failure (network, SSH, AWS) can kill the script.
+  set +euo pipefail
+
   # ── Parse key values from infra-outputs.yaml ──────────────────────────────
   # Use a heredoc so bash never touches the Python source — no quoting issues.
   _get_yaml() {
@@ -123,10 +127,11 @@ except: sys.exit(1)
   echo -e "  ${DIM}Elastic IP: ${EIP:-unknown}${RESET}"
   echo ""
 
+  HTTPS_CODE=""  # initialise so TLS note check below is always safe
   if [[ -n "$EIP" ]]; then
-    APP_TCP="$(_port_check "$EIP" 3000 "App  (port 3000)"     2>/dev/null | tail -1)"
-    HTTP_CODE="$(_http_status "http://${EIP}" 2>/dev/null)"
-    HTTPS_CODE="$(_http_status "https://${DOMAIN_LOCAL:-$EIP}" 2>/dev/null)"
+    _port_check "$EIP" 3000 "App   (port 3000)"   # side-effect: prints status
+    HTTP_CODE="$(_http_status "http://${EIP}")"
+    HTTPS_CODE="$(_http_status "https://${DOMAIN_LOCAL:-$EIP}")"
 
     if [[ "$HTTP_CODE" =~ ^[0-9]+$ && "$HTTP_CODE" != "000" ]]; then
       success "HTTP   (port 80)    → HTTP $HTTP_CODE"
@@ -208,10 +213,9 @@ PYEOF
   fi
 
   # ── TLS status ─────────────────────────────────────────────────────────────
-  INVENTORY="$REPO_ROOT/ansible/vars/inventory.yaml"
-  TLS_NOTE=""
   if [[ "$HTTPS_CODE" == "000" || -z "$HTTPS_CODE" || "$HTTPS_CODE" == "down" ]]; then
-    TLS_NOTE="${YELLOW}  TLS not configured — after DNS propagates run:${RESET}\n    ansible-playbook -i ansible/vars/inventory.yaml ansible/setup-tls.yaml"
+    echo ""
+    echo -e "  ${YELLOW}TLS not configured.${RESET} After DNS points to ${EIP}, choose [t] below."
   fi
 
   # ── Action menu ────────────────────────────────────────────────────────────
@@ -226,7 +230,7 @@ PYEOF
   echo "   [t]  TLS setup — run setup-tls.yaml (after DNS is pointed)"
   echo "   [q]  Quit"
   echo ""
-  echo -en "  Choice [h/u/f/p/t/q]: "; read -r choice
+  echo -en "  Choice [h/u/f/p/t/q]: "; read -r choice || true
 
   cd "$REPO_ROOT"
   case "${choice:-h}" in
@@ -274,7 +278,7 @@ fi
 # vars.yaml exists but no infra-outputs yet — original single-question fast-path
 if [[ -f "$VARS_FILE" ]]; then
   echo -e "  ${GREEN}Found existing ansible/vars/vars.yaml${RESET}"
-  echo -en "  Re-use it and run deployment? [Y/n]: "; read -r reuse
+  echo -en "  Re-use it and run deployment? [Y/n]: "; read -r reuse || true
   if [[ "${reuse:-Y}" =~ ^[Yy] ]]; then
     cd "$REPO_ROOT"
     echo ""
@@ -309,12 +313,12 @@ python3 -c "import boto3" 2>/dev/null \
 if [[ ${#PIP_NEEDED[@]} -gt 0 ]]; then
   echo ""
   echo -e "  ${YELLOW}Missing:${RESET} ${PIP_NEEDED[*]}"
-  echo -en "  Install via pip? [Y/n]: "; read -r yn
+  echo -en "  Install via pip? [Y/n]: "; read -r yn || true
   if [[ "${yn:-Y}" =~ ^[Yy] ]]; then
     python3 -m pip install --user "${PIP_NEEDED[@]}"
     # pip --user bin dir is platform-specific: ~/Library/Python/3.x/bin on macOS,
     # ~/.local/bin on Linux. Ask Python itself where it put them.
-    PY_USER_BIN="$(python3 -m site --user-base)/bin"
+    PY_USER_BIN="$(python3 -m site --user-base 2>/dev/null || echo "$HOME/.local")/bin"
     export PATH="$PY_USER_BIN:$HOME/.local/bin:$PATH"
     # Persist to shell profile so ansible is found in future sessions.
     if [[ "$SHELL" == *zsh* ]]; then  SHELL_RC="$HOME/.zshrc"
@@ -345,7 +349,7 @@ if ansible-galaxy collection list 2>/dev/null | grep -q "amazon\.aws"; then
   success "amazon.aws collection"
 else
   warn "amazon.aws collection missing"
-  echo -en "  Install now? [Y/n]: "; read -r yn
+  echo -en "  Install now? [Y/n]: "; read -r yn || true
   [[ "${yn:-Y}" =~ ^[Yy] ]] \
     && ansible-galaxy collection install -r "$REPO_ROOT/ansible/requirements.yaml" \
     && success "amazon.aws collection installed" \
@@ -359,7 +363,7 @@ else
   warn "AWS credentials not configured or expired."
   echo "  Set: export AWS_ACCESS_KEY_ID=...  AWS_SECRET_ACCESS_KEY=..."
   echo "  or:  export AWS_PROFILE=my-profile"
-  echo -en "  Continue anyway? [y/N]: "; read -r yn
+  echo -en "  Continue anyway? [y/N]: "; read -r yn || true
   [[ "${yn:-N}" =~ ^[Yy] ]] || exit 1
 fi
 
@@ -375,7 +379,7 @@ if aws ec2 describe-key-pairs --key-names "$AWS_KEY_PAIR" --region "$AWS_REGION"
   success "Key pair '$AWS_KEY_PAIR' found in $AWS_REGION"
 else
   warn "Key pair '$AWS_KEY_PAIR' not found in $AWS_REGION — verify the name and region."
-  echo -en "  Continue anyway? [y/N]: "; read -r yn
+  echo -en "  Continue anyway? [y/N]: "; read -r yn || true
   [[ "${yn:-N}" =~ ^[Yy] ]] || die "Fix the key pair name and try again."
 fi
 
@@ -459,7 +463,7 @@ echo ""
 
 ask ZILLIZ_URI  "Endpoint URI"   ""
 [[ -z "$ZILLIZ_URI" ]] && die "Zilliz URI is required."
-echo -en "  API token (hidden): "; read -rs ZILLIZ_TOKEN; echo
+echo -en "  API token (hidden): "; read -rs ZILLIZ_TOKEN || true; echo
 [[ -z "$ZILLIZ_TOKEN" ]] && die "Zilliz token is required."
 ask MILVUS_DB   "Database name"  "teleoscope"
 
@@ -502,7 +506,7 @@ printf "  %-26s %s\n" "Vectorizer token:"        "$VEC_TOKEN"
 echo "  ─────────────────────────────────────────────"
 echo ""
 echo -en "  Write ansible/vars/vars.yaml? [Y/n]: "
-read -r yn; [[ "${yn:-Y}" =~ ^[Nn] ]] && { echo "Aborted."; exit 0; }
+read -r yn || true; [[ "${yn:-Y}" =~ ^[Nn] ]] && { echo "Aborted."; exit 0; }
 
 # ── write vars.yaml ───────────────────────────────────────────────────────────
 mkdir -p "$REPO_ROOT/ansible/vars"
@@ -585,7 +589,7 @@ echo ""
 echo "  Estimated time: 15–20 minutes."
 echo "  Full log written to: ./ansible-deploy.log"
 echo ""
-echo -en "  Deploy now? [Y/n]: "; read -r yn
+echo -en "  Deploy now? [Y/n]: "; read -r yn || true
 
 if [[ "${yn:-Y}" =~ ^[Yy] ]]; then
   cd "$REPO_ROOT"
