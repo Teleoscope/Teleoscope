@@ -74,12 +74,19 @@ def _ensure_database_available(client: MilvusClient):
             return
         if _is_missing_database_error(exc):
             logging.warning(
-                "Milvus database '%s' was missing; creating it now.",
+                "Milvus database '%s' was missing; attempting to create it.",
                 MILVUS_DBNAME,
             )
-            with quiet_pymilvus_rpc_logs():
-                client.create_database(db_name=MILVUS_DBNAME)
-                client.using_database(db_name=MILVUS_DBNAME)
+            try:
+                with quiet_pymilvus_rpc_logs():
+                    client.create_database(db_name=MILVUS_DBNAME)
+                    client.using_database(db_name=MILVUS_DBNAME)
+            except Exception as create_exc:
+                logging.warning(
+                    "Could not create Milvus database '%s' (%s); "
+                    "continuing on default database (Zilliz Serverless or restricted cluster).",
+                    MILVUS_DBNAME, create_exc,
+                )
             return
         raise
 
@@ -273,20 +280,26 @@ def connect():
         _milvus_connect_trace("Milvus Lite client ready")
         return client
 
-    if os.getenv("MILVUS_SKIP_TCP_PREFLIGHT", "").lower() not in ("1", "true", "yes"):
-        try:
-            from backend.milvus_preflight import tcp_probe_from_env
-
-            tcp_probe_from_env()
-            _milvus_connect_trace("TCP preflight OK (port accepts connections)")
-        except RuntimeError:
-            raise
-        except Exception as exc:
-            logging.warning("Milvus TCP preflight skipped: %s", exc)
-
     from backend.milvus_uri_resolve import milvus_http_uri_from_env
 
     uri = milvus_http_uri_from_env()
+
+    if os.getenv("MILVUS_SKIP_TCP_PREFLIGHT", "").lower() not in ("1", "true", "yes"):
+        if uri.lower().startswith("https://"):
+            # Zilliz Cloud / HTTPS: the pymilvus gRPC layer manages TLS — a raw TCP probe
+            # is unnecessary and may fail in environments where port 19530 is blocked.
+            _milvus_connect_trace("TCP preflight skipped (HTTPS/Zilliz — SDK manages TLS)")
+        else:
+            try:
+                from backend.milvus_preflight import tcp_probe_from_env
+
+                tcp_probe_from_env()
+                _milvus_connect_trace("TCP preflight OK (port accepts connections)")
+            except RuntimeError:
+                raise
+            except Exception as exc:
+                logging.warning("Milvus TCP preflight skipped: %s", exc)
+
     assert_milvus_auth_before_network_connect(uri)
     log_milvus_auth_summary(uri)
     _milvus_connect_trace(f"auth={milvus_auth_label()} (no secrets logged)")
@@ -315,12 +328,19 @@ def use_database_if_supported(client: MilvusClient):
             return
         if _is_missing_database_error(exc):
             logging.warning(
-                "Milvus database '%s' missing when switching; creating it.",
+                "Milvus database '%s' missing when switching; attempting to create it.",
                 MILVUS_DBNAME,
             )
-            with quiet_pymilvus_rpc_logs():
-                client.create_database(db_name=MILVUS_DBNAME)
-                client.using_database(db_name=MILVUS_DBNAME)
+            try:
+                with quiet_pymilvus_rpc_logs():
+                    client.create_database(db_name=MILVUS_DBNAME)
+                    client.using_database(db_name=MILVUS_DBNAME)
+            except Exception as create_exc:
+                logging.warning(
+                    "Could not create Milvus database '%s' (%s); "
+                    "continuing on default database (Zilliz Serverless or restricted cluster).",
+                    MILVUS_DBNAME, create_exc,
+                )
             return
         raise
 

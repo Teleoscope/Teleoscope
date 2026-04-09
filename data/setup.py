@@ -24,7 +24,7 @@ def main() -> None:
 
         schema = client.create_schema(
             auto_id=False,
-            enable_dynamic_fields=False,
+            enable_dynamic_field=False,
         )
 
         schema.add_field(
