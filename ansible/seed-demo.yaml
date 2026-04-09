@@ -59,6 +59,7 @@
         MILVUS_SKIP_TCP_PREFLIGHT: "1"
         TELEOSCOPE_DATA_DIR: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
       register: seed_result
+      no_log: true  # Prevent MONGODB_URI (with password) appearing in ansible -v output
       # Seed can take several minutes on first run (parquet upsert to Zilliz).
       async: 1800
       poll: 30

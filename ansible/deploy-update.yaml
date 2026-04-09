@@ -22,8 +22,15 @@
         repo: "https://github.com/Teleoscope/Teleoscope.git"
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
         version: main
-        force: false
+        force: true  # Overwrite any server-side edits so re-runs are reliable
       register: git_result
+
+    - name: Get git SHA for image tagging
+      ansible.builtin.command:
+        cmd: git rev-parse --short HEAD
+        chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+      register: _git_sha
+      changed_when: false
 
     - name: Rebuild and restart changed containers
       community.docker.docker_compose_v2:
@@ -36,14 +43,38 @@
         pull: missing
       become: true
 
-    - name: Wait for app to be healthy
-      ansible.builtin.uri:
-        url: "http://localhost:3000/api/hello"
-        status_code: 200
-      register: health
-      until: health.status == 200
-      retries: 30
-      delay: 10
+    - name: Tag images with git SHA for rollback reference
+      ansible.builtin.shell: |
+        docker tag teleoscope-app:latest teleoscope-app:{{ _git_sha.stdout }} 2>/dev/null || true
+        docker tag teleoscope-monitor:latest teleoscope-monitor:{{ _git_sha.stdout }} 2>/dev/null || true
+      become: true
+      changed_when: false
+
+    # TCP check only — /api/hello depends on Zilliz being reachable.
+    - name: Wait for app to accept TCP connections on port 3000
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 3000
+        timeout: 300
+        sleep: 5
+
+    - name: Check MongoDB is responding
+      ansible.builtin.shell: |
+        docker exec teleoscope-mongodb-1 \
+          mongosh --host 127.0.0.1 \
+          -u admin -p "{{ mongodb_admin_password }}" \
+          --authenticationDatabase admin --quiet \
+          --eval 'db.adminCommand({ping:1}).ok'
+      register: mongo_check
+      changed_when: false
+      become: true
+
+    - name: Check RabbitMQ is running
+      ansible.builtin.command: >
+        docker exec teleoscope-rabbitmq-1 rabbitmq-diagnostics check_running
+      register: rabbit_check
+      changed_when: false
+      become: true
 
     - name: Show running containers
       ansible.builtin.shell: docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
@@ -51,7 +82,12 @@
         chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
       register: ps_out
       become: true
+      changed_when: false
 
-    - name: Container status
+    - name: Update summary
       ansible.builtin.debug:
-        var: ps_out.stdout_lines
+        msg:
+          - "MongoDB: {{ 'OK' if mongo_check.rc == 0 else 'FAILED' }}"
+          - "RabbitMQ: {{ 'OK' if rabbit_check.rc == 0 else 'FAILED' }}"
+          - "App port 3000: OK"
+          - "Containers: {{ ps_out.stdout_lines }}"
