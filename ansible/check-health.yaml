@@ -43,20 +43,25 @@
 
     - name: Check Zilliz Cloud endpoint is reachable
       ansible.builtin.command:
-        cmd: >-
-          python3 -c "
-          import socket, sys
-          from urllib.parse import urlparse
-          u = urlparse('{{ milvus_uri }}')
-          host = u.hostname or u.path
-          port = u.port or 19530
-          try:
-              socket.create_connection((host, port), timeout=10)
-              print(f'Zilliz OK — {host}:{port}')
-          except Exception as e:
-              print(f'Zilliz UNREACHABLE — {host}:{port}: {e}')
-              sys.exit(1)
-          "
+        # argv passes the Python script as a proper argument (newlines preserved).
+        # URI injected via environment to avoid quoting issues.
+        argv:
+          - python3
+          - -c
+          - |
+            import socket, sys, os
+            from urllib.parse import urlparse
+            u = urlparse(os.environ.get('MILVUS_URI', ''))
+            host = u.hostname or u.path
+            port = u.port or 19530
+            try:
+                socket.create_connection((host, port), timeout=10)
+                print('Zilliz OK -- {}:{}'.format(host, port))
+            except Exception as e:
+                print('Zilliz UNREACHABLE -- {}:{}: {}'.format(host, port, e))
+                sys.exit(1)
+      environment:
+        MILVUS_URI: "{{ milvus_uri }}"
       register: zilliz_check
       failed_when: false
       changed_when: false
@@ -90,9 +95,11 @@
       ansible.builtin.shell: |
         UNHEALTHY=$(docker ps --filter health=unhealthy --format '{{ '{{' }}.Names{{ '}}' }}' 2>/dev/null)
         EXITED=$(docker ps -a --filter status=exited --format '{{ '{{' }}.Names{{ '}}' }}: exited {{ '{{' }}.Status{{ '}}' }}' 2>/dev/null | grep -v "mongodb-init" || true)
-        if [[ -n "$UNHEALTHY" ]]; then echo "UNHEALTHY: $UNHEALTHY"; fi
-        if [[ -n "$EXITED" ]]; then echo "EXITED: $EXITED"; fi
-        if [[ -z "$UNHEALTHY" && -z "$EXITED" ]]; then echo "All containers healthy"; fi
+        if [ -n "$UNHEALTHY" ]; then echo "UNHEALTHY: $UNHEALTHY"; fi
+        if [ -n "$EXITED" ]; then echo "EXITED: $EXITED"; fi
+        if [ -z "$UNHEALTHY" ] && [ -z "$EXITED" ]; then echo "All containers healthy"; fi
+      args:
+        executable: /bin/bash
       register: container_issues
       become: true
       changed_when: false
@@ -190,12 +197,15 @@
 
     - name: Check TLS certificate expiry
       ansible.builtin.shell: |
-        DOMAIN="{{ teleoscope.ca }}"
-        if command -v certbot &>/dev/null; then
-          certbot certificates 2>/dev/null | grep -E "Domains|Expiry Date|VALID|INVALID" || echo "No certbot certs found"
+        if [ -x /usr/bin/certbot ]; then
+          certbot certificates 2>/dev/null \
+            | grep -E "Domains|Expiry Date|VALID|INVALID" \
+            || echo "certbot installed but no certs found"
         else
           echo "certbot not installed (run setup-tls.yaml first)"
         fi
+      args:
+        executable: /bin/bash
       register: tls_status
       become: true
       changed_when: false
