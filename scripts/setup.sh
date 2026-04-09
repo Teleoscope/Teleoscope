@@ -112,11 +112,20 @@ PYEOF
 
   HTTPS_CODE=""  # initialise so TLS note check below is always safe
   if [[ -n "$EIP" ]]; then
-    HTTP_CODE="$(_http_status "http://${EIP}")"
-    HTTPS_CODE="$(_http_status "https://${DOMAIN_LOCAL:-$EIP}")"
+    # Probe port 80 via the domain (same host as HTTPS) so nginx server_name matches.
+    # Hitting the raw IP skips the vhost and returns a default 404.
+    HTTP_PROBE_HOST="${DOMAIN_LOCAL:-$EIP}"
+    HTTP_CODE="$(_http_status "http://${HTTP_PROBE_HOST}")"
+    HTTPS_CODE="$(_http_status "https://${HTTP_PROBE_HOST}")"
 
-    if [[ "$HTTP_CODE" =~ ^[0-9]+$ && "$HTTP_CODE" != "000" ]]; then
+    # After TLS is configured, port 80 should return 301 (redirect to HTTPS).
+    # Before TLS it serves content directly (200). Any other code is a warning.
+    if [[ "$HTTP_CODE" == "301" || "$HTTP_CODE" == "302" ]]; then
+      success "HTTP   (port 80)    → HTTP $HTTP_CODE (redirect to HTTPS)"
+    elif [[ "$HTTP_CODE" == "200" ]]; then
       success "HTTP   (port 80)    → HTTP $HTTP_CODE"
+    elif [[ "$HTTP_CODE" =~ ^[0-9]+$ && "$HTTP_CODE" != "000" ]]; then
+      warn    "HTTP   (port 80)    → HTTP $HTTP_CODE (expected 301 redirect or 200)"
     else
       warn    "HTTP   (port 80)    → no response"
     fi

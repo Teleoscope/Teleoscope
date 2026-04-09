@@ -91,3 +91,142 @@
           - "RabbitMQ: {{ 'OK' if rabbit_check.rc == 0 else 'FAILED' }}"
           - "App port 3000: OK"
           - "Containers: {{ ps_out.stdout_lines }}"
+
+# ── PLAY 2: Start on-demand EC2s and register current IPs ────────────────────
+# Stopped EC2s lose their public IP — fetch the live address from the AWS API
+# after start so we can SSH in. Both instances are stopped again in Play 5.
+- name: Start worker and vectorizer EC2s for update
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+
+  tasks:
+    - name: Start worker EC2 and wait until running
+      amazon.aws.ec2_instance:
+        instance_ids: ["{{ ec2_worker_instance }}"]
+        region: "{{ aws_region }}"
+        state: started
+        wait: true
+        wait_timeout: 120
+      register: worker_start
+
+    - name: Add worker to in-memory inventory with current public IP
+      ansible.builtin.add_host:
+        name: teleoscope-worker
+        groups: workers_update
+        ansible_host: "{{ worker_start.instances[0].public_ip_address }}"
+        ansible_user: "{{ ansible_user }}"
+        ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+
+    - name: Start vectorizer EC2 and wait until running
+      amazon.aws.ec2_instance:
+        instance_ids: ["{{ ec2_vectorize_instance }}"]
+        region: "{{ aws_region }}"
+        state: started
+        wait: true
+        wait_timeout: 120
+      register: vectorizer_start
+
+    - name: Add vectorizer to in-memory inventory with current public IP
+      ansible.builtin.add_host:
+        name: teleoscope-vectorizer
+        groups: vectorizer_update
+        ansible_host: "{{ vectorizer_start.instances[0].public_ip_address }}"
+        ansible_user: "{{ ansible_user }}"
+        ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+
+# ── PLAY 3: Update worker EC2 ─────────────────────────────────────────────────
+- name: Update worker EC2
+  hosts: workers_update
+  remote_user: "{{ ansible_user }}"
+  gather_facts: false
+  vars_files:
+    - ./vars/vars.yaml
+
+  tasks:
+    - name: Wait for SSH to be ready
+      ansible.builtin.wait_for_connection:
+        timeout: 120
+
+    - name: Pull latest code
+      ansible.builtin.git:
+        repo: "https://github.com/Teleoscope/Teleoscope.git"
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        version: main
+        force: true
+      register: worker_git
+
+    - name: Rebuild and restart worker containers
+      community.docker.docker_compose_v2:
+        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        files: [docker-compose.workers.yml]
+        build: always
+        state: present
+        pull: missing
+      become: true
+
+    - name: Worker update summary
+      ansible.builtin.debug:
+        msg: "Worker updated to {{ worker_git.after[:8] | default('unknown') }}"
+
+# ── PLAY 4: Update vectorizer EC2 ─────────────────────────────────────────────
+- name: Update vectorizer EC2
+  hosts: vectorizer_update
+  remote_user: "{{ ansible_user }}"
+  gather_facts: false
+  vars_files:
+    - ./vars/vars.yaml
+
+  tasks:
+    - name: Wait for SSH to be ready
+      ansible.builtin.wait_for_connection:
+        timeout: 120
+
+    - name: Pull latest code
+      ansible.builtin.git:
+        repo: "https://github.com/Teleoscope/Teleoscope.git"
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        version: main
+        force: true
+      register: vectorizer_git
+
+    - name: Rebuild vectorizer container
+      community.docker.docker_compose_v2:
+        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        files: [docker-compose.vectorizer.yml]
+        build: always
+        state: present
+        pull: missing
+      become: true
+
+    - name: Vectorizer update summary
+      ansible.builtin.debug:
+        msg: "Vectorizer updated to {{ vectorizer_git.after[:8] | default('unknown') }}"
+
+# ── PLAY 5: Re-stop on-demand instances ───────────────────────────────────────
+# monitor.py will start them again when the queues have work.
+- name: Stop worker and vectorizer (monitor.py controls them)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+
+  tasks:
+    - name: Stop worker EC2
+      amazon.aws.ec2_instance:
+        instance_ids: ["{{ ec2_worker_instance }}"]
+        region: "{{ aws_region }}"
+        state: stopped
+        wait: false
+
+    - name: Stop vectorizer EC2
+      amazon.aws.ec2_instance:
+        instance_ids: ["{{ ec2_vectorize_instance }}"]
+        region: "{{ aws_region }}"
+        state: stopped
+        wait: false

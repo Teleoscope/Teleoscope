@@ -25,6 +25,13 @@
     - ./vars/infra-outputs.yaml
 
   tasks:
+    - name: Install python3-venv system package
+      ansible.builtin.apt:
+        name: python3-venv
+        state: present
+        update_cache: false
+      become: true
+
     - name: Create seed virtualenv and install Python dependencies
       ansible.builtin.pip:
         name:
