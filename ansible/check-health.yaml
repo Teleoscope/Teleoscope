@@ -70,6 +70,54 @@
       loop_control:
         label: "{{ item.instance_id }}"
 
+    - name: Ensure pymilvus is available for Zilliz health check
+      ansible.builtin.pip:
+        name: "pymilvus>=2.6.0,<2.7.0"
+        virtualenv: "{{ playbook_dir }}/../.venv-health"
+        virtualenv_command: python3 -m venv
+        state: present
+
+    - name: Check Zilliz Cloud connectivity via pymilvus
+      ansible.builtin.command:
+        argv:
+          - "{{ playbook_dir }}/../.venv-health/bin/python3"
+          - "-c"
+          - |
+            import os, sys
+            from pymilvus import MilvusClient
+            uri = os.environ.get('MILVUS_URI', '')
+            token = os.environ.get('MILVUS_TOKEN', '')
+            if not uri:
+                print('MILVUS_URI not set')
+                sys.exit(1)
+            try:
+                kw = {'uri': uri}
+                if token:
+                    kw['token'] = token
+                client = MilvusClient(**kw)
+                cols = client.list_collections()
+                print('Zilliz OK -- {} collections'.format(len(cols)))
+                client.close()
+            except Exception as e:
+                print('Zilliz UNREACHABLE: {}'.format(e))
+                sys.exit(1)
+      environment:
+        MILVUS_URI: "{{ milvus_uri }}"
+        MILVUS_TOKEN: "{{ milvus_token | default('') }}"
+      register: zilliz_check
+      failed_when: false
+      changed_when: false
+      no_log: true  # prevent token appearing in -v output
+
+    - name: Zilliz status
+      ansible.builtin.debug:
+        msg: "{{ zilliz_check.stdout | default(zilliz_check.stderr) | default('check failed') }}"
+
+    - name: Track Zilliz failure
+      ansible.builtin.set_fact:
+        local_failures: "{{ local_failures + ['Zilliz Cloud: ' + (zilliz_check.stdout | default(zilliz_check.stderr) | default('unreachable'))] }}"
+      when: zilliz_check.rc | default(1) != 0
+
     # Add running worker to a dynamic group so Play 3 can SSH into it.
     # Stopped instances have no public IP — skip them gracefully.
     - name: Register running worker for live health check
@@ -151,52 +199,6 @@
       when: >-
         'UNHEALTHY' in (container_issues.stdout | default('')) or
         'EXITED' in (container_issues.stdout | default(''))
-
-    - name: Check Zilliz Cloud connectivity via pymilvus
-      ansible.builtin.shell: |
-        docker exec \
-          -e MILVUS_URI \
-          -e MILVUS_TOKEN \
-          teleoscope-app-1 \
-          python3 -c "
-        import os, sys
-        from pymilvus import MilvusClient
-        uri = os.environ.get('MILVUS_URI', '')
-        token = os.environ.get('MILVUS_TOKEN', '')
-        if not uri:
-            print('MILVUS_URI not set')
-            sys.exit(1)
-        try:
-            kw = {'uri': uri}
-            if token:
-                kw['token'] = token
-            client = MilvusClient(**kw)
-            cols = client.list_collections()
-            print('Zilliz OK -- {} collections'.format(len(cols)))
-            client.close()
-        except Exception as e:
-            print('Zilliz UNREACHABLE: {}'.format(e))
-            sys.exit(1)
-        "
-      args:
-        executable: /bin/bash
-      environment:
-        MILVUS_URI: "{{ milvus_uri }}"
-        MILVUS_TOKEN: "{{ milvus_token | default('') }}"
-      become: true
-      register: zilliz_check
-      failed_when: false
-      changed_when: false
-      no_log: true  # prevent token appearing in -v output
-
-    - name: Zilliz status
-      ansible.builtin.debug:
-        msg: "{{ zilliz_check.stdout | default(zilliz_check.stderr) | default('check failed') }}"
-
-    - name: Track Zilliz failure
-      ansible.builtin.set_fact:
-        main_play_failures: "{{ main_play_failures + ['Zilliz Cloud: ' + (zilliz_check.stdout | default(zilliz_check.stderr) | default('unreachable'))] }}"
-      when: zilliz_check.rc | default(1) != 0
 
     - name: Check MongoDB — admin ping and replica set status
       ansible.builtin.shell: |
@@ -341,7 +343,7 @@
           - "  MongoDB:       {{ mongo_health.stdout | default('unknown') }}"
           - "  RabbitMQ:      {{ 'OK' if rabbitmq_health.rc == 0 else 'FAILED' }}"
           - "  nginx:         {{ nginx_health.stdout_lines[-1] | default('unknown') }}"
-          - "  Zilliz Cloud:  {{ 'OK' if zilliz_check.rc == 0 else 'UNREACHABLE' }}"
+          - "  Zilliz Cloud:  {{ 'OK' if hostvars['localhost']['zilliz_check'].rc == 0 else 'UNREACHABLE' }}"
           - "  Containers:    {{ container_issues.stdout_lines[0] | default('unknown') }}"
           - "══════════════════════════════════════════"
 
