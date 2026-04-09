@@ -39,6 +39,13 @@
         state: present
         update_cache: true
 
+    - name: Kill any stale certbot process and remove lock file
+      ansible.builtin.shell: |
+        pkill -f certbot 2>/dev/null || true
+        rm -f /var/lib/letsencrypt/.certbot.lock
+      become: true
+      changed_when: false
+
     - name: Obtain / renew certificate (certbot --nginx)
       ansible.builtin.command:
         cmd: >
