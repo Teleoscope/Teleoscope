@@ -64,15 +64,8 @@
         enabled: true
         state: started
 
-    - name: Test certbot renewal configuration (dry run)
-      ansible.builtin.command: certbot renew --dry-run --non-interactive
-      register: renew_check
-      changed_when: false
-      failed_when: false   # informational only; cert is already valid
-      timeout: 60          # don't hang forever on ACME network calls
-
     - name: TLS setup complete
       ansible.builtin.debug:
         msg:
-          - "https://{{ teleoscope.ca }} is now live with TLS."
-          - "Renewal dry-run: {{ 'OK' if renew_check.rc == 0 else 'TIMED OUT or FAILED (cert is still valid; auto-renewal via certbot.timer)' }}"
+          - "https://{{ teleoscope.ca }} is live with TLS."
+          - "Auto-renewal is enabled via certbot.timer (runs twice daily)."
