@@ -45,6 +45,7 @@
           certbot --nginx
           --non-interactive
           --agree-tos
+          --redirect
           --email {{ certbot_email }}
           -d {{ teleoscope.ca }}
           -d www.{{ teleoscope.ca }}
