@@ -56,13 +56,23 @@ if [[ -f "$VARS_FILE" ]]; then
   if [[ "${reuse:-Y}" =~ ^[Yy] ]]; then
     echo ""
     echo -e "${CYAN}${BOLD}  Ready to deploy${RESET}"
+
+    INFRA_FILE="$REPO_ROOT/ansible/vars/infra-outputs.yaml"
+    SKIP_PROVISION=""
+    REBUILD_FLAG=""
+    if [[ -f "$INFRA_FILE" ]]; then
+      echo -e "  ${DIM}Infrastructure already provisioned (infra-outputs.yaml exists).${RESET}"
+      echo -en "  Skip AWS provisioning and deploy only? [Y/n]: "; read -r skip
+      [[ "${skip:-Y}" =~ ^[Yy] ]] && SKIP_PROVISION="--skip-tags provision"
+    fi
+
     echo ""
     echo -en "  Run ansible-playbook ansible/site.yaml now? [Y/n]: "; read -r yn
     if [[ "${yn:-Y}" =~ ^[Yy] ]]; then
       cd "$REPO_ROOT"
-      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml
+      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml $SKIP_PROVISION
     else
-      echo "  Run manually: ansible-playbook ansible/site.yaml"
+      echo "  Run manually: ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ansible/site.yaml $SKIP_PROVISION"
     fi
     echo ""
     exit 0
