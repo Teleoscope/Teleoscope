@@ -1,8 +1,11 @@
 ---
 # check-health.yaml — live health report for a running Teleoscope deployment.
 #
-# Run any time to get a snapshot of everything: EC2 states, container health,
-# MongoDB, RabbitMQ, disk, Zilliz connectivity, and nginx status.
+# Design: every play runs with failed_when: false / ignore_errors so the full
+# report is always printed regardless of individual failures. Each play tracks
+# its own failures in a list and delegates that list to localhost at the end.
+# A final play on localhost aggregates all lists; if any failures exist it calls
+# ansible.builtin.fail so Ansible prints them in RED and exits non-zero.
 #
 # Usage:
 #   ansible-playbook -i ansible/vars/inventory.yaml ansible/check-health.yaml
@@ -19,6 +22,10 @@
     - ./vars/infra-outputs.yaml
 
   tasks:
+    - name: Initialize local failure list
+      ansible.builtin.set_fact:
+        local_failures: []
+
     - name: Get current state of all three EC2 instances
       amazon.aws.ec2_instance_info:
         instance_ids:
@@ -37,6 +44,28 @@
           — state: {{ item.state.name }}
           — type: {{ item.instance_type }}
           — ip: {{ item.public_ip_address | default('no public IP (stopped)') }}
+      loop: "{{ ec2_info.instances | default([]) }}"
+      loop_control:
+        label: "{{ item.instance_id }}"
+
+    # Main EC2 must be running; worker/vectorizer are expected stopped.
+    # Anything else (terminated, shutting-down, impaired) is a failure.
+    - name: Track unexpected EC2 states
+      ansible.builtin.set_fact:
+        local_failures: >-
+          {{
+            local_failures + ([
+              item.tags.Name | default(item.instance_id) + ' (' + item.instance_id + ')'
+              + ' is ' + item.state.name
+              + (
+                  ' — expected: running' if item.instance_id == ec2_main_id
+                  else ' — expected: running or stopped'
+                )
+            ] if (
+              (item.instance_id == ec2_main_id and item.state.name != 'running') or
+              (item.instance_id != ec2_main_id and item.state.name not in ['running', 'stopped', 'pending', 'stopping'])
+            ) else [])
+          }}
       loop: "{{ ec2_info.instances | default([]) }}"
       loop_control:
         label: "{{ item.instance_id }}"
@@ -75,8 +104,6 @@
 
     - name: Check Zilliz Cloud endpoint is reachable
       ansible.builtin.command:
-        # argv passes the Python script as a proper argument (newlines preserved).
-        # URI injected via environment to avoid quoting issues.
         argv:
           - python3
           - -c
@@ -102,6 +129,11 @@
       ansible.builtin.debug:
         msg: "{{ zilliz_check.stdout | default('check failed') }}"
 
+    - name: Track Zilliz failure
+      ansible.builtin.set_fact:
+        local_failures: "{{ local_failures + ['Zilliz Cloud: ' + (zilliz_check.stdout | default('unreachable'))] }}"
+      when: zilliz_check.rc | default(1) != 0
+
 # ── PLAY 2: Main EC2 — containers, MongoDB, RabbitMQ, disk, nginx ─────────────
 - name: Check main EC2 health
   hosts: main
@@ -112,6 +144,10 @@
     - ./vars/infra-outputs.yaml
 
   tasks:
+    - name: Initialize main failure list
+      ansible.builtin.set_fact:
+        main_play_failures: []
+
     - name: List all running containers with health status
       ansible.builtin.shell: |
         docker ps --format 'table {{ '{{' }}.Names{{ '}}' }}\t{{ '{{' }}.Status{{ '}}' }}\t{{ '{{' }}.Image{{ '}}' }}' 2>/dev/null
@@ -140,21 +176,25 @@
       ansible.builtin.debug:
         var: container_issues.stdout_lines
 
+    - name: Track container failures
+      ansible.builtin.set_fact:
+        main_play_failures: "{{ main_play_failures + ['Main containers: ' + container_issues.stdout] }}"
+      when: >-
+        'UNHEALTHY' in (container_issues.stdout | default('')) or
+        'EXITED' in (container_issues.stdout | default(''))
+
     - name: Check MongoDB — admin ping and replica set status
       ansible.builtin.shell: |
-        # Ping
         PING=$(docker exec teleoscope-mongodb-1 \
           mongosh --host 127.0.0.1 \
           -u admin -p "{{ mongodb_admin_password }}" \
           --authenticationDatabase admin --quiet \
           --eval 'db.adminCommand({ping:1}).ok' 2>/dev/null)
-        # Replica set status
         RS=$(docker exec teleoscope-mongodb-1 \
           mongosh --host 127.0.0.1 \
           -u admin -p "{{ mongodb_admin_password }}" \
           --authenticationDatabase admin --quiet \
           --eval 'rs.status().members[0].stateStr' 2>/dev/null)
-        # DB size
         SIZE=$(docker exec teleoscope-mongodb-1 \
           mongosh --host 127.0.0.1 \
           -u admin -p "{{ mongodb_admin_password }}" \
@@ -170,11 +210,14 @@
       ansible.builtin.debug:
         var: mongo_health.stdout_lines
 
+    - name: Track MongoDB failure
+      ansible.builtin.set_fact:
+        main_play_failures: "{{ main_play_failures + ['MongoDB: ping failed — ' + (mongo_health.stdout | default('no output'))] }}"
+      when: "'ping=1' not in (mongo_health.stdout | default(''))"
+
     - name: Check RabbitMQ — running state and queue depths
       ansible.builtin.shell: |
-        # Check broker
         RUNNING=$(docker exec teleoscope-rabbitmq-1 rabbitmq-diagnostics check_running 2>&1 | tail -1)
-        # List queues with depth
         QUEUES=$(docker exec teleoscope-rabbitmq-1 \
           rabbitmqctl list_queues name messages consumers 2>/dev/null | tail -n +2)
         echo "broker: $RUNNING"
@@ -188,6 +231,11 @@
     - name: RabbitMQ status
       ansible.builtin.debug:
         var: rabbitmq_health.stdout_lines
+
+    - name: Track RabbitMQ failure
+      ansible.builtin.set_fact:
+        main_play_failures: "{{ main_play_failures + ['RabbitMQ: check_running failed (rc=' + (rabbitmq_health.rc | string) + ')'] }}"
+      when: rabbitmq_health.rc | default(1) != 0
 
     - name: Check nginx — configuration and active connections
       ansible.builtin.shell: |
@@ -203,6 +251,11 @@
       ansible.builtin.debug:
         var: nginx_health.stdout_lines
 
+    - name: Track nginx failure
+      ansible.builtin.set_fact:
+        main_play_failures: "{{ main_play_failures + ['nginx: not active (systemctl reports: ' + (nginx_health.stdout_lines | default([]) | last | default('unknown')) + ')'] }}"
+      when: "'active' not in (nginx_health.stdout_lines | default([]) | last | default(''))"
+
     - name: Check disk usage on /
       ansible.builtin.shell: |
         df -h / | tail -1
@@ -215,6 +268,17 @@
     - name: Disk usage
       ansible.builtin.debug:
         var: disk_usage.stdout_lines
+
+    - name: Get disk usage percentage
+      ansible.builtin.shell: df / | tail -1 | awk '{print $5}' | tr -d '%'
+      register: disk_pct
+      become: true
+      changed_when: false
+
+    - name: Track high disk usage
+      ansible.builtin.set_fact:
+        main_play_failures: "{{ main_play_failures + ['Disk: ' + disk_pct.stdout + '% used on / (threshold: 90%)'] }}"
+      when: disk_pct.stdout | int > 90
 
     - name: Check monitor.py container logs (last 20 lines)
       ansible.builtin.shell: |
@@ -247,6 +311,11 @@
       ansible.builtin.debug:
         var: tls_status.stdout_lines
 
+    - name: Track TLS failure
+      ansible.builtin.set_fact:
+        main_play_failures: "{{ main_play_failures + ['TLS: certificate INVALID — run setup-tls.yaml or check certbot'] }}"
+      when: "'INVALID' in (tls_status.stdout | default(''))"
+
     - name: Overall health summary
       ansible.builtin.debug:
         msg:
@@ -261,6 +330,14 @@
           - "  Containers:    {{ container_issues.stdout_lines[0] | default('unknown') }}"
           - "══════════════════════════════════════════"
 
+    # Push this play's failures to localhost so the final summary can access them.
+    - name: Export main failures to localhost
+      ansible.builtin.set_fact:
+        main_failures: "{{ main_play_failures }}"
+      delegate_to: localhost
+      delegate_facts: true
+      run_once: true
+
 # ── PLAY 3: Worker health (only when instance is running) ─────────────────────
 # If the worker is stopped, no hosts were added to workers_live and this play
 # prints "skipping: no hosts matched" — which is correct and expected.
@@ -273,6 +350,10 @@
     - ./vars/vars.yaml
 
   tasks:
+    - name: Initialize worker failure list
+      ansible.builtin.set_fact:
+        worker_play_failures: []
+
     - name: Wait for SSH
       ansible.builtin.wait_for_connection:
         timeout: 30
@@ -305,6 +386,13 @@
       ansible.builtin.debug:
         var: worker_issues.stdout_lines
 
+    - name: Track worker container failures
+      ansible.builtin.set_fact:
+        worker_play_failures: "{{ worker_play_failures + ['Worker containers: ' + worker_issues.stdout] }}"
+      when: >-
+        'UNHEALTHY' in (worker_issues.stdout | default('')) or
+        'EXITED' in (worker_issues.stdout | default(''))
+
     - name: Worker git commit
       ansible.builtin.command:
         cmd: git rev-parse --short HEAD
@@ -316,6 +404,13 @@
       ansible.builtin.debug:
         msg: "Worker code: {{ worker_sha.stdout }}"
 
+    - name: Export worker failures to localhost
+      ansible.builtin.set_fact:
+        worker_failures: "{{ worker_play_failures }}"
+      delegate_to: localhost
+      delegate_facts: true
+      run_once: true
+
 # ── PLAY 4: Vectorizer health (only when instance is running) ─────────────────
 - name: Check vectorizer EC2 health (when running)
   hosts: vectorizer_live
@@ -326,6 +421,10 @@
     - ./vars/vars.yaml
 
   tasks:
+    - name: Initialize vectorizer failure list
+      ansible.builtin.set_fact:
+        vec_play_failures: []
+
     - name: Wait for SSH
       ansible.builtin.wait_for_connection:
         timeout: 30
@@ -341,6 +440,30 @@
       ansible.builtin.debug:
         var: vec_containers.stdout_lines
 
+    - name: Check for unhealthy vectorizer containers
+      ansible.builtin.shell: |
+        UNHEALTHY=$(docker ps --filter health=unhealthy --format '{{ '{{' }}.Names{{ '}}' }}' 2>/dev/null)
+        EXITED=$(docker ps -a --filter status=exited --format '{{ '{{' }}.Names{{ '}}' }}: {{ '{{' }}.Status{{ '}}' }}' 2>/dev/null || true)
+        if [ -n "$UNHEALTHY" ]; then echo "UNHEALTHY: $UNHEALTHY"; fi
+        if [ -n "$EXITED" ]; then echo "EXITED: $EXITED"; fi
+        if [ -z "$UNHEALTHY" ] && [ -z "$EXITED" ]; then echo "All vectorizer containers healthy"; fi
+      args:
+        executable: /bin/bash
+      register: vec_issues
+      become: true
+      changed_when: false
+
+    - name: Vectorizer health summary
+      ansible.builtin.debug:
+        var: vec_issues.stdout_lines
+
+    - name: Track vectorizer container failures
+      ansible.builtin.set_fact:
+        vec_play_failures: "{{ vec_play_failures + ['Vectorizer containers: ' + vec_issues.stdout] }}"
+      when: >-
+        'UNHEALTHY' in (vec_issues.stdout | default('')) or
+        'EXITED' in (vec_issues.stdout | default(''))
+
     - name: Vectorizer git commit
       ansible.builtin.command:
         cmd: git rev-parse --short HEAD
@@ -351,3 +474,45 @@
     - name: Vectorizer code version
       ansible.builtin.debug:
         msg: "Vectorizer code: {{ vec_sha.stdout }}"
+
+    - name: Export vectorizer failures to localhost
+      ansible.builtin.set_fact:
+        vec_failures: "{{ vec_play_failures }}"
+      delegate_to: localhost
+      delegate_facts: true
+      run_once: true
+
+# ── PLAY 5: Failure summary — printed in RED if anything failed ───────────────
+# This play always runs. All individual checks above use failed_when: false so
+# the full report is always printed. Failures are aggregated here and surfaced
+# via ansible.builtin.fail (red output, non-zero exit code) if any exist.
+- name: Health check failure summary
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Aggregate all failures from every play
+      ansible.builtin.set_fact:
+        all_failures: >-
+          {{
+            (local_failures | default([])) +
+            (main_failures | default([])) +
+            (worker_failures | default([])) +
+            (vec_failures | default([]))
+          }}
+
+    - name: Health check complete — all checks passed
+      ansible.builtin.debug:
+        msg: "✓ All health checks passed."
+      when: all_failures | length == 0
+
+    - name: FAILURE SUMMARY
+      ansible.builtin.fail:
+        msg: |
+          ╔══ HEALTH CHECK FAILURES ({{ all_failures | length }}) ═══════════════════════════════════╗
+          {% for item in all_failures %}
+            ✗  {{ item }}
+          {% endfor %}
+          ╚════════════════════════════════════════════════════════════════════════════╝
+      when: all_failures | length > 0
