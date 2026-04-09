@@ -210,9 +210,10 @@ PYEOF
   echo "   [f]  Full redeploy — re-run site.yaml (skips AWS provisioning)"
   echo "   [p]  Full redeploy WITH re-provisioning (recreates EC2s)"
   echo "   [t]  TLS setup — run setup-tls.yaml (after DNS is pointed)"
+  echo "   [s]  Seed demo data — load demo corpus into MongoDB + Zilliz"
   echo "   [q]  Quit"
   echo ""
-  echo -en "  Choice [h/u/f/p/t/q]: "; read -r choice || true
+  echo -en "  Choice [h/u/f/p/t/s/q]: "; read -r choice || true
 
   cd "$REPO_ROOT"
   case "${choice:-h}" in
@@ -246,11 +247,17 @@ PYEOF
       ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
         -i ansible/vars/inventory.yaml ansible/setup-tls.yaml
       ;;
+    s|S)
+      echo ""
+      echo -e "  ${DIM}Seeding demo corpus into MongoDB + Zilliz (may take several minutes)…${RESET}"
+      ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
+        -i ansible/vars/inventory.yaml ansible/seed-demo.yaml
+      ;;
     q|Q|"")
       echo "  Bye."
       ;;
     *)
-      echo "  Unknown choice '$choice'. Run setup.sh again and pick h/u/f/p/t/q."
+      echo "  Unknown choice '$choice'. Run setup.sh again and pick from the menu."
       ;;
   esac
   echo ""
