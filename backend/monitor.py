@@ -31,7 +31,7 @@ import sys
 import time
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError, TokenRetrievalError
 from dotenv import load_dotenv
 
 from backend import utils
@@ -41,10 +41,11 @@ load_dotenv()
 logging.basicConfig(
     level=logging.INFO,
     format="[%(asctime)s: %(levelname)s/%(processName)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S,%f",
+    datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 logging.getLogger("pika").setLevel(logging.WARNING)
+log = logging.getLogger(__name__)
 
 
 def _require(var: str) -> str:
@@ -78,6 +79,97 @@ ec2 = boto3.client("ec2", region_name=AWS_REGION)
 
 
 # ---------------------------------------------------------------------------
+# Startup health checks
+# ---------------------------------------------------------------------------
+
+def _check_aws_credentials() -> bool:
+    """Verify AWS credentials are valid and the IAM role can describe instances."""
+    try:
+        sts = boto3.client("sts", region_name=AWS_REGION)
+        identity = sts.get_caller_identity()
+        log.info(
+            "monitor: AWS credentials OK — account=%s arn=%s",
+            identity.get("Account"), identity.get("Arn"),
+        )
+        # Verify we can actually describe our instances (not just auth)
+        for iid, label in [(EC2_WORKER_INSTANCE, "worker"), (EC2_VECTORIZE_INSTANCE, "vectorizer")]:
+            resp = ec2.describe_instances(InstanceIds=[iid])
+            instances = resp.get("Reservations", [{}])[0].get("Instances", [{}])
+            state = instances[0].get("State", {}).get("Name", "unknown") if instances else "NOT FOUND"
+            name_tags = [t["Value"] for t in instances[0].get("Tags", []) if t["Key"] == "Name"] if instances else []
+            name = name_tags[0] if name_tags else iid
+            log.info("monitor: %s EC2 — id=%s  name=%s  state=%s", label, iid, name, state)
+        return True
+    except (NoCredentialsError, TokenRetrievalError) as e:
+        log.error("monitor: AWS credentials missing or expired: %s", e)
+        log.error("monitor: Set AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY or use an IAM instance profile.")
+        return False
+    except ClientError as e:
+        code = e.response["Error"]["Code"]
+        if code in ("AuthFailure", "UnauthorizedOperation", "InvalidClientTokenId"):
+            log.error("monitor: AWS auth error (%s): %s", code, e)
+            log.error("monitor: Check IAM role permissions for ec2:DescribeInstances on these instances.")
+            return False
+        log.warning("monitor: AWS check returned %s — will retry: %s", code, e)
+        return True  # Transient error, not a credentials problem
+
+
+def _check_rabbitmq() -> bool:
+    """Verify RabbitMQ connection is working at startup."""
+    try:
+        conn = utils.get_connection()
+        conn.close()
+        log.info(
+            "monitor: RabbitMQ OK — host=%s vhost=%s",
+            os.getenv("RABBITMQ_HOST", "rabbitmq"),
+            RABBITMQ_VHOST,
+        )
+        return True
+    except Exception as e:
+        log.warning("monitor: RabbitMQ not ready yet: %s", e)
+        return False
+
+
+def startup_checks(max_wait_seconds: int = 120) -> None:
+    """
+    Block until AWS creds and RabbitMQ are both confirmed working, or give up.
+    This surfaces configuration errors immediately instead of logging them every
+    10 seconds for the lifetime of the container.
+    """
+    log.info("monitor: running startup checks (max wait %ds) …", max_wait_seconds)
+    deadline = time.time() + max_wait_seconds
+
+    aws_ok = False
+    rmq_ok = False
+
+    while time.time() < deadline:
+        if not aws_ok:
+            aws_ok = _check_aws_credentials()
+        if not rmq_ok:
+            rmq_ok = _check_rabbitmq()
+        if aws_ok and rmq_ok:
+            log.info("monitor: startup checks passed.")
+            return
+        time.sleep(5)
+
+    # Surface a clear diagnostic rather than silently proceeding
+    if not aws_ok:
+        log.error(
+            "monitor: STARTUP FAILED — AWS credentials invalid or IAM role missing "
+            "ec2:DescribeInstances/StartInstances/StopInstances permissions. "
+            "Instances will NOT be auto-scaled until this is resolved."
+        )
+    if not rmq_ok:
+        log.error(
+            "monitor: STARTUP FAILED — cannot connect to RabbitMQ after %ds. "
+            "Queue depths cannot be read; instances will NOT be auto-scaled.",
+            max_wait_seconds,
+        )
+    # Do not exit — keep running so the container stays up and the issue is visible
+    # in `docker logs` without a restart loop masking the error.
+
+
+# ---------------------------------------------------------------------------
 # EC2 helpers
 # ---------------------------------------------------------------------------
 
@@ -86,27 +178,38 @@ def instance_state(instance_id: str) -> str | None:
         resp = ec2.describe_instances(InstanceIds=[instance_id])
         reservations = resp.get("Reservations", [])
         if not reservations:
+            log.error("instance_state(%s): no reservations — instance may have been terminated.", instance_id)
             return None
         return reservations[0]["Instances"][0]["State"]["Name"]
+    except (NoCredentialsError, TokenRetrievalError) as e:
+        log.error(
+            "instance_state(%s): AWS credentials expired — "
+            "the IAM instance profile may need rotation: %s", instance_id, e
+        )
+        return None
     except ClientError as e:
-        logging.error("describe_instances(%s): %s", instance_id, e)
+        log.error("instance_state(%s): %s", instance_id, e)
         return None
 
 
 def start_instance(instance_id: str, label: str) -> None:
     try:
         ec2.start_instances(InstanceIds=[instance_id])
-        logging.info("%s: issued start_instances(%s)", label, instance_id)
+        log.info("%s: issued start_instances(%s)", label, instance_id)
+    except (NoCredentialsError, TokenRetrievalError) as e:
+        log.error("%s: start_instances(%s): credentials expired: %s", label, instance_id, e)
     except ClientError as e:
-        logging.error("%s: start_instances(%s): %s", label, instance_id, e)
+        log.error("%s: start_instances(%s): %s", label, instance_id, e)
 
 
 def stop_instance(instance_id: str, label: str) -> None:
     try:
         ec2.stop_instances(InstanceIds=[instance_id])
-        logging.info("%s: issued stop_instances(%s)", label, instance_id)
+        log.info("%s: issued stop_instances(%s)", label, instance_id)
+    except (NoCredentialsError, TokenRetrievalError) as e:
+        log.error("%s: stop_instances(%s): credentials expired: %s", label, instance_id, e)
     except ClientError as e:
-        logging.error("%s: stop_instances(%s): %s", label, instance_id, e)
+        log.error("%s: stop_instances(%s): %s", label, instance_id, e)
 
 
 # ---------------------------------------------------------------------------
@@ -122,7 +225,7 @@ def queue_depth(queue_name: str) -> int | None:
         conn.close()
         return depth
     except Exception as e:
-        logging.warning("queue_depth(%s): %s", queue_name, e)
+        log.warning("queue_depth(%s): %s", queue_name, e)
         return None
 
 
@@ -156,41 +259,46 @@ class InstanceScaler:
         depth = total_depth(self.queues)
         state = instance_state(self.instance_id)
 
-        logging.info(
-            "%s: queue_depth=%s  state=%s",
-            self.label,
-            depth if depth is not None else "ERR",
-            state or "ERR",
-        )
-
         if depth is None or state is None:
+            log.warning(
+                "%s: skipping tick — depth=%s state=%s",
+                self.label,
+                "ERR" if depth is None else depth,
+                "ERR" if state is None else state,
+            )
             return
 
         if depth > 0:
             self._empty_since = None
             if state == "stopped":
-                logging.info("%s: %d messages — starting instance.", self.label, depth)
+                log.info("%s: %d message(s) queued — starting instance %s.", self.label, depth, self.instance_id)
                 start_instance(self.instance_id, self.label)
+            elif state == "running":
+                log.info("%s: %d message(s) queued — instance running.", self.label, depth)
             elif state in _TRANSIENT:
-                logging.info("%s: instance in transient state '%s' — waiting.", self.label, state)
+                log.info("%s: %d message(s) queued — instance in transient state '%s', waiting.", self.label, depth, state)
         else:
             if self._empty_since is None:
                 self._empty_since = time.time()
-            idle = (time.time() - self._empty_since) / 60.0
+            idle_min = (time.time() - self._empty_since) / 60.0
+            pct = min(100, int(idle_min / self.idle_minutes * 100))
 
             if state == "running":
-                if idle >= self.idle_minutes:
-                    logging.info(
-                        "%s: queues empty %.1f / %d min — stopping instance.",
-                        self.label, idle, self.idle_minutes,
+                if idle_min >= self.idle_minutes:
+                    log.info(
+                        "%s: queues empty %.1f/%d min (100%%) — stopping instance %s.",
+                        self.label, idle_min, self.idle_minutes, self.instance_id,
                     )
                     stop_instance(self.instance_id, self.label)
                     self._empty_since = None
                 else:
-                    logging.info(
-                        "%s: queues empty %.1f / %d min — keeping instance running.",
-                        self.label, idle, self.idle_minutes,
+                    log.info(
+                        "%s: queues empty %.1f/%d min (%d%% of idle threshold) — instance running.",
+                        self.label, idle_min, self.idle_minutes, pct,
                     )
+            elif state == "stopped":
+                log.info("%s: queues empty — instance already stopped.", self.label)
+                self._empty_since = None  # reset so we don't count stopped time toward idle
 
 
 # ---------------------------------------------------------------------------
@@ -198,6 +306,8 @@ class InstanceScaler:
 # ---------------------------------------------------------------------------
 
 def monitor_loop() -> None:
+    startup_checks()
+
     worker_scaler = InstanceScaler(
         instance_id=EC2_WORKER_INSTANCE,
         queues=WORKER_QUEUES,
@@ -211,8 +321,8 @@ def monitor_loop() -> None:
         label="vectorizer",
     )
 
-    logging.info(
-        "monitor: region=%s  check_interval=%ds  "
+    log.info(
+        "monitor: running — region=%s  interval=%ds  "
         "worker=%s (idle_stop=%dm)  gpu=%s (idle_stop=%dm)",
         AWS_REGION, CHECK_INTERVAL,
         EC2_WORKER_INSTANCE, WORKER_IDLE_STOP,

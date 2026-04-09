@@ -1,0 +1,220 @@
+---
+# check-health.yaml — live health report for a running Teleoscope deployment.
+#
+# Run any time to get a snapshot of everything: EC2 states, container health,
+# MongoDB, RabbitMQ, disk, Zilliz connectivity, and nginx status.
+#
+# Usage:
+#   ansible-playbook -i ansible/vars/inventory.yaml ansible/check-health.yaml
+#
+# Requires: infra-outputs.yaml to exist (written by site.yaml Play 1)
+
+# ── PLAY 1: EC2 and external service checks (from local machine) ──────────────
+- name: Check EC2 states and external connectivity
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+
+  tasks:
+    - name: Get current state of all three EC2 instances
+      amazon.aws.ec2_instance_info:
+        instance_ids:
+          - "{{ ec2_main_id }}"
+          - "{{ ec2_worker_instance }}"
+          - "{{ ec2_vectorize_instance }}"
+        region: "{{ aws_region }}"
+      register: ec2_info
+      failed_when: false
+
+    - name: EC2 instance states
+      ansible.builtin.debug:
+        msg: >-
+          {{ item.tags.Name | default(item.instance_id) }}
+          ({{ item.instance_id }})
+          — state: {{ item.state.name }}
+          — type: {{ item.instance_type }}
+          — ip: {{ item.public_ip_address | default('stopped/no-ip') }}
+      loop: "{{ ec2_info.instances | default([]) }}"
+      loop_control:
+        label: "{{ item.instance_id }}"
+
+    - name: Check Zilliz Cloud endpoint is reachable
+      ansible.builtin.command:
+        cmd: >-
+          python3 -c "
+          import socket, sys
+          from urllib.parse import urlparse
+          u = urlparse('{{ milvus_uri }}')
+          host = u.hostname or u.path
+          port = u.port or 19530
+          try:
+              socket.create_connection((host, port), timeout=10)
+              print(f'Zilliz OK — {host}:{port}')
+          except Exception as e:
+              print(f'Zilliz UNREACHABLE — {host}:{port}: {e}')
+              sys.exit(1)
+          "
+      register: zilliz_check
+      failed_when: false
+      changed_when: false
+
+    - name: Zilliz status
+      ansible.builtin.debug:
+        msg: "{{ zilliz_check.stdout | default('check failed') }}"
+
+# ── PLAY 2: Main EC2 — containers, MongoDB, RabbitMQ, disk, nginx ─────────────
+- name: Check main EC2 health
+  hosts: main
+  remote_user: "{{ ansible_user }}"
+  gather_facts: false
+  vars_files:
+    - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+
+  tasks:
+    - name: List all running containers with health status
+      ansible.builtin.shell: |
+        docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}' 2>/dev/null
+      register: containers
+      become: true
+      changed_when: false
+
+    - name: Container status
+      ansible.builtin.debug:
+        var: containers.stdout_lines
+
+    - name: Check for any unhealthy or exited containers
+      ansible.builtin.shell: |
+        UNHEALTHY=$(docker ps --filter health=unhealthy --format '{{.Names}}' 2>/dev/null)
+        EXITED=$(docker ps -a --filter status=exited --format '{{.Names}}: exited {{.Status}}' 2>/dev/null | grep -v "mongodb-init" || true)
+        if [[ -n "$UNHEALTHY" ]]; then echo "UNHEALTHY: $UNHEALTHY"; fi
+        if [[ -n "$EXITED" ]]; then echo "EXITED: $EXITED"; fi
+        if [[ -z "$UNHEALTHY" && -z "$EXITED" ]]; then echo "All containers healthy"; fi
+      register: container_issues
+      become: true
+      changed_when: false
+
+    - name: Container issues summary
+      ansible.builtin.debug:
+        var: container_issues.stdout_lines
+
+    - name: Check MongoDB — admin ping and replica set status
+      ansible.builtin.shell: |
+        # Ping
+        PING=$(docker exec teleoscope-mongodb-1 \
+          mongosh --host 127.0.0.1 \
+          -u admin -p "{{ mongodb_admin_password }}" \
+          --authenticationDatabase admin --quiet \
+          --eval 'db.adminCommand({ping:1}).ok' 2>/dev/null)
+        # Replica set status
+        RS=$(docker exec teleoscope-mongodb-1 \
+          mongosh --host 127.0.0.1 \
+          -u admin -p "{{ mongodb_admin_password }}" \
+          --authenticationDatabase admin --quiet \
+          --eval 'rs.status().members[0].stateStr' 2>/dev/null)
+        # DB size
+        SIZE=$(docker exec teleoscope-mongodb-1 \
+          mongosh --host 127.0.0.1 \
+          -u admin -p "{{ mongodb_admin_password }}" \
+          --authenticationDatabase admin --quiet \
+          --eval 'db.getSiblingDB("teleoscope").stats().dataSize' 2>/dev/null)
+        echo "ping=${PING}  replica_state=${RS}  data_size_bytes=${SIZE}"
+      register: mongo_health
+      become: true
+      changed_when: false
+      no_log: true  # password in command
+
+    - name: MongoDB status
+      ansible.builtin.debug:
+        var: mongo_health.stdout_lines
+
+    - name: Check RabbitMQ — running state and queue depths
+      ansible.builtin.shell: |
+        # Check broker
+        RUNNING=$(docker exec teleoscope-rabbitmq-1 rabbitmq-diagnostics check_running 2>&1 | tail -1)
+        # List queues with depth
+        QUEUES=$(docker exec teleoscope-rabbitmq-1 \
+          rabbitmqctl list_queues name messages consumers 2>/dev/null | tail -n +2)
+        echo "broker: $RUNNING"
+        echo "---"
+        echo "queue                          messages  consumers"
+        echo "$QUEUES"
+      register: rabbitmq_health
+      become: true
+      changed_when: false
+
+    - name: RabbitMQ status
+      ansible.builtin.debug:
+        var: rabbitmq_health.stdout_lines
+
+    - name: Check nginx — configuration and active connections
+      ansible.builtin.shell: |
+        nginx -t 2>&1 | tail -2
+        echo "---"
+        echo "Connections: $(ss -tn state established '( dport = :443 or dport = :80 )' | grep -c ESTAB || echo 0) active (HTTP/HTTPS)"
+        systemctl is-active nginx
+      register: nginx_health
+      become: true
+      changed_when: false
+
+    - name: nginx status
+      ansible.builtin.debug:
+        var: nginx_health.stdout_lines
+
+    - name: Check disk usage on /
+      ansible.builtin.shell: |
+        df -h / | tail -1
+        echo "Docker disk usage:"
+        docker system df 2>/dev/null
+      register: disk_usage
+      become: true
+      changed_when: false
+
+    - name: Disk usage
+      ansible.builtin.debug:
+        var: disk_usage.stdout_lines
+
+    - name: Check monitor.py container logs (last 20 lines)
+      ansible.builtin.shell: |
+        docker logs --tail=20 teleoscope-monitor-1 2>&1 || echo "monitor container not running"
+      register: monitor_logs
+      become: true
+      changed_when: false
+
+    - name: monitor.py recent logs
+      ansible.builtin.debug:
+        var: monitor_logs.stdout_lines
+
+    - name: Check TLS certificate expiry
+      ansible.builtin.shell: |
+        DOMAIN="{{ teleoscope.ca }}"
+        if command -v certbot &>/dev/null; then
+          certbot certificates 2>/dev/null | grep -E "Domains|Expiry Date|VALID|INVALID" || echo "No certbot certs found"
+        else
+          echo "certbot not installed (run setup-tls.yaml first)"
+        fi
+      register: tls_status
+      become: true
+      changed_when: false
+      failed_when: false
+
+    - name: TLS certificate status
+      ansible.builtin.debug:
+        var: tls_status.stdout_lines
+
+    - name: Overall health summary
+      ansible.builtin.debug:
+        msg:
+          - "══════════════════════════════════════════"
+          - "  Teleoscope Health Report"
+          - "══════════════════════════════════════════"
+          - "  Main EC2:      {{ ec2_main_public_ip }}"
+          - "  MongoDB:       {{ mongo_health.stdout | default('unknown') }}"
+          - "  RabbitMQ:      {{ 'OK' if rabbitmq_health.rc == 0 else 'FAILED' }}"
+          - "  nginx:         {{ nginx_health.stdout_lines[-1] | default('unknown') }}"
+          - "  Zilliz Cloud:  {{ 'OK' if zilliz_check.rc == 0 else 'UNREACHABLE' }}"
+          - "  Containers:    {{ container_issues.stdout_lines[0] | default('unknown') }}"
+          - "══════════════════════════════════════════"

@@ -63,14 +63,22 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
       RABBITMQ_DEFAULT_VHOST: /
+    volumes:
+      # Activates rabbitmq_web_stomp so the nginx /ws proxy works.
+      # rabbitmq:3-management ships the plugin; it just needs to be listed here.
+      - ./docker/rabbitmq-enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
     ports:
       - "5672:5672"
-      - "15672:15672"
+      - "15672:15672"   # management UI
+      - "15674:15674"   # WebStomp (real-time workspace updates via nginx /ws)
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      # check_port_connectivity verifies the broker actually accepts connections,
+      # not just that the process is running — catches hung-but-alive brokers.
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
+      start_period: 30s
 
   # Keep in sync with pymilvus major.minor in backend/requirements.txt (2.6.x).
   # Upgrading from older Milvus: existing milvus/etcd/minio volumes may be incompatible —
@@ -186,10 +194,8 @@ services:
       MONGODB_HOST: mongodb
       MONGODB_OPTIONS: directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
       DOWNLOAD_DIR: /tmp/teleoscope/downloads
-      MILVUS_HOST: milvus
-      MIVLUS_PORT: 19530
-      MILVUS_DBNAME: teleoscope
       MILVUS_URI: ${MILVUS_DOCKER_URI:-http://milvus:19530}
+      MILVUS_DBNAME: teleoscope
       RABBITMQ_DISPATCH_QUEUE: teleoscope-dispatch
       RABBITMQ_VECTORIZE_QUEUE: teleoscope-vectorize
       RABBITMQ_UPLOAD_VECTOR_QUEUE: teleoscope-upload-vector
@@ -244,10 +250,8 @@ services:
       MONGODB_PASSWORD: ${MONGODB_PASSWORD:-teleoscope_dev_password}
       MONGODB_HOST: mongodb
       MONGODB_OPTIONS: directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
-      MILVUS_HOST: milvus
-      MIVLUS_PORT: 19530
-      MILVUS_DBNAME: teleoscope
       MILVUS_URI: ${MILVUS_DOCKER_URI:-http://milvus:19530}
+      MILVUS_DBNAME: teleoscope
     env_file:
       - .env
     depends_on:
@@ -301,10 +305,8 @@ services:
       RABBITMQ_DISPATCH_QUEUE: teleoscope-dispatch
       RABBITMQ_VECTORIZE_QUEUE: teleoscope-vectorize
       RABBITMQ_UPLOAD_VECTOR_QUEUE: teleoscope-upload-vector
-      MILVUS_HOST: milvus
-      MIVLUS_PORT: 19530
-      MILVUS_DBNAME: teleoscope
       MILVUS_URI: ${MILVUS_DOCKER_URI:-http://milvus:19530}
+      MILVUS_DBNAME: teleoscope
     env_file:
       - .env
     depends_on:

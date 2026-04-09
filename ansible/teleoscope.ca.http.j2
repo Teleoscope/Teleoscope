@@ -4,25 +4,34 @@ server {
     listen 80;
     server_name {{ teleoscope.ca }} www.{{ teleoscope.ca }};
 
+    # Shared proxy settings
+    proxy_http_version      1.1;
+    proxy_set_header        Host              $host;
+    proxy_set_header        X-Real-IP         $remote_addr;
+    proxy_set_header        X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header        X-Forwarded-Proto $scheme;
+    # Timeouts: 30s connect, 120s read (long enough for file uploads / API calls)
+    proxy_connect_timeout   30s;
+    proxy_send_timeout      120s;
+    proxy_read_timeout      120s;
+    # Disable buffering so SSE and streaming responses reach the browser immediately
+    proxy_buffering         off;
+
     # Next.js app
     location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
+        proxy_pass          http://127.0.0.1:3000;
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection 'upgrade';
+        proxy_cache_bypass  $http_upgrade;
     }
 
-    # RabbitMQ WebStomp (real-time workspace updates)
+    # RabbitMQ WebStomp (real-time workspace updates via rabbitmq_web_stomp plugin)
+    # Port 15674 must be exposed by the rabbitmq container (see docker-compose.yml)
     location /ws {
-        proxy_pass http://127.0.0.1:15674/ws;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "Upgrade";
-        proxy_set_header Host $host;
+        proxy_pass          http://127.0.0.1:15674/ws;
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection "Upgrade";
+        # WebStomp connections are long-lived; bump read timeout accordingly
+        proxy_read_timeout  3600s;
     }
 }

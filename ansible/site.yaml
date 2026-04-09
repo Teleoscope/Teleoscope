@@ -361,6 +361,37 @@
         groups: docker
         append: true
 
+# ── PLAY 3b: Pre-flight checks (Zilliz reachability) — runs on localhost ──────
+- name: Pre-flight connectivity checks
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files: [./vars/vars.yaml]
+  tasks:
+    - name: Verify Zilliz Cloud endpoint is reachable
+      ansible.builtin.command:
+        cmd: >-
+          python3 -c "
+          import socket, sys
+          from urllib.parse import urlparse
+          u = urlparse('{{ milvus_uri }}')
+          host = u.hostname or u.path
+          port = u.port or 19530
+          try:
+              socket.create_connection((host, port), timeout=15)
+              print(f'Zilliz OK: {host}:{port}')
+          except Exception as e:
+              print(f'Zilliz UNREACHABLE: {host}:{port}: {e}')
+              sys.exit(1)
+          "
+      register: zilliz_check
+      failed_when: zilliz_check.rc != 0
+      changed_when: false
+
+    - name: Zilliz connectivity result
+      ansible.builtin.debug:
+        msg: "{{ zilliz_check.stdout }}"
+
 # ── PLAY 4: Deploy main stack (app + MongoDB + RabbitMQ + monitor) ────────────
 - name: Deploy main stack
   hosts: main
@@ -383,23 +414,31 @@
     # Snapshot MongoDB before deploying so a failed migration can be rolled back.
     - name: Backup MongoDB before deploy
       ansible.builtin.shell: |
-        set -e
         STAMP=$(date +%Y%m%d-%H%M%S)
         DEST=/tmp/mongodump-pre-deploy-${STAMP}
-        docker exec teleoscope-mongodb-1 \
-          mongodump \
-          --username admin \
-          --password "{{ mongodb_admin_password }}" \
-          --authenticationDatabase admin \
-          --out /tmp/mongodump-${STAMP} \
-          2>/dev/null || true
-        # Copy out of container in case container is recreated
-        docker cp teleoscope-mongodb-1:/tmp/mongodump-${STAMP} ${DEST} 2>/dev/null || true
-        echo "backup: ${DEST}"
+        if ! docker ps --format '{{.Names}}' | grep -q teleoscope-mongodb-1; then
+          echo "SKIPPED: mongodb container not running (first deploy)"
+          exit 0
+        fi
+        if docker exec teleoscope-mongodb-1 \
+            mongodump \
+            --username admin \
+            --password "{{ mongodb_admin_password }}" \
+            --authenticationDatabase admin \
+            --out /tmp/mongodump-${STAMP} 2>&1; then
+          docker cp teleoscope-mongodb-1:/tmp/mongodump-${STAMP} ${DEST} 2>/dev/null || true
+          echo "OK: backup written to ${DEST}"
+        else
+          echo "WARNING: mongodump failed — deploying without backup"
+        fi
       register: _backup
       changed_when: false
-      failed_when: false  # Don't abort deploy if MongoDB isn't running yet (first deploy)
+      failed_when: false
       become: true
+
+    - name: Show backup result
+      ansible.builtin.debug:
+        msg: "{{ _backup.stdout_lines | default(['(no output)']) }}"
 
     - name: Check if main app image is already built
       ansible.builtin.command: docker image inspect teleoscope-app --format "exists"
@@ -560,6 +599,16 @@
         files: [docker-compose.vectorizer.yml]
         build: "{{ 'always' if (rebuild | default(false) | bool or _vectorizer_image.rc != 0) else 'never' }}"
         state: present
+      become: true
+      register: _vectorizer_build
+
+    # Verify the image actually exists before stopping the EC2 — a failed build
+    # followed by a stop would leave the GPU EC2 with no working vectorizer.
+    - name: Verify vectorizer image is present after build
+      ansible.builtin.command: docker image inspect teleoscope-vectorizer --format "exists"
+      register: _vectorizer_built
+      failed_when: _vectorizer_built.rc != 0
+      changed_when: false
       become: true
 
     - name: Configure UFW — SSH only on GPU EC2
