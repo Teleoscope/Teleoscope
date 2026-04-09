@@ -65,26 +65,34 @@ INFRA_FILE="$REPO_ROOT/ansible/vars/infra-outputs.yaml"
 
 if [[ -f "$VARS_FILE" && -f "$INFRA_FILE" ]]; then
   # ── Parse key values from infra-outputs.yaml ──────────────────────────────
-  _get_yaml() { python3 -c "
+  # Use a heredoc so bash never touches the Python source — no quoting issues.
+  _get_yaml() {
+    python3 - "$1" "$2" 2>/dev/null <<'PYEOF' || true
 import sys, re
 key = sys.argv[1]
 for line in open(sys.argv[2]):
-    m = re.match(r'^' + re.escape(key) + r':\s*[\"']?([^\"'\n]+)[\"']?\s*$', line)
-    if m: print(m.group(1).strip()); sys.exit(0)
+    m = re.match(r'^' + re.escape(key) + r""":\s*["']?([^"'\n]+)["']?\s*$""", line)
+    if m:
+        print(m.group(1).strip())
+        sys.exit(0)
 print('')
-" "$1" "$2" 2>/dev/null; }
+PYEOF
+  }
 
-  EIP="$(_get_yaml ec2_main_public_ip "$INFRA_FILE")"
-  WORKER_ID="$(_get_yaml ec2_worker_instance "$INFRA_FILE")"
-  GPU_ID="$(_get_yaml ec2_vectorize_instance "$INFRA_FILE")"
-  AWS_REGION_LOCAL="$(_get_yaml aws_region "$VARS_FILE")"
-  DOMAIN_LOCAL="$(python3 -c "
+  EIP="$(_get_yaml ec2_main_public_ip "$INFRA_FILE")"          || true
+  WORKER_ID="$(_get_yaml ec2_worker_instance "$INFRA_FILE")"   || true
+  GPU_ID="$(_get_yaml ec2_vectorize_instance "$INFRA_FILE")"   || true
+  AWS_REGION_LOCAL="$(_get_yaml aws_region "$VARS_FILE")"      || true
+  DOMAIN_LOCAL="$(python3 - "$VARS_FILE" 2>/dev/null <<'PYEOF' || true
 import re, sys
 for line in open(sys.argv[1]):
     m = re.search(r'ca:\s*(\S+)', line)
-    if m: print(m.group(1)); sys.exit(0)
+    if m:
+        print(m.group(1))
+        sys.exit(0)
 print('')
-" "$VARS_FILE" 2>/dev/null)"
+PYEOF
+)"
 
   header "Current deployment status"
 
