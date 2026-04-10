@@ -11,6 +11,7 @@ import { connect } from '@/lib/lucia';
 import { Teams } from '@/types/teams';
 import { Workspaces } from '@/types/workspaces';
 import { isDemoUserById, getDemoCorpusWorkspaceIdAsync } from '@/lib/demoMode';
+import send from '@/lib/amqp';
 
 async function getDefaultWorkspaceId(userId: string): Promise<string | null> {
     const mongoClient = await client();
@@ -56,6 +57,12 @@ export async function POST() {
                 { status: 500 }
             );
         }
+
+        // Pre-warm the Worker EC2: publish a ping task so the monitor sees a
+        // non-zero queue depth and starts the instance immediately.  By the time
+        // the user triggers a real operation (rank, search, etc.) the instance
+        // will already be booting rather than cold-starting on first use.
+        send('ping', {}).catch(() => { /* non-fatal — monitor will catch up */ });
 
         const response = NextResponse.json({
             workspace_id: workspaceId,

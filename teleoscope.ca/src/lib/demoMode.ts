@@ -50,10 +50,13 @@ export async function getDemoCorpusWorkspaceIdAsync(): Promise<string | null> {
         const workspace = await db
             .collection<Workspaces>('workspaces')
             .findOne({ label: DEMO_CORPUS_WORKSPACE_LABEL }, { projection: { _id: 1 } });
+        // Only cache definitive results (found or genuinely absent).
+        // Transient DB errors must not poison the cache — leave it undefined so
+        // the next request retries rather than permanently returning null.
         demoCorpusWorkspaceIdCache = workspace?._id?.toString() ?? null;
         return demoCorpusWorkspaceIdCache;
     } catch {
-        demoCorpusWorkspaceIdCache = null;
+        // Don't update the cache on transient errors so the next call retries.
         return null;
     }
 }
