@@ -110,14 +110,23 @@
         region: "{{ aws_region }}"
         state: started
         wait: true
-        wait_timeout: 120
+        wait_timeout: 300
       register: worker_start
+
+    - name: Fetch current worker EC2 details (for public IP)
+      # ec2_instance returns partial data when the instance_status_ok waiter
+      # times out; ec2_instance_info always returns the live describe_instances
+      # payload including public_ip_address once the instance is running.
+      amazon.aws.ec2_instance_info:
+        instance_ids: ["{{ ec2_worker_instance }}"]
+        region: "{{ aws_region }}"
+      register: worker_info
 
     - name: Add worker to in-memory inventory with current public IP
       ansible.builtin.add_host:
         name: teleoscope-worker
         groups: workers_update
-        ansible_host: "{{ worker_start.instances[0].public_ip_address }}"
+        ansible_host: "{{ worker_info.instances[0].public_ip_address }}"
         ansible_user: "{{ ansible_user }}"
         ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
 
@@ -127,14 +136,20 @@
         region: "{{ aws_region }}"
         state: started
         wait: true
-        wait_timeout: 120
+        wait_timeout: 300
       register: vectorizer_start
+
+    - name: Fetch current vectorizer EC2 details (for public IP)
+      amazon.aws.ec2_instance_info:
+        instance_ids: ["{{ ec2_vectorize_instance }}"]
+        region: "{{ aws_region }}"
+      register: vectorizer_info
 
     - name: Add vectorizer to in-memory inventory with current public IP
       ansible.builtin.add_host:
         name: teleoscope-vectorizer
         groups: vectorizer_update
-        ansible_host: "{{ vectorizer_start.instances[0].public_ip_address }}"
+        ansible_host: "{{ vectorizer_info.instances[0].public_ip_address }}"
         ansible_user: "{{ ansible_user }}"
         ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
 
