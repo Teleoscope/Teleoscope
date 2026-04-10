@@ -23,6 +23,17 @@
   vars_files:
     - ./vars/vars.yaml
     - ./vars/infra-outputs.yaml
+  vars:
+    # Keep the SSH control socket alive while the seed script runs.
+    # 347 k vectors × ~5 s/batch ≈ 30 min for Zilliz Cloud; firewalls/NAT
+    # devices that close idle TCP connections after ~60 s will kill the mux
+    # socket and make every subsequent task "UNREACHABLE" even though the
+    # seed is still running on the server.  ServerAliveInterval sends a
+    # keep-alive every 30 s; ServerAliveCountMax=240 allows up to 2 hours
+    # of silence before the client gives up.
+    ansible_ssh_common_args: >-
+      -o ServerAliveInterval=30
+      -o ServerAliveCountMax=240
 
   tasks:
     - name: Install system packages required for seeding
@@ -118,12 +129,14 @@
             MILVUS_SKIP_TCP_PREFLIGHT: "1"
             TELEOSCOPE_DATA_DIR: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
           no_log: true  # Prevent MONGODB_URI (with password) appearing in ansible -v output
-          # Seed can take several minutes on first run (parquet upsert to Zilliz).
+          # Seed can take >30 min on first run: 347 k vectors → 348 HTTPS RPCs to
+          # Zilliz Cloud at ~5 s each ≈ 29 min just for upsert, plus Mongo bulk
+          # load.  Set timeout to 2 hours so Ansible does not kill the task early.
           # Do NOT use async here: async tasks that fail with jid=None bypass block
           # error-handling entirely, so the always section never runs and the log
           # file is never shown.  Synchronous execution with a generous task-level
           # timeout is reliable and lets block/always work as expected.
-          timeout: 1800
+          timeout: 7200
 
       always:
         - name: Show seed output (stdout + stderr)
