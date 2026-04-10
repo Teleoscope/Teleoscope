@@ -23,6 +23,17 @@
   vars_files:
     - ./vars/vars.yaml
     - ./vars/infra-outputs.yaml
+  vars:
+    # Keep the SSH control socket alive while the seed script runs.
+    # 347 k vectors × ~5 s/batch ≈ 30 min for Zilliz Cloud; firewalls/NAT
+    # devices that close idle TCP connections after ~60 s will kill the mux
+    # socket and make every subsequent task "UNREACHABLE" even though the
+    # seed is still running on the server.  ServerAliveInterval sends a
+    # keep-alive every 30 s; ServerAliveCountMax=240 allows up to 2 hours
+    # of silence before the client gives up.
+    ansible_ssh_common_args: >-
+      -o ServerAliveInterval=30
+      -o ServerAliveCountMax=240
 
   tasks:
     - name: Install system packages required for seeding
@@ -39,23 +50,57 @@
         cmd: git lfs install
       changed_when: false
 
-    - name: Remove documents.jsonl.7z if it is a Git LFS pointer stub
-      # A shallow git clone without git-lfs leaves a ~130-byte text stub instead of
-      # the real archive.  The seed script treats any existing file as valid data and
-      # skips the re-download, then fails with "not a 7z file".  Delete the stub here
-      # so the seed script triggers a fresh git-lfs-aware download on next run.
-      ansible.builtin.shell:
-        cmd: >-
-          if [ -f "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data/documents.jsonl.7z" ] &&
-          head -c 43 "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data/documents.jsonl.7z" |
-          grep -q "^version https://git-lfs"; then
-            rm "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data/documents.jsonl.7z" &&
-            echo "removed LFS stub";
+    - name: Validate data files — remove LFS stubs and incomplete downloads
+      # The seed script only checks existence + LFS pointer status.  A download
+      # interrupted mid-transfer leaves a file that passes those checks but
+      # fails later (py7zr "not a 7z file"; pyarrow read error).  Remove any
+      # bad files here so ensure_demo_data_files() triggers a fresh download.
+      #
+      # Checks applied:
+      #   documents.jsonl.7z
+      #     1. LFS pointer stub (first 43 bytes match "version https://git-lfs")
+      #     2. Invalid 7z magic (first 2 bytes must be 0x37 0x7A = ASCII "7z")
+      #   parquet_export/part-*.parquet  (both flat and /full sub-dir)
+      #     1. LFS pointer stub (same byte check)
+      ansible.builtin.shell: |
+        DATA="{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
+        REMOVED=0
+
+        # ── documents.jsonl.7z ─────────────────────────────────────────────
+        Z="$DATA/documents.jsonl.7z"
+        if [ -f "$Z" ]; then
+          if head -c 43 "$Z" 2>/dev/null | grep -q "^version https://git-lfs"; then
+            rm "$Z" && echo "removed LFS stub: documents.jsonl.7z"
+            REMOVED=$((REMOVED+1))
           else
-            echo "not an LFS stub";
+            # Verify 7z magic bytes (0x37 0x7A).  od -A n -t x1 prints hex
+            # bytes without an address field; tr removes whitespace.
+            MAGIC=$(head -c 2 "$Z" 2>/dev/null | od -A n -t x1 | tr -d ' \n')
+            if [ "$MAGIC" != "377a" ]; then
+              rm "$Z" && echo "removed corrupt/incomplete download (header=$MAGIC): documents.jsonl.7z"
+              REMOVED=$((REMOVED+1))
+            else
+              echo "ok: documents.jsonl.7z (valid 7z header)"
+            fi
           fi
-      register: lfs_stub_result
-      changed_when: "'removed LFS stub' in lfs_stub_result.stdout"
+        else
+          echo "absent: documents.jsonl.7z (will be downloaded by seed script)"
+        fi
+
+        # ── parquet_export/part-*.parquet ─────────────────────────────────
+        for F in \
+          "$DATA"/parquet_export/part-*.parquet \
+          "$DATA"/parquet_export/full/part-*.parquet; do
+          [ -f "$F" ] || continue
+          if head -c 43 "$F" 2>/dev/null | grep -q "^version https://git-lfs"; then
+            rm "$F" && echo "removed LFS stub: $(basename $F)"
+            REMOVED=$((REMOVED+1))
+          fi
+        done
+
+        [ "$REMOVED" -eq 0 ] && echo "all data files look valid" || echo "removed $REMOVED bad file(s) — seed script will re-download"
+      register: data_validation
+      changed_when: "'removed' in data_validation.stdout"
 
     - name: Create seed virtualenv and install Python dependencies
       ansible.builtin.pip:
@@ -87,50 +132,122 @@
       changed_when: false
       no_log: true  # prevent password appearing in ansible -v output
 
-    - name: Run seed-demo-corpus.py (MongoDB + Zilliz)
+    # ── Phase 1: MongoDB ─────────────────────────────────────────────────────
+    # Three sequential sub-phases, all slow on first run for 347 k documents:
+    #   1. extract + parse documents.jsonl.7z
+    #   2. bulk insert_many (695 batches × 500 docs, ordered=False, resumable)
+    #   3. $text index build on title+text — the slowest step, can exceed 30 min
+    #      on a small EC2; this is why Zilliz never started in earlier runs.
+    # No MILVUS_URI → script exits after the text index and skips Zilliz entirely,
+    # keeping this phase bounded and independently retryable.
+    - name: "Phase 1/2 — MongoDB (extract → bulk-insert → text-index)"
       block:
-        - name: Launch seed script
-          ansible.builtin.shell:
-            # Redirect both stdout and stderr to a log file so we can display
-            # them in the 'always' block below regardless of exit status.
-            # The shell task itself stays no_log to keep MONGODB_URI out of
-            # ansible -v output; the log file read is a plain task with no
-            # sensitive variables so it is always visible.
-            cmd: >-
-              {{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python
-              scripts/seed-demo-corpus.py
-              --no-progress
-              --workspace-documents-only
-              > /tmp/seed-demo.log 2>&1
+        - name: Start MongoDB seed in background
+          ansible.builtin.shell: |
+            # Idempotency: skip if already completed successfully.
+            if [ -f /tmp/seed-mongo.rc ] && [ "$(cat /tmp/seed-mongo.rc)" = "0" ]; then
+              echo "already completed — skipping"
+              exit 0
+            fi
+            rm -f /tmp/seed-mongo.rc /tmp/seed-demo-mongo.log
+            nohup sh -c '{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python scripts/seed-demo-corpus.py --no-progress --workspace-documents-only > /tmp/seed-demo-mongo.log 2>&1; echo $? > /tmp/seed-mongo.rc' >/dev/null 2>&1 &
+            disown $!
+          args:
             chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
           environment:
             PYTHONPATH: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
-            # MongoDB: connect directly (replicaSet node) using the app user.
             MONGODB_URI: "mongodb://{{ mongodb_dev_name }}:{{ mongodb_dev_password }}@localhost:27017/{{ mongodb_database }}?directConnection=true&serverSelectionTimeoutMS=10000&authSource=admin"
             MONGODB_DATABASE: "{{ mongodb_database }}"
-            # Milvus / Zilliz Cloud.
-            # NOTE: containers use MILVUS_DOCKER_URI mapped to MILVUS_URI internally;
-            # the seed script runs on the host so we pass MILVUS_URI directly.
-            MILVUS_URI: "{{ milvus_uri }}"
-            MILVUS_TOKEN: "{{ milvus_token }}"
-            MILVUS_DATABASE: "{{ milvus_dbname | default('teleoscope') }}"
-            # Zilliz is HTTPS — skip the raw TCP port preflight check.
-            MILVUS_SKIP_TCP_PREFLIGHT: "1"
             TELEOSCOPE_DATA_DIR: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
-          no_log: true  # Prevent MONGODB_URI (with password) appearing in ansible -v output
-          # Seed can take several minutes on first run (parquet upsert to Zilliz).
-          # Do NOT use async here: async tasks that fail with jid=None bypass block
-          # error-handling entirely, so the always section never runs and the log
-          # file is never shown.  Synchronous execution with a generous task-level
-          # timeout is reliable and lets block/always work as expected.
-          timeout: 1800
+          no_log: true
+          changed_when: true
+
+        - name: Monitor MongoDB seed (last 30 log lines every 60 s)
+          # Ansible prints each retry attempt, so the log tail below is visible
+          # on every poll — watch the extract / insert / text-index phases roll by.
+          # For live streaming: ssh to the host and run: tail -f /tmp/seed-demo-mongo.log
+          ansible.builtin.shell: |
+            echo "=== $(date -u '+%H:%M:%S UTC') ==="
+            tail -30 /tmp/seed-demo-mongo.log 2>/dev/null || echo "(log not yet created)"
+            [ -f /tmp/seed-mongo.rc ] && echo "--- DONE ---" || echo "--- still running ---"
+          register: mongo_poll
+          until: "'--- DONE ---' in mongo_poll.stdout"
+          retries: 120   # 120 × 60 s = 2 hours
+          delay: 60
+          changed_when: false
+
+        - name: Fail if MongoDB seed exited non-zero
+          ansible.builtin.shell: cat /tmp/seed-mongo.rc
+          register: mongo_rc
+          changed_when: false
+          failed_when: (mongo_rc.stdout | trim) != "0"
 
       always:
-        - name: Show seed output (stdout + stderr)
+        - name: Show full MongoDB seed log (last 200 lines)
           ansible.builtin.command:
-            cmd: tail -200 /tmp/seed-demo.log
-          register: seed_log
+            cmd: tail -200 /tmp/seed-demo-mongo.log
+          register: mongo_final_log
           changed_when: false
           failed_when: false
         - ansible.builtin.debug:
-            var: seed_log.stdout_lines
+            var: mongo_final_log.stdout_lines
+
+    # ── Phase 2: Zilliz ──────────────────────────────────────────────────────
+    # --milvus-only skips MongoDB entirely and upserts parquet vectors to Zilliz.
+    # 347 k vectors / 1000-per-batch = 348 HTTPS RPCs to Zilliz Cloud.
+    # SEED_MILVUS_BATCH_LOG=1 logs one [OK] line per batch so the monitor poll
+    # and the final log both show exactly how far the upsert has progressed.
+    - name: "Phase 2/2 — Zilliz upsert (--milvus-only)"
+      block:
+        - name: Start Zilliz upsert in background
+          ansible.builtin.shell: |
+            # Idempotency: skip if already completed successfully.
+            if [ -f /tmp/seed-zilliz.rc ] && [ "$(cat /tmp/seed-zilliz.rc)" = "0" ]; then
+              echo "already completed — skipping"
+              exit 0
+            fi
+            rm -f /tmp/seed-zilliz.rc /tmp/seed-demo-zilliz.log
+            nohup sh -c '{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python scripts/seed-demo-corpus.py --no-progress --milvus-only > /tmp/seed-demo-zilliz.log 2>&1; echo $? > /tmp/seed-zilliz.rc' >/dev/null 2>&1 &
+            disown $!
+          args:
+            chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+          environment:
+            PYTHONPATH: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+            MONGODB_URI: "mongodb://{{ mongodb_dev_name }}:{{ mongodb_dev_password }}@localhost:27017/{{ mongodb_database }}?directConnection=true&serverSelectionTimeoutMS=10000&authSource=admin"
+            MONGODB_DATABASE: "{{ mongodb_database }}"
+            MILVUS_URI: "{{ milvus_uri }}"
+            MILVUS_TOKEN: "{{ milvus_token }}"
+            MILVUS_DATABASE: "{{ milvus_dbname | default('teleoscope') }}"
+            MILVUS_SKIP_TCP_PREFLIGHT: "1"
+            SEED_MILVUS_BATCH_LOG: "1"   # one [OK] line per 1000-vector batch
+            TELEOSCOPE_DATA_DIR: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
+          no_log: true
+          changed_when: true
+
+        - name: Monitor Zilliz upsert (last 30 log lines every 60 s)
+          # For live streaming: ssh to the host and run: tail -f /tmp/seed-demo-zilliz.log
+          ansible.builtin.shell: |
+            echo "=== $(date -u '+%H:%M:%S UTC') ==="
+            tail -30 /tmp/seed-demo-zilliz.log 2>/dev/null || echo "(log not yet created)"
+            [ -f /tmp/seed-zilliz.rc ] && echo "--- DONE ---" || echo "--- still running ---"
+          register: zilliz_poll
+          until: "'--- DONE ---' in zilliz_poll.stdout"
+          retries: 120   # 120 × 60 s = 2 hours
+          delay: 60
+          changed_when: false
+
+        - name: Fail if Zilliz upsert exited non-zero
+          ansible.builtin.shell: cat /tmp/seed-zilliz.rc
+          register: zilliz_rc
+          changed_when: false
+          failed_when: (zilliz_rc.stdout | trim) != "0"
+
+      always:
+        - name: Show full Zilliz upsert log (last 200 lines)
+          ansible.builtin.command:
+            cmd: tail -200 /tmp/seed-demo-zilliz.log
+          register: zilliz_final_log
+          changed_when: false
+          failed_when: false
+        - ansible.builtin.debug:
+            var: zilliz_final_log.stdout_lines
