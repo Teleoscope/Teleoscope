@@ -66,7 +66,7 @@ services:
           try {
             var s = rs.status();
             var cur = s.members[0].name;
-            var want = '${RS_HOST}:27017';
+            var want = '$${RS_HOST}:27017';
             if (cur !== want) {
               print('mongodb-init: reconfiguring RS member from ' + cur + ' to ' + want);
               var cfg = rs.conf();
@@ -75,7 +75,7 @@ services:
             }
             quit(0);
           } catch (e) {
-            rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: '${RS_HOST}:27017' }] });
+            rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: '$${RS_HOST}:27017' }] });
             quit(0);
           }
         "
