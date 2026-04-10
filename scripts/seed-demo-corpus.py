@@ -877,6 +877,38 @@ def load_parquet_rows(parquet_dirs: list[Path]) -> list[dict]:
     return all_rows
 
 
+def _count_parquet_rows(part_files: list[Path]) -> int:
+    """Return total row count using parquet file metadata only — no column data loaded."""
+    if not pq:
+        raise RuntimeError("pyarrow is required to read parquet. pip install pyarrow")
+    total = 0
+    for f in part_files:
+        meta = pq.read_metadata(f)
+        total += meta.num_rows
+    return total
+
+
+def _iter_parquet_rows(part_files: list[Path]):
+    """Yield one row dict at a time, loading one part-file into Arrow memory and releasing it
+    before loading the next.  Peak memory ≈ one file's Arrow table + current batch buffer
+    (vs. load_parquet_rows which holds all files as Python float-lists simultaneously).
+    """
+    if not pq:
+        raise RuntimeError("pyarrow is required to read parquet. pip install pyarrow")
+    for f in part_files:
+        tbl = pq.read_table(f)
+        col_names = tbl.column_names
+        for row_i in range(tbl.num_rows):
+            row = {}
+            for name in col_names:
+                val = tbl.column(name)[row_i]
+                if hasattr(val, "as_py"):
+                    val = val.as_py()
+                row[name] = val
+            yield row
+        del tbl  # release Arrow table before loading the next file
+
+
 def resolve_demo_workspace_id(db) -> ObjectId:
     raw = os.environ.get("DEMO_CORPUS_WORKSPACE_ID", "").strip()
     if raw:
@@ -917,11 +949,11 @@ def seed_milvus_only(
     if not pq:
         raise SystemExit("pyarrow is required for Milvus seed. pip install pyarrow")
 
-    log(f"Loading parquet (validation pass) from {parquet_dir}…", "INFO")
+    part_files = sorted(parquet_dir.glob("part-*.parquet"))
+    log(f"Counting parquet rows from {len(part_files)} file(s) in {parquet_dir}…", "INFO")
     t_pq = time.perf_counter()
-    parquet_rows = load_parquet_rows([parquet_dir])
-    n = len(parquet_rows)
-    log(f"Parquet validation load: {n:,} rows in {_fmt_elapsed(time.perf_counter() - t_pq)}.", "OK")
+    n = _count_parquet_rows(part_files)
+    log(f"Parquet metadata count: {n:,} rows in {_fmt_elapsed(time.perf_counter() - t_pq)}.", "OK")
     if n == 0:
         raise SystemExit("Parquet export is empty.")
 
@@ -929,19 +961,17 @@ def seed_milvus_only(
     db = client[MONGODB_DATABASE]
     log(f"Connected to MongoDB database={MONGODB_DATABASE!r} (Milvus-only; Mongo not modified).", "INFO")
     workspace_id = resolve_demo_workspace_id(db)
-    log(f"Loading Mongo documents for workspace {workspace_id} (sort by _id)…", "INFO")
+    log(f"Loading Mongo document ids for workspace {workspace_id} (sort by _id)…", "INFO")
     t_m = time.perf_counter()
-    docs = list(db.documents.find({"workspace": workspace_id}).sort("_id", 1))
-    log(f"Mongo find returned {len(docs):,} documents in {_fmt_elapsed(time.perf_counter() - t_m)}.", "OK")
-    if len(docs) != n:
+    doc_ids = _mongo_workspace_doc_ids(db, workspace_id)
+    log(f"Mongo returned {len(doc_ids):,} document ids in {_fmt_elapsed(time.perf_counter() - t_m)}.", "OK")
+    if len(doc_ids) != n:
         raise SystemExit(
-            f"Milvus-only seed needs Mongo document count ({len(docs)}) to equal parquet "
+            f"Milvus-only seed needs Mongo document count ({len(doc_ids)}) to equal parquet "
             f"rows ({n}). Documents must align in the same order as a full seed (Mongo sort "
             "by _id). If you changed the demo workspace in Mongo, run full "
             "seed-demo-corpus.py without --milvus-only."
         )
-
-    doc_ids = [d["_id"] for d in docs]
     log(
         f"Milvus-only: workspace {workspace_id}, {n} Mongo docs × parquet rows (by _id order).",
         "INFO",
@@ -980,18 +1010,19 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
         "INFO",
     )
     t_load = time.perf_counter()
-    rows = load_parquet_rows([parquet_dir])
+    n_parquet = _count_parquet_rows(part_files)
     log(
-        f"Read {len(rows):,} parquet rows in {_fmt_elapsed(time.perf_counter() - t_load)}.",
+        f"Counted {n_parquet:,} parquet rows (metadata only) in {_fmt_elapsed(time.perf_counter() - t_load)}.",
         "OK",
     )
-    if len(rows) != len(doc_ids):
+    if n_parquet != len(doc_ids):
         log(
-            f"Parquet row count ({len(rows)}) != Mongo doc count ({len(doc_ids)}). "
+            f"Parquet row count ({n_parquet}) != Mongo doc count ({len(doc_ids)}). "
             "Vectors may be misaligned; skipping Milvus load.",
             "WARN",
         )
         return
+    row_gen = _iter_parquet_rows(part_files)
     _seed_mv_rpc = float(os.environ.get("SEED_MILVUS_RPC_TIMEOUT", "300").strip() or "300")
     ensure_script_rpc_deadline(_seed_mv_rpc)
     log(
@@ -1059,7 +1090,7 @@ def seed_milvus(workspace_id: ObjectId, doc_ids: list[ObjectId], parquet_dir: Pa
         milvus_pbar = upsert_indices
     for b_idx, i in enumerate(milvus_pbar):
         chunk_ids = doc_ids[i : i + batch]
-        chunk_rows = rows[i : i + batch]
+        chunk_rows = [next(row_gen) for _ in range(len(chunk_ids))]
         def to_list(v):
             if hasattr(v, "tolist"):
                 return v.tolist()
