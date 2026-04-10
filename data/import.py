@@ -74,6 +74,12 @@ def main() -> None:
         for path in sorted(PARQUET_DIR.glob("part-*.parquet")):
             table = pq.read_table(path)
             rows = table.to_pylist()
+
+            for row in rows:
+                title = row.get("title") or ""
+                text = row.get("text") or ""
+                row["combined_text"] = f"{title}\n\n{text}".strip()
+
             client.insert(collection_name=COLLECTION_NAME, data=rows)
             print(f"Inserted {len(rows)} rows from {path}")
 
