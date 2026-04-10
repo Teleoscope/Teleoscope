@@ -298,7 +298,9 @@ def update_rank(
     client = embeddings.connect()
 
     # get every document oid from the control nodes
-    control_oids = utils.get_doc_oids(mdb, controls, exclude=[])
+    control_oids = utils.get_doc_oids(
+        mdb, controls, exclude=[], include_object_id_fallback=True
+    )
     logging.info(f"Documents with oids {control_oids} found for controls {controls}.")
 
     # get the vectors for each document vector id

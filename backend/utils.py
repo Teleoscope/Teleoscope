@@ -370,15 +370,27 @@ def _doc_to_milvus_id(doc):
     return str(vid) if vid is not None else None
 
 
-def get_oids(db: database.Database, source, exclude=["Note"]):
+def _doc_to_milvus_ids(doc, include_object_id_fallback=False):
+    ids = []
+    source_id = (doc.get("metadata") or {}).get("source_id")
+    object_id = doc.get("_id")
+    if source_id is not None:
+        ids.append(str(source_id))
+    if object_id is not None and (include_object_id_fallback or not ids):
+        oid = str(object_id)
+        if oid not in ids:
+            ids.append(oid)
+    return ids
+
+
+def get_oids(db: database.Database, source, exclude=["Note"], include_object_id_fallback=False):
     if source["type"] in exclude:
         return []
 
     node = get_collection(db, source["type"]).find_one({"_id": source["reference"]})
     match source["type"]:
         case "Document":
-            vid = _doc_to_milvus_id(node)
-            return [vid] if vid else []
+            return _doc_to_milvus_ids(node, include_object_id_fallback=include_object_id_fallback)
         case "Note":
             return [str(node["_id"])]
         case "Group":
@@ -390,8 +402,13 @@ def get_oids(db: database.Database, source, exclude=["Note"]):
                     projection={"_id": 1, "metadata.source_id": 1},
                 )
             )
-            id_map = {d["_id"]: _doc_to_milvus_id(d) for d in docs}
-            return [id_map[oid] for oid in node["docs"] if id_map.get(oid)]
+            id_map = {
+                d["_id"]: _doc_to_milvus_ids(
+                    d, include_object_id_fallback=include_object_id_fallback
+                )
+                for d in docs
+            }
+            return [mid for oid in node["docs"] for mid in id_map.get(oid, [])]
         case "Storage":
             if not node.get("docs"):
                 return []
@@ -401,14 +418,25 @@ def get_oids(db: database.Database, source, exclude=["Note"]):
                     projection={"_id": 1, "metadata.source_id": 1},
                 )
             )
-            id_map = {d["_id"]: _doc_to_milvus_id(d) for d in docs}
-            return [id_map[oid] for oid in node["docs"] if id_map.get(oid)]
+            id_map = {
+                d["_id"]: _doc_to_milvus_ids(
+                    d, include_object_id_fallback=include_object_id_fallback
+                )
+                for d in docs
+            }
+            return [mid for oid in node["docs"] for mid in id_map.get(oid, [])]
         case "Search":
             cursor = db.documents.find(
                 make_query(node["query"]),
                 projection={"_id": 1, "metadata.source_id": 1},
             )
-            return [_doc_to_milvus_id(d) for d in cursor if _doc_to_milvus_id(d)]
+            return [
+                mid
+                for d in cursor
+                for mid in _doc_to_milvus_ids(
+                    d, include_object_id_fallback=include_object_id_fallback
+                )
+            ]
         case "Rank" | "Union" | "Difference" | "Intersection" | "Exclusion":
             return [
                 str(d[0])
@@ -423,12 +451,19 @@ def truncate_string(s, max_length):
     return s
 
 
-def get_doc_oids(db: database.Database, sources, exclude=["Note"]):
+def get_doc_oids(db: database.Database, sources, exclude=["Note"], include_object_id_fallback=False):
     sources = db.graph.find({"uid": {"$in": sources}})
     oids = []
     for source in sources:
-        oids.extend(get_oids(db, source, exclude=exclude))
-    return oids
+        oids.extend(
+            get_oids(
+                db,
+                source,
+                exclude=exclude,
+                include_object_id_fallback=include_object_id_fallback,
+            )
+        )
+    return list(dict.fromkeys(oids))
 
 
 def sanitize_db_name(name):

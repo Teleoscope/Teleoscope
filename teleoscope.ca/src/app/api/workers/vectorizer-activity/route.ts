@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { validateRequest } from '@/lib/auth';
+import { wakeVectorizer } from '@/lib/amqp';
 
 /**
  * Proxies workspace UI activity to the vectorizer control server so the embedding
@@ -13,9 +14,11 @@ export async function POST() {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
+  const queueWakeOk = await wakeVectorizer(null);
+
   const base = process.env.VECTORIZER_CONTROL_URL?.trim();
   if (!base) {
-    return new NextResponse(null, { status: 204 });
+    return new NextResponse(null, { status: queueWakeOk ? 204 : 503 });
   }
 
   const url = `${base.replace(/\/$/, '')}/activity`;
@@ -30,12 +33,18 @@ export async function POST() {
   try {
     const res = await fetch(url, { method: 'POST', headers, signal: ac.signal });
     if (!res.ok) {
+      if (queueWakeOk) {
+        return new NextResponse(null, { status: 204 });
+      }
       return NextResponse.json(
         { message: `Vectorizer control returned ${res.status}` },
         { status: 502 }
       );
     }
   } catch {
+    if (queueWakeOk) {
+      return new NextResponse(null, { status: 204 });
+    }
     return NextResponse.json(
       { message: 'Vectorizer control unreachable' },
       { status: 503 }
