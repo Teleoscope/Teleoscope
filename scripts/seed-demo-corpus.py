@@ -556,61 +556,173 @@ def load_jsonl_uncompressed(path: Path) -> list[dict]:
 
 
 def load_documents_jsonl() -> list[dict]:
+    """Load all documents into memory.  Prefer iter_documents_jsonl() for large corpora."""
+    return list(iter_documents_jsonl())
+
+
+def iter_documents_jsonl():
+    """Yield raw JSONL rows one at a time.  Peak RAM = O(1 row), not O(all rows)."""
     jsonl_path = DATA_DIR / "documents.jsonl"
     if DOCUMENTS_7Z.exists():
         log(f"Document source: compressed archive {DOCUMENTS_7Z}", "INFO")
-        return extract_jsonl_from_7z(DOCUMENTS_7Z)
+        _scripts = str(Path(__file__).resolve().parent)
+        if _scripts not in sys.path:
+            sys.path.insert(0, _scripts)
+        from demo_7z_jsonl import iter_jsonl_rows_from_7z
+        yield from iter_jsonl_rows_from_7z(DOCUMENTS_7Z, log=log)
+        return
     if jsonl_path.exists():
-        log(f"Reading uncompressed JSONL: {jsonl_path}", "INFO")
-        t0 = time.perf_counter()
-        rows = load_jsonl_uncompressed(jsonl_path)
-        log(
-            f"Loaded {len(rows):,} rows from JSONL in {_fmt_elapsed(time.perf_counter() - t0)}.",
-            "OK",
-        )
-        return rows
+        log(f"Document source: uncompressed JSONL {jsonl_path}", "INFO")
+        with open(jsonl_path, encoding="utf-8") as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line:
+                    continue
+                try:
+                    yield json.loads(line)
+                except json.JSONDecodeError as e:
+                    log(f"Skip bad JSON line: {e}", "WARN")
+        return
     raise FileNotFoundError(
         f"Neither {DOCUMENTS_7Z} nor {jsonl_path} found after fetch step. "
         "Check TELEOSCOPE_DATA_DIR or run ./scripts/download-demo-data.sh."
     )
 
 
+def _row_to_mongo_doc(row: dict, workspace_id: ObjectId) -> dict | None:
+    """Convert a single raw JSONL row to a MongoDB document dict, or None if the row is empty."""
+    title = (row.get("title") or "").strip() or "Untitled"
+    text = (row.get("text") or "").strip()
+    if not text and not title:
+        return None
+    meta = {}
+    for k, v in row.items():
+        if k in ("title", "text", "id"):
+            continue
+        if v is None:
+            continue
+        if isinstance(v, (str, int, float, bool)):
+            meta[k] = v
+        elif isinstance(v, (list, dict)):
+            try:
+                json.dumps(v)
+                meta[k] = v
+            except (TypeError, ValueError):
+                pass
+    source_id = row.get("id")
+    if source_id is not None:
+        meta["source_id"] = str(source_id)
+    return {
+        "text": text[:1_000_000],
+        "title": title[:2048],
+        "relationships": {},
+        "metadata": meta,
+        "workspace": workspace_id,
+        "state": {"vectorized": True},
+    }
+
+
 def mongo_docs_from_rows(rows: list[dict], workspace_id: ObjectId) -> list[dict]:
+    """Build a list of MongoDB documents from all rows.  Kept for backward compatibility;
+    prefer stream_insert_documents() for large corpora to avoid loading all rows into RAM."""
     docs = []
     row_iter = rows
     if _seed_use_progress and len(rows) >= 8000:
         row_iter = _pbar(rows, total=len(rows), desc="Build Mongo payloads", unit="row")
     for row in row_iter:
-        title = (row.get("title") or "").strip() or "Untitled"
-        text = (row.get("text") or "").strip()
-        if not text and not title:
-            continue
-        meta = {}
-        for k, v in row.items():
-            if k in ("title", "text", "id"):
-                continue
-            if v is None:
-                continue
-            if isinstance(v, (str, int, float, bool)):
-                meta[k] = v
-            elif isinstance(v, (list, dict)):
-                try:
-                    json.dumps(v)
-                    meta[k] = v
-                except (TypeError, ValueError):
-                    pass
-        source_id = row.get("id")
-        if source_id is not None:
-            meta["source_id"] = str(source_id)
-        docs.append({
-            "text": text[:1_000_000],
-            "title": title[:2048],
-            "relationships": {},
-            "metadata": meta,
-            "workspace": workspace_id,
-            "state": {"vectorized": True},
-        })
+        doc = _row_to_mongo_doc(row, workspace_id)
+        if doc is not None:
+            docs.append(doc)
     return docs
+
+
+def stream_insert_documents(
+    client: MongoClient,
+    workspace_id: ObjectId,
+    row_iter,
+    batch_size: int = BATCH_INSERT,
+) -> tuple[MongoClient, list[ObjectId]]:
+    """Stream-insert documents from *row_iter* one batch at a time.
+
+    Peak RAM is O(batch_size) — only one batch of raw rows + one batch of
+    transformed docs is live at any moment.  Avoids the OOM that occurs when
+    load_documents_jsonl() + mongo_docs_from_rows() hold two full copies of
+    the entire corpus in memory simultaneously.
+
+    Resume: counts existing workspace documents before starting; skips that
+    many rows from the front of *row_iter* so a restart after a crash picks up
+    where it left off.
+    """
+    max_attempts = max(1, int(os.environ.get("SEED_MONGO_BATCH_RETRIES", "12")))
+    t_all = time.perf_counter()
+    per_batch_logs = not _seed_use_progress
+
+    db = client[MONGODB_DATABASE]
+    inserted: list[ObjectId] = list(_mongo_workspace_doc_ids(db, workspace_id))
+    n_skip = len(inserted)
+    if n_skip:
+        log(
+            f"Stream-insert resume: {n_skip:,} documents already present for workspace; "
+            f"skipping first {n_skip:,} source rows.",
+            "WARN",
+        )
+
+    bi = 0
+    batch: list[dict] = []
+    skipped = 0
+
+    for raw_row in row_iter:
+        if skipped < n_skip:
+            skipped += 1
+            continue
+        doc = _row_to_mongo_doc(raw_row, workspace_id)
+        if doc is None:
+            continue
+        batch.append(doc)
+        if len(batch) < batch_size:
+            continue
+        # Batch is full — insert with retry.
+        bi += 1
+        t0 = time.perf_counter()
+        for attempt in range(max_attempts):
+            try:
+                db = client[MONGODB_DATABASE]
+                result = db.documents.insert_many(batch, ordered=False)
+                inserted.extend(result.inserted_ids)
+                break
+            except Exception as e:
+                if not _mongo_seed_transient(e) or attempt + 1 >= max_attempts:
+                    raise
+                log(f"Batch {bi}: transient error ({e!s}); reconnecting (attempt {attempt + 2}/{max_attempts})…", "WARN")
+                time.sleep(min(30.0, 1.5 ** attempt))
+                try:
+                    client.close()
+                except Exception:
+                    pass
+                client = mongo_client_for_seed()
+                db = client[MONGODB_DATABASE]
+        dt = time.perf_counter() - t0
+        if per_batch_logs:
+            lo, hi = len(inserted) - len(batch) + 1, len(inserted)
+            log(f"Batch {bi}: documents {lo:,}–{hi:,} ({len(batch):,} inserted, {dt:.2f}s, {len(batch)/dt:,.0f} docs/s)", "OK")
+        batch = []  # release memory for this batch
+
+    # Final partial batch.
+    if batch:
+        bi += 1
+        db = client[MONGODB_DATABASE]
+        result = db.documents.insert_many(batch, ordered=False)
+        inserted.extend(result.inserted_ids)
+        if per_batch_logs:
+            log(f"Batch {bi} (final): {len(batch):,} documents inserted.", "OK")
+        batch = []
+
+    log(
+        f"Stream-insert complete: {len(inserted):,} total documents in {bi} batch(es), "
+        f"{_fmt_elapsed(time.perf_counter() - t_all)} elapsed.",
+        "OK",
+    )
+    return client, inserted
 
 
 def insert_documents_batched(
@@ -1159,11 +1271,6 @@ def seed(
         need_documents=True,
         need_parquet=need_parquet,
     )
-    log_section("Source documents (7z or JSONL)")
-    log("Loading documents from 7z/JSONL...", "INFO")
-    raw_rows = load_documents_jsonl()
-    log(f"Loaded {len(raw_rows):,} raw rows from source.", "OK")
-
     log_section("MongoDB")
     client = mongo_client_for_seed()
     db = client[MONGODB_DATABASE]
@@ -1219,18 +1326,6 @@ def seed(
         })
         log(f"Created team={team_id}, workspace={workspace_id}, workflow={workflow_id}", "OK")
 
-    t_build = time.perf_counter()
-    docs = mongo_docs_from_rows(raw_rows, workspace_id)
-    log(
-        f"Built {len(docs):,} Mongo document payloads from {len(raw_rows):,} raw rows "
-        f"in {_fmt_elapsed(time.perf_counter() - t_build)}.",
-        "INFO",
-    )
-    if not docs:
-        log("No documents to insert.", "WARN")
-        client.close()
-        return
-
     if workspace_documents_only:
         if not keep_text_index:
             log(
@@ -1256,7 +1351,13 @@ def seed(
         )
         wipe_documents_collection(db)
 
-    client, inserted_ids = insert_documents_batched(client, workspace_id, docs)
+    # Stream-insert: read one batch from disk → transform → insert → free → repeat.
+    # Peak RAM = O(batch_size) ≈ a few MB, not O(347 k docs) ≈ 4–5 GB.
+    log_section("Source documents (7z or JSONL) — streaming batch insert")
+    log("Streaming documents from source into MongoDB (no full-corpus load into RAM)…", "INFO")
+    client, inserted_ids = stream_insert_documents(
+        client, workspace_id, iter_documents_jsonl(), batch_size=BATCH_INSERT
+    )
     db = client[MONGODB_DATABASE]
     log(f"Inserted {len(inserted_ids):,} documents into workspace {workspace_id}.", "OK")
 

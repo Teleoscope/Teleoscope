@@ -13,7 +13,7 @@ import json
 import tempfile
 import time
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Generator
 
 
 def extract_jsonl_rows_from_7z(
@@ -22,6 +22,21 @@ def extract_jsonl_rows_from_7z(
     log: Callable[[str, str], None] | None = None,
 ) -> list[dict]:
     """Return parsed JSON objects, one per non-empty line, for all ``*.jsonl`` members."""
+    return list(iter_jsonl_rows_from_7z(archive_path, log=log))
+
+
+def iter_jsonl_rows_from_7z(
+    archive_path: Path,
+    *,
+    log: Callable[[str, str], None] | None = None,
+) -> Generator[dict, None, None]:
+    """Yield parsed JSON objects one at a time from all ``*.jsonl`` members of a ``.7z``.
+
+    Extracts to a temporary directory on disk then streams line-by-line so
+    only one batch's worth of rows needs to be in memory at a time.  The
+    temporary directory is cleaned up when the generator is closed or
+    garbage-collected.
+    """
     try:
         import py7zr
     except ImportError as e:
@@ -38,37 +53,43 @@ def extract_jsonl_rows_from_7z(
         if log:
             log(msg, level)
 
-    rows: list[dict] = []
     _log(f"Opening 7z archive: {archive_path}", "INFO")
-    with SevenZipFile(archive_path, mode="r") as arc:
-        names = arc.getnames() if hasattr(arc, "getnames") else arc.namelist()
-        targets = [n for n in names if str(n).endswith(".jsonl")]
-        _log(f"JSONL members ({len(targets)}): {targets}", "INFO")
-        if not targets:
-            _log("No .jsonl files in archive.", "WARN")
-            return rows
-
-        t0 = time.perf_counter()
-        with tempfile.TemporaryDirectory() as tmpd:
-            tmp = Path(tmpd)
+    tmpdir = tempfile.TemporaryDirectory()
+    try:
+        tmp = Path(tmpdir.name)
+        with SevenZipFile(archive_path, mode="r") as arc:
+            names = arc.getnames() if hasattr(arc, "getnames") else arc.namelist()
+            targets = [n for n in names if str(n).endswith(".jsonl")]
+            _log(f"JSONL members ({len(targets)}): {targets}", "INFO")
+            if not targets:
+                _log("No .jsonl files in archive.", "WARN")
+                return
+            t0 = time.perf_counter()
             arc.extract(path=tmp, targets=targets)
-            for jsonl_path in sorted(tmp.rglob("*.jsonl")):
-                rel = jsonl_path.relative_to(tmp)
-                for raw_line in jsonl_path.read_text(encoding="utf-8").splitlines():
+
+        n_rows = 0
+        n_bad = 0
+        for jsonl_path in sorted(tmp.rglob("*.jsonl")):
+            rel = jsonl_path.relative_to(tmp)
+            with open(jsonl_path, encoding="utf-8") as f:
+                for raw_line in f:
                     line = raw_line.strip()
                     if not line:
                         continue
                     try:
-                        rows.append(json.loads(line))
+                        yield json.loads(line)
+                        n_rows += 1
                     except json.JSONDecodeError as e:
                         _log(f"Skip bad JSON line in {rel}: {e}", "WARN")
+                        n_bad += 1
 
-        def _fmt_elapsed(seconds: float) -> str:
-            return f"{seconds / 60:.1f}m" if seconds >= 120 else f"{seconds:.1f}s"
+        def _fmt(s: float) -> str:
+            return f"{s / 60:.1f}m" if s >= 120 else f"{s:.1f}s"
 
         _log(
-            f"Parsed {len(rows):,} lines from 7z JSONL in {_fmt_elapsed(time.perf_counter() - t0)}.",
+            f"Streamed {n_rows:,} rows from 7z JSONL in {_fmt(time.perf_counter() - t0)}"
+            + (f" ({n_bad} bad lines skipped)" if n_bad else "") + ".",
             "OK",
         )
-
-    return rows
+    finally:
+        tmpdir.cleanup()
