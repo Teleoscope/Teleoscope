@@ -158,29 +158,38 @@
         ansible_user: "{{ ansible_user }}"
         ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
 
-    - name: Start vectorizer EC2 and wait until running
-      amazon.aws.ec2_instance:
-        instance_ids: ["{{ ec2_vectorize_instance }}"]
-        region: "{{ aws_region }}"
-        state: running
-        wait: true
-        wait_timeout: 300
+    - name: Start vectorizer EC2
+      # Use the AWS CLI directly rather than amazon.aws.ec2_instance, which routes
+      # stopped-instance starts through a "reboot" code path that fails with
+      # InsufficientInstanceCapacity even when capacity exists.  A plain
+      # start-instances call matches what the console does.
+      # GPU instances (g5.xlarge) can have transient capacity delays — retry up
+      # to 6 times with 60 s gaps (≤ 6 min total) before giving up.
+      ansible.builtin.command: >
+        aws ec2 start-instances
+        --instance-ids {{ ec2_vectorize_instance }}
+        --region {{ aws_region }}
       register: vectorizer_start
+      until: vectorizer_start.rc == 0
+      retries: 6
+      delay: 60
       ignore_errors: true
 
     - name: Warn if vectorizer EC2 could not be started
       ansible.builtin.debug:
         msg: >-
-          GPU EC2 ({{ ec2_vectorize_instance }}) could not be started
-          ({{ vectorizer_start.msg | default('unknown error') }}) —
+          GPU EC2 ({{ ec2_vectorize_instance }}) could not be started after retries —
           skipping vectorizer update. It will be updated next time monitor.py starts it.
       when: vectorizer_start is failed
 
-    - name: Fetch current vectorizer EC2 details (for public IP)
+    - name: Wait for vectorizer EC2 to reach running state
       amazon.aws.ec2_instance_info:
         instance_ids: ["{{ ec2_vectorize_instance }}"]
         region: "{{ aws_region }}"
       register: vectorizer_info
+      until: vectorizer_info.instances[0].state.name == 'running'
+      retries: 20
+      delay: 15
       when: vectorizer_start is not failed
 
     - name: Add vectorizer to in-memory inventory with current public IP
