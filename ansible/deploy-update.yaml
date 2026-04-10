@@ -25,6 +25,15 @@
         force: true  # Overwrite any server-side edits so re-runs are reliable
       register: git_result
 
+    - name: Write production .env from vars.yaml
+      # Keep the server's .env in sync with vars.yaml so credential changes
+      # (e.g. after a fresh setup.sh run) are propagated before containers restart.
+      # Without this, the server's .env can be stale and seed/app auth fails.
+      ansible.builtin.template:
+        src: ./.env.j2
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
+        mode: "0600"
+
     - name: Get git SHA for image tagging
       ansible.builtin.command:
         cmd: git rev-parse --short HEAD

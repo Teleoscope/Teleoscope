@@ -69,23 +69,6 @@
         virtualenv: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed"
         virtualenv_command: python3 -m venv
 
-    - name: Read MONGODB_PASSWORD from deployed .env (source of truth)
-      # vars.yaml on the controller can drift from what site.yaml actually deployed.
-      # The .env on the server IS what the running containers use, so read it here
-      # to guarantee the seed script authenticates with the same password.
-      ansible.builtin.shell:
-        cmd: >-
-          grep '^MONGODB_PASSWORD=' "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env" |
-          cut -d'=' -f2-
-      register: _env_mongo_password
-      changed_when: false
-      no_log: true
-
-    - name: Set _mongodb_password fact
-      ansible.builtin.set_fact:
-        _mongodb_password: "{{ _env_mongo_password.stdout | trim }}"
-      no_log: true
-
     - name: Run seed-demo-corpus.py (MongoDB + Zilliz)
       block:
         - name: Launch seed script
@@ -105,9 +88,7 @@
           environment:
             PYTHONPATH: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
             # MongoDB: connect directly (replicaSet node) using the app user.
-            # Username 'teleoscope' matches mongo-init.js and docker-compose.yml (both hardcode it).
-            # Password is read from the deployed .env, not from vars.yaml, to avoid drift.
-            MONGODB_URI: "mongodb://teleoscope:{{ _mongodb_password }}@localhost:27017/{{ mongodb_database }}?directConnection=true&serverSelectionTimeoutMS=10000&authSource=admin"
+            MONGODB_URI: "mongodb://{{ mongodb_dev_name }}:{{ mongodb_dev_password }}@localhost:27017/{{ mongodb_database }}?directConnection=true&serverSelectionTimeoutMS=10000&authSource=admin"
             MONGODB_DATABASE: "{{ mongodb_database }}"
             # Milvus / Zilliz Cloud.
             # NOTE: containers use MILVUS_DOCKER_URI mapped to MILVUS_URI internally;
