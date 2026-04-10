@@ -34,6 +34,25 @@
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
         mode: "0600"
 
+    - name: Sync MongoDB teleoscope user password with vars.yaml
+      # mongo-init.js only runs on a fresh volume; if mongodb_dev_password
+      # changed in vars.yaml after the initial setup, MongoDB still holds the
+      # old password and every container / seed script auth attempt will fail
+      # with code 18 (AuthenticationFailed).  Idempotent: updateUser is safe
+      # to run even when the password is already correct.
+      ansible.builtin.shell: |
+        docker exec teleoscope-mongodb-1 \
+          mongosh --host 127.0.0.1 \
+          -u admin -p "{{ mongodb_admin_password }}" \
+          --authenticationDatabase admin --quiet \
+          --eval 'db.getSiblingDB("admin").updateUser(
+            "{{ mongodb_dev_name }}",
+            {pwd: "{{ mongodb_dev_password }}"}
+          )'
+      become: true
+      changed_when: false
+      no_log: true  # prevent password appearing in ansible -v output
+
     - name: Get git SHA for image tagging
       ansible.builtin.command:
         cmd: git rev-parse --short HEAD
