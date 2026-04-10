@@ -197,6 +197,7 @@ def _fmt_elapsed(seconds: float) -> str:
 
 
 _GIT_LFS_POINTER_HEADER = b"version https://git-lfs.github.com/spec/v1"
+_7Z_MAGIC = b"\x37\x7A\xBC\xAF\x27\x1C"
 
 
 def _is_git_lfs_pointer(path: Path) -> bool:
@@ -204,6 +205,15 @@ def _is_git_lfs_pointer(path: Path) -> bool:
     try:
         with open(path, "rb") as f:
             return f.read(len(_GIT_LFS_POINTER_HEADER)) == _GIT_LFS_POINTER_HEADER
+    except OSError:
+        return False
+
+
+def _is_valid_7z(path: Path) -> bool:
+    """Return True if *path* starts with the 7z magic bytes (not truncated/corrupt)."""
+    try:
+        with open(path, "rb") as f:
+            return f.read(len(_7Z_MAGIC)) == _7Z_MAGIC
     except OSError:
         return False
 
@@ -219,13 +229,24 @@ def demo_document_sources_present() -> bool:
                 "WARN",
             )
             return False  # treat as absent so ensure_demo_data_files triggers a fresh download
+        if not _is_valid_7z(DOCUMENTS_7Z):
+            log(
+                f"{DOCUMENTS_7Z.name} has an invalid 7z header — the download was likely "
+                "interrupted.  Delete the file and re-run to trigger a fresh download.",
+                "WARN",
+            )
+            return False
         return True
     return jsonl_path.is_file()
 
 
 def find_parquet_dir() -> Path | None:
     for d in PARQUET_DIRS:
-        if d.is_dir() and list(d.glob("part-*.parquet")):
+        if not d.is_dir():
+            continue
+        # Only count files that are real parquet data, not LFS pointer stubs.
+        real = [f for f in d.glob("part-*.parquet") if not _is_git_lfs_pointer(f)]
+        if real:
             return d
     return None
 
