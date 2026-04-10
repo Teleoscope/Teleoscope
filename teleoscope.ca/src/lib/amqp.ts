@@ -8,7 +8,8 @@ const port = process.env.RABBITMQ_PORT
 const vhost = process.env.RABBITMQ_VHOST
 const database = process.env.MONGODB_DATABASE
 
-const rabbitMqUrl = `amqp://${username}:${password}@${host}:${port}/${vhost}`
+const encodedVhost = encodeURIComponent(vhost || '/');
+const rabbitMqUrl = `amqp://${username}:${password}@${host}:${port}/${encodedVhost}`
 
 // RABBITMQ_DISPATCH_QUEUE is the canonical name used by the backend monitor and
 // workers. RABBITMQ_QUEUE is an older alias kept for backward compatibility.
