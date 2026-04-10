@@ -37,11 +37,15 @@ load_dotenv()
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
 
 from bson.objectid import ObjectId
 
 from backend import embeddings
 from backend import utils
+from milvus_io_utils import connect_milvus_client, use_milvus_db
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -187,10 +191,11 @@ def reconcile(
         len(docs),
     )
 
-    client = embeddings.connect()
+    client, db_override = connect_milvus_client()
     try:
+        use_milvus_db(client, db_override)
         embeddings.milvus_setup(client, workspace_partition, collection_name=collection_name)
-        embeddings.use_database_if_supported(client)
+        use_milvus_db(client, db_override)
         client.load_partitions(
             collection_name=collection_name,
             partition_names=[workspace_partition],
@@ -257,6 +262,7 @@ def reconcile(
 
         written = 0
         for chunk in _chunked(upserts, batch_size):
+            use_milvus_db(client, db_override)
             client.upsert(
                 collection_name=collection_name,
                 partition_name=workspace_partition,
@@ -265,6 +271,7 @@ def reconcile(
             written += len(chunk)
             log.info("Upserted %s/%s alias vectors.", written, len(upserts))
 
+        use_milvus_db(client, db_override)
         client.flush(collection_name=collection_name)
         log.info(
             "Done. Upserted %s alias vectors into collection=%s partition=%s.",

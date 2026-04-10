@@ -186,15 +186,14 @@ def _milvus_client_kwargs(uri: str, *, with_db_name: bool) -> dict:
 
 def _prefer_default_db_first(uri: str) -> bool:
     """
-    Standalone / Docker Milvus over plain HTTP usually has no database named MILVUS_DBNAME;
-    passing db_name in the constructor makes pymilvus log RPC errors before we can fall back.
-    Zilliz and other HTTPS + token endpoints typically expect the named DB in connect.
+    Prefer connecting without db_name first unless explicitly forced.
+
+    In practice, some Zilliz / managed Milvus setups can hang during constructor-time
+    db_name negotiation, while a plain connect plus later using_database() succeeds
+    or fails fast. This keeps the connection path consistent across Docker, scripts,
+    and managed endpoints.
     """
     if os.getenv("MILVUS_FORCE_DB_NAME_ON_CONNECT", "").lower() in ("1", "true", "yes"):
-        return False
-    if uri.lower().startswith("https://"):
-        return False
-    if milvus_has_credentials():
         return False
     return True
 
