@@ -153,6 +153,7 @@ def vectorize_documents(
     touch_workspace_activity()
     load_model()
     assert model is not None
+    acked = False
 
     try:
         message = json.loads(body.decode("utf-8"))
@@ -163,11 +164,13 @@ def vectorize_documents(
         if len(documents) == 0:
             logging.warning("No documents found in the message.")
             ch.basic_ack(delivery_tag=method.delivery_tag)
+            acked = True
             return
 
         if workspace_id == "":
             logging.warning("No workspace included.")
             ch.basic_ack(delivery_tag=method.delivery_tag)
+            acked = True
             return
 
         logging.info(
@@ -224,7 +227,8 @@ def vectorize_documents(
     except Exception as e:
         logging.error("Error during vectorization: %s", e)
     finally:
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+        if not acked:
+            ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 def _stop_consuming_safe() -> None:
