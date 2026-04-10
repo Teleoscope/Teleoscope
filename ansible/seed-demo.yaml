@@ -99,60 +99,83 @@
       no_log: true  # prevent password appearing in ansible -v output
 
     # ── Phase 1: MongoDB ─────────────────────────────────────────────────────
-    # Three sub-phases, all slow on first run for 347 k documents:
-    #   1. extract + parse documents.jsonl.7z in memory
+    # Three sequential sub-phases, all slow on first run for 347 k documents:
+    #   1. extract + parse documents.jsonl.7z
     #   2. bulk insert_many (695 batches × 500 docs, ordered=False, resumable)
-    #   3. $text index build on title+text — the slowest step, can take
-    #      30-60 min on a small EC2 for this corpus; this is why Zilliz never
-    #      started in previous runs that hit the 30-min timeout.
-    # No MILVUS_URI → script exits after the text index and skips Zilliz.
-    - name: "Phase 1/2 — MongoDB (extract → insert → text-index)"
+    #   3. $text index build on title+text — the slowest step, can exceed 30 min
+    #      on a small EC2; this is why Zilliz never started in earlier runs.
+    # No MILVUS_URI → script exits after the text index and skips Zilliz entirely,
+    # keeping this phase bounded and independently retryable.
+    - name: "Phase 1/2 — MongoDB (extract → bulk-insert → text-index)"
       block:
-        - name: Launch MongoDB seeding
-          ansible.builtin.shell:
-            cmd: >-
-              {{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python
-              scripts/seed-demo-corpus.py
-              --no-progress
-              --workspace-documents-only
-              > /tmp/seed-demo-mongo.log 2>&1
+        - name: Start MongoDB seed in background
+          ansible.builtin.shell: |
+            # Idempotency: skip if already completed successfully.
+            if [ -f /tmp/seed-mongo.rc ] && [ "$(cat /tmp/seed-mongo.rc)" = "0" ]; then
+              echo "already completed — skipping"
+              exit 0
+            fi
+            rm -f /tmp/seed-mongo.rc /tmp/seed-demo-mongo.log
+            nohup sh -c '{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python scripts/seed-demo-corpus.py --no-progress --workspace-documents-only > /tmp/seed-demo-mongo.log 2>&1; echo $? > /tmp/seed-mongo.rc' >/dev/null 2>&1 &
+            disown $!
+          args:
             chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
           environment:
             PYTHONPATH: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
             MONGODB_URI: "mongodb://{{ mongodb_dev_name }}:{{ mongodb_dev_password }}@localhost:27017/{{ mongodb_database }}?directConnection=true&serverSelectionTimeoutMS=10000&authSource=admin"
             MONGODB_DATABASE: "{{ mongodb_database }}"
             TELEOSCOPE_DATA_DIR: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
-            # Intentionally no MILVUS_URI: script skips Zilliz and exits after
-            # text-index build, keeping this phase bounded and independently retryable.
           no_log: true
-          timeout: 7200   # 2 h; text-index build on 347 k docs can be slow
+          changed_when: true
+
+        - name: Monitor MongoDB seed (last 30 log lines every 60 s)
+          # Ansible prints each retry attempt, so the log tail below is visible
+          # on every poll — watch the extract / insert / text-index phases roll by.
+          # For live streaming: ssh to the host and run: tail -f /tmp/seed-demo-mongo.log
+          ansible.builtin.shell: |
+            echo "=== $(date -u '+%H:%M:%S UTC') ==="
+            tail -30 /tmp/seed-demo-mongo.log 2>/dev/null || echo "(log not yet created)"
+            [ -f /tmp/seed-mongo.rc ] && echo "--- DONE ---" || echo "--- still running ---"
+          register: mongo_poll
+          until: "'--- DONE ---' in mongo_poll.stdout"
+          retries: 120   # 120 × 60 s = 2 hours
+          delay: 60
+          changed_when: false
+
+        - name: Fail if MongoDB seed exited non-zero
+          ansible.builtin.shell: cat /tmp/seed-mongo.rc
+          register: mongo_rc
+          changed_when: false
+          failed_when: (mongo_rc.stdout | trim) != "0"
 
       always:
-        - name: Show MongoDB seed output
+        - name: Show full MongoDB seed log (last 200 lines)
           ansible.builtin.command:
             cmd: tail -200 /tmp/seed-demo-mongo.log
-          register: mongo_seed_log
+          register: mongo_final_log
           changed_when: false
           failed_when: false
         - ansible.builtin.debug:
-            var: mongo_seed_log.stdout_lines
+            var: mongo_final_log.stdout_lines
 
     # ── Phase 2: Zilliz ──────────────────────────────────────────────────────
     # --milvus-only skips MongoDB entirely and upserts parquet vectors to Zilliz.
-    # 347 k vectors / 1000-per-batch = 348 HTTPS RPCs; each RPC can take several
-    # seconds against a cold Zilliz cluster, so this phase can exceed 30 min.
-    # SEED_MILVUS_BATCH_LOG=1 logs one line per batch so the tail below shows
-    # how far the upsert got if it fails or times out.
+    # 347 k vectors / 1000-per-batch = 348 HTTPS RPCs to Zilliz Cloud.
+    # SEED_MILVUS_BATCH_LOG=1 logs one [OK] line per batch so the monitor poll
+    # and the final log both show exactly how far the upsert has progressed.
     - name: "Phase 2/2 — Zilliz upsert (--milvus-only)"
       block:
-        - name: Launch Zilliz upsert
-          ansible.builtin.shell:
-            cmd: >-
-              {{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python
-              scripts/seed-demo-corpus.py
-              --no-progress
-              --milvus-only
-              > /tmp/seed-demo-zilliz.log 2>&1
+        - name: Start Zilliz upsert in background
+          ansible.builtin.shell: |
+            # Idempotency: skip if already completed successfully.
+            if [ -f /tmp/seed-zilliz.rc ] && [ "$(cat /tmp/seed-zilliz.rc)" = "0" ]; then
+              echo "already completed — skipping"
+              exit 0
+            fi
+            rm -f /tmp/seed-zilliz.rc /tmp/seed-demo-zilliz.log
+            nohup sh -c '{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python scripts/seed-demo-corpus.py --no-progress --milvus-only > /tmp/seed-demo-zilliz.log 2>&1; echo $? > /tmp/seed-zilliz.rc' >/dev/null 2>&1 &
+            disown $!
+          args:
             chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
           environment:
             PYTHONPATH: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
@@ -162,17 +185,35 @@
             MILVUS_TOKEN: "{{ milvus_token }}"
             MILVUS_DATABASE: "{{ milvus_dbname | default('teleoscope') }}"
             MILVUS_SKIP_TCP_PREFLIGHT: "1"
-            SEED_MILVUS_BATCH_LOG: "1"   # one log line per 1000-vector batch
+            SEED_MILVUS_BATCH_LOG: "1"   # one [OK] line per 1000-vector batch
             TELEOSCOPE_DATA_DIR: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
           no_log: true
-          timeout: 7200   # 2 h; 348 batches × ~5 s/RPC to Zilliz Cloud ≈ 29 min
+          changed_when: true
+
+        - name: Monitor Zilliz upsert (last 30 log lines every 60 s)
+          # For live streaming: ssh to the host and run: tail -f /tmp/seed-demo-zilliz.log
+          ansible.builtin.shell: |
+            echo "=== $(date -u '+%H:%M:%S UTC') ==="
+            tail -30 /tmp/seed-demo-zilliz.log 2>/dev/null || echo "(log not yet created)"
+            [ -f /tmp/seed-zilliz.rc ] && echo "--- DONE ---" || echo "--- still running ---"
+          register: zilliz_poll
+          until: "'--- DONE ---' in zilliz_poll.stdout"
+          retries: 120   # 120 × 60 s = 2 hours
+          delay: 60
+          changed_when: false
+
+        - name: Fail if Zilliz upsert exited non-zero
+          ansible.builtin.shell: cat /tmp/seed-zilliz.rc
+          register: zilliz_rc
+          changed_when: false
+          failed_when: (zilliz_rc.stdout | trim) != "0"
 
       always:
-        - name: Show Zilliz upsert output
+        - name: Show full Zilliz upsert log (last 200 lines)
           ansible.builtin.command:
             cmd: tail -200 /tmp/seed-demo-zilliz.log
-          register: zilliz_seed_log
+          register: zilliz_final_log
           changed_when: false
           failed_when: false
         - ansible.builtin.debug:
-            var: zilliz_seed_log.stdout_lines
+            var: zilliz_final_log.stdout_lines
