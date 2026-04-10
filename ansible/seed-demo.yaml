@@ -69,6 +69,24 @@
         virtualenv: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed"
         virtualenv_command: python3 -m venv
 
+    - name: Sync MongoDB teleoscope user password with vars.yaml
+      # mongo-init.js runs only once on fresh volume creation.  If the password
+      # drifted between vars.yaml and the live MongoDB instance, the seed script
+      # will hit AuthenticationFailed (code 18) even though .env looks correct.
+      # updateUser is idempotent — safe to run even when the password matches.
+      ansible.builtin.shell: |
+        docker exec teleoscope-mongodb-1 \
+          mongosh --host 127.0.0.1 \
+          -u admin -p "{{ mongodb_admin_password }}" \
+          --authenticationDatabase admin --quiet \
+          --eval 'db.getSiblingDB("admin").updateUser(
+            "{{ mongodb_dev_name }}",
+            {pwd: "{{ mongodb_dev_password }}"}
+          )'
+      become: true
+      changed_when: false
+      no_log: true  # prevent password appearing in ansible -v output
+
     - name: Run seed-demo-corpus.py (MongoDB + Zilliz)
       block:
         - name: Launch seed script

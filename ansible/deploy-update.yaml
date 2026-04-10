@@ -34,6 +34,25 @@
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
         mode: "0600"
 
+    - name: Sync MongoDB teleoscope user password with vars.yaml
+      # mongo-init.js only runs on a fresh volume; if mongodb_dev_password
+      # changed in vars.yaml after the initial setup, MongoDB still holds the
+      # old password and every container / seed script auth attempt will fail
+      # with code 18 (AuthenticationFailed).  Idempotent: updateUser is safe
+      # to run even when the password is already correct.
+      ansible.builtin.shell: |
+        docker exec teleoscope-mongodb-1 \
+          mongosh --host 127.0.0.1 \
+          -u admin -p "{{ mongodb_admin_password }}" \
+          --authenticationDatabase admin --quiet \
+          --eval 'db.getSiblingDB("admin").updateUser(
+            "{{ mongodb_dev_name }}",
+            {pwd: "{{ mongodb_dev_password }}"}
+          )'
+      become: true
+      changed_when: false
+      no_log: true  # prevent password appearing in ansible -v output
+
     - name: Get git SHA for image tagging
       ansible.builtin.command:
         cmd: git rev-parse --short HEAD
@@ -117,7 +136,7 @@
       amazon.aws.ec2_instance:
         instance_ids: ["{{ ec2_worker_instance }}"]
         region: "{{ aws_region }}"
-        state: started
+        state: running
         wait: true
         wait_timeout: 300
       register: worker_start
@@ -143,16 +162,26 @@
       amazon.aws.ec2_instance:
         instance_ids: ["{{ ec2_vectorize_instance }}"]
         region: "{{ aws_region }}"
-        state: started
+        state: running
         wait: true
         wait_timeout: 300
       register: vectorizer_start
+      ignore_errors: true
+
+    - name: Warn if vectorizer EC2 could not be started
+      ansible.builtin.debug:
+        msg: >-
+          GPU EC2 ({{ ec2_vectorize_instance }}) could not be started
+          ({{ vectorizer_start.msg | default('unknown error') }}) —
+          skipping vectorizer update. It will be updated next time monitor.py starts it.
+      when: vectorizer_start is failed
 
     - name: Fetch current vectorizer EC2 details (for public IP)
       amazon.aws.ec2_instance_info:
         instance_ids: ["{{ ec2_vectorize_instance }}"]
         region: "{{ aws_region }}"
       register: vectorizer_info
+      when: vectorizer_start is not failed
 
     - name: Add vectorizer to in-memory inventory with current public IP
       ansible.builtin.add_host:
@@ -161,6 +190,7 @@
         ansible_host: "{{ vectorizer_info.instances[0].public_ip_address }}"
         ansible_user: "{{ ansible_user }}"
         ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+      when: vectorizer_start is not failed
 
 # ── PLAY 3: Update worker EC2 ─────────────────────────────────────────────────
 - name: Update worker EC2
