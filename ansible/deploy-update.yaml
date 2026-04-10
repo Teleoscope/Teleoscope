@@ -68,6 +68,7 @@
           - docker-compose.prod.yml
         build: always
         state: present
+        recreate: always
         pull: missing
       become: true
 

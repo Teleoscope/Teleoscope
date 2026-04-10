@@ -460,6 +460,7 @@
         files: [docker-compose.yml, docker-compose.prod.yml]
         build: "{{ 'always' if (rebuild | default(false) | bool or _main_image.rc != 0) else 'never' }}"
         state: present
+        recreate: always
       become: true
 
     - name: Tag app image with git SHA for rollback reference
