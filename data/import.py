@@ -17,7 +17,7 @@ from pymilvus import MilvusClient, DataType
 from backend.milvus_script_connect import connect_milvus_script_client
 
 COLLECTION_NAME = "reddit_posts"
-PARQUET_DIR = Path("parquet_export_dynamic")  # or parquet_out/full
+PARQUET_DIR = Path("parquet_export")  # or parquet_out/full
 
 
 def main() -> None:
