@@ -1,0 +1,10 @@
+{
+  "collection": "teleoscope",
+  "partitions": [
+    "69b4d774c7c77e8bed5149a9"
+  ],
+  "total_rows": 0,
+  "format": "jsonl",
+  "gzip": false,
+  "schema_note": "id (str), vector (list[float] len 1024), optional dynamic fields"
+}
