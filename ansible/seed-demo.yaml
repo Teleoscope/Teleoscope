@@ -50,23 +50,57 @@
         cmd: git lfs install
       changed_when: false
 
-    - name: Remove documents.jsonl.7z if it is a Git LFS pointer stub
-      # A shallow git clone without git-lfs leaves a ~130-byte text stub instead of
-      # the real archive.  The seed script treats any existing file as valid data and
-      # skips the re-download, then fails with "not a 7z file".  Delete the stub here
-      # so the seed script triggers a fresh git-lfs-aware download on next run.
-      ansible.builtin.shell:
-        cmd: >-
-          if [ -f "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data/documents.jsonl.7z" ] &&
-          head -c 43 "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data/documents.jsonl.7z" |
-          grep -q "^version https://git-lfs"; then
-            rm "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data/documents.jsonl.7z" &&
-            echo "removed LFS stub";
+    - name: Validate data files — remove LFS stubs and incomplete downloads
+      # The seed script only checks existence + LFS pointer status.  A download
+      # interrupted mid-transfer leaves a file that passes those checks but
+      # fails later (py7zr "not a 7z file"; pyarrow read error).  Remove any
+      # bad files here so ensure_demo_data_files() triggers a fresh download.
+      #
+      # Checks applied:
+      #   documents.jsonl.7z
+      #     1. LFS pointer stub (first 43 bytes match "version https://git-lfs")
+      #     2. Invalid 7z magic (first 2 bytes must be 0x37 0x7A = ASCII "7z")
+      #   parquet_export/part-*.parquet  (both flat and /full sub-dir)
+      #     1. LFS pointer stub (same byte check)
+      ansible.builtin.shell: |
+        DATA="{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
+        REMOVED=0
+
+        # ── documents.jsonl.7z ─────────────────────────────────────────────
+        Z="$DATA/documents.jsonl.7z"
+        if [ -f "$Z" ]; then
+          if head -c 43 "$Z" 2>/dev/null | grep -q "^version https://git-lfs"; then
+            rm "$Z" && echo "removed LFS stub: documents.jsonl.7z"
+            REMOVED=$((REMOVED+1))
           else
-            echo "not an LFS stub";
+            # Verify 7z magic bytes (0x37 0x7A).  od -A n -t x1 prints hex
+            # bytes without an address field; tr removes whitespace.
+            MAGIC=$(head -c 2 "$Z" 2>/dev/null | od -A n -t x1 | tr -d ' \n')
+            if [ "$MAGIC" != "377a" ]; then
+              rm "$Z" && echo "removed corrupt/incomplete download (header=$MAGIC): documents.jsonl.7z"
+              REMOVED=$((REMOVED+1))
+            else
+              echo "ok: documents.jsonl.7z (valid 7z header)"
+            fi
           fi
-      register: lfs_stub_result
-      changed_when: "'removed LFS stub' in lfs_stub_result.stdout"
+        else
+          echo "absent: documents.jsonl.7z (will be downloaded by seed script)"
+        fi
+
+        # ── parquet_export/part-*.parquet ─────────────────────────────────
+        for F in \
+          "$DATA"/parquet_export/part-*.parquet \
+          "$DATA"/parquet_export/full/part-*.parquet; do
+          [ -f "$F" ] || continue
+          if head -c 43 "$F" 2>/dev/null | grep -q "^version https://git-lfs"; then
+            rm "$F" && echo "removed LFS stub: $(basename $F)"
+            REMOVED=$((REMOVED+1))
+          fi
+        done
+
+        [ "$REMOVED" -eq 0 ] && echo "all data files look valid" || echo "removed $REMOVED bad file(s) — seed script will re-download"
+      register: data_validation
+      changed_when: "'removed' in data_validation.stdout"
 
     - name: Create seed virtualenv and install Python dependencies
       ansible.builtin.pip:
