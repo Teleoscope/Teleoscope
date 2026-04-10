@@ -76,8 +76,11 @@
             TELEOSCOPE_DATA_DIR: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
           no_log: true  # Prevent MONGODB_URI (with password) appearing in ansible -v output
           # Seed can take several minutes on first run (parquet upsert to Zilliz).
-          async: 1800
-          poll: 30
+          # Do NOT use async here: async tasks that fail with jid=None bypass block
+          # error-handling entirely, so the always section never runs and the log
+          # file is never shown.  Synchronous execution with a generous task-level
+          # timeout is reliable and lets block/always work as expected.
+          timeout: 1800
 
       always:
         - name: Show seed output (stdout + stderr)
