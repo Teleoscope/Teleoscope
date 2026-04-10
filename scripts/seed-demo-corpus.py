@@ -196,9 +196,31 @@ def _fmt_elapsed(seconds: float) -> str:
     return f"{seconds:.1f}s"
 
 
+_GIT_LFS_POINTER_HEADER = b"version https://git-lfs.github.com/spec/v1"
+
+
+def _is_git_lfs_pointer(path: Path) -> bool:
+    """Return True if *path* is a Git LFS pointer (real file was never fetched)."""
+    try:
+        with open(path, "rb") as f:
+            return f.read(len(_GIT_LFS_POINTER_HEADER)) == _GIT_LFS_POINTER_HEADER
+    except OSError:
+        return False
+
+
 def demo_document_sources_present() -> bool:
     jsonl_path = DATA_DIR / "documents.jsonl"
-    return DOCUMENTS_7Z.exists() or jsonl_path.is_file()
+    if DOCUMENTS_7Z.exists():
+        if _is_git_lfs_pointer(DOCUMENTS_7Z):
+            log(
+                f"{DOCUMENTS_7Z.name} is a Git LFS pointer — the real archive was not fetched. "
+                "Install git-lfs on the host (sudo apt install git-lfs && git lfs install) "
+                "and re-run, or delete the pointer file and re-run with --download.",
+                "WARN",
+            )
+            return False  # treat as absent so ensure_demo_data_files triggers a fresh download
+        return True
+    return jsonl_path.is_file()
 
 
 def find_parquet_dir() -> Path | None:

@@ -38,6 +38,17 @@ info "Cloning (shallow, depth=1)..."
 git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$TMP_DIR"
 ok "Clone finished"
 
+# Resolve Git LFS objects so large files aren't left as pointer stubs.
+# git-lfs must be installed (sudo apt install git-lfs && git lfs install).
+if git -C "$TMP_DIR" lfs --version &>/dev/null 2>&1; then
+  info "Resolving Git LFS objects (git lfs pull)..."
+  git -C "$TMP_DIR" lfs pull
+  ok "Git LFS objects resolved"
+else
+  warn "git-lfs not found — large files may be Git LFS pointer stubs, not real data."
+  warn "Install git-lfs: sudo apt install git-lfs && git lfs install && re-run this script."
+fi
+
 info "Copying into $DATA_DIR (excluding .git)..."
 if command -v rsync &>/dev/null; then
   rsync -a --exclude='.git' "$TMP_DIR/" "$DATA_DIR/"
