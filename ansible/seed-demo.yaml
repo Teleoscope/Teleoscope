@@ -45,33 +45,46 @@
         virtualenv_command: python3 -m venv
 
     - name: Run seed-demo-corpus.py (MongoDB + Zilliz)
-      ansible.builtin.command:
-        cmd: >
-          {{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python
-          scripts/seed-demo-corpus.py
-          --no-progress
-          --workspace-documents-only
-        chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
-      environment:
-        PYTHONPATH: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
-        # MongoDB: connect directly (replicaSet node) using the app user.
-        MONGODB_URI: "mongodb://{{ mongodb_dev_name }}:{{ mongodb_dev_password }}@localhost:27017/{{ mongodb_database }}?directConnection=true&serverSelectionTimeoutMS=10000&authSource=admin"
-        MONGODB_DATABASE: "{{ mongodb_database }}"
-        # Milvus / Zilliz Cloud.
-        # NOTE: containers use MILVUS_DOCKER_URI mapped to MILVUS_URI internally;
-        # the seed script runs on the host so we pass MILVUS_URI directly.
-        MILVUS_URI: "{{ milvus_uri }}"
-        MILVUS_TOKEN: "{{ milvus_token }}"
-        MILVUS_DATABASE: "{{ milvus_dbname | default('teleoscope') }}"
-        # Zilliz is HTTPS — skip the raw TCP port preflight check.
-        MILVUS_SKIP_TCP_PREFLIGHT: "1"
-        TELEOSCOPE_DATA_DIR: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
-      register: seed_result
-      no_log: true  # Prevent MONGODB_URI (with password) appearing in ansible -v output
-      # Seed can take several minutes on first run (parquet upsert to Zilliz).
-      async: 1800
-      poll: 30
+      block:
+        - name: Launch seed script
+          ansible.builtin.shell:
+            # Redirect both stdout and stderr to a log file so we can display
+            # them in the 'always' block below regardless of exit status.
+            # The shell task itself stays no_log to keep MONGODB_URI out of
+            # ansible -v output; the log file read is a plain task with no
+            # sensitive variables so it is always visible.
+            cmd: >-
+              {{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python
+              scripts/seed-demo-corpus.py
+              --no-progress
+              --workspace-documents-only
+              > /tmp/seed-demo.log 2>&1
+            chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+          environment:
+            PYTHONPATH: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+            # MongoDB: connect directly (replicaSet node) using the app user.
+            MONGODB_URI: "mongodb://{{ mongodb_dev_name }}:{{ mongodb_dev_password }}@localhost:27017/{{ mongodb_database }}?directConnection=true&serverSelectionTimeoutMS=10000&authSource=admin"
+            MONGODB_DATABASE: "{{ mongodb_database }}"
+            # Milvus / Zilliz Cloud.
+            # NOTE: containers use MILVUS_DOCKER_URI mapped to MILVUS_URI internally;
+            # the seed script runs on the host so we pass MILVUS_URI directly.
+            MILVUS_URI: "{{ milvus_uri }}"
+            MILVUS_TOKEN: "{{ milvus_token }}"
+            MILVUS_DATABASE: "{{ milvus_dbname | default('teleoscope') }}"
+            # Zilliz is HTTPS — skip the raw TCP port preflight check.
+            MILVUS_SKIP_TCP_PREFLIGHT: "1"
+            TELEOSCOPE_DATA_DIR: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data"
+          no_log: true  # Prevent MONGODB_URI (with password) appearing in ansible -v output
+          # Seed can take several minutes on first run (parquet upsert to Zilliz).
+          async: 1800
+          poll: 30
 
-    - name: Show seed output
-      ansible.builtin.debug:
-        var: seed_result.stdout_lines
+      always:
+        - name: Show seed output (stdout + stderr)
+          ansible.builtin.command:
+            cmd: tail -200 /tmp/seed-demo.log
+          register: seed_log
+          changed_when: false
+          failed_when: false
+        - ansible.builtin.debug:
+            var: seed_log.stdout_lines
