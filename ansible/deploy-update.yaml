@@ -117,10 +117,13 @@
       amazon.aws.ec2_instance:
         instance_ids: ["{{ ec2_worker_instance }}"]
         region: "{{ aws_region }}"
-        state: started
+        state: running
         wait: true
         wait_timeout: 300
       register: worker_start
+      retries: 5
+      delay: 30
+      until: worker_start is not failed
 
     - name: Fetch current worker EC2 details (for public IP)
       # ec2_instance returns partial data when the instance_status_ok waiter
@@ -143,10 +146,13 @@
       amazon.aws.ec2_instance:
         instance_ids: ["{{ ec2_vectorize_instance }}"]
         region: "{{ aws_region }}"
-        state: started
+        state: running
         wait: true
         wait_timeout: 300
       register: vectorizer_start
+      retries: 5
+      delay: 30
+      until: vectorizer_start is not failed
       ignore_errors: true
 
     - name: Warn if vectorizer EC2 could not be started
