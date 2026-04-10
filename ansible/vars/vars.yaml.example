@@ -62,7 +62,7 @@ vectorizer_idle_stop_minutes: 10
 # -----------------------------------------------------------------------------
 # MongoDB
 # -----------------------------------------------------------------------------
-mongodb_admin_name: teleoscope_admin
+mongodb_admin_name: admin
 mongodb_admin_password: change-me-admin-password
 mongodb_dev_name: teleoscope
 mongodb_dev_password: change-me-app-password

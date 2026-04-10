@@ -174,8 +174,8 @@ services:
       MONGODB_PASSWORD: ${MONGODB_PASSWORD:-teleoscope_dev_password}
       MONGODB_HOST: mongodb
       MONGODB_OPTIONS: directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin
-      RABBITMQ_USERNAME: guest
-      RABBITMQ_PASSWORD: guest
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_VHOST: /
@@ -209,8 +209,8 @@ services:
     command: ["python", "-m", "celery", "-A", "backend.tasks", "worker", "--loglevel=info", "-Q", "teleoscope-tasks"]
     environment:
       C_FORCE_ROOT: 1
-      RABBITMQ_USERNAME: guest
-      RABBITMQ_PASSWORD: guest
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_VHOST: /
@@ -243,8 +243,8 @@ services:
     command: ["python", "-m", "backend.dispatch"]
     environment:
       C_FORCE_ROOT: 1
-      RABBITMQ_USERNAME: guest
-      RABBITMQ_PASSWORD: guest
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_VHOST: /
@@ -264,8 +264,8 @@ services:
     command: ["python", "-m", "celery", "-A", "backend.graph", "worker", "--loglevel=info", "-Q", "graph"]
     environment:
       C_FORCE_ROOT: 1
-      RABBITMQ_USERNAME: guest
-      RABBITMQ_PASSWORD: guest
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_VHOST: /
@@ -297,8 +297,8 @@ services:
     ports:
       - "8765:8765"
     environment:
-      RABBITMQ_USERNAME: guest
-      RABBITMQ_PASSWORD: guest
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_VHOST: /
@@ -322,8 +322,8 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "backend.uploader"]
     environment:
-      RABBITMQ_USERNAME: guest
-      RABBITMQ_PASSWORD: guest
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_VHOST: /

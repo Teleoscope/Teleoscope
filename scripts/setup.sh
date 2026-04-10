@@ -534,7 +534,7 @@ vectorizer_volume_size: ${GPU_VOL}
 worker_idle_stop_minutes: ${WORKER_STOP}
 vectorizer_idle_stop_minutes: ${IDLE_STOP}
 
-mongodb_admin_name: teleoscope_admin
+mongodb_admin_name: admin
 mongodb_admin_password: "${MONGO_ADMIN_PASS}"
 mongodb_dev_name: teleoscope
 mongodb_dev_password: "${MONGO_PASS}"
