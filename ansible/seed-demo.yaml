@@ -39,6 +39,24 @@
         cmd: git lfs install
       changed_when: false
 
+    - name: Remove documents.jsonl.7z if it is a Git LFS pointer stub
+      # A shallow git clone without git-lfs leaves a ~130-byte text stub instead of
+      # the real archive.  The seed script treats any existing file as valid data and
+      # skips the re-download, then fails with "not a 7z file".  Delete the stub here
+      # so the seed script triggers a fresh git-lfs-aware download on next run.
+      ansible.builtin.shell:
+        cmd: >-
+          if [ -f "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data/documents.jsonl.7z" ] &&
+          head -c 43 "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data/documents.jsonl.7z" |
+          grep -q "^version https://git-lfs"; then
+            rm "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/data/documents.jsonl.7z" &&
+            echo "removed LFS stub";
+          else
+            echo "not an LFS stub";
+          fi
+      register: lfs_stub_result
+      changed_when: "'removed LFS stub' in lfs_stub_result.stdout"
+
     - name: Create seed virtualenv and install Python dependencies
       ansible.builtin.pip:
         name:
