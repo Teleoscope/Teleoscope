@@ -87,11 +87,21 @@ def _workspace_documents(db, workspace_id: ObjectId) -> list[dict[str, str]]:
     return rows
 
 
-def _existing_alias_ids(client, collection_name: str, workspace_id: str, mongo_ids: list[str]) -> set[str]:
+def _existing_alias_ids(
+    client,
+    collection_name: str,
+    workspace_id: str,
+    mongo_ids: list[str],
+    *,
+    lookup_batch_size: int,
+    progress_every: int,
+) -> set[str]:
     if not mongo_ids:
         return set()
     found: set[str] = set()
-    for chunk in _chunked(mongo_ids, 1000):
+    total = len(mongo_ids)
+    batches = (total + lookup_batch_size - 1) // lookup_batch_size
+    for batch_idx, chunk in enumerate(_chunked(mongo_ids, lookup_batch_size), start=1):
         rows = client.get(
             collection_name=collection_name,
             partition_names=[workspace_id],
@@ -102,12 +112,31 @@ def _existing_alias_ids(client, collection_name: str, workspace_id: str, mongo_i
             rid = str(row.get("id", "")).strip()
             if rid:
                 found.add(rid)
+        if batch_idx == 1 or batch_idx % progress_every == 0 or batch_idx == batches:
+            log.info(
+                "Alias scan: batch %s/%s (%s/%s ids), found %s existing aliases so far.",
+                batch_idx,
+                batches,
+                min(batch_idx * lookup_batch_size, total),
+                total,
+                len(found),
+            )
     return found
 
 
-def _source_vectors(client, collection_name: str, workspace_id: str, source_ids: list[str]) -> dict[str, dict[str, Any]]:
+def _source_vectors(
+    client,
+    collection_name: str,
+    workspace_id: str,
+    source_ids: list[str],
+    *,
+    lookup_batch_size: int,
+    progress_every: int,
+) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
-    for chunk in _chunked(source_ids, 1000):
+    total = len(source_ids)
+    batches = (total + lookup_batch_size - 1) // lookup_batch_size
+    for batch_idx, chunk in enumerate(_chunked(source_ids, lookup_batch_size), start=1):
         rows = client.get(
             collection_name=collection_name,
             partition_names=[workspace_id],
@@ -118,6 +147,15 @@ def _source_vectors(client, collection_name: str, workspace_id: str, source_ids:
             rid = str(row.get("id", "")).strip()
             if rid:
                 out[rid] = row
+        if batch_idx == 1 or batch_idx % progress_every == 0 or batch_idx == batches:
+            log.info(
+                "Source fetch: batch %s/%s (%s/%s ids), matched %s source rows so far.",
+                batch_idx,
+                batches,
+                min(batch_idx * lookup_batch_size, total),
+                total,
+                len(out),
+            )
     return out
 
 
@@ -127,6 +165,9 @@ def reconcile(
     workspace_id: ObjectId,
     dry_run: bool,
     batch_size: int,
+    lookup_batch_size: int,
+    progress_every: int,
+    limit: int,
 ) -> int:
     db = utils.connect(db=database_name)
     collection_name = _collection_name()
@@ -136,6 +177,9 @@ def reconcile(
     if not docs:
         log.info("No workspace documents with metadata.source_id needing reconciliation.")
         return 0
+    if limit > 0:
+        docs = docs[:limit]
+        log.info("Limiting reconciliation scope to first %s candidate documents.", len(docs))
 
     log.info(
         "Workspace %s: found %s Mongo documents with metadata.source_id candidates.",
@@ -157,6 +201,8 @@ def reconcile(
             collection_name,
             workspace_partition,
             [row["mongo_id"] for row in docs],
+            lookup_batch_size=lookup_batch_size,
+            progress_every=progress_every,
         )
         pending = [row for row in docs if row["mongo_id"] not in existing_aliases]
         if not pending:
@@ -175,6 +221,8 @@ def reconcile(
             collection_name,
             workspace_partition,
             [row["source_id"] for row in pending],
+            lookup_batch_size=lookup_batch_size,
+            progress_every=progress_every,
         )
 
         upserts: list[dict[str, Any]] = []
@@ -246,6 +294,24 @@ def main() -> int:
         help="Mongo database name (default: MONGODB_DATABASE or teleoscope).",
     )
     parser.add_argument("--batch-size", type=int, default=500, help="Milvus upsert batch size.")
+    parser.add_argument(
+        "--lookup-batch-size",
+        type=int,
+        default=100,
+        help="Milvus get() batch size for alias/source lookups (default: 100).",
+    )
+    parser.add_argument(
+        "--progress-every",
+        type=int,
+        default=10,
+        help="Log lookup progress every N batches (default: 10).",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="Only process the first N candidate documents (default: all).",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Preview work without writing to Milvus.")
     args = parser.parse_args()
 
@@ -264,6 +330,9 @@ def main() -> int:
         workspace_id=workspace_id,
         dry_run=args.dry_run,
         batch_size=max(1, args.batch_size),
+        lookup_batch_size=max(1, args.lookup_batch_size),
+        progress_every=max(1, args.progress_every),
+        limit=max(0, args.limit),
     )
 
 
