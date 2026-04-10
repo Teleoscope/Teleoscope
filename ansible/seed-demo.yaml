@@ -151,7 +151,6 @@
             fi
             rm -f /tmp/seed-mongo.rc /tmp/seed-demo-mongo.log
             nohup sh -c '{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python scripts/seed-demo-corpus.py --no-progress --workspace-documents-only > /tmp/seed-demo-mongo.log 2>&1; echo $? > /tmp/seed-mongo.rc' >/dev/null 2>&1 &
-            disown $!
           args:
             chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
           environment:
@@ -208,7 +207,6 @@
             fi
             rm -f /tmp/seed-zilliz.rc /tmp/seed-demo-zilliz.log
             nohup sh -c '{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed/bin/python scripts/seed-demo-corpus.py --no-progress --milvus-only > /tmp/seed-demo-zilliz.log 2>&1; echo $? > /tmp/seed-zilliz.rc' >/dev/null 2>&1 &
-            disown $!
           args:
             chdir: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
           environment:
