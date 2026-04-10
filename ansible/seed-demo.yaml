@@ -40,6 +40,7 @@
           - tqdm
           - python-dotenv
           - pymongo
+          - pymilvus
         virtualenv: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.venv-seed"
         virtualenv_command: python3 -m venv
 
