@@ -10,10 +10,16 @@ const database = process.env.MONGODB_DATABASE
 
 const rabbitMqUrl = `amqp://${username}:${password}@${host}:${port}/${vhost}`
 
+// RABBITMQ_DISPATCH_QUEUE is the canonical name used by the backend monitor and
+// workers. RABBITMQ_QUEUE is an older alias kept for backward compatibility.
+const DISPATCH_QUEUE =
+    process.env.RABBITMQ_DISPATCH_QUEUE ||
+    process.env.RABBITMQ_QUEUE ||
+    'teleoscope-dispatch';
 
 async function send(task: string, args: any) {
-    const queue = `${process.env.RABBITMQ_QUEUE}`;
-    
+    const queue = DISPATCH_QUEUE;
+
     const kwargs = {
         ...args,
         database: database

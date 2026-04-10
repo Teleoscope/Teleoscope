@@ -49,11 +49,36 @@ services:
     restart: "no"
     environment:
       MONGODB_ADMIN_PASSWORD: ${MONGODB_ADMIN_PASSWORD:-admin_password}
+      # MONGODB_RS_HOST controls the replica set member hostname advertised to clients.
+      # Default 'mongodb' works inside Docker (inter-container DNS).
+      # For external / SSH-tunnel inspection set this to the host's IP or hostname so
+      # MongoDB Compass / mongosh can resolve it:
+      #   MONGODB_RS_HOST=<server-ip>  # e.g. 1.2.3.4 or my-server.example.com
+      # When connecting via SSH tunnel use directConnection=true instead:
+      #   mongodb://admin:<pw>@localhost:27017/admin?authSource=admin&directConnection=true
+      MONGODB_RS_HOST: ${MONGODB_RS_HOST:-mongodb}
     entrypoint: ["/bin/bash", "-eu", "-c"]
     command:
       - |
         echo "mongodb-init: ensuring replica set rs0 (Mongo already passed health: admin ping)..."
-        mongosh --host mongodb --username admin --password "$MONGODB_ADMIN_PASSWORD" --authenticationDatabase admin --quiet --eval "try { rs.status(); quit(0); } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] }); quit(0); }"
+        RS_HOST="${MONGODB_RS_HOST:-mongodb}"
+        mongosh --host mongodb --username admin --password "$MONGODB_ADMIN_PASSWORD" --authenticationDatabase admin --quiet --eval "
+          try {
+            var s = rs.status();
+            var cur = s.members[0].name;
+            var want = '${RS_HOST}:27017';
+            if (cur !== want) {
+              print('mongodb-init: reconfiguring RS member from ' + cur + ' to ' + want);
+              var cfg = rs.conf();
+              cfg.members[0].host = want;
+              rs.reconfig(cfg, { force: true });
+            }
+            quit(0);
+          } catch (e) {
+            rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: '${RS_HOST}:27017' }] });
+            quit(0);
+          }
+        "
         echo "mongodb-init: done"
 
   rabbitmq:
@@ -154,6 +179,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_VHOST: /
+      RABBITMQ_DISPATCH_QUEUE: teleoscope-dispatch
       RABBITMQ_QUEUE: teleoscope-dispatch
       TELEOSCOPE_BASE_URL: ${TELEOSCOPE_BASE_URL:-http://localhost:3000}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
