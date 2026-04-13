@@ -389,6 +389,16 @@ def update_rank(
                     output_fields=[vector_field],
                     partition_names=[str(workspace_id)]
                 )
+                if len(results) == 0:
+                    logging.info(
+                        "No source vectors found in partition %s; retrying source fetch globally.",
+                        workspace_id,
+                    )
+                    results = client.get(
+                        collection_name=collection_name,
+                        ids=oids,
+                        output_fields=[vector_field],
+                    )
                 logging.info(f"{len(results)} result vectors found.")
                 source_map.append(
                     (
@@ -400,6 +410,9 @@ def update_rank(
 
         for source, source_oids, source_vecs in source_map:
             logging.info(f"Ranking {len(source_map)} sources.")
+            if not source_vecs:
+                logging.info("No source vectors found for source %s; skipping.", source.get("uid"))
+                continue
             ranks = utils.rank(control_vectors, source_oids, source_vecs)
             ranks = utils.normalize_ranked_document_ids(mdb, workspace_id, ranks)
             doclists.append(
