@@ -141,7 +141,6 @@ def _existing_alias_ids(
 def _source_rows(
     client,
     collection_name: str,
-    workspace_id: str,
     source_ids: list[str],
     *,
     vector_field: str,
@@ -155,7 +154,6 @@ def _source_rows(
     for batch_idx, chunk in enumerate(_chunked(source_ids, lookup_batch_size), start=1):
         rows = client.get(
             collection_name=collection_name,
-            partition_names=[workspace_id],
             ids=chunk,
             output_fields=[vector_field, *copy_fields],
         )
@@ -242,7 +240,6 @@ def reconcile(
         source_rows = _source_rows(
             client,
             collection_name,
-            workspace_partition,
             [row["source_id"] for row in pending],
             vector_field=vector_field,
             copy_fields=copy_fields,
