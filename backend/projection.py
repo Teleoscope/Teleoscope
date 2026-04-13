@@ -13,6 +13,7 @@ from sklearn.metrics.pairwise import cosine_distances
 
 # Local files
 from backend import embeddings
+from backend import utils
 
 # Directory where intermediate results will be cached
 cache_dir = './hdbscan_cache'
@@ -64,6 +65,10 @@ def document_ordering(sources, controls, dbname, workspace_id):
 
         # Organize documents into clusters
         doclists = organize_clusters(cluster_labels, source_oids)
+        for doclist in doclists:
+            doclist["ranked_documents"] = utils.normalize_ranked_document_ids(
+                dbname, workspace_id, doclist["ranked_documents"]
+            )
 
         return doclists
     finally:
@@ -75,18 +80,31 @@ def document_ordering(sources, controls, dbname, workspace_id):
 
 def retrieve_embeddings(client, dbname, workspace_id, sources):
     """Retrieve embeddings for source documents."""
+    vector_field = embeddings.MILVUS_VECTOR_FIELD
     source_oids = []
     for source in sources:
         for doclist in source["doclists"]:
             oids = [r[0] for r in doclist["ranked_documents"]]
             source_oids.extend(oids)
     source_embeddings = embeddings.get_embeddings(client, dbname, workspace_id, source_oids)
-    source_vectors = [s["vector"] for s in source_embeddings]
-    return source_oids, np.array(source_vectors)
+    if len(source_embeddings) == 0 and source_oids:
+        logging.info(
+            "No source embeddings found in partition %s; retrying source fetch globally.",
+            workspace_id,
+        )
+        source_embeddings = client.get(
+            collection_name=embeddings.milvus_collection_name(dbname.name),
+            ids=[str(i) for i in source_oids],
+            output_fields=[vector_field],
+        )
+    source_ids = [str(s["id"]) for s in source_embeddings if vector_field in s and "id" in s]
+    source_vectors = [s[vector_field] for s in source_embeddings if vector_field in s]
+    return source_ids, np.array(source_vectors)
 
 
 def retrieve_control_embeddings(client, dbname, workspace_id, controls):
     """Retrieve embeddings for control documents."""
+    vector_field = embeddings.MILVUS_VECTOR_FIELD
     control_groupings = []
     control_vectors = []
     control_oids = []
@@ -95,8 +113,20 @@ def retrieve_control_embeddings(client, dbname, workspace_id, controls):
             oids = [r[0] for r in doclist["ranked_documents"]]
             control_oids.extend(oids)
             embeds = embeddings.get_embeddings(client, dbname, workspace_id, oids)
+            if len(embeds) == 0 and oids:
+                logging.info(
+                    "No control embeddings found in partition %s; retrying control fetch globally.",
+                    workspace_id,
+                )
+                embeds = client.get(
+                    collection_name=embeddings.milvus_collection_name(dbname.name),
+                    ids=[str(i) for i in oids],
+                    output_fields=[vector_field],
+                )
             for result in embeds:
-                control_vectors.append(result["vector"])
+                if vector_field not in result:
+                    continue
+                control_vectors.append(result[vector_field])
                 control_groupings.append(doclist["uid"])
     return control_groupings, np.array(control_vectors), control_oids
 
