@@ -16,7 +16,7 @@ Runtime code uses **`backend.embeddings.connect()`**, which honors (in order):
 
 Auth for hosted Milvus: set **`MILVUS_TOKEN`**, or **`MILVUS_USERNAME`** + **`MILVUS_PASSWORD`** (combined internally as `user:password`).
 
-Optional database name: **`MILVUS_DBNAME`** (default `teleoscope`). Zilliz may or may not expose multi-DB the same way as standalone Milvus; the client falls back to the default DB if needed.
+Optional database name: **`MILVUS_DBNAME`**. For some Zilliz deployments this is `default` even when older Teleoscope setups used `teleoscope`; match whatever DB actually contains your collections.
 
 ## 1. Export vectors from Docker Milvus
 
@@ -47,7 +47,7 @@ export MILVUS_URI='https://YOUR_ENDPOINT.vectordb.zillizcloud.com:19536'
 export MILVUS_TOKEN='paste-token-from-zilliz-console'
 export MILVUS_USERNAME='db_admin'      # optional if token alone works for your deployment
 export MILVUS_PASSWORD='paste-db-admin-password'
-export MILVUS_DBNAME=teleoscope   # optional; match export
+export MILVUS_DBNAME=default   # optional; match the DB that actually contains your collections
 
 PYTHONPATH=. python scripts/import_milvus_teleoscope.py --in ./milvus-export-docker --batch-size 500
 ```
@@ -63,7 +63,7 @@ In **`.env`** (and any deployment secrets):
 MILVUS_TOKEN=your-zilliz-token
 MILVUS_USERNAME=db_admin
 MILVUS_PASSWORD=your-zilliz-db-admin-password
-MILVUS_DBNAME=teleoscope
+MILVUS_DBNAME=default
 
 # Docker Compose + Zilliz: set MILVUS_DOCKER_URI (compose substitutes worker/uploader MILVUS_URI from it).
 # If you previously put only MILVUS_URI in .env for Zilliz, use MILVUS_DOCKER_URI for that value instead

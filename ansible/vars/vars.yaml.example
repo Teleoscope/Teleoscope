@@ -108,7 +108,7 @@ milvus_uri: "https://your-endpoint.vectordb.zillizcloud.com:19536"
 milvus_token: "your-zilliz-api-key"
 milvus_username: "db_admin"
 milvus_password: "your-zilliz-db-admin-password"
-milvus_dbname: teleoscope
+milvus_dbname: default
 
 # -----------------------------------------------------------------------------
 # Vectorizer
