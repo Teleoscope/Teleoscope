@@ -407,7 +407,7 @@
 
     - name: Write production .env
       ansible.builtin.template:
-        src: ./.env.j2
+        src: ./.env.main.j2
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
         mode: "0600"
 

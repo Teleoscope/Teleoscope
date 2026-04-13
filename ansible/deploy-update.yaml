@@ -15,6 +15,20 @@
     - ./vars/vars.yaml
     - ./vars/infra-outputs.yaml
   become: false
+  tags: [main]
+
+  handlers:
+    - name: restart main stack
+      community.docker.docker_compose_v2:
+        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        files:
+          - docker-compose.yml
+          - docker-compose.prod.yml
+        build: always
+        state: present
+        recreate: always
+        pull: missing
+      become: true
 
   tasks:
     - name: Pull latest code
@@ -24,15 +38,17 @@
         version: main
         force: true  # Overwrite any server-side edits so re-runs are reliable
       register: git_result
+      notify: restart main stack
 
     - name: Write production .env from vars.yaml
       # Keep the server's .env in sync with vars.yaml so credential changes
       # (e.g. after a fresh setup.sh run) are propagated before containers restart.
       # Without this, the server's .env can be stale and seed/app auth fails.
       ansible.builtin.template:
-        src: ./.env.j2
+        src: ./.env.main.j2
         dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
         mode: "0600"
+      notify: restart main stack
 
     - name: Sync MongoDB teleoscope user password with vars.yaml
       # mongo-init.js only runs on a fresh volume; if mongodb_dev_password
@@ -60,17 +76,8 @@
       register: _git_sha
       changed_when: false
 
-    - name: Rebuild and restart changed containers
-      community.docker.docker_compose_v2:
-        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
-        files:
-          - docker-compose.yml
-          - docker-compose.prod.yml
-        build: always
-        state: present
-        recreate: always
-        pull: missing
-      become: true
+    - name: Apply pending main stack changes
+      ansible.builtin.meta: flush_handlers
 
     - name: Tag images with git SHA for rollback reference
       ansible.builtin.shell: |
@@ -141,6 +148,7 @@
         wait: true
         wait_timeout: 300
       register: worker_start
+      tags: [worker]
 
     - name: Fetch current worker EC2 details (for public IP)
       # ec2_instance returns partial data when the instance_status_ok waiter
@@ -150,6 +158,7 @@
         instance_ids: ["{{ ec2_worker_instance }}"]
         region: "{{ aws_region }}"
       register: worker_info
+      tags: [worker]
 
     - name: Add worker to in-memory inventory with current public IP
       ansible.builtin.add_host:
@@ -158,6 +167,7 @@
         ansible_host: "{{ worker_info.instances[0].public_ip_address }}"
         ansible_user: "{{ ansible_user }}"
         ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
+      tags: [worker]
 
     - name: Start vectorizer EC2
       # Use the AWS CLI directly rather than amazon.aws.ec2_instance, which routes
@@ -175,6 +185,7 @@
       retries: 6
       delay: 60
       ignore_errors: true
+      tags: [vectorizer]
 
     - name: Warn if vectorizer EC2 could not be started
       ansible.builtin.debug:
@@ -182,6 +193,7 @@
           GPU EC2 ({{ ec2_vectorize_instance }}) could not be started after retries —
           skipping vectorizer update. It will be updated next time monitor.py starts it.
       when: vectorizer_start is failed
+      tags: [vectorizer]
 
     - name: Wait for vectorizer EC2 to reach running state
       amazon.aws.ec2_instance_info:
@@ -192,6 +204,7 @@
       retries: 20
       delay: 15
       when: vectorizer_start is not failed
+      tags: [vectorizer]
 
     - name: Add vectorizer to in-memory inventory with current public IP
       ansible.builtin.add_host:
@@ -201,6 +214,7 @@
         ansible_user: "{{ ansible_user }}"
         ansible_ssh_private_key_file: "{{ ssh_private_key_file }}"
       when: vectorizer_start is not failed
+      tags: [vectorizer]
 
 # ── PLAY 3: Update worker EC2 ─────────────────────────────────────────────────
 - name: Update worker EC2
@@ -209,6 +223,19 @@
   gather_facts: false
   vars_files:
     - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+  tags: [worker]
+
+  handlers:
+    - name: restart worker stack
+      community.docker.docker_compose_v2:
+        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        files: [docker-compose.workers.yml]
+        build: always
+        state: present
+        pull: missing
+        recreate: always
+      become: true
 
   tasks:
     - name: Wait for SSH to be ready
@@ -222,15 +249,17 @@
         version: main
         force: true
       register: worker_git
+      notify: restart worker stack
 
-    - name: Rebuild and restart worker containers
-      community.docker.docker_compose_v2:
-        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
-        files: [docker-compose.workers.yml]
-        build: always
-        state: present
-        pull: missing
-      become: true
+    - name: Write worker .env from vars.yaml
+      ansible.builtin.template:
+        src: ./.env.workers.j2
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
+        mode: "0600"
+      notify: restart worker stack
+
+    - name: Apply pending worker stack changes
+      ansible.builtin.meta: flush_handlers
 
     - name: Worker update summary
       ansible.builtin.debug:
@@ -243,6 +272,19 @@
   gather_facts: false
   vars_files:
     - ./vars/vars.yaml
+    - ./vars/infra-outputs.yaml
+  tags: [vectorizer]
+
+  handlers:
+    - name: restart vectorizer stack
+      community.docker.docker_compose_v2:
+        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        files: [docker-compose.vectorizer.yml]
+        build: always
+        state: present
+        pull: missing
+        recreate: always
+      become: true
 
   tasks:
     - name: Wait for SSH to be ready
@@ -256,15 +298,17 @@
         version: main
         force: true
       register: vectorizer_git
+      notify: restart vectorizer stack
 
-    - name: Rebuild vectorizer container
-      community.docker.docker_compose_v2:
-        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
-        files: [docker-compose.vectorizer.yml]
-        build: always
-        state: present
-        pull: missing
-      become: true
+    - name: Write vectorizer .env from vars.yaml
+      ansible.builtin.template:
+        src: ./.env.vectorizer.j2
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
+        mode: "0600"
+      notify: restart vectorizer stack
+
+    - name: Apply pending vectorizer stack changes
+      ansible.builtin.meta: flush_handlers
 
     - name: Vectorizer update summary
       ansible.builtin.debug:
@@ -287,6 +331,7 @@
         region: "{{ aws_region }}"
         state: stopped
         wait: false
+      tags: [worker]
 
     - name: Stop vectorizer EC2
       amazon.aws.ec2_instance:
@@ -294,3 +339,4 @@
         region: "{{ aws_region }}"
         state: stopped
         wait: false
+      tags: [vectorizer]

@@ -109,6 +109,11 @@ milvus_token: "your-zilliz-api-key"
 milvus_username: "db_admin"
 milvus_password: "your-zilliz-db-admin-password"
 milvus_dbname: default
+milvus_collection: reddit_posts
+milvus_vector_field: dense
+milvus_vector_index: dense_ivf_flat
+milvus_vector_metric: COSINE
+milvus_vector_dim: 1024
 
 # -----------------------------------------------------------------------------
 # Vectorizer
