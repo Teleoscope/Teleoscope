@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Reconcile Teleoscope Milvus ids with current Mongo document ids.
+"""Reconcile current Milvus ids with current Mongo document ids.
 
 This maintenance script is intended for cases where Mongo documents have been
 re-seeded or re-created, so their current ``_id`` no longer matches the Milvus
 primary key used for previously loaded vectors. It reads Mongo documents for a
-workspace, uses ``metadata.source_id`` to find the existing Milvus vectors, and
+workspace, uses ``metadata.source_id`` to find the existing Milvus rows, and
 upserts alias rows keyed by the current Mongo ``_id`` into the same Milvus
-partition.
+partition and collection schema.
 
 The original Milvus rows keyed by ``metadata.source_id`` are left in place.
 This makes current document ids resolvable without requiring a destructive
@@ -53,7 +53,17 @@ log = logging.getLogger("reconcile_milvus_doc_ids")
 
 
 def _collection_name() -> str:
-    return (os.getenv("MILVUS_COLLECTION") or os.getenv("MILVUS_DBNAME", "teleoscope")).strip()
+    return (os.getenv("MILVUS_COLLECTION") or "reddit_posts").strip()
+
+
+def _vector_field() -> str:
+    return (os.getenv("MILVUS_VECTOR_FIELD") or "dense").strip()
+
+
+def _copy_fields() -> list[str]:
+    raw = (os.getenv("MILVUS_COPY_FIELDS") or "title,text,combined_text").strip()
+    fields = [part.strip() for part in raw.split(",") if part.strip()]
+    return fields
 
 
 def _database_name() -> str:
@@ -128,12 +138,14 @@ def _existing_alias_ids(
     return found
 
 
-def _source_vectors(
+def _source_rows(
     client,
     collection_name: str,
     workspace_id: str,
     source_ids: list[str],
     *,
+    vector_field: str,
+    copy_fields: list[str],
     lookup_batch_size: int,
     progress_every: int,
 ) -> dict[str, dict[str, Any]]:
@@ -145,7 +157,7 @@ def _source_vectors(
             collection_name=collection_name,
             partition_names=[workspace_id],
             ids=chunk,
-            output_fields=["vector"],
+            output_fields=[vector_field, *copy_fields],
         )
         for row in rows:
             rid = str(row.get("id", "")).strip()
@@ -175,6 +187,8 @@ def reconcile(
 ) -> int:
     db = utils.connect(db=database_name)
     collection_name = _collection_name()
+    vector_field = _vector_field()
+    copy_fields = _copy_fields()
     workspace_partition = str(workspace_id)
 
     docs = _workspace_documents(db, workspace_id)
@@ -194,7 +208,11 @@ def reconcile(
     client, db_override = connect_milvus_client()
     try:
         use_milvus_db(client, db_override)
-        embeddings.milvus_setup(client, workspace_partition, collection_name=collection_name)
+        if not client.has_collection(collection_name):
+            raise SystemExit(
+                f"Milvus collection {collection_name!r} does not exist. "
+                "Set MILVUS_COLLECTION to the current collection name before running this script."
+            )
         use_milvus_db(client, db_override)
         client.load_partitions(
             collection_name=collection_name,
@@ -221,11 +239,13 @@ def reconcile(
             len(pending),
         )
 
-        source_rows = _source_vectors(
+        source_rows = _source_rows(
             client,
             collection_name,
             workspace_partition,
             [row["source_id"] for row in pending],
+            vector_field=vector_field,
+            copy_fields=copy_fields,
             lookup_batch_size=lookup_batch_size,
             progress_every=progress_every,
         )
@@ -237,13 +257,11 @@ def reconcile(
             if not source_row:
                 missing_source_ids.append(row["source_id"])
                 continue
-            upserts.append(
-                {
-                    "id": row["mongo_id"],
-                    "vector": source_row["vector"],
-                    "source_id": row["source_id"],
-                }
-            )
+            upsert_row = {"id": row["mongo_id"], vector_field: source_row[vector_field]}
+            for field in copy_fields:
+                if field in source_row:
+                    upsert_row[field] = source_row[field]
+            upserts.append(upsert_row)
 
         log.info(
             "Workspace %s: matched %s source ids, missing %s source ids.",
