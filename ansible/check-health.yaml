@@ -87,6 +87,8 @@
             from pymilvus import MilvusClient
             uri = os.environ.get('MILVUS_URI', '')
             token = os.environ.get('MILVUS_TOKEN', '')
+            username = os.environ.get('MILVUS_USERNAME', '')
+            password = os.environ.get('MILVUS_PASSWORD', '')
             if not uri:
                 print('MILVUS_URI not set')
                 sys.exit(1)
@@ -94,6 +96,8 @@
                 kw = {'uri': uri}
                 if token:
                     kw['token'] = token
+                elif username and password:
+                    kw['token'] = f'{username}:{password}'
                 client = MilvusClient(**kw)
                 cols = client.list_collections()
                 print('Zilliz OK -- {} collections'.format(len(cols)))
@@ -104,6 +108,8 @@
       environment:
         MILVUS_URI: "{{ milvus_uri }}"
         MILVUS_TOKEN: "{{ milvus_token | default('') }}"
+        MILVUS_USERNAME: "{{ milvus_username | default('') }}"
+        MILVUS_PASSWORD: "{{ milvus_password | default('') }}"
       register: zilliz_check
       failed_when: false
       changed_when: false

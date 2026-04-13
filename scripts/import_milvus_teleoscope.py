@@ -12,7 +12,7 @@ Usage (repo root; ``mamba activate teleoscope`` for pymilvus et al.; ``PYTHONPAT
   PYTHONPATH=. python scripts/import_milvus_teleoscope.py --in ./milvus-backup/
   PYTHONPATH=. python scripts/import_milvus_teleoscope.py --in ./export.jsonl
 
-  MILVUS_URI=https://....zillizcloud.com:443 MILVUS_TOKEN='id:secret' \\
+  MILVUS_URI=https://....vectordb.zillizcloud.com:19536 MILVUS_TOKEN='id:secret' \\
     PYTHONPATH=. python scripts/import_milvus_teleoscope.py --in ./export --batch-size 500
 """
 from __future__ import annotations

@@ -16,8 +16,10 @@
 #   MONGODB_HOST=<main-ec2-private-ip>
 #   MONGODB_USERNAME=teleoscope
 #   MONGODB_PASSWORD=<generated-by-setup.sh>
-#   MILVUS_DOCKER_URI=https://<endpoint>.zillizcloud.com:443
+#   MILVUS_DOCKER_URI=https://<endpoint>.vectordb.zillizcloud.com:19536
 #   MILVUS_TOKEN=<zilliz-token>
+#   MILVUS_USERNAME=db_admin
+#   MILVUS_PASSWORD=<zilliz-db-admin-password>
 #
 # Containers restart on boot (restart: unless-stopped), so when monitor.py
 # starts this EC2 instance the workers automatically reconnect.
@@ -63,6 +65,8 @@ services:
       MONGODB_OPTIONS: ${MONGODB_OPTIONS:-directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin}
       MILVUS_URI: ${MILVUS_DOCKER_URI:-}
       MILVUS_TOKEN: ${MILVUS_TOKEN:-}
+      MILVUS_USERNAME: ${MILVUS_USERNAME:-}
+      MILVUS_PASSWORD: ${MILVUS_PASSWORD:-}
       MILVUS_DBNAME: ${MILVUS_DBNAME:-teleoscope}
       DOWNLOAD_DIR: /tmp/teleoscope/downloads
     volumes:
@@ -91,6 +95,8 @@ services:
       MONGODB_OPTIONS: ${MONGODB_OPTIONS:-directConnection=true&serverSelectionTimeoutMS=2000&authSource=admin}
       MILVUS_URI: ${MILVUS_DOCKER_URI:-}
       MILVUS_TOKEN: ${MILVUS_TOKEN:-}
+      MILVUS_USERNAME: ${MILVUS_USERNAME:-}
+      MILVUS_PASSWORD: ${MILVUS_PASSWORD:-}
       MILVUS_DBNAME: ${MILVUS_DBNAME:-teleoscope}
     env_file: [.env]
 
@@ -112,6 +118,8 @@ services:
       RABBITMQ_UPLOAD_VECTOR_QUEUE: ${RABBITMQ_UPLOAD_VECTOR_QUEUE:-teleoscope-upload-vector}
       MILVUS_URI: ${MILVUS_DOCKER_URI:-}
       MILVUS_TOKEN: ${MILVUS_TOKEN:-}
+      MILVUS_USERNAME: ${MILVUS_USERNAME:-}
+      MILVUS_PASSWORD: ${MILVUS_PASSWORD:-}
       MILVUS_DBNAME: ${MILVUS_DBNAME:-teleoscope}
     env_file: [.env]
 

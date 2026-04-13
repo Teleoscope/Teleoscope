@@ -215,6 +215,8 @@
             MONGODB_DATABASE: "{{ mongodb_database }}"
             MILVUS_URI: "{{ milvus_uri }}"
             MILVUS_TOKEN: "{{ milvus_token }}"
+            MILVUS_USERNAME: "{{ milvus_username | default('') }}"
+            MILVUS_PASSWORD: "{{ milvus_password | default('') }}"
             MILVUS_DATABASE: "{{ milvus_dbname | default('teleoscope') }}"
             MILVUS_SKIP_TCP_PREFLIGHT: "1"
             SEED_MILVUS_BATCH_LOG: "1"   # one [OK] line per 1000-vector batch
