@@ -18,6 +18,11 @@ MIVLUS_PORT = os.getenv("MIVLUS_PORT", "19530")
 MILVUS_USERNAME = os.getenv("MILVUS_USERNAME")
 MILVUS_PASSWORD = os.getenv("MILVUS_PASSWORD")
 MILVUS_DBNAME = os.getenv("MILVUS_DBNAME", "teleoscope")
+MILVUS_COLLECTION = os.getenv("MILVUS_COLLECTION", "").strip()
+MILVUS_VECTOR_FIELD = os.getenv("MILVUS_VECTOR_FIELD", "vector").strip() or "vector"
+MILVUS_VECTOR_INDEX = os.getenv("MILVUS_VECTOR_INDEX", "vector_index").strip() or "vector_index"
+MILVUS_VECTOR_METRIC = os.getenv("MILVUS_VECTOR_METRIC", "IP").strip() or "IP"
+MILVUS_VECTOR_DIM = int((os.getenv("MILVUS_VECTOR_DIM", "1024").strip() or "1024"))
 # connect() prefers Milvus Lite (MILVUS_LITE_PATH), else MILVUS_URI, else MILVUS_HOST + MIVLUS_PORT.
 # When MILVUS_URI is set it wins over host:port. Docker Compose should set MILVUS_URI for workers via
 # MILVUS_DOCKER_URI substitution (default http://milvus:19530) so containers do not use host localhost.
@@ -114,7 +119,11 @@ def milvus_setup(client: MilvusClient, workspace_id, collection_name="teleoscope
 
         # 2.2. Add fields to schema
         schema.add_field(field_name="id", datatype=DataType.VARCHAR, max_length=36, is_primary=True)
-        schema.add_field(field_name="vector", datatype=DataType.FLOAT_VECTOR, dim=1024)
+        schema.add_field(
+            field_name=MILVUS_VECTOR_FIELD,
+            datatype=DataType.FLOAT_VECTOR,
+            dim=MILVUS_VECTOR_DIM,
+        )
 
         client.create_collection(
             collection_name=collection_name, 
@@ -126,10 +135,10 @@ def milvus_setup(client: MilvusClient, workspace_id, collection_name="teleoscope
 
         # 4.2. Add an index on the vector field.
         index_params.add_index(
-            field_name="vector",
-            metric_type="IP",
+            field_name=MILVUS_VECTOR_FIELD,
+            metric_type=MILVUS_VECTOR_METRIC,
             index_type="IVF_FLAT",
-            index_name="vector_index",
+            index_name=MILVUS_VECTOR_INDEX,
             params={ "nlist": 1024 }
         )
 
@@ -359,9 +368,13 @@ def get_embeddings(client: MilvusClient, collection_name, workspace_id, oids, li
         collection_name=collection_name,
         partition_names=[str(workspace_id)],
         ids=[str(i) for i in oids], 
-        output_fields=["vector"]
+        output_fields=[MILVUS_VECTOR_FIELD]
     )
     return milvus_results
+
+
+def milvus_collection_name(default_collection: str = "teleoscope") -> str:
+    return MILVUS_COLLECTION or default_collection
 
 
 def delete(collection_name, ids):

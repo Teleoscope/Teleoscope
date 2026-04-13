@@ -292,7 +292,9 @@ def update_rank(
         return rank_node
 
     # collection name should be something unique
-    collection_name = mdb.name
+    collection_name = embeddings.milvus_collection_name(mdb.name)
+    vector_field = embeddings.MILVUS_VECTOR_FIELD
+    index_name = embeddings.MILVUS_VECTOR_INDEX
 
     # connect to Milvus
     client = embeddings.connect()
@@ -307,7 +309,7 @@ def update_rank(
     milvus_results = embeddings.get_embeddings(client, collection_name, workspace_id, control_oids)
 
     # unpack results
-    control_vectors = [np.array(res["vector"]) for res in milvus_results]
+    control_vectors = [np.array(res[vector_field]) for res in milvus_results if vector_field in res]
     logging.info(
         f"Found {len(control_vectors)} vectors for {len(control_oids)} controls."
     )
@@ -333,7 +335,7 @@ def update_rank(
 
     # get the index to search over
     index = client.describe_index(
-        collection_name=collection_name, index_name="vector_index", field_name="vector"
+        collection_name=collection_name, index_name=index_name, field_name=vector_field
     )
 
     # set up parameters for the vector search
@@ -360,13 +362,14 @@ def update_rank(
         results = client.search(
             collection_name=collection_name,
             data=[search_vector],
-            anns_field="vector",
+            anns_field=vector_field,
             search_params=search_params,
             limit=10000,
             partition_names=[str(workspace_id)]
         )
 
         ranks = [(result["id"], float(result["distance"])) for result in results[0]]
+        ranks = utils.normalize_ranked_document_ids(mdb, workspace_id, ranks)
         doclists.append(
             {"reference": None, "uid": None, "ranked_documents": ranks, "type": "All"}
         )
@@ -383,15 +386,22 @@ def update_rank(
                 results = client.get(
                     collection_name=collection_name, 
                     ids=oids, 
-                    output_fields=["vector"],
+                    output_fields=[vector_field],
                     partition_names=[str(workspace_id)]
                 )
                 logging.info(f"{len(results)} result vectors found.")
-                source_map.append((source, oids, [r["vector"] for r in results]))
+                source_map.append(
+                    (
+                        source,
+                        [str(r["id"]) for r in results if vector_field in r and "id" in r],
+                        [r[vector_field] for r in results if vector_field in r],
+                    )
+                )
 
         for source, source_oids, source_vecs in source_map:
             logging.info(f"Ranking {len(source_map)} sources.")
             ranks = utils.rank(control_vectors, source_oids, source_vecs)
+            ranks = utils.normalize_ranked_document_ids(mdb, workspace_id, ranks)
             doclists.append(
                 {
                     "type": source["type"],

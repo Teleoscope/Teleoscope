@@ -339,6 +339,50 @@ def rank(control_vecs, ids, source_vecs):
     return ranks
 
 
+def normalize_ranked_document_ids(db: database.Database, workspace_id, ranks):
+    """Map Milvus ids back to canonical Mongo document ObjectIds for the UI."""
+    if not ranks:
+        return ranks
+
+    raw_ids = [str(doc_id) for doc_id, _score in ranks]
+    object_ids = []
+    for doc_id in raw_ids:
+        if ObjectId.is_valid(doc_id):
+            object_ids.append(ObjectId(doc_id))
+
+    workspace_oid = (
+        workspace_id if isinstance(workspace_id, ObjectId) else ObjectId(str(workspace_id))
+    )
+    query = {
+        "workspace": workspace_oid,
+        "$or": [
+            {"_id": {"$in": object_ids}},
+            {"metadata.source_id": {"$in": raw_ids}},
+        ],
+    }
+    docs = list(
+        db.documents.find(
+            query,
+            projection={"_id": 1, "metadata.source_id": 1},
+        )
+    )
+
+    id_map = {}
+    for doc in docs:
+        canonical_id = str(doc["_id"])
+        id_map[canonical_id] = canonical_id
+        source_id = (doc.get("metadata") or {}).get("source_id")
+        if source_id is not None:
+            id_map[str(source_id)] = canonical_id
+
+    normalized = []
+    for doc_id, score in ranks:
+        canonical_id = id_map.get(str(doc_id))
+        if canonical_id:
+            normalized.append((canonical_id, score))
+    return normalized
+
+
 def rank_similarity(control_vecs, ids, vecs, similarity):
     logging.info(f"There were {len(control_vecs)} control vecs.")
     vec = np.average(control_vecs, axis=0)
