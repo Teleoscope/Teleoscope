@@ -17,7 +17,7 @@
 #   MONGODB_PASSWORD=<generated>
 #   RABBITMQ_USERNAME=teleoscope
 #   RABBITMQ_PASSWORD=<generated>
-#   MILVUS_DOCKER_URI=https://<endpoint>.zillizcloud.com:19530
+#   MILVUS_DOCKER_URI=https://<endpoint>.zillizcloud.com:443
 #   MILVUS_TOKEN=<zilliz-token>
 #   EC2_WORKER_INSTANCE=i-0abc1234567890def
 #   EC2_VECTORIZE_INSTANCE=i-0def9876543210abc

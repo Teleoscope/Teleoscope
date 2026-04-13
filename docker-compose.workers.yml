@@ -16,7 +16,7 @@
 #   MONGODB_HOST=<main-ec2-private-ip>
 #   MONGODB_USERNAME=teleoscope
 #   MONGODB_PASSWORD=<generated-by-setup.sh>
-#   MILVUS_DOCKER_URI=https://<endpoint>.zillizcloud.com:19530
+#   MILVUS_DOCKER_URI=https://<endpoint>.zillizcloud.com:443
 #   MILVUS_TOKEN=<zilliz-token>
 #
 # Containers restart on boot (restart: unless-stopped), so when monitor.py

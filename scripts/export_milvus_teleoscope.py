@@ -6,7 +6,7 @@ Reads the same vector layout the app uses: collection with partitions per worksp
 
 Connection (same idea as ``backend.embeddings``):
   - ``MILVUS_LITE_PATH`` — Milvus Lite file (local)
-  - or ``MILVUS_URI`` — e.g. ``https://in01-....zillizcloud.com:19530`` (Zilliz)
+  - or ``MILVUS_URI`` — e.g. ``https://in01-....zillizcloud.com:443`` (Zilliz; use the port from the Connect panel)
   - or ``MILVUS_HOST`` + ``MIVLUS_PORT`` (Docker / self-hosted)
   - Optional auth: ``MILVUS_TOKEN`` (Zilliz API key / ``user:password``) or
     ``MILVUS_USERNAME`` + ``MILVUS_PASSWORD``
@@ -17,7 +17,7 @@ Usage (repo root; ``mamba activate teleoscope`` for pymilvus et al.; ``PYTHONPAT
     --collection teleoscope --partition 674a... --out ./one-partition.jsonl
 
   # Zilliz (example)
-  MILVUS_URI=https://....zillizcloud.com:19530 MILVUS_TOKEN=... \\
+  MILVUS_URI=https://....zillizcloud.com:443 MILVUS_TOKEN=... \\
     PYTHONPATH=. python scripts/export_milvus_teleoscope.py --out ./export
 
 To restore into another cluster, use ``import_milvus_teleoscope.py`` (same env vars).

@@ -11,7 +11,7 @@ Zilliz Cloud is managed Milvus. Teleoscope talks to it with **`pymilvus`** using
 Runtime code uses **`backend.embeddings.connect()`**, which honors (in order):
 
 1. **`MILVUS_LITE_PATH`** — local file (skip for Zilliz).
-2. **`MILVUS_URI`** — e.g. `https://in01-xxxxxxxx.zillizcloud.com:19530` (use your real host; port is usually **19530**).
+2. **`MILVUS_URI`** — e.g. `https://in01-xxxxxxxx.zillizcloud.com:443` (use the exact host and port from the Zilliz Connect panel; current serverless deployments may use **443** instead of **19530**).
 3. Otherwise **`MILVUS_HOST`** + **`MIVLUS_PORT`** (Docker / LAN).
 
 Auth for hosted Milvus: set **`MILVUS_TOKEN`**, or **`MILVUS_USERNAME`** + **`MILVUS_PASSWORD`** (combined internally as `user:password`).
@@ -43,7 +43,7 @@ Create an empty cluster (or empty database) in Zilliz. Then:
 ```bash
 cd /path/to/Teleoscope
 mamba activate teleoscope
-export MILVUS_URI='https://YOUR_ENDPOINT.zillizcloud.com:19530'
+export MILVUS_URI='https://YOUR_ENDPOINT.zillizcloud.com:443'
 export MILVUS_TOKEN='paste-token-from-zilliz-console'
 export MILVUS_DBNAME=teleoscope   # optional; match export
 
@@ -64,10 +64,10 @@ MILVUS_DBNAME=teleoscope
 # Docker Compose + Zilliz: set MILVUS_DOCKER_URI (compose substitutes worker/uploader MILVUS_URI from it).
 # If you previously put only MILVUS_URI in .env for Zilliz, use MILVUS_DOCKER_URI for that value instead
 # so Compose-injected MILVUS_URI points at Zilliz (plain MILVUS_URI in .env is overridden for those services).
-MILVUS_DOCKER_URI=https://YOUR_ENDPOINT.zillizcloud.com:19530
+MILVUS_DOCKER_URI=https://YOUR_ENDPOINT.zillizcloud.com:443
 
 # Non-Compose / host scripts: you can still export MILVUS_URI for seed, export, import, status.
-# MILVUS_URI=https://YOUR_ENDPOINT.zillizcloud.com:19530
+# MILVUS_URI=https://YOUR_ENDPOINT.zillizcloud.com:443
 
 # Stop using local Milvus file for remote vector store:
 # unset or delete:

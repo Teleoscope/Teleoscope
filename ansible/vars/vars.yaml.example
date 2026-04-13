@@ -102,8 +102,9 @@ certbot_email: admin@teleoscope.ca
 # -----------------------------------------------------------------------------
 # Milvus / Zilliz Cloud
 # -----------------------------------------------------------------------------
-# From your Zilliz console → Connect panel.
-milvus_uri: "https://your-endpoint.zillizcloud.com:19530"
+# From your Zilliz console → Connect panel. Include the explicit port from that panel.
+# For current Zilliz serverless deployments this is often :443, not :19530.
+milvus_uri: "https://your-endpoint.zillizcloud.com:443"
 milvus_token: "your-zilliz-api-key"
 milvus_dbname: teleoscope
 
