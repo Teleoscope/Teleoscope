@@ -82,23 +82,59 @@ def _chunked(seq: list[Any], size: int):
         yield seq[i : i + size]
 
 
-def _workspace_documents(db, workspace_id: ObjectId) -> list[dict[str, str]]:
-    docs = list(
-        db.documents.find(
-            {"workspace": workspace_id, "metadata.source_id": {"$exists": True, "$ne": None}},
-            {"_id": 1, "metadata.source_id": 1},
-        )
-    )
-    rows: list[dict[str, str]] = []
-    for doc in docs:
-        source_id = str((doc.get("metadata") or {}).get("source_id", "")).strip()
-        mongo_id = str(doc["_id"])
-        if not source_id:
+def _workspace_document_cursor(db, workspace_id: ObjectId):
+    return db.documents.find(
+        {"workspace": workspace_id, "metadata.source_id": {"$exists": True, "$ne": None}},
+        {"_id": 1, "metadata.source_id": 1},
+    ).sort("_id", 1)
+
+
+def _normalized_doc_row(doc: dict[str, Any]) -> dict[str, str] | None:
+    source_id = str((doc.get("metadata") or {}).get("source_id", "")).strip()
+    mongo_id = str(doc["_id"])
+    if not source_id:
+        return None
+    if source_id == mongo_id:
+        return None
+    return {"mongo_id": mongo_id, "source_id": source_id}
+
+
+def _iter_workspace_documents(
+    db,
+    workspace_id: ObjectId,
+    *,
+    chunk_size: int,
+    limit: int,
+):
+    cursor = _workspace_document_cursor(db, workspace_id)
+    chunk: list[dict[str, str]] = []
+    seen = 0
+    for doc in cursor:
+        row = _normalized_doc_row(doc)
+        if row is None:
             continue
-        if source_id == mongo_id:
+        chunk.append(row)
+        seen += 1
+        if limit > 0 and seen >= limit:
+            yield chunk
+            return
+        if len(chunk) >= chunk_size:
+            yield chunk
+            chunk = []
+    if chunk:
+        yield chunk
+
+
+def _count_workspace_documents(db, workspace_id: ObjectId, *, limit: int) -> int:
+    count = 0
+    cursor = _workspace_document_cursor(db, workspace_id)
+    for doc in cursor:
+        if _normalized_doc_row(doc) is None:
             continue
-        rows.append({"mongo_id": mongo_id, "source_id": source_id})
-    return rows
+        count += 1
+        if limit > 0 and count >= limit:
+            return limit
+    return count
 
 
 def _existing_alias_ids(
@@ -179,6 +215,7 @@ def reconcile(
     workspace_id: ObjectId,
     dry_run: bool,
     batch_size: int,
+    doc_chunk_size: int,
     lookup_batch_size: int,
     progress_every: int,
     limit: int,
@@ -189,18 +226,17 @@ def reconcile(
     copy_fields = _copy_fields()
     workspace_partition = str(workspace_id)
 
-    docs = _workspace_documents(db, workspace_id)
-    if not docs:
+    total_candidates = _count_workspace_documents(db, workspace_id, limit=limit)
+    if total_candidates == 0:
         log.info("No workspace documents with metadata.source_id needing reconciliation.")
         return 0
     if limit > 0:
-        docs = docs[:limit]
-        log.info("Limiting reconciliation scope to first %s candidate documents.", len(docs))
+        log.info("Limiting reconciliation scope to first %s candidate documents.", total_candidates)
 
     log.info(
         "Workspace %s: found %s Mongo documents with metadata.source_id candidates.",
         workspace_partition,
-        len(docs),
+        total_candidates,
     )
 
     client, db_override = connect_milvus_client()
@@ -217,84 +253,119 @@ def reconcile(
             partition_names=[workspace_partition],
         )
 
-        existing_aliases = _existing_alias_ids(
-            client,
-            collection_name,
-            workspace_partition,
-            [row["mongo_id"] for row in docs],
-            lookup_batch_size=lookup_batch_size,
-            progress_every=progress_every,
-        )
-        pending = [row for row in docs if row["mongo_id"] not in existing_aliases]
-        if not pending:
-            log.info("All current Mongo ids already exist in Milvus for this partition.")
-            return 0
+        total_seen = 0
+        total_existing_aliases = 0
+        total_missing_source_ids = 0
+        total_upserts = 0
 
-        log.info(
-            "Workspace %s: %s alias ids already present, %s still need reconciliation.",
-            workspace_partition,
-            len(existing_aliases),
-            len(pending),
-        )
-
-        source_rows = _source_rows(
-            client,
-            collection_name,
-            [row["source_id"] for row in pending],
-            vector_field=vector_field,
-            copy_fields=copy_fields,
-            lookup_batch_size=lookup_batch_size,
-            progress_every=progress_every,
-        )
-
-        upserts: list[dict[str, Any]] = []
-        missing_source_ids: list[str] = []
-        for row in pending:
-            source_row = source_rows.get(row["source_id"])
-            if not source_row:
-                missing_source_ids.append(row["source_id"])
-                continue
-            upsert_row = {"id": row["mongo_id"], vector_field: source_row[vector_field]}
-            for field in copy_fields:
-                if field in source_row:
-                    upsert_row[field] = source_row[field]
-            upserts.append(upsert_row)
-
-        log.info(
-            "Workspace %s: matched %s source ids, missing %s source ids.",
-            workspace_partition,
-            len(upserts),
-            len(missing_source_ids),
-        )
-        if missing_source_ids:
-            sample = ", ".join(missing_source_ids[:10])
-            more = "" if len(missing_source_ids) <= 10 else " ..."
-            log.warning("Missing source ids in Milvus: %s%s", sample, more)
-
-        if dry_run:
-            log.info("[dry-run] Would upsert %s alias vectors into %s / %s.", len(upserts), collection_name, workspace_partition)
-            return len(upserts)
-
-        written = 0
-        for chunk in _chunked(upserts, batch_size):
-            use_milvus_db(client, db_override)
-            client.upsert(
-                collection_name=collection_name,
-                partition_name=workspace_partition,
-                data=chunk,
+        for chunk_idx, docs_chunk in enumerate(
+            _iter_workspace_documents(
+                db,
+                workspace_id,
+                chunk_size=doc_chunk_size,
+                limit=limit,
+            ),
+            start=1,
+        ):
+            total_seen += len(docs_chunk)
+            log.info(
+                "Chunk %s: processing %s candidate docs (%s/%s seen).",
+                chunk_idx,
+                len(docs_chunk),
+                total_seen,
+                total_candidates,
             )
-            written += len(chunk)
-            log.info("Upserted %s/%s alias vectors.", written, len(upserts))
 
-        use_milvus_db(client, db_override)
-        client.flush(collection_name=collection_name)
+            existing_aliases = _existing_alias_ids(
+                client,
+                collection_name,
+                workspace_partition,
+                [row["mongo_id"] for row in docs_chunk],
+                lookup_batch_size=lookup_batch_size,
+                progress_every=progress_every,
+            )
+            total_existing_aliases += len(existing_aliases)
+            pending = [row for row in docs_chunk if row["mongo_id"] not in existing_aliases]
+            if not pending:
+                log.info("Chunk %s: all docs already reconciled.", chunk_idx)
+                continue
+
+            source_rows = _source_rows(
+                client,
+                collection_name,
+                [row["source_id"] for row in pending],
+                vector_field=vector_field,
+                copy_fields=copy_fields,
+                lookup_batch_size=lookup_batch_size,
+                progress_every=progress_every,
+            )
+
+            upserts: list[dict[str, Any]] = []
+            missing_source_ids: list[str] = []
+            for row in pending:
+                source_row = source_rows.get(row["source_id"])
+                if not source_row:
+                    missing_source_ids.append(row["source_id"])
+                    continue
+                upsert_row = {"id": row["mongo_id"], vector_field: source_row[vector_field]}
+                for field in copy_fields:
+                    if field in source_row:
+                        upsert_row[field] = source_row[field]
+                upserts.append(upsert_row)
+
+            total_missing_source_ids += len(missing_source_ids)
+            total_upserts += len(upserts)
+            log.info(
+                "Chunk %s: matched %s source ids, missing %s source ids.",
+                chunk_idx,
+                len(upserts),
+                len(missing_source_ids),
+            )
+            if missing_source_ids:
+                sample = ", ".join(missing_source_ids[:10])
+                more = "" if len(missing_source_ids) <= 10 else " ..."
+                log.warning("Chunk %s missing source ids: %s%s", chunk_idx, sample, more)
+
+            if dry_run:
+                log.info(
+                    "[dry-run] Chunk %s would upsert %s alias vectors into %s / %s.",
+                    chunk_idx,
+                    len(upserts),
+                    collection_name,
+                    workspace_partition,
+                )
+                continue
+
+            chunk_written = 0
+            for upsert_chunk in _chunked(upserts, batch_size):
+                use_milvus_db(client, db_override)
+                client.upsert(
+                    collection_name=collection_name,
+                    partition_name=workspace_partition,
+                    data=upsert_chunk,
+                )
+                chunk_written += len(upsert_chunk)
+                log.info(
+                    "Chunk %s: upserted %s/%s alias vectors.",
+                    chunk_idx,
+                    chunk_written,
+                    len(upserts),
+                )
+
+            log.info("Chunk %s complete.", chunk_idx)
+
+        if not dry_run:
+            use_milvus_db(client, db_override)
+            client.flush(collection_name=collection_name)
         log.info(
-            "Done. Upserted %s alias vectors into collection=%s partition=%s.",
-            written,
+            "Done. existing_aliases=%s, upserts=%s, missing_source_ids=%s into collection=%s partition=%s.",
+            total_existing_aliases,
+            total_upserts,
+            total_missing_source_ids,
             collection_name,
             workspace_partition,
         )
-        return written
+        return total_upserts
     finally:
         try:
             client.close()
@@ -316,6 +387,12 @@ def main() -> int:
         help="Mongo database name (default: MONGODB_DATABASE or teleoscope).",
     )
     parser.add_argument("--batch-size", type=int, default=500, help="Milvus upsert batch size.")
+    parser.add_argument(
+        "--doc-chunk-size",
+        type=int,
+        default=2000,
+        help="Mongo document chunk size to process in memory at once (default: 2000).",
+    )
     parser.add_argument(
         "--lookup-batch-size",
         type=int,
@@ -352,6 +429,7 @@ def main() -> int:
         workspace_id=workspace_id,
         dry_run=args.dry_run,
         batch_size=max(1, args.batch_size),
+        doc_chunk_size=max(1, args.doc_chunk_size),
         lookup_batch_size=max(1, args.lookup_batch_size),
         progress_every=max(1, args.progress_every),
         limit=max(0, args.limit),
