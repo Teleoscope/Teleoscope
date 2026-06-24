@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Fragment } from "react";
 import Link from "next/link";
+import { productRoute } from "@/lib/productUrl";
 
 export default function LandingPageHero() {
   return (
@@ -17,7 +18,7 @@ export default function LandingPageHero() {
             </span>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
-                href="/demo"
+                href={productRoute("/demo")}
                 className="rounded bg-neutral-900 px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-800"
               >
                 Open Public Demo

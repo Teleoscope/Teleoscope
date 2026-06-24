@@ -1,0 +1,165 @@
+---
+# Deploy (or re-deploy) the landing-only Teleoscope stack on a tiny always-on EC2.
+#
+# Intended architecture:
+#   - Root domain (teleoscope.ca) lives here with marketing/docs/newsletter pages
+#   - In proxy mode (default), nginx on this host forwards product traffic
+#     (/demo, /auth/*, /app/*, /workspace/*, most /api/*, /ws) to the heavier
+#     app host over its private VPC IP.
+#   - In redirect mode, the landing app can instead point product CTAs at
+#     NEXT_PUBLIC_PRODUCT_BASE_URL, for example https://app.teleoscope.ca
+#
+# Usage:
+#   ansible-playbook -i vars/inventory.yaml ansible/deploy-landing.yaml
+
+- name: Deploy landing-only Teleoscope stack
+  hosts: landing
+  remote_user: ec2-user
+  gather_facts: false
+  vars_files:
+    - ./vars/vars.yaml
+  become: true
+
+  tasks:
+    - name: Install Docker, nginx, and certbot on Amazon Linux
+      ansible.builtin.dnf:
+        name:
+          - curl
+          - docker
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+        state: present
+
+    - name: Enable and start Docker daemon
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Add ansible user to docker group
+      ansible.builtin.user:
+        name: ec2-user
+        groups: docker
+        append: true
+
+    - name: Install Docker Compose plugin on Amazon Linux
+      ansible.builtin.shell: |
+        set -euo pipefail
+        mkdir -p /usr/local/lib/docker/cli-plugins
+        curl -SL https://github.com/docker/compose/releases/download/v2.39.1/docker-compose-linux-x86_64 \
+          -o /usr/local/lib/docker/cli-plugins/docker-compose
+        chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+      args:
+        creates: /usr/local/lib/docker/cli-plugins/docker-compose
+
+    - name: Clone or update Teleoscope repo
+      ansible.builtin.git:
+        repo: "https://github.com/Teleoscope/Teleoscope.git"
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        version: main
+        force: false
+      become: false
+
+    - name: Write landing .env
+      ansible.builtin.template:
+        src: ./.env.landing.j2
+        dest: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope/.env"
+        mode: "0600"
+      become: false
+
+    - name: Build and start landing stack
+      community.docker.docker_compose_v2:
+        project_src: "{{ remote_prefix }}/{{ ansible_user }}/Teleoscope"
+        files:
+          - docker-compose.landing.yml
+        build: always
+        state: present
+        recreate: always
+        pull: missing
+      become: false
+
+    - name: Wait for landing app to be healthy
+      ansible.builtin.uri:
+        url: "http://localhost:3000/api/hello"
+        status_code: 200
+      register: health
+      until: health.status == 200
+      retries: 30
+      delay: 10
+      become: false
+
+    - name: Create nginx sites directories expected by shared templates
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - /etc/nginx/sites-available
+        - /etc/nginx/sites-enabled
+
+    - name: Enable and start nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Write landing nginx config
+      ansible.builtin.template:
+        src: ./teleoscope.landing.http.j2
+        dest: /etc/nginx/sites-available/teleoscope.ca
+
+    - name: Enable landing site
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/teleoscope.ca
+        dest: /etc/nginx/sites-enabled/teleoscope.ca
+        state: link
+
+    - name: Remove default nginx site
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+      ignore_errors: true
+
+    - name: Validate and reload nginx
+      ansible.builtin.shell: nginx -t && systemctl reload nginx
+
+    - name: Obtain Let's Encrypt certificate
+      ansible.builtin.shell: >
+        certbot --nginx
+        -d {{ teleoscope.ca }}
+        -d www.{{ teleoscope.ca }}
+        --non-interactive
+        --agree-tos
+        --email {{ certbot_email }}
+      args:
+        creates: "/etc/letsencrypt/live/{{ teleoscope.ca }}/fullchain.pem"
+
+    - name: Enable certbot renewal timer
+      ansible.builtin.systemd:
+        name: certbot.timer
+        state: started
+        enabled: true
+
+    - name: Configure landing UFW
+      community.general.ufw:
+        rule: limit
+        port: "22"
+        proto: tcp
+
+    - name: Allow HTTP on landing host
+      community.general.ufw:
+        rule: allow
+        port: "80"
+        proto: tcp
+
+    - name: Allow HTTPS on landing host
+      community.general.ufw:
+        rule: allow
+        port: "443"
+        proto: tcp
+
+    - name: Enable UFW on landing host
+      community.general.ufw:
+        state: enabled
+        policy: deny

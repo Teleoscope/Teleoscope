@@ -9,3 +9,5 @@ collections:
     version: ">=8.0.0"
   - name: community.general
     version: ">=9.0.0"
+  - name: community.docker
+    version: ">=4.0.0"

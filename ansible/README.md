@@ -76,6 +76,45 @@ Pulls `main`, rebuilds changed containers, waits for health check.
 ansible-playbook -i ansible/vars/inventory.yaml ansible/deploy-main.yaml
 ```
 
+### Deploy landing-only site to a tiny always-on host
+
+```bash
+ansible-playbook -i ansible/vars/inventory.yaml ansible/deploy-landing.yaml
+```
+
+Use this when `teleoscope.ca` should be marketing/docs/newsletter only, while
+the product app lives somewhere heavier.
+
+Recommended mode:
+- keep `teleoscope.ca` on the tiny landing host
+- set `landing_product_route_mode: proxy`
+- let nginx on the landing host proxy `/demo`, `/auth/*`, `/app/*`,
+  `/workspace/*`, most `/api/*`, and `/ws` to the heavier app host over its
+  private VPC IP
+
+Alternative mode:
+- set `landing_product_route_mode: redirect`
+- set `product_base_url: https://app.teleoscope.ca`
+- landing CTAs will point to the separate product hostname instead
+
+Add a `landing` group to `ansible/vars/inventory.yaml` before the first run:
+
+```yaml
+all:
+  vars:
+    ansible_user: "ubuntu"
+    ansible_ssh_private_key_file: "/path/to/your/key.pem"
+  children:
+    landing:
+      hosts:
+        teleoscope-landing:
+          ansible_host: "YOUR_LANDING_PUBLIC_IP"
+```
+
+This playbook installs Docker, deploys [docker-compose.landing.yml](/Users/paul/Documents/GitHub/Teleoscope/docker-compose.landing.yml), configures nginx, obtains TLS with certbot, and locks the host down to `22/80/443`.
+In proxy mode it expects the `main` group in inventory to include a valid
+`main_private_ip` for the heavier app host.
+
 ### Re-provision GPU vectorizer (e.g. after model or code change)
 
 ```bash

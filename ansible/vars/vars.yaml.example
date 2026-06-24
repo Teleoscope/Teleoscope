@@ -29,6 +29,22 @@ ssh_allowed_cidr: 0.0.0.0/0
 teleoscope:
   ca: teleoscope.ca   # change if deploying to a different domain
 
+# Optional split-domain deployment:
+# - teleoscope.ca on a tiny always-on landing host
+# - product app on a heavier host or separate deployment, e.g. app.teleoscope.ca
+# Leave empty to keep all CTAs on the same host, or use redirect mode below.
+product_base_url: "https://app.teleoscope.ca"
+# Landing split strategy:
+# - proxy   (default): keep a single public domain and let the landing micro
+#   reverse-proxy product paths to the heavier app host over its private IP
+# - redirect: send product CTAs straight to product_base_url
+landing_product_route_mode: proxy
+# Optional explicit proxy target. If omitted, deploy-landing/nginx uses the
+# `main_private_ip` from ansible/vars/inventory.yaml.
+# landing_product_upstream_host: "172.31.17.145"
+# landing_product_upstream_port: 3000
+# landing_product_ws_upstream_port: 15674
+
 # -----------------------------------------------------------------------------
 # AWS — infrastructure provisioning (provision-aws.yaml / site.yaml)
 # -----------------------------------------------------------------------------
@@ -125,6 +141,7 @@ vectorizer_control_token: change-me-vectorizer-token
 # Optional integrations
 # -----------------------------------------------------------------------------
 # loops_api_key: ""
+# next_mailchimp_url: ""
 # stripe_secret_key: ""
 
 # -----------------------------------------------------------------------------

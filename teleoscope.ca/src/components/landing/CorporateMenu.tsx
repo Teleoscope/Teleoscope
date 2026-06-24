@@ -1,31 +1,32 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-
-const menuItems = [
-  {
-    label: "How It Works",
-    href: "/about",
-  },
-  {
-    label: "Docs",
-    href: "/resources/reference",
-  },
-  {
-    label: "Public Demo",
-    href: "/demo",
-  },
-  {
-    label: "Get Started",
-    href: "/auth/signup",
-    variant: "primary",
-  },
-  {
-    label: "Sign In",
-    href: "/auth/signin",
-  },
-];
+import { productRoute } from "@/lib/productUrl";
 
 export default function Menu() {
+  const menuItems = [
+    {
+      label: "How It Works",
+      href: "/about",
+    },
+    {
+      label: "Docs",
+      href: "/resources/reference",
+    },
+    {
+      label: "Public Demo",
+      href: productRoute("/demo"),
+    },
+    {
+      label: "Get Started",
+      href: productRoute("/auth/signup"),
+      variant: "primary",
+    },
+    {
+      label: "Sign In",
+      href: productRoute("/auth/signin"),
+    },
+  ];
+
   const menuStyle = "flex items-center justify-between px-2 gap-4";
   const menuItemStyle =
     "flex-shrink-0 p-2 font-medium text-neutral-900 rounded hover:bg-neutral-100";

@@ -1,0 +1,95 @@
+# {{ teleoscope.ca }} landing host — HTTP-only nginx config
+# certbot --nginx will add SSL directives and an HTTPS redirect to this file.
+{% set landing_product_route_mode = landing_product_route_mode | default('proxy') %}
+{% set landing_upstream_scheme = landing_product_upstream_scheme | default('http') %}
+{% set landing_upstream_host = landing_product_upstream_host | default(hostvars[groups['main'][0]].main_private_ip) %}
+{% set landing_upstream_port = landing_product_upstream_port | default(3000) %}
+{% set landing_ws_upstream_port = landing_product_ws_upstream_port | default(15674) %}
+server {
+    listen 80;
+    server_name {{ teleoscope.ca }} www.{{ teleoscope.ca }};
+
+    proxy_http_version      1.1;
+    proxy_set_header        Host              $host;
+    proxy_set_header        X-Real-IP         $remote_addr;
+    proxy_set_header        X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header        X-Forwarded-Proto $scheme;
+    proxy_connect_timeout   30s;
+    proxy_send_timeout      120s;
+    proxy_read_timeout      120s;
+    proxy_buffering         off;
+
+    # Landing-only APIs stay local on the micro.
+    location ^~ /api/email/ {
+        proxy_pass          http://127.0.0.1:3000;
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection 'upgrade';
+        proxy_cache_bypass  $http_upgrade;
+    }
+
+    location = /api/hello {
+        proxy_pass          http://127.0.0.1:3000;
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection 'upgrade';
+        proxy_cache_bypass  $http_upgrade;
+    }
+
+    location = /api/health {
+        proxy_pass          http://127.0.0.1:3000;
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection 'upgrade';
+        proxy_cache_bypass  $http_upgrade;
+    }
+
+{% if landing_product_route_mode == 'proxy' %}
+    # Product APIs go to the heavier app host.
+    location ^~ /api/ {
+        proxy_pass          {{ landing_upstream_scheme }}://{{ landing_upstream_host }}:{{ landing_upstream_port }};
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection 'upgrade';
+        proxy_cache_bypass  $http_upgrade;
+    }
+
+    location /ws {
+        proxy_pass          {{ landing_upstream_scheme }}://{{ landing_upstream_host }}:{{ landing_ws_upstream_port }}/ws;
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection "Upgrade";
+        proxy_read_timeout  3600s;
+    }
+
+    location ^~ /demo {
+        proxy_pass          {{ landing_upstream_scheme }}://{{ landing_upstream_host }}:{{ landing_upstream_port }};
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection 'upgrade';
+        proxy_cache_bypass  $http_upgrade;
+    }
+
+    location ^~ /auth {
+        proxy_pass          {{ landing_upstream_scheme }}://{{ landing_upstream_host }}:{{ landing_upstream_port }};
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection 'upgrade';
+        proxy_cache_bypass  $http_upgrade;
+    }
+
+    location ^~ /app {
+        proxy_pass          {{ landing_upstream_scheme }}://{{ landing_upstream_host }}:{{ landing_upstream_port }};
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection 'upgrade';
+        proxy_cache_bypass  $http_upgrade;
+    }
+
+    location ^~ /workspace {
+        proxy_pass          {{ landing_upstream_scheme }}://{{ landing_upstream_host }}:{{ landing_upstream_port }};
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection 'upgrade';
+        proxy_cache_bypass  $http_upgrade;
+    }
+{% endif %}
+
+    location / {
+        proxy_pass          http://127.0.0.1:3000;
+        proxy_set_header    Upgrade    $http_upgrade;
+        proxy_set_header    Connection 'upgrade';
+        proxy_cache_bypass  $http_upgrade;
+    }
+}

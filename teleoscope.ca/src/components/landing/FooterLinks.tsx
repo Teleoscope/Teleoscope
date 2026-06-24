@@ -1,4 +1,5 @@
 import { GithubIcon, LinkedinIcon } from "lucide-react";
+import { productRoute } from "@/lib/productUrl";
 
 const socialLinks = [
   {
@@ -13,57 +14,57 @@ const socialLinks = [
   },
 ];
 
-const links = [
-  {
-    groupLabel: "Product",
-    links: [
-      {
-        label: "How It Works",
-        href: "/about",
-      },
-      {
-        label: "Pricing",
-        href: "/pricing",
-      },
-      {
-        label: "Docs",
-        href: "/resources/reference",
-      },
-      {
-        label: "Public Demo",
-        href: "/demo",
-      },
-      {
-        label: "Get Started",
-        href: "/auth/signup",
-        variant: "primary",
-      },
-    ],
-  },
-  {
-    groupLabel: "Company",
-    links: [
-      {
-        label: "About Us",
-        href: "/about",
-      },
-      {
-        label: "Contact",
-        href: "/contact",
-      },
-      {
-        label: "Privacy Policy",
-        href: "/privacy",
-      },
-      {
-        label: "Terms of Service",
-        href: "/terms",
-      },
-    ],
-  },
-];
-
 export default function FooterLinks() {
+  const links = [
+    {
+      groupLabel: "Product",
+      links: [
+        {
+          label: "How It Works",
+          href: "/about",
+        },
+        {
+          label: "Pricing",
+          href: "/pricing",
+        },
+        {
+          label: "Docs",
+          href: "/resources/reference",
+        },
+        {
+          label: "Public Demo",
+          href: productRoute("/demo"),
+        },
+        {
+          label: "Get Started",
+          href: productRoute("/auth/signup"),
+          variant: "primary",
+        },
+      ],
+    },
+    {
+      groupLabel: "Company",
+      links: [
+        {
+          label: "About Us",
+          href: "/about",
+        },
+        {
+          label: "Contact",
+          href: "/contact",
+        },
+        {
+          label: "Privacy Policy",
+          href: "/privacy",
+        },
+        {
+          label: "Terms of Service",
+          href: "/terms",
+        },
+      ],
+    },
+  ];
+
   return (
     <div className="flex  gap-4 w-full py-5 px-10">
       <div className="flex flex-col gap-2 flex-1">

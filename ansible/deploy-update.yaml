@@ -137,12 +137,20 @@
   gather_facts: false
   vars_files:
     - ./vars/vars.yaml
-    - ./vars/infra-outputs.yaml
 
   tasks:
+    - name: Resolve worker/vectorizer instance ids from vars or inventory
+      ansible.builtin.set_fact:
+        resolved_ec2_worker_instance: >-
+          {{ ec2_worker_instance
+             | default(hostvars[groups['main'][0]].ec2_worker_instance) }}
+        resolved_ec2_vectorize_instance: >-
+          {{ ec2_vectorize_instance
+             | default(hostvars[groups['main'][0]].ec2_vectorize_instance) }}
+
     - name: Start worker EC2 and wait until running
       amazon.aws.ec2_instance:
-        instance_ids: ["{{ ec2_worker_instance }}"]
+        instance_ids: ["{{ resolved_ec2_worker_instance }}"]
         region: "{{ aws_region }}"
         state: running
         wait: true
@@ -155,7 +163,7 @@
       # times out; ec2_instance_info always returns the live describe_instances
       # payload including public_ip_address once the instance is running.
       amazon.aws.ec2_instance_info:
-        instance_ids: ["{{ ec2_worker_instance }}"]
+        instance_ids: ["{{ resolved_ec2_worker_instance }}"]
         region: "{{ aws_region }}"
       register: worker_info
       tags: [worker]
@@ -178,7 +186,7 @@
       # to 6 times with 60 s gaps (≤ 6 min total) before giving up.
       ansible.builtin.command: >
         aws ec2 start-instances
-        --instance-ids {{ ec2_vectorize_instance }}
+        --instance-ids {{ resolved_ec2_vectorize_instance }}
         --region {{ aws_region }}
       register: vectorizer_start
       until: vectorizer_start.rc == 0
@@ -190,14 +198,14 @@
     - name: Warn if vectorizer EC2 could not be started
       ansible.builtin.debug:
         msg: >-
-          GPU EC2 ({{ ec2_vectorize_instance }}) could not be started after retries —
+          GPU EC2 ({{ resolved_ec2_vectorize_instance }}) could not be started after retries —
           skipping vectorizer update. It will be updated next time monitor.py starts it.
       when: vectorizer_start is failed
       tags: [vectorizer]
 
     - name: Wait for vectorizer EC2 to reach running state
       amazon.aws.ec2_instance_info:
-        instance_ids: ["{{ ec2_vectorize_instance }}"]
+        instance_ids: ["{{ resolved_ec2_vectorize_instance }}"]
         region: "{{ aws_region }}"
       register: vectorizer_info
       until: vectorizer_info.instances[0].state.name == 'running'
@@ -223,7 +231,6 @@
   gather_facts: false
   vars_files:
     - ./vars/vars.yaml
-    - ./vars/infra-outputs.yaml
   tags: [worker]
 
   handlers:
@@ -272,7 +279,6 @@
   gather_facts: false
   vars_files:
     - ./vars/vars.yaml
-    - ./vars/infra-outputs.yaml
   tags: [vectorizer]
 
   handlers:
@@ -322,21 +328,29 @@
   gather_facts: false
   vars_files:
     - ./vars/vars.yaml
-    - ./vars/infra-outputs.yaml
 
   tasks:
+    - name: Resolve worker/vectorizer instance ids from vars or inventory
+      ansible.builtin.set_fact:
+        resolved_ec2_worker_instance: >-
+          {{ ec2_worker_instance
+             | default(hostvars[groups['main'][0]].ec2_worker_instance) }}
+        resolved_ec2_vectorize_instance: >-
+          {{ ec2_vectorize_instance
+             | default(hostvars[groups['main'][0]].ec2_vectorize_instance) }}
+
     - name: Stop worker EC2
       amazon.aws.ec2_instance:
-        instance_ids: ["{{ ec2_worker_instance }}"]
+        instance_ids: ["{{ resolved_ec2_worker_instance }}"]
         region: "{{ aws_region }}"
         state: stopped
         wait: false
-      tags: [worker]
+      tags: [worker, worker_stop]
 
     - name: Stop vectorizer EC2
       amazon.aws.ec2_instance:
-        instance_ids: ["{{ ec2_vectorize_instance }}"]
+        instance_ids: ["{{ resolved_ec2_vectorize_instance }}"]
         region: "{{ aws_region }}"
         state: stopped
         wait: false
-      tags: [vectorizer]
+      tags: [vectorizer, vectorizer_stop]

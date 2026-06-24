@@ -1,0 +1,35 @@
+# Landing-only stack — intended for a tiny always-on host.
+#
+# This runs only the public-facing Next.js site. Product traffic is expected to
+# live on a separate heavier host or subdomain, configured via
+# NEXT_PUBLIC_PRODUCT_BASE_URL (for example https://app.teleoscope.ca).
+#
+# Usage:
+#   docker compose -f docker-compose.landing.yml up -d --build
+
+services:
+  landing:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-in-production}
+      TELEOSCOPE_BASE_URL: ${TELEOSCOPE_BASE_URL:-http://localhost:3000}
+      NEXT_PUBLIC_PRODUCT_BASE_URL: ${NEXT_PUBLIC_PRODUCT_BASE_URL:-}
+      LOOPS_API_KEY: ${LOOPS_API_KEY:-}
+      NEXT_MAILCHIMP_URL: ${NEXT_MAILCHIMP_URL:-}
+      HEALTH_AUTH_USER: ${HEALTH_AUTH_USER:-}
+      HEALTH_AUTH_PASS: ${HEALTH_AUTH_PASS:-}
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/hello >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
