@@ -1,8 +1,8 @@
 # Teleoscope web app (teleoscope.ca)
 FROM node:22-alpine AS base
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install the pnpm major version this repo's lockfiles are generated with.
+RUN corepack enable && corepack prepare pnpm@10 --activate
 
 WORKDIR /app
 
